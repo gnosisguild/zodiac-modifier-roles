@@ -4,6 +4,8 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
+  event AssignRole(address module, uint16 role);
+  event UnassignRole(address module, uint16 role);
   event SetTargetAllowed(uint16 role, address target, bool allowed);
   event SetTargetScoped(uint16 role, address target, bool scoped);
   event SetSendAllowedOnTarget(uint16 role, address target, bool allowed);
@@ -18,13 +20,14 @@ contract Roles is Modifier {
     bytes4 functionSig,
     bool allowed
   );
-  event AssignRole(address module, uint16 role);
   event RolesSetup(
     address indexed initiator,
     address indexed owner,
     address indexed avatar,
     address target
   );
+
+  uint16 internal constant SENTINEL_ROLES = 0xFFFF;
 
   struct Target {
     bool allowed;
@@ -168,10 +171,63 @@ contract Roles is Modifier {
   }
 
   function assignRole(address module, uint16 role) public onlyOwner {
-    require(role > 0, "invalid role");
-    assignedRoles[module][role] = assignedRoles[module][0];
+    require(role != 0 && role != SENTINEL_ROLES, "Invalid role");
+    require(assignedRoles[module][role] == 0, "Role already assigned");
+
+    assignedRoles[module][role] = assignedRoles[module][0] == 0
+      ? SENTINEL_ROLES
+      : assignedRoles[module][0];
     assignedRoles[module][0] = role;
+
+    if (modules[module] == address(0)) {
+      enableModule(module);
+    }
     emit AssignRole(module, role);
+  }
+
+  function unassignRole(
+    address module,
+    uint16 prevRole,
+    uint16 role
+  ) public onlyOwner {
+    require(role != 0 && role != SENTINEL_ROLES, "Invalid role");
+    require(assignedRoles[module][prevRole] == role, "Role already unassigned");
+
+    assignedRoles[module][prevRole] = assignedRoles[module][role];
+    assignedRoles[module][role] = 0;
+    emit UnassignRole(module, role);
+  }
+
+  /// @dev Returns array of roles.
+  /// @param module Address of the module to return roles for
+  /// @param start Start of the page.
+  /// @param pageSize Maximum number of roles that should be returned.
+  /// @return array Array of roles.
+  /// @return next Start of the next page.
+  function getRolesPaginated(
+    address module,
+    uint16 start,
+    uint16 pageSize
+  ) external view returns (uint16[] memory array, uint16 next) {
+    // Init array with max page size
+    array = new uint16[](pageSize);
+
+    // Populate return array
+    uint16 roleCount = 0;
+    uint16 currentRole = assignedRoles[module][start];
+    while (
+      currentRole != 0 && currentRole != SENTINEL_ROLES && roleCount < pageSize
+    ) {
+      array[roleCount] = currentRole;
+      currentRole = assignedRoles[module][currentRole];
+      roleCount++;
+    }
+    next = currentRole == SENTINEL_ROLES ? 0 : currentRole;
+    // Set correct size of returned array
+    // solhint-disable-next-line no-inline-assembly
+    assembly {
+      mstore(array, roleCount)
+    }
   }
 
   /// @dev Returns bool to indicate if an address is an allowed target.
