@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.6;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
@@ -226,6 +226,7 @@ contract Roles is Modifier {
     return (allowedTargetsForRole[role][target].delegateCallAllowed);
   }
 
+  // TODO maybe make it interal to save gas?
   function isAllowedTransaction(
     uint16 role,
     address to,
