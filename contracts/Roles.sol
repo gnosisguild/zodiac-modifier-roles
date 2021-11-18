@@ -333,7 +333,7 @@ contract Roles is Modifier {
       if (isAllowedTransaction(role, to, data, operation)) return;
     }
 
-    revert("Call is not allowed for any assigned role");
+    revert("Not allowed");
   }
 
   /// @dev Passes a transaction to the modifier.
