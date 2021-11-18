@@ -4,8 +4,7 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-  event AssignRole(address module, uint16 role);
-  event UnassignRole(address module, uint16 role);
+  event AssignRoles(address module, uint16[] roles);
   event SetTargetAllowed(uint16 role, address target, bool allowed);
   event SetTargetScoped(uint16 role, address target, bool scoped);
   event SetSendAllowedOnTarget(uint16 role, address target, bool allowed);
@@ -27,7 +26,7 @@ contract Roles is Modifier {
     address target
   );
 
-  uint16 internal constant SENTINEL_ROLES = 0xFFFF;
+  uint16 internal constant MAX_ROLES = 16;
 
   struct Target {
     bool allowed;
@@ -39,7 +38,7 @@ contract Roles is Modifier {
 
   mapping(uint16 => mapping(address => Target)) internal allowedTargetsForRole;
 
-  mapping(address => mapping(uint16 => uint16)) internal assignedRoles;
+  mapping(address => uint16[]) internal assignedRoles;
 
   /// @param _owner Address of the owner
   /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
@@ -170,64 +169,20 @@ contract Roles is Modifier {
     );
   }
 
-  function assignRole(address module, uint16 role) public onlyOwner {
-    require(role != 0 && role != SENTINEL_ROLES, "Invalid role");
-    require(assignedRoles[module][role] == 0, "Role already assigned");
-
-    assignedRoles[module][role] = assignedRoles[module][0] == 0
-      ? SENTINEL_ROLES
-      : assignedRoles[module][0];
-    assignedRoles[module][0] = role;
-
+  function assignRoles(address module, uint16[] calldata roles)
+    public
+    onlyOwner
+  {
+    require(roles.length <= MAX_ROLES, "Max number of roles exceeded");
+    assignedRoles[module] = roles;
     if (modules[module] == address(0)) {
       enableModule(module);
     }
-    emit AssignRole(module, role);
+    emit AssignRoles(module, roles);
   }
 
-  function unassignRole(
-    address module,
-    uint16 prevRole,
-    uint16 role
-  ) public onlyOwner {
-    require(role != 0 && role != SENTINEL_ROLES, "Invalid role");
-    require(assignedRoles[module][prevRole] == role, "Role already unassigned");
-
-    assignedRoles[module][prevRole] = assignedRoles[module][role];
-    assignedRoles[module][role] = 0;
-    emit UnassignRole(module, role);
-  }
-
-  /// @dev Returns array of roles.
-  /// @param module Address of the module to return roles for
-  /// @param start Start of the page.
-  /// @param pageSize Maximum number of roles that should be returned.
-  /// @return array Array of roles.
-  /// @return next Start of the next page.
-  function getRolesPaginated(
-    address module,
-    uint16 start,
-    uint16 pageSize
-  ) external view returns (uint16[] memory array, uint16 next) {
-    // Init array with max page size
-    array = new uint16[](pageSize);
-
-    // Populate return array
-    uint16 roleCount = 0;
-    uint16 currentRole = assignedRoles[module][start];
-    while (
-      currentRole != 0 && currentRole != SENTINEL_ROLES && roleCount < pageSize
-    ) {
-      array[roleCount] = currentRole;
-      currentRole = assignedRoles[module][currentRole];
-      roleCount++;
-    }
-    next = currentRole == SENTINEL_ROLES ? 0 : currentRole;
-    // Set correct size of returned array
-    // solhint-disable-next-line no-inline-assembly
-    assembly {
-      mstore(array, roleCount)
-    }
+  function getRoles(address module) external view returns (uint16[] memory) {
+    return assignedRoles[module];
   }
 
   /// @dev Returns bool to indicate if an address is an allowed target.
@@ -328,9 +283,12 @@ contract Roles is Modifier {
       "Function signature too short"
     );
 
-    uint16 role = assignedRoles[msg.sender][0];
-    while (role > 0) {
-      if (isAllowedTransaction(role, to, data, operation)) return;
+    for (uint256 i = 0; i < assignedRoles[msg.sender].length; i++) {
+      if (
+        isAllowedTransaction(assignedRoles[msg.sender][i], to, data, operation)
+      ) {
+        return;
+      }
     }
 
     revert("Not allowed");

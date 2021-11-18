@@ -28,20 +28,6 @@ describe("RolesModifier", async () => {
     return { ...base, Modifier, modifier };
   });
 
-  const setupTestWithRoles = async (roles: number[]) => {
-    const { avatar, modifier } = await setupTestWithTestAvatar();
-    await Promise.all(
-      roles.map(async (role) => {
-        const assign = await modifier.populateTransaction.assignRole(
-          user1.address,
-          role
-        );
-        return await avatar.exec(modifier.address, 0, assign.data);
-      })
-    );
-    return { avatar, modifier };
-  };
-
   const [user1] = waffle.provider.getWallets();
 
   describe("setUp()", async () => {
@@ -171,56 +157,32 @@ describe("RolesModifier", async () => {
     });
   });
 
-  describe("assignRole()", () => {
+  describe("assignRoles()", () => {
     it("throws if not authorized", async () => {
       const { modifier } = await setupTestWithTestAvatar();
-      await expect(modifier.assignRole(user1.address, 1)).to.be.revertedWith(
+      await expect(modifier.assignRoles(user1.address, [1])).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
     });
 
-    it("throws if role is invalid", async () => {
+    it("assigns roles to a module", async () => {
       const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRole(
+      const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
-        0
-      );
-      await expect(
-        avatar.exec(modifier.address, 0, assign.data)
-      ).to.be.revertedWith("Invalid role");
-    });
-
-    it("throws if role is already assigned", async () => {
-      const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRole(
-        user1.address,
-        1
-      );
-      avatar.exec(modifier.address, 0, assign.data);
-
-      await expect(
-        avatar.exec(modifier.address, 0, assign.data)
-      ).to.be.revertedWith("Role already assigned");
-    });
-
-    it("assigns a role to a module", async () => {
-      const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRole(
-        user1.address,
-        1
+        [1]
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
-      await expect(
-        await modifier.getRolesPaginated(user1.address, 0, 10)
-      ).to.be.deep.equal([[1], 0]);
+      await expect(await modifier.getRoles(user1.address)).to.be.deep.equal([
+        1,
+      ]);
     });
 
     it("it enables the module if necessary", async () => {
       const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRole(
+      const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
-        1
+        [1]
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
@@ -229,86 +191,24 @@ describe("RolesModifier", async () => {
       );
 
       // it doesn't revert when assigning additional roles
-      const assignSecond = await modifier.populateTransaction.assignRole(
+      const assignSecond = await modifier.populateTransaction.assignRoles(
         user1.address,
-        2
+        [1, 2]
       );
       await expect(avatar.exec(modifier.address, 0, assignSecond.data)).to.not
         .be.reverted;
     });
 
-    it("emits the AssignRole event", async () => {
+    it("emits the AssignRoles event", async () => {
       const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRole(
+      const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
-        1
+        [1]
       );
 
       await expect(avatar.exec(modifier.address, 0, assign.data))
-        .to.emit(modifier, "AssignRole")
-        .withArgs(user1.address, 1);
-    });
-  });
-
-  describe("unassignRole()", () => {
-    it("throws if not authorized", async () => {
-      const { modifier } = await setupTestWithRoles([1]);
-      await expect(
-        modifier.unassignRole(user1.address, 0, 1)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("throws if role is invalid", async () => {
-      const { avatar, modifier } = await setupTestWithRoles([1]);
-      const unassign = await modifier.populateTransaction.unassignRole(
-        user1.address,
-        0,
-        0
-      );
-      await expect(
-        avatar.exec(modifier.address, 0, unassign.data)
-      ).to.be.revertedWith("Invalid role");
-    });
-
-    it("throws if role is not assigned", async () => {
-      const { avatar, modifier } = await setupTestWithRoles([1]);
-      const unassign = await modifier.populateTransaction.unassignRole(
-        user1.address,
-        0,
-        2
-      );
-
-      await expect(
-        avatar.exec(modifier.address, 0, unassign.data)
-      ).to.be.revertedWith("Role already unassigned");
-    });
-
-    it("removes assignment of a role to a module", async () => {
-      const { avatar, modifier } = await setupTestWithRoles([1, 2]);
-
-      const assign = await modifier.populateTransaction.unassignRole(
-        user1.address,
-        0,
-        2
-      );
-      await avatar.exec(modifier.address, 0, assign.data);
-
-      await expect(
-        await modifier.getRolesPaginated(user1.address, 0, 10)
-      ).to.be.deep.equal([[1], 0]);
-    });
-
-    it("emits the UnassignRole event", async () => {
-      const { avatar, modifier } = await setupTestWithRoles([1, 2]);
-      const assign = await modifier.populateTransaction.unassignRole(
-        user1.address,
-        2,
-        1
-      );
-
-      await expect(avatar.exec(modifier.address, 0, assign.data))
-        .to.emit(modifier, "UnassignRole")
-        .withArgs(user1.address, 1);
+        .to.emit(modifier, "AssignRoles")
+        .withArgs(user1.address, [1]);
     });
   });
 });
