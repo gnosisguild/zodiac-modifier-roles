@@ -165,17 +165,6 @@ describe("RolesModifier", async () => {
       );
     });
 
-    it("reverts when assigning too many roles", async () => {
-      const { avatar, modifier } = await setupTestWithTestAvatar();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-      );
-      await await expect(
-        avatar.exec(modifier.address, 0, assign.data)
-      ).to.be.revertedWith("Too many roles");
-    });
-
     it("assigns roles to a module", async () => {
       const { avatar, modifier } = await setupTestWithTestAvatar();
       const assign = await modifier.populateTransaction.assignRoles(
@@ -184,9 +173,9 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
-      await expect(await modifier.getRoles(user1.address)).to.be.deep.equal([
-        1,
-      ]);
+      await expect(await modifier.isRoleMember(user1.address, 1)).to.be.equal(
+        true
+      );
     });
 
     it("it enables the module if necessary", async () => {
@@ -308,6 +297,13 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
       const mint = await testContract.populateTransaction.mint(
         user1.address,
         99
@@ -413,6 +409,13 @@ describe("RolesModifier", async () => {
         true
       );
       await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+
+      await avatar.exec(modifier.address, 0, defaultRole.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
