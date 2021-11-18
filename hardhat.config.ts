@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "solidity-coverage";
 import "hardhat-deploy";
+import "hardhat-gas-reporter";
 import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
@@ -75,5 +76,13 @@ export default {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    // @ts-ignore-next-line
+    proxyResolver(transaction) {
+      throw transaction;
+      // @ts-ignore-next-line
+      console.log(this.data);
+    },
   },
 };
