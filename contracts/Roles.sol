@@ -85,7 +85,7 @@ contract Roles is Modifier {
     uint16 role,
     address target,
     bool allow
-  ) public onlyOwner {
+  ) external onlyOwner {
     allowedTargetsForRole[role][target].allowed = allow;
     emit SetTargetAllowed(
       role,
@@ -103,7 +103,7 @@ contract Roles is Modifier {
     uint16 role,
     address target,
     bool allow
-  ) public onlyOwner {
+  ) external onlyOwner {
     allowedTargetsForRole[role][target].delegateCallAllowed = allow;
     emit SetDelegateCallAllowedOnTarget(
       role,
@@ -121,7 +121,7 @@ contract Roles is Modifier {
     uint16 role,
     address target,
     bool scoped
-  ) public onlyOwner {
+  ) external onlyOwner {
     allowedTargetsForRole[role][target].scoped = scoped;
     emit SetTargetScoped(
       role,
@@ -139,7 +139,7 @@ contract Roles is Modifier {
     uint16 role,
     address target,
     bool allow
-  ) public onlyOwner {
+  ) external onlyOwner {
     allowedTargetsForRole[role][target].sendAllowed = allow;
     emit SetSendAllowedOnTarget(
       role,
@@ -159,7 +159,7 @@ contract Roles is Modifier {
     address target,
     bytes4 functionSig,
     bool allow
-  ) public onlyOwner {
+  ) external onlyOwner {
     allowedTargetsForRole[role][target].allowedFunctions[functionSig] = allow;
     emit SetFunctionAllowedOnTarget(
       role,
@@ -170,10 +170,10 @@ contract Roles is Modifier {
   }
 
   function assignRoles(address module, uint16[] calldata roles)
-    public
+    external
     onlyOwner
   {
-    require(roles.length <= MAX_ROLES, "Max number of roles exceeded");
+    require(roles.length <= MAX_ROLES, "Too many roles");
     assignedRoles[module] = roles;
     if (modules[module] == address(0)) {
       enableModule(module);
