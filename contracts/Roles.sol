@@ -10,7 +10,10 @@ contract Roles is Modifier {
 
     struct Function {
         bool allowed;
+        bool scoped;
         string name;
+        string[] paramTypes;
+        mapping (string => bytes) allowedValues; // make array and bring back mapping for values?
     }
 
     struct Target {
@@ -33,6 +36,8 @@ contract Roles is Modifier {
     event AssignRoles(address module, uint16[] roles);
     event SetTargetAllowed(uint16 role, address target, bool allowed);
     event SetTargetScoped(uint16 role, address target, bool scoped);
+    event SetParametersScoped(uint16 role, address target, bytes4 functionSig, string[] types, bool scoped);
+    event SetParameterScoped(uint16 role, address target, bytes4 functionSig, string parameter, bool scoped);  
     event SetSendAllowedOnTarget(uint16 role, address target, bool allowed);
     event SetDelegateCallAllowedOnTarget(
         uint16 role,
@@ -44,6 +49,13 @@ contract Roles is Modifier {
         address target,
         bytes4 selector,
         bool allowed
+    );
+    event SetParameterAllowedValues(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        string parameter,
+        bytes allowedValue
     );
     event RolesSetup(
         address indexed initiator,
@@ -131,7 +143,6 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         roles[role].targets[target].delegateCallAllowed = allow;
-
         emit SetDelegateCallAllowedOnTarget(
             role,
             target,
@@ -144,13 +155,37 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param target Address to be scoped/unscoped.
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
-    function setScoped(
+    function setFunctionScoped(
         uint16 role,
         address target,
         bool scoped
     ) external onlyOwner {
         roles[role].targets[target].scoped = scoped;
         emit SetTargetScoped(role, target, roles[role].targets[target].scoped);
+    }
+
+    /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param target Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature
+    /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    function setParametersScoped(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        string[] memory types,
+        bool scoped
+    ) external onlyOwner {
+        roles[role].targets[target].functions[functionSig].scoped = scoped;
+        roles[role].targets[target].functions[functionSig].paramTypes = types;
+        emit SetParametersScoped(
+          role,
+          target,
+          functionSig,
+          types,
+          roles[role].targets[target].functions[functionSig].scoped = scoped
+        );
     }
 
     /// @dev Sets whether or not a target can be sent to (incluces fallback/receive functions).
@@ -189,6 +224,31 @@ contract Roles is Modifier {
             target,
             selector,
             roles[role].targets[target].functions[selector].allowed
+        );
+    }
+
+    /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param target Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature
+    /// @param parameter name of the parameter to scope
+    /// @param allowedValue the allowed parameter value that can be called
+    function setParameterAllowedValue(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        string memory parameter,
+        bytes memory allowedValue
+    ) external onlyOwner {
+        // todo: require that param is scoped first?
+        roles[role].targets[target].functions[functionSig].allowedValues[parameter] = allowedValue;
+        emit SetParameterAllowedValues(
+          role,
+          target,
+          functionSig,
+          parameter,
+          roles[role].targets[target].functions[functionSig].allowedValues[parameter]
         );
     }
 
@@ -297,6 +357,18 @@ contract Roles is Modifier {
             ) {
                 return false;
             }
+        if (roles[role].targets[target].functions[bytes4(data)].scoped) {
+        uint16 pos = 0;
+            for (uint i = 0; i < roles[role].targets[target].functions[bytes4(data)].paramTypes.length; i++) {
+                // get the bytes corresponding to the param
+                string memory paramType = roles[role].targets[target].functions[bytes4(data)].paramTypes[i];
+                if (strEql(paramType, "bytes") || strEql(paramType, "string")) {
+
+                }
+                // abi decode each with the param type string
+                // check the value matches allowed value
+            }
+        }
         } else {
             if (
                 roles[role].targets[target].scoped &&
@@ -366,5 +438,13 @@ contract Roles is Modifier {
     {
         checkTransaction(to, value, data, operation);
         return execAndReturnData(to, value, data, operation);
+    }
+
+    function strEql(string memory a, string memory b) internal view returns (bool) {
+        if(bytes(a).length != bytes(b).length) {
+            return false;
+        } else {
+            return keccak256(bytes(a)) == keccak256(bytes(b));
+        }
     }
 }
