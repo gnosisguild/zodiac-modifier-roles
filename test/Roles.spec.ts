@@ -31,20 +31,6 @@ describe("RolesModifier", async () => {
   const [user1] = waffle.provider.getWallets();
 
   describe("setUp()", async () => {
-    it("reverts if avatar is zero address", async () => {
-      const Module = await hre.ethers.getContractFactory("Roles");
-      await expect(
-        Module.deploy(ZeroAddress, ZeroAddress, FirstAddress)
-      ).to.be.revertedWith("Avatar can not be zero address");
-    });
-
-    it("reverts if target is zero address", async () => {
-      const Module = await hre.ethers.getContractFactory("Roles");
-      await expect(
-        Module.deploy(ZeroAddress, FirstAddress, ZeroAddress)
-      ).to.be.revertedWith("Target can not be zero address");
-    });
-
     it("should emit event because of successful set up", async () => {
       const Module = await hre.ethers.getContractFactory("Roles");
       const module = await Module.deploy(
@@ -216,11 +202,8 @@ describe("RolesModifier", async () => {
     it("reverts if called from module not assigned any role", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
 
       const allowTarget = await modifier.populateTransaction.setTargetAllowed(
         1,
@@ -247,11 +230,8 @@ describe("RolesModifier", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
       const assign = await modifier.populateTransaction.assignRoles(
         signer.address,
         [1]
@@ -273,17 +253,14 @@ describe("RolesModifier", async () => {
       const someOtherAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
       await expect(
         modifier.execTransactionFromModule(someOtherAddress, 0, mint.data, 0)
-      ).to.be.revertedWith("Not allowed");
+      ).to.be.revertedWith("NotAllowed");
     });
 
     it("executes a call to an allowed target", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
       const assign = await modifier.populateTransaction.assignRoles(
         signer.address,
         [1]
@@ -324,11 +301,8 @@ describe("RolesModifier", async () => {
     it("reverts if called from module not assigned any role", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
 
       const allowTarget = await modifier.populateTransaction.setTargetAllowed(
         1,
@@ -355,11 +329,8 @@ describe("RolesModifier", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
       const assign = await modifier.populateTransaction.assignRoles(
         signer.address,
         [1]
@@ -386,17 +357,14 @@ describe("RolesModifier", async () => {
           mint.data,
           0
         )
-      ).to.be.revertedWith("Not allowed");
+      ).to.be.revertedWith("NotAllowed");
     });
 
     it("executes a call to an allowed target", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
-      const {
-        avatar,
-        modifier,
-        testContract,
-      } = await setupTestWithTestAvatar();
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
       const assign = await modifier.populateTransaction.assignRoles(
         signer.address,
         [1]

@@ -4,28 +4,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    event AssignRoles(address module, uint16[] roles);
-    event SetTargetAllowed(uint16 role, address target, bool allowed);
-    event SetTargetScoped(uint16 role, address target, bool scoped);
-    event SetSendAllowedOnTarget(uint16 role, address target, bool allowed);
-    event SetDelegateCallAllowedOnTarget(
-        uint16 role,
-        address target,
-        bool allowed
-    );
-    event SetFunctionAllowedOnTarget(
-        uint16 role,
-        address target,
-        bytes4 selector,
-        bool allowed
-    );
-    event RolesSetup(
-        address indexed initiator,
-        address indexed owner,
-        address indexed avatar,
-        address target
-    );
-
     // struct Parameter {
     //     mapping(bytes => bool) allowed;
     // }
@@ -52,6 +30,43 @@ contract Roles is Modifier {
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) public roles;
 
+    event AssignRoles(address module, uint16[] roles);
+    event SetTargetAllowed(uint16 role, address target, bool allowed);
+    event SetTargetScoped(uint16 role, address target, bool scoped);
+    event SetSendAllowedOnTarget(uint16 role, address target, bool allowed);
+    event SetDelegateCallAllowedOnTarget(
+        uint16 role,
+        address target,
+        bool allowed
+    );
+    event SetFunctionAllowedOnTarget(
+        uint16 role,
+        address target,
+        bytes4 selector,
+        bool allowed
+    );
+    event RolesSetup(
+        address indexed initiator,
+        address indexed owner,
+        address indexed avatar,
+        address target
+    );
+
+    /// `setUpModules` has already been called
+    error SetUpModulesAlreadyCalled();
+
+    /// Function signature too short
+    error FunctionSignatureTooShort();
+
+    /// Role is not allowed to perform this transaction
+    error NotAllowed(
+        uint16 role,
+        address to,
+        uint256 value,
+        bytes data,
+        Enum.Operation operation
+    );
+
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -70,8 +85,6 @@ contract Roles is Modifier {
             (address, address, address)
         );
         __Ownable_init();
-        require(_avatar != address(0), "Avatar can not be zero address");
-        require(_target != address(0), "Target can not be zero address");
 
         avatar = _avatar;
         target = _target;
@@ -83,10 +96,9 @@ contract Roles is Modifier {
     }
 
     function setupModules() internal {
-        require(
-            modules[SENTINEL_MODULES] == address(0),
-            "setUpModules has already been called"
-        );
+        if (modules[SENTINEL_MODULES] != address(0)) {
+            revert SetUpModulesAlreadyCalled();
+        }
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
@@ -171,12 +183,12 @@ contract Roles is Modifier {
         bytes4 selector,
         bool allow
     ) external onlyOwner {
-        roles[role].targets[target].Functions[selector].allowed = allow;
+        roles[role].targets[target].functions[selector].allowed = allow;
         emit SetFunctionAllowedOnTarget(
             role,
             target,
             selector,
-            roles[role].targets[target].Functions[selector].allowed
+            roles[role].targets[target].functions[selector].allowed
         );
     }
 
@@ -247,7 +259,7 @@ contract Roles is Modifier {
         address target,
         bytes4 selector
     ) public view returns (bool) {
-        return (roles[role].targets[target].Functions[selector].allowed);
+        return (roles[role].targets[target].functions[selector].allowed);
     }
 
     /// @dev Returns bool to indicate if delegate calls are allowed to a target address.
@@ -281,7 +293,7 @@ contract Roles is Modifier {
         if (data.length >= 4) {
             if (
                 roles[role].targets[target].scoped &&
-                !roles[role].targets[target].Functions[bytes4(data)].allowed
+                !roles[role].targets[target].functions[bytes4(data)].allowed
             ) {
                 return false;
             }
@@ -299,18 +311,24 @@ contract Roles is Modifier {
 
     function checkTransaction(
         address to,
+        uint256 value,
         bytes memory data,
         Enum.Operation operation
     ) internal view {
-        require(
-            data.length == 0 || data.length >= 4,
-            "Function signature too short"
-        );
-
-        require(
-            isAllowedTransaction(defaultRoles[msg.sender], to, data, operation),
-            "Not allowed"
-        );
+        if (data.length != 0 && data.length < 4) {
+            revert FunctionSignatureTooShort();
+        }
+        if (
+            !isAllowedTransaction(defaultRoles[msg.sender], to, data, operation)
+        ) {
+            revert NotAllowed(
+                defaultRoles[msg.sender],
+                to,
+                value,
+                data,
+                operation
+            );
+        }
     }
 
     /// @dev Passes a transaction to the modifier.
@@ -325,7 +343,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        checkTransaction(to, data, operation);
+        checkTransaction(to, value, data, operation);
         return exec(to, value, data, operation);
     }
 
@@ -346,7 +364,7 @@ contract Roles is Modifier {
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        checkTransaction(to, data, operation);
+        checkTransaction(to, value, data, operation);
         return execAndReturnData(to, value, data, operation);
     }
 }
