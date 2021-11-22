@@ -65,8 +65,10 @@ contract Roles is Modifier {
     }
 
     function setUp(bytes memory initParams) public override {
-        (address _owner, address _avatar, address _target) =
-            abi.decode(initParams, (address, address, address));
+        (address _owner, address _avatar, address _target) = abi.decode(
+            initParams,
+            (address, address, address)
+        );
         __Ownable_init();
         require(_avatar != address(0), "Avatar can not be zero address");
         require(_target != address(0), "Target can not be zero address");
@@ -117,6 +119,7 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         roles[role].targets[target].delegateCallAllowed = allow;
+
         emit SetDelegateCallAllowedOnTarget(
             role,
             target,
