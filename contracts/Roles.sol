@@ -298,25 +298,25 @@ contract Roles is Modifier {
         }
         if (
             operation == Enum.Operation.DelegateCall &&
-            !roles[role].targets[target].delegateCallAllowed
+            !roles[role].targets[to].delegateCallAllowed
         ) {
             revert DelegateCallNotAllowed();
         }
 
-        if (!roles[role].targets[target].allowed) {
+        if (!roles[role].targets[to].allowed) {
             revert TargetNotAllowed();
         }
         if (data.length >= 4) {
             if (
-                roles[role].targets[target].scoped &&
-                !roles[role].targets[target].functions[bytes4(data)].allowed
+                roles[role].targets[to].scoped &&
+                !roles[role].targets[to].functions[bytes4(data)].allowed
             ) {
                 revert FunctionNotAllowed();
             }
         } else {
             if (
-                roles[role].targets[target].scoped &&
-                !roles[role].targets[target].sendAllowed
+                roles[role].targets[to].scoped &&
+                !roles[role].targets[to].sendAllowed
             ) {
                 revert SendNotAllowed();
             }
