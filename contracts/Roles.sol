@@ -171,12 +171,12 @@ contract Roles is Modifier {
         bytes4 selector,
         bool allow
     ) external onlyOwner {
-        roles[role].targets[target].Functions[selector].allowed = allow;
+        roles[role].targets[target].functions[selector].allowed = allow;
         emit SetFunctionAllowedOnTarget(
             role,
             target,
             selector,
-            roles[role].targets[target].Functions[selector].allowed
+            roles[role].targets[target].functions[selector].allowed
         );
     }
 
@@ -247,7 +247,7 @@ contract Roles is Modifier {
         address target,
         bytes4 selector
     ) public view returns (bool) {
-        return (roles[role].targets[target].Functions[selector].allowed);
+        return (roles[role].targets[target].functions[selector].allowed);
     }
 
     /// @dev Returns bool to indicate if delegate calls are allowed to a target address.
@@ -281,7 +281,7 @@ contract Roles is Modifier {
         if (data.length >= 4) {
             if (
                 roles[role].targets[target].scoped &&
-                !roles[role].targets[target].Functions[bytes4(data)].allowed
+                !roles[role].targets[target].functions[bytes4(data)].allowed
             ) {
                 return false;
             }
