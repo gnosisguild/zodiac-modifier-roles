@@ -58,14 +58,17 @@ contract Roles is Modifier {
     /// Function signature too short
     error FunctionSignatureTooShort();
 
-    /// Role is not allowed to perform this transaction
-    error NotAllowed(
-        uint16 role,
-        address to,
-        uint256 value,
-        bytes data,
-        Enum.Operation operation
-    );
+    /// Role not allowed to delegate call to target
+    error DelegateCallNotAllowed();
+
+    /// Role not allowed to call target
+    error TargetNotAllowed();
+
+    /// Role not allowed to call this function on target
+    error FunctionNotAllowed();
+
+    /// Role not allowed to send to target
+    error SendNotAllowed();
 
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
@@ -280,32 +283,6 @@ contract Roles is Modifier {
         bytes memory data,
         Enum.Operation operation
     ) public view returns (bool) {
-        if (
-            operation == Enum.Operation.DelegateCall &&
-            !roles[role].targets[target].delegateCallAllowed
-        ) {
-            return false;
-        }
-
-        if (!roles[role].targets[target].allowed) {
-            return false;
-        }
-        if (data.length >= 4) {
-            if (
-                roles[role].targets[target].scoped &&
-                !roles[role].targets[target].functions[bytes4(data)].allowed
-            ) {
-                return false;
-            }
-        } else {
-            if (
-                roles[role].targets[target].scoped &&
-                !roles[role].targets[target].sendAllowed
-            ) {
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -315,19 +292,34 @@ contract Roles is Modifier {
         bytes memory data,
         Enum.Operation operation
     ) internal view {
+        uint16 role = defaultRoles[msg.sender];
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
         if (
-            !isAllowedTransaction(defaultRoles[msg.sender], to, data, operation)
+            operation == Enum.Operation.DelegateCall &&
+            !roles[role].targets[target].delegateCallAllowed
         ) {
-            revert NotAllowed(
-                defaultRoles[msg.sender],
-                to,
-                value,
-                data,
-                operation
-            );
+            revert DelegateCallNotAllowed();
+        }
+
+        if (!roles[role].targets[target].allowed) {
+            revert TargetNotAllowed();
+        }
+        if (data.length >= 4) {
+            if (
+                roles[role].targets[target].scoped &&
+                !roles[role].targets[target].functions[bytes4(data)].allowed
+            ) {
+                revert FunctionNotAllowed();
+            }
+        } else {
+            if (
+                roles[role].targets[target].scoped &&
+                !roles[role].targets[target].sendAllowed
+            ) {
+                revert SendNotAllowed();
+            }
         }
     }
 
