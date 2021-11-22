@@ -40,7 +40,7 @@ contract Roles is Modifier {
         bool scoped;
         bool delegateCallAllowed;
         bool sendAllowed;
-        mapping(bytes4 => Function) Functions;
+        mapping(bytes4 => Function) functions;
     }
 
     struct Role {
