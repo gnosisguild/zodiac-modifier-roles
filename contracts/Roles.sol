@@ -202,6 +202,7 @@ contract Roles is Modifier {
         bytes4 selector,
         bool allow
     ) external onlyOwner {
+
         roles[role]
             .targetAddresses[targetAddress]
             .functions[selector]
