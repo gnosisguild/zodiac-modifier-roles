@@ -357,7 +357,7 @@ describe("RolesModifier", async () => {
           mint.data,
           0
         )
-      ).to.be.revertedWith("NotAllowed");
+      ).to.be.revertedWith("TargetNotAllowed()");
     });
 
     it("executes a call to an allowed target", async () => {
