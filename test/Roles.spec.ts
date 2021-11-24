@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
 const ZeroState =
@@ -294,6 +294,199 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
+    });
+
+    it("executes a call with allowed value parameter", async () => {
+      const signer = (await hre.ethers.getSigners())[0];
+
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
+      const assign = await modifier.populateTransaction.assignRoles(
+        signer.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget = await modifier.populateTransaction.setTargetAllowed(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped = await modifier.populateTransaction.setFunctionScoped(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed = await modifier.populateTransaction.setAllowedFunction(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped = await modifier.populateTransaction.setParametersScoped(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        ["address", "uint256"],
+        true
+      );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
+        ["address"],
+        [user1.address]
+      );
+      console.log(encodedParam_1)
+
+      const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        "address",
+        encodedParam_1
+      );
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+      console.log(encodedParam_2)
+
+      const paramAllowed_2 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        "uint256",
+        encodedParam_2
+      );
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        99
+      );
+      console.log(mint.data)
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.emit(testContract, "Mint");
+      const test = await modifier.test()
+      console.log(test.toString())
+      console.log(user1.address)
+    });
+
+    it("executes a call with allowed dynamic parameter", async () => {
+      const signer = (await hre.ethers.getSigners())[0];
+
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
+      const assign = await modifier.populateTransaction.assignRoles(
+        signer.address,
+        [1]
+      );
+
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget = await modifier.populateTransaction.setTargetAllowed(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped = await modifier.populateTransaction.setFunctionScoped(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed = await modifier.populateTransaction.setAllowedFunction(
+        1,
+        testContract.address,
+        "0xedad9b7e",
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped = await modifier.populateTransaction.setParametersScoped(
+        1,
+        testContract.address,
+        "0xedad9b7e",
+        ["string"],
+        true
+      );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["This is a dynamic array"]
+      );
+      console.log('----')
+      console.log(encodedParam_1)
+      const removeDetails = "0x" + encodedParam_1.slice(130, encodedParam_1.length)
+      console.log(removeDetails)
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["string", "uint256", "string"],
+        ["This is a dynamic array", 4, "Test"]
+      );
+      console.log('----')
+      console.log(encodedParam_2)
+
+      const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xedad9b7e",
+        "string",
+        removeDetails
+      );
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+
+      const dynamic = await testContract.populateTransaction.testDynamic(
+        "This is a dynamic array"
+      );
+      //console.log(dynamic.data)
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          dynamic.data,
+          0
+        )
+      ).to.emit(testContract, "TestDynamic");
+      const test = await modifier.test()
+      console.log(test.toString())
+      const test2 = await modifier.test2()
+      console.log(test2.toString())
+      //0xedad9b7e000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
+      //0x00000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
     });
   });
 

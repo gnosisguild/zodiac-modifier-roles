@@ -49,8 +49,17 @@ export default {
   },
   solidity: {
     compilers: [{ version: "0.8.6" }, { version: "0.6.12" }],
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }    
   },
   networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true
+    },
     mainnet: {
       ...sharedNetworkConfig,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,

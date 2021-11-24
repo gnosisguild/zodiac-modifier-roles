@@ -8,6 +8,9 @@ contract Roles is Modifier {
     //     mapping(bytes => bool) allowed;
     // }
 
+    uint256 public test;
+    bytes32 public test2;
+
     struct Function {
         bool allowed;
         bool scoped;
@@ -25,13 +28,12 @@ contract Roles is Modifier {
     }
 
     struct Role {
-        uint16 id;
         mapping(address => Target) targets;
         mapping(address => bool) members;
     }
 
     mapping(address => uint16) public defaultRoles;
-    mapping(uint16 => Role) public roles;
+    mapping(uint16 => Role) roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetTargetAllowed(uint16 role, address target, bool allowed);
@@ -81,6 +83,9 @@ contract Roles is Modifier {
 
     /// Role not allowed to send to target
     error SendNotAllowed();
+
+    /// Role not allowed to use bytes for parameter
+    error ParameterNotAllowed();
 
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
@@ -235,23 +240,23 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param target Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature
-    /// @param parameter name of the parameter to scope
+    /// @param paramType name of the parameter to scope
     /// @param allowedValue the allowed parameter value that can be called
     function setParameterAllowedValue(
         uint16 role,
         address target,
         bytes4 functionSig,
-        string memory parameter,
+        string memory paramType,
         bytes memory allowedValue
     ) external onlyOwner {
         // todo: require that param is scoped first?
-        roles[role].targets[target].functions[functionSig].allowedValues[parameter] = allowedValue;
+        roles[role].targets[target].functions[functionSig].allowedValues[paramType] = allowedValue;
         emit SetParameterAllowedValues(
           role,
           target,
           functionSig,
-          parameter,
-          roles[role].targets[target].functions[functionSig].allowedValues[parameter]
+          paramType,
+          roles[role].targets[target].functions[functionSig].allowedValues[paramType]
         );
     }
 
@@ -351,7 +356,7 @@ contract Roles is Modifier {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) internal view {
+    ) internal {
         uint16 role = defaultRoles[msg.sender];
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
@@ -373,16 +378,47 @@ contract Roles is Modifier {
             ) {
                 revert FunctionNotAllowed();
             }
-            if (roles[role].targets[target].functions[bytes4(data)].scoped) {
-                uint16 pos = 0;
-                for (uint i = 0; i < roles[role].targets[target].functions[bytes4(data)].paramTypes.length; i++) {
-                    // get the bytes corresponding to the param
-                    string memory paramType = roles[role].targets[target].functions[bytes4(data)].paramTypes[i];
+            if (roles[role].targets[to].functions[bytes4(data)].scoped) {
+                uint16 pos = 4; // skip function selector
+                for (uint i = 0; i < roles[role].targets[to].functions[bytes4(data)].paramTypes.length; i++) {
+                    string memory paramType = roles[role].targets[to].functions[bytes4(data)].paramTypes[i];
+                    bytes memory paramBytes = roles[role].targets[to].functions[bytes4(data)].allowedValues[paramType];
                     if (strEql(paramType, "bytes") || strEql(paramType, "string")) {
-
+                        pos += 32; // location of length
+                        uint256 lengthLocation;
+                        assembly {lengthLocation := mload(add(data, pos))}
+                        uint256 lengthPos = pos + lengthLocation;
+                        uint256 length;
+                        assembly {length := mload(add(data, lengthPos))}
+                        // if length > 32, check 1 word at a time
+                        bytes32 input;
+                        uint256 dataLocation = lengthPos + 32;
+                        assembly {input := mload(add(data, 100))}
+                        if (input == bytes32(paramBytes)) {
+                            test = 420;
+                        }
+                        test2 = input;
+                        //test = length;
+                        //uint256 input = abi.decode(paramBytes, (uint256));
+                    } else {
+                        pos += 32;
+                        if (strEql(paramType, "address")) {
+                            address decoded;
+                            assembly {decoded := mload(add(data, pos))}
+                            address input = abi.decode(paramBytes, (address));
+                            if (input != decoded){
+                                revert ParameterNotAllowed();
+                            }
+                        }
+                        if (strEql(paramType, "uint256")) {
+                            uint256 decoded;
+                            assembly {decoded := mload(add(data, pos))}
+                            uint256 input = abi.decode(paramBytes, (uint256));
+                            if (input != decoded){
+                                revert ParameterNotAllowed();
+                            }
+                        }
                     }
-                    // abi decode each with the param type string
-                    // check the value matches allowed value
                 }
             }
         } else {
@@ -437,6 +473,14 @@ contract Roles is Modifier {
             return false;
         } else {
             return keccak256(bytes(a)) == keccak256(bytes(b));
+        }
+    }
+
+    function bytesEql(bytes memory a, bytes memory b) internal view returns (bool) {
+        if(a.length != b.length) {
+            return false;
+        } else {
+            return keccak256(a) == keccak256(b);
         }
     }
 }
