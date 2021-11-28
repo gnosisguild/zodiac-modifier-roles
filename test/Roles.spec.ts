@@ -393,7 +393,7 @@ describe("RolesModifier", async () => {
       console.log(user1.address)
     });
 
-    it("executes a call with allowed dynamic parameter", async () => {
+    it.only("executes a call with allowed dynamic parameter", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
       const { avatar, modifier, testContract } =
@@ -428,7 +428,7 @@ describe("RolesModifier", async () => {
       const functionAllowed = await modifier.populateTransaction.setAllowedFunction(
         1,
         testContract.address,
-        "0xedad9b7e",
+        "0xe18c576f",
         true
       );
       await avatar.exec(modifier.address, 0, functionAllowed.data);
@@ -436,42 +436,117 @@ describe("RolesModifier", async () => {
       const paramScoped = await modifier.populateTransaction.setParametersScoped(
         1,
         testContract.address,
-        "0xedad9b7e",
-        ["string"],
+        "0xe18c576f",
+        ["string", "uint256", "string", "bool", "uint8", "string"], // TODO: this can just be boolean, dynamic type or not
         true
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
+      console.log('----')
       const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
         ["string"],
         ["This is a dynamic array"]
       );
-      console.log('----')
       console.log(encodedParam_1)
       const removeDetails = "0x" + encodedParam_1.slice(130, encodedParam_1.length)
       console.log(removeDetails)
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-        ["string", "uint256", "string"],
-        ["This is a dynamic array", 4, "Test"]
+        ["uint256"],
+        [4]
+      );
+
+      const encodedParam_3 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["Test"]
+      );
+      console.log(encodedParam_3)
+      const removeDetails_2 = "0x" + encodedParam_3.slice(130, encodedParam_3.length)
+      console.log(removeDetails_2)
+
+      const encodedParam_4 = ethers.utils.defaultAbiCoder.encode(
+        ["bool"],
+        [true]
+      );
+
+      const encodedParam_5= ethers.utils.defaultAbiCoder.encode(
+        ["uint8"],
+        [3]
+      );
+
+      const encodedParam_6 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["weeeeeeee"]
+      );
+      const removeDetails_3 = "0x" + encodedParam_6.slice(130, encodedParam_6.length)
+
+      const totalParams = ethers.utils.defaultAbiCoder.encode(
+        ["string", "uint256", "string", "bool", "uint8", "string"],
+        ["This is a dynamic array", 4, "Test", true, 3, "weeeeeeee"]
       );
       console.log('----')
-      console.log(encodedParam_2)
+      console.log(totalParams)
+      const x = totalParams.slice(64+320, 64+320+2)
+      console.log(x)
 
       const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
         1,
         testContract.address,
-        "0xedad9b7e",
-        "string",
+        "0xe18c576f",
+        0,
         removeDetails
       );
-
+      const paramAllowed_2 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xe18c576f",
+        1,
+        encodedParam_2
+      );
+      const paramAllowed_3 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xe18c576f",
+        2,
+        removeDetails_2
+      );
+      const paramAllowed_4 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xe18c576f",
+        3,
+        encodedParam_4
+      );
+      const paramAllowed_5 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xe18c576f",
+        4,
+        encodedParam_5
+      );
+      const paramAllowed_6 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0xe18c576f",
+        5,
+        removeDetails_3
+      );
       await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
-        "This is a dynamic array"
+        "This is a dynamic array",
+        4,
+        "Test",
+        true,
+        3,
+        "weeeeeeee"
       );
-      //console.log(dynamic.data)
+      console.log(dynamic.data)
 
       await expect(
         modifier.execTransactionFromModule(
@@ -485,6 +560,8 @@ describe("RolesModifier", async () => {
       console.log(test.toString())
       const test2 = await modifier.test2()
       console.log(test2.toString())
+      const test3 = await modifier.test3()
+      console.log(test3.toString())
       //0xedad9b7e000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
       //0x00000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
     });

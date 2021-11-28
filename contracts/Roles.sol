@@ -10,13 +10,14 @@ contract Roles is Modifier {
 
     uint256 public test;
     bytes32 public test2;
+    bytes32 public test3;
 
     struct Function {
         bool allowed;
         bool scoped;
         string name;
         string[] paramTypes;
-        mapping (string => bytes) allowedValues; // make array and bring back mapping for values?
+        mapping (uint16 => bytes) allowedValues; // make array and bring back mapping for values?
     }
 
     struct Target {
@@ -56,7 +57,7 @@ contract Roles is Modifier {
         uint16 role,
         address target,
         bytes4 functionSig,
-        string parameter,
+        uint16 parameterIndex,
         bytes allowedValue
     );
     event RolesSetup(
@@ -240,23 +241,23 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param target Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature
-    /// @param paramType name of the parameter to scope
+    /// @param paramIndex index of the parameter to scope
     /// @param allowedValue the allowed parameter value that can be called
     function setParameterAllowedValue(
         uint16 role,
         address target,
         bytes4 functionSig,
-        string memory paramType,
+        uint16 paramIndex,
         bytes memory allowedValue
     ) external onlyOwner {
         // todo: require that param is scoped first?
-        roles[role].targets[target].functions[functionSig].allowedValues[paramType] = allowedValue;
+        roles[role].targets[target].functions[functionSig].allowedValues[paramIndex] = allowedValue;
         emit SetParameterAllowedValues(
           role,
           target,
           functionSig,
-          paramType,
-          roles[role].targets[target].functions[functionSig].allowedValues[paramType]
+          paramIndex,
+          roles[role].targets[target].functions[functionSig].allowedValues[paramIndex]
         );
     }
 
@@ -380,44 +381,43 @@ contract Roles is Modifier {
             }
             if (roles[role].targets[to].functions[bytes4(data)].scoped) {
                 uint16 pos = 4; // skip function selector
-                for (uint i = 0; i < roles[role].targets[to].functions[bytes4(data)].paramTypes.length; i++) {
+                for (uint16 i = 0; i < roles[role].targets[to].functions[bytes4(data)].paramTypes.length; i++) {
                     string memory paramType = roles[role].targets[to].functions[bytes4(data)].paramTypes[i];
-                    bytes memory paramBytes = roles[role].targets[to].functions[bytes4(data)].allowedValues[paramType];
+                    bytes memory paramBytes = roles[role].targets[to].functions[bytes4(data)].allowedValues[i];
                     if (strEql(paramType, "bytes") || strEql(paramType, "string")) {
                         pos += 32; // location of length
                         uint256 lengthLocation;
                         assembly {lengthLocation := mload(add(data, pos))}
-                        uint256 lengthPos = pos + lengthLocation;
+                        uint256 lengthPos = 36 + lengthLocation; // always start from param block start
                         uint256 length;
                         assembly {length := mload(add(data, lengthPos))}
                         // if length > 32, check 1 word at a time
                         bytes32 input;
                         uint256 dataLocation = lengthPos + 32;
-                        assembly {input := mload(add(data, 100))}
-                        if (input == bytes32(paramBytes)) {
-                            test = 420;
+                        assembly {input := mload(add(data, dataLocation))}
+                        if (input != bytes32(paramBytes)) {
+                            //test = 420;
+                            revert ParameterNotAllowed();
                         }
                         test2 = input;
-                        //test = length;
-                        //uint256 input = abi.decode(paramBytes, (uint256));
+                        //test = lengthLocation;
                     } else {
                         pos += 32;
-                        if (strEql(paramType, "address")) {
-                            address decoded;
-                            assembly {decoded := mload(add(data, pos))}
-                            address input = abi.decode(paramBytes, (address));
-                            if (input != decoded){
-                                revert ParameterNotAllowed();
-                            }
+                        // if (strEql(paramType, "address")) {
+                        //     address decoded;
+                        //     assembly {decoded := mload(add(data, pos))}
+                        //     address input = abi.decode(paramBytes, (address));
+                        //     if (input != decoded){
+                        //         revert ParameterNotAllowed();
+                        //     }
+                        // }
+                        bytes32 decoded;
+                        assembly {decoded := mload(add(data, pos))}
+                        if (decoded != bytes32(paramBytes)){
+                            //test3 = decoded;
+                            revert ParameterNotAllowed();
                         }
-                        if (strEql(paramType, "uint256")) {
-                            uint256 decoded;
-                            assembly {decoded := mload(add(data, pos))}
-                            uint256 input = abi.decode(paramBytes, (uint256));
-                            if (input != decoded){
-                                revert ParameterNotAllowed();
-                            }
-                        }
+                        test3 = decoded;
                     }
                 }
             }
