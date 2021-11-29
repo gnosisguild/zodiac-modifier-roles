@@ -16,7 +16,7 @@ contract Roles is Modifier {
         bool allowed;
         bool scoped;
         string name;
-        string[] paramTypes;
+        bool[] paramTypes;
         mapping (uint16 => bytes) allowedValues; // make array and bring back mapping for values?
     }
 
@@ -37,7 +37,7 @@ contract Roles is Modifier {
     mapping(uint16 => Role) roles;
 
     event AssignRoles(address module, uint16[] roles);
-    event SetParametersScoped(uint16 role, address target, bytes4 functionSig, string[] types, bool scoped);
+    event SetParametersScoped(uint16 role, address target, bytes4 functionSig, bool[] types, bool scoped);
     event SetParameterScoped(uint16 role, address target, bytes4 functionSig, string parameter, bool scoped);
     event SetTargetAddressAllowed(
         uint16 role,
@@ -195,12 +195,13 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature
+    /// @param types false for static, true for dynamic
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
     function setParametersScoped(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        string[] memory types,
+        bool[] memory types,
         bool scoped
     ) external onlyOwner {
         roles[role].targetAddresses[targetAddress].functions[functionSig].scoped = scoped;
@@ -375,6 +376,59 @@ contract Roles is Modifier {
         return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
     }
 
+    function checkParameters(uint16 role, address targetAddress, bytes memory data) internal returns (bool) {
+        uint16 pos = 4; // skip function selector
+        for (uint16 i = 0; i < roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes.length; i++) {
+            bool paramType = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes[i];
+            bytes memory paramBytes = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].allowedValues[i];
+            if (paramType == true) {
+                pos += 32; // location of length
+                uint256 lengthLocation;
+                assembly {lengthLocation := mload(add(data, pos))}
+                uint256 lengthPos = 36 + lengthLocation; // always start from param block start
+                uint256 length;
+                assembly {length := mload(add(data, lengthPos))}
+                if (length > 32) { // check 1 word at a time
+                    uint256 iterations = length / 32;
+                    if (length % 32 != 0) {
+                        iterations++;
+                    }
+                    for (uint x = 1; x <= iterations; x++) {
+                        uint256 startScan = lengthPos + (32 * x);
+                        uint256 startParamScan = 32 * x;
+                        bytes32 scan;
+                        bytes32 pbytes;
+                        assembly {scan := mload(add(data, startScan))}
+                        assembly {pbytes := mload(add(paramBytes, startParamScan))}
+                        if (scan != pbytes) {
+                            revert ParameterNotAllowed();
+                        }
+                        test = x;
+                        test2 = scan;
+                    }
+                } else {
+                    bytes32 input;
+                    uint256 dataLocation = lengthPos + 32;
+                    assembly {input := mload(add(data, dataLocation))}
+                    if (input != bytes32(paramBytes)) {
+                        //test = 420;
+                        revert ParameterNotAllowed();
+                    }
+                    test2 = input;
+                }
+            } else {
+                pos += 32;
+                bytes32 decoded;
+                assembly {decoded := mload(add(data, pos))}
+                if (decoded != bytes32(paramBytes)){
+                    //test3 = decoded;
+                    revert ParameterNotAllowed();
+                }
+                test3 = decoded;
+            }
+        }
+    }
+
     function checkTransaction(
         address targetAddress,
         uint256 value,
@@ -406,46 +460,7 @@ contract Roles is Modifier {
                 revert FunctionNotAllowed();
             }
             if (roles[role].targetAddresses[targetAddress].functions[bytes4(data)].scoped) {
-                uint16 pos = 4; // skip function selector
-                for (uint16 i = 0; i < roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes.length; i++) {
-                    string memory paramType = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes[i];
-                    bytes memory paramBytes = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].allowedValues[i];
-                    if (strEql(paramType, "bytes") || strEql(paramType, "string")) {
-                        pos += 32; // location of length
-                        uint256 lengthLocation;
-                        assembly {lengthLocation := mload(add(data, pos))}
-                        uint256 lengthPos = 36 + lengthLocation; // always start from param block start
-                        uint256 length;
-                        assembly {length := mload(add(data, lengthPos))}
-                        // if length > 32, check 1 word at a time
-                        bytes32 input;
-                        uint256 dataLocation = lengthPos + 32;
-                        assembly {input := mload(add(data, dataLocation))}
-                        if (input != bytes32(paramBytes)) {
-                            //test = 420;
-                            revert ParameterNotAllowed();
-                        }
-                        test2 = input;
-                        //test = lengthLocation;
-                    } else {
-                        pos += 32;
-                        // if (strEql(paramType, "address")) {
-                        //     address decoded;
-                        //     assembly {decoded := mload(add(data, pos))}
-                        //     address input = abi.decode(paramBytes, (address));
-                        //     if (input != decoded){
-                        //         revert ParameterNotAllowed();
-                        //     }
-                        // }
-                        bytes32 decoded;
-                        assembly {decoded := mload(add(data, pos))}
-                        if (decoded != bytes32(paramBytes)){
-                            //test3 = decoded;
-                            revert ParameterNotAllowed();
-                        }
-                        test3 = decoded;
-                    }
-                }
+                checkParameters(role, targetAddress, data);
             }
         } else {
             if (
