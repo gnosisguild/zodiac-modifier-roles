@@ -8,16 +8,12 @@ contract Roles is Modifier {
     //     mapping(bytes => bool) allowed;
     // }
 
-    uint256 public test;
-    bytes32 public test2;
-    bytes32 public test3;
-
     struct Function {
         bool allowed;
         bool scoped;
         string name;
         bool[] paramTypes;
-        mapping (uint16 => bytes) allowedValues; // make array and bring back mapping for values?
+        mapping(uint16 => bytes) allowedValues; // make array and bring back mapping for values?
     }
 
     struct TargetAddress {
@@ -37,8 +33,20 @@ contract Roles is Modifier {
     mapping(uint16 => Role) roles;
 
     event AssignRoles(address module, uint16[] roles);
-    event SetParametersScoped(uint16 role, address target, bytes4 functionSig, bool[] types, bool scoped);
-    event SetParameterScoped(uint16 role, address target, bytes4 functionSig, string parameter, bool scoped);
+    event SetParametersScoped(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        bool[] types,
+        bool scoped
+    );
+    event SetParameterScoped(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        string parameter,
+        bool scoped
+    );
     event SetTargetAddressAllowed(
         uint16 role,
         address targetAddress,
@@ -204,14 +212,23 @@ contract Roles is Modifier {
         bool[] memory types,
         bool scoped
     ) external onlyOwner {
-        roles[role].targetAddresses[targetAddress].functions[functionSig].scoped = scoped;
-        roles[role].targetAddresses[targetAddress].functions[functionSig].paramTypes = types;
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .scoped = scoped;
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramTypes = types;
         emit SetParametersScoped(
-          role,
-          target,
-          functionSig,
-          types,
-          roles[role].targetAddresses[targetAddress].functions[functionSig].scoped = scoped
+            role,
+            target,
+            functionSig,
+            types,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .scoped = scoped
         );
     }
 
@@ -245,7 +262,6 @@ contract Roles is Modifier {
         bytes4 selector,
         bool allow
     ) external onlyOwner {
-
         roles[role]
             .targetAddresses[targetAddress]
             .functions[selector]
@@ -276,13 +292,19 @@ contract Roles is Modifier {
         bytes memory allowedValue
     ) external onlyOwner {
         // todo: require that param is scoped first?
-        roles[role].targetAddresses[targetAddress].functions[functionSig].allowedValues[paramIndex] = allowedValue;
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowedValues[paramIndex] = allowedValue;
         emit SetParameterAllowedValues(
-          role,
-          target,
-          functionSig,
-          paramIndex,
-          roles[role].targetAddresses[targetAddress].functions[functionSig].allowedValues[paramIndex]
+            role,
+            target,
+            functionSig,
+            paramIndex,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowedValues[paramIndex]
         );
     }
 
@@ -376,55 +398,81 @@ contract Roles is Modifier {
         return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
     }
 
-    function checkParameters(uint16 role, address targetAddress, bytes memory data) internal returns (bool) {
+    function checkParameters(
+        uint16 role,
+        address targetAddress,
+        bytes memory data
+    ) internal returns (bool) {
         uint16 pos = 4; // skip function selector
-        for (uint16 i = 0; i < roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes.length; i++) {
-            bool paramType = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].paramTypes[i];
-            bytes memory paramBytes = roles[role].targetAddresses[targetAddress].functions[bytes4(data)].allowedValues[i];
+        for (
+            uint16 i = 0;
+            i <
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .paramTypes
+                .length;
+            i++
+        ) {
+            bool paramType = roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .paramTypes[i];
+            bytes memory paramBytes = roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i];
             if (paramType == true) {
                 pos += 32; // location of length
                 uint256 lengthLocation;
-                assembly {lengthLocation := mload(add(data, pos))}
+                assembly {
+                    lengthLocation := mload(add(data, pos))
+                }
                 uint256 lengthPos = 36 + lengthLocation; // always start from param block start
                 uint256 length;
-                assembly {length := mload(add(data, lengthPos))}
-                if (length > 32) { // check 1 word at a time
+                assembly {
+                    length := mload(add(data, lengthPos))
+                }
+                if (length > 32) {
+                    // check 1 word at a time
                     uint256 iterations = length / 32;
                     if (length % 32 != 0) {
                         iterations++;
                     }
-                    for (uint x = 1; x <= iterations; x++) {
+                    for (uint256 x = 1; x <= iterations; x++) {
                         uint256 startScan = lengthPos + (32 * x);
                         uint256 startParamScan = 32 * x;
                         bytes32 scan;
                         bytes32 pbytes;
-                        assembly {scan := mload(add(data, startScan))}
-                        assembly {pbytes := mload(add(paramBytes, startParamScan))}
+                        assembly {
+                            scan := mload(add(data, startScan))
+                        }
+                        assembly {
+                            pbytes := mload(add(paramBytes, startParamScan))
+                        }
                         if (scan != pbytes) {
                             revert ParameterNotAllowed();
                         }
-                        test = x;
-                        test2 = scan;
                     }
                 } else {
                     bytes32 input;
                     uint256 dataLocation = lengthPos + 32;
-                    assembly {input := mload(add(data, dataLocation))}
+                    assembly {
+                        input := mload(add(data, dataLocation))
+                    }
                     if (input != bytes32(paramBytes)) {
-                        //test = 420;
                         revert ParameterNotAllowed();
                     }
-                    test2 = input;
                 }
             } else {
                 pos += 32;
                 bytes32 decoded;
-                assembly {decoded := mload(add(data, pos))}
-                if (decoded != bytes32(paramBytes)){
-                    //test3 = decoded;
+                assembly {
+                    decoded := mload(add(data, pos))
+                }
+                if (decoded != bytes32(paramBytes)) {
                     revert ParameterNotAllowed();
                 }
-                test3 = decoded;
             }
         }
     }
@@ -459,7 +507,12 @@ contract Roles is Modifier {
             ) {
                 revert FunctionNotAllowed();
             }
-            if (roles[role].targetAddresses[targetAddress].functions[bytes4(data)].scoped) {
+            if (
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .scoped
+            ) {
                 checkParameters(role, targetAddress, data);
             }
         } else {
@@ -509,16 +562,24 @@ contract Roles is Modifier {
         return execAndReturnData(to, value, data, operation);
     }
 
-    function strEql(string memory a, string memory b) internal view returns (bool) {
-        if(bytes(a).length != bytes(b).length) {
+    function strEql(string memory a, string memory b)
+        internal
+        view
+        returns (bool)
+    {
+        if (bytes(a).length != bytes(b).length) {
             return false;
         } else {
             return keccak256(bytes(a)) == keccak256(bytes(b));
         }
     }
 
-    function bytesEql(bytes memory a, bytes memory b) internal view returns (bool) {
-        if(a.length != b.length) {
+    function bytesEql(bytes memory a, bytes memory b)
+        internal
+        view
+        returns (bool)
+    {
+        if (a.length != b.length) {
             return false;
         } else {
             return keccak256(a) == keccak256(b);

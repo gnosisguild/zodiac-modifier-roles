@@ -310,7 +310,7 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
-      const allowTarget = await modifier.populateTransaction.setTargetAllowed(
+      const allowTarget = await modifier.populateTransaction.setTargetAddressAllowed(
         1,
         testContract.address,
         true
@@ -342,7 +342,7 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        ["address", "uint256"],
+        [false, false],
         true
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
@@ -351,13 +351,12 @@ describe("RolesModifier", async () => {
         ["address"],
         [user1.address]
       );
-      console.log(encodedParam_1)
 
       const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
         1,
         testContract.address,
         "0x40c10f19",
-        "address",
+        0,
         encodedParam_1
       );
       await avatar.exec(modifier.address, 0, paramAllowed_1.data);
@@ -366,13 +365,12 @@ describe("RolesModifier", async () => {
         ["uint256"],
         [99]
       );
-      console.log(encodedParam_2)
 
       const paramAllowed_2 = await modifier.populateTransaction.setParameterAllowedValue(
         1,
         testContract.address,
         "0x40c10f19",
-        "uint256",
+        1,
         encodedParam_2
       );
       await avatar.exec(modifier.address, 0, paramAllowed_2.data);
@@ -381,7 +379,6 @@ describe("RolesModifier", async () => {
         user1.address,
         99
       );
-      console.log(mint.data)
 
       await expect(
         modifier.execTransactionFromModule(
@@ -391,12 +388,9 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
-      const test = await modifier.test()
-      console.log(test.toString())
-      console.log(user1.address)
     });
 
-    it.only("executes a call with allowed dynamic parameter", async () => {
+    it("executes a call with allowed dynamic parameter", async () => {
       const signer = (await hre.ethers.getSigners())[0];
 
       const { avatar, modifier, testContract } =
@@ -445,7 +439,7 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
-      console.log('----')
+
       const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
         ["string"],
         ["This is a dynamic array"]
@@ -484,16 +478,11 @@ describe("RolesModifier", async () => {
         ["This is an input that is larger than 32 bytes and must be scanned for correctness"]
       );
       const removeDetails_4 = "0x" + encodedParam_7.slice(130, encodedParam_7.length)
-      console.log(removeDetails_4)
 
       const totalParams = ethers.utils.defaultAbiCoder.encode(
         ["string", "uint256", "string", "bool", "uint8", "string", "string"],
         ["This is a dynamic array", 4, "Test", true, 3, "weeeeeeee", "This is an input that is larger than 32 bytes and must be scanned for correctness"]
       );
-      console.log('----')
-      console.log(totalParams)
-      const x = totalParams.slice(64+320, 64+320+2)
-      console.log(x)
 
       const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
         1,
@@ -561,7 +550,6 @@ describe("RolesModifier", async () => {
         "weeeeeeee",
         "This is an input that is larger than 32 bytes and must be scanned for correctness"
       );
-      console.log(dynamic.data)
 
       await expect(
         modifier.execTransactionFromModule(
@@ -571,14 +559,6 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "TestDynamic");
-      const test = await modifier.test()
-      console.log(test.toString())
-      const test2 = await modifier.test2()
-      console.log(test2.toString())
-      const test3 = await modifier.test3()
-      console.log(test3.toString())
-      //0xedad9b7e000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
-      //0x00000000000000000000000000000000000000000000000000000000000000175468697320697320612064796e616d6963206172726179000000000000000000
     });
   });
 
