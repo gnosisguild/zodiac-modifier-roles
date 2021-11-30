@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
 const ZeroState =
@@ -297,6 +297,268 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
+    });
+
+    it("executes a call with allowed value parameter", async () => {
+      const signer = (await hre.ethers.getSigners())[0];
+
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
+      const assign = await modifier.populateTransaction.assignRoles(
+        signer.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget = await modifier.populateTransaction.setTargetAddressAllowed(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped = await modifier.populateTransaction.setFunctionScoped(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed = await modifier.populateTransaction.setAllowedFunction(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped = await modifier.populateTransaction.setParametersScoped(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        [false, false],
+        true
+      );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
+        ["address"],
+        [user1.address]
+      );
+
+      const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        0,
+        encodedParam_1
+      );
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+
+      const paramAllowed_2 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x40c10f19",
+        1,
+        encodedParam_2
+      );
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        99
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.emit(testContract, "Mint");
+    });
+
+    it("executes a call with allowed dynamic parameter", async () => {
+      const signer = (await hre.ethers.getSigners())[0];
+
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
+      const assign = await modifier.populateTransaction.assignRoles(
+        signer.address,
+        [1]
+      );
+
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget = await modifier.populateTransaction.setTargetAddressAllowed(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        signer.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped = await modifier.populateTransaction.setFunctionScoped(
+        1,
+        testContract.address,
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed = await modifier.populateTransaction.setAllowedFunction(
+        1,
+        testContract.address,
+        "0x273454bf",
+        true
+      );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped = await modifier.populateTransaction.setParametersScoped(
+        1,
+        testContract.address,
+        "0x273454bf",
+        [true, false, true, false, false, true, true], // TODO: this can just be boolean, dynamic type or not
+        true
+      );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+
+      const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["This is a dynamic array"]
+      );
+      const removeDetails = "0x" + encodedParam_1.slice(130, encodedParam_1.length)
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [4]
+      );
+
+      const encodedParam_3 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["Test"]
+      );
+      const removeDetails_2 = "0x" + encodedParam_3.slice(130, encodedParam_3.length)
+
+      const encodedParam_4 = ethers.utils.defaultAbiCoder.encode(
+        ["bool"],
+        [true]
+      );
+
+      const encodedParam_5= ethers.utils.defaultAbiCoder.encode(
+        ["uint8"],
+        [3]
+      );
+
+      const encodedParam_6 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["weeeeeeee"]
+      );
+      const removeDetails_3 = "0x" + encodedParam_6.slice(130, encodedParam_6.length)
+
+      const encodedParam_7 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["This is an input that is larger than 32 bytes and must be scanned for correctness"]
+      );
+      const removeDetails_4 = "0x" + encodedParam_7.slice(130, encodedParam_7.length)
+
+      const totalParams = ethers.utils.defaultAbiCoder.encode(
+        ["string", "uint256", "string", "bool", "uint8", "string", "string"],
+        ["This is a dynamic array", 4, "Test", true, 3, "weeeeeeee", "This is an input that is larger than 32 bytes and must be scanned for correctness"]
+      );
+
+      const paramAllowed_1 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        0,
+        removeDetails
+      );
+      const paramAllowed_2 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        1,
+        encodedParam_2
+      );
+      const paramAllowed_3 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        2,
+        removeDetails_2
+      );
+      const paramAllowed_4 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        3,
+        encodedParam_4
+      );
+      const paramAllowed_5 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        4,
+        encodedParam_5
+      );
+      const paramAllowed_6 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        5,
+        removeDetails_3
+      );
+      const paramAllowed_7 = await modifier.populateTransaction.setParameterAllowedValue(
+        1,
+        testContract.address,
+        "0x273454bf",
+        6,
+        removeDetails_4
+      );
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
+
+      const dynamic = await testContract.populateTransaction.testDynamic(
+        "This is a dynamic array",
+        4,
+        "Test",
+        true,
+        3,
+        "weeeeeeee",
+        "This is an input that is larger than 32 bytes and must be scanned for correctness"
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          dynamic.data,
+          0
+        )
+      ).to.emit(testContract, "TestDynamic");
     });
   });
 
