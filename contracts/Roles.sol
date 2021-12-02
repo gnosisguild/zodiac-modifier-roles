@@ -30,7 +30,7 @@ contract Roles is Modifier {
     }
 
     mapping(address => uint16) public defaultRoles;
-    mapping(uint16 => Role) roles;
+    mapping(uint16 => Role) internal roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetParametersScoped(
@@ -404,7 +404,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes memory data
-    ) internal {
+    ) internal view {
         uint16 pos = 4; // skip function selector
         for (
             uint16 i = 0;
@@ -483,10 +483,10 @@ contract Roles is Modifier {
 
     function checkTransaction(
         address targetAddress,
-        uint256 value,
+        uint256,
         bytes memory data,
         Enum.Operation operation
-    ) internal {
+    ) internal view {
         uint16 role = defaultRoles[msg.sender];
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
@@ -570,7 +570,7 @@ contract Roles is Modifier {
         bytes memory input,
         uint256 length,
         uint256 start
-    ) internal view returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         bytes memory out = new bytes(length);
         for (uint256 i = 0; i < length; i++) {
             out[i] = input[start + i];
@@ -588,7 +588,7 @@ contract Roles is Modifier {
         uint256 offset,
         uint256 length,
         bytes memory data
-    ) public view returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         bytes memory result = new bytes(length * 32);
         for (uint256 index = 0; index < length; index++) {
             // solhint-disable-next-line no-inline-assembly
