@@ -771,8 +771,6 @@ describe("RolesModifier", async () => {
           "This is an input that is larger than 32 bytes and must be scanned for correctness",
         ]
       );
-      const removeDetails_4 =
-        "0x" + encodedParam_7.slice(130, encodedParam_7.length);
 
       const totalParams = ethers.utils.defaultAbiCoder.encode(
         ["string", "uint256", "string", "bool", "uint8", "string", "string"],
@@ -841,7 +839,7 @@ describe("RolesModifier", async () => {
           testContract.address,
           "0x273454bf",
           6,
-          removeDetails_4
+          encodedParam_7
         );
       await avatar.exec(modifier.address, 0, paramAllowed_1.data);
       await avatar.exec(modifier.address, 0, paramAllowed_2.data);

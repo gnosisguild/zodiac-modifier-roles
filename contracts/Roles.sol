@@ -4,16 +4,16 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    // struct Parameter {
-    //     mapping(bytes => bool) allowed;
-    // }
+    struct Parameter {
+        mapping(bytes => bool) allowed;
+    }
 
     struct Function {
         bool allowed;
         bool scoped;
         string name;
         bool[] paramTypes;
-        mapping(uint16 => bytes) allowedValues; // make array and bring back mapping for values?
+        mapping(uint16 => Parameter) allowedValues;
     }
 
     struct TargetAddress {
@@ -78,7 +78,7 @@ contract Roles is Modifier {
         address target,
         bytes4 functionSig,
         uint16 parameterIndex,
-        bytes allowedValue
+        bool allowed
     );
     event RolesModSetup(
         address indexed initiator,
@@ -295,7 +295,8 @@ contract Roles is Modifier {
         roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .allowedValues[paramIndex] = allowedValue;
+            .allowedValues[paramIndex]
+            .allowed[allowedValue] = true;
         emit SetParameterAllowedValues(
             role,
             target,
@@ -305,6 +306,7 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .allowedValues[paramIndex]
+                .allowed[allowedValue]
         );
     }
 
@@ -402,7 +404,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes memory data
-    ) internal returns (bool) {
+    ) internal {
         uint16 pos = 4; // skip function selector
         for (
             uint16 i = 0;
@@ -418,10 +420,6 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
                 .paramTypes[i];
-            bytes memory paramBytes = roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .allowedValues[i];
             if (paramType == true) {
                 pos += 32; // location of length
                 uint256 lengthLocation;
@@ -434,25 +432,17 @@ contract Roles is Modifier {
                     length := mload(add(data, lengthPos))
                 }
                 if (length > 32) {
-                    // check 1 word at a time
-                    uint256 iterations = length / 32;
-                    if (length % 32 != 0) {
-                        iterations++;
-                    }
-                    for (uint256 x = 1; x <= iterations; x++) {
-                        uint256 startScan = lengthPos + (32 * x);
-                        uint256 startParamScan = 32 * x;
-                        bytes32 scan;
-                        bytes32 pbytes;
-                        assembly {
-                            scan := mload(add(data, startScan))
-                        }
-                        assembly {
-                            pbytes := mload(add(paramBytes, startParamScan))
-                        }
-                        if (scan != pbytes) {
-                            revert ParameterNotAllowed();
-                        }
+                    bytes memory out = abi.encode(
+                        sliceBytes(data, length, lengthPos)
+                    );
+                    if (
+                        !roles[role]
+                            .targetAddresses[targetAddress]
+                            .functions[bytes4(data)]
+                            .allowedValues[i]
+                            .allowed[out]
+                    ) {
+                        revert ParameterNotAllowed();
                     }
                 } else {
                     bytes32 input;
@@ -460,7 +450,14 @@ contract Roles is Modifier {
                     assembly {
                         input := mload(add(data, dataLocation))
                     }
-                    if (input != bytes32(paramBytes)) {
+                    bytes memory t = abi.encodePacked(input);
+                    if (
+                        !roles[role]
+                            .targetAddresses[targetAddress]
+                            .functions[bytes4(data)]
+                            .allowedValues[i]
+                            .allowed[t]
+                    ) {
                         revert ParameterNotAllowed();
                     }
                 }
@@ -470,7 +467,14 @@ contract Roles is Modifier {
                 assembly {
                     decoded := mload(add(data, pos))
                 }
-                if (decoded != bytes32(paramBytes)) {
+                bytes memory t = abi.encodePacked(decoded);
+                if (
+                    !roles[role]
+                        .targetAddresses[targetAddress]
+                        .functions[bytes4(data)]
+                        .allowedValues[i]
+                        .allowed[t]
+                ) {
                     revert ParameterNotAllowed();
                 }
             }
@@ -562,27 +566,37 @@ contract Roles is Modifier {
         return execAndReturnData(to, value, data, operation);
     }
 
-    function strEql(string memory a, string memory b)
-        internal
-        view
-        returns (bool)
-    {
-        if (bytes(a).length != bytes(b).length) {
-            return false;
-        } else {
-            return keccak256(bytes(a)) == keccak256(bytes(b));
+    function sliceBytes(
+        bytes memory input,
+        uint256 length,
+        uint256 start
+    ) internal view returns (bytes memory) {
+        bytes memory out = new bytes(length);
+        for (uint256 i = 0; i < length; i++) {
+            out[i] = input[start + i];
         }
+        return out;
     }
 
-    function bytesEql(bytes memory a, bytes memory b)
-        internal
-        view
-        returns (bool)
-    {
-        if (a.length != b.length) {
-            return false;
-        } else {
-            return keccak256(a) == keccak256(b);
+    /**
+     * @dev Reads `length` bytes of storage in the currents contract
+     * @param offset - the offset in the current contract's storage in words to start reading from
+     * @param length - the number of words (32 bytes) of data to read
+     * @return the bytes that were read.
+     */
+    function getStorageAt(
+        uint256 offset,
+        uint256 length,
+        bytes memory data
+    ) public view returns (bytes memory) {
+        bytes memory result = new bytes(length * 32);
+        for (uint256 index = 0; index < length; index++) {
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                let word := mload(add(add(offset, data), index))
+                mstore(add(add(result, 0x20), mul(index, 0x20)), word)
+            }
         }
+        return result;
     }
 }
