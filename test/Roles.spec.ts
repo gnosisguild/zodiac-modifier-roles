@@ -923,8 +923,10 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
+          true,
+          [true,true],
           [false, false],
-          true
+          [1,1]
         );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -939,7 +941,9 @@ describe("RolesModifier", async () => {
           testContract.address,
           "0x40c10f19",
           0,
-          encodedParam_1
+          encodedParam_1,
+          1,
+          "0x"
         );
       await avatar.exec(modifier.address, 0, paramAllowed_1.data);
 
@@ -954,7 +958,9 @@ describe("RolesModifier", async () => {
           testContract.address,
           "0x40c10f19",
           1,
-          encodedParam_2
+          encodedParam_2,
+          1,
+          "0x"
         );
       await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 

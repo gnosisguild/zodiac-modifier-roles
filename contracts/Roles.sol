@@ -8,14 +8,23 @@ contract Roles is Modifier {
     address public test2;
     uint256 public test3;
 
+    enum Comparison {
+        EqualTo,
+        GreaterThan,
+        LessThan
+    }
+
     struct Parameter {
+        Comparison compType;
         mapping(bytes => bool) allowed;
+        bytes compValue;
     }
 
     struct Function {
         bool allowed;
         bool scoped;
         string name;
+        bool[] paramsScoped;
         bool[] paramTypes;
         mapping(uint16 => Parameter) allowedValues;
     }
@@ -43,16 +52,18 @@ contract Roles is Modifier {
         uint16 role,
         address target,
         bytes4 functionSig,
+        bool scoped,
+        bool[] paramsScoped,
         bool[] types,
-        bool scoped
+        Comparison[] compTypes
     );
-    event SetParameterScoped(
-        uint16 role,
-        address target,
-        bytes4 functionSig,
-        string parameter,
-        bool scoped
-    );
+    // event SetParameterScoped(
+    //     uint16 role,
+    //     address target,
+    //     bytes4 functionSig,
+    //     string parameter,
+    //     bool scoped
+    // );
     event SetTargetAddressAllowed(
         uint16 role,
         address targetAddress,
@@ -84,7 +95,9 @@ contract Roles is Modifier {
         address target,
         bytes4 functionSig,
         uint16 parameterIndex,
-        bool allowed
+        bool allowed,
+        Comparison compType,
+        bytes compValue
     );
     event RolesModSetup(
         address indexed initiator,
@@ -210,17 +223,21 @@ contract Roles is Modifier {
 
     /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
     /// @notice Only callable by owner.
-    /// @param role Role to set for
+    /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature
-    /// @param types false for static, true for dynamic
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    /// @param paramsScoped false for un-scoped, true for scoped.
+    /// @param types false for static, true for dynamic.
+    /// @param compTypes Any, or EqualTo, GreaterThan, or LessThan compValue.
     function setParametersScoped(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
+        bool scoped,
+        bool[] memory paramsScoped,
         bool[] memory types,
-        bool scoped
+        Comparison[] memory compTypes
     ) external onlyOwner {
         roles[role]
             .targetAddresses[targetAddress]
@@ -234,11 +251,13 @@ contract Roles is Modifier {
             role,
             target,
             functionSig,
-            types,
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .scoped = scoped
+                .scoped,
+            paramsScoped,
+            types,
+            compTypes
         );
     }
 
@@ -299,7 +318,9 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
-        bytes memory allowedValue
+        bytes memory allowedValue,
+        Comparison compType,
+        bytes memory compValue
     ) external onlyOwner {
         // todo: require that param is scoped first?
         roles[role]
@@ -307,6 +328,19 @@ contract Roles is Modifier {
             .functions[functionSig]
             .allowedValues[paramIndex]
             .allowed[allowedValue] = true;
+
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowedValues[paramIndex]
+            .compType = compType;
+
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowedValues[paramIndex]
+            .compValue = compValue;
+
         emit SetParameterAllowedValues(
             role,
             target,
@@ -316,7 +350,17 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .allowedValues[paramIndex]
-                .allowed[allowedValue]
+                .allowed[allowedValue],
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowedValues[paramIndex]
+                .compType,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowedValues[paramIndex]
+                .compValue
         );
     }
 
@@ -418,7 +462,7 @@ contract Roles is Modifier {
         bytes memory data;
         uint256 dataLength;
         uint256 length;
-        for(uint256 i=100; i<transactions.length; i+=(85+dataLength)) {
+        for (uint256 i = 100; i < transactions.length; i += (85 + dataLength)) {
             assembly {
                 operation := shr(0xf8, mload(add(transactions, i)))
                 to := shr(0x60, mload(add(transactions, add(i, 0x01))))
@@ -508,13 +552,60 @@ contract Roles is Modifier {
                         sliceBytes(data, length, lengthPos)
                     );
                     if (
-                        !roles[role]
+                        roles[role]
                             .targetAddresses[targetAddress]
                             .functions[bytes4(data)]
-                            .allowedValues[i]
-                            .allowed[out]
+                            .paramTypes[i]
                     ) {
-                        revert ParameterNotAllowed();
+                        if (
+                            roles[role]
+                                .targetAddresses[targetAddress]
+                                .functions[bytes4(data)]
+                                .allowedValues[i]
+                                .compType ==
+                            Comparison.EqualTo &&
+                            !roles[role]
+                                .targetAddresses[targetAddress]
+                                .functions[bytes4(data)]
+                                .allowedValues[i]
+                                .allowed[out]
+                        ) {
+                            revert ParameterNotAllowed();
+                        } else if (
+                            roles[role]
+                                .targetAddresses[targetAddress]
+                                .functions[bytes4(data)]
+                                .allowedValues[i]
+                                .compType ==
+                            Comparison.GreaterThan &&
+                            bytes32(out) <=
+                            bytes32(
+                                roles[role]
+                                    .targetAddresses[targetAddress]
+                                    .functions[bytes4(data)]
+                                    .allowedValues[i]
+                                    .compValue
+                            )
+                        ) {
+                            revert ParameterNotAllowed();
+                        } else if (
+                            roles[role]
+                                .targetAddresses[targetAddress]
+                                .functions[bytes4(data)]
+                                .allowedValues[i]
+                                .compType ==
+                            Comparison.LessThan &&
+                            bytes32(out) >=
+                            bytes32(
+                                roles[role]
+                                    .targetAddresses[targetAddress]
+                                    .functions[bytes4(data)]
+                                    .allowedValues[i]
+                                    .compValue
+                            )
+                        ) {
+                            revert ParameterNotAllowed();
+                        }
                     }
                 } else {
                     bytes32 input;
