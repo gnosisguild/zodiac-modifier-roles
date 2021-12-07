@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-
+import { buildContractCall, buildMultiSendSafeTx } from "./utils";
 const ZeroState =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
@@ -28,7 +28,7 @@ describe("RolesModifier", async () => {
     return { ...base, Modifier, modifier };
   });
 
-  const [user1] = waffle.provider.getWallets();
+  const [user1, user2] = waffle.provider.getWallets();
 
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
@@ -867,6 +867,169 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "TestDynamic");
+    });
+
+    it.only("executes a call with multisend tx", async () => {
+      const { avatar, modifier, testContract } =
+        await setupTestWithTestAvatar();
+      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const multisend = await MultiSend.deploy();
+
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const multiSendTarget =
+        await modifier.populateTransaction.setMultiSend(
+          multisend.address
+        );
+      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          [false, false],
+          true
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
+        ["address"],
+        [user1.address]
+      );
+
+      const paramAllowed_1 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          0,
+          encodedParam_1
+        );
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+
+      const paramAllowed_2 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          1,
+          encodedParam_2
+        );
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        99
+      );
+
+      const tx_1 = buildContractCall(
+        testContract,
+        "mint",
+        [user1.address, 99],
+        0
+      )
+      const tx_2 = buildContractCall(
+        testContract,
+        "mint",
+        [user1.address, 99],
+        0
+      )
+      const multiTx = buildMultiSendSafeTx(
+        multisend,
+        [tx_1, tx_2],
+        0
+      )
+      console.log(multiTx.data)
+      let trimData = multiTx.data.slice(0, multiTx.data.length - 14)
+      console.log(trimData)
+      let w0 = multiTx.data.slice(10, 74)
+      console.log('0x'+w0)
+      let w1 = multiTx.data.slice(74, 138)
+      console.log('0x'+w1)
+      let w2 = multiTx.data.slice(138, 202)
+      console.log('0x'+w2)
+      let w3 = multiTx.data.slice(202, 266)
+      console.log('0x'+w3)
+      let w4 = multiTx.data.slice(266, 330)
+      console.log('0x'+w4)
+      await expect(
+        modifier.execTransactionFromModule(
+          multisend.address,
+          0,
+          multiTx.data,
+          1
+        )
+      ).to.emit(testContract, "Mint");
+      const test = await modifier.test()
+      console.log(test.toString())
+      const test2 = await modifier.test2()
+      console.log(test2.toString())
+      const test3 = await modifier.test3()
+      console.log(test3.toString())
+      console.log(testContract.address)
+      let c = "40c10f19000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266000000000000000000000000000000000000000000000000000000000000006300000000000000"
+      console.log(c.length)
+
+      const encodedTest = ethers.utils.defaultAbiCoder.encode(
+        ["bytes[]"],
+        [["0x40c10f19", "0x273454bfff"]]
+      );
+      console.log(encodedTest)
+      w0 = encodedTest.slice(2, 66)
+      console.log('0x'+w0)
+      w1 = encodedTest.slice(66, 130)
+      console.log('0x'+w1)
+      w2 = encodedTest.slice(130, 194)
+      console.log('0x'+w2)
+      w3 = encodedTest.slice(194, 258)
+      console.log('0x'+w3)
+      w4 = encodedTest.slice(258, 322)
+      console.log('0x'+w4)
+      let w5 = encodedTest.slice(322, 386)
+      console.log('0x'+w5)
+      let w6 = encodedTest.slice(386, 450)
+      console.log('0x'+w6)
     });
   });
 

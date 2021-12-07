@@ -4,6 +4,10 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
+    bytes public test;
+    address public test2;
+    uint256 public test3;
+
     struct Parameter {
         mapping(bytes => bool) allowed;
     }
@@ -32,6 +36,7 @@ contract Roles is Modifier {
 
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) internal roles;
+    address public multiSendAddress;
 
     event AssignRoles(address module, uint16[] roles);
     event SetParametersScoped(
@@ -142,6 +147,10 @@ contract Roles is Modifier {
             revert SetUpModulesAlreadyCalled();
         }
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
+    }
+
+    function setMultiSend(address _multiSendAddress) external onlyOwner {
+        multiSendAddress = _multiSendAddress;
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -401,44 +410,66 @@ contract Roles is Modifier {
         return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
     }
 
-    function splitMultiSend(bytes memory transactions) internal returns (address[] memory, uint256[] memory, bytes[] memory, Enum.Operation[] memory) {
+    function splitMultiSend(bytes memory transactions, uint16 role) internal {
         // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let length := mload(transactions)
-            let i := 0x20
-            for {
-                // Pre block is not used in "while mode"
-            } lt(i, length) {
-                // Post block is not used in "while mode"
-            } {
-                // First byte of the data is the operation.
-                // We shift by 248 bits (256 - 8 [operation byte]) it right since mload will always load 32 bytes (a word).
-                // This will also zero out unused data.
-                let operation := shr(0xf8, mload(add(transactions, i)))
-                // We offset the load address by 1 byte (operation byte)
-                // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
-                let to := shr(0x60, mload(add(transactions, add(i, 0x01))))
-                // We offset the load address by 21 byte (operation byte + 20 address bytes)
-                let value := mload(add(transactions, add(i, 0x15)))
-                // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
-                let dataLength := mload(add(transactions, add(i, 0x35)))
-                // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
-                let data := add(transactions, add(i, 0x55))
-                // let success := 0
-                // switch operation
-                //     case 0 {
-                //         success := call(gas(), to, value, data, dataLength, 0, 0)
-                //     }
-                //     case 1 {
-                //         success := delegatecall(gas(), to, data, dataLength, 0, 0)
-                //     }
-                // if eq(success, 0) {
-                //     revert(0, 0)
-                // }
-                // Next entry starts at 85 byte + data length
-                i := add(i, add(0x55, dataLength))
+        Enum.Operation operation;
+        address to;
+        uint256 value;
+        bytes memory data;
+        uint256 dataLength;
+        uint256 length;
+        for(uint256 i=100; i<transactions.length; i+=(85+dataLength)) {
+            assembly {
+                operation := shr(0xf8, mload(add(transactions, i)))
+                to := shr(0x60, mload(add(transactions, add(i, 0x01))))
+                value := mload(add(transactions, add(i, 0x15)))
+                dataLength := mload(add(transactions, add(i, 0x35)))
+                data := add(transactions, add(i, 0x35))
             }
+            checkTransaction(to, value, data, operation, role);
         }
+        // assembly {
+        //     length := mload(transactions)
+        //     count := 0
+        //     lengthTotal := 0
+        //     let i := 0x64 // we skip past the first 4 bytes + length location + length
+        //     for {
+        //         // Pre block is not used in "while mode"
+        //     } lt(i, length) {
+        //         // Post block is not used in "while mode"
+        //     } {
+        //         // First byte of the data is the operation.
+        //         // We shift by 248 bits (256 - 8 [operation byte]) it right since mload will always load 32 bytes (a word).
+        //         // This will also zero out unused data.
+        //         op := shr(0xf8, mload(add(transactions, i)))
+        //         // We offset the load address by 1 byte (operation byte)
+        //         // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
+        //         tos := shr(0x60, mload(add(transactions, add(i, 0x01))))
+        //         // We offset the load address by 21 byte (operation byte + 20 address bytes)
+        //         values := mload(add(transactions, add(i, 0x15)))
+        //         // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
+        //         dataLength := mload(add(transactions, add(i, 0x35)))
+        //         // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
+        //         data := add(transactions, add(i, 0x35))
+        //         // Next entry starts at 85 byte + data length
+        //         mstore(add(datas, add(0x20, lengthTotal)), data)
+        //         mstore(add(addresses, add(0x20, mul(0x20, count))), tos)
+        //         lengthTotal := add(lengthTotal, dataLength)
+        //         count := add(count, 1)
+        //         mstore(addresses, count)
+        //         mstore(datas, count)
+        //         i := add(i, add(0x55, dataLength))
+        //     }
+        // }
+        // bytes memory t = sliceBytes(data, 68, 0);
+        // test = t;
+        test = sliceBytes(data, 68, 0);
+        test2 = to;
+        test3 = transactions.length;
+    }
+
+    function testBytes(bytes memory tester) public {
+        bytes memory _t = tester;
     }
 
     function checkParameters(
@@ -582,8 +613,8 @@ contract Roles is Modifier {
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
         uint16 role = defaultRoles[msg.sender];
-        if (roles[role].targetAddresses[to].isMultiSend) {
-            
+        if (to == multiSendAddress) {
+            splitMultiSend(data, role);
         } else {
             checkTransaction(to, value, data, operation, role);
         }
@@ -608,8 +639,8 @@ contract Roles is Modifier {
         returns (bool success, bytes memory returnData)
     {
         uint16 role = defaultRoles[msg.sender];
-        if (roles[role].targetAddresses[to].isMultiSend) {
-            
+        if (to == multiSendAddress) {
+            //bytes memory t = splitMultiSend(data);
         } else {
             checkTransaction(to, value, data, operation, role);
         }
