@@ -4,10 +4,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    bytes public test;
-    address public test2;
-    uint256 public test3;
-
     struct Parameter {
         mapping(bytes => bool) allowed;
     }
@@ -39,6 +35,7 @@ contract Roles is Modifier {
     address public multiSendAddress;
 
     event AssignRoles(address module, uint16[] roles);
+    event SetMulitSendAddress(address multiSendAddress);
     event SetParametersScoped(
         uint16 role,
         address target,
@@ -149,8 +146,12 @@ contract Roles is Modifier {
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
+    /// @dev Set the address of the expected multisend library
+    /// @notice Only callable by owner.
+    /// @param _multiSendAddress address of the multisend library contract
     function setMultiSend(address _multiSendAddress) external onlyOwner {
         multiSendAddress = _multiSendAddress;
+        emit SetMulitSendAddress(_multiSendAddress);
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -410,75 +411,53 @@ contract Roles is Modifier {
         return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
     }
 
-    function splitMultiSend(bytes memory transactions, uint16 role) internal {
-        // solhint-disable-next-line no-inline-assembly
+    /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
+    /// @param transactions the packed transaction data (created by utils function buildMultiSendSafeTx).
+    /// @param role Role to check for.
+    function checkMultiSend(bytes memory transactions, uint16 role)
+        internal
+        view
+    {
         Enum.Operation operation;
         address to;
         uint256 value;
         bytes memory data;
         uint256 dataLength;
-        uint256 length;
-        for(uint256 i=100; i<transactions.length; i+=(85+dataLength)) {
+        // transaction data begins at byte 100, increment i by the transaction data length
+        // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
+        for (uint256 i = 100; i < transactions.length; i += (85 + dataLength)) {
             assembly {
+                // First byte of the data is the operation.
+                // We shift by 248 bits (256 - 8 [operation byte]) right since mload will always load 32 bytes (a word).
+                // This will also zero out unused data.
                 operation := shr(0xf8, mload(add(transactions, i)))
+                // We offset the load address by 1 byte (operation byte)
+                // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
                 to := shr(0x60, mload(add(transactions, add(i, 0x01))))
+                // We offset the load address by 21 byte (operation byte + 20 address bytes)
                 value := mload(add(transactions, add(i, 0x15)))
+                // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
                 dataLength := mload(add(transactions, add(i, 0x35)))
+                // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 data := add(transactions, add(i, 0x35))
             }
             checkTransaction(to, value, data, operation, role);
         }
-        // assembly {
-        //     length := mload(transactions)
-        //     count := 0
-        //     lengthTotal := 0
-        //     let i := 0x64 // we skip past the first 4 bytes + length location + length
-        //     for {
-        //         // Pre block is not used in "while mode"
-        //     } lt(i, length) {
-        //         // Post block is not used in "while mode"
-        //     } {
-        //         // First byte of the data is the operation.
-        //         // We shift by 248 bits (256 - 8 [operation byte]) it right since mload will always load 32 bytes (a word).
-        //         // This will also zero out unused data.
-        //         op := shr(0xf8, mload(add(transactions, i)))
-        //         // We offset the load address by 1 byte (operation byte)
-        //         // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
-        //         tos := shr(0x60, mload(add(transactions, add(i, 0x01))))
-        //         // We offset the load address by 21 byte (operation byte + 20 address bytes)
-        //         values := mload(add(transactions, add(i, 0x15)))
-        //         // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
-        //         dataLength := mload(add(transactions, add(i, 0x35)))
-        //         // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
-        //         data := add(transactions, add(i, 0x35))
-        //         // Next entry starts at 85 byte + data length
-        //         mstore(add(datas, add(0x20, lengthTotal)), data)
-        //         mstore(add(addresses, add(0x20, mul(0x20, count))), tos)
-        //         lengthTotal := add(lengthTotal, dataLength)
-        //         count := add(count, 1)
-        //         mstore(addresses, count)
-        //         mstore(datas, count)
-        //         i := add(i, add(0x55, dataLength))
-        //     }
-        // }
-        // bytes memory t = sliceBytes(data, 68, 0);
-        // test = t;
-        test = sliceBytes(data, 68, 0);
-        test2 = to;
-        test3 = transactions.length;
     }
 
-    function testBytes(bytes memory tester) public {
-        bytes memory _t = tester;
-    }
-
+    /// @dev Will revert if a transaction has a parameter that is not allowed
+    /// @param role Role to check for.
+    /// @param targetAddress Address to check.
+    /// @param data the transaction data to check
     function checkParameters(
         uint16 role,
         address targetAddress,
         bytes memory data
     ) internal view {
-        uint16 pos = 4; // skip function selector
+        // First 4 bytes are the function selector, skip function selector.
+        uint16 pos = 4;
         for (
+            // loop through each parameter
             uint16 i = 0;
             i <
             roles[role]
@@ -492,17 +471,23 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
                 .paramTypes[i];
+            // we set paramType to true if its a fixed or dynamic array type with length encoding
             if (paramType == true) {
-                pos += 32; // location of length
+                // location of length of first parameter is first word (4 bytes)
+                pos += 32;
                 uint256 lengthLocation;
                 assembly {
                     lengthLocation := mload(add(data, pos))
                 }
-                uint256 lengthPos = 36 + lengthLocation; // always start from param block start
+                // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
+                uint256 lengthPos = 36 + lengthLocation;
                 uint256 length;
                 assembly {
+                    // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
                     length := mload(add(data, lengthPos))
                 }
+                // if the length of the parameter is greater than 1 word, we must slice the bytes and encode it
+                // in order to supply it as the key to the allowed => bool mapping
                 if (length > 32) {
                     bytes memory out = abi.encode(
                         sliceBytes(data, length, lengthPos)
@@ -516,12 +501,15 @@ contract Roles is Modifier {
                     ) {
                         revert ParameterNotAllowed();
                     }
+                    // if the length encoded array is less than 1 word, we can simply store it in bytes32
                 } else {
                     bytes32 input;
+                    // data is located 1 word after the length prefix word
                     uint256 dataLocation = lengthPos + 32;
                     assembly {
                         input := mload(add(data, dataLocation))
                     }
+                    // encode bytes32 to bytes memory for the mapping key
                     bytes memory t = abi.encodePacked(input);
                     if (
                         !roles[role]
@@ -533,12 +521,15 @@ contract Roles is Modifier {
                         revert ParameterNotAllowed();
                     }
                 }
+                // the parameter is not an array and has no length encoding
             } else {
+                // fixed value data is positioned within the parameter block
                 pos += 32;
                 bytes32 decoded;
                 assembly {
                     decoded := mload(add(data, pos))
                 }
+                // encode bytes32 to bytes memory for the mapping key
                 bytes memory t = abi.encodePacked(decoded);
                 if (
                     !roles[role]
@@ -614,7 +605,7 @@ contract Roles is Modifier {
     ) public override moduleOnly returns (bool success) {
         uint16 role = defaultRoles[msg.sender];
         if (to == multiSendAddress) {
-            splitMultiSend(data, role);
+            checkMultiSend(data, role);
         } else {
             checkTransaction(to, value, data, operation, role);
         }
@@ -640,7 +631,7 @@ contract Roles is Modifier {
     {
         uint16 role = defaultRoles[msg.sender];
         if (to == multiSendAddress) {
-            //bytes memory t = splitMultiSend(data);
+            checkMultiSend(data, role);
         } else {
             checkTransaction(to, value, data, operation, role);
         }
@@ -648,36 +639,76 @@ contract Roles is Modifier {
     }
 
     function sliceBytes(
-        bytes memory input,
-        uint256 length,
-        uint256 start
+        bytes memory _bytes,
+        uint256 _length,
+        uint256 _start
     ) internal pure returns (bytes memory) {
-        bytes memory out = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
-            out[i] = input[start + i];
-        }
-        return out;
-    }
+        require(_length + 31 >= _length, "slice_overflow");
+        require(_bytes.length >= _start + _length, "slice_outOfBounds");
 
-    /**
-     * @dev Reads `length` bytes of storage in the currents contract
-     * @param offset - the offset in the current contract's storage in words to start reading from
-     * @param length - the number of words (32 bytes) of data to read
-     * @return the bytes that were read.
-     */
-    function getStorageAt(
-        uint256 offset,
-        uint256 length,
-        bytes memory data
-    ) public pure returns (bytes memory) {
-        bytes memory result = new bytes(length * 32);
-        for (uint256 index = 0; index < length; index++) {
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                let word := mload(add(add(offset, data), index))
-                mstore(add(add(result, 0x20), mul(index, 0x20)), word)
+        bytes memory tempBytes;
+
+        assembly {
+            switch iszero(_length)
+            case 0 {
+                // Get a location of some free memory and store it in tempBytes as
+                // Solidity does for memory variables.
+                tempBytes := mload(0x40)
+
+                // The first word of the slice result is potentially a partial
+                // word read from the original array. To read it, we calculate
+                // the length of that partial word and start copying that many
+                // bytes into the array. The first word we copy will start with
+                // data we don't care about, but the last `lengthmod` bytes will
+                // land at the beginning of the contents of the new array. When
+                // we're done copying, we overwrite the full first word with
+                // the actual length of the slice.
+                let lengthmod := and(_length, 31)
+
+                // The multiplication in the next line is necessary
+                // because when slicing multiples of 32 bytes (lengthmod == 0)
+                // the following copy loop was copying the origin's length
+                // and then ending prematurely not copying everything it should.
+                let mc := add(
+                    add(tempBytes, lengthmod),
+                    mul(0x20, iszero(lengthmod))
+                )
+                let end := add(mc, _length)
+
+                for {
+                    // The multiplication in the next line has the same exact purpose
+                    // as the one above.
+                    let cc := add(
+                        add(
+                            add(_bytes, lengthmod),
+                            mul(0x20, iszero(lengthmod))
+                        ),
+                        _start
+                    )
+                } lt(mc, end) {
+                    mc := add(mc, 0x20)
+                    cc := add(cc, 0x20)
+                } {
+                    mstore(mc, mload(cc))
+                }
+
+                mstore(tempBytes, _length)
+
+                //update free-memory pointer
+                //allocating the array padded to 32 bytes like the compiler does now
+                mstore(0x40, and(add(mc, 31), not(31)))
+            }
+            //if we want a zero-length slice let's just return a zero-length array
+            default {
+                tempBytes := mload(0x40)
+                //zero out the 32 bytes slice we are about to return
+                //we need to do it because Solidity does not garbage collect
+                mstore(tempBytes, 0)
+
+                mstore(0x40, add(tempBytes, 0x20))
             }
         }
-        return result;
+
+        return tempBytes;
     }
 }

@@ -581,19 +581,6 @@ describe("RolesModifier", async () => {
       const removeDetails_4 =
         "0x" + encodedParam_7.slice(130, encodedParam_7.length);
 
-      const totalParams = ethers.utils.defaultAbiCoder.encode(
-        ["string", "uint256", "string", "bool", "uint8", "string", "string"],
-        [
-          "This is a dynamic array",
-          4,
-          "Test",
-          true,
-          3,
-          "weeeeeeee",
-          "This is an input that is larger than 32 bytes and must be scanned for correctness",
-        ]
-      );
-
       const paramAllowed_1 =
         await modifier.populateTransaction.setParameterAllowedValue(
           1,
@@ -659,7 +646,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, paramAllowed_7.data);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
-        "This is a dynamic array that was not allowed",
+        "This is a dynamic array",
         4,
         "Test",
         true,
@@ -771,19 +758,8 @@ describe("RolesModifier", async () => {
           "This is an input that is larger than 32 bytes and must be scanned for correctness",
         ]
       );
-
-      const totalParams = ethers.utils.defaultAbiCoder.encode(
-        ["string", "uint256", "string", "bool", "uint8", "string", "string"],
-        [
-          "This is a dynamic array",
-          4,
-          "Test",
-          true,
-          3,
-          "weeeeeeee",
-          "This is an input that is larger than 32 bytes and must be scanned for correctness",
-        ]
-      );
+      const removeDetails_4 =
+        "0x" + encodedParam_7.slice(130, encodedParam_7.length);
 
       const paramAllowed_1 =
         await modifier.populateTransaction.setParameterAllowedValue(
@@ -869,7 +845,7 @@ describe("RolesModifier", async () => {
       ).to.emit(testContract, "TestDynamic");
     });
 
-    it.only("executes a call with multisend tx", async () => {
+    it("executes a call with multisend tx", async () => {
       const { avatar, modifier, testContract } =
         await setupTestWithTestAvatar();
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
@@ -889,10 +865,9 @@ describe("RolesModifier", async () => {
         );
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
-      const multiSendTarget =
-        await modifier.populateTransaction.setMultiSend(
-          multisend.address
-        );
+      const multiSendTarget = await modifier.populateTransaction.setMultiSend(
+        multisend.address
+      );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
@@ -918,6 +893,27 @@ describe("RolesModifier", async () => {
         );
       await avatar.exec(modifier.address, 0, functionAllowed.data);
 
+      // -----
+
+      const functionScoped_2 =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped_2.data);
+
+      const functionAllowed_2 =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x273454bf",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed_2.data);
+
+      // -----
+
       const paramScoped =
         await modifier.populateTransaction.setParametersScoped(
           1,
@@ -927,6 +923,18 @@ describe("RolesModifier", async () => {
           true
         );
       await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const paramScoped_2 =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x273454bf",
+          [true, false, true, false, false, true, true], // TODO: this can just be boolean, dynamic type or not
+          true
+        );
+      await avatar.exec(modifier.address, 0, paramScoped_2.data);
+
+      // -----
 
       const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
         ["address"],
@@ -958,41 +966,154 @@ describe("RolesModifier", async () => {
         );
       await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
+      // -----
+
       const mint = await testContract.populateTransaction.mint(
         user1.address,
         99
       );
-
       const tx_1 = buildContractCall(
         testContract,
         "mint",
         [user1.address, 99],
         0
-      )
+      );
       const tx_2 = buildContractCall(
         testContract,
         "mint",
         [user1.address, 99],
         0
-      )
+      );
+
+      // -----
+
+      const encodedParam_3 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["This is a dynamic array"]
+      );
+      const removeDetails =
+        "0x" + encodedParam_3.slice(130, encodedParam_3.length);
+
+      const encodedParam_4 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [4]
+      );
+
+      const encodedParam_5 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["Test"]
+      );
+      const removeDetails_2 =
+        "0x" + encodedParam_5.slice(130, encodedParam_5.length);
+
+      const encodedParam_6 = ethers.utils.defaultAbiCoder.encode(
+        ["bool"],
+        [true]
+      );
+
+      const encodedParam_7 = ethers.utils.defaultAbiCoder.encode(
+        ["uint8"],
+        [3]
+      );
+
+      const encodedParam_8 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        ["weeeeeeee"]
+      );
+      const removeDetails_3 =
+        "0x" + encodedParam_8.slice(130, encodedParam_8.length);
+
+      const encodedParam_9 = ethers.utils.defaultAbiCoder.encode(
+        ["string"],
+        [
+          "This is an input that is larger than 32 bytes and must be scanned for correctness",
+        ]
+      );
+      const paramAllowed_3 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          0,
+          removeDetails
+        );
+      const paramAllowed_4 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          1,
+          encodedParam_4
+        );
+      const paramAllowed_5 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          2,
+          removeDetails_2
+        );
+      const paramAllowed_6 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          3,
+          encodedParam_6
+        );
+      const paramAllowed_7 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          4,
+          encodedParam_7
+        );
+      const paramAllowed_8 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          5,
+          removeDetails_3
+        );
+      const paramAllowed_9 =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x273454bf",
+          6,
+          encodedParam_9
+        );
+      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_8.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_9.data);
+
+      const tx_3 = await buildContractCall(
+        testContract,
+        "testDynamic",
+        [
+          "This is a dynamic array",
+          4,
+          "Test",
+          true,
+          3,
+          "weeeeeeee",
+          "This is an input that is larger than 32 bytes and must be scanned for correctness",
+        ],
+        0
+      );
+
       const multiTx = buildMultiSendSafeTx(
         multisend,
-        [tx_1, tx_2],
+        [tx_1, tx_2, tx_3, tx_1, tx_2, tx_3],
         0
-      )
-      console.log(multiTx.data)
-      let trimData = multiTx.data.slice(0, multiTx.data.length - 14)
-      console.log(trimData)
-      let w0 = multiTx.data.slice(10, 74)
-      console.log('0x'+w0)
-      let w1 = multiTx.data.slice(74, 138)
-      console.log('0x'+w1)
-      let w2 = multiTx.data.slice(138, 202)
-      console.log('0x'+w2)
-      let w3 = multiTx.data.slice(202, 266)
-      console.log('0x'+w3)
-      let w4 = multiTx.data.slice(266, 330)
-      console.log('0x'+w4)
+      );
+
       await expect(
         modifier.execTransactionFromModule(
           multisend.address,
@@ -1000,36 +1121,7 @@ describe("RolesModifier", async () => {
           multiTx.data,
           1
         )
-      ).to.emit(testContract, "Mint");
-      const test = await modifier.test()
-      console.log(test.toString())
-      const test2 = await modifier.test2()
-      console.log(test2.toString())
-      const test3 = await modifier.test3()
-      console.log(test3.toString())
-      console.log(testContract.address)
-      let c = "40c10f19000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266000000000000000000000000000000000000000000000000000000000000006300000000000000"
-      console.log(c.length)
-
-      const encodedTest = ethers.utils.defaultAbiCoder.encode(
-        ["bytes[]"],
-        [["0x40c10f19", "0x273454bfff"]]
-      );
-      console.log(encodedTest)
-      w0 = encodedTest.slice(2, 66)
-      console.log('0x'+w0)
-      w1 = encodedTest.slice(66, 130)
-      console.log('0x'+w1)
-      w2 = encodedTest.slice(130, 194)
-      console.log('0x'+w2)
-      w3 = encodedTest.slice(194, 258)
-      console.log('0x'+w3)
-      w4 = encodedTest.slice(258, 322)
-      console.log('0x'+w4)
-      let w5 = encodedTest.slice(322, 386)
-      console.log('0x'+w5)
-      let w6 = encodedTest.slice(386, 450)
-      console.log('0x'+w6)
+      ).to.emit(testContract, "TestDynamic");
     });
   });
 
