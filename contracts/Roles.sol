@@ -4,10 +4,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    bytes public test;
-    address public test2;
-    uint256 public test3;
-
     enum Comparison {
         EqualTo,
         GreaterThan,
@@ -15,7 +11,7 @@ contract Roles is Modifier {
     }
 
     struct Parameter {
-        Comparison compType;
+        //Comparison compType;
         mapping(bytes => bool) allowed;
         bytes compValue;
     }
@@ -59,17 +55,7 @@ contract Roles is Modifier {
         bool[] types,
         Comparison[] compTypes
     );
-<<<<<<< HEAD
 
-=======
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
-    // event SetParameterScoped(
-    //     uint16 role,
-    //     address target,
-    //     bytes4 functionSig,
-    //     string parameter,
-    //     bool scoped
-    // );
     event SetTargetAddressAllowed(
         uint16 role,
         address targetAddress,
@@ -102,10 +88,6 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint16 parameterIndex,
         bool allowed,
-<<<<<<< HEAD
-=======
-        Comparison compType,
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
         bytes compValue
     );
     event RolesModSetup(
@@ -135,6 +117,12 @@ contract Roles is Modifier {
 
     /// Role not allowed to use bytes for parameter
     error ParameterNotAllowed();
+
+    /// Role not allowed to use bytes less than value for parameter
+    error ParameterLessThanAllowed();
+
+    /// Role not allowed to use bytes greater than value for parameter
+    error ParameterGreaterThanAllowed();
 
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
@@ -260,6 +248,14 @@ contract Roles is Modifier {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .paramTypes = types;
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramsScoped = paramsScoped;
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .compTypes = compTypes;
         emit SetParametersScoped(
             role,
             target,
@@ -326,13 +322,13 @@ contract Roles is Modifier {
     /// @param functionSig first 4 bytes of the sha256 of the function signature
     /// @param paramIndex index of the parameter to scope
     /// @param allowedValue the allowed parameter value that can be called
+    /// @param compValue the comparison value
     function setParameterAllowedValue(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
         bytes memory allowedValue,
-        Comparison compType,
         bytes memory compValue
     ) external onlyOwner {
         // todo: require that param is scoped first?
@@ -341,16 +337,6 @@ contract Roles is Modifier {
             .functions[functionSig]
             .allowedValues[paramIndex]
             .allowed[allowedValue] = true;
-<<<<<<< HEAD
-=======
-
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .allowedValues[paramIndex]
-            .compType = compType;
-
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
         roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -371,14 +357,6 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .allowedValues[paramIndex]
-<<<<<<< HEAD
-=======
-                .compType,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .allowedValues[paramIndex]
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
                 .compValue
         );
     }
@@ -543,7 +521,7 @@ contract Roles is Modifier {
                     .compValue
             )
         ) {
-            revert ParameterNotAllowed();
+            revert ParameterLessThanAllowed();
         } else if (
             roles[role]
                 .targetAddresses[targetAddress]
@@ -559,75 +537,14 @@ contract Roles is Modifier {
                     .compValue
             )
         ) {
-            revert ParameterNotAllowed();
+            revert ParameterGreaterThanAllowed();
         }
     }
 
-<<<<<<< HEAD
     /// @dev Will revert if a transaction has a parameter that is not allowed
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
-=======
-    function checkParameter(
-        address targetAddress,
-        uint16 role,
-        bytes memory data,
-        uint16 i,
-        bytes memory out
-    ) internal view {
-        if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .allowedValues[i]
-                .compType ==
-            Comparison.EqualTo &&
-            !roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .allowedValues[i]
-                .allowed[out]
-        ) {
-            revert ParameterNotAllowed();
-        } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .allowedValues[i]
-                .compType ==
-            Comparison.GreaterThan &&
-            bytes32(out) <=
-            bytes32(
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .allowedValues[i]
-                    .compValue
-            )
-        ) {
-            revert ParameterNotAllowed();
-        } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .allowedValues[i]
-                .compType ==
-            Comparison.LessThan &&
-            bytes32(out) >=
-            bytes32(
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .allowedValues[i]
-                    .compValue
-            )
-        ) {
-            revert ParameterNotAllowed();
-        }
-    }
-
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
     function checkParameters(
         uint16 role,
         address targetAddress,
@@ -649,45 +566,46 @@ contract Roles is Modifier {
             bool isScopedParam = roles[role]
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
-                .paramTypes[i];
-            if (paramType == true) {
-                pos += 32; // location of length
-                uint256 lengthLocation;
-                assembly {
-                    lengthLocation := mload(add(data, pos))
-                }
-                uint256 lengthPos = 36 + lengthLocation; // always start from param block start
-                uint256 length;
-                assembly {
-                    length := mload(add(data, lengthPos))
-                }
-                if (length > 32) {
-                    bytes memory out = abi.encode(
-                        sliceBytes(data, length, lengthPos)
-                    );
+                .paramsScoped[i];
+            if (isScopedParam) {
+                bool paramType = roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .paramTypes[i];
+                // we set paramType to true if its a fixed or dynamic array type with length encoding
+                if (paramType == true) {
+                    // location of length of first parameter is first word (4 bytes)
+                    pos += 32;
+                    uint256 lengthLocation;
+                    assembly {
+                        lengthLocation := mload(add(data, pos))
+                    }
+                    // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
+                    uint256 lengthPos = 36 + lengthLocation;
+                    uint256 length;
+                    assembly {
+                        // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
+                        length := mload(add(data, lengthPos))
+                    }
+                    // get the data at length position
+                    bytes memory out;
+                    assembly {
+                        out := add(data, lengthPos)
+                    }
                     checkParameter(targetAddress, role, data, i, out);
+
+                    // the parameter is not an array and has no length encoding
                 } else {
                     // fixed value data is positioned within the parameter block
                     pos += 32;
                     bytes32 decoded;
                     assembly {
-<<<<<<< HEAD
                         decoded := mload(add(data, pos))
-=======
-                        input := mload(add(data, dataLocation))
->>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
                     }
-                    bytes memory out = abi.encodePacked(input);
-                    checkParameter(targetAddress, role, data, i, out);
+                    // encode bytes32 to bytes memory for the mapping key
+                    bytes memory encoded = abi.encodePacked(decoded);
+                    checkParameter(targetAddress, role, data, i, encoded);
                 }
-            } else {
-                pos += 32;
-                bytes32 decoded;
-                assembly {
-                    decoded := mload(add(data, pos))
-                }
-                bytes memory out = abi.encodePacked(decoded);
-                checkParameter(targetAddress, role, data, i, out);
             }
         }
     }
