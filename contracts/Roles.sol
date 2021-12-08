@@ -15,6 +15,7 @@ contract Roles is Modifier {
     }
 
     struct Parameter {
+        Comparison compType;
         mapping(bytes => bool) allowed;
         bytes compValue;
     }
@@ -58,7 +59,10 @@ contract Roles is Modifier {
         bool[] types,
         Comparison[] compTypes
     );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
     // event SetParameterScoped(
     //     uint16 role,
     //     address target,
@@ -98,6 +102,10 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint16 parameterIndex,
         bool allowed,
+<<<<<<< HEAD
+=======
+        Comparison compType,
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
         bytes compValue
     );
     event RolesModSetup(
@@ -333,6 +341,16 @@ contract Roles is Modifier {
             .functions[functionSig]
             .allowedValues[paramIndex]
             .allowed[allowedValue] = true;
+<<<<<<< HEAD
+=======
+
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowedValues[paramIndex]
+            .compType = compType;
+
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
         roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -353,6 +371,14 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .allowedValues[paramIndex]
+<<<<<<< HEAD
+=======
+                .compType,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowedValues[paramIndex]
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
                 .compValue
         );
     }
@@ -537,10 +563,71 @@ contract Roles is Modifier {
         }
     }
 
+<<<<<<< HEAD
     /// @dev Will revert if a transaction has a parameter that is not allowed
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
+=======
+    function checkParameter(
+        address targetAddress,
+        uint16 role,
+        bytes memory data,
+        uint16 i,
+        bytes memory out
+    ) internal view {
+        if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.EqualTo &&
+            !roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .allowed[out]
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.GreaterThan &&
+            bytes32(out) <=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.LessThan &&
+            bytes32(out) >=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        }
+    }
+
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
     function checkParameters(
         uint16 role,
         address targetAddress,
@@ -584,7 +671,11 @@ contract Roles is Modifier {
                     pos += 32;
                     bytes32 decoded;
                     assembly {
+<<<<<<< HEAD
                         decoded := mload(add(data, pos))
+=======
+                        input := mload(add(data, dataLocation))
+>>>>>>> 463b8da926bb24ae85ef1cdc50622347313d36b4
                     }
                     bytes memory out = abi.encodePacked(input);
                     checkParameter(targetAddress, role, data, i, out);
