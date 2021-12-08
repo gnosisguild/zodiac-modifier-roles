@@ -516,6 +516,64 @@ contract Roles is Modifier {
         bytes memory _t = tester;
     }
 
+    function checkParameter(
+        address targetAddress,
+        uint16 role,
+        bytes memory data,
+        uint16 i,
+        bytes memory out
+    ) internal view {
+        if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.EqualTo &&
+            !roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .allowed[out]
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.GreaterThan &&
+            bytes32(out) <=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .compType ==
+            Comparison.LessThan &&
+            bytes32(out) >=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        }
+    }
+
     function checkParameters(
         uint16 role,
         address targetAddress,
@@ -551,78 +609,15 @@ contract Roles is Modifier {
                     bytes memory out = abi.encode(
                         sliceBytes(data, length, lengthPos)
                     );
-                    if (
-                        roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .paramTypes[i]
-                    ) {
-                        if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .allowedValues[i]
-                                .compType ==
-                            Comparison.EqualTo &&
-                            !roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .allowedValues[i]
-                                .allowed[out]
-                        ) {
-                            revert ParameterNotAllowed();
-                        } else if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .allowedValues[i]
-                                .compType ==
-                            Comparison.GreaterThan &&
-                            bytes32(out) <=
-                            bytes32(
-                                roles[role]
-                                    .targetAddresses[targetAddress]
-                                    .functions[bytes4(data)]
-                                    .allowedValues[i]
-                                    .compValue
-                            )
-                        ) {
-                            revert ParameterNotAllowed();
-                        } else if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .allowedValues[i]
-                                .compType ==
-                            Comparison.LessThan &&
-                            bytes32(out) >=
-                            bytes32(
-                                roles[role]
-                                    .targetAddresses[targetAddress]
-                                    .functions[bytes4(data)]
-                                    .allowedValues[i]
-                                    .compValue
-                            )
-                        ) {
-                            revert ParameterNotAllowed();
-                        }
-                    }
+                    checkParameter(targetAddress, role, data, i, out);
                 } else {
                     bytes32 input;
                     uint256 dataLocation = lengthPos + 32;
                     assembly {
                         input := mload(add(data, dataLocation))
                     }
-                    bytes memory t = abi.encodePacked(input);
-                    if (
-                        !roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .allowedValues[i]
-                            .allowed[t]
-                    ) {
-                        revert ParameterNotAllowed();
-                    }
+                    bytes memory out = abi.encodePacked(input);
+                    checkParameter(targetAddress, role, data, i, out);
                 }
             } else {
                 pos += 32;
@@ -630,16 +625,8 @@ contract Roles is Modifier {
                 assembly {
                     decoded := mload(add(data, pos))
                 }
-                bytes memory t = abi.encodePacked(decoded);
-                if (
-                    !roles[role]
-                        .targetAddresses[targetAddress]
-                        .functions[bytes4(data)]
-                        .allowedValues[i]
-                        .allowed[t]
-                ) {
-                    revert ParameterNotAllowed();
-                }
+                bytes memory out = abi.encodePacked(decoded);
+                checkParameter(targetAddress, role, data, i, out);
             }
         }
     }
