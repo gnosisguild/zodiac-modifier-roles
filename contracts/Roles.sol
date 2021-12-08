@@ -5,6 +5,7 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
     struct Parameter {
+        bool scoped;
         mapping(bytes => bool) allowed;
     }
 
@@ -47,7 +48,7 @@ contract Roles is Modifier {
         uint16 role,
         address target,
         bytes4 functionSig,
-        string parameter,
+        uint16 parameter,
         bool scoped
     );
     event SetTargetAddressAllowed(
@@ -240,6 +241,38 @@ contract Roles is Modifier {
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .scoped = scoped
+        );
+    }
+
+    /// @dev Sets whether or not calls should be scoped to a specific parameter.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature
+    /// @param parameterIndex index of paramter to set is scoped
+    /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    function setParameterScoped(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 parameterIndex,
+        bool scoped
+    ) external onlyOwner {
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowedValues[parameterIndex]
+            .scoped = scoped;
+        emit SetParameterScoped(
+            role,
+            target,
+            functionSig,
+            parameterIndex,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowedValues[parameterIndex]
+                .scoped
         );
     }
 
@@ -467,58 +500,65 @@ contract Roles is Modifier {
                 .length;
             i++
         ) {
-            bool paramType = roles[role]
+            bool isScopedParam = roles[role]
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
-                .paramTypes[i];
-            // we set paramType to true if its a fixed or dynamic array type with length encoding
-            if (paramType == true) {
-                // location of length of first parameter is first word (4 bytes)
-                pos += 32;
-                uint256 lengthLocation;
-                assembly {
-                    lengthLocation := mload(add(data, pos))
-                }
-                // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
-                uint256 lengthPos = 36 + lengthLocation;
-                uint256 length;
-                assembly {
-                    // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
-                    length := mload(add(data, lengthPos))
-                }
-                // get the data at length position
-                bytes memory out;
-                assembly {
-                    out := add(data, lengthPos)
-                }
-                if (
-                    !roles[role]
-                        .targetAddresses[targetAddress]
-                        .functions[bytes4(data)]
-                        .allowedValues[i]
-                        .allowed[out]
-                ) {
-                    revert ParameterNotAllowed();
-                }
+                .allowedValues[i]
+                .scoped;
+            if (isScopedParam) {
+                bool paramType = roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .paramTypes[i];
+                // we set paramType to true if its a fixed or dynamic array type with length encoding
+                if (paramType == true) {
+                    // location of length of first parameter is first word (4 bytes)
+                    pos += 32;
+                    uint256 lengthLocation;
+                    assembly {
+                        lengthLocation := mload(add(data, pos))
+                    }
+                    // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
+                    uint256 lengthPos = 36 + lengthLocation;
+                    uint256 length;
+                    assembly {
+                        // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
+                        length := mload(add(data, lengthPos))
+                    }
+                    // get the data at length position
+                    bytes memory out;
+                    assembly {
+                        out := add(data, lengthPos)
+                    }
+                    if (
+                        !roles[role]
+                            .targetAddresses[targetAddress]
+                            .functions[bytes4(data)]
+                            .allowedValues[i]
+                            .allowed[out]
+                    ) {
+                        revert ParameterNotAllowed();
+                    }
 
-                // the parameter is not an array and has no length encoding
-            } else {
-                // fixed value data is positioned within the parameter block
-                pos += 32;
-                bytes32 decoded;
-                assembly {
-                    decoded := mload(add(data, pos))
-                }
-                // encode bytes32 to bytes memory for the mapping key
-                bytes memory encoded = abi.encodePacked(decoded);
-                if (
-                    !roles[role]
-                        .targetAddresses[targetAddress]
-                        .functions[bytes4(data)]
-                        .allowedValues[i]
-                        .allowed[encoded]
-                ) {
-                    revert ParameterNotAllowed();
+                    // the parameter is not an array and has no length encoding
+                } else {
+                    // fixed value data is positioned within the parameter block
+                    pos += 32;
+                    bytes32 decoded;
+                    assembly {
+                        decoded := mload(add(data, pos))
+                    }
+                    // encode bytes32 to bytes memory for the mapping key
+                    bytes memory encoded = abi.encodePacked(decoded);
+                    if (
+                        !roles[role]
+                            .targetAddresses[targetAddress]
+                            .functions[bytes4(data)]
+                            .allowedValues[i]
+                            .allowed[encoded]
+                    ) {
+                        revert ParameterNotAllowed();
+                    }
                 }
             }
         }
