@@ -486,41 +486,21 @@ contract Roles is Modifier {
                     // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
                     length := mload(add(data, lengthPos))
                 }
-                // if the length of the parameter is greater than 1 word, we must slice the bytes and encode it
-                // in order to supply it as the key to the allowed => bool mapping
-                if (length > 32) {
-                    bytes memory out = abi.encode(
-                        sliceBytes(data, length, lengthPos)
-                    );
-                    if (
-                        !roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .allowedValues[i]
-                            .allowed[out]
-                    ) {
-                        revert ParameterNotAllowed();
-                    }
-                    // if the length encoded array is less than 1 word, we can simply store it in bytes32
-                } else {
-                    bytes32 input;
-                    // data is located 1 word after the length prefix word
-                    uint256 dataLocation = lengthPos + 32;
-                    assembly {
-                        input := mload(add(data, dataLocation))
-                    }
-                    // encode bytes32 to bytes memory for the mapping key
-                    bytes memory t = abi.encodePacked(input);
-                    if (
-                        !roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .allowedValues[i]
-                            .allowed[t]
-                    ) {
-                        revert ParameterNotAllowed();
-                    }
+                // get the data at length position
+                bytes memory out;
+                assembly {
+                    out := add(data, lengthPos)
                 }
+                if (
+                    !roles[role]
+                        .targetAddresses[targetAddress]
+                        .functions[bytes4(data)]
+                        .allowedValues[i]
+                        .allowed[out]
+                ) {
+                    revert ParameterNotAllowed();
+                }
+
                 // the parameter is not an array and has no length encoding
             } else {
                 // fixed value data is positioned within the parameter block
@@ -530,13 +510,13 @@ contract Roles is Modifier {
                     decoded := mload(add(data, pos))
                 }
                 // encode bytes32 to bytes memory for the mapping key
-                bytes memory t = abi.encodePacked(decoded);
+                bytes memory encoded = abi.encodePacked(decoded);
                 if (
                     !roles[role]
                         .targetAddresses[targetAddress]
                         .functions[bytes4(data)]
                         .allowedValues[i]
-                        .allowed[t]
+                        .allowed[encoded]
                 ) {
                     revert ParameterNotAllowed();
                 }
