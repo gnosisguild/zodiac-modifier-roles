@@ -482,6 +482,61 @@ contract Roles is Modifier {
         }
     }
 
+    function checkParameter(
+        address targetAddress,
+        uint16 role,
+        bytes memory data,
+        uint16 i,
+        bytes memory out
+    ) internal view {
+        if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .compTypes[i] ==
+            Comparison.EqualTo &&
+            !roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .allowedValues[i]
+                .allowed[out]
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .compTypes[i] ==
+            Comparison.GreaterThan &&
+            bytes32(out) <=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[bytes4(data)]
+                .compTypes[i] ==
+            Comparison.LessThan &&
+            bytes32(out) >=
+            bytes32(
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[bytes4(data)]
+                    .allowedValues[i]
+                    .compValue
+            )
+        ) {
+            revert ParameterNotAllowed();
+        }
+    }
+
     /// @dev Will revert if a transaction has a parameter that is not allowed
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
@@ -507,87 +562,23 @@ contract Roles is Modifier {
             bool isScopedParam = roles[role]
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
-                .paramsScoped[i];
-            if (isScopedParam) {
-                bool paramType = roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .paramTypes[i];
-                // we set paramType to true if its a fixed or dynamic array type with length encoding
-                if (paramType == true) {
-                    // location of length of first parameter is first word (4 bytes)
-                    pos += 32;
-                    uint256 lengthLocation;
-                    assembly {
-                        lengthLocation := mload(add(data, pos))
-                    }
-                    // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
-                    uint256 lengthPos = 36 + lengthLocation;
-                    uint256 length;
-                    assembly {
-                        // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
-                        length := mload(add(data, lengthPos))
-                    }
-                    // get the data at length position
-                    bytes memory out;
-                    assembly {
-                        out := add(data, lengthPos)
-                    }
-                    if (
-                        roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .paramTypes[i]
-                    ) {
-                        if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .compTypes[i] ==
-                            Comparison.EqualTo &&
-                            !roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .allowedValues[i]
-                                .allowed[out]
-                        ) {
-                            revert ParameterNotAllowed();
-                        } else if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .compTypes[i] ==
-                            Comparison.GreaterThan &&
-                            bytes32(out) <=
-                            bytes32(
-                                roles[role]
-                                    .targetAddresses[targetAddress]
-                                    .functions[bytes4(data)]
-                                    .allowedValues[i]
-                                    .compValue
-                            )
-                        ) {
-                            revert ParameterNotAllowed();
-                        } else if (
-                            roles[role]
-                                .targetAddresses[targetAddress]
-                                .functions[bytes4(data)]
-                                .compTypes[i] ==
-                            Comparison.LessThan &&
-                            bytes32(out) >=
-                            bytes32(
-                                roles[role]
-                                    .targetAddresses[targetAddress]
-                                    .functions[bytes4(data)]
-                                    .allowedValues[i]
-                                    .compValue
-                            )
-                        ) {
-                            revert ParameterNotAllowed();
-                        }
-                    }
-
-                    // the parameter is not an array and has no length encoding
+                .paramTypes[i];
+            if (paramType == true) {
+                pos += 32; // location of length
+                uint256 lengthLocation;
+                assembly {
+                    lengthLocation := mload(add(data, pos))
+                }
+                uint256 lengthPos = 36 + lengthLocation; // always start from param block start
+                uint256 length;
+                assembly {
+                    length := mload(add(data, lengthPos))
+                }
+                if (length > 32) {
+                    bytes memory out = abi.encode(
+                        sliceBytes(data, length, lengthPos)
+                    );
+                    checkParameter(targetAddress, role, data, i, out);
                 } else {
                     // fixed value data is positioned within the parameter block
                     pos += 32;
@@ -595,18 +586,17 @@ contract Roles is Modifier {
                     assembly {
                         decoded := mload(add(data, pos))
                     }
-                    // encode bytes32 to bytes memory for the mapping key
-                    bytes memory encoded = abi.encodePacked(decoded);
-                    if (
-                        !roles[role]
-                            .targetAddresses[targetAddress]
-                            .functions[bytes4(data)]
-                            .allowedValues[i]
-                            .allowed[encoded]
-                    ) {
-                        revert ParameterNotAllowed();
-                    }
+                    bytes memory out = abi.encodePacked(input);
+                    checkParameter(targetAddress, role, data, i, out);
                 }
+            } else {
+                pos += 32;
+                bytes32 decoded;
+                assembly {
+                    decoded := mload(add(data, pos))
+                }
+                bytes memory out = abi.encodePacked(decoded);
+                checkParameter(targetAddress, role, data, i, out);
             }
         }
     }
