@@ -11,7 +11,6 @@ contract Roles is Modifier {
     }
 
     struct Parameter {
-        //Comparison compType;
         mapping(bytes => bool) allowed;
         bytes compValue;
     }
@@ -465,7 +464,6 @@ contract Roles is Modifier {
         uint256 dataLength;
         // transaction data begins at byte 100, increment i by the transaction data length
         // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
-        uint256 length;
         for (uint256 i = 100; i < transactions.length; i += (85 + dataLength)) {
             assembly {
                 // First byte of the data is the operation.
