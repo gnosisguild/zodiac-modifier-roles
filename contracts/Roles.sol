@@ -576,17 +576,34 @@ contract Roles is Modifier {
     /// @dev Returns bool to indicate if a function signature is allowed for a target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    /// @param selector Signature to check.
+    /// @param functionSig Signature to check.
     function isAllowedFunction(
         uint16 role,
         address targetAddress,
-        bytes4 selector
+        bytes4 functionSig
     ) public view returns (bool) {
         return (
             roles[role]
                 .targetAddresses[targetAddress]
-                .functions[selector]
+                .functions[functionSig]
                 .allowed
+        );
+    }
+
+    /// @dev Returns bool to indicate if a given function signature is scoped.
+    /// @param role Role to check for.
+    /// @param targetAddress Address to check.
+    /// @param functionSig Signature to check.
+    function isFunctionScoped(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig
+    ) public view returns (bool) {
+        return (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .scoped
         );
     }
 
@@ -709,52 +726,34 @@ contract Roles is Modifier {
         address targetAddress,
         uint16 role,
         bytes memory data,
-        uint16 i,
-        bytes memory out
+        uint16 paramIndex,
+        bytes memory value
     ) internal view {
+        bytes4 functionSig = bytes4(data);
         if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .compTypes[i] ==
+            getCompType(role, targetAddress, functionSig, paramIndex) ==
             Comparison.EqualTo &&
-            !roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .values[i]
-                .allowed[out]
+            !isAllowedValueForParam(
+                role,
+                targetAddress,
+                functionSig,
+                paramIndex,
+                value
+            )
         ) {
             revert ParameterNotAllowed();
         } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .compTypes[i] ==
+            getCompType(role, targetAddress, functionSig, paramIndex) ==
             Comparison.GreaterThan &&
-            bytes32(out) <=
-            bytes32(
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .values[i]
-                    .compValue
-            )
+            bytes32(value) <=
+            bytes32(getCompValue(role, targetAddress, functionSig, paramIndex))
         ) {
             revert ParameterLessThanAllowed();
         } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .compTypes[i] ==
+            getCompType(role, targetAddress, functionSig, paramIndex) ==
             Comparison.LessThan &&
-            bytes32(out) >=
-            bytes32(
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .values[i]
-                    .compValue
-            )
+            bytes32(value) >=
+            bytes32(getCompValue(role, targetAddress, functionSig, paramIndex))
         ) {
             revert ParameterGreaterThanAllowed();
         }
@@ -769,6 +768,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes memory data
     ) internal view {
+        bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
         for (
@@ -777,22 +777,20 @@ contract Roles is Modifier {
             i <
             roles[role]
                 .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
+                .functions[functionSig]
                 .paramTypes
                 .length;
             i++
         ) {
-            bool isScopedParam = roles[role]
-                .targetAddresses[targetAddress]
-                .functions[bytes4(data)]
-                .paramsScoped[i];
+            (
+                bool isScopedParam,
+                bool[] memory paramTypes,
+                ,
+
+            ) = getParameterScopes(role, targetAddress, functionSig);
             if (isScopedParam) {
-                bool paramType = roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .paramTypes[i];
                 // we set paramType to true if its a fixed or dynamic array type with length encoding
-                if (paramType == true) {
+                if (paramTypes[i] == true) {
                     // location of length of first parameter is first word (4 bytes)
                     pos += 32;
                     uint256 lengthLocation;
@@ -836,40 +834,33 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) internal view {
+        bytes4 functionSig = bytes4(data);
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
         if (
             operation == Enum.Operation.DelegateCall &&
-            !roles[role].targetAddresses[targetAddress].delegateCallAllowed
+            !isAllowedToDelegateCall(role, targetAddress)
         ) {
             revert DelegateCallNotAllowed();
         }
-        if (!roles[role].targetAddresses[targetAddress].allowed) {
+        if (!isAllowedTargetAddress(role, targetAddress)) {
             revert TargetAddressNotAllowed();
         }
         if (data.length >= 4) {
             if (
-                roles[role].targetAddresses[targetAddress].scoped &&
-                !roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .allowed
+                isScoped(role, targetAddress) &&
+                !isAllowedFunction(role, targetAddress, functionSig)
             ) {
                 revert FunctionNotAllowed();
             }
-            if (
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[bytes4(data)]
-                    .scoped
-            ) {
+            if (isFunctionScoped(role, targetAddress, functionSig)) {
                 checkParameters(role, targetAddress, data);
             }
         } else {
             if (
-                roles[role].targetAddresses[targetAddress].scoped &&
-                !roles[role].targetAddresses[targetAddress].sendAllowed
+                isFunctionScoped(role, targetAddress, functionSig) &&
+                !isSendAllowed(role, targetAddress)
             ) {
                 revert SendNotAllowed();
             }
