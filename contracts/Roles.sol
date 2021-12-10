@@ -592,7 +592,7 @@ contract Roles is Modifier {
                     }
                     checkParameter(targetAddress, role, data, i, out);
 
-                    // the parameter is not an array and has no length encoding
+                // the parameter is not an array and has no length encoding
                 } else {
                     // fixed value data is positioned within the parameter block
                     pos += 32;

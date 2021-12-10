@@ -1039,6 +1039,342 @@ describe("RolesModifier", async () => {
         )
       ).to.emit(testContract, "TestDynamic");
     });
+
+    it("reverts if value parameter is less than allowed", async () => {
+      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+        await txSetup();
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+      const paramAllowed_lessThan =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          1,
+          encodedParam_2,
+          encodedParam_2
+        );
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true,
+          [true, true],
+          [false, false],
+          [0, 1] // set param 2 to greater than
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        98
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.be.revertedWith("ParameterLessThanAllowed");
+    });
+
+    it("executes if value parameter is greater than allowed", async () => {
+      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+        await txSetup();
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+      const paramAllowed_lessThan =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          1,
+          encodedParam_2,
+          encodedParam_2
+        );
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true,
+          [true, true],
+          [false, false],
+          [0, 1] // set param 2 to greater than
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        100
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.emit(testContract, "Mint");
+    });
+
+    it("reverts if value parameter is greater than allowed", async () => {
+      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+        await txSetup();
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+      const paramAllowed_lessThan =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          1,
+          encodedParam_2,
+          encodedParam_2
+        );
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true,
+          [true, true],
+          [false, false],
+          [0, 2] // set param 2 to less than
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        100
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.be.revertedWith("ParameterGreaterThanAllowed");
+    });
+
+    it("executes if value parameter is less than allowed", async () => {
+      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+        await txSetup();
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setFunctionScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"],
+        [99]
+      );
+      const paramAllowed_lessThan =
+        await modifier.populateTransaction.setParameterAllowedValue(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          1,
+          encodedParam_2,
+          encodedParam_2
+        );
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          "0x40c10f19",
+          true,
+          [true, true],
+          [false, false],
+          [0, 2] // set param 2 to less than
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        98
+      );
+
+      await expect(
+        modifier.execTransactionFromModule(
+          testContract.address,
+          0,
+          mint.data,
+          0
+        )
+      ).to.emit(testContract, "Mint");
+    });
   });
 
   describe("execTransactionFromModuleReturnData", () => {
