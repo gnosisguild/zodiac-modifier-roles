@@ -1746,19 +1746,41 @@ describe("RolesModifier", async () => {
 
     it("sets allowed function to true", async () => {
       const { avatar, modifier} = await txSetup();
-      const tx = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 1, "0xabcd", true);
+      const tx = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 0, "0xabcd", true);
       expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 1, "0xabcd")).to.be.equals(true);
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          AddressOne,
+          "0x12345678",
+          true,
+          [true],
+          [false],
+          [0]
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data)
+      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 0, "0xabcd")).to.be.equals(true);
     });
 
     it("sets allowed function to false", async () => {
       const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 1, "0xabcd", "0xabcd");
+      const txTrue = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 0, "0xabcd", "0xabcd");
       expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 1, "0xabcd")).to.be.equals(true);
-      const txFalse = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 1, "0xabcd", "0xabcd");
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          AddressOne,
+          "0x12345678",
+          true,
+          [true],
+          [false],
+          [0]
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data)
+      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 0, "0xabcd")).to.be.equals(true);
+      const txFalse = await modifier.populateTransaction.setParameterAllowedValue(1, AddressOne, "0x12345678", 0, "0xabcdef", "0xabcdef");
       expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 1, "0xabcd")).to.be.equals(false);
+      expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 0, "0xabcd")).to.be.equals(false);
     });
 
     it("emits event with correct params", async () => {
