@@ -1552,7 +1552,9 @@ describe("RolesModifier", async () => {
     it("sets allowed address to true", async () => {
       const { avatar, modifier} = await txSetup();
       const tx = await modifier.populateTransaction.setTargetAddressAllowed(1, AddressOne, true);
-      expect(avatar.exec(modifier.address, 0, tx.data));
+      expect(avatar.exec(modifier.address, 0, tx.data))
+      .to.emit(modifier, "SetTargetAddressAllowed")
+      .withArgs(1, AddressOne, true);
       expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(true);
     });
 
