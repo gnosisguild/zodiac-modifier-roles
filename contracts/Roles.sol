@@ -354,7 +354,7 @@ contract Roles is Modifier {
 
         emit SetParameterAllowedValue(
             role,
-            target,
+            targetAddress,
             functionSig,
             paramIndex,
             roles[role]
