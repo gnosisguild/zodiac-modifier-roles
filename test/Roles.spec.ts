@@ -2040,6 +2040,17 @@ describe("RolesModifier", async () => {
   describe("isAllowedValueForParam()", () => {
     it("returns false if not set", async () => {
       const { avatar, modifier} = await txSetup();
+      const paramScoped =
+      await modifier.populateTransaction.setParametersScoped(
+        1,
+        AddressOne,
+        "0x12345678",
+        true,
+        [true],
+        [true],
+        [0]
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
       await expect(await modifier.isAllowedValueForParam(1, AddressOne, "0x12345678", 0, "0x1234")).to.be.equals(false);
     });
     
