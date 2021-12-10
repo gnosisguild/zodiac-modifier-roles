@@ -30,7 +30,6 @@ contract Roles is Modifier {
         bool scoped;
         bool delegateCallAllowed;
         bool sendAllowed;
-        bool isMultiSend;
         mapping(bytes4 => Function) functions;
     }
 
@@ -123,6 +122,9 @@ contract Roles is Modifier {
     /// Role not allowed to use bytes greater than value for parameter
     error ParameterGreaterThanAllowed();
 
+    /// Arrays must be the same length
+    error ArraysDiffferentLength();
+
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -161,12 +163,12 @@ contract Roles is Modifier {
     /// @dev Set the address of the expected multisend library
     /// @notice Only callable by owner.
     /// @param multiSendAddress address of the multisend library contract
-    /// @param allowed bool, whether or not _multisendAddress is allowed
-    function setMultiSend(address multiSendAddress, bool allowed)
+    /// @param allow bool, whether or not _multisendAddress is allowed
+    function setMultiSend(address multiSendAddress, bool allow)
         external
         onlyOwner
     {
-        multiSendAddresses[multiSendAddress] = allowed;
+        multiSendAddresses[multiSendAddress] = allow;
         emit SetMulitSendAddress(
             multiSendAddress,
             multiSendAddresses[multiSendAddress]
@@ -215,7 +217,7 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
-    function setFunctionScoped(
+    function setTargetAddressScoped(
         uint16 role,
         address targetAddress,
         bool scoped
@@ -367,12 +369,16 @@ contract Roles is Modifier {
         );
     }
 
-    function assignRoles(address module, uint16[] calldata _roles)
-        external
-        onlyOwner
-    {
+    function assignRoles(
+        address module,
+        uint16[] calldata _roles,
+        bool[] memory memberOf
+    ) external onlyOwner {
+        if (_roles.length != memberOf.length) {
+            revert ArraysDiffferentLength();
+        }
         for (uint16 i = 0; i < _roles.length; i++) {
-            roles[_roles[i]].members[module] = true;
+            roles[_roles[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
@@ -388,12 +394,52 @@ contract Roles is Modifier {
         return defaultRoles[module];
     }
 
+    function getParameterScopes(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig
+    )
+        public
+        view
+        returns (
+            bool,
+            bool[] memory,
+            bool[] memory,
+            Comparison[] memory
+        )
+    {
+        return (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .scoped,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .paramTypes,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .paramsScoped,
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes
+        );
+    }
+
     function isRoleMember(address module, uint16 role)
         external
         view
         returns (bool)
     {
         return roles[role].members[module];
+    }
+
+    /// @dev Returns bool to indicate if an address is an allowed multisend
+    /// @param multiSend address to check
+    function isAllowedMultiSend(address multiSend) public view returns (bool) {
+        return (multiSendAddresses[multiSend]);
     }
 
     /// @dev Returns bool to indicate if an address is an allowed target address.
