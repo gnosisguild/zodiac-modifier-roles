@@ -870,8 +870,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        uint16 role = defaultRoles[msg.sender];
-        execTransactionWithRole(to, value, data, operation, role);
+        execTransactionWithRole(to, value, data, operation, defaultRoles[msg.sender]);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -891,8 +890,7 @@ contract Roles is Modifier {
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        uint16 role = defaultRoles[msg.sender];
-        return execTransactionWithRoleReturnData(to, value, data, operation, role);
+        return execTransactionWithRoleReturnData(to, value, data, operation, defaultRoles[msg.sender]);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
