@@ -133,6 +133,12 @@ contract Roles is Modifier {
     /// Arrays must be the same length
     error ArraysDifferentLength();
 
+    /// Sender is not a member of the role
+    error NoMembership();
+
+    /// Sender is allowed to make this call, but the internal transaction failed
+    error ModuleTransactionFailed();
+
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -864,13 +870,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        uint16 role = defaultRoles[msg.sender];
-        if (multiSendAddresses[to]) {
-            checkMultiSend(data, role);
-        } else {
-            checkTransaction(to, value, data, operation, role);
-        }
-        return exec(to, value, data, operation);
+        execTransactionWithRole(to, value, data, operation, defaultRoles[msg.sender]);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -890,7 +890,53 @@ contract Roles is Modifier {
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        uint16 role = defaultRoles[msg.sender];
+        return execTransactionWithRoleReturnData(to, value, data, operation, defaultRoles[msg.sender]);
+    }
+
+    /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
+    /// @param to Destination address of module transaction
+    /// @param value Ether value of module transaction
+    /// @param data Data payload of module transaction
+    /// @param operation Operation type of module transaction
+    /// @param role Identifier of the role to assume for this transaction.
+    /// @notice Can only be called by enabled modules
+    function execTransactionWithRole(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint16 role
+    ) internal {
+        if(!roles[role].members[msg.sender]) {
+            revert NoMembership();
+        }
+        if (multiSendAddresses[to]) {
+            checkMultiSend(data, role);
+        } else {
+            checkTransaction(to, value, data, operation, role);
+        }
+        if (!exec(to, value, data, operation)) {
+            revert ModuleTransactionFailed();
+        }
+    }
+
+    /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
+    /// @param to Destination address of module transaction
+    /// @param value Ether value of module transaction
+    /// @param data Data payload of module transaction
+    /// @param operation Operation type of module transaction
+    /// @param role Identifier of the role to assume for this transaction.
+    /// @notice Can only be called by enabled modules
+    function execTransactionWithRoleReturnData(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint16 role
+    ) internal returns (bool success, bytes memory returnData) {
+        if(!roles[role].members[msg.sender]) {
+            revert NoMembership();
+        }
         if (multiSendAddresses[to]) {
             checkMultiSend(data, role);
         } else {
