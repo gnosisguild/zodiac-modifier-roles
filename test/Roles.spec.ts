@@ -325,6 +325,26 @@ describe("RolesModifier", async () => {
       );
     });
 
+    it("revokes roles to a module", async () => {
+      const { avatar, modifier } = await txSetup();
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1],
+        [true]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+      const revoke = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1],
+        [false]
+      );
+      await avatar.exec(modifier.address, 0, revoke.data);
+
+      await expect(await modifier.isRoleMember(user1.address, 1)).to.be.equal(
+        false
+      );
+    });
+
     it("it enables the module if necessary", async () => {
       const { avatar, modifier } = await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(

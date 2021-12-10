@@ -4,6 +4,7 @@ module.exports = {
     "test/TestAvatar.sol",
     "test/TestContract.sol",
     "test/TestFactory.sol",
+    "test/MultiSend.sol"
   ],
   mocha: {
     grep: "@skip-on-coverage", // Find everything with this tag
