@@ -101,6 +101,7 @@ contract Roles is Modifier {
         address indexed avatar,
         address target
     );
+    event SetDefaultRole(address module, uint16 defaultRole);
 
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
@@ -130,7 +131,7 @@ contract Roles is Modifier {
     error ParameterGreaterThanAllowed();
 
     /// Arrays must be the same length
-    error ArraysDiffferentLength();
+    error ArraysDifferentLength();
 
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
@@ -400,13 +401,17 @@ contract Roles is Modifier {
         );
     }
 
+    /// @dev Assigns and revokes roles to a given module.
+    /// @param module Module on which to assign/revoke roles.
+    /// @param _roles Roles to assign/revoke.
+    /// @param memberOf Assign (true) or revoke (false) corresponding _roles.
     function assignRoles(
         address module,
         uint16[] calldata _roles,
         bool[] memory memberOf
     ) external onlyOwner {
         if (_roles.length != memberOf.length) {
-            revert ArraysDiffferentLength();
+            revert ArraysDifferentLength();
         }
         for (uint16 i = 0; i < _roles.length; i++) {
             roles[_roles[i]].members[module] = memberOf[i];
@@ -417,14 +422,29 @@ contract Roles is Modifier {
         emit AssignRoles(module, _roles);
     }
 
+    /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
+    /// @param module Address of the module on which to set default role.
+    /// @param role Role to be set as default.
     function setDefaultRole(address module, uint16 role) external onlyOwner {
         defaultRoles[module] = role;
+        emit SetDefaultRole(module, defaultRoles[module]);
     }
 
+    /// @dev Returns the default role for a given module.
+    /// @param module Module to be checked.
+    /// @return Default role of given module.
     function getDefaultRole(address module) external view returns (uint16) {
         return defaultRoles[module];
     }
 
+    /// @dev Returns details on whether and how functions parameters are scoped.
+    /// @param role Role to check.
+    /// @param targetAddress Target address to check.
+    /// @param functionSig Function signature of the function to check.
+    /// @return bool describing whether (true) or not (false) the function is scoped.
+    /// @return bool[] describing parameter types are variable(true) or fixed (false) length.
+    /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
+    /// @return Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
     function getParameterScopes(
         uint16 role,
         address targetAddress,
@@ -478,7 +498,11 @@ contract Roles is Modifier {
                 .compValue;
     }
 
-    function isRoleMember(address module, uint16 role)
+    /// @dev Returns bool to indicate whether (true) or not (false) a given module is a member of a role.
+    /// @param role Role to check.
+    /// @param module Module to check.
+    /// @return bool indicating whether module is a member or role.
+    function isRoleMember(uint16 role, address module)
         external
         view
         returns (bool)
