@@ -41,10 +41,10 @@ contract Roles is Modifier {
 
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) internal roles;
-    address public multiSendAddress;
+    mapping(address => bool) public multiSendAddresses;
 
     event AssignRoles(address module, uint16[] roles);
-    event SetMulitSendAddress(address multiSendAddress);
+    event SetMulitSendAddress(address multiSendAddress, bool allowed);
     event SetParametersScoped(
         uint16 role,
         address target,
@@ -160,10 +160,17 @@ contract Roles is Modifier {
 
     /// @dev Set the address of the expected multisend library
     /// @notice Only callable by owner.
-    /// @param _multiSendAddress address of the multisend library contract
-    function setMultiSend(address _multiSendAddress) external onlyOwner {
-        multiSendAddress = _multiSendAddress;
-        emit SetMulitSendAddress(_multiSendAddress);
+    /// @param multiSendAddress address of the multisend library contract
+    /// @param allowed bool, whether or not _multisendAddress is allowed
+    function setMultiSend(address multiSendAddress, bool allowed)
+        external
+        onlyOwner
+    {
+        multiSendAddresses[multiSendAddress] = allowed;
+        emit SetMulitSendAddress(
+            multiSendAddress,
+            multiSendAddresses[multiSendAddress]
+        );
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -592,7 +599,7 @@ contract Roles is Modifier {
                     }
                     checkParameter(targetAddress, role, data, i, out);
 
-                // the parameter is not an array and has no length encoding
+                    // the parameter is not an array and has no length encoding
                 } else {
                     // fixed value data is positioned within the parameter block
                     pos += 32;
@@ -668,7 +675,7 @@ contract Roles is Modifier {
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
         uint16 role = defaultRoles[msg.sender];
-        if (to == multiSendAddress) {
+        if (multiSendAddresses[to]) {
             checkMultiSend(data, role);
         } else {
             checkTransaction(to, value, data, operation, role);
@@ -694,7 +701,7 @@ contract Roles is Modifier {
         returns (bool success, bytes memory returnData)
     {
         uint16 role = defaultRoles[msg.sender];
-        if (to == multiSendAddress) {
+        if (multiSendAddresses[to]) {
             checkMultiSend(data, role);
         } else {
             checkTransaction(to, value, data, operation, role);

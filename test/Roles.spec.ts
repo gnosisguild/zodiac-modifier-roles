@@ -809,7 +809,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
       const multiSendTarget = await modifier.populateTransaction.setMultiSend(
-        multisend.address
+        multisend.address, true
       );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
@@ -946,7 +946,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
       const multiSendTarget = await modifier.populateTransaction.setMultiSend(
-        multisend.address
+        multisend.address, true
       );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
