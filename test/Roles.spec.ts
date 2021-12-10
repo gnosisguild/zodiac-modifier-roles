@@ -1926,14 +1926,14 @@ describe("RolesModifier", async () => {
   });
 
   describe("getCompValue()", () => {
-    it.only("returns 0 if not set", async () => {
+    it("returns 0 if not set", async () => {
       const { avatar, modifier} = await txSetup();
       const result = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
       await expect(result).to.be.equals("0x");
     });
 
     
-    it.only("returns role if set", async () => {
+    it("returns role if set", async () => {
       const { avatar, modifier} = await txSetup();
       const tx = await modifier.populateTransaction.setParameterCompValue(1,AddressOne, "0x12345678", 0, "0x1234");
       const resultFalse = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
