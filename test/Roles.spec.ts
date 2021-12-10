@@ -1928,7 +1928,7 @@ describe("RolesModifier", async () => {
   });
 
   describe("getCompValue()", () => {
-    it("returns 0 if not set", async () => {
+    it("returns 0x if not set", async () => {
       const { avatar, modifier} = await txSetup();
       const result = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
       await expect(result).to.be.equals("0x");
@@ -1943,6 +1943,51 @@ describe("RolesModifier", async () => {
       await expect(await avatar.exec(modifier.address, 0, tx.data));
       const resultTrue = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
       await expect(resultTrue).to.be.equals("0x1234");
+    });
+  });
+
+  describe("isRoleMember()", () => {
+    it("returns false if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isRoleMember(1, AddressOne)).to.be.equals(false);
+    });
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.assignRoles(user1.address, [1], [true]);
+      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equals(false);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equals(true);
+    });
+  });
+
+  describe("isAllowedTargetAddress()", () => {
+    it("returns false if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(false);
+    });
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(false);
+      const tx = await modifier.populateTransaction.setTargetAddressAllowed(1, AddressOne, true);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(true);
+    });
+  });
+
+  describe("isScoped()", () => {
+    it("returns false if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isScoped(1, AddressOne)).to.be.equals(false);
+    });
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isScoped(1, AddressOne)).to.be.equals(false);
+      const tx = await modifier.populateTransaction.setTargetAddressScoped(1, AddressOne, true);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.isScoped(1, AddressOne)).to.be.equals(true);
     });
   });
 });
