@@ -21,7 +21,7 @@ contract Roles is Modifier {
         string name;
         bool[] paramsScoped;
         bool[] paramTypes;
-        mapping(uint16 => Parameter) allowedValues;
+        mapping(uint16 => Parameter) values;
         Comparison[] compTypes;
     }
 
@@ -80,12 +80,18 @@ contract Roles is Modifier {
         bytes4 selector,
         bool allowed
     );
-    event SetParameterAllowedValues(
+    event SetParameterAllowedValue(
         uint16 role,
         address target,
         bytes4 functionSig,
         uint16 parameterIndex,
-        bool allowed,
+        bool allowed
+    );
+    event SetParameterCompValue(
+        uint16 role,
+        address target,
+        bytes4 functionSig,
+        uint16 parameterIndex,
         bytes compValue
     );
     event RolesModSetup(
@@ -329,29 +335,24 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature
     /// @param paramIndex index of the parameter to scope
-    /// @param allowedValue the allowed parameter value that can be called
-    /// @param compValue the comparison value
+    /// @param value the parameter value to be set
+    /// @param allow allow (true) or disallow (false) parameter value
     function setParameterAllowedValue(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
-        bytes memory allowedValue,
-        bytes memory compValue
+        bytes memory value,
+        bool allow
     ) external onlyOwner {
         // todo: require that param is scoped first?
         roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .allowedValues[paramIndex]
-            .allowed[allowedValue] = true;
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .allowedValues[paramIndex]
-            .compValue = compValue;
+            .values[paramIndex]
+            .allowed[value] = allow;
 
-        emit SetParameterAllowedValues(
+        emit SetParameterAllowedValue(
             role,
             target,
             functionSig,
@@ -359,12 +360,40 @@ contract Roles is Modifier {
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .allowedValues[paramIndex]
-                .allowed[allowedValue],
+                .values[paramIndex]
+                .allowed[value]
+        );
+    }
+
+    /// @dev Sets the comparison value for a parameter
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to set for.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature
+    /// @param paramIndex index of the parameter to scope
+    /// @param compValue the comparison value
+    function setParameterCompValue(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex,
+        bytes memory compValue
+    ) external onlyOwner {
+        roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .compValue = compValue;
+
+        emit SetParameterCompValue(
+            role,
+            target,
+            functionSig,
+            paramIndex,
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .allowedValues[paramIndex]
+                .values[paramIndex]
                 .compValue
         );
     }
@@ -503,6 +532,74 @@ contract Roles is Modifier {
         return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
     }
 
+    /// @dev Returns bool to indicate if a value is allowed for a parameter on a function at a target address for a role.
+    /// @param role Role to check.
+    /// @param targetAddress Address to check.
+    /// @param functionSig Function signature to check.
+    /// @param paramIndex Parameter index to check.
+    /// @param value Value to check.
+    function isAllowedValueForParam(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex,
+        bytes memory value
+    ) public view returns (bool) {
+        if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex] == Comparison.EqualTo
+        ) {
+            return
+                roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[functionSig]
+                    .values[paramIndex]
+                    .allowed[value];
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex] == Comparison.GreaterThan
+        ) {
+            if (
+                bytes32(value) >
+                bytes32(
+                    roles[role]
+                        .targetAddresses[targetAddress]
+                        .functions[functionSig]
+                        .values[paramIndex]
+                        .compValue
+                )
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex] == Comparison.LessThan
+        ) {
+            if (
+                bytes32(value) <
+                bytes32(
+                    roles[role]
+                        .targetAddresses[targetAddress]
+                        .functions[functionSig]
+                        .values[paramIndex]
+                        .compValue
+                )
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param transactions the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
@@ -553,7 +650,7 @@ contract Roles is Modifier {
             !roles[role]
                 .targetAddresses[targetAddress]
                 .functions[bytes4(data)]
-                .allowedValues[i]
+                .values[i]
                 .allowed[out]
         ) {
             revert ParameterNotAllowed();
@@ -568,7 +665,7 @@ contract Roles is Modifier {
                 roles[role]
                     .targetAddresses[targetAddress]
                     .functions[bytes4(data)]
-                    .allowedValues[i]
+                    .values[i]
                     .compValue
             )
         ) {
@@ -584,7 +681,7 @@ contract Roles is Modifier {
                 roles[role]
                     .targetAddresses[targetAddress]
                     .functions[bytes4(data)]
-                    .allowedValues[i]
+                    .values[i]
                     .compValue
             )
         ) {
