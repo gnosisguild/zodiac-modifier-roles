@@ -1849,4 +1849,98 @@ describe("RolesModifier", async () => {
       .withArgs(1, AddressOne, "0x12345678", 1, "0xabcd");
     });
   });
+
+  describe("setDefaultRole()", () => {
+    it("reverts if not authorized", async () => {
+      const { avatar, modifier } = await txSetup();
+      expect(modifier.setDefaultRole(AddressOne, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it("sets default role", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+      expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(1);
+    });
+
+    
+    it("emits event with correct params", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+      await expect(await avatar.exec(modifier.address, 0, tx.data)).to.emit(modifier, "SetDefaultRole").withArgs(AddressOne, 1);
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(1);
+    });
+  });
+
+  describe("getDefaultRole()", () => {
+    it("returns 0 if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+    });
+
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(1);
+    });
+  });
+
+  describe("getParameterScopes()", () => {
+    it("returns 0 if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const result = (await modifier.getParameterScopes(1, AddressOne, "0x12345678")).toString();
+      await expect(result).to.be.equals("false,,,");
+    });
+
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setParametersScoped(1,AddressOne, "0x12345678", true, [true],[true],[1]);
+      const resultFalse = (await modifier.getParameterScopes(1, AddressOne, "0x12345678")).toString();
+      await expect(resultFalse).to.be.equals("false,,,");
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      const resultTrue = (await modifier.getParameterScopes(1, AddressOne, "0x12345678")).toString();
+      await expect(resultTrue).to.be.equals("true,true,true,1");
+    });
+  });
+
+  describe("getDefaultRole()", () => {
+    it("returns 0 if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+    });
+
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(1);
+    });
+  });
+
+  describe("getCompValue()", () => {
+    it.only("returns 0 if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const result = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
+      await expect(result).to.be.equals("0x");
+    });
+
+    
+    it.only("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const tx = await modifier.populateTransaction.setParameterCompValue(1,AddressOne, "0x12345678", 0, "0x1234");
+      const resultFalse = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
+      await expect(resultFalse).to.be.equals("0x");
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      const resultTrue = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
+      await expect(resultTrue).to.be.equals("0x1234");
+    });
+  });
 });
