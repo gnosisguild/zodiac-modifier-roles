@@ -101,6 +101,7 @@ contract Roles is Modifier {
         address indexed avatar,
         address target
     );
+    event SetDefaultRole(address module, uint16 defaultRole);
 
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
@@ -417,14 +418,29 @@ contract Roles is Modifier {
         emit AssignRoles(module, _roles);
     }
 
+    /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
+    /// @param module Address of the module on which to set default role.
+    /// @param role Role to be set as default.
     function setDefaultRole(address module, uint16 role) external onlyOwner {
         defaultRoles[module] = role;
+        emit SetDefaultRole(module, defaultRoles[module]);
     }
 
+    /// @dev Returns the default role for a given module.
+    /// @param module Module to be checked.
+    /// @return Default role of given module.
     function getDefaultRole(address module) external view returns (uint16) {
         return defaultRoles[module];
     }
 
+    /// @dev Returns details on whether and how functions parameters are scoped.
+    /// @param role Role to check.
+    /// @param targetAddress Target address to check.
+    /// @param functionSig Function signature of the function to check.
+    /// @return bool describing whether (true) or not (false) the function is scoped.
+    /// @return bool[] describing parameter types are variable(true) or fixed (false) length.
+    /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
+    /// @return Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
     function getParameterScopes(
         uint16 role,
         address targetAddress,
