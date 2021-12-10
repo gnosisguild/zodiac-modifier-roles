@@ -870,7 +870,13 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        execTransactionWithRole(to, value, data, operation, defaultRoles[msg.sender]);
+        execTransactionWithRole(
+            to,
+            value,
+            data,
+            operation,
+            defaultRoles[msg.sender]
+        );
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -890,7 +896,14 @@ contract Roles is Modifier {
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        return execTransactionWithRoleReturnData(to, value, data, operation, defaultRoles[msg.sender]);
+        return
+            execTransactionWithRoleReturnData(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[msg.sender]
+            );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
@@ -906,8 +919,8 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) internal {
-        if(!roles[role].members[msg.sender]) {
+    ) public moduleOnly {
+        if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (multiSendAddresses[to]) {
@@ -933,8 +946,8 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) internal returns (bool success, bytes memory returnData) {
-        if(!roles[role].members[msg.sender]) {
+    ) public moduleOnly returns (bool success, bytes memory returnData) {
+        if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (multiSendAddresses[to]) {
