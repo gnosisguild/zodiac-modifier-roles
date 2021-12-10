@@ -237,7 +237,7 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
+    /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
@@ -330,7 +330,7 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
+    /// @dev Sets whether or not a specific parameter value is allowed for a function call.
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Address to be scoped/unscoped.
