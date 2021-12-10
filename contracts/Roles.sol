@@ -485,6 +485,24 @@ contract Roles is Modifier {
         );
     }
 
+    /// @dev Returns the comparison type of a given parameter.
+    /// @param role The role to check.
+    /// @param targetAddress Target address to check.
+    /// @param functionSig Function signature for the function to check.
+    /// @param paramIndex Index of the parameter to check.
+    function getCompType(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex
+    ) public view returns (Comparison) {
+        return
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex];
+    }
+
     /// @dev Returns the comparison value for a parameter.
     /// @param role The role to check.
     /// @param targetAddress Target address to check.

@@ -1932,10 +1932,47 @@ describe("RolesModifier", async () => {
     
     it("returns role if set", async () => {
       const { avatar, modifier} = await txSetup();
-      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
       await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(0);
+      const tx = await modifier.populateTransaction.setDefaultRole(AddressOne, 1);
       await expect(await avatar.exec(modifier.address, 0, tx.data));
       await expect(await modifier.getDefaultRole(AddressOne)).to.be.equals(1);
+    });
+  });
+
+  describe("getCompType()", () => {
+    it("returns 0 if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const result = (await modifier.getCompValue(1, AddressOne, "0x12345678", 0)).toString();
+      await expect(result).to.be.equals("0x");
+    });
+
+    
+    it("returns type if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      const paramScoped =
+      await modifier.populateTransaction.setParametersScoped(
+        1,
+        AddressOne,
+        "0x12345678",
+        true,
+        [true],
+        [true],
+        [0]
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data)
+      await expect(await modifier.getCompType(1, AddressOne, "0x12345678", 0)).to.be.equals(0);
+      const changeCompType =
+      await modifier.populateTransaction.setParametersScoped(
+        1,
+        AddressOne,
+        "0x12345678",
+        true,
+        [true],
+        [true],
+        [1]
+        );
+      await avatar.exec(modifier.address, 0, changeCompType.data)
+      await expect(await modifier.getCompType(1, AddressOne, "0x12345678", 0)).to.be.equals(1);
     });
   });
 
