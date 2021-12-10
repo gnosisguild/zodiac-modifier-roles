@@ -2005,4 +2005,19 @@ describe("RolesModifier", async () => {
       await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(true);
     });
   });
+
+  describe("isAllowedFunction()", () => {
+    it("returns false if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isAllowedFunction(1, AddressOne, "0x12345678")).to.be.equals(false);
+    });
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isAllowedFunction(1, AddressOne, "0x12345678")).to.be.equals(false);
+      const tx = await modifier.populateTransaction.setAllowedFunction(1, AddressOne, "0x12345678", true);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.isAllowedFunction(1, AddressOne, "0x12345678")).to.be.equals(true);
+    });
+  });
 });
