@@ -46,7 +46,7 @@ contract Roles is Modifier {
     event SetMulitSendAddress(address multiSendAddress, bool allowed);
     event SetParametersScoped(
         uint16 role,
-        address target,
+        address targetAddress,
         bytes4 functionSig,
         bool scoped,
         bool[] paramsScoped,
@@ -82,7 +82,7 @@ contract Roles is Modifier {
     );
     event SetParameterAllowedValue(
         uint16 role,
-        address target,
+        address targetAddress,
         bytes4 functionSig,
         uint16 parameterIndex,
         bytes value,
@@ -90,7 +90,7 @@ contract Roles is Modifier {
     );
     event SetParameterCompValue(
         uint16 role,
-        address target,
+        address targetAddress,
         bytes4 functionSig,
         uint16 parameterIndex,
         bytes compValue
@@ -273,7 +273,7 @@ contract Roles is Modifier {
             .compTypes = compTypes;
         emit SetParametersScoped(
             role,
-            target,
+            targetAddress,
             functionSig,
             roles[role]
                 .targetAddresses[targetAddress]
@@ -389,7 +389,7 @@ contract Roles is Modifier {
 
         emit SetParameterCompValue(
             role,
-            target,
+            targetAddress,
             functionSig,
             paramIndex,
             roles[role]
@@ -457,6 +457,25 @@ contract Roles is Modifier {
                 .functions[functionSig]
                 .compTypes
         );
+    }
+
+    /// @dev Returns the comparison value for a parameter.
+    /// @param role The role to check.
+    /// @param targetAddress Target address to check.
+    /// @param functionSig Function signature for the function to check.
+    /// @param paramIndex Index of the parameter to check.
+    function getCompValue(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex
+    ) public view returns (bytes memory) {
+        return
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .values[paramIndex]
+                .compValue;
     }
 
     function isRoleMember(address module, uint16 role)
