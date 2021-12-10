@@ -85,6 +85,7 @@ contract Roles is Modifier {
         address target,
         bytes4 functionSig,
         uint16 parameterIndex,
+        bytes value,
         bool allowed
     );
     event SetParameterCompValue(
@@ -357,6 +358,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex,
+            value,
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
@@ -597,6 +599,8 @@ contract Roles is Modifier {
             } else {
                 return false;
             }
+        } else {
+            return false;
         }
     }
 
