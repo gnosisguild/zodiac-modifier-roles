@@ -320,7 +320,7 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
-      await expect(await modifier.isRoleMember(user1.address, 1)).to.be.equal(
+      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equal(
         true
       );
     });
@@ -340,7 +340,7 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, revoke.data);
 
-      await expect(await modifier.isRoleMember(user1.address, 1)).to.be.equal(
+      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equal(
         false
       );
     });
@@ -1988,6 +1988,21 @@ describe("RolesModifier", async () => {
       const tx = await modifier.populateTransaction.setTargetAddressScoped(1, AddressOne, true);
       await expect(await avatar.exec(modifier.address, 0, tx.data));
       await expect(await modifier.isScoped(1, AddressOne)).to.be.equals(true);
+    });
+  });
+
+  describe("isSendAllowed()", () => {
+    it("returns false if not set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(false);
+    });
+    
+    it("returns role if set", async () => {
+      const { avatar, modifier} = await txSetup();
+      await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(false);
+      const tx = await modifier.populateTransaction.setSendAllowedOnTargetAddress(1, AddressOne, true);
+      await expect(await avatar.exec(modifier.address, 0, tx.data));
+      await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(true);
     });
   });
 });
