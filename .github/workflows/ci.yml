@@ -1,4 +1,4 @@
-name: Delay
+name: Coverage
 on: [push]
 
 jobs:
