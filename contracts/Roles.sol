@@ -282,7 +282,10 @@ contract Roles is Modifier {
             role,
             targetAddress,
             functionSig,
-            isScoped(role, targetAddress),
+            roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .scoped,
             paramsScoped,
             types,
             compTypes

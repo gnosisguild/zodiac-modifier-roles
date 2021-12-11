@@ -1768,7 +1768,7 @@ describe("RolesModifier", async () => {
         [1, 1]
       );
       expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(
+      await expect(
         (
           await modifier.getParameterScopes(1, AddressOne, "0x12345678")
         ).toString()
@@ -1822,7 +1822,7 @@ describe("RolesModifier", async () => {
         [1, 1]
       );
 
-      expect(avatar.exec(modifier.address, 0, tx.data))
+      await expect(await avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "SetParametersScoped")
         .withArgs(
           1,
