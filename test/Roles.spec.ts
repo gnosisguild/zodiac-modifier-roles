@@ -1708,13 +1708,13 @@ describe("RolesModifier", async () => {
       expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(true);
       const txFalse = await modifier.populateTransaction.setSendAllowedOnTargetAddress(1, AddressOne, false);
       expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(false);
+      await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(false);
     });
 
     it("emits event with correct params", async () => {
       const { avatar, modifier } = await txSetup();
       const tx = await modifier.populateTransaction.setSendAllowedOnTargetAddress(1, AddressOne, true);
-      expect(await avatar.exec(modifier.address, 0, tx.data))
+      await expect(await avatar.exec(modifier.address, 0, tx.data))
       .to.emit(modifier, "SetSendAllowedOnTargetAddress")
       .withArgs(1, AddressOne, true);
     });

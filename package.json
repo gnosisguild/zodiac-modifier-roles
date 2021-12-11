@@ -1,7 +1,7 @@
 {
   "name": "zodiac-roles-modifier",
   "version": "1.0.0",
-  "description": "Modifier for checking transactions against role permissions",
+  "description": "A Zodiac modifier that allows avatars to enforce granular, role-based, permissions for attached modules.",
   "directories": {
     "test": "test"
   },
