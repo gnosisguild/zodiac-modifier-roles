@@ -222,7 +222,7 @@ contract Roles is Modifier {
         emit SetDelegateCallAllowedOnTargetAddress(
             role,
             targetAddress,
-            roles[role].targetAddresses[targetAddress].delegateCallAllowed
+            isAllowedToDelegateCall(role, targetAddress)
         );
     }
 
@@ -240,7 +240,7 @@ contract Roles is Modifier {
         emit SetTargetAddressScoped(
             role,
             targetAddress,
-            roles[role].targetAddresses[targetAddress].scoped
+            isScoped(role, targetAddress)
         );
     }
 
@@ -282,10 +282,7 @@ contract Roles is Modifier {
             role,
             targetAddress,
             functionSig,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .scoped,
+            isScoped(role, targetAddress),
             paramsScoped,
             types,
             compTypes
@@ -306,7 +303,7 @@ contract Roles is Modifier {
         emit SetSendAllowedOnTargetAddress(
             role,
             targetAddress,
-            roles[role].targetAddresses[targetAddress].sendAllowed
+            isSendAllowed(role, targetAddress)
         );
     }
 
@@ -314,26 +311,23 @@ contract Roles is Modifier {
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
-    /// @param selector Function signature to be allowed/disallowed.
+    /// @param functionSig Function signature to be allowed/disallowed.
     /// @param allow Bool to allow (true) or disallow (false) calls a function signature on target address.
     function setAllowedFunction(
         uint16 role,
         address targetAddress,
-        bytes4 selector,
+        bytes4 functionSig,
         bool allow
     ) external onlyOwner {
         roles[role]
             .targetAddresses[targetAddress]
-            .functions[selector]
+            .functions[functionSig]
             .allowed = allow;
         emit SetFunctionAllowedOnTargetAddress(
             role,
             targetAddress,
-            selector,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[selector]
-                .allowed
+            functionSig,
+            isAllowedFunction(role, targetAddress, functionSig)
         );
     }
 
@@ -399,11 +393,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .compValue
+            getCompValue(role, targetAddress, functionSig, paramIndex)
         );
     }
 
@@ -433,13 +423,13 @@ contract Roles is Modifier {
     /// @param role Role to be set as default.
     function setDefaultRole(address module, uint16 role) external onlyOwner {
         defaultRoles[module] = role;
-        emit SetDefaultRole(module, defaultRoles[module]);
+        emit SetDefaultRole(module, getDefaultRole(module));
     }
 
     /// @dev Returns the default role for a given module.
     /// @param module Module to be checked.
     /// @return Default role of given module.
-    function getDefaultRole(address module) external view returns (uint16) {
+    function getDefaultRole(address module) public view returns (uint16) {
         return defaultRoles[module];
     }
 
@@ -527,7 +517,7 @@ contract Roles is Modifier {
     /// @param module Module to check.
     /// @return bool indicating whether module is a member or role.
     function isRoleMember(uint16 role, address module)
-        external
+        public
         view
         returns (bool)
     {
@@ -879,13 +869,14 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        execTransactionWithRole(
-            to,
-            value,
-            data,
-            operation,
-            defaultRoles[msg.sender]
-        );
+        return
+            execTransactionWithRole(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[msg.sender]
+            );
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -928,7 +919,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly {
+    ) public moduleOnly returns (bool success) {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
@@ -940,6 +931,7 @@ contract Roles is Modifier {
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
         }
+        return true;
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
