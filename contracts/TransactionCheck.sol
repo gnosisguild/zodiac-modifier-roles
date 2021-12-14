@@ -139,20 +139,14 @@ library TransactionCheck {
         bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
-        (, bool[] memory paramTypes, , ) = Roles(msg.sender).getParameterScopes(
-            role,
-            targetAddress,
-            functionSig
-        );
+        (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(msg.sender)
+            .getParameterScopes(role, targetAddress, functionSig);
         for (
             // loop through each parameter
             uint16 i = 0;
             i < paramTypes.length;
             i++
         ) {
-            (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
-                msg.sender
-            ).getParameterScopes(role, targetAddress, functionSig);
             if (isScopedParam) {
                 // we set paramType to true if its a fixed or dynamic array type with length encoding
                 if (paramTypes[i] == true) {

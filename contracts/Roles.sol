@@ -36,10 +36,11 @@ contract Roles is Modifier {
 
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) internal roles;
-    mapping(address => bool) public multiSendAddresses;
+
+    address public multiSend;
 
     event AssignRoles(address module, uint16[] roles);
-    event SetMulitSendAddress(address multiSendAddress, bool allowed);
+    event SetMulitSendAddress(address multiSendAddress);
     event SetParametersScoped(
         uint16 role,
         address targetAddress,
@@ -149,16 +150,9 @@ contract Roles is Modifier {
     /// @dev Set the address of the expected multisend library
     /// @notice Only callable by owner.
     /// @param multiSendAddress address of the multisend library contract
-    /// @param allow bool, whether or not _multisendAddress is allowed
-    function setMultiSend(address multiSendAddress, bool allow)
-        external
-        onlyOwner
-    {
-        multiSendAddresses[multiSendAddress] = allow;
-        emit SetMulitSendAddress(
-            multiSendAddress,
-            multiSendAddresses[multiSendAddress]
-        );
+    function setMultiSend(address multiSendAddress) external onlyOwner {
+        multiSend = multiSendAddress;
+        emit SetMulitSendAddress(multiSend);
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -499,12 +493,6 @@ contract Roles is Modifier {
         return roles[role].members[module];
     }
 
-    /// @dev Returns bool to indicate if an address is an allowed multisend
-    /// @param multiSend address to check
-    function isAllowedMultiSend(address multiSend) public view returns (bool) {
-        return (multiSendAddresses[multiSend]);
-    }
-
     /// @dev Returns bool to indicate if an address is an allowed target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
@@ -719,7 +707,7 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (multiSendAddresses[to]) {
+        if (to == multiSend) {
             TransactionCheck.checkMultiSend(data, role);
         } else {
             TransactionCheck.checkTransaction(to, value, data, operation, role);
@@ -747,7 +735,7 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (multiSendAddresses[to]) {
+        if (to == multiSend) {
             TransactionCheck.checkMultiSend(data, role);
         } else {
             TransactionCheck.checkTransaction(to, value, data, operation, role);
