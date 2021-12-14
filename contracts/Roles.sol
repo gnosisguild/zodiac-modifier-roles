@@ -149,9 +149,9 @@ contract Roles is Modifier {
 
     /// @dev Set the address of the expected multisend library
     /// @notice Only callable by owner.
-    /// @param multiSendAddress address of the multisend library contract
-    function setMultiSend(address multiSendAddress) external onlyOwner {
-        multiSend = multiSendAddress;
+    /// @param _multiSend address of the multisend library contract
+    function setMultiSend(address _multiSend) external onlyOwner {
+        multiSend = _multiSend;
         emit SetMulitSendAddress(multiSend);
     }
 
