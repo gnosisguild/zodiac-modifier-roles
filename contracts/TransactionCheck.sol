@@ -158,11 +158,6 @@ library TransactionCheck {
                     }
                     // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
                     uint256 lengthPos = 36 + lengthLocation;
-                    uint256 length;
-                    assembly {
-                        // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
-                        length := mload(add(data, lengthPos))
-                    }
                     // get the data at length position
                     bytes memory out;
                     assembly {
