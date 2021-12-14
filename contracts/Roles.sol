@@ -941,7 +941,7 @@ contract Roles is Modifier {
         } else {
             checkTransaction(to, value, data, operation, role);
         }
-        if (revertOnFail && !exec(to, value, data, operation)) {
+        if (!exec(to, value, data, operation) && revertOnFail) {
             revert ModuleTransactionFailed();
         }
         return true;
@@ -970,7 +970,7 @@ contract Roles is Modifier {
             checkTransaction(to, value, data, operation, role);
         }
         (success, returnData) = execAndReturnData(to, value, data, operation);
-        if (revertOnFail && !success) {
+        if (!success && revertOnFail) {
             revert ModuleTransactionFailed();
         }
     }
