@@ -102,30 +102,6 @@ contract Roles is Modifier {
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
 
-    /// Function signature too short
-    error FunctionSignatureTooShort();
-
-    /// Role not allowed to delegate call to target address
-    error DelegateCallNotAllowed();
-
-    /// Role not allowed to call target address
-    error TargetAddressNotAllowed();
-
-    /// Role not allowed to call this function on target address
-    error FunctionNotAllowed();
-
-    /// Role not allowed to send to target address
-    error SendNotAllowed();
-
-    /// Role not allowed to use bytes for parameter
-    error ParameterNotAllowed();
-
-    /// Role not allowed to use bytes less than value for parameter
-    error ParameterLessThanAllowed();
-
-    /// Role not allowed to use bytes greater than value for parameter
-    error ParameterGreaterThanAllowed();
-
     /// Arrays must be the same length
     error ArraysDifferentLength();
 
