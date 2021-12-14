@@ -42,6 +42,8 @@ contract Roles is Modifier {
     mapping(uint16 => Role) internal roles;
     mapping(address => bool) public multiSendAddresses;
 
+    bool public revertOnFail;
+
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress, bool allowed);
     event SetParametersScoped(
@@ -102,6 +104,7 @@ contract Roles is Modifier {
         address target
     );
     event SetDefaultRole(address module, uint16 defaultRole);
+    event SetRevertOnFail(bool revertOnFail);
 
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
@@ -398,6 +401,13 @@ contract Roles is Modifier {
             paramIndex,
             getCompValue(role, targetAddress, functionSig, paramIndex)
         );
+    }
+
+    /// @dev Sets whether or not transactions should revert if the module transaction fails.
+    /// @param _revertOnFail Set true to revert on failed transactions.
+    function setRevertOnFail(bool _revertOnFail) public onlyOwner {
+        revertOnFail = _revertOnFail;
+        emit SetRevertOnFail(revertOnFail);
     }
 
     /// @dev Assigns and revokes roles to a given module.
@@ -931,7 +941,7 @@ contract Roles is Modifier {
         } else {
             checkTransaction(to, value, data, operation, role);
         }
-        if (!exec(to, value, data, operation)) {
+        if (revertOnFail && !exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
         }
         return true;
@@ -959,6 +969,9 @@ contract Roles is Modifier {
         } else {
             checkTransaction(to, value, data, operation, role);
         }
-        return execAndReturnData(to, value, data, operation);
+        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (revertOnFail && !success) {
+            revert ModuleTransactionFailed();
+        }
     }
 }
