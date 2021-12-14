@@ -31,36 +31,33 @@ library TransactionCheck {
     error ParameterGreaterThanAllowed();
 
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
-    /// @param transactions the packed transaction data (created by utils function buildMultiSendSafeTx).
+    /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(bytes memory transactions, uint16 role)
-        public
-        view
-    {
+    function checkMultiSend(bytes memory data, uint16 role) public view {
         Enum.Operation operation;
         address to;
         uint256 value;
-        bytes memory data;
+        bytes memory out;
         uint256 dataLength;
         // transaction data begins at byte 100, increment i by the transaction data length
         // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
-        for (uint256 i = 100; i < transactions.length; i += (85 + dataLength)) {
+        for (uint256 i = 100; i < data.length; i += (85 + dataLength)) {
             assembly {
                 // First byte of the data is the operation.
                 // We shift by 248 bits (256 - 8 [operation byte]) right since mload will always load 32 bytes (a word).
                 // This will also zero out unused data.
-                operation := shr(0xf8, mload(add(transactions, i)))
+                operation := shr(0xf8, mload(add(data, i)))
                 // We offset the load address by 1 byte (operation byte)
                 // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
-                to := shr(0x60, mload(add(transactions, add(i, 0x01))))
+                to := shr(0x60, mload(add(data, add(i, 0x01))))
                 // We offset the load address by 21 byte (operation byte + 20 address bytes)
-                value := mload(add(transactions, add(i, 0x15)))
+                value := mload(add(data, add(i, 0x15)))
                 // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
-                dataLength := mload(add(transactions, add(i, 0x35)))
+                dataLength := mload(add(data, add(i, 0x35)))
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
-                data := add(transactions, add(i, 0x35))
+                out := add(data, add(i, 0x35))
             }
-            checkTransaction(to, value, data, operation, role);
+            checkTransaction(to, value, out, operation, role);
         }
     }
 

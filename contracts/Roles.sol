@@ -6,6 +6,9 @@ import "./TransactionCheck.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
+    address constant MULTISENDADDRESS =
+        0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+
     struct Parameter {
         mapping(bytes => bool) allowed;
         bytes compValue;
@@ -144,21 +147,6 @@ contract Roles is Modifier {
             revert SetUpModulesAlreadyCalled();
         }
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
-    }
-
-    /// @dev Set the address of the expected multisend library
-    /// @notice Only callable by owner.
-    /// @param multiSendAddress address of the multisend library contract
-    /// @param allow bool, whether or not _multisendAddress is allowed
-    function setMultiSend(address multiSendAddress, bool allow)
-        external
-        onlyOwner
-    {
-        multiSendAddresses[multiSendAddress] = allow;
-        emit SetMulitSendAddress(
-            multiSendAddress,
-            multiSendAddresses[multiSendAddress]
-        );
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -653,60 +641,6 @@ contract Roles is Modifier {
         }
     }
 
-    /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
-    /// @param transactions the packed transaction data (created by utils function buildMultiSendSafeTx).
-    /// @param role Role to check for.
-    function checkMultiSend(bytes memory transactions, uint16 role)
-        internal
-        view
-    {
-        TransactionCheck.checkMultiSend(transactions, role);
-    }
-
-    function checkParameter(
-        address targetAddress,
-        uint16 role,
-        bytes memory data,
-        uint16 paramIndex,
-        bytes memory value
-    ) internal view {
-        TransactionCheck.checkParameter(
-            targetAddress,
-            role,
-            data,
-            paramIndex,
-            value
-        );
-    }
-
-    /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    /// @param data the transaction data to check
-    function checkParameters(
-        uint16 role,
-        address targetAddress,
-        bytes memory data
-    ) internal view {
-        TransactionCheck.checkParameters(role, targetAddress, data);
-    }
-
-    function checkTransaction(
-        address targetAddress,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation,
-        uint16 role
-    ) internal view {
-        TransactionCheck.checkTransaction(
-            targetAddress,
-            value,
-            data,
-            operation,
-            role
-        );
-    }
-
     /// @dev Passes a transaction to the modifier.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
@@ -773,10 +707,10 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (multiSendAddresses[to]) {
-            checkMultiSend(data, role);
+        if (to == MULTISENDADDRESS) {
+            TransactionCheck.checkMultiSend(data, role);
         } else {
-            checkTransaction(to, value, data, operation, role);
+            TransactionCheck.checkTransaction(to, value, data, operation, role);
         }
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
@@ -801,10 +735,10 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (multiSendAddresses[to]) {
-            checkMultiSend(data, role);
+        if (to == MULTISENDADDRESS) {
+            TransactionCheck.checkMultiSend(data, role);
         } else {
-            checkTransaction(to, value, data, operation, role);
+            TransactionCheck.checkTransaction(to, value, data, operation, role);
         }
         return execAndReturnData(to, value, data, operation);
     }
