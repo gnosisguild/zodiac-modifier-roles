@@ -6,9 +6,6 @@ import "./TransactionCheck.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    address constant MULTISENDADDRESS =
-        0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-
     struct Parameter {
         mapping(bytes => bool) allowed;
         bytes compValue;
@@ -147,6 +144,21 @@ contract Roles is Modifier {
             revert SetUpModulesAlreadyCalled();
         }
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
+    }
+
+    /// @dev Set the address of the expected multisend library
+    /// @notice Only callable by owner.
+    /// @param multiSendAddress address of the multisend library contract
+    /// @param allow bool, whether or not _multisendAddress is allowed
+    function setMultiSend(address multiSendAddress, bool allow)
+        external
+        onlyOwner
+    {
+        multiSendAddresses[multiSendAddress] = allow;
+        emit SetMulitSendAddress(
+            multiSendAddress,
+            multiSendAddresses[multiSendAddress]
+        );
     }
 
     /// @dev Set whether or not calls can be made to an address.
@@ -707,7 +719,7 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (to == MULTISENDADDRESS) {
+        if (multiSendAddresses[to]) {
             TransactionCheck.checkMultiSend(data, role);
         } else {
             TransactionCheck.checkTransaction(to, value, data, operation, role);
@@ -735,7 +747,7 @@ contract Roles is Modifier {
         if (!roles[role].members[msg.sender]) {
             revert NoMembership();
         }
-        if (to == MULTISENDADDRESS) {
+        if (multiSendAddresses[to]) {
             TransactionCheck.checkMultiSend(data, role);
         } else {
             TransactionCheck.checkTransaction(to, value, data, operation, role);
