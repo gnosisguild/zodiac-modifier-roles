@@ -3,9 +3,11 @@ import "@nomiclabs/hardhat-waffle";
 import "solidity-coverage";
 import "hardhat-deploy";
 import "hardhat-gas-reporter";
+import "hardhat-contract-sizer";
 import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
+import "./src/tasks/setup";
 
 const argv = yargs
   .option("network", {
@@ -18,8 +20,6 @@ const argv = yargs
 // Load environment variables.
 dotenv.config();
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
-
-import "./src/tasks/setup";
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
@@ -52,13 +52,13 @@ export default {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }    
+        runs: 1,
+      },
+    },
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     mainnet: {
       ...sharedNetworkConfig,

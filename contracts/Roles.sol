@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
+import "./Comp.sol";
+import "./TransactionCheck.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    enum Comparison {
-        EqualTo,
-        GreaterThan,
-        LessThan
-    }
-
     struct Parameter {
         mapping(bytes => bool) allowed;
         bytes compValue;
@@ -22,7 +18,7 @@ contract Roles is Modifier {
         bool[] paramsScoped;
         bool[] paramTypes;
         mapping(uint16 => Parameter) values;
-        Comparison[] compTypes;
+        Comp.Comparison[] compTypes;
     }
 
     struct TargetAddress {
@@ -51,7 +47,7 @@ contract Roles is Modifier {
         bool scoped,
         bool[] paramsScoped,
         bool[] types,
-        Comparison[] compTypes
+        Comp.Comparison[] compTypes
     );
 
     event SetTargetAddressAllowed(
@@ -260,7 +256,7 @@ contract Roles is Modifier {
         bool scoped,
         bool[] memory paramsScoped,
         bool[] memory types,
-        Comparison[] memory compTypes
+        Comp.Comparison[] memory compTypes
     ) external onlyOwner {
         roles[role]
             .targetAddresses[targetAddress]
@@ -443,7 +439,7 @@ contract Roles is Modifier {
     /// @return bool describing whether (true) or not (false) the function is scoped.
     /// @return bool[] describing parameter types are variable(true) or fixed (false) length.
     /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
-    /// @return Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
+    /// @return Comp.Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
     function getParameterScopes(
         uint16 role,
         address targetAddress,
@@ -455,7 +451,7 @@ contract Roles is Modifier {
             bool,
             bool[] memory,
             bool[] memory,
-            Comparison[] memory
+            Comp.Comparison[] memory
         )
     {
         return (
@@ -488,7 +484,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex
-    ) public view returns (Comparison) {
+    ) public view returns (Comp.Comparison) {
         return
             roles[role]
                 .targetAddresses[targetAddress]
@@ -628,7 +624,7 @@ contract Roles is Modifier {
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .compTypes[paramIndex] == Comparison.EqualTo
+                .compTypes[paramIndex] == Comp.Comparison.EqualTo
         ) {
             return
                 roles[role]
@@ -640,7 +636,7 @@ contract Roles is Modifier {
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .compTypes[paramIndex] == Comparison.GreaterThan
+                .compTypes[paramIndex] == Comp.Comparison.GreaterThan
         ) {
             if (
                 bytes32(value) >
@@ -660,7 +656,7 @@ contract Roles is Modifier {
             roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
-                .compTypes[paramIndex] == Comparison.LessThan
+                .compTypes[paramIndex] == Comp.Comparison.LessThan
         ) {
             if (
                 bytes32(value) <
@@ -688,31 +684,7 @@ contract Roles is Modifier {
         internal
         view
     {
-        Enum.Operation operation;
-        address to;
-        uint256 value;
-        bytes memory data;
-        uint256 dataLength;
-        // transaction data begins at byte 100, increment i by the transaction data length
-        // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
-        for (uint256 i = 100; i < transactions.length; i += (85 + dataLength)) {
-            assembly {
-                // First byte of the data is the operation.
-                // We shift by 248 bits (256 - 8 [operation byte]) right since mload will always load 32 bytes (a word).
-                // This will also zero out unused data.
-                operation := shr(0xf8, mload(add(transactions, i)))
-                // We offset the load address by 1 byte (operation byte)
-                // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
-                to := shr(0x60, mload(add(transactions, add(i, 0x01))))
-                // We offset the load address by 21 byte (operation byte + 20 address bytes)
-                value := mload(add(transactions, add(i, 0x15)))
-                // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
-                dataLength := mload(add(transactions, add(i, 0x35)))
-                // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
-                data := add(transactions, add(i, 0x35))
-            }
-            checkTransaction(to, value, data, operation, role);
-        }
+        TransactionCheck.checkMultiSend(transactions, role);
     }
 
     function checkParameter(
@@ -722,34 +694,13 @@ contract Roles is Modifier {
         uint16 paramIndex,
         bytes memory value
     ) internal view {
-        bytes4 functionSig = bytes4(data);
-        if (
-            getCompType(role, targetAddress, functionSig, paramIndex) ==
-            Comparison.EqualTo &&
-            !isAllowedValueForParam(
-                role,
-                targetAddress,
-                functionSig,
-                paramIndex,
-                value
-            )
-        ) {
-            revert ParameterNotAllowed();
-        } else if (
-            getCompType(role, targetAddress, functionSig, paramIndex) ==
-            Comparison.GreaterThan &&
-            bytes32(value) <=
-            bytes32(getCompValue(role, targetAddress, functionSig, paramIndex))
-        ) {
-            revert ParameterLessThanAllowed();
-        } else if (
-            getCompType(role, targetAddress, functionSig, paramIndex) ==
-            Comparison.LessThan &&
-            bytes32(value) >=
-            bytes32(getCompValue(role, targetAddress, functionSig, paramIndex))
-        ) {
-            revert ParameterGreaterThanAllowed();
-        }
+        TransactionCheck.checkParameter(
+            targetAddress,
+            role,
+            data,
+            paramIndex,
+            value
+        );
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
@@ -761,103 +712,23 @@ contract Roles is Modifier {
         address targetAddress,
         bytes memory data
     ) internal view {
-        bytes4 functionSig = bytes4(data);
-        // First 4 bytes are the function selector, skip function selector.
-        uint16 pos = 4;
-        for (
-            // loop through each parameter
-            uint16 i = 0;
-            i <
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .paramTypes
-                .length;
-            i++
-        ) {
-            (
-                bool isScopedParam,
-                bool[] memory paramTypes,
-                ,
-
-            ) = getParameterScopes(role, targetAddress, functionSig);
-            if (isScopedParam) {
-                // we set paramType to true if its a fixed or dynamic array type with length encoding
-                if (paramTypes[i] == true) {
-                    // location of length of first parameter is first word (4 bytes)
-                    pos += 32;
-                    uint256 lengthLocation;
-                    assembly {
-                        lengthLocation := mload(add(data, pos))
-                    }
-                    // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
-                    uint256 lengthPos = 36 + lengthLocation;
-                    uint256 length;
-                    assembly {
-                        // load the first parameter length at (4 bytes + 32 bytes + lengthLocation bytes)
-                        length := mload(add(data, lengthPos))
-                    }
-                    // get the data at length position
-                    bytes memory out;
-                    assembly {
-                        out := add(data, lengthPos)
-                    }
-                    checkParameter(targetAddress, role, data, i, out);
-
-                    // the parameter is not an array and has no length encoding
-                } else {
-                    // fixed value data is positioned within the parameter block
-                    pos += 32;
-                    bytes32 decoded;
-                    assembly {
-                        decoded := mload(add(data, pos))
-                    }
-                    // encode bytes32 to bytes memory for the mapping key
-                    bytes memory encoded = abi.encodePacked(decoded);
-                    checkParameter(targetAddress, role, data, i, encoded);
-                }
-            }
-        }
+        TransactionCheck.checkParameters(role, targetAddress, data);
     }
 
     function checkTransaction(
         address targetAddress,
-        uint256,
+        uint256 value,
         bytes memory data,
         Enum.Operation operation,
         uint16 role
     ) internal view {
-        bytes4 functionSig = bytes4(data);
-        if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
-        }
-        if (
-            operation == Enum.Operation.DelegateCall &&
-            !isAllowedToDelegateCall(role, targetAddress)
-        ) {
-            revert DelegateCallNotAllowed();
-        }
-        if (!isAllowedTargetAddress(role, targetAddress)) {
-            revert TargetAddressNotAllowed();
-        }
-        if (data.length >= 4) {
-            if (
-                isScoped(role, targetAddress) &&
-                !isAllowedFunction(role, targetAddress, functionSig)
-            ) {
-                revert FunctionNotAllowed();
-            }
-            if (isFunctionScoped(role, targetAddress, functionSig)) {
-                checkParameters(role, targetAddress, data);
-            }
-        } else {
-            if (
-                isFunctionScoped(role, targetAddress, functionSig) &&
-                !isSendAllowed(role, targetAddress)
-            ) {
-                revert SendNotAllowed();
-            }
-        }
+        TransactionCheck.checkTransaction(
+            targetAddress,
+            value,
+            data,
+            operation,
+            role
+        );
     }
 
     /// @dev Passes a transaction to the modifier.
