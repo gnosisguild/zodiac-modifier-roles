@@ -35,17 +35,17 @@ contract Roles is Modifier {
 
     struct Role {
         mapping(address => TargetAddress) targetAddresses;
-        mapping(address => bool) members;
     }
 
-    mapping(address => uint16) public defaultRoles;
-    mapping(uint16 => Role) internal roles;
+    mapping(address => bytes32) public assignedRoles;
+    mapping(address => uint8) public defaultRoles;
+    mapping(uint8 => Role) internal roles;
     mapping(address => bool) public multiSendAddresses;
 
-    event AssignRoles(address module, uint16[] roles);
+    event AssignRoles(address module, bytes32 roles);
     event SetMulitSendAddress(address multiSendAddress, bool allowed);
     event SetParametersScoped(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         bool scoped,
@@ -55,33 +55,33 @@ contract Roles is Modifier {
     );
 
     event SetTargetAddressAllowed(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allowed
     );
     event SetTargetAddressScoped(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool scoped
     );
     event SetSendAllowedOnTargetAddress(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allowed
     );
     event SetDelegateCallAllowedOnTargetAddress(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allowed
     );
     event SetFunctionAllowedOnTargetAddress(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 selector,
         bool allowed
     );
     event SetParameterAllowedValue(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 parameterIndex,
@@ -89,7 +89,7 @@ contract Roles is Modifier {
         bool allowed
     );
     event SetParameterCompValue(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 parameterIndex,
@@ -101,7 +101,7 @@ contract Roles is Modifier {
         address indexed avatar,
         address target
     );
-    event SetDefaultRole(address module, uint16 defaultRole);
+    event SetDefaultRole(address module, uint8 defaultRole);
 
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
@@ -195,7 +195,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be allowed/disallowed.
     /// @param allow Bool to allow (true) or disallow (false) calls to target address.
     function setTargetAddressAllowed(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allow
     ) external onlyOwner {
@@ -213,7 +213,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to which delegate calls should be allowed/disallowed.
     /// @param allow Bool to allow (true) or disallow (false) delegate calls to target address.
     function setDelegateCallAllowedOnTargetAddress(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allow
     ) external onlyOwner {
@@ -232,7 +232,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
     function setTargetAddressScoped(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool scoped
     ) external onlyOwner {
@@ -254,7 +254,7 @@ contract Roles is Modifier {
     /// @param types false for static, true for dynamic.
     /// @param compTypes Any, or EqualTo, GreaterThan, or LessThan compValue.
     function setParametersScoped(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         bool scoped,
@@ -298,7 +298,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be allow/disallow sends to.
     /// @param allow Bool to allow (true) or disallow (false) sends on target address.
     function setSendAllowedOnTargetAddress(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bool allow
     ) external onlyOwner {
@@ -317,7 +317,7 @@ contract Roles is Modifier {
     /// @param functionSig Function signature to be allowed/disallowed.
     /// @param allow Bool to allow (true) or disallow (false) calls a function signature on target address.
     function setAllowedFunction(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         bool allow
@@ -343,7 +343,7 @@ contract Roles is Modifier {
     /// @param value the parameter value to be set
     /// @param allow allow (true) or disallow (false) parameter value
     function setParameterAllowedValue(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
@@ -379,7 +379,7 @@ contract Roles is Modifier {
     /// @param paramIndex index of the parameter to scope
     /// @param compValue the comparison value
     function setParameterCompValue(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
@@ -400,31 +400,24 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Assigns and revokes roles to a given module.
-    /// @param module Module on which to assign/revoke roles.
-    /// @param _roles Roles to assign/revoke.
-    /// @param memberOf Assign (true) or revoke (false) corresponding _roles.
+    /// @dev Assigns a new set of roles to a given module replacing any previously assigned roles.
+    /// @param module Module on which to assign roles.
+    /// @param newRolesBitmap Bitmap where bit a position i indicates whether role with ID i is assigned.
     function assignRoles(
         address module,
-        uint16[] calldata _roles,
-        bool[] memory memberOf
+        bytes32 newRolesBitmap
     ) external onlyOwner {
-        if (_roles.length != memberOf.length) {
-            revert ArraysDifferentLength();
-        }
-        for (uint16 i = 0; i < _roles.length; i++) {
-            roles[_roles[i]].members[module] = memberOf[i];
-        }
+        assignedRoles[module] = newRolesBitmap;
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }
-        emit AssignRoles(module, _roles);
+        emit AssignRoles(module, newRolesBitmap);
     }
 
     /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
     /// @param module Address of the module on which to set default role.
     /// @param role Role to be set as default.
-    function setDefaultRole(address module, uint16 role) external onlyOwner {
+    function setDefaultRole(address module, uint8 role) external onlyOwner {
         defaultRoles[module] = role;
         emit SetDefaultRole(module, getDefaultRole(module));
     }
@@ -432,7 +425,7 @@ contract Roles is Modifier {
     /// @dev Returns the default role for a given module.
     /// @param module Module to be checked.
     /// @return Default role of given module.
-    function getDefaultRole(address module) public view returns (uint16) {
+    function getDefaultRole(address module) public view returns (uint8) {
         return defaultRoles[module];
     }
 
@@ -445,7 +438,7 @@ contract Roles is Modifier {
     /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
     /// @return Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
     function getParameterScopes(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig
     )
@@ -484,7 +477,7 @@ contract Roles is Modifier {
     /// @param functionSig Function signature for the function to check.
     /// @param paramIndex Index of the parameter to check.
     function getCompType(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex
@@ -502,7 +495,7 @@ contract Roles is Modifier {
     /// @param functionSig Function signature for the function to check.
     /// @param paramIndex Index of the parameter to check.
     function getCompValue(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex
@@ -519,12 +512,15 @@ contract Roles is Modifier {
     /// @param role Role to check.
     /// @param module Module to check.
     /// @return bool indicating whether module is a member or role.
-    function isRoleMember(uint16 role, address module)
+    function isRoleMember(uint8 role, address module)
         public
         view
         returns (bool)
     {
-        return roles[role].members[module];
+        unchecked {
+            bytes32 shifted = bytes32(uint256(uint256(2)**uint256(role)));
+            return bytes32(0) != assignedRoles[module] & shifted;
+        }
     }
 
     /// @dev Returns bool to indicate if an address is an allowed multisend
@@ -536,7 +532,7 @@ contract Roles is Modifier {
     /// @dev Returns bool to indicate if an address is an allowed target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isAllowedTargetAddress(uint16 role, address targetAddress)
+    function isAllowedTargetAddress(uint8 role, address targetAddress)
         public
         view
         returns (bool)
@@ -547,7 +543,7 @@ contract Roles is Modifier {
     /// @dev Returns bool to indicate if an address is scoped.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isScoped(uint16 role, address targetAddress)
+    function isScoped(uint8 role, address targetAddress)
         public
         view
         returns (bool)
@@ -558,7 +554,7 @@ contract Roles is Modifier {
     /// @dev Returns bool to indicate if an address is scoped.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isSendAllowed(uint16 role, address targetAddress)
+    function isSendAllowed(uint8 role, address targetAddress)
         public
         view
         returns (bool)
@@ -571,7 +567,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to check.
     /// @param functionSig Signature to check.
     function isAllowedFunction(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig
     ) public view returns (bool) {
@@ -588,7 +584,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to check.
     /// @param functionSig Signature to check.
     function isFunctionScoped(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig
     ) public view returns (bool) {
@@ -603,7 +599,7 @@ contract Roles is Modifier {
     /// @dev Returns bool to indicate if delegate calls are allowed to a target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isAllowedToDelegateCall(uint16 role, address targetAddress)
+    function isAllowedToDelegateCall(uint8 role, address targetAddress)
         public
         view
         returns (bool)
@@ -618,7 +614,7 @@ contract Roles is Modifier {
     /// @param paramIndex Parameter index to check.
     /// @param value Value to check.
     function isAllowedValueForParam(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex,
@@ -684,7 +680,7 @@ contract Roles is Modifier {
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param transactions the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(bytes memory transactions, uint16 role)
+    function checkMultiSend(bytes memory transactions, uint8 role)
         internal
         view
     {
@@ -717,7 +713,7 @@ contract Roles is Modifier {
 
     function checkParameter(
         address targetAddress,
-        uint16 role,
+        uint8 role,
         bytes memory data,
         uint16 paramIndex,
         bytes memory value
@@ -757,7 +753,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
-        uint16 role,
+        uint8 role,
         address targetAddress,
         bytes memory data
     ) internal view {
@@ -825,7 +821,7 @@ contract Roles is Modifier {
         uint256,
         bytes memory data,
         Enum.Operation operation,
-        uint16 role
+        uint8 role
     ) internal view {
         bytes4 functionSig = bytes4(data);
         if (data.length != 0 && data.length < 4) {
@@ -921,9 +917,9 @@ contract Roles is Modifier {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 role
+        uint8 role
     ) public moduleOnly returns (bool success) {
-        if (!roles[role].members[msg.sender]) {
+        if (!isRoleMember(role, msg.sender)) {
             revert NoMembership();
         }
         if (multiSendAddresses[to]) {
@@ -949,9 +945,9 @@ contract Roles is Modifier {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 role
+        uint8 role
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        if (!roles[role].members[msg.sender]) {
+        if (!isRoleMember(role, msg.sender)) {
             revert NoMembership();
         }
         if (multiSendAddresses[to]) {
