@@ -20,7 +20,16 @@ describe("RolesModifier", async () => {
 
   const setupTestWithTestAvatar = deployments.createFixture(async () => {
     const base = await baseSetup();
-    const Modifier = await hre.ethers.getContractFactory("Roles");
+    const TransactionCheck = await hre.ethers.getContractFactory(
+      "TransactionCheck"
+    );
+    const transactionCheck = await TransactionCheck.deploy();
+    const Modifier = await hre.ethers.getContractFactory("Roles", {
+      libraries: {
+        TransactionCheck: transactionCheck.address,
+      },
+    });
+
     const modifier = await Modifier.deploy(
       base.avatar.address,
       base.avatar.address,
@@ -192,21 +201,30 @@ describe("RolesModifier", async () => {
 
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
-      const Module = await hre.ethers.getContractFactory("Roles");
-      const module = await Module.deploy(
+      const TransactionCheck = await hre.ethers.getContractFactory(
+        "TransactionCheck"
+      );
+      const transactionCheck = await TransactionCheck.deploy();
+      const Modifier = await hre.ethers.getContractFactory("Roles", {
+        libraries: {
+          TransactionCheck: transactionCheck.address,
+        },
+      });
+
+      const modifier = await Modifier.deploy(
         user1.address,
         user1.address,
         user1.address
       );
-      await module.deployed();
-      await expect(module.deployTransaction)
-        .to.emit(module, "RolesModSetup")
+      await modifier.deployed();
+      await expect(modifier.deployTransaction)
+        .to.emit(modifier, "RolesModSetup")
         .withArgs(user1.address, user1.address, user1.address, user1.address);
     });
   });
 
   describe("disableModule()", async () => {
-    it.only("reverts if not authorized", async () => {
+    it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
         modifier.disableModule(FirstAddress, user1.address)
@@ -847,8 +865,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
       const multiSendTarget = await modifier.populateTransaction.setMultiSend(
-        multisend.address,
-        true
+        multisend.address
       );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
@@ -986,8 +1003,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, allowTarget.data);
 
       const multiSendTarget = await modifier.populateTransaction.setMultiSend(
-        multisend.address,
-        true
+        multisend.address
       );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
@@ -1535,39 +1551,17 @@ describe("RolesModifier", async () => {
 
     it("sets multisend address to true", async () => {
       const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setMultiSend(
-        AddressOne,
-        true
-      );
+      const tx = await modifier.populateTransaction.setMultiSend(AddressOne);
       expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(await modifier.isAllowedMultiSend(AddressOne)).to.be.equals(true);
-    });
-
-    it("sets multisend address to false", async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setMultiSend(
-        AddressOne,
-        true
-      );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(await modifier.isAllowedMultiSend(AddressOne)).to.be.equals(true);
-      const txFalse = await modifier.populateTransaction.setMultiSend(
-        AddressOne,
-        false
-      );
-      expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(await modifier.isAllowedMultiSend(AddressOne)).to.be.equals(false);
+      expect(await modifier.multiSend()).to.be.equals(AddressOne);
     });
 
     it("emits event with correct params", async () => {
       const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setMultiSend(
-        AddressOne,
-        true
-      );
+      const tx = await modifier.populateTransaction.setMultiSend(AddressOne);
       expect(await avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "SetMulitSendAddress")
-        .withArgs(AddressOne, true);
+        .withArgs(AddressOne);
     });
   });
 

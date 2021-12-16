@@ -70,14 +70,14 @@ library TransactionCheck {
     ) public view {
         bytes4 functionSig = bytes4(data);
         if (
-            Roles(msg.sender).getCompType(
+            Roles(address(this)).getCompType(
                 role,
                 targetAddress,
                 functionSig,
                 paramIndex
             ) ==
             Comp.Comparison.EqualTo &&
-            !Roles(msg.sender).isAllowedValueForParam(
+            !Roles(address(this)).isAllowedValueForParam(
                 role,
                 targetAddress,
                 functionSig,
@@ -87,7 +87,7 @@ library TransactionCheck {
         ) {
             revert ParameterNotAllowed();
         } else if (
-            Roles(msg.sender).getCompType(
+            Roles(address(this)).getCompType(
                 role,
                 targetAddress,
                 functionSig,
@@ -96,7 +96,7 @@ library TransactionCheck {
             Comp.Comparison.GreaterThan &&
             bytes32(value) <=
             bytes32(
-                Roles(msg.sender).getCompValue(
+                Roles(address(this)).getCompValue(
                     role,
                     targetAddress,
                     functionSig,
@@ -106,7 +106,7 @@ library TransactionCheck {
         ) {
             revert ParameterLessThanAllowed();
         } else if (
-            Roles(msg.sender).getCompType(
+            Roles(address(this)).getCompType(
                 role,
                 targetAddress,
                 functionSig,
@@ -115,7 +115,7 @@ library TransactionCheck {
             Comp.Comparison.LessThan &&
             bytes32(value) >=
             bytes32(
-                Roles(msg.sender).getCompValue(
+                Roles(address(this)).getCompValue(
                     role,
                     targetAddress,
                     functionSig,
@@ -139,8 +139,9 @@ library TransactionCheck {
         bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
-        (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(msg.sender)
-            .getParameterScopes(role, targetAddress, functionSig);
+        (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
+            address(this)
+        ).getParameterScopes(role, targetAddress, functionSig);
         for (
             // loop through each parameter
             uint16 i = 0;
@@ -194,17 +195,17 @@ library TransactionCheck {
         }
         if (
             operation == Enum.Operation.DelegateCall &&
-            !Roles(msg.sender).isAllowedToDelegateCall(role, targetAddress)
+            !Roles(address(this)).isAllowedToDelegateCall(role, targetAddress)
         ) {
             revert DelegateCallNotAllowed();
         }
-        if (!Roles(msg.sender).isAllowedTargetAddress(role, targetAddress)) {
+        if (!Roles(address(this)).isAllowedTargetAddress(role, targetAddress)) {
             revert TargetAddressNotAllowed();
         }
         if (data.length >= 4) {
             if (
-                Roles(msg.sender).isScoped(role, targetAddress) &&
-                !Roles(msg.sender).isAllowedFunction(
+                Roles(address(this)).isScoped(role, targetAddress) &&
+                !Roles(address(this)).isAllowedFunction(
                     role,
                     targetAddress,
                     functionSig
@@ -213,7 +214,7 @@ library TransactionCheck {
                 revert FunctionNotAllowed();
             }
             if (
-                Roles(msg.sender).isFunctionScoped(
+                Roles(address(this)).isFunctionScoped(
                     role,
                     targetAddress,
                     functionSig
@@ -223,11 +224,11 @@ library TransactionCheck {
             }
         } else {
             if (
-                Roles(msg.sender).isFunctionScoped(
+                Roles(address(this)).isFunctionScoped(
                     role,
                     targetAddress,
                     functionSig
-                ) && !Roles(msg.sender).isSendAllowed(role, targetAddress)
+                ) && !Roles(address(this)).isSendAllowed(role, targetAddress)
             ) {
                 revert SendNotAllowed();
             }
