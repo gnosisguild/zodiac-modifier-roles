@@ -5,7 +5,62 @@ import "./Roles.sol";
 import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+struct Parameter {
+    mapping(bytes => bool) allowed;
+    bytes compValue;
+}
+
+struct Function {
+    bool allowed;
+    bool scoped;
+    bool[] paramsScoped;
+    bool[] paramTypes;
+    mapping(uint16 => Parameter) values;
+    Comp.Comparison[] compTypes;
+}
+
+struct TargetAddress {
+    bool allowed;
+    bool scoped;
+    bool delegateCallAllowed;
+    bool sendAllowed;
+    mapping(bytes4 => Function) functions;
+}
+
+struct Role {
+    mapping(address => TargetAddress) targetAddresses;
+    mapping(address => bool) members;
+}
+
+struct RoleWrap {
+    mapping(uint16 => Role) roles;
+}
+
 library TransactionCheck {
+    event SetParameterAllowedValue(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 parameterIndex,
+        bytes value,
+        bool allowed
+    );
+    event SetFunctionAllowedOnTargetAddress(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        bool allowed
+    );
+    event SetParametersScoped(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool scoped,
+        bool[] paramsScoped,
+        bool[] types,
+        Comp.Comparison[] compTypes
+    );
+
     /// Function signature too short
     error FunctionSignatureTooShort();
 
@@ -33,7 +88,7 @@ library TransactionCheck {
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(bytes memory data, uint16 role) public view {
+    function checkMultiSend(RoleWrap storage self, bytes memory data, uint16 role) public view {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -57,11 +112,12 @@ library TransactionCheck {
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 out := add(data, add(i, 0x35))
             }
-            checkTransaction(to, value, out, operation, role);
+            checkTransaction(self, to, value, out, operation, role);
         }
     }
 
     function checkParameter(
+        RoleWrap storage self,
         address targetAddress,
         uint16 role,
         bytes memory data,
@@ -69,15 +125,20 @@ library TransactionCheck {
         bytes memory value
     ) public view {
         bytes4 functionSig = bytes4(data);
+        bytes memory compValue = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .values[paramIndex]
+                .compValue;
+        Comp.Comparison compType = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex];
         if (
-            Roles(address(this)).getCompType(
-                role,
-                targetAddress,
-                functionSig,
-                paramIndex
-            ) ==
+            compType ==
             Comp.Comparison.EqualTo &&
-            !Roles(address(this)).isAllowedValueForParam(
+            !isAllowedValueForParam(
+                self,
                 role,
                 targetAddress,
                 functionSig,
@@ -87,51 +148,29 @@ library TransactionCheck {
         ) {
             revert ParameterNotAllowed();
         } else if (
-            Roles(address(this)).getCompType(
-                role,
-                targetAddress,
-                functionSig,
-                paramIndex
-            ) ==
+            compType ==
             Comp.Comparison.GreaterThan &&
             bytes32(value) <=
-            bytes32(
-                Roles(address(this)).getCompValue(
-                    role,
-                    targetAddress,
-                    functionSig,
-                    paramIndex
-                )
-            )
+            bytes32(compValue)
         ) {
             revert ParameterLessThanAllowed();
         } else if (
-            Roles(address(this)).getCompType(
-                role,
-                targetAddress,
-                functionSig,
-                paramIndex
-            ) ==
+            compType ==
             Comp.Comparison.LessThan &&
             bytes32(value) >=
-            bytes32(
-                Roles(address(this)).getCompValue(
-                    role,
-                    targetAddress,
-                    functionSig,
-                    paramIndex
-                )
-            )
+            bytes32(compValue)
         ) {
             revert ParameterGreaterThanAllowed();
         }
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
+    /// @param self reference to roles storage
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
+        RoleWrap storage self,
         uint16 role,
         address targetAddress,
         bytes memory data
@@ -139,9 +178,17 @@ library TransactionCheck {
         bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
-        (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
-            address(this)
-        ).getParameterScopes(role, targetAddress, functionSig);
+        bool[] memory paramTypes = self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramTypes;
+        bool isScopedParam = self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .scoped;
+        // (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
+        //     address(this)
+        // ).getParameterScopes(role, targetAddress, functionSig);
         for (
             // loop through each parameter
             uint16 i = 0;
@@ -164,7 +211,7 @@ library TransactionCheck {
                     assembly {
                         out := add(data, lengthPos)
                     }
-                    checkParameter(targetAddress, role, data, i, out);
+                    checkParameter(self, targetAddress, role, data, i, out);
 
                     // the parameter is not an array and has no length encoding
                 } else {
@@ -176,13 +223,14 @@ library TransactionCheck {
                     }
                     // encode bytes32 to bytes memory for the mapping key
                     bytes memory encoded = abi.encodePacked(decoded);
-                    checkParameter(targetAddress, role, data, i, encoded);
+                    checkParameter(self, targetAddress, role, data, i, encoded);
                 }
             }
         }
     }
 
     function checkTransaction(
+        RoleWrap storage self,
         address targetAddress,
         uint256,
         bytes memory data,
@@ -190,48 +238,203 @@ library TransactionCheck {
         uint16 role
     ) public view {
         bytes4 functionSig = bytes4(data);
+        // bools[0] = targetAllowed
+        // bools[1] = targetScoped
+        // bools[2] = sendAllowed
+        // bools[3] = functionAllowed
+        // bools[4] = functionscoped
+        // bools[5] = delegateAllowed
+        bool[6] memory bools;
+        bools[0] = self.roles[role].targetAddresses[targetAddress].allowed;
+        bools[1] = self.roles[role].targetAddresses[targetAddress].scoped;
+        bools[2] = self.roles[role].targetAddresses[targetAddress].sendAllowed;
+        bools[3] = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .allowed;
+        bools[4] = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .scoped;
+        bools[5] = self.roles[role].targetAddresses[targetAddress].delegateCallAllowed;
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
         if (
             operation == Enum.Operation.DelegateCall &&
-            !Roles(address(this)).isAllowedToDelegateCall(role, targetAddress)
+            !bools[5]
         ) {
             revert DelegateCallNotAllowed();
         }
-        if (!Roles(address(this)).isAllowedTargetAddress(role, targetAddress)) {
+        if (!bools[0]) {
             revert TargetAddressNotAllowed();
         }
         if (data.length >= 4) {
-            if (
-                Roles(address(this)).isScoped(role, targetAddress) &&
-                !Roles(address(this)).isAllowedFunction(
-                    role,
-                    targetAddress,
-                    functionSig
-                )
-            ) {
+            if (bools[1] && !bools[3]) {
                 revert FunctionNotAllowed();
             }
-            if (
-                Roles(address(this)).isFunctionScoped(
-                    role,
-                    targetAddress,
-                    functionSig
-                )
-            ) {
-                checkParameters(role, targetAddress, data);
+            if (bools[4])
+            {
+                checkParameters(self, role, targetAddress, data);
             }
         } else {
-            if (
-                Roles(address(this)).isFunctionScoped(
-                    role,
-                    targetAddress,
-                    functionSig
-                ) && !Roles(address(this)).isSendAllowed(role, targetAddress)
+            if (bools[4] && !bools[2]
             ) {
                 revert SendNotAllowed();
             }
         }
+    }
+
+    /// @dev Returns bool to indicate if a value is allowed for a parameter on a function at a target address for a role.
+    /// @param role Role to check.
+    /// @param targetAddress Address to check.
+    /// @param functionSig Function signature to check.
+    /// @param paramIndex Parameter index to check.
+    /// @param value Value to check.
+    function isAllowedValueForParam(
+        RoleWrap storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex,
+        bytes memory value
+    ) public view returns (bool) {
+        bool compAllowed = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .values[paramIndex]
+                .allowed[value];
+
+        bytes memory compValue = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .values[paramIndex]
+                .compValue;
+
+        Comp.Comparison comptype = self.roles[role]
+                .targetAddresses[targetAddress]
+                .functions[functionSig]
+                .compTypes[paramIndex];  
+        if (
+            comptype == Comp.Comparison.EqualTo
+        ) {
+            return
+            compAllowed;
+        } else if (
+            comptype == Comp.Comparison.GreaterThan
+        ) {
+            if (
+                bytes32(value) >
+                bytes32(compValue)
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (
+            comptype == Comp.Comparison.LessThan
+        ) {
+            if (
+                bytes32(value) <
+                bytes32(compValue)
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    function setParameterAllowedValue(
+        RoleWrap storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 paramIndex,
+        bytes memory value,
+        bool allow
+    ) external {
+        // todo: require that param is scoped first?
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .allowed[value] = allow;
+
+        emit SetParameterAllowedValue(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            value,
+            allow
+        );
+    }
+
+    function setAllowedFunction(
+        RoleWrap storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool allow
+    ) external {
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowed = allow;
+        emit SetFunctionAllowedOnTargetAddress(
+            role,
+            targetAddress,
+            functionSig,
+            allow
+        );
+    }
+
+    /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for.
+    /// @param targetAddress Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
+    /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    /// @param paramsScoped false for un-scoped, true for scoped.
+    /// @param types false for static, true for dynamic.
+    /// @param compTypes Any, or EqualTo, GreaterThan, or LessThan compValue.
+    function setParametersScoped(
+        RoleWrap storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool scoped,
+        bool[] memory paramsScoped,
+        bool[] memory types,
+        Comp.Comparison[] memory compTypes
+    ) external {
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .scoped = scoped;
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramTypes = types;
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramsScoped = paramsScoped;
+        self.roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .compTypes = compTypes;
+        emit SetParametersScoped(
+            role,
+            targetAddress,
+            functionSig,
+            scoped,
+            paramsScoped,
+            types,
+            compTypes
+        );
     }
 }

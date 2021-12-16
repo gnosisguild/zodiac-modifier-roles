@@ -6,49 +6,50 @@ import "./TransactionCheck.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    struct Parameter {
-        mapping(bytes => bool) allowed;
-        bytes compValue;
-    }
+    // struct Parameter {
+    //     mapping(bytes => bool) allowed;
+    //     bytes compValue;
+    // }
 
-    struct Function {
-        bool allowed;
-        bool scoped;
-        bool[] paramsScoped;
-        bool[] paramTypes;
-        mapping(uint16 => Parameter) values;
-        Comp.Comparison[] compTypes;
-    }
+    // struct Function {
+    //     bool allowed;
+    //     bool scoped;
+    //     bool[] paramsScoped;
+    //     bool[] paramTypes;
+    //     mapping(uint16 => Parameter) values;
+    //     Comp.Comparison[] compTypes;
+    // }
 
-    struct TargetAddress {
-        bool allowed;
-        bool scoped;
-        bool delegateCallAllowed;
-        bool sendAllowed;
-        mapping(bytes4 => Function) functions;
-    }
+    // struct TargetAddress {
+    //     bool allowed;
+    //     bool scoped;
+    //     bool delegateCallAllowed;
+    //     bool sendAllowed;
+    //     mapping(bytes4 => Function) functions;
+    // }
 
-    struct Role {
-        mapping(address => TargetAddress) targetAddresses;
-        mapping(address => bool) members;
-    }
+    // struct Role {
+    //     mapping(address => TargetAddress) targetAddresses;
+    //     mapping(address => bool) members;
+    // }
 
     mapping(address => uint16) public defaultRoles;
-    mapping(uint16 => Role) internal roles;
+    // mapping(uint16 => Role) internal roles;
+    RoleWrap s_roles;
 
     address public multiSend;
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
-    event SetParametersScoped(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool scoped,
-        bool[] paramsScoped,
-        bool[] types,
-        Comp.Comparison[] compTypes
-    );
+    // event SetParametersScoped(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig,
+    //     bool scoped,
+    //     bool[] paramsScoped,
+    //     bool[] types,
+    //     Comp.Comparison[] compTypes
+    // );
 
     event SetTargetAddressAllowed(
         uint16 role,
@@ -70,20 +71,20 @@ contract Roles is Modifier {
         address targetAddress,
         bool allowed
     );
-    event SetFunctionAllowedOnTargetAddress(
-        uint16 role,
-        address targetAddress,
-        bytes4 selector,
-        bool allowed
-    );
-    event SetParameterAllowedValue(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint16 parameterIndex,
-        bytes value,
-        bool allowed
-    );
+    // event SetFunctionAllowedOnTargetAddress(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 selector,
+    //     bool allowed
+    // );
+    // event SetParameterAllowedValue(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig,
+    //     uint16 parameterIndex,
+    //     bytes value,
+    //     bool allowed
+    // );
     event SetParameterCompValue(
         uint16 role,
         address targetAddress,
@@ -164,7 +165,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roles[role].targetAddresses[targetAddress].allowed = allow;
+        s_roles.roles[role].targetAddresses[targetAddress].allowed = allow;
         emit SetTargetAddressAllowed(role, targetAddress, allow);
     }
 
@@ -178,7 +179,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roles[role].targetAddresses[targetAddress].delegateCallAllowed = allow;
+        s_roles.roles[role].targetAddresses[targetAddress].delegateCallAllowed = allow;
 
         emit SetDelegateCallAllowedOnTargetAddress(role, targetAddress, allow);
     }
@@ -193,7 +194,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool scoped
     ) external onlyOwner {
-        roles[role].targetAddresses[targetAddress].scoped = scoped;
+        s_roles.roles[role].targetAddresses[targetAddress].scoped = scoped;
         emit SetTargetAddressScoped(role, targetAddress, scoped);
     }
 
@@ -215,23 +216,24 @@ contract Roles is Modifier {
         bool[] memory types,
         Comp.Comparison[] memory compTypes
     ) external onlyOwner {
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .scoped = scoped;
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramTypes = types;
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramsScoped = paramsScoped;
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .compTypes = compTypes;
-        emit SetParametersScoped(
+        // s_roles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .scoped = scoped;
+        // s_roles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .paramTypes = types;
+        // s_roles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .paramsScoped = paramsScoped;
+        // s_roles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .compTypes = compTypes;
+        TransactionCheck.setParametersScoped(
+            s_roles,
             role,
             targetAddress,
             functionSig,
@@ -240,6 +242,15 @@ contract Roles is Modifier {
             types,
             compTypes
         );
+        // emit SetParametersScoped(
+        //     role,
+        //     targetAddress,
+        //     functionSig,
+        //     scoped,
+        //     paramsScoped,
+        //     types,
+        //     compTypes
+        // );
     }
 
     /// @dev Sets whether or not a target address can be sent to (incluces fallback/receive functions).
@@ -252,7 +263,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roles[role].targetAddresses[targetAddress].sendAllowed = allow;
+        s_roles.roles[role].targetAddresses[targetAddress].sendAllowed = allow;
         emit SetSendAllowedOnTargetAddress(role, targetAddress, allow);
     }
 
@@ -268,16 +279,23 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool allow
     ) external onlyOwner {
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .allowed = allow;
-        emit SetFunctionAllowedOnTargetAddress(
+        // Proles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .allowed = allow;
+        TransactionCheck.setAllowedFunction(
+            s_roles,
             role,
             targetAddress,
             functionSig,
             allow
         );
+        // emit SetFunctionAllowedOnTargetAddress(
+        //     role,
+        //     targetAddress,
+        //     functionSig,
+        //     allow
+        // );
     }
 
     /// @dev Sets whether or not a specific parameter value is allowed for a function call.
@@ -297,13 +315,13 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         // todo: require that param is scoped first?
-        roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .allowed[value] = allow;
-
-        emit SetParameterAllowedValue(
+        // Proles.roles[role]
+        //     .targetAddresses[targetAddress]
+        //     .functions[functionSig]
+        //     .values[paramIndex]
+        //     .allowed[value] = allow;
+        TransactionCheck.setParameterAllowedValue(
+            s_roles,
             role,
             targetAddress,
             functionSig,
@@ -311,6 +329,15 @@ contract Roles is Modifier {
             value,
             allow
         );
+
+        // emit setParameterAllowedValue(
+        //     role,
+        //     targetAddress,
+        //     functionSig,
+        //     paramIndex,
+        //     value,
+        //     allow
+        // );
     }
 
     /// @dev Sets the comparison value for a parameter
@@ -327,7 +354,7 @@ contract Roles is Modifier {
         uint16 paramIndex,
         bytes memory compValue
     ) external onlyOwner {
-        roles[role]
+        s_roles.roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
@@ -355,7 +382,7 @@ contract Roles is Modifier {
             revert ArraysDifferentLength();
         }
         for (uint16 i = 0; i < _roles.length; i++) {
-            roles[_roles[i]].members[module] = memberOf[i];
+            s_roles.roles[_roles[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
@@ -379,39 +406,39 @@ contract Roles is Modifier {
     /// @return bool[] describing parameter types are variable(true) or fixed (false) length.
     /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
     /// @return Comp.Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
-    function getParameterScopes(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig
-    )
-        public
-        view
-        returns (
-            bool,
-            bool[] memory,
-            bool[] memory,
-            Comp.Comparison[] memory
-        )
-    {
-        return (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .scoped,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .paramTypes,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .paramsScoped,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes
-        );
-    }
+    // function getParameterScopes(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig
+    // )
+    //     public
+    //     view
+    //     returns (
+    //         bool,
+    //         bool[] memory,
+    //         bool[] memory,
+    //         Comp.Comparison[] memory
+    //     )
+    // {
+    //     return (
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .scoped,
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .paramTypes,
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .paramsScoped,
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .compTypes
+    //     );
+    // }
 
     /// @dev Returns the comparison type of a given parameter.
     /// @param role The role to check.
@@ -425,7 +452,7 @@ contract Roles is Modifier {
         uint16 paramIndex
     ) public view returns (Comp.Comparison) {
         return
-            roles[role]
+            s_roles.roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .compTypes[paramIndex];
@@ -443,7 +470,7 @@ contract Roles is Modifier {
         uint16 paramIndex
     ) public view returns (bytes memory) {
         return
-            roles[role]
+            s_roles.roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .values[paramIndex]
@@ -454,91 +481,91 @@ contract Roles is Modifier {
     /// @param role Role to check.
     /// @param module Module to check.
     /// @return bool indicating whether module is a member or role.
-    function isRoleMember(uint16 role, address module)
-        public
-        view
-        returns (bool)
-    {
-        return roles[role].members[module];
-    }
+    // function isRoleMember(uint16 role, address module)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //     return s_roles.roles[role].members[module];
+    // }
 
     /// @dev Returns bool to indicate if an address is an allowed target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isAllowedTargetAddress(uint16 role, address targetAddress)
-        public
-        view
-        returns (bool)
-    {
-        return (roles[role].targetAddresses[targetAddress].allowed);
-    }
+    // function isAllowedTargetAddress(uint16 role, address targetAddress)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //     return (s_roles.roles[role].targetAddresses[targetAddress].allowed);
+    // }
 
     /// @dev Returns bool to indicate if an address is scoped.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isScoped(uint16 role, address targetAddress)
-        public
-        view
-        returns (bool)
-    {
-        return (roles[role].targetAddresses[targetAddress].scoped);
-    }
+    // function isScoped(uint16 role, address targetAddress)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //     return (s_roles.roles[role].targetAddresses[targetAddress].scoped);
+    // }
 
     /// @dev Returns bool to indicate if an address is scoped.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isSendAllowed(uint16 role, address targetAddress)
-        public
-        view
-        returns (bool)
-    {
-        return (roles[role].targetAddresses[targetAddress].sendAllowed);
-    }
+    // function isSendAllowed(uint16 role, address targetAddress)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //     return (s_roles.roles[role].targetAddresses[targetAddress].sendAllowed);
+    // }
 
     /// @dev Returns bool to indicate if a function signature is allowed for a target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
     /// @param functionSig Signature to check.
-    function isAllowedFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig
-    ) public view returns (bool) {
-        return (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .allowed
-        );
-    }
+    // function isAllowedFunction(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig
+    // ) public view returns (bool) {
+    //     return (
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .allowed
+    //     );
+    // }
 
     /// @dev Returns bool to indicate if a given function signature is scoped.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
     /// @param functionSig Signature to check.
-    function isFunctionScoped(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig
-    ) public view returns (bool) {
-        return (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .scoped
-        );
-    }
+    // function isFunctionScoped(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig
+    // ) public view returns (bool) {
+    //     return (
+    //         s_roles.roles[role]
+    //             .targetAddresses[targetAddress]
+    //             .functions[functionSig]
+    //             .scoped
+    //     );
+    // }
 
     /// @dev Returns bool to indicate if delegate calls are allowed to a target address.
     /// @param role Role to check for.
     /// @param targetAddress Address to check.
-    function isAllowedToDelegateCall(uint16 role, address targetAddress)
-        public
-        view
-        returns (bool)
-    {
-        return (roles[role].targetAddresses[targetAddress].delegateCallAllowed);
-    }
+    // function isAllowedToDelegateCall(uint16 role, address targetAddress)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //     return (s_roles.roles[role].targetAddresses[targetAddress].delegateCallAllowed);
+    // }
 
     /// @dev Returns bool to indicate if a value is allowed for a parameter on a function at a target address for a role.
     /// @param role Role to check.
@@ -546,69 +573,15 @@ contract Roles is Modifier {
     /// @param functionSig Function signature to check.
     /// @param paramIndex Parameter index to check.
     /// @param value Value to check.
-    function isAllowedValueForParam(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint16 paramIndex,
-        bytes memory value
-    ) public view returns (bool) {
-        if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex] == Comp.Comparison.EqualTo
-        ) {
-            return
-                roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[functionSig]
-                    .values[paramIndex]
-                    .allowed[value];
-        } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex] == Comp.Comparison.GreaterThan
-        ) {
-            if (
-                bytes32(value) >
-                bytes32(
-                    roles[role]
-                        .targetAddresses[targetAddress]
-                        .functions[functionSig]
-                        .values[paramIndex]
-                        .compValue
-                )
-            ) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex] == Comp.Comparison.LessThan
-        ) {
-            if (
-                bytes32(value) <
-                bytes32(
-                    roles[role]
-                        .targetAddresses[targetAddress]
-                        .functions[functionSig]
-                        .values[paramIndex]
-                        .compValue
-                )
-            ) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
+    // function isAllowedValueForParam(
+    //     uint16 role,
+    //     address targetAddress,
+    //     bytes4 functionSig,
+    //     uint16 paramIndex,
+    //     bytes memory value
+    // ) public view returns (bool) {
+    //     return TransactionCheck.isAllowedValueForParam(s_roles, role, targetAddress, functionSig, paramIndex, value);
+    // }
 
     /// @dev Passes a transaction to the modifier.
     /// @param to Destination address of module transaction
@@ -673,13 +646,13 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success) {
-        if (!roles[role].members[msg.sender]) {
+        if (!s_roles.roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            TransactionCheck.checkMultiSend(data, role);
+            TransactionCheck.checkMultiSend(s_roles, data, role);
         } else {
-            TransactionCheck.checkTransaction(to, value, data, operation, role);
+            TransactionCheck.checkTransaction(s_roles, to, value, data, operation, role);
         }
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
@@ -701,13 +674,13 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        if (!roles[role].members[msg.sender]) {
+        if (!s_roles.roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            TransactionCheck.checkMultiSend(data, role);
+            TransactionCheck.checkMultiSend(s_roles, data, role);
         } else {
-            TransactionCheck.checkTransaction(to, value, data, operation, role);
+            TransactionCheck.checkTransaction(s_roles, to, value, data, operation, role);
         }
         return execAndReturnData(to, value, data, operation);
     }

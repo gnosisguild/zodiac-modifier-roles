@@ -224,7 +224,7 @@ describe("RolesModifier", async () => {
   });
 
   describe("disableModule()", async () => {
-    it("reverts if not authorized", async () => {
+    it.only("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
         modifier.disableModule(FirstAddress, user1.address)
