@@ -14,7 +14,6 @@ contract Roles is Modifier {
     struct Function {
         bool allowed;
         bool scoped;
-        string name;
         bool[] paramsScoped;
         bool[] paramTypes;
         mapping(uint16 => Parameter) values;
