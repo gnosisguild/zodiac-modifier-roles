@@ -165,11 +165,7 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         roles[role].targetAddresses[targetAddress].allowed = allow;
-        emit SetTargetAddressAllowed(
-            role,
-            targetAddress,
-            roles[role].targetAddresses[targetAddress].allowed
-        );
+        emit SetTargetAddressAllowed(role, targetAddress, allow);
     }
 
     /// @dev Set whether or not delegate calls can be made to a target address.
@@ -184,11 +180,7 @@ contract Roles is Modifier {
     ) external onlyOwner {
         roles[role].targetAddresses[targetAddress].delegateCallAllowed = allow;
 
-        emit SetDelegateCallAllowedOnTargetAddress(
-            role,
-            targetAddress,
-            isAllowedToDelegateCall(role, targetAddress)
-        );
+        emit SetDelegateCallAllowedOnTargetAddress(role, targetAddress, allow);
     }
 
     /// @dev Sets whether or not calls to an address should be scoped to specific function signatures.
@@ -202,11 +194,7 @@ contract Roles is Modifier {
         bool scoped
     ) external onlyOwner {
         roles[role].targetAddresses[targetAddress].scoped = scoped;
-        emit SetTargetAddressScoped(
-            role,
-            targetAddress,
-            isScoped(role, targetAddress)
-        );
+        emit SetTargetAddressScoped(role, targetAddress, scoped);
     }
 
     /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
@@ -247,10 +235,7 @@ contract Roles is Modifier {
             role,
             targetAddress,
             functionSig,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .scoped,
+            scoped,
             paramsScoped,
             types,
             compTypes
@@ -268,11 +253,7 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         roles[role].targetAddresses[targetAddress].sendAllowed = allow;
-        emit SetSendAllowedOnTargetAddress(
-            role,
-            targetAddress,
-            isSendAllowed(role, targetAddress)
-        );
+        emit SetSendAllowedOnTargetAddress(role, targetAddress, allow);
     }
 
     /// @dev Sets whether or not a specific function signature should be allowed on a scoped target address.
@@ -295,7 +276,7 @@ contract Roles is Modifier {
             role,
             targetAddress,
             functionSig,
-            isAllowedFunction(role, targetAddress, functionSig)
+            allow
         );
     }
 
@@ -328,11 +309,7 @@ contract Roles is Modifier {
             functionSig,
             paramIndex,
             value,
-            roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .allowed[value]
+            allow
         );
     }
 
@@ -361,7 +338,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex,
-            getCompValue(role, targetAddress, functionSig, paramIndex)
+            compValue
         );
     }
 
@@ -391,14 +368,7 @@ contract Roles is Modifier {
     /// @param role Role to be set as default.
     function setDefaultRole(address module, uint16 role) external onlyOwner {
         defaultRoles[module] = role;
-        emit SetDefaultRole(module, getDefaultRole(module));
-    }
-
-    /// @dev Returns the default role for a given module.
-    /// @param module Module to be checked.
-    /// @return Default role of given module.
-    function getDefaultRole(address module) public view returns (uint16) {
-        return defaultRoles[module];
+        emit SetDefaultRole(module, role);
     }
 
     /// @dev Returns details on whether and how functions parameters are scoped.
