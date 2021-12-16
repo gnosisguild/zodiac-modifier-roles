@@ -30,7 +30,7 @@ describe("Module works with factory", () => {
       FirstAddress
     );
 
-    return { factory, masterCopy };
+    return { factory, masterCopy, Modifier };
   });
 
   it("should throw because master copy is already initialized", async () => {
@@ -47,7 +47,7 @@ describe("Module works with factory", () => {
   });
 
   it("should deploy new roles module proxy", async () => {
-    const { factory, masterCopy } = await baseSetup();
+    const { factory, masterCopy, Modifier } = await baseSetup();
     const [avatar, owner, target] = await ethers.getSigners();
     const paramsValues = [owner.address, avatar.address, target.address];
     const encodedParams = [new AbiCoder().encode(paramsTypes, paramsValues)];
@@ -66,7 +66,8 @@ describe("Module works with factory", () => {
       ({ event }: { event: string }) => event === "ModuleProxyCreation"
     );
 
-    const newProxy = await hre.ethers.getContractAt("Roles", newProxyAddress);
+    const newProxy = Modifier.attach(newProxyAddress);
+    // const newProxy = await hre.ethers.getContractAt("Roles", newProxyAddress);
     expect(await newProxy.avatar()).to.be.eq(avatar.address);
     expect(await newProxy.target()).to.be.eq(target.address);
   });

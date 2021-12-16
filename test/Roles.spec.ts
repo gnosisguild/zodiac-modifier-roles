@@ -1544,7 +1544,7 @@ describe("RolesModifier", async () => {
   describe("setMultiSend()", () => {
     it("reverts if not authorized", async () => {
       const { avatar, modifier } = await txSetup();
-      expect(modifier.setMultiSend(AddressOne, true)).to.be.revertedWith(
+      await expect(modifier.setMultiSend(AddressOne)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
     });
