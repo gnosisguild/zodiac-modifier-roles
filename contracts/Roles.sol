@@ -179,7 +179,10 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        s_roles.roles[role].targetAddresses[targetAddress].delegateCallAllowed = allow;
+        s_roles
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .delegateCallAllowed = allow;
 
         emit SetDelegateCallAllowedOnTargetAddress(role, targetAddress, allow);
     }
@@ -354,7 +357,8 @@ contract Roles is Modifier {
         uint16 paramIndex,
         bytes memory compValue
     ) external onlyOwner {
-        s_roles.roles[role]
+        s_roles
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
@@ -452,7 +456,8 @@ contract Roles is Modifier {
         uint16 paramIndex
     ) public view returns (Comp.Comparison) {
         return
-            s_roles.roles[role]
+            s_roles
+                .roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .compTypes[paramIndex];
@@ -470,7 +475,8 @@ contract Roles is Modifier {
         uint16 paramIndex
     ) public view returns (bytes memory) {
         return
-            s_roles.roles[role]
+            s_roles
+                .roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
                 .values[paramIndex]
@@ -652,7 +658,14 @@ contract Roles is Modifier {
         if (to == multiSend) {
             TransactionCheck.checkMultiSend(s_roles, data, role);
         } else {
-            TransactionCheck.checkTransaction(s_roles, to, value, data, operation, role);
+            TransactionCheck.checkTransaction(
+                s_roles,
+                to,
+                value,
+                data,
+                operation,
+                role
+            );
         }
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
@@ -680,7 +693,14 @@ contract Roles is Modifier {
         if (to == multiSend) {
             TransactionCheck.checkMultiSend(s_roles, data, role);
         } else {
-            TransactionCheck.checkTransaction(s_roles, to, value, data, operation, role);
+            TransactionCheck.checkTransaction(
+                s_roles,
+                to,
+                value,
+                data,
+                operation,
+                role
+            );
         }
         return execAndReturnData(to, value, data, operation);
     }

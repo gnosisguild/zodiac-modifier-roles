@@ -88,7 +88,11 @@ library TransactionCheck {
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(RoleWrap storage self, bytes memory data, uint16 role) public view {
+    function checkMultiSend(
+        RoleWrap storage self,
+        bytes memory data,
+        uint16 role
+    ) public view {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -125,18 +129,19 @@ library TransactionCheck {
         bytes memory value
     ) public view {
         bytes4 functionSig = bytes4(data);
-        bytes memory compValue = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .compValue;
-        Comp.Comparison compType = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex];
+        bytes memory compValue = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .compValue;
+        Comp.Comparison compType = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .compTypes[paramIndex];
         if (
-            compType ==
-            Comp.Comparison.EqualTo &&
+            compType == Comp.Comparison.EqualTo &&
             !isAllowedValueForParam(
                 self,
                 role,
@@ -148,17 +153,13 @@ library TransactionCheck {
         ) {
             revert ParameterNotAllowed();
         } else if (
-            compType ==
-            Comp.Comparison.GreaterThan &&
-            bytes32(value) <=
-            bytes32(compValue)
+            compType == Comp.Comparison.GreaterThan &&
+            bytes32(value) <= bytes32(compValue)
         ) {
             revert ParameterLessThanAllowed();
         } else if (
-            compType ==
-            Comp.Comparison.LessThan &&
-            bytes32(value) >=
-            bytes32(compValue)
+            compType == Comp.Comparison.LessThan &&
+            bytes32(value) >= bytes32(compValue)
         ) {
             revert ParameterGreaterThanAllowed();
         }
@@ -178,11 +179,13 @@ library TransactionCheck {
         bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
-        bool[] memory paramTypes = self.roles[role]
+        bool[] memory paramTypes = self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .paramTypes;
-        bool isScopedParam = self.roles[role]
+        bool isScopedParam = self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .scoped;
@@ -248,22 +251,24 @@ library TransactionCheck {
         bools[0] = self.roles[role].targetAddresses[targetAddress].allowed;
         bools[1] = self.roles[role].targetAddresses[targetAddress].scoped;
         bools[2] = self.roles[role].targetAddresses[targetAddress].sendAllowed;
-        bools[3] = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .allowed;
-        bools[4] = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .scoped;
-        bools[5] = self.roles[role].targetAddresses[targetAddress].delegateCallAllowed;
+        bools[3] = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .allowed;
+        bools[4] = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .scoped;
+        bools[5] = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .delegateCallAllowed;
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
-        if (
-            operation == Enum.Operation.DelegateCall &&
-            !bools[5]
-        ) {
+        if (operation == Enum.Operation.DelegateCall && !bools[5]) {
             revert DelegateCallNotAllowed();
         }
         if (!bools[0]) {
@@ -273,13 +278,11 @@ library TransactionCheck {
             if (bools[1] && !bools[3]) {
                 revert FunctionNotAllowed();
             }
-            if (bools[4])
-            {
+            if (bools[4]) {
                 checkParameters(self, role, targetAddress, data);
             }
         } else {
-            if (bools[4] && !bools[2]
-            ) {
+            if (bools[4] && !bools[2]) {
                 revert SendNotAllowed();
             }
         }
@@ -299,45 +302,35 @@ library TransactionCheck {
         uint16 paramIndex,
         bytes memory value
     ) public view returns (bool) {
-        bool compAllowed = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .allowed[value];
+        bool compAllowed = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .allowed[value];
 
-        bytes memory compValue = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .compValue;
+        bytes memory compValue = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .compValue;
 
-        Comp.Comparison comptype = self.roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex];  
-        if (
-            comptype == Comp.Comparison.EqualTo
-        ) {
-            return
-            compAllowed;
-        } else if (
-            comptype == Comp.Comparison.GreaterThan
-        ) {
-            if (
-                bytes32(value) >
-                bytes32(compValue)
-            ) {
+        Comp.Comparison comptype = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .compTypes[paramIndex];
+        if (comptype == Comp.Comparison.EqualTo) {
+            return compAllowed;
+        } else if (comptype == Comp.Comparison.GreaterThan) {
+            if (bytes32(value) > bytes32(compValue)) {
                 return true;
             } else {
                 return false;
             }
-        } else if (
-            comptype == Comp.Comparison.LessThan
-        ) {
-            if (
-                bytes32(value) <
-                bytes32(compValue)
-            ) {
+        } else if (comptype == Comp.Comparison.LessThan) {
+            if (bytes32(value) < bytes32(compValue)) {
                 return true;
             } else {
                 return false;
@@ -357,7 +350,8 @@ library TransactionCheck {
         bool allow
     ) external {
         // todo: require that param is scoped first?
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
@@ -380,7 +374,8 @@ library TransactionCheck {
         bytes4 functionSig,
         bool allow
     ) external {
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .allowed = allow;
@@ -411,19 +406,23 @@ library TransactionCheck {
         bool[] memory types,
         Comp.Comparison[] memory compTypes
     ) external {
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .scoped = scoped;
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .paramTypes = types;
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .paramsScoped = paramsScoped;
-        self.roles[role]
+        self
+            .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .compTypes = compTypes;
