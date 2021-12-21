@@ -1769,17 +1769,63 @@ describe('RolesModifier', async () => {
     });
 
     it('sets allowed address to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx =
-        await modifier.populateTransaction.setDelegateCallAllowedOnTargetAddress(
-          1,
-          AddressOne,
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      const execArgs = [
+        testContract.address,
+        ROLE_ID,
+        testContract.interface.encodeFunctionData('doNothing()'),
+        1,
+      ];
+
+      // allow calls (but not delegate)
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      // still getting the delegateCallNotAllowed error
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...execArgs)
+      ).to.be.revertedWith('DelegateCallNotAllowed()');
+
+      // allow delegate calls to address
+      await modifier
+        .connect(owner)
+        .setDelegateCallAllowedOnTargetAddress(
+          ROLE_ID,
+          testContract.address,
           true
         );
-      expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(
-        await modifier.isAllowedToDelegateCall(1, AddressOne)
-      ).to.be.equals(true);
+
+      // ok
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            ROLE_ID,
+            testContract.interface.encodeFunctionData('doNothing()'),
+            1
+          )
+      ).to.not.be.reverted;
+
+      // const { avatar, modifier } = await txSetup();
+      // const tx =
+      //   await modifier.populateTransaction.setDelegateCallAllowedOnTargetAddress(
+      //     1,
+      //     AddressOne,
+      //     true
+      //   );
+      // expect(avatar.exec(modifier.address, 0, tx.data));
+      // expect(
+      //   await modifier.isAllowedToDelegateCall(1, AddressOne)
+      // ).to.be.equals(true);
     });
 
     it('sets allowed address to false', async () => {
