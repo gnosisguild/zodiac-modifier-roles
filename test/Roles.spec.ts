@@ -362,7 +362,7 @@ describe('RolesModifier', async () => {
     });
 
     it('assigns roles to a module', async () => {
-      // api doesn't the function to check explicitly
+      // api doesn't have the function to check explicitly
       // lets assert implicitly
 
       const { modifier, testContract, owner, invoker } =
@@ -401,23 +401,49 @@ describe('RolesModifier', async () => {
     });
 
     it('revokes roles to a module', async () => {
-      const { avatar, modifier } = await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data);
-      const revoke = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [false]
-      );
-      await avatar.exec(modifier.address, 0, revoke.data);
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
 
-      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equal(
-        false
-      );
+      const ROLE_ID = 0;
+
+      // blank allow all calls to testContract from role 0
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      //authorize
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      // expect it to succeed, after assigning role
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData('doNothing()'),
+            0
+          )
+      ).to.emit(testContract, 'DoNothing');
+
+      //revoke
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [false]);
+
+      // expect it to fail, after revoking
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData('doNothing()'),
+            0
+          )
+      ).to.be.revertedWith('NoMembership()');
     });
 
     it('it enables the module if necessary', async () => {
