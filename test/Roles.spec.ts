@@ -1657,18 +1657,48 @@ describe('RolesModifier', async () => {
     });
 
     it('sets allowed address to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setTargetAddressAllowed(
-        1,
-        AddressOne,
-        true
-      );
-      expect(avatar.exec(modifier.address, 0, tx.data))
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 1;
+
+      const doNothingArgs = [
+        testContract.address,
+        0,
+        testContract.interface.encodeFunctionData('doNothing()'),
+        0,
+      ];
+
+      // assign a role to invoker
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      // expect to fail due to no permissions
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...doNothingArgs)
+      ).to.be.revertedWith('NoMembership()');
+
+      // allow testContract address for role
+      await expect(
+        modifier
+          .connect(owner)
+          .setTargetAddressAllowed(ROLE_ID, testContract.address, true)
+      )
         .to.emit(modifier, 'SetTargetAddressAllowed')
-        .withArgs(1, AddressOne, true);
-      expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(
-        true
-      );
+        .withArgs(ROLE_ID, testContract.address, true);
+
+      // expect to fail with default role
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...doNothingArgs)
+      ).to.be.revertedWith('NoMembership()');
+
+      // should work with the configured role
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRole(...[...doNothingArgs, ROLE_ID])
+      ).to.emit(testContract, 'DoNothing');
     });
 
     it('sets allowed address to false', async () => {
