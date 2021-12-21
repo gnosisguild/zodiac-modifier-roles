@@ -1702,26 +1702,49 @@ describe('RolesModifier', async () => {
     });
 
     it('sets allowed address to false', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setTargetAddressAllowed(
-        1,
-        AddressOne,
-        true
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 1;
+
+      const execWithRoleArgs = [
+        testContract.address,
+        0,
+        testContract.interface.encodeFunctionData('doNothing()'),
+        0,
+        ROLE_ID,
+      ];
+
+      // assign a role to invoker
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      // allow testContract address for role
+      await expect(
+        modifier
+          .connect(owner)
+          .setTargetAddressAllowed(ROLE_ID, testContract.address, true)
       );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(
-        true
-      );
-      const txFalse =
-        await modifier.populateTransaction.setTargetAddressAllowed(
-          1,
-          AddressOne,
-          false
-        );
-      expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(await modifier.isAllowedTargetAddress(1, AddressOne)).to.be.equals(
-        false
-      );
+
+      // this call should work
+      await expect(
+        modifier.connect(invoker).execTransactionWithRole(...execWithRoleArgs)
+      ).to.emit(testContract, 'DoNothing');
+
+      // Revoke access
+      await expect(
+        modifier
+          .connect(owner)
+          .setTargetAddressAllowed(ROLE_ID, testContract.address, false)
+      )
+        .to.emit(modifier, 'SetTargetAddressAllowed')
+        .withArgs(ROLE_ID, testContract.address, false);
+
+      // fails after revoke
+      await expect(
+        modifier.connect(invoker).execTransactionWithRole(...execWithRoleArgs)
+      ).to.be.revertedWith('TargetAddressNotAllowed()');
     });
 
     it('emits event with correct params', async () => {
