@@ -13,6 +13,7 @@ contract TestContract {
         string test6,
         string test7
     );
+    event DoNothing();
 
     receive() external payable {
         emit Receive();
@@ -34,5 +35,9 @@ contract TestContract {
     ) public returns (bool) {
         emit TestDynamic(test, test2, test3, test4, test5, test6, test7);
         return true;
+    }
+
+    function doNothing() public {
+        emit DoNothing();
     }
 }

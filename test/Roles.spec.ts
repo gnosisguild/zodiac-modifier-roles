@@ -38,6 +38,38 @@ describe('RolesModifier', async () => {
     return { ...base, Modifier, modifier };
   });
 
+  const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
+    const base = await baseSetup();
+
+    const [owner, invoker] = waffle.provider.getWallets();
+
+    const TransactionCheck = await hre.ethers.getContractFactory(
+      'TransactionCheck'
+    );
+    const transactionCheck = await TransactionCheck.deploy();
+    const Modifier = await hre.ethers.getContractFactory('Roles', {
+      libraries: {
+        TransactionCheck: transactionCheck.address,
+      },
+    });
+
+    const modifier = await Modifier.deploy(
+      owner.address,
+      base.avatar.address,
+      base.avatar.address
+    );
+
+    await modifier.enableModule(invoker.address);
+
+    return {
+      ...base,
+      Modifier,
+      modifier,
+      owner,
+      invoker,
+    };
+  });
+
   const txSetup = deployments.createFixture(async () => {
     const baseAvatar = await setupTestWithTestAvatar();
     const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
@@ -330,17 +362,42 @@ describe('RolesModifier', async () => {
     });
 
     it('assigns roles to a module', async () => {
-      const { avatar, modifier } = await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data);
+      // api doesn't the function to check explicitly
+      // lets assert implicitly
 
-      await expect(await modifier.isRoleMember(1, user1.address)).to.be.equal(
-        true
-      );
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      // blank allow all calls to testContract from role 0
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(0, testContract.address, true);
+
+      // expect it to fail, before assigning role
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData('doNothing()'),
+            0
+          )
+      ).to.be.revertedWith('NoMembership()');
+
+      await modifier.connect(owner).assignRoles(invoker.address, [0], [true]);
+
+      // expect it to succeed, after assigning role
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData('doNothing()'),
+            0
+          )
+      ).to.emit(testContract, 'DoNothing');
     });
 
     it('revokes roles to a module', async () => {
