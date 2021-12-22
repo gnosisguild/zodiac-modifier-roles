@@ -1900,13 +1900,10 @@ describe('RolesModifier', async () => {
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
-      const EXEC_ARGS = (n: number) => [
+      const EXEC_ARGS = [
         testContract.address,
         ROLE_ID,
-        testContract.interface.encodeFunctionData(
-          'fnWithSingleParam(uint256)',
-          [n]
-        ),
+        testContract.interface.encodeFunctionData('doNothing()'),
         0,
       ];
 
@@ -1919,7 +1916,7 @@ describe('RolesModifier', async () => {
         .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
 
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
       ).to.not.be.reverted;
 
       await modifier
@@ -1927,26 +1924,47 @@ describe('RolesModifier', async () => {
         .setTargetAddressScoped(ROLE_ID, testContract.address, true);
 
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
       ).to.be.revertedWith('FunctionNotAllowed()');
     });
 
     it('sets address scoped to false', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setTargetAddressScoped(
-        1,
-        AddressOne,
-        true
-      );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(await modifier.isScoped(1, AddressOne)).to.be.equals(true);
-      const txFalse = await modifier.populateTransaction.setTargetAddressScoped(
-        1,
-        AddressOne,
-        false
-      );
-      expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(await modifier.isScoped(1, AddressOne)).to.be.equals(false);
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const EXEC_ARGS = [
+        testContract.address,
+        ROLE_ID,
+        testContract.interface.encodeFunctionData('doNothing()'),
+        0,
+      ];
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressScoped(ROLE_ID, testContract.address, true);
+
+      // should revert after scope true
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+      ).to.be.revertedWith('FunctionNotAllowed()');
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressScoped(ROLE_ID, testContract.address, false);
+
+      // should work after disabling scoping
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+      ).to.not.be.reverted;
     });
 
     it('emits event with correct params', async () => {
