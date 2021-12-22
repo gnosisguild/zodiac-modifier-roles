@@ -321,6 +321,7 @@ library TransactionCheck {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .compTypes[paramIndex];
+
         if (comptype == Comp.Comparison.EqualTo) {
             return compAllowed;
         } else if (comptype == Comp.Comparison.GreaterThan) {

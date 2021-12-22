@@ -229,7 +229,7 @@ describe('RolesModifier', async () => {
     };
   });
 
-  const [user1, user2] = waffle.provider.getWallets();
+  const [user1] = waffle.provider.getWallets();
 
   describe('setUp()', async () => {
     it('should emit event because of successful set up', async () => {
@@ -1896,14 +1896,39 @@ describe('RolesModifier', async () => {
     });
 
     it('sets address scoped to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setTargetAddressScoped(
-        1,
-        AddressOne,
-        true
-      );
-      expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(await modifier.isScoped(1, AddressOne)).to.be.equals(true);
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const EXEC_ARGS = (n: number) => [
+        testContract.address,
+        ROLE_ID,
+        testContract.interface.encodeFunctionData(
+          'fnWithSingleParam(uint256)',
+          [n]
+        ),
+        0,
+      ];
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressScoped(ROLE_ID, testContract.address, true);
+
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
+      ).to.be.revertedWith('FunctionNotAllowed()');
     });
 
     it('sets address scoped to false', async () => {
