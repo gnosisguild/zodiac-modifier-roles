@@ -179,16 +179,28 @@ library TransactionCheck {
         bytes4 functionSig = bytes4(data);
         // First 4 bytes are the function selector, skip function selector.
         uint16 pos = 4;
+
+        bool isScopedFunction = self
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .scoped;
+
+        if (!isScopedFunction) {
+            return;
+        }
+
         bool[] memory paramTypes = self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .paramTypes;
-        bool isScopedParam = self
+        bool[] memory isParamScoped = self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .scoped;
+            .paramsScoped;
+
         // (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
         //     address(this)
         // ).getParameterScopes(role, targetAddress, functionSig);
@@ -198,7 +210,7 @@ library TransactionCheck {
             i < paramTypes.length;
             i++
         ) {
-            if (isScopedParam) {
+            if (isParamScoped[i]) {
                 // we set paramType to true if its a fixed or dynamic array type with length encoding
                 if (paramTypes[i] == true) {
                     // location of length of first parameter is first word (4 bytes)
