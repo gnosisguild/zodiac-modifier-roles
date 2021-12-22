@@ -247,7 +247,7 @@ library TransactionCheck {
     function checkTransaction(
         RoleWrap storage self,
         address targetAddress,
-        uint256,
+        uint256 value,
         bytes memory data,
         Enum.Operation operation,
         uint16 role
@@ -293,10 +293,10 @@ library TransactionCheck {
             if (bools[4]) {
                 checkParameters(self, role, targetAddress, data);
             }
-        } else {
-            if (bools[4] && !bools[2]) {
-                revert SendNotAllowed();
-            }
+        }
+
+        if (value > 0 && !bools[2]) {
+            revert SendNotAllowed();
         }
     }
 

@@ -41,15 +41,15 @@ contract Roles is Modifier {
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
-    // event SetParametersScoped(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig,
-    //     bool scoped,
-    //     bool[] paramsScoped,
-    //     bool[] types,
-    //     Comp.Comparison[] compTypes
-    // );
+    event SetParametersScoped(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool scoped,
+        bool[] paramsScoped,
+        bool[] types,
+        Comp.Comparison[] compTypes
+    );
 
     event SetTargetAddressAllowed(
         uint16 role,

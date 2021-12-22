@@ -1779,7 +1779,7 @@ describe('RolesModifier', async () => {
 
       const execArgs = [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData('doNothing()'),
         1,
       ];
@@ -1809,7 +1809,7 @@ describe('RolesModifier', async () => {
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             testContract.interface.encodeFunctionData('doNothing()'),
             1
           )
@@ -1827,7 +1827,7 @@ describe('RolesModifier', async () => {
 
       const execArgs = [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData('doNothing()'),
         1,
       ];
@@ -1852,7 +1852,7 @@ describe('RolesModifier', async () => {
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             testContract.interface.encodeFunctionData('doNothing()'),
             1
           )
@@ -1902,7 +1902,7 @@ describe('RolesModifier', async () => {
       const ROLE_ID = 0;
       const EXEC_ARGS = [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData('doNothing()'),
         0,
       ];
@@ -1935,7 +1935,7 @@ describe('RolesModifier', async () => {
       const ROLE_ID = 0;
       const EXEC_ARGS = [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData('doNothing()'),
         0,
       ];
@@ -2007,7 +2007,7 @@ describe('RolesModifier', async () => {
       );
       const EXEC_ARGS = (n: number) => [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData(
           'fnWithSingleParam(uint256)',
           [n]
@@ -2078,7 +2078,7 @@ describe('RolesModifier', async () => {
       );
       const EXEC_ARGS = (n: number) => [
         testContract.address,
-        ROLE_ID,
+        0,
         testContract.interface.encodeFunctionData(
           'fnWithSingleParam(uint256)',
           [n]
@@ -2185,38 +2185,82 @@ describe('RolesModifier', async () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('sets allowed address to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx =
-        await modifier.populateTransaction.setSendAllowedOnTargetAddress(
-          1,
-          AddressOne,
-          true
-        );
-      expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(true);
+    it('sets send allowed to true', async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      // blank allow all calls to testContract from role 0
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModuleReturnData(testContract.address, 1, '0x', 0)
+      ).to.be.revertedWith('SendNotAllowed');
+
+      await modifier
+        .connect(owner)
+        .setSendAllowedOnTargetAddress(ROLE_ID, testContract.address, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModuleReturnData(
+            testContract.address,
+            10000,
+            '0x',
+            0
+          )
+      ).to.not.be.reverted;
     });
 
-    it('sets allowed address to false', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue =
-        await modifier.populateTransaction.setSendAllowedOnTargetAddress(
-          1,
-          AddressOne,
-          true
-        );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(true);
-      const txFalse =
-        await modifier.populateTransaction.setSendAllowedOnTargetAddress(
-          1,
-          AddressOne,
-          false
-        );
-      expect(avatar.exec(modifier.address, 0, txFalse.data));
-      await expect(await modifier.isSendAllowed(1, AddressOne)).to.be.equals(
-        false
-      );
+    it('sets send allowed to false', async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      // blank allow all calls to testContract from role 0
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setSendAllowedOnTargetAddress(ROLE_ID, testContract.address, true);
+
+      // should work with sendAllowed true
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModuleReturnData(
+            testContract.address,
+            10000,
+            '0x',
+            0
+          )
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .setSendAllowedOnTargetAddress(ROLE_ID, testContract.address, false);
+
+      // should work with sendAllowed false
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModuleReturnData(testContract.address, 1, '0x', 0)
+      ).to.be.revertedWith('SendNotAllowed');
     });
 
     it('emits event with correct params', async () => {
