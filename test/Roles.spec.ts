@@ -1997,22 +1997,74 @@ describe('RolesModifier', async () => {
     });
 
     it('sets parameters scoped to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setParametersScoped(
-        1,
-        AddressOne,
-        '0x12345678',
-        true,
-        [true, true],
-        [true, true],
-        [1, 1]
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const COMP_TYPE_EQ = 0;
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction('fnWithSingleParam')
       );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
+      const EXEC_ARGS = (n: number) => [
+        testContract.address,
+        ROLE_ID,
+        testContract.interface.encodeFunctionData(
+          'fnWithSingleParam(uint256)',
+          [n]
+        ),
+        0,
+      ];
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .setAllowedFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      // works before making function parameter scoped
       await expect(
-        (
-          await modifier.getParameterScopes(1, AddressOne, '0x12345678')
-        ).toString()
-      ).to.be.equals('true,true,true,true,true,1,1');
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .setParametersScoped(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          true,
+          [true],
+          [false],
+          [COMP_TYPE_EQ]
+        );
+
+      // turn scoping on
+      await modifier
+        .connect(owner)
+        .setParameterAllowedValue(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          0,
+          ethers.utils.defaultAbiCoder.encode(['uint256'], [2]),
+          true
+        );
+
+      // ngmi
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
+      ).to.be.revertedWith('ParameterNotAllowed');
+
+      // gmi
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
+      ).to.not.be.reverted;
     });
 
     it('sets parameters scoped to false', async () => {
