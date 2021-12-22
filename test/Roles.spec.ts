@@ -2285,42 +2285,58 @@ describe('RolesModifier', async () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('sets allowed function to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setAllowedFunction(
-        1,
-        AddressOne,
-        '0x12345678',
-        true
-      );
-      expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(
-        await modifier.isAllowedFunction(1, AddressOne, '0x12345678')
-      ).to.be.equals(true);
-    });
+    it('toggles allowed function false -> true -> false', async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
 
-    it('sets allowed function to false', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue = await modifier.populateTransaction.setAllowedFunction(
-        1,
-        AddressOne,
-        '0x12345678',
-        true
+      const ROLE_ID = 0;
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction('doNothing')
       );
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(
-        await modifier.isAllowedFunction(1, AddressOne, '0x12345678')
-      ).to.be.equals(true);
-      const txFalse = await modifier.populateTransaction.setAllowedFunction(
-        1,
-        AddressOne,
-        '0x12345678',
-        false
-      );
-      expect(avatar.exec(modifier.address, 0, txFalse.data));
-      expect(
-        await modifier.isAllowedFunction(1, AddressOne, '0x12345678')
-      ).to.be.equals(false);
+      const EXEC_ARGS = [
+        testContract.address,
+        0,
+        testContract.interface.encodeFunctionData('doNothing()'),
+        0,
+      ];
+
+      const toggle = (allow: boolean) =>
+        modifier
+          .connect(owner)
+          .setAllowedFunction(ROLE_ID, testContract.address, SELECTOR, allow);
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressScoped(ROLE_ID, testContract.address, true);
+
+      // ngmi
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+      ).to.be.revertedWith('FunctionNotAllowed');
+
+      // allow the function
+      await toggle(true);
+
+      // gmi
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+      ).to.emit(testContract, 'DoNothing');
+
+      // revoke the function
+      await toggle(false);
+
+      // ngmi again
+      await expect(
+        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+      ).to.be.revertedWith('FunctionNotAllowed');
     });
 
     it('emits event with correct params', async () => {
