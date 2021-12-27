@@ -15,6 +15,7 @@ contract TestContract {
     );
     event DoNothing();
     event FnWithSingleParam(uint256);
+    event FnWithTwoParams(uint256, uint256);
 
     receive() external payable {
         emit Receive();
@@ -44,5 +45,9 @@ contract TestContract {
 
     function fnWithSingleParam(uint256 p) public {
         emit FnWithSingleParam(p);
+    }
+
+    function fnWithTwoParams(uint256 a, uint256 b) public {
+        emit FnWithTwoParams(a, b);
     }
 }

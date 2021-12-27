@@ -186,34 +186,36 @@ library TransactionCheck {
             i < paramTypes.length;
             i++
         ) {
-            if (isParamScoped[i]) {
-                // we set paramType to true if its a fixed or dynamic array type with length encoding
-                if (paramTypes[i] == true) {
-                    // location of length of first parameter is first word (4 bytes)
-                    pos += 32;
-                    uint256 lengthLocation;
-                    assembly {
-                        lengthLocation := mload(add(data, pos))
-                    }
-                    // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
-                    uint256 lengthPos = 36 + lengthLocation;
-                    // get the data at length position
-                    bytes memory out;
-                    assembly {
-                        out := add(data, lengthPos)
-                    }
+            // we set paramType to true if its a fixed or dynamic array type with length encoding
+            if (paramTypes[i] == true) {
+                // location of length of first parameter is first word (4 bytes)
+                pos += 32;
+                uint256 lengthLocation;
+                assembly {
+                    lengthLocation := mload(add(data, pos))
+                }
+                // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
+                uint256 lengthPos = 36 + lengthLocation;
+                // get the data at length position
+                bytes memory out;
+                assembly {
+                    out := add(data, lengthPos)
+                }
+                if (isParamScoped[i]) {
                     checkParameter(self, targetAddress, role, data, i, out);
+                }
 
-                    // the parameter is not an array and has no length encoding
-                } else {
-                    // fixed value data is positioned within the parameter block
-                    pos += 32;
-                    bytes32 decoded;
-                    assembly {
-                        decoded := mload(add(data, pos))
-                    }
-                    // encode bytes32 to bytes memory for the mapping key
-                    bytes memory encoded = abi.encodePacked(decoded);
+                // the parameter is not an array and has no length encoding
+            } else {
+                // fixed value data is positioned within the parameter block
+                pos += 32;
+                bytes32 decoded;
+                assembly {
+                    decoded := mload(add(data, pos))
+                }
+                // encode bytes32 to bytes memory for the mapping key
+                bytes memory encoded = abi.encodePacked(decoded);
+                if (isParamScoped[i]) {
                     checkParameter(self, targetAddress, role, data, i, encoded);
                 }
             }
@@ -344,7 +346,7 @@ library TransactionCheck {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
-            .allowed[value] = allow;      
+            .allowed[value] = allow;
     }
 
     function setAllowedFunction(
@@ -358,7 +360,7 @@ library TransactionCheck {
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .allowed = allow;       
+            .allowed = allow;
     }
 
     /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.

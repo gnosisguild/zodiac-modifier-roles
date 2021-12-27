@@ -2352,7 +2352,7 @@ describe('RolesModifier', async () => {
     });
   });
 
-  describe.skip('setParameterAllowedValue()', () => {
+  describe('setParameterAllowedValue()', () => {
     it('reverts if not authorized', async () => {
       const { avatar, modifier } = await txSetup();
       expect(
@@ -2367,110 +2367,80 @@ describe('RolesModifier', async () => {
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('sets allowed parameter value to true', async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        AddressOne,
-        '0x12345678',
-        0,
-        '0xabcd',
-        true
-      );
-      const paramScoped =
-        await modifier.populateTransaction.setParametersScoped(
-          1,
-          AddressOne,
-          '0x12345678',
-          true,
-          [true],
-          [false],
-          [0]
-        );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
-      expect(
-        await modifier.isAllowedValueForParam(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd'
-        )
-      ).to.be.equals(false);
-      expect(avatar.exec(modifier.address, 0, tx.data));
-      expect(
-        await modifier.isAllowedValueForParam(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd'
-        )
-      ).to.be.equals(true);
-    });
+    it('sets different allowed value parameters', async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
 
-    it('sets allowed parameter value to false', async () => {
-      const { avatar, modifier } = await txSetup();
-      const txTrue =
-        await modifier.populateTransaction.setParameterAllowedValue(
+      const ROLE_ID = 0;
+      const COMP_TYPE_EQ = 0;
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction('fnWithTwoParams')
+      );
+      const EXEC_ARGS = (a: number, b: number) => [
+        testContract.address,
+        0,
+        testContract.interface.encodeFunctionData(
+          'fnWithTwoParams(uint256,uint256)',
+          [a, b]
+        ),
+        0,
+      ];
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .setTargetAddressAllowed(ROLE_ID, testContract.address, true);
+
+      await modifier
+        .connect(owner)
+        .setAllowedFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      await modifier
+        .connect(owner)
+        .setParametersScoped(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          true,
+          [false, true],
+          [false, false],
+          [COMP_TYPE_EQ, COMP_TYPE_EQ]
+        );
+
+      // should fail before setting an allowedValue -> compValue
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(...EXEC_ARGS(10, 20))
+      ).to.be.revertedWith('ParameterNotAllowed');
+
+      await modifier
+        .connect(owner)
+        .setParameterAllowedValue(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
           1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd',
+          ethers.utils.defaultAbiCoder.encode(['uint256'], [10]),
           true
         );
-      const txFalse =
-        await modifier.populateTransaction.setParameterAllowedValue(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd',
-          false
-        );
-      const paramScoped =
-        await modifier.populateTransaction.setParametersScoped(
-          1,
-          AddressOne,
-          '0x12345678',
-          true,
-          [true],
-          [false],
-          [0]
-        );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
-      expect(
-        await modifier.isAllowedValueForParam(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd'
-        )
-      ).to.be.equals(false);
-      expect(avatar.exec(modifier.address, 0, txTrue.data));
-      expect(
-        await modifier.isAllowedValueForParam(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd'
-        )
-      ).to.be.equals(true);
-      await expect(avatar.exec(modifier.address, 0, txFalse.data))
-        .to.emit(modifier, 'SetParameterAllowedValue')
-        .withArgs(1, AddressOne, '0x12345678', 0, '0xabcd', false);
-      expect(
-        await modifier.isAllowedValueForParam(
-          1,
-          AddressOne,
-          '0x12345678',
-          0,
-          '0xabcd'
-        )
-      ).to.be.equals(false);
+
+      // should fail because second param not allowed
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(...EXEC_ARGS(20, 20))
+      ).to.be.revertedWith('ParameterNotAllowed');
+
+      // should succeed with allowed value
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(...EXEC_ARGS(10, 10))
+      ).to.not.be.reverted;
     });
 
     it('emits event with correct params', async () => {
