@@ -177,9 +177,6 @@ library TransactionCheck {
             .functions[functionSig]
             .paramsScoped;
 
-        // (bool isScopedParam, bool[] memory paramTypes, , ) = Roles(
-        //     address(this)
-        // ).getParameterScopes(role, targetAddress, functionSig);
         for (
             // loop through each parameter
             uint16 i = 0;

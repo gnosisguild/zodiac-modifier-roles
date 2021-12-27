@@ -6,33 +6,6 @@ import "./TransactionCheck.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    // struct Parameter {
-    //     mapping(bytes => bool) allowed;
-    //     bytes compValue;
-    // }
-
-    // struct Function {
-    //     bool allowed;
-    //     bool scoped;
-    //     bool[] paramsScoped;
-    //     bool[] paramTypes;
-    //     mapping(uint16 => Parameter) values;
-    //     Comp.Comparison[] compTypes;
-    // }
-
-    // struct TargetAddress {
-    //     bool allowed;
-    //     bool scoped;
-    //     bool delegateCallAllowed;
-    //     bool sendAllowed;
-    //     mapping(bytes4 => Function) functions;
-    // }
-
-    // struct Role {
-    //     mapping(address => TargetAddress) targetAddresses;
-    //     mapping(address => bool) members;
-    // }
-
     mapping(address => uint16) public defaultRoles;
     // mapping(uint16 => Role) internal roles;
     RoleWrap s_roles;
@@ -219,22 +192,6 @@ contract Roles is Modifier {
         bool[] memory types,
         Comp.Comparison[] memory compTypes
     ) external onlyOwner {
-        // s_roles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .scoped = scoped;
-        // s_roles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .paramTypes = types;
-        // s_roles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .paramsScoped = paramsScoped;
-        // s_roles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .compTypes = compTypes;
         TransactionCheck.setParametersScoped(
             s_roles,
             role,
@@ -282,10 +239,6 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool allow
     ) external onlyOwner {
-        // Proles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .allowed = allow;
         TransactionCheck.setAllowedFunction(
             s_roles,
             role,
@@ -482,112 +435,6 @@ contract Roles is Modifier {
                 .values[paramIndex]
                 .compValue;
     }
-
-    /// @dev Returns bool to indicate whether (true) or not (false) a given module is a member of a role.
-    /// @param role Role to check.
-    /// @param module Module to check.
-    /// @return bool indicating whether module is a member or role.
-    // function isRoleMember(uint16 role, address module)
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return s_roles.roles[role].members[module];
-    // }
-
-    /// @dev Returns bool to indicate if an address is an allowed target address.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    // function isAllowedTargetAddress(uint16 role, address targetAddress)
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return (s_roles.roles[role].targetAddresses[targetAddress].allowed);
-    // }
-
-    /// @dev Returns bool to indicate if an address is scoped.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    // function isScoped(uint16 role, address targetAddress)
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return (s_roles.roles[role].targetAddresses[targetAddress].scoped);
-    // }
-
-    /// @dev Returns bool to indicate if an address is scoped.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    // function isSendAllowed(uint16 role, address targetAddress)
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return (s_roles.roles[role].targetAddresses[targetAddress].sendAllowed);
-    // }
-
-    /// @dev Returns bool to indicate if a function signature is allowed for a target address.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    /// @param functionSig Signature to check.
-    // function isAllowedFunction(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig
-    // ) public view returns (bool) {
-    //     return (
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .allowed
-    //     );
-    // }
-
-    /// @dev Returns bool to indicate if a given function signature is scoped.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    /// @param functionSig Signature to check.
-    // function isFunctionScoped(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig
-    // ) public view returns (bool) {
-    //     return (
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .scoped
-    //     );
-    // }
-
-    /// @dev Returns bool to indicate if delegate calls are allowed to a target address.
-    /// @param role Role to check for.
-    /// @param targetAddress Address to check.
-    // function isAllowedToDelegateCall(uint16 role, address targetAddress)
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return (s_roles.roles[role].targetAddresses[targetAddress].delegateCallAllowed);
-    // }
-
-    /// @dev Returns bool to indicate if a value is allowed for a parameter on a function at a target address for a role.
-    /// @param role Role to check.
-    /// @param targetAddress Address to check.
-    /// @param functionSig Function signature to check.
-    /// @param paramIndex Parameter index to check.
-    /// @param value Value to check.
-    // function isAllowedValueForParam(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig,
-    //     uint16 paramIndex,
-    //     bytes memory value
-    // ) public view returns (bool) {
-    //     return TransactionCheck.isAllowedValueForParam(s_roles, role, targetAddress, functionSig, paramIndex, value);
-    // }
 
     /// @dev Passes a transaction to the modifier.
     /// @param to Destination address of module transaction
