@@ -71,20 +71,20 @@ contract Roles is Modifier {
         address targetAddress,
         bool allowed
     );
-    // event SetFunctionAllowedOnTargetAddress(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 selector,
-    //     bool allowed
-    // );
-    // event SetParameterAllowedValue(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig,
-    //     uint16 parameterIndex,
-    //     bytes value,
-    //     bool allowed
-    // );
+    event SetFunctionAllowedOnTargetAddress(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        bool allowed
+    );
+    event SetParameterAllowedValue(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint16 parameterIndex,
+        bytes value,
+        bool allowed
+    );
     event SetParameterCompValue(
         uint16 role,
         address targetAddress,
@@ -245,15 +245,15 @@ contract Roles is Modifier {
             types,
             compTypes
         );
-        // emit SetParametersScoped(
-        //     role,
-        //     targetAddress,
-        //     functionSig,
-        //     scoped,
-        //     paramsScoped,
-        //     types,
-        //     compTypes
-        // );
+        emit SetParametersScoped(
+            role,
+            targetAddress,
+            functionSig,
+            scoped,
+            paramsScoped,
+            types,
+            compTypes
+        );
     }
 
     /// @dev Sets whether or not a target address can be sent to (incluces fallback/receive functions).
@@ -293,12 +293,12 @@ contract Roles is Modifier {
             functionSig,
             allow
         );
-        // emit SetFunctionAllowedOnTargetAddress(
-        //     role,
-        //     targetAddress,
-        //     functionSig,
-        //     allow
-        // );
+        emit SetFunctionAllowedOnTargetAddress(
+            role,
+            targetAddress,
+            functionSig,
+            allow
+        );
     }
 
     /// @dev Sets whether or not a specific parameter value is allowed for a function call.
@@ -333,14 +333,14 @@ contract Roles is Modifier {
             allow
         );
 
-        // emit setParameterAllowedValue(
-        //     role,
-        //     targetAddress,
-        //     functionSig,
-        //     paramIndex,
-        //     value,
-        //     allow
-        // );
+        emit SetParameterAllowedValue(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            value,
+            allow
+        );
     }
 
     /// @dev Sets the comparison value for a parameter

@@ -37,30 +37,6 @@ struct RoleWrap {
 }
 
 library TransactionCheck {
-    event SetParameterAllowedValue(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint16 parameterIndex,
-        bytes value,
-        bool allowed
-    );
-    event SetFunctionAllowedOnTargetAddress(
-        uint16 role,
-        address targetAddress,
-        bytes4 selector,
-        bool allowed
-    );
-    event SetParametersScoped(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool scoped,
-        bool[] paramsScoped,
-        bool[] types,
-        Comp.Comparison[] compTypes
-    );
-
     /// Function signature too short
     error FunctionSignatureTooShort();
 
@@ -368,16 +344,7 @@ library TransactionCheck {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
-            .allowed[value] = allow;
-
-        emit SetParameterAllowedValue(
-            role,
-            targetAddress,
-            functionSig,
-            paramIndex,
-            value,
-            allow
-        );
+            .allowed[value] = allow;      
     }
 
     function setAllowedFunction(
@@ -391,13 +358,7 @@ library TransactionCheck {
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .allowed = allow;
-        emit SetFunctionAllowedOnTargetAddress(
-            role,
-            targetAddress,
-            functionSig,
-            allow
-        );
+            .allowed = allow;       
     }
 
     /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
@@ -439,14 +400,5 @@ library TransactionCheck {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .compTypes = compTypes;
-        emit SetParametersScoped(
-            role,
-            targetAddress,
-            functionSig,
-            scoped,
-            paramsScoped,
-            types,
-            compTypes
-        );
     }
 }
