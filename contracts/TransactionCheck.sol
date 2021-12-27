@@ -61,6 +61,9 @@ library TransactionCheck {
     /// Role not allowed to use bytes greater than value for parameter
     error ParameterGreaterThanAllowed();
 
+    // only multisend txs with an offset of 32 bytes are allowed
+    error UnacceptableMultiSendOffset();
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
@@ -74,7 +77,18 @@ library TransactionCheck {
         uint256 value;
         bytes memory out;
         uint256 dataLength;
-        // transaction data begins at byte 100, increment i by the transaction data length
+
+        uint256 offset;
+        assembly {
+            offset := mload(add(data, 36))
+        }
+        if (offset != 32) {
+            revert UnacceptableMultiSendOffset();
+        }
+
+        // transaction data (1st tx operation) reads at byte 100, 
+        // 4 bytes (multisend_id) + 32 bytes (offset_multisend_data) + 32 bytes multisend_data_length
+        // increment i by the transaction data length
         // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
         for (uint256 i = 100; i < data.length; i += (85 + dataLength)) {
             assembly {

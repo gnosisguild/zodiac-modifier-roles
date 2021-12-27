@@ -1049,6 +1049,104 @@ describe('RolesModifier', async () => {
       ).to.be.revertedWith('ParameterNotAllowed()');
     });
 
+    it('reverts if multisend tx data offset is not 32 bytes', async () => {
+      const {
+        avatar,
+        modifier,
+        testContract,
+        paramAllowed_1,
+        paramAllowed_2,
+        paramAllowed_3,
+        paramAllowed_4,
+        paramAllowed_5,
+        paramAllowed_6,
+        paramAllowed_7,
+        paramAllowed_8,
+        paramAllowed_9,
+        tx_1,
+        tx_2,
+        tx_3,
+      } = await txSetup();
+      const MultiSend = await hre.ethers.getContractFactory('MultiSend');
+      const multisend = await MultiSend.deploy();
+
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [1],
+        [true]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const allowTarget =
+        await modifier.populateTransaction.setTargetAddressAllowed(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, allowTarget.data);
+
+      const multiSendTarget = await modifier.populateTransaction.setMultiSend(
+        multisend.address
+      );
+      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+
+      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+        user1.address,
+        1
+      );
+      await avatar.exec(modifier.address, 0, defaultRole.data);
+
+      const functionScoped =
+        await modifier.populateTransaction.setTargetAddressScoped(
+          1,
+          testContract.address,
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionScoped.data);
+
+      const functionAllowed =
+        await modifier.populateTransaction.setAllowedFunction(
+          1,
+          testContract.address,
+          '0x40c10f19',
+          true
+        );
+      await avatar.exec(modifier.address, 0, functionAllowed.data);
+
+      const paramScoped =
+        await modifier.populateTransaction.setParametersScoped(
+          1,
+          testContract.address,
+          '0x40c10f19',
+          true,
+          [true, true],
+          [false, false],
+          [0, 0]
+        );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
+      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
+
+      const multiTx = buildMultiSendSafeTx(
+        multisend,
+        [tx_1],
+        0
+      );
+
+      // setting offset to 0x21 bytes instead of 0x20
+      multiTx.data = multiTx.data.substr(0, 73) + "1" + multiTx.data.substr(74)
+
+      await expect(
+        modifier.execTransactionFromModule(
+          multisend.address,
+          0,
+          multiTx.data,
+          1
+        )
+      ).to.be.revertedWith('UnacceptableMultiSendOffset()');
+    });
+
     it('executes a call with multisend tx', async () => {
       const {
         avatar,
