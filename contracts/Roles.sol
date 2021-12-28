@@ -270,21 +270,14 @@ contract Roles is Modifier {
         bytes memory value,
         bool allow
     ) external onlyOwner {
-        // todo: require that param is scoped first?
-        // Proles.roles[role]
-        //     .targetAddresses[targetAddress]
-        //     .functions[functionSig]
-        //     .values[paramIndex]
-        //     .allowed[value] = allow;
-        TransactionCheck.setParameterAllowedValue(
-            s_roles,
-            role,
-            targetAddress,
-            functionSig,
-            paramIndex,
-            value,
-            allow
-        );
+        s_roles
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .values[paramIndex]
+            .allowed[
+                value.length > 32 ? keccak256(value) : bytes32(value)
+            ] = allow;
 
         emit SetParameterAllowedValue(
             role,
@@ -315,7 +308,9 @@ contract Roles is Modifier {
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .values[paramIndex]
-            .compValue = compValue;
+            .compValue = compValue.length > 32
+            ? keccak256(compValue)
+            : bytes32(compValue);
 
         emit SetParameterCompValue(
             role,
@@ -355,48 +350,6 @@ contract Roles is Modifier {
         emit SetDefaultRole(module, role);
     }
 
-    /// @dev Returns details on whether and how functions parameters are scoped.
-    /// @param role Role to check.
-    /// @param targetAddress Target address to check.
-    /// @param functionSig Function signature of the function to check.
-    /// @return bool describing whether (true) or not (false) the function is scoped.
-    /// @return bool[] describing parameter types are variable(true) or fixed (false) length.
-    /// @return bool[] describing whether (true) or not (false) the parameters are scoped.
-    /// @return Comp.Comparison[] describing the comparison type for each parameter: EqualTo, GreaterThan, or LessThan.
-    // function getParameterScopes(
-    //     uint16 role,
-    //     address targetAddress,
-    //     bytes4 functionSig
-    // )
-    //     public
-    //     view
-    //     returns (
-    //         bool,
-    //         bool[] memory,
-    //         bool[] memory,
-    //         Comp.Comparison[] memory
-    //     )
-    // {
-    //     return (
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .scoped,
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .paramTypes,
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .paramsScoped,
-    //         s_roles.roles[role]
-    //             .targetAddresses[targetAddress]
-    //             .functions[functionSig]
-    //             .compTypes
-    //     );
-    // }
-
     /// @dev Returns the comparison type of a given parameter.
     /// @param role The role to check.
     /// @param targetAddress Target address to check.
@@ -426,7 +379,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint16 paramIndex
-    ) public view returns (bytes memory) {
+    ) public view returns (bytes32) {
         return
             s_roles
                 .roles[role]

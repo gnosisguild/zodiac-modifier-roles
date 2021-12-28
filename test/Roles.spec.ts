@@ -1128,14 +1128,10 @@ describe('RolesModifier', async () => {
       await avatar.exec(modifier.address, 0, paramAllowed_1.data);
       await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
-      const multiTx = buildMultiSendSafeTx(
-        multisend,
-        [tx_1],
-        0
-      );
+      const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
 
       // setting offset to 0x21 bytes instead of 0x20
-      multiTx.data = multiTx.data.substr(0, 73) + "1" + multiTx.data.substr(74)
+      multiTx.data = multiTx.data.substr(0, 73) + '1' + multiTx.data.substr(74);
 
       await expect(
         modifier.execTransactionFromModule(
@@ -2587,11 +2583,11 @@ describe('RolesModifier', async () => {
       await avatar.exec(modifier.address, 0, paramScoped.data);
       expect(
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
-      ).to.be.equals('0x');
+      ).to.be.equals(padToBytes32('0x'));
       expect(avatar.exec(modifier.address, 0, tx.data));
       expect(
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
-      ).to.be.equals('0xabcd');
+      ).to.be.equals(padToBytes32('0xabcd'));
     });
 
     it('sets compValue to zero', async () => {
@@ -2623,17 +2619,17 @@ describe('RolesModifier', async () => {
       await avatar.exec(modifier.address, 0, paramScoped.data);
       expect(
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
-      ).to.be.equals('0x');
+      ).to.be.equals(padToBytes32('0x'));
       expect(avatar.exec(modifier.address, 0, txTrue.data));
       expect(
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
-      ).to.be.equals('0xabcd');
+      ).to.be.equals(padToBytes32('0xabcd'));
       await expect(avatar.exec(modifier.address, 0, txFalse.data))
         .to.emit(modifier, 'SetParameterCompValue')
         .withArgs(1, AddressOne, '0x12345678', 0, '0x');
       expect(
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
-      ).to.be.equals('0x');
+      ).to.be.equals(padToBytes32('0x'));
     });
 
     it('emits event with correct params', async () => {
@@ -2732,7 +2728,7 @@ describe('RolesModifier', async () => {
       const result = (
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
       ).toString();
-      await expect(result).to.be.equals('0x');
+      await expect(result).to.be.equals(padToBytes32('0x'));
     });
 
     it('returns type if set', async () => {
@@ -2774,7 +2770,7 @@ describe('RolesModifier', async () => {
       const result = (
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
       ).toString();
-      await expect(result).to.be.equals('0x');
+      await expect(result).to.be.equals(padToBytes32('0x'));
     });
 
     it('returns role if set', async () => {
@@ -2789,12 +2785,16 @@ describe('RolesModifier', async () => {
       const resultFalse = (
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
       ).toString();
-      await expect(resultFalse).to.be.equals('0x');
+      await expect(resultFalse).to.be.equals(padToBytes32('0x'));
       await expect(await avatar.exec(modifier.address, 0, tx.data));
       const resultTrue = (
         await modifier.getCompValue(1, AddressOne, '0x12345678', 0)
       ).toString();
-      await expect(resultTrue).to.be.equals('0x1234');
+      await expect(resultTrue).to.be.equals(padToBytes32('0x1234'));
     });
   });
 });
+
+function padToBytes32(s: string) {
+  return s.padEnd(66, '0');
+}

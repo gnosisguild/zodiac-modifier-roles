@@ -6,8 +6,8 @@ import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 struct Parameter {
-    mapping(bytes => bool) allowed;
-    bytes compValue;
+    mapping(bytes32 => bool) allowed;
+    bytes32 compValue;
 }
 
 struct Function {
@@ -86,7 +86,7 @@ library TransactionCheck {
             revert UnacceptableMultiSendOffset();
         }
 
-        // transaction data (1st tx operation) reads at byte 100, 
+        // transaction data (1st tx operation) reads at byte 100,
         // 4 bytes (multisend_id) + 32 bytes (offset_multisend_data) + 32 bytes multisend_data_length
         // increment i by the transaction data length
         // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
@@ -110,51 +110,6 @@ library TransactionCheck {
         }
     }
 
-    function checkParameter(
-        RoleWrap storage self,
-        address targetAddress,
-        uint16 role,
-        bytes memory data,
-        uint16 paramIndex,
-        bytes memory value
-    ) public view {
-        bytes4 functionSig = bytes4(data);
-        bytes memory compValue = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .compValue;
-        Comp.Comparison compType = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .compTypes[paramIndex];
-        if (
-            compType == Comp.Comparison.EqualTo &&
-            !isAllowedValueForParam(
-                self,
-                role,
-                targetAddress,
-                functionSig,
-                paramIndex,
-                value
-            )
-        ) {
-            revert ParameterNotAllowed();
-        } else if (
-            compType == Comp.Comparison.GreaterThan &&
-            bytes32(value) <= bytes32(compValue)
-        ) {
-            revert ParameterLessThanAllowed();
-        } else if (
-            compType == Comp.Comparison.LessThan &&
-            bytes32(value) >= bytes32(compValue)
-        ) {
-            revert ParameterGreaterThanAllowed();
-        }
-    }
-
     /// @dev Will revert if a transaction has a parameter that is not allowed
     /// @param self reference to roles storage
     /// @param role Role to check for.
@@ -167,9 +122,6 @@ library TransactionCheck {
         bytes memory data
     ) public view {
         bytes4 functionSig = bytes4(data);
-        // First 4 bytes are the function selector, skip function selector.
-        uint16 pos = 4;
-
         bool isScopedFunction = self
             .roles[role]
             .targetAddresses[targetAddress]
@@ -180,7 +132,7 @@ library TransactionCheck {
             return;
         }
 
-        bool[] memory paramTypes = self
+        bool[] memory paramIsDynamic = self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -194,42 +146,117 @@ library TransactionCheck {
         for (
             // loop through each parameter
             uint16 i = 0;
-            i < paramTypes.length;
+            i < paramIsDynamic.length;
             i++
         ) {
-            // we set paramType to true if its a fixed or dynamic array type with length encoding
-            if (paramTypes[i] == true) {
-                // location of length of first parameter is first word (4 bytes)
-                pos += 32;
-                uint256 lengthLocation;
-                assembly {
-                    lengthLocation := mload(add(data, pos))
-                }
-                // get location of length prefix, always start from param block start (4 bytes + 32 bytes)
-                uint256 lengthPos = 36 + lengthLocation;
-                // get the data at length position
-                bytes memory out;
-                assembly {
-                    out := add(data, lengthPos)
-                }
-                if (isParamScoped[i]) {
-                    checkParameter(self, targetAddress, role, data, i, out);
-                }
-
-                // the parameter is not an array and has no length encoding
-            } else {
-                // fixed value data is positioned within the parameter block
-                pos += 32;
-                bytes32 decoded;
-                assembly {
-                    decoded := mload(add(data, pos))
-                }
-                // encode bytes32 to bytes memory for the mapping key
-                bytes memory encoded = abi.encodePacked(decoded);
-                if (isParamScoped[i]) {
-                    checkParameter(self, targetAddress, role, data, i, encoded);
-                }
+            if (!isParamScoped[i]) {
+                continue;
             }
+
+            Comp.Comparison compType;
+            bytes32 compValue;
+            bool isAllowed;
+            bytes32 value;
+
+            if (paramIsDynamic[i] == true) {
+                compType = Comp.Comparison.EqualTo;
+                value = pluckDynamicParamValue(data, i);
+            } else {
+                compType = self
+                    .roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[functionSig]
+                    .compTypes[i];
+                value = pluckParamValue(data, i);
+            }
+
+            if (compType == Comp.Comparison.EqualTo) {
+                isAllowed = self
+                    .roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[functionSig]
+                    .values[i]
+                    .allowed[value];
+            } else {
+                compValue = self
+                    .roles[role]
+                    .targetAddresses[targetAddress]
+                    .functions[functionSig]
+                    .values[i]
+                    .compValue;
+            }
+
+            compareParameterValues(compType, compValue, isAllowed, value);
+        }
+    }
+
+    function compareParameterValues(
+        Comp.Comparison compType,
+        bytes32 compValue,
+        bool isAllowed,
+        bytes32 value
+    ) internal pure {
+        if (compType == Comp.Comparison.EqualTo && !isAllowed) {
+            revert ParameterNotAllowed();
+        } else if (
+            compType == Comp.Comparison.GreaterThan && value <= compValue
+        ) {
+            revert ParameterLessThanAllowed();
+        } else if (compType == Comp.Comparison.LessThan && value >= compValue) {
+            revert ParameterGreaterThanAllowed();
+        }
+    }
+
+    function pluckDynamicParamValue(bytes memory data, uint256 paramIndex)
+        internal
+        pure
+        returns (bytes32)
+    {
+        // get the pointer to the start of the buffer
+        uint256 offset = 32 + 4 + paramIndex * 32;
+        uint256 start;
+        assembly {
+            start := add(32, add(4, mload(add(data, offset))))
+        }
+
+        uint256 length;
+        assembly {
+            length := mload(add(data, start))
+        }
+
+        if (length > 32) {
+            return keccak256(slice(data, start, start + length));
+        } else {
+            bytes32 content;
+            assembly {
+                content := mload(add(add(data, start), 32))
+            }
+            return content;
+        }
+    }
+
+    function pluckParamValue(bytes memory data, uint256 paramIndex)
+        internal
+        pure
+        returns (bytes32)
+    {
+        uint256 offset = 32 + 4 + paramIndex * 32;
+        bytes32 value;
+        assembly {
+            value := mload(add(data, offset))
+        }
+        return value;
+    }
+
+    function slice(
+        bytes memory data,
+        uint256 start,
+        uint256 end
+    ) internal pure returns (bytes memory result) {
+        result = new bytes(end - start);
+        uint256 i;
+        for (uint256 j = start; j < end; j++) {
+            result[i++] = data[j];
         }
     }
 
@@ -287,77 +314,6 @@ library TransactionCheck {
         if (value > 0 && !bools[2]) {
             revert SendNotAllowed();
         }
-    }
-
-    /// @dev Returns bool to indicate if a value is allowed for a parameter on a function at a target address for a role.
-    /// @param role Role to check.
-    /// @param targetAddress Address to check.
-    /// @param functionSig Function signature to check.
-    /// @param paramIndex Parameter index to check.
-    /// @param value Value to check.
-    function isAllowedValueForParam(
-        RoleWrap storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint16 paramIndex,
-        bytes memory value
-    ) public view returns (bool) {
-        bool compAllowed = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .allowed[value];
-
-        bytes memory compValue = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .compValue;
-
-        Comp.Comparison comptype = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .compTypes[paramIndex];
-
-        if (comptype == Comp.Comparison.EqualTo) {
-            return compAllowed;
-        } else if (comptype == Comp.Comparison.GreaterThan) {
-            if (bytes32(value) > bytes32(compValue)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (comptype == Comp.Comparison.LessThan) {
-            if (bytes32(value) < bytes32(compValue)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    function setParameterAllowedValue(
-        RoleWrap storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint16 paramIndex,
-        bytes memory value,
-        bool allow
-    ) external {
-        // todo: require that param is scoped first?
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .allowed[value] = allow;
     }
 
     function setAllowedFunction(
