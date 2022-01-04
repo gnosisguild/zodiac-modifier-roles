@@ -13,10 +13,8 @@ struct Parameter {
 struct Function {
     bool allowed;
     bool scoped;
-    bool[] paramsScoped;
-    bool[] paramTypes;
+    uint256 paramConfig;
     mapping(uint16 => Parameter) values;
-    Comp.Comparison[] compTypes;
 }
 
 struct TargetAddress {
@@ -122,51 +120,43 @@ library TransactionCheck {
         bytes memory data
     ) public view {
         bytes4 functionSig = bytes4(data);
-        bool isScopedFunction = self
+        bool isFunctionScoped = self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .scoped;
 
-        if (!isScopedFunction) {
+        if (!isFunctionScoped) {
             return;
         }
 
-        bool[] memory paramIsDynamic = self
+        uint256 paramConfig = self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .paramTypes;
-        bool[] memory isParamScoped = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramsScoped;
+            .paramConfig;
 
-        for (
-            // loop through each parameter
-            uint16 i = 0;
-            i < paramIsDynamic.length;
-            i++
-        ) {
-            if (!isParamScoped[i]) {
-                continue;
-            }
+        uint8 paramCount = unpackParamCount(paramConfig);
 
-            Comp.Comparison compType;
+        for (uint8 i = 0; i < paramCount; i++) {
+            (
+                bool isParamScoped,
+                bool isParamDynamic,
+                Comp.Comparison compType
+            ) = unpackParamConfig(paramConfig, i);
+
             bytes32 compValue;
             bool isAllowed;
             bytes32 value;
 
-            if (paramIsDynamic[i] == true) {
-                compType = Comp.Comparison.EqualTo;
+            if (!isParamScoped) {
+                continue;
+            }
+
+            if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
+                compType = Comp.Comparison.EqualTo;
             } else {
-                compType = self
-                    .roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[functionSig]
-                    .compTypes[i];
                 value = pluckParamValue(data, i);
             }
 
@@ -336,38 +326,110 @@ library TransactionCheck {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
-    /// @param paramsScoped false for un-scoped, true for scoped.
-    /// @param types false for static, true for dynamic.
-    /// @param compTypes Any, or EqualTo, GreaterThan, or LessThan compValue.
+    /// @param isParamScoped false for un-scoped, true for scoped.
+    /// @param isParamDynamic false for static, true for dynamic.
+    /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
     function setParametersScoped(
         RoleWrap storage self,
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         bool scoped,
-        bool[] memory paramsScoped,
-        bool[] memory types,
-        Comp.Comparison[] memory compTypes
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comp.Comparison[] memory paramCompType
     ) external {
+        require(
+            isParamScoped.length <= 62,
+            "Functions with more than 62 arguments are not supported"
+        );
+
+        require(
+            isParamScoped.length == isParamDynamic.length,
+            "Mismatch: isParamScoped and isParamDynamic arrays have different lengths"
+        );
+
+        require(
+            isParamScoped.length == paramCompType.length,
+            "Mismatch: isParamScoped and paramCompType arrays have different lengths"
+        );
+
         self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
             .scoped = scoped;
+
+        uint8 paramCount = uint8(isParamScoped.length);
+        uint256 paramConfig = packParamCount(paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            paramConfig = packParamConfig(
+                paramConfig,
+                i,
+                isParamScoped[i],
+                isParamDynamic[i],
+                paramCompType[i]
+            );
+        }
+
         self
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
-            .paramTypes = types;
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramsScoped = paramsScoped;
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .compTypes = compTypes;
+            .paramConfig = paramConfig;
+    }
+
+    function packParamConfig(
+        uint256 config,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comp.Comparison compType
+    ) internal pure returns (uint256) {
+        // we restrict paramCount to 62:
+        // 8   bits -> length
+        // 62  bits -> isParamScoped
+        // 62  bits -> isParamDynamic
+        // 124 bits -> two bits for each compType 62*2 = 124
+        if (isScoped) {
+            config |= 1 << (paramIndex + 62 + 124);
+            config |= uint256(compType) << (paramIndex * 2);
+        }
+
+        if (isDynamic) {
+            config |= 1 << (paramIndex + 124);
+        }
+        return config;
+    }
+
+    function unpackParamConfig(uint256 config, uint8 paramIndex)
+        internal
+        pure
+        returns (
+            bool isScoped,
+            bool isDynamic,
+            Comp.Comparison compType
+        )
+    {
+        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
+        uint256 isDynamicMask = 1 << (paramIndex + 124);
+        // 3 -> 11 in binary
+        uint256 compTypeMask = 3 << (2 * paramIndex);
+
+        isScoped = (config & isScopedMask) != 0;
+        isDynamic = (config & isDynamicMask) != 0;
+        compType = Comp.Comparison((config & compTypeMask) >> (2 * paramIndex));
+    }
+
+    function packParamCount(uint8 paramCount) internal pure returns (uint256) {
+        // 8   bits -> length
+        // 62  bits -> isParamScoped
+        // 62  bits -> isParamDynamic
+        // 124 bits -> two bits represents for each compType 62*2 = 124
+        return (uint256(paramCount) << (62 + 62 + 124));
+    }
+
+    function unpackParamCount(uint256 config) internal pure returns (uint8) {
+        return uint8(config >> 248);
     }
 }

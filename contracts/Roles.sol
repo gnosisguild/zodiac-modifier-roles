@@ -361,12 +361,17 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint16 paramIndex
     ) public view returns (Comp.Comparison) {
-        return
-            s_roles
-                .roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .compTypes[paramIndex];
+        // TODO we can delete this function, but some tests are relying on it, so leaving it in for now
+
+        uint256 paramConfig = s_roles
+            .roles[role]
+            .targetAddresses[targetAddress]
+            .functions[functionSig]
+            .paramConfig;
+
+        // doing the unpacking inline since will be deleted
+        uint256 mask = 3 << (2 * paramIndex);
+        return Comp.Comparison((paramConfig & mask) >> (2 * paramIndex));
     }
 
     /// @dev Returns the comparison value for a parameter.
