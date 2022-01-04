@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test",
+    "test": "hardhat test --deploy-fixture",
     "deploy": "hardhat deploy --network",
     "coverage": "hardhat coverage",
     "lint": "yarn lint:sol && yarn lint:ts",
@@ -42,6 +42,7 @@
     "eslint-plugin-prettier": "3.1.4",
     "ethereum-waffle": "3.2.0",
     "hardhat": "2.6.4",
+    "hardhat-contract-sizer": "^2.1.1",
     "hardhat-deploy": "0.7.0-beta.38",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "5.1.3",

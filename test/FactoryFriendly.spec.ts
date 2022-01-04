@@ -13,16 +13,24 @@ describe("Module works with factory", () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
-    const RolesModifier = await hre.ethers.getContractFactory("Roles");
     const factory = await Factory.deploy();
+    const TransactionCheck = await hre.ethers.getContractFactory(
+      "TransactionCheck"
+    );
+    const transactionCheck = await TransactionCheck.deploy();
+    const Modifier = await hre.ethers.getContractFactory("Roles", {
+      libraries: {
+        TransactionCheck: transactionCheck.address,
+      },
+    });
 
-    const masterCopy = await RolesModifier.deploy(
+    const masterCopy = await Modifier.deploy(
       FirstAddress,
       FirstAddress,
       FirstAddress
     );
 
-    return { factory, masterCopy };
+    return { factory, masterCopy, Modifier };
   });
 
   it("should throw because master copy is already initialized", async () => {
@@ -39,7 +47,7 @@ describe("Module works with factory", () => {
   });
 
   it("should deploy new roles module proxy", async () => {
-    const { factory, masterCopy } = await baseSetup();
+    const { factory, masterCopy, Modifier } = await baseSetup();
     const [avatar, owner, target] = await ethers.getSigners();
     const paramsValues = [owner.address, avatar.address, target.address];
     const encodedParams = [new AbiCoder().encode(paramsTypes, paramsValues)];
@@ -58,7 +66,8 @@ describe("Module works with factory", () => {
       ({ event }: { event: string }) => event === "ModuleProxyCreation"
     );
 
-    const newProxy = await hre.ethers.getContractAt("Roles", newProxyAddress);
+    const newProxy = Modifier.attach(newProxyAddress);
+    // const newProxy = await hre.ethers.getContractAt("Roles", newProxyAddress);
     expect(await newProxy.avatar()).to.be.eq(avatar.address);
     expect(await newProxy.target()).to.be.eq(target.address);
   });

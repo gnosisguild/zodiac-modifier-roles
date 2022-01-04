@@ -13,6 +13,9 @@ contract TestContract {
         string test6,
         string test7
     );
+    event DoNothing();
+    event FnWithSingleParam(uint256);
+    event FnWithTwoParams(uint256, uint256);
 
     receive() external payable {
         emit Receive();
@@ -34,5 +37,17 @@ contract TestContract {
     ) public returns (bool) {
         emit TestDynamic(test, test2, test3, test4, test5, test6, test7);
         return true;
+    }
+
+    function doNothing() public {
+        emit DoNothing();
+    }
+
+    function fnWithSingleParam(uint256 p) public {
+        emit FnWithSingleParam(p);
+    }
+
+    function fnWithTwoParams(uint256 a, uint256 b) public {
+        emit FnWithTwoParams(a, b);
     }
 }
