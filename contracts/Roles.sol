@@ -2,13 +2,13 @@
 pragma solidity ^0.8.6;
 
 import "./Comp.sol";
-import "./TransactionCheck.sol";
+import "./Permissions.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
     mapping(address => uint16) public defaultRoles;
     // mapping(uint16 => Role) internal roles;
-    RoleWrap s_roles;
+    RoleList roleList;
 
     address public multiSend;
 
@@ -138,7 +138,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        s_roles.roles[role].targetAddresses[targetAddress].allowed = allow;
+        roleList.roles[role].targetAddresses[targetAddress].allowed = allow;
         emit SetTargetAddressAllowed(role, targetAddress, allow);
     }
 
@@ -152,7 +152,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        s_roles
+        roleList
             .roles[role]
             .targetAddresses[targetAddress]
             .delegateCallAllowed = allow;
@@ -170,7 +170,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool scoped
     ) external onlyOwner {
-        s_roles.roles[role].targetAddresses[targetAddress].scoped = scoped;
+        roleList.roles[role].targetAddresses[targetAddress].scoped = scoped;
         emit SetTargetAddressScoped(role, targetAddress, scoped);
     }
 
@@ -192,8 +192,8 @@ contract Roles is Modifier {
         bool[] memory types,
         Comp.Comparison[] memory compTypes
     ) external onlyOwner {
-        TransactionCheck.setParametersScoped(
-            s_roles,
+        Permissions.setParametersScoped(
+            roleList,
             role,
             targetAddress,
             functionSig,
@@ -223,7 +223,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        s_roles.roles[role].targetAddresses[targetAddress].sendAllowed = allow;
+        roleList.roles[role].targetAddresses[targetAddress].sendAllowed = allow;
         emit SetSendAllowedOnTargetAddress(role, targetAddress, allow);
     }
 
@@ -239,8 +239,8 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool allow
     ) external onlyOwner {
-        TransactionCheck.setAllowedFunction(
-            s_roles,
+        Permissions.setAllowedFunction(
+            roleList,
             role,
             targetAddress,
             functionSig,
@@ -270,7 +270,7 @@ contract Roles is Modifier {
         bytes memory value,
         bool allow
     ) external onlyOwner {
-        s_roles
+        roleList
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -303,7 +303,7 @@ contract Roles is Modifier {
         uint16 paramIndex,
         bytes memory compValue
     ) external onlyOwner {
-        s_roles
+        roleList
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -334,7 +334,7 @@ contract Roles is Modifier {
             revert ArraysDifferentLength();
         }
         for (uint16 i = 0; i < _roles.length; i++) {
-            s_roles.roles[_roles[i]].members[module] = memberOf[i];
+            roleList.roles[_roles[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
@@ -363,7 +363,7 @@ contract Roles is Modifier {
     ) public view returns (Comp.Comparison) {
         // TODO we can delete this function, but some tests are relying on it, so leaving it in for now
 
-        uint256 paramConfig = s_roles
+        uint256 paramConfig = roleList
             .roles[role]
             .targetAddresses[targetAddress]
             .functions[functionSig]
@@ -386,7 +386,7 @@ contract Roles is Modifier {
         uint16 paramIndex
     ) public view returns (bytes32) {
         return
-            s_roles
+            roleList
                 .roles[role]
                 .targetAddresses[targetAddress]
                 .functions[functionSig]
@@ -457,14 +457,14 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success) {
-        if (!s_roles.roles[role].members[msg.sender]) {
+        if (!roleList.roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            TransactionCheck.checkMultiSend(s_roles, data, role);
+            Permissions.checkMultiSend(roleList, data, role);
         } else {
-            TransactionCheck.checkTransaction(
-                s_roles,
+            Permissions.checkTransaction(
+                roleList,
                 to,
                 value,
                 data,
@@ -492,14 +492,14 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        if (!s_roles.roles[role].members[msg.sender]) {
+        if (!roleList.roles[role].members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            TransactionCheck.checkMultiSend(s_roles, data, role);
+            Permissions.checkMultiSend(roleList, data, role);
         } else {
-            TransactionCheck.checkTransaction(
-                s_roles,
+            Permissions.checkTransaction(
+                roleList,
                 to,
                 value,
                 data,

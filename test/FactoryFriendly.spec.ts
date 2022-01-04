@@ -14,13 +14,11 @@ describe("Module works with factory", () => {
     await deployments.fixture();
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
-    const TransactionCheck = await hre.ethers.getContractFactory(
-      "TransactionCheck"
-    );
-    const transactionCheck = await TransactionCheck.deploy();
+    const Permissions = await hre.ethers.getContractFactory("Permissions");
+    const permissions = await Permissions.deploy();
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        TransactionCheck: transactionCheck.address,
+        Permissions: permissions.address,
       },
     });
 

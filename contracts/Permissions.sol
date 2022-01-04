@@ -30,11 +30,11 @@ struct Role {
     mapping(address => bool) members;
 }
 
-struct RoleWrap {
+struct RoleList {
     mapping(uint16 => Role) roles;
 }
 
-library TransactionCheck {
+library Permissions {
     /// Function signature too short
     error FunctionSignatureTooShort();
 
@@ -66,7 +66,7 @@ library TransactionCheck {
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
     function checkMultiSend(
-        RoleWrap storage self,
+        RoleList storage self,
         bytes memory data,
         uint16 role
     ) public view {
@@ -114,7 +114,7 @@ library TransactionCheck {
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
-        RoleWrap storage self,
+        RoleList storage self,
         uint16 role,
         address targetAddress,
         bytes memory data
@@ -251,7 +251,7 @@ library TransactionCheck {
     }
 
     function checkTransaction(
-        RoleWrap storage self,
+        RoleList storage self,
         address targetAddress,
         uint256 value,
         bytes memory data,
@@ -307,7 +307,7 @@ library TransactionCheck {
     }
 
     function setAllowedFunction(
-        RoleWrap storage self,
+        RoleList storage self,
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
@@ -330,7 +330,7 @@ library TransactionCheck {
     /// @param isParamDynamic false for static, true for dynamic.
     /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
     function setParametersScoped(
-        RoleWrap storage self,
+        RoleList storage self,
         uint16 role,
         address targetAddress,
         bytes4 functionSig,

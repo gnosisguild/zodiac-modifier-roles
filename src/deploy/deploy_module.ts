@@ -9,7 +9,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const args = [FirstAddress, FirstAddress, FirstAddress];
 
-  const txCheck = await deploy("TransactionCheck", {
+  const txCheck = await deploy("Permissions", {
     from: deployer,
     log: true,
   });
@@ -20,7 +20,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     deterministicDeployment: true,
     libraries: {
-      TransactionCheck: txCheck.address,
+      Permissions: txCheck.address,
     },
   });
 };
