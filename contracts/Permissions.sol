@@ -279,13 +279,10 @@ library Permissions {
             // 1: wildcard, allowed/white-listed function
             // 2: paramConfig/scoped function
             // 3: nothing, meaning no rules for the current function were defined
-            bool isWildcard = paramConfig == 2**256 - 1;
-            bool isScoped = !isWildcard && paramConfig != 0;
 
-            if (isWildcard) {
-                // oki doki
+            if (paramConfig == 2**256 - 1) {                
                 return;
-            } else if (isScoped) {
+            } else if (paramConfig != 0) {
                 checkParameters(self, paramConfig, role, targetAddress, data);
             } else {
                 revert FunctionNotAllowed();
