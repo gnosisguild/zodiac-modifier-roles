@@ -423,7 +423,7 @@ library Permissions {
         // fits in 32 bytes
         return
             bytes32(
-                abi.encodePacked(targetAddress, functionSig, ":", paramIndex)
+                abi.encodePacked(targetAddress, functionSig, paramIndex)
             );
     }
 }
