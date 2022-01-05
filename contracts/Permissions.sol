@@ -163,14 +163,9 @@ library Permissions {
         if (target.clearance == Clearance.FUNCTION) {
             uint256 paramConfig = self.roles[role].functions[
                 keyForFunctions(targetAddress, bytes4(data))
-            ];
+            ];            
 
-            // FunctionCheck can be:
-            // 1: whitelisted
-            // 2: scoped
-            // 3: unauthorized - no rules for the current function were defined
-
-            if (paramConfig == FUNCTION_WHITELIST) {
+            if (paramConfig != FUNCTION_WHITELIST) {
                 return;
             } else {
                 checkParameters(self, paramConfig, role, targetAddress, data);
@@ -214,7 +209,7 @@ library Permissions {
             bool isAllowed;
             bytes32 value;
             bytes32 compValue;
-
+            
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
                 compType = Comp.Comparison.EqualTo;
@@ -223,7 +218,6 @@ library Permissions {
             }
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-
             if (compType == Comp.Comparison.EqualTo) {
                 isAllowed = self.roles[role].compValues[key].allowed[value];
             } else {
