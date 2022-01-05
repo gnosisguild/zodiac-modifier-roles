@@ -256,21 +256,21 @@ library Permissions {
          * Forbidden     - nothing was setup
          * AddressPass   - all calls to this address are go, nothing more to check
          * FunctionCheck - some functions on this address are allowed
-         */
-        bool isForbidden = target.clearance == AccessGranularity.NONE;
-        bool isAddressPass = target.clearance == AccessGranularity.TARGET;
-        bool isFunctionCheck = target.clearance == AccessGranularity.FUNCTION;
+         */       
 
-        if (isForbidden) {
+        // isForbidden
+        if (target.clearance == AccessGranularity.NONE) {
             revert TargetAddressNotAllowed();
         }
 
-        if (isAddressPass) {
+        // isAddressPass
+        if (target.clearance == AccessGranularity.TARGET) {
             // good to go
             return;
         }
 
-        if (isFunctionCheck) {
+        //isFunctionCheck
+        if (target.clearance == AccessGranularity.FUNCTION) {
             uint256 paramConfig = self.roles[role].functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
