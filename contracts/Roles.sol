@@ -7,7 +7,6 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
     mapping(address => uint16) public defaultRoles;
-    // mapping(uint16 => Role) internal roles;
     RoleList roleList;
 
     address public multiSend;
@@ -54,7 +53,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 parameterIndex,
+        uint8 paramIndex,
         bytes value,
         bool allowed
     );
@@ -62,7 +61,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 parameterIndex,
+        uint8 paramIndex,
         bytes compValue
     );
     event RolesModSetup(
@@ -138,7 +137,9 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList.roles[role].targetAddresses[targetAddress].allowed = allow;
+        roleList.roles[role].targets[targetAddress].clearance = allow
+            ? AccessGranularity.TARGET
+            : AccessGranularity.NONE;
         emit SetTargetAddressAllowed(role, targetAddress, allow);
     }
 
@@ -152,10 +153,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .delegateCallAllowed = allow;
+        roleList.roles[role].targets[targetAddress].canDelegate = allow;
 
         emit SetDelegateCallAllowedOnTargetAddress(role, targetAddress, allow);
     }
@@ -170,7 +168,9 @@ contract Roles is Modifier {
         address targetAddress,
         bool scoped
     ) external onlyOwner {
-        roleList.roles[role].targetAddresses[targetAddress].scoped = scoped;
+        roleList.roles[role].targets[targetAddress].clearance = scoped
+            ? AccessGranularity.FUNCTION
+            : AccessGranularity.NONE;
         emit SetTargetAddressScoped(role, targetAddress, scoped);
     }
 
@@ -223,7 +223,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList.roles[role].targetAddresses[targetAddress].sendAllowed = allow;
+        roleList.roles[role].targets[targetAddress].canSend = allow;
         emit SetSendAllowedOnTargetAddress(role, targetAddress, allow);
     }
 
@@ -266,18 +266,19 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 paramIndex,
+        uint8 paramIndex,
         bytes memory value,
         bool allow
     ) external onlyOwner {
-        roleList
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .allowed[
-                value.length > 32 ? keccak256(value) : bytes32(value)
-            ] = allow;
+        bytes32 key = Permissions.keyForCompValues(
+            targetAddress,
+            functionSig,
+            paramIndex
+        );
+
+        roleList.roles[role].compValues[key].allowed[
+            value.length > 32 ? keccak256(value) : bytes32(value)
+        ] = allow;
 
         emit SetParameterAllowedValue(
             role,
@@ -300,15 +301,16 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 paramIndex,
+        uint8 paramIndex,
         bytes memory compValue
     ) external onlyOwner {
-        roleList
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .values[paramIndex]
-            .compValue = compValue.length > 32
+        bytes32 key = Permissions.keyForCompValues(
+            targetAddress,
+            functionSig,
+            paramIndex
+        );
+
+        roleList.roles[role].compValues[key].compValue = compValue.length > 32
             ? keccak256(compValue)
             : bytes32(compValue);
 
@@ -359,15 +361,13 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 paramIndex
+        uint8 paramIndex
     ) public view returns (Comp.Comparison) {
         // TODO we can delete this function, but some tests are relying on it, so leaving it in for now
 
-        uint256 paramConfig = roleList
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramConfig;
+        bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
+
+        uint256 paramConfig = roleList.roles[role].functions[key];
 
         // doing the unpacking inline since will be deleted
         uint256 mask = 3 << (2 * paramIndex);
@@ -383,15 +383,15 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint16 paramIndex
+        uint8 paramIndex
     ) public view returns (bytes32) {
-        return
-            roleList
-                .roles[role]
-                .targetAddresses[targetAddress]
-                .functions[functionSig]
-                .values[paramIndex]
-                .compValue;
+        bytes32 key = Permissions.keyForCompValues(
+            targetAddress,
+            functionSig,
+            paramIndex
+        );
+
+        return roleList.roles[role].compValues[key].compValue;
     }
 
     /// @dev Passes a transaction to the modifier.

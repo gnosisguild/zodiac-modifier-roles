@@ -5,29 +5,28 @@ import "./Roles.sol";
 import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+enum AccessGranularity {
+    NONE,
+    TARGET,
+    FUNCTION
+}
+
 struct Parameter {
     mapping(bytes32 => bool) allowed;
     bytes32 compValue;
 }
 
-struct Function {
-    bool allowed;
-    bool scoped;
-    uint256 paramConfig;
-    mapping(uint16 => Parameter) values;
-}
-
 struct TargetAddress {
-    bool allowed;
-    bool scoped;
-    bool delegateCallAllowed;
-    bool sendAllowed;
-    mapping(bytes4 => Function) functions;
+    bool canDelegate;
+    bool canSend;
+    AccessGranularity clearance;
 }
 
 struct Role {
-    mapping(address => TargetAddress) targetAddresses;
     mapping(address => bool) members;
+    mapping(address => TargetAddress) targets;
+    mapping(bytes32 => uint256) functions;
+    mapping(bytes32 => Parameter) compValues;
 }
 
 struct RoleList {
@@ -115,26 +114,12 @@ library Permissions {
     /// @param data the transaction data to check
     function checkParameters(
         RoleList storage self,
+        uint256 paramConfig,
         uint16 role,
         address targetAddress,
         bytes memory data
     ) public view {
         bytes4 functionSig = bytes4(data);
-        bool isFunctionScoped = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .scoped;
-
-        if (!isFunctionScoped) {
-            return;
-        }
-
-        uint256 paramConfig = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramConfig;
 
         uint8 paramCount = unpackParamCount(paramConfig);
 
@@ -145,13 +130,13 @@ library Permissions {
                 Comp.Comparison compType
             ) = unpackParamConfig(paramConfig, i);
 
-            bytes32 compValue;
-            bool isAllowed;
-            bytes32 value;
-
             if (!isParamScoped) {
                 continue;
             }
+
+            bool isAllowed;
+            bytes32 value;
+            bytes32 compValue;
 
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
@@ -160,20 +145,11 @@ library Permissions {
                 value = pluckParamValue(data, i);
             }
 
+            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             if (compType == Comp.Comparison.EqualTo) {
-                isAllowed = self
-                    .roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[functionSig]
-                    .values[i]
-                    .allowed[value];
+                isAllowed = self.roles[role].compValues[key].allowed[value];
             } else {
-                compValue = self
-                    .roles[role]
-                    .targetAddresses[targetAddress]
-                    .functions[functionSig]
-                    .values[i]
-                    .compValue;
+                compValue = self.roles[role].compValues[key].compValue;
             }
 
             compareParameterValues(compType, compValue, isAllowed, value);
@@ -258,51 +234,62 @@ library Permissions {
         Enum.Operation operation,
         uint16 role
     ) public view {
-        bytes4 functionSig = bytes4(data);
-        // bools[0] = targetAllowed
-        // bools[1] = targetScoped
-        // bools[2] = sendAllowed
-        // bools[3] = functionAllowed
-        // bools[4] = functionscoped
-        // bools[5] = delegateAllowed
-        bool[6] memory bools;
-        bools[0] = self.roles[role].targetAddresses[targetAddress].allowed;
-        bools[1] = self.roles[role].targetAddresses[targetAddress].scoped;
-        bools[2] = self.roles[role].targetAddresses[targetAddress].sendAllowed;
-        bools[3] = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .allowed;
-        bools[4] = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .scoped;
-        bools[5] = self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .delegateCallAllowed;
+        TargetAddress memory target = self.roles[role].targets[targetAddress];
+
+        // CLEARANCE: transversal - checks
+        if (value > 0 && !target.canSend) {
+            revert SendNotAllowed();
+        }
+
+        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
+            revert DelegateCallNotAllowed();
+        }
+
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
-        if (operation == Enum.Operation.DelegateCall && !bools[5]) {
-            revert DelegateCallNotAllowed();
-        }
-        if (!bools[0]) {
+
+        // CLEARANCE: levels 1 2 and 3 - checks
+
+        /*
+         * For each address we have three clearance checks:
+         * Forbidden     - nothing was setup
+         * AddressPass   - all calls to this address are go, nothing more to check
+         * FunctionCheck - some functions on this address are allowed
+         */
+        bool isForbidden = target.clearance == AccessGranularity.NONE;
+        bool isAddressPass = target.clearance == AccessGranularity.TARGET;
+        bool isFunctionCheck = target.clearance == AccessGranularity.FUNCTION;
+
+        if (isForbidden) {
             revert TargetAddressNotAllowed();
         }
-        if (data.length >= 4) {
-            if (bools[1] && !bools[3]) {
-                revert FunctionNotAllowed();
-            }
-            if (bools[4]) {
-                checkParameters(self, role, targetAddress, data);
-            }
+
+        if (isAddressPass) {
+            // good to go
+            return;
         }
 
-        if (value > 0 && !bools[2]) {
-            revert SendNotAllowed();
+        if (isFunctionCheck) {
+            uint256 paramConfig = self.roles[role].functions[
+                keyForFunctions(targetAddress, bytes4(data))
+            ];
+
+            // FunctionCheck can be:
+            // 1: wildcard, allowed/white-listed function
+            // 2: paramConfig/scoped function
+            // 3: nothing, meaning no rules for the current function were defined
+            bool isWildcard = paramConfig == 2**256 - 1;
+            bool isScoped = !isWildcard && paramConfig != 0;
+
+            if (isWildcard) {
+                // oki doki
+                return;
+            } else if (isScoped) {
+                checkParameters(self, paramConfig, role, targetAddress, data);
+            } else {
+                revert FunctionNotAllowed();
+            }
         }
     }
 
@@ -313,11 +300,14 @@ library Permissions {
         bytes4 functionSig,
         bool allow
     ) external {
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .allowed = allow;
+        // MAX-INT represents function allowed/whitelist
+
+        self.roles[role].targets[targetAddress].clearance = AccessGranularity
+            .FUNCTION;
+
+        self.roles[role].functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = allow ? (2**256 - 1) : 0;
     }
 
     /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
@@ -334,16 +324,20 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
+        /*
+         * NOTE: this parameter is not used and as a matter of a fact
+         * it is always invoked from tests with true.
+         *
+         * Even with the current api it has no semantic meaning.
+         * scope false would be achieved by calling setTargetAddressScoped(...,false)
+         *
+         * In a follow up commit will delete. currently keeping the diff minimal
+         */
         bool scoped,
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comp.Comparison[] memory paramCompType
     ) external {
-        require(
-            isParamScoped.length <= 62,
-            "Functions with more than 62 arguments are not supported"
-        );
-
         require(
             isParamScoped.length == isParamDynamic.length,
             "Mismatch: isParamScoped and isParamDynamic arrays have different lengths"
@@ -353,12 +347,6 @@ library Permissions {
             isParamScoped.length == paramCompType.length,
             "Mismatch: isParamScoped and paramCompType arrays have different lengths"
         );
-
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .scoped = scoped;
 
         uint8 paramCount = uint8(isParamScoped.length);
         uint256 paramConfig = packParamCount(paramCount);
@@ -372,11 +360,9 @@ library Permissions {
             );
         }
 
-        self
-            .roles[role]
-            .targetAddresses[targetAddress]
-            .functions[functionSig]
-            .paramConfig = paramConfig;
+        self.roles[role].functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = paramConfig;
     }
 
     function packParamConfig(
@@ -431,5 +417,26 @@ library Permissions {
 
     function unpackParamCount(uint256 config) internal pure returns (uint8) {
         return uint8(config >> 248);
+    }
+
+    function keyForFunctions(address targetAddress, bytes4 functionSig)
+        public
+        pure
+        returns (bytes32)
+    {
+        // fits in 32 bytes
+        return bytes32(abi.encodePacked(targetAddress, functionSig));
+    }
+
+    function keyForCompValues(
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    ) public pure returns (bytes32) {
+        // fits in 32 bytes
+        return
+            bytes32(
+                abi.encodePacked(targetAddress, functionSig, ":", paramIndex)
+            );
     }
 }
