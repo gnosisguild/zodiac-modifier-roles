@@ -1,10 +1,6 @@
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { buildContractCall, buildMultiSendSafeTx } from "./utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
-const ZeroAddress = "0x0000000000000000000000000000000000000000";
-const FirstAddress = "0x0000000000000000000000000000000000000001";
 
 describe("Clearance", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -46,8 +42,6 @@ describe("Clearance", async () => {
       invoker,
     };
   });
-
-  const [user1] = waffle.provider.getWallets();
 
   describe("Clearance", () => {
     it("allows and then disallows a target", async () => {
