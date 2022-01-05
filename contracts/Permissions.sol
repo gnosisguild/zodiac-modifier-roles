@@ -5,7 +5,7 @@ import "./Roles.sol";
 import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-enum AccessGranularity {
+enum Clearance {
     NONE,
     TARGET,
     FUNCTION
@@ -19,7 +19,7 @@ struct Parameter {
 struct TargetAddress {
     bool canDelegate;
     bool canSend;
-    AccessGranularity clearance;
+    Clearance clearance;
 }
 
 struct Role {
@@ -256,21 +256,21 @@ library Permissions {
          * Forbidden     - nothing was setup
          * AddressPass   - all calls to this address are go, nothing more to check
          * FunctionCheck - some functions on this address are allowed
-         */       
+         */
 
         // isForbidden
-        if (target.clearance == AccessGranularity.NONE) {
+        if (target.clearance == Clearance.NONE) {
             revert TargetAddressNotAllowed();
         }
 
         // isAddressPass
-        if (target.clearance == AccessGranularity.TARGET) {
+        if (target.clearance == Clearance.TARGET) {
             // good to go
             return;
         }
 
         //isFunctionCheck
-        if (target.clearance == AccessGranularity.FUNCTION) {
+        if (target.clearance == Clearance.FUNCTION) {
             uint256 paramConfig = self.roles[role].functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
@@ -280,7 +280,7 @@ library Permissions {
             // 2: paramConfig/scoped function
             // 3: nothing, meaning no rules for the current function were defined
 
-            if (paramConfig == 2**256 - 1) {                
+            if (paramConfig == 2**256 - 1) {
                 return;
             } else if (paramConfig != 0) {
                 checkParameters(self, paramConfig, role, targetAddress, data);
@@ -299,8 +299,7 @@ library Permissions {
     ) external {
         // MAX-INT represents function allowed/whitelist
 
-        self.roles[role].targets[targetAddress].clearance = AccessGranularity
-            .FUNCTION;
+        self.roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
 
         self.roles[role].functions[
             keyForFunctions(targetAddress, functionSig)
@@ -311,7 +310,7 @@ library Permissions {
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.    
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param isParamScoped false for un-scoped, true for scoped.
     /// @param isParamDynamic false for static, true for dynamic.
     /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
