@@ -35,6 +35,8 @@ struct RoleList {
 
 library Permissions {
     uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
+    // 60 bit mask
+    uint256 constant IS_SCOPED_MASK = uint256(0xfffffffffffffff << 186);
 
     /// Function signature too short
     error FunctionSignatureTooShort();
@@ -170,10 +172,8 @@ library Permissions {
 
             if (paramConfig == FUNCTION_WHITELIST) {
                 return;
-            } else if (paramConfig != 0) {
-                checkParameters(self, paramConfig, role, targetAddress, data);
             } else {
-                revert FunctionNotAllowed();
+                checkParameters(self, paramConfig, role, targetAddress, data);
             }
         }
     }
@@ -190,8 +190,14 @@ library Permissions {
         address targetAddress,
         bytes memory data
     ) public view {
-        bytes4 functionSig = bytes4(data);
+        if (paramConfig & IS_SCOPED_MASK == 0) {
+            // is there no single param scoped?
+            // either config bug or unset
+            // semantically the same, not allowed
+            revert FunctionNotAllowed();
+        }
 
+        bytes4 functionSig = bytes4(data);
         uint8 paramCount = unpackParamCount(paramConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
@@ -217,16 +223,17 @@ library Permissions {
             }
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
+
             if (compType == Comp.Comparison.EqualTo) {
                 isAllowed = self.roles[role].compValues[key].allowed[value];
             } else {
                 compValue = self.roles[role].compValues[key].compValue;
             }
-
             compareParameterValues(compType, compValue, isAllowed, value);
         }
     }
 
+    // should this go inline?
     function compareParameterValues(
         Comp.Comparison compType,
         bytes32 compValue,
@@ -286,7 +293,7 @@ library Permissions {
         );
 
         uint8 paramCount = uint8(isParamScoped.length);
-        uint256 paramConfig = packParamCount(paramCount);
+        uint256 paramConfig = packParamCount(0, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
             paramConfig = packParamEntry(
                 paramConfig,
@@ -300,6 +307,37 @@ library Permissions {
         self.roles[role].functions[
             keyForFunctions(targetAddress, functionSig)
         ] = paramConfig;
+    }
+
+    function scopeParameter(
+        RoleList storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comp.Comparison compType
+    ) external {
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+
+        uint256 prevParamConfig = self.roles[role].functions[key];
+        if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
+        uint8 prevParamCount = unpackParamCount(prevParamConfig);
+
+        uint8 nextParamCount = paramIndex + 1 > prevParamCount
+            ? paramIndex + 1
+            : prevParamCount;
+
+        uint256 nextParamConfig = packParamEntry(
+            packParamCount(prevParamConfig, nextParamCount),
+            paramIndex,
+            isScoped,
+            isDynamic,
+            compType
+        );
+
+        self.roles[role].functions[key] = nextParamConfig;
     }
 
     /*
@@ -372,14 +410,24 @@ library Permissions {
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits for each compType 62*2 = 124
+        uint256 scopedMask = 1 << (paramIndex + 62 + 124);
+        uint256 dynamicMask = 1 << (paramIndex + 124);
+        uint256 compTypeMask = 3 << (paramIndex * 2);
+
         if (isScoped) {
-            config |= 1 << (paramIndex + 62 + 124);
+            config |= scopedMask;
             config |= uint256(compType) << (paramIndex * 2);
+        } else {
+            config &= ~scopedMask;
+            config &= ~compTypeMask;
         }
 
-        if (isDynamic) {
-            config |= 1 << (paramIndex + 124);
+        if (isScoped && isDynamic) {
+            config |= dynamicMask;
+        } else {
+            config &= ~dynamicMask;
         }
+
         return config;
     }
 
@@ -394,7 +442,6 @@ library Permissions {
     {
         uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
         uint256 isDynamicMask = 1 << (paramIndex + 124);
-        // 3 -> 11 in binary
         uint256 compTypeMask = 3 << (2 * paramIndex);
 
         isScoped = (config & isScopedMask) != 0;
@@ -402,12 +449,18 @@ library Permissions {
         compType = Comp.Comparison((config & compTypeMask) >> (2 * paramIndex));
     }
 
-    function packParamCount(uint8 paramCount) internal pure returns (uint256) {
+    function packParamCount(uint256 config, uint8 paramCount)
+        internal
+        pure
+        returns (uint256)
+    {
         // 8   bits -> length
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits represents for each compType 62*2 = 124
-        return (uint256(paramCount) << (62 + 62 + 124));
+        uint256 left = (uint256(paramCount) << (62 + 62 + 124));
+        uint256 right = (config << 8) >> 8;
+        return left | right;
     }
 
     function unpackParamCount(uint256 config) internal pure returns (uint8) {

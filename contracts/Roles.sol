@@ -36,6 +36,15 @@ contract Roles is Modifier {
         bool[] paramIsDynamic,
         Comp.Comparison[] paramCompType
     );
+    event ScopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comp.Comparison compType
+    );
 
     event SetParameterAllowedValue(
         uint16 role,
@@ -184,7 +193,7 @@ contract Roles is Modifier {
         emit AllowFunction(role, targetAddress, functionSig, allow);
     }
 
-    /// @dev Sets and enforces scoping configuration for a function on an address
+    /// @dev Sets and enforces scoping for a function on an address
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
@@ -216,6 +225,45 @@ contract Roles is Modifier {
             paramIsScoped,
             paramIsDynamic,
             paramCompType
+        );
+    }
+
+    /// @dev Sets and enforces scoping for a single paramater in a function on an address
+    /// @notice Only callable by owner.
+    /// @param role Role to set for.
+    /// @param targetAddress Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
+    /// @param paramIndex the index of the parameter to scope
+    /// @param isScoped false for un-scoped, true for scoped.
+    /// @param isDynamic false for value, true for dynamic.
+    /// @param compType Any, or EqualTo, GreaterThan, or LessThan compValue.
+    function scopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comp.Comparison compType
+    ) external onlyOwner {
+        Permissions.scopeParameter(
+            roleList,
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            isScoped,
+            isDynamic,
+            compType
+        );
+        emit ScopeParameter(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            isScoped,
+            isDynamic,
+            compType
         );
     }
 
