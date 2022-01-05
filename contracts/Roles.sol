@@ -16,8 +16,7 @@ contract Roles is Modifier {
     event SetParametersScoped(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
-        bool scoped,
+        bytes4 functionSig,        
         bool[] paramsScoped,
         bool[] types,
         Comp.Comparison[] compTypes
@@ -178,16 +177,14 @@ contract Roles is Modifier {
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.    
     /// @param paramsScoped false for un-scoped, true for scoped.
     /// @param types false for static, true for dynamic.
     /// @param compTypes Any, or EqualTo, GreaterThan, or LessThan compValue.
     function setParametersScoped(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
-        bool scoped,
+        bytes4 functionSig,        
         bool[] memory paramsScoped,
         bool[] memory types,
         Comp.Comparison[] memory compTypes
@@ -196,8 +193,7 @@ contract Roles is Modifier {
             roleList,
             role,
             targetAddress,
-            functionSig,
-            scoped,
+            functionSig,            
             paramsScoped,
             types,
             compTypes
@@ -205,8 +201,7 @@ contract Roles is Modifier {
         emit SetParametersScoped(
             role,
             targetAddress,
-            functionSig,
-            scoped,
+            functionSig,            
             paramsScoped,
             types,
             compTypes

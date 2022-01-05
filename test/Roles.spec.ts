@@ -623,7 +623,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 0]
@@ -696,7 +695,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 0]
@@ -778,7 +776,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x273454bf",
-          true,
           [true, true, true, true, true, true, true],
           [true, false, true, false, false, true, true],
           [0, 0, 0, 0, 0, 0, 0]
@@ -870,7 +867,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x273454bf",
-          true,
           [true, true, true, true, true, true, true],
           [true, false, true, false, false, true, true],
           [0, 0, 0, 0, 0, 0, 0]
@@ -991,7 +987,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 0]
@@ -1003,7 +998,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x273454bf",
-          true,
           [true, true, true, true, true, true, true],
           [true, false, true, false, false, true, true],
           [0, 0, 0, 0, 0, 0, 0]
@@ -1112,7 +1106,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 0]
@@ -1223,7 +1216,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 0]
@@ -1235,7 +1227,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x273454bf",
-          true,
           [true, true, true, true, true, true, true],
           [true, false, true, false, false, true, true],
           [0, 0, 0, 0, 0, 0, 0]
@@ -1327,7 +1318,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 1] // set param 2 to greater than
@@ -1412,7 +1402,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 1] // set param 2 to greater than
@@ -1497,7 +1486,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 2] // set param 2 to less than
@@ -1581,7 +1569,6 @@ describe("RolesModifier", async () => {
           1,
           testContract.address,
           "0x40c10f19",
-          true,
           [true, true],
           [false, false],
           [0, 2] // set param 2 to less than
@@ -2079,7 +2066,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true, true],
           [true, true],
           [1, 1]
@@ -2129,7 +2115,6 @@ describe("RolesModifier", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          true,
           [true],
           [false],
           [COMP_TYPE_EQ]
@@ -2200,7 +2185,6 @@ describe("RolesModifier", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          true,
           [true],
           [false],
           [COMP_TYPE_EQ]
@@ -2229,7 +2213,6 @@ describe("RolesModifier", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          true,
           [false],
           [false],
           [COMP_TYPE_EQ]
@@ -2248,7 +2231,6 @@ describe("RolesModifier", async () => {
         1,
         AddressOne,
         "0x12345678",
-        true,
         [true, true],
         [true, true],
         [1, 1]
@@ -2260,7 +2242,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true, true],
           [true, true],
           [1, 1]
@@ -2495,7 +2476,6 @@ describe("RolesModifier", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          true,
           [false, true],
           [false, false],
           [COMP_TYPE_EQ, COMP_TYPE_EQ]
@@ -2572,7 +2552,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true],
           [false],
           [0]
@@ -2608,7 +2587,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true],
           [false],
           [0]
@@ -2735,7 +2713,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true],
           [true],
           [0]
@@ -2749,7 +2726,6 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          true,
           [true],
           [true],
           [1]

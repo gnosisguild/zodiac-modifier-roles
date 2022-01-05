@@ -311,8 +311,7 @@ library Permissions {
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param scoped Bool to scope (true) or unscope (false) function calls on target.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.    
     /// @param isParamScoped false for un-scoped, true for scoped.
     /// @param isParamDynamic false for static, true for dynamic.
     /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
@@ -321,16 +320,6 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        /*
-         * NOTE: this parameter is not used and as a matter of a fact
-         * it is always invoked from tests with true.
-         *
-         * Even with the current api it has no semantic meaning.
-         * scope false would be achieved by calling setTargetAddressScoped(...,false)
-         *
-         * In a follow up commit will delete. currently keeping the diff minimal
-         */
-        bool scoped,
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comp.Comparison[] memory paramCompType
