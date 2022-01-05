@@ -49,68 +49,7 @@ describe("Clearance", async () => {
 
   const [user1] = waffle.provider.getWallets();
 
-  describe.only("Clearance", () => {
-    // it("sets parameters scoped to true", async () => {
-    //   const { modifier, testContract, owner, invoker } =
-    //     await setupRolesWithOwnerAndInvoker();
-    //   const ROLE_ID = 0;
-    //   const COMP_TYPE_EQ = 0;
-    //   const SELECTOR = testContract.interface.getSighash(
-    //     testContract.interface.getFunction("fnWithSingleParam")
-    //   );
-    //   const EXEC_ARGS = (n: number) => [
-    //     testContract.address,
-    //     0,
-    //     testContract.interface.encodeFunctionData(
-    //       "fnWithSingleParam(uint256)",
-    //       [n]
-    //     ),
-    //     0,
-    //   ];
-    //   await modifier
-    //     .connect(owner)
-    //     .assignRoles(invoker.address, [ROLE_ID], [true]);
-    //   await modifier
-    //     .connect(owner)
-    //     .allowTarget(ROLE_ID, testContract.address, true);
-    //   // works before making function parameter scoped
-    //   await expect(
-    //     modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
-    //   ).to.not.be.reverted;
-    //   await modifier
-    //     .connect(owner)
-    //     .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
-    //   await modifier
-    //     .connect(owner)
-    //     .scopeFunction(
-    //       ROLE_ID,
-    //       testContract.address,
-    //       SELECTOR,
-    //       [true],
-    //       [false],
-    //       [COMP_TYPE_EQ]
-    //     );
-    //   // turn scoping on
-    //   await modifier
-    //     .connect(owner)
-    //     .setParameterAllowedValue(
-    //       ROLE_ID,
-    //       testContract.address,
-    //       SELECTOR,
-    //       0,
-    //       ethers.utils.defaultAbiCoder.encode(["uint256"], [2]),
-    //       true
-    //     );
-    //   // ngmi
-    //   await expect(
-    //     modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
-    //   ).to.be.revertedWith("ParameterNotAllowed");
-    //   // gmi
-    //   await expect(
-    //     modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
-    //   ).to.not.be.reverted;
-    // });
-
+  describe("Clearance", () => {
     it("allows and then disallows a target", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
@@ -125,7 +64,7 @@ describe("Clearance", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModule(testContract.address, 0, data, 0)
-      ).to.be.reverted;
+      ).to.be.revertedWith("TargetAddressNotAllowed()");
 
       await modifier
         .connect(owner)
@@ -145,7 +84,7 @@ describe("Clearance", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModule(testContract.address, 0, data, 0)
-      ).to.be.reverted;
+      ).to.be.revertedWith("TargetAddressNotAllowed()");
     });
     it("allowing a target does not allow other targets", async () => {
       const { modifier, testContract, testContractClone, owner, invoker } =
@@ -175,12 +114,218 @@ describe("Clearance", async () => {
           .execTransactionFromModule(testContractClone.address, 0, data, 0)
       ).to.be.revertedWith("TargetAddressNotAllowed()");
     });
-    it("allows and then disallows a function", () => {});
-    it(
-      "allowing a function on a target does not allow same function on other target"
-    );
-    it("allowing a function restricts a previously allowed target");
-    it("allowing a target relaxes a previously allowed function");
-    it("disallowing one function does not impact other function allowances");
+    it("allows and then disallows a function", async () => {
+      const { modifier, testContract, testContractClone, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      const { data } = await testContract.populateTransaction.doNothing();
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.be.revertedWith("FunctionNotAllowed()");
+    });
+    it("allowing function on a target does not allow same function on diff target", async () => {
+      const { modifier, testContract, testContractClone, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      const { data } = await testContract.populateTransaction.doNothing();
+
+      // should work on testContract
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.not.be.reverted;
+
+      // but fail on the clone
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContractClone.address, 0, data, 0)
+      ).to.be.revertedWith("TargetAddressNotAllowed()");
+    });
+    it("allowing a function tightens a previously allowed target", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, true);
+
+      const { data: dataDoNothing } =
+        await testContract.populateTransaction.doNothing();
+      const { data: dataDoEvenLess } =
+        await testContract.populateTransaction.doEvenLess();
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoNothing, 0)
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.be.revertedWith("FunctionNotAllowed()");
+    });
+    it("allowing a target loosens a previously allowed function", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+      const { data: dataDoNothing } =
+        await testContract.populateTransaction.doNothing();
+      const { data: dataDoEvenLess } =
+        await testContract.populateTransaction.doEvenLess();
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoNothing, 0)
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.be.revertedWith("FunctionNotAllowed()");
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.emit(testContract, "DoEvenLess");
+    });
+    it("disallowing one function does not impact other function allowances", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      const SEL_DONOTHING = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+      const SEL_DOEVENLESS = testContract.interface.getSighash(
+        testContract.interface.getFunction("doEvenLess")
+      );
+      const { data: dataDoNothing } =
+        await testContract.populateTransaction.doNothing();
+      const { data: dataDoEvenLess } =
+        await testContract.populateTransaction.doEvenLess();
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SEL_DONOTHING, true);
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoNothing, 0)
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoNothing, 0)
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
+      ).to.be.revertedWith("FunctionNotAllowed");
+    });
   });
 });

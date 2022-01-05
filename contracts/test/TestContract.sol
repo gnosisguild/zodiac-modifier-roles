@@ -14,6 +14,7 @@ contract TestContract {
         string test7
     );
     event DoNothing();
+    event DoEvenLess();
     event FnWithSingleParam(uint256);
     event FnWithTwoParams(uint256, uint256);
 
@@ -41,6 +42,10 @@ contract TestContract {
 
     function doNothing() public {
         emit DoNothing();
+    }
+
+    function doEvenLess() public {
+        emit DoEvenLess();
     }
 
     function fnWithSingleParam(uint256 p) public {
