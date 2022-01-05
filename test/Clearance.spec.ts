@@ -13,7 +13,8 @@ describe("Clearance", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    return { Avatar, avatar, testContract };
+    const testContractClone = await TestContract.deploy();
+    return { Avatar, avatar, testContract, testContractClone };
   });
 
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
@@ -48,7 +49,7 @@ describe("Clearance", async () => {
 
   const [user1] = waffle.provider.getWallets();
 
-  describe("Clearance", () => {
+  describe.only("Clearance", () => {
     // it("sets parameters scoped to true", async () => {
     //   const { modifier, testContract, owner, invoker } =
     //     await setupRolesWithOwnerAndInvoker();
@@ -110,9 +111,71 @@ describe("Clearance", async () => {
     //   ).to.not.be.reverted;
     // });
 
-    it("allows and then disallows a target");
-    it("allowing a target does not allow other targets");
-    it("allows and then disallows a function");
+    it("allows and then disallows a target", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+      const ROLE_ID = 0;
+      const { data } = await testContract.populateTransaction.doNothing();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, true);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.not.be.reverted;
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.be.reverted;
+    });
+    it("allowing a target does not allow other targets", async () => {
+      const { modifier, testContract, testContractClone, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, true);
+
+      const { data } = await testContract.populateTransaction.doNothing();
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 0)
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContractClone.address, 0, data, 0)
+      ).to.be.revertedWith("TargetAddressNotAllowed()");
+    });
+    it("allows and then disallows a function", () => {});
     it(
       "allowing a function on a target does not allow same function on other target"
     );
