@@ -34,6 +34,8 @@ struct RoleList {
 }
 
 library Permissions {
+    uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
+
     /// Function signature too short
     error FunctionSignatureTooShort();
 
@@ -280,7 +282,7 @@ library Permissions {
             // 2: paramConfig/scoped function
             // 3: nothing, meaning no rules for the current function were defined
 
-            if (paramConfig == 2**256 - 1) {
+            if (paramConfig == FUNCTION_WHITELIST) {
                 return;
             } else if (paramConfig != 0) {
                 checkParameters(self, paramConfig, role, targetAddress, data);
@@ -303,7 +305,7 @@ library Permissions {
 
         self.roles[role].functions[
             keyForFunctions(targetAddress, functionSig)
-        ] = allow ? (2**256 - 1) : 0;
+        ] = allow ? (FUNCTION_WHITELIST) : 0;
     }
 
     /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
