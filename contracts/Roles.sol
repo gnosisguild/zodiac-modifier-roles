@@ -317,48 +317,6 @@ contract Roles is Modifier {
         emit SetDefaultRole(module, role);
     }
 
-    /// @dev Returns the comparison type of a given parameter.
-    /// @param role The role to check.
-    /// @param targetAddress Target address to check.
-    /// @param functionSig Function signature for the function to check.
-    /// @param paramIndex Index of the parameter to check.
-    function getCompType(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex
-    ) public view returns (Comp.Comparison) {
-        // TODO we can delete this function, but some tests are relying on it, so leaving it in for now
-
-        bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
-
-        uint256 paramConfig = roleList.roles[role].functions[key];
-
-        // doing the unpacking inline since will be deleted
-        uint256 mask = 3 << (2 * paramIndex);
-        return Comp.Comparison((paramConfig & mask) >> (2 * paramIndex));
-    }
-
-    /// @dev Returns the comparison value for a parameter.
-    /// @param role The role to check.
-    /// @param targetAddress Target address to check.
-    /// @param functionSig Function signature for the function to check.
-    /// @param paramIndex Index of the parameter to check.
-    function getCompValue(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex
-    ) public view returns (bytes32) {
-        bytes32 key = Permissions.keyForCompValues(
-            targetAddress,
-            functionSig,
-            paramIndex
-        );
-
-        return roleList.roles[role].compValues[key].compValue;
-    }
-
     /// @dev Passes a transaction to the modifier.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction

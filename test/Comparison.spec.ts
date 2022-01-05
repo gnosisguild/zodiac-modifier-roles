@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-describe("Scoping", async () => {
+describe("Comparison", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -43,17 +43,15 @@ describe("Scoping", async () => {
     };
   });
 
-  it("function scoping works");
-  it("param scoping enable works");
-  it("param scoping disable works");
+  it("should pass an eq comparison");
+  it("should pass an eq comparison for dynamic");
+  it("should update an eq comparison");
 
-  it("param scoping should work from WHITELIST state");
-  it("param scoping should work from scoped state");
+  it("should pass a oneOf comparison");
+  it("should pass a oneOf comparison for dynamic");
+  it("should update a oneOf comparison");
 
-  it(
-    "param scoping all params are scoped off, should result in FunctionNotAllowed"
-  );
-  it(
-    "function scoping all params are scoped off, should result in FunctionNotAllowed"
-  );
+  it("should pass a gt/lt comparison");
+  it("should update a gt/lt comparison");
+  it("should coerce compType eq for dynamic");
 });
