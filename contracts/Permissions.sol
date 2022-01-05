@@ -63,10 +63,16 @@ library Permissions {
     // only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
+    /*
+     *
+     * CHECKERS
+     *
+     */
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(
+    function checkMultisendTransaction(
         RoleList storage self,
         bytes memory data,
         uint16 role
@@ -109,6 +115,69 @@ library Permissions {
         }
     }
 
+    function checkTransaction(
+        RoleList storage self,
+        address targetAddress,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint16 role
+    ) public view {
+        TargetAddress memory target = self.roles[role].targets[targetAddress];
+
+        // CLEARANCE: transversal - checks
+        if (value > 0 && !target.canSend) {
+            revert SendNotAllowed();
+        }
+
+        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
+            revert DelegateCallNotAllowed();
+        }
+
+        if (data.length != 0 && data.length < 4) {
+            revert FunctionSignatureTooShort();
+        }
+
+        // CLEARANCE: levels 1 2 and 3 - checks
+        /*
+         * For each address we have three clearance checks:
+         * Forbidden     - nothing was setup
+         * AddressPass   - all calls to this address are go, nothing more to check
+         * FunctionCheck - some functions on this address are allowed
+         */
+
+        // isForbidden
+        if (target.clearance == Clearance.NONE) {
+            revert TargetAddressNotAllowed();
+        }
+
+        // isAddressPass
+        if (target.clearance == Clearance.TARGET) {
+            // good to go
+            return;
+        }
+
+        //isFunctionCheck
+        if (target.clearance == Clearance.FUNCTION) {
+            uint256 paramConfig = self.roles[role].functions[
+                keyForFunctions(targetAddress, bytes4(data))
+            ];
+
+            // FunctionCheck can be:
+            // 1: whitelisted
+            // 2: scoped
+            // 3: unauthorized - no rules for the current function were defined
+
+            if (paramConfig == FUNCTION_WHITELIST) {
+                return;
+            } else if (paramConfig != 0) {
+                checkParameters(self, paramConfig, role, targetAddress, data);
+            } else {
+                revert FunctionNotAllowed();
+            }
+        }
+    }
+
     /// @dev Will revert if a transaction has a parameter that is not allowed
     /// @param self reference to roles storage
     /// @param role Role to check for.
@@ -130,7 +199,7 @@ library Permissions {
                 bool isParamScoped,
                 bool isParamDynamic,
                 Comp.Comparison compType
-            ) = unpackParamConfig(paramConfig, i);
+            ) = unpackParamEntry(paramConfig, i);
 
             if (!isParamScoped) {
                 continue;
@@ -175,6 +244,69 @@ library Permissions {
         }
     }
 
+    /*
+     *
+     * SETTERS
+     *
+     */
+    function allowFunction(
+        RoleList storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool allow
+    ) external {
+        if (allow) {
+            self.roles[role].targets[targetAddress].clearance = Clearance
+                .FUNCTION;
+        }
+
+        self.roles[role].functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = allow ? FUNCTION_WHITELIST : 0;
+    }
+
+    function scopeFunction(
+        RoleList storage self,
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comp.Comparison[] memory paramCompType
+    ) external {
+        require(
+            isParamScoped.length == isParamDynamic.length,
+            "Mismatch: isParamScoped and isParamDynamic length"
+        );
+
+        require(
+            isParamScoped.length == paramCompType.length,
+            "Mismatch: isParamScoped and paramCompType length"
+        );
+
+        uint8 paramCount = uint8(isParamScoped.length);
+        uint256 paramConfig = packParamCount(paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            paramConfig = packParamEntry(
+                paramConfig,
+                i,
+                isParamScoped[i],
+                isParamDynamic[i],
+                paramCompType[i]
+            );
+        }
+
+        self.roles[role].functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = paramConfig;
+    }
+
+    /*
+     *
+     * HELPERS
+     *
+     */
     function pluckDynamicParamValue(bytes memory data, uint256 paramIndex)
         internal
         pure
@@ -228,131 +360,7 @@ library Permissions {
         }
     }
 
-    function checkTransaction(
-        RoleList storage self,
-        address targetAddress,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation,
-        uint16 role
-    ) public view {
-        TargetAddress memory target = self.roles[role].targets[targetAddress];
-
-        // CLEARANCE: transversal - checks
-        if (value > 0 && !target.canSend) {
-            revert SendNotAllowed();
-        }
-
-        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
-            revert DelegateCallNotAllowed();
-        }
-
-        if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
-        }
-
-        // CLEARANCE: levels 1 2 and 3 - checks
-
-        /*
-         * For each address we have three clearance checks:
-         * Forbidden     - nothing was setup
-         * AddressPass   - all calls to this address are go, nothing more to check
-         * FunctionCheck - some functions on this address are allowed
-         */
-
-        // isForbidden
-        if (target.clearance == Clearance.NONE) {
-            revert TargetAddressNotAllowed();
-        }
-
-        // isAddressPass
-        if (target.clearance == Clearance.TARGET) {
-            // good to go
-            return;
-        }
-
-        //isFunctionCheck
-        if (target.clearance == Clearance.FUNCTION) {
-            uint256 paramConfig = self.roles[role].functions[
-                keyForFunctions(targetAddress, bytes4(data))
-            ];
-
-            // FunctionCheck can be:
-            // 1: wildcard, allowed/white-listed function
-            // 2: paramConfig/scoped function
-            // 3: nothing, meaning no rules for the current function were defined
-
-            if (paramConfig == FUNCTION_WHITELIST) {
-                return;
-            } else if (paramConfig != 0) {
-                checkParameters(self, paramConfig, role, targetAddress, data);
-            } else {
-                revert FunctionNotAllowed();
-            }
-        }
-    }
-
-    function setAllowedFunction(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool allow
-    ) external {
-        // MAX-INT represents function allowed/whitelist
-
-        self.roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = allow ? (FUNCTION_WHITELIST) : 0;
-    }
-
-    /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param isParamScoped false for un-scoped, true for scoped.
-    /// @param isParamDynamic false for static, true for dynamic.
-    /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
-    function setParametersScoped(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comp.Comparison[] memory paramCompType
-    ) external {
-        require(
-            isParamScoped.length == isParamDynamic.length,
-            "Mismatch: isParamScoped and isParamDynamic arrays have different lengths"
-        );
-
-        require(
-            isParamScoped.length == paramCompType.length,
-            "Mismatch: isParamScoped and paramCompType arrays have different lengths"
-        );
-
-        uint8 paramCount = uint8(isParamScoped.length);
-        uint256 paramConfig = packParamCount(paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            paramConfig = packParamConfig(
-                paramConfig,
-                i,
-                isParamScoped[i],
-                isParamDynamic[i],
-                paramCompType[i]
-            );
-        }
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = paramConfig;
-    }
-
-    function packParamConfig(
+    function packParamEntry(
         uint256 config,
         uint8 paramIndex,
         bool isScoped,
@@ -375,7 +383,7 @@ library Permissions {
         return config;
     }
 
-    function unpackParamConfig(uint256 config, uint8 paramIndex)
+    function unpackParamEntry(uint256 config, uint8 paramIndex)
         internal
         pure
         returns (
@@ -422,8 +430,6 @@ library Permissions {
     ) public pure returns (bytes32) {
         // fits in 32 bytes
         return
-            bytes32(
-                abi.encodePacked(targetAddress, functionSig, paramIndex)
-            );
+            bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
     }
 }
