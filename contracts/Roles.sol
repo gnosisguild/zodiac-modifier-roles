@@ -6,10 +6,12 @@ import "./Permissions.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    mapping(address => uint16) public defaultRoles;
+    address public multiSend;
+
+    mapping(address => uint16) defaultRoles;
     mapping(uint16 => Role) roles;
 
-    address public multiSend;
+    
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
@@ -205,9 +207,9 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comp.Comparison[] memory paramCompType
+        bool[] calldata isParamScoped,
+        bool[] calldata isParamDynamic,
+        Comp.Comparison[] calldata paramCompType
     ) external onlyOwner {
         // 24kb
         // require(
@@ -299,7 +301,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bytes memory value,
+        bytes calldata value,
         bool allow
     ) external onlyOwner {
         bytes32 key = Permissions.keyForCompValues(
@@ -334,7 +336,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bytes memory compValue
+        bytes calldata compValue
     ) external onlyOwner {
         bytes32 key = Permissions.keyForCompValues(
             targetAddress,
@@ -362,7 +364,7 @@ contract Roles is Modifier {
     function assignRoles(
         address module,
         uint16[] calldata _roles,
-        bool[] memory memberOf
+        bool[] calldata memberOf
     ) external onlyOwner {
         if (_roles.length != memberOf.length) {
             revert ArraysDifferentLength();
