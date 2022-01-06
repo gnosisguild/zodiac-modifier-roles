@@ -34,7 +34,7 @@ struct RoleList {
 }
 
 library Permissions {
-    uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
+    uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
     // 60 bit mask
     uint256 constant IS_SCOPED_MASK = uint256(0xfffffffffffffff << 186);
 

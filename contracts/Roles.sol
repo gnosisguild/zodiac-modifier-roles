@@ -6,9 +6,6 @@ import "./Permissions.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
-    uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
-    uint256 constant IS_SCOPED_MASK = uint256(0xfffffffffffffff << 186);
-
     mapping(address => uint16) public defaultRoles;
     RoleList roleList;
 
@@ -193,7 +190,7 @@ contract Roles is Modifier {
 
         roleList.roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = allow ? FUNCTION_WHITELIST : 0;
+        ] = allow ? Permissions.FUNCTION_WHITELIST : 0;
         emit AllowFunction(role, targetAddress, functionSig, allow);
     }
 
@@ -500,7 +497,7 @@ contract Roles is Modifier {
                 operation,
                 role
             );
-        }
+        }        
         return execAndReturnData(to, value, data, operation);
     }
 }
