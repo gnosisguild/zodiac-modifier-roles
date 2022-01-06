@@ -165,7 +165,7 @@ library Permissions {
                 keyForFunctions(targetAddress, bytes4(data))
             ];            
 
-            if (paramConfig != FUNCTION_WHITELIST) {
+            if (paramConfig == FUNCTION_WHITELIST) {
                 return;
             } else {
                 checkParameters(self, paramConfig, role, targetAddress, data);
