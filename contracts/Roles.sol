@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "./Comp.sol";
-import "./Permissions.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
+import "./Permissions.sol";
+
 
 contract Roles is Modifier {
     address public multiSend;
 
     mapping(address => uint16) defaultRoles;
     mapping(uint16 => Role) roles;
-
-    
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
@@ -36,7 +34,7 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool[] paramIsScoped,
         bool[] paramIsDynamic,
-        Comp.Comparison[] paramCompType
+        Comparison[] paramCompType
     );
     event ScopeParameter(
         uint16 role,
@@ -45,7 +43,7 @@ contract Roles is Modifier {
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
-        Comp.Comparison compType
+        Comparison compType
     );
 
     event SetParameterAllowedValue(
@@ -209,7 +207,7 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool[] calldata isParamScoped,
         bool[] calldata isParamDynamic,
-        Comp.Comparison[] calldata paramCompType
+        Comparison[] calldata paramCompType
     ) external onlyOwner {
         // 24kb
         // require(
@@ -264,7 +262,7 @@ contract Roles is Modifier {
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
-        Comp.Comparison compType
+        Comparison compType
     ) external onlyOwner {
         bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
         uint256 prevParamConfig = roles[role].functions[key];

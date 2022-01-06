@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "./Roles.sol";
-import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 enum Clearance {
     NONE,
     TARGET,
     FUNCTION
+}
+
+enum Comparison {
+    EqualTo,
+    GreaterThan,
+    LessThan    
 }
 
 struct Parameter {
@@ -32,7 +36,8 @@ struct Role {
 library Permissions {
     uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
     // 60 bit mask
-    uint256 constant IS_SCOPED_MASK = uint256(0xfffffffffffffff << 186);
+    uint256 internal constant IS_SCOPED_MASK =
+        uint256(0xfffffffffffffff << 186);
 
     /// Function signature too short
     error FunctionSignatureTooShort();
@@ -191,7 +196,7 @@ library Permissions {
             (
                 bool isParamScoped,
                 bool isParamDynamic,
-                Comp.Comparison compType
+                Comparison compType
             ) = unpackParamEntry(paramConfig, i);
 
             if (!isParamScoped) {
@@ -204,13 +209,13 @@ library Permissions {
 
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
-                compType = Comp.Comparison.EqualTo;
+                compType = Comparison.EqualTo;
             } else {
                 value = pluckParamValue(data, i);
             }
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-            if (compType == Comp.Comparison.EqualTo) {
+            if (compType == Comparison.EqualTo) {
                 isAllowed = role.compValues[key].allowed[value];
             } else {
                 compValue = role.compValues[key].compValue;
@@ -221,18 +226,18 @@ library Permissions {
 
     // should this go inline?
     function compareParameterValues(
-        Comp.Comparison compType,
+        Comparison compType,
         bytes32 compValue,
         bool isAllowed,
         bytes32 value
     ) internal pure {
-        if (compType == Comp.Comparison.EqualTo && !isAllowed) {
+        if (compType == Comparison.EqualTo && !isAllowed) {
             revert ParameterNotAllowed();
         } else if (
-            compType == Comp.Comparison.GreaterThan && value <= compValue
+            compType == Comparison.GreaterThan && value <= compValue
         ) {
             revert ParameterLessThanAllowed();
-        } else if (compType == Comp.Comparison.LessThan && value >= compValue) {
+        } else if (compType == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
         }
     }
@@ -245,7 +250,7 @@ library Permissions {
     function resetParamConfig(
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
-        Comp.Comparison[] memory paramCompType
+        Comparison[] memory paramCompType
     ) external pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
         uint256 paramConfig = packParamCount(0, paramCount);
@@ -266,7 +271,7 @@ library Permissions {
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
-        Comp.Comparison compType
+        Comparison compType
     ) external pure returns (uint256) {
         if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
         uint8 prevParamCount = unpackParamCount(prevParamConfig);
@@ -348,7 +353,7 @@ library Permissions {
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
-        Comp.Comparison compType
+        Comparison compType
     ) internal pure returns (uint256) {
         // we restrict paramCount to 62:
         // 8   bits -> length
@@ -382,7 +387,7 @@ library Permissions {
         returns (
             bool isScoped,
             bool isDynamic,
-            Comp.Comparison compType
+            Comparison compType
         )
     {
         uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
@@ -391,7 +396,7 @@ library Permissions {
 
         isScoped = (config & isScopedMask) != 0;
         isDynamic = (config & isDynamicMask) != 0;
-        compType = Comp.Comparison((config & compTypeMask) >> (2 * paramIndex));
+        compType = Comparison((config & compTypeMask) >> (2 * paramIndex));
     }
 
     function packParamCount(uint256 config, uint8 paramCount)
