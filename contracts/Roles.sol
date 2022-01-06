@@ -223,7 +223,7 @@ contract Roles is Modifier {
         require(
             isParamScoped.length == isParamDynamic.length &&
                 isParamScoped.length == paramCompType.length,
-            "M"
+            "Len - Mismatch"
         );
 
         uint256 paramConfig = Permissions.resetParamConfig(
