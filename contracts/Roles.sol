@@ -7,7 +7,7 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
     mapping(address => uint16) public defaultRoles;
-    RoleList roleList;
+    mapping(uint16 => Role) roles;
 
     address public multiSend;
 
@@ -135,7 +135,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList.roles[role].targets[targetAddress].canDelegate = allow;
+        roles[role].targets[targetAddress].canDelegate = allow;
         emit SetCanDelegateToTarget(role, targetAddress, allow);
     }
 
@@ -150,7 +150,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList.roles[role].targets[targetAddress].canSend = allow;
+        roles[role].targets[targetAddress].canSend = allow;
         emit SetCanSendToTarget(role, targetAddress, allow);
     }
 
@@ -164,7 +164,7 @@ contract Roles is Modifier {
         address targetAddress,
         bool allow
     ) external onlyOwner {
-        roleList.roles[role].targets[targetAddress].clearance = allow
+        roles[role].targets[targetAddress].clearance = allow
             ? Clearance.TARGET
             : Clearance.NONE;
 
@@ -184,11 +184,10 @@ contract Roles is Modifier {
         bool allow
     ) external onlyOwner {
         if (allow) {
-            roleList.roles[role].targets[targetAddress].clearance = Clearance
-                .FUNCTION;
+            roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
         }
 
-        roleList.roles[role].functions[
+        roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
         ] = allow ? Permissions.FUNCTION_WHITELIST : 0;
         emit AllowFunction(role, targetAddress, functionSig, allow);
@@ -233,7 +232,7 @@ contract Roles is Modifier {
             paramCompType
         );
 
-        roleList.roles[role].functions[
+        roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
         ] = paramConfig;
 
@@ -266,7 +265,7 @@ contract Roles is Modifier {
         Comp.Comparison compType
     ) external onlyOwner {
         bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
-        uint256 prevParamConfig = roleList.roles[role].functions[key];
+        uint256 prevParamConfig = roles[role].functions[key];
         uint256 nextParamConfig = Permissions.setParamConfig(
             prevParamConfig,
             paramIndex,
@@ -274,7 +273,7 @@ contract Roles is Modifier {
             isDynamic,
             compType
         );
-        roleList.roles[role].functions[key] = nextParamConfig;
+        roles[role].functions[key] = nextParamConfig;
 
         emit ScopeParameter(
             role,
@@ -309,7 +308,7 @@ contract Roles is Modifier {
             paramIndex
         );
 
-        roleList.roles[role].compValues[key].allowed[
+        roles[role].compValues[key].allowed[
             value.length > 32 ? keccak256(value) : bytes32(value)
         ] = allow;
 
@@ -343,7 +342,7 @@ contract Roles is Modifier {
             paramIndex
         );
 
-        roleList.roles[role].compValues[key].compValue = compValue.length > 32
+        roles[role].compValues[key].compValue = compValue.length > 32
             ? keccak256(compValue)
             : bytes32(compValue);
 
@@ -369,7 +368,7 @@ contract Roles is Modifier {
             revert ArraysDifferentLength();
         }
         for (uint16 i = 0; i < _roles.length; i++) {
-            roleList.roles[_roles[i]].members[module] = memberOf[i];
+            roles[_roles[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
@@ -448,20 +447,15 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success) {
-        if (!roleList.roles[role].members[msg.sender]) {
+        Role storage _role = roles[role];
+
+        if (!_role.members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            Permissions.checkMultisendTransaction(roleList, data, role);
+            Permissions.checkMultisendTransaction(_role, data);
         } else {
-            Permissions.checkTransaction(
-                roleList,
-                to,
-                value,
-                data,
-                operation,
-                role
-            );
+            Permissions.checkTransaction(_role, to, value, data, operation);
         }
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
@@ -483,21 +477,16 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        if (!roleList.roles[role].members[msg.sender]) {
+        Role storage _role = roles[role];
+
+        if (!_role.members[msg.sender]) {
             revert NoMembership();
         }
         if (to == multiSend) {
-            Permissions.checkMultisendTransaction(roleList, data, role);
+            Permissions.checkMultisendTransaction(_role, data);
         } else {
-            Permissions.checkTransaction(
-                roleList,
-                to,
-                value,
-                data,
-                operation,
-                role
-            );
-        }        
+            Permissions.checkTransaction(_role, to, value, data, operation);
+        }
         return execAndReturnData(to, value, data, operation);
     }
 }

@@ -29,10 +29,6 @@ struct Role {
     mapping(bytes32 => Parameter) compValues;
 }
 
-struct RoleList {
-    mapping(uint16 => Role) roles;
-}
-
 library Permissions {
     uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
     // 60 bit mask
@@ -74,11 +70,10 @@ library Permissions {
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultisendTransaction(
-        RoleList storage self,
-        bytes memory data,
-        uint16 role
-    ) public view {
+    function checkMultisendTransaction(Role storage role, bytes memory data)
+        public
+        view
+    {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -113,19 +108,18 @@ library Permissions {
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 out := add(data, add(i, 0x35))
             }
-            checkTransaction(self, to, value, out, operation, role);
+            checkTransaction(role, to, value, out, operation);
         }
     }
 
     function checkTransaction(
-        RoleList storage self,
+        Role storage role,
         address targetAddress,
         uint256 value,
         bytes memory data,
-        Enum.Operation operation,
-        uint16 role
+        Enum.Operation operation
     ) public view {
-        TargetAddress memory target = self.roles[role].targets[targetAddress];
+        TargetAddress memory target = role.targets[targetAddress];
 
         // CLEARANCE: transversal - checks
         if (value > 0 && !target.canSend) {
@@ -161,27 +155,25 @@ library Permissions {
 
         //isFunctionCheck
         if (target.clearance == Clearance.FUNCTION) {
-            uint256 paramConfig = self.roles[role].functions[
+            uint256 paramConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
             if (paramConfig == FUNCTION_WHITELIST) {
                 return;
             } else {
-                checkParameters(self, paramConfig, role, targetAddress, data);
+                checkParameters(role, paramConfig, targetAddress, data);
             }
         }
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param self reference to roles storage
-    /// @param role Role to check for.
+    /// @param role reference to role storage
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
-        RoleList storage self,
+        Role storage role,
         uint256 paramConfig,
-        uint16 role,
         address targetAddress,
         bytes memory data
     ) public view {
@@ -219,9 +211,9 @@ library Permissions {
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             if (compType == Comp.Comparison.EqualTo) {
-                isAllowed = self.roles[role].compValues[key].allowed[value];
+                isAllowed = role.compValues[key].allowed[value];
             } else {
-                compValue = self.roles[role].compValues[key].compValue;
+                compValue = role.compValues[key].compValue;
             }
             compareParameterValues(compType, compValue, isAllowed, value);
         }
