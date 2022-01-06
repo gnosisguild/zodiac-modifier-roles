@@ -4,7 +4,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./Permissions.sol";
 
-
 contract Roles is Modifier {
     address public multiSend;
 
@@ -41,7 +40,6 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bool isScoped,
         bool isDynamic,
         Comparison compType
     );
@@ -226,7 +224,7 @@ contract Roles is Modifier {
             "Len - Mismatch"
         );
 
-        uint256 paramConfig = Permissions.resetParamConfig(
+        uint256 scopeConfig = Permissions.resetScopeConfig(
             isParamScoped,
             isParamDynamic,
             paramCompType
@@ -234,7 +232,7 @@ contract Roles is Modifier {
 
         roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = paramConfig;
+        ] = scopeConfig;
 
         emit ScopeFunction(
             role,
@@ -252,7 +250,6 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
-    /// @param isScoped false for un-scoped, true for scoped.
     /// @param isDynamic false for value, true for dynamic.
     /// @param compType Any, or EqualTo, GreaterThan, or LessThan compValue.
     function scopeParameter(
@@ -260,30 +257,49 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bool isScoped,
         bool isDynamic,
         Comparison compType
     ) external onlyOwner {
         bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
-        uint256 prevParamConfig = roles[role].functions[key];
-        uint256 nextParamConfig = Permissions.setParamConfig(
-            prevParamConfig,
+
+        roles[role].functions[key] = Permissions.setScopeConfig(
+            roles[role].functions[key],
             paramIndex,
-            isScoped,
             isDynamic,
             compType
         );
-        roles[role].functions[key] = nextParamConfig;
 
         emit ScopeParameter(
             role,
             targetAddress,
             functionSig,
             paramIndex,
-            isScoped,
             isDynamic,
             compType
         );
+    }
+
+    function unscopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    ) external onlyOwner {
+        bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
+
+        roles[role].functions[key] = Permissions.unsetScopeConfig(
+            roles[role].functions[key],
+            paramIndex
+        );
+
+        // emit UnscopeParameter(
+        //     role,
+        //     targetAddress,
+        //     functionSig,
+        //     paramIndex,
+        //     isDynamic,
+        //     compType
+        // );
     }
 
     /// @dev Sets whether or not a specific parameter value is allowed for a function call.

@@ -12,7 +12,7 @@ enum Clearance {
 enum Comparison {
     EqualTo,
     GreaterThan,
-    LessThan    
+    LessThan
 }
 
 struct Parameter {
@@ -233,9 +233,7 @@ library Permissions {
     ) internal pure {
         if (compType == Comparison.EqualTo && !isAllowed) {
             revert ParameterNotAllowed();
-        } else if (
-            compType == Comparison.GreaterThan && value <= compValue
-        ) {
+        } else if (compType == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
         } else if (compType == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
@@ -247,34 +245,33 @@ library Permissions {
      * SETTERS
      *
      */
-    function resetParamConfig(
+    function resetScopeConfig(
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType
     ) external pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
-        uint256 paramConfig = packParamCount(0, paramCount);
+        uint256 scopeConfig = packParamCount(0, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
-            paramConfig = packParamEntry(
-                paramConfig,
+            scopeConfig = packParamEntry(
+                scopeConfig,
                 i,
                 isParamScoped[i],
                 isParamDynamic[i],
                 paramCompType[i]
             );
         }
-        return paramConfig;
+        return scopeConfig;
     }
 
-    function setParamConfig(
-        uint256 prevParamConfig,
+    function setScopeConfig(
+        uint256 prevScopeConfig,
         uint8 paramIndex,
-        bool isScoped,
         bool isDynamic,
         Comparison compType
     ) external pure returns (uint256) {
-        if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
-        uint8 prevParamCount = unpackParamCount(prevParamConfig);
+        if (prevScopeConfig == FUNCTION_WHITELIST) prevScopeConfig = 0;
+        uint8 prevParamCount = unpackParamCount(prevScopeConfig);
 
         uint8 nextParamCount = paramIndex + 1 > prevParamCount
             ? paramIndex + 1
@@ -282,11 +279,35 @@ library Permissions {
 
         return
             packParamEntry(
-                packParamCount(prevParamConfig, nextParamCount),
+                packParamCount(prevScopeConfig, nextParamCount),
                 paramIndex,
-                isScoped,
+                true,
                 isDynamic,
                 compType
+            );
+    }
+
+    function unsetScopeConfig(uint256 prevScopeConfig, uint8 paramIndex)
+        external
+        pure
+        returns (uint256)
+    {
+        /*
+         * Note scoping single parameter in a previously allowed function makes sense
+         * the opposite doesn't
+         */
+        require(
+            prevScopeConfig != FUNCTION_WHITELIST,
+            "Unsetting param in whitelisted function"
+        );
+
+        return
+            packParamEntry(
+                prevScopeConfig,
+                paramIndex,
+                false,
+                false,
+                Comparison(0)
             );
     }
 
@@ -360,23 +381,24 @@ library Permissions {
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits for each compType 62*2 = 124
-        uint256 scopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 dynamicMask = 1 << (paramIndex + 124);
+        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
+        uint256 isDynamicMask = 1 << (paramIndex + 124);
         uint256 compTypeMask = 3 << (paramIndex * 2);
 
         if (isScoped) {
-            config |= scopedMask;
-            config |= uint256(compType) << (paramIndex * 2);
+            config |= isScopedMask;
         } else {
-            config &= ~scopedMask;
-            config &= ~compTypeMask;
+            config &= ~isScopedMask;
         }
 
-        if (isScoped && isDynamic) {
-            config |= dynamicMask;
+        if (isDynamic) {
+            config |= isDynamicMask;
         } else {
-            config &= ~dynamicMask;
+            config &= ~isDynamicMask;
         }
+
+        config &= ~compTypeMask;
+        config |= uint256(compType) << (paramIndex * 2);
 
         return config;
     }
