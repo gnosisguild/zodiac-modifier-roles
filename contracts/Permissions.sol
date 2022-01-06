@@ -163,7 +163,7 @@ library Permissions {
         if (target.clearance == Clearance.FUNCTION) {
             uint256 paramConfig = self.roles[role].functions[
                 keyForFunctions(targetAddress, bytes4(data))
-            ];            
+            ];
 
             if (paramConfig == FUNCTION_WHITELIST) {
                 return;
@@ -209,7 +209,7 @@ library Permissions {
             bool isAllowed;
             bytes32 value;
             bytes32 compValue;
-            
+
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
                 compType = Comp.Comparison.EqualTo;
@@ -250,42 +250,11 @@ library Permissions {
      * SETTERS
      *
      */
-    function allowFunction(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool allow
-    ) external {
-        if (allow) {
-            self.roles[role].targets[targetAddress].clearance = Clearance
-                .FUNCTION;
-        }
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = allow ? FUNCTION_WHITELIST : 0;
-    }
-
-    function scopeFunction(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
+    function resetParamConfig(
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comp.Comparison[] memory paramCompType
-    ) external {
-        require(
-            isParamScoped.length == isParamDynamic.length,
-            "Mismatch: isParamScoped and isParamDynamic length"
-        );
-
-        require(
-            isParamScoped.length == paramCompType.length,
-            "Mismatch: isParamScoped and paramCompType length"
-        );
-
+    ) external pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
         uint256 paramConfig = packParamCount(0, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
@@ -297,25 +266,16 @@ library Permissions {
                 paramCompType[i]
             );
         }
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = paramConfig;
+        return paramConfig;
     }
 
-    function scopeParameter(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
+    function setParamConfig(
+        uint256 prevParamConfig,
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
         Comp.Comparison compType
-    ) external {
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
-
-        uint256 prevParamConfig = self.roles[role].functions[key];
+    ) external pure returns (uint256) {
         if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
         uint8 prevParamCount = unpackParamCount(prevParamConfig);
 
@@ -323,15 +283,14 @@ library Permissions {
             ? paramIndex + 1
             : prevParamCount;
 
-        uint256 nextParamConfig = packParamEntry(
-            packParamCount(prevParamConfig, nextParamCount),
-            paramIndex,
-            isScoped,
-            isDynamic,
-            compType
-        );
-
-        self.roles[role].functions[key] = nextParamConfig;
+        return
+            packParamEntry(
+                packParamCount(prevParamConfig, nextParamCount),
+                paramIndex,
+                isScoped,
+                isDynamic,
+                compType
+            );
     }
 
     /*

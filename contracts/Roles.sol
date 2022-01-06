@@ -6,6 +6,9 @@ import "./Permissions.sol";
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract Roles is Modifier {
+    uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
+    uint256 constant IS_SCOPED_MASK = uint256(0xfffffffffffffff << 186);
+
     mapping(address => uint16) public defaultRoles;
     RoleList roleList;
 
@@ -183,13 +186,14 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool allow
     ) external onlyOwner {
-        Permissions.allowFunction(
-            roleList,
-            role,
-            targetAddress,
-            functionSig,
-            allow
-        );
+        if (allow) {
+            roleList.roles[role].targets[targetAddress].clearance = Clearance
+                .FUNCTION;
+        }
+
+        roleList.roles[role].functions[
+            Permissions.keyForFunctions(targetAddress, functionSig)
+        ] = allow ? FUNCTION_WHITELIST : 0;
         emit AllowFunction(role, targetAddress, functionSig, allow);
     }
 
@@ -198,32 +202,50 @@ contract Roles is Modifier {
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param paramIsScoped false for un-scoped, true for scoped.
-    /// @param paramIsDynamic false for static, true for dynamic.
+    /// @param isParamScoped false for un-scoped, true for scoped.
+    /// @param isParamDynamic false for static, true for dynamic.
     /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
     function scopeFunction(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        bool[] memory paramIsScoped,
-        bool[] memory paramIsDynamic,
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
         Comp.Comparison[] memory paramCompType
     ) external onlyOwner {
-        Permissions.scopeFunction(
-            roleList,
-            role,
-            targetAddress,
-            functionSig,
-            paramIsScoped,
-            paramIsDynamic,
+        // 24kb
+        // require(
+        //     isParamScoped.length == isParamDynamic.length,
+        //     "Mismatch: isParamScoped and isParamDynamic length"
+        // );
+
+        // require(
+        //     isParamScoped.length == paramCompType.length,
+        //     "Mismatch: isParamScoped and paramCompType length"
+        // );
+
+        require(
+            isParamScoped.length == isParamDynamic.length &&
+                isParamScoped.length == paramCompType.length,
+            "M"
+        );
+
+        uint256 paramConfig = Permissions.resetParamConfig(
+            isParamScoped,
+            isParamDynamic,
             paramCompType
         );
+
+        roleList.roles[role].functions[
+            Permissions.keyForFunctions(targetAddress, functionSig)
+        ] = paramConfig;
+
         emit ScopeFunction(
             role,
             targetAddress,
             functionSig,
-            paramIsScoped,
-            paramIsDynamic,
+            isParamScoped,
+            isParamDynamic,
             paramCompType
         );
     }
@@ -246,16 +268,17 @@ contract Roles is Modifier {
         bool isDynamic,
         Comp.Comparison compType
     ) external onlyOwner {
-        Permissions.scopeParameter(
-            roleList,
-            role,
-            targetAddress,
-            functionSig,
+        bytes32 key = Permissions.keyForFunctions(targetAddress, functionSig);
+        uint256 prevParamConfig = roleList.roles[role].functions[key];
+        uint256 nextParamConfig = Permissions.setParamConfig(
+            prevParamConfig,
             paramIndex,
             isScoped,
             isDynamic,
             compType
         );
+        roleList.roles[role].functions[key] = nextParamConfig;
+
         emit ScopeParameter(
             role,
             targetAddress,
