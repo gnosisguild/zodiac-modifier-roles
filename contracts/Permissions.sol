@@ -293,9 +293,7 @@ library Permissions {
         for (uint8 i = 0; i < paramCompType.length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
-            ] = paramCompValue[i].length > 32
-                ? keccak256(paramCompValue[i])
-                : bytes32(paramCompValue[i]);
+            ] = maybeCompressCompValue(paramCompValue[i]);
         }
     }
 
@@ -324,7 +322,7 @@ library Permissions {
         // set compValue
         role.compValues[
             keyForCompValues(targetAddress, functionSig, paramIndex)
-        ] = isDynamic ? keccak256(compValue) : bytes32(compValue);
+        ] = maybeCompressCompValue(compValue);
     }
 
     function scopeParameterAsOneOf(
@@ -348,12 +346,14 @@ library Permissions {
 
         // set compValue
         key = keyForCompValues(targetAddress, functionSig, paramIndex);
+
         delete role.compValuesOneOf[key];
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
+
         for (uint256 i = 0; i < compValues.length; i++) {
-            role.compValuesOneOf[key][i] = isDynamic
-                ? keccak256(compValues[i])
-                : bytes32(compValues[i]);
+            role.compValuesOneOf[key][i] = maybeCompressCompValue(
+                compValues[i]
+            );
         }
     }
 
@@ -587,5 +587,19 @@ library Permissions {
         // fits in 32 bytes
         return
             bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
+    }
+
+    /*
+     *
+     * ALL COMPVALUE STORAGE INSERTS ARE TO PIPE THRU THIS FUNCTION
+     *
+     */
+    function maybeCompressCompValue(bytes calldata compValue)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            compValue.length > 32 ? keccak256(compValue) : bytes32(compValue);
     }
 }
