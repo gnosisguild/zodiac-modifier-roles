@@ -4,7 +4,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./Permissions.sol";
 
-
 contract Roles is Modifier {
     address public multiSend;
 
@@ -209,11 +208,10 @@ contract Roles is Modifier {
         bool[] calldata isParamDynamic,
         Comparison[] calldata paramCompType
     ) external onlyOwner {
-        require(
-            isParamScoped.length == isParamDynamic.length &&
-                isParamScoped.length == paramCompType.length,
-            "Len - Mismatch"
-        );
+        if (
+            isParamScoped.length != isParamDynamic.length ||
+            isParamScoped.length != paramCompType.length
+        ) revert ArraysDifferentLength();
 
         uint256 paramConfig = Permissions.resetParamConfig(
             isParamScoped,

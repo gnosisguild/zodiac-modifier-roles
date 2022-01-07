@@ -12,7 +12,7 @@ enum Clearance {
 enum Comparison {
     EqualTo,
     GreaterThan,
-    LessThan    
+    LessThan
 }
 
 struct Parameter {
@@ -233,9 +233,7 @@ library Permissions {
     ) internal pure {
         if (compType == Comparison.EqualTo && !isAllowed) {
             revert ParameterNotAllowed();
-        } else if (
-            compType == Comparison.GreaterThan && value <= compValue
-        ) {
+        } else if (compType == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
         } else if (compType == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
