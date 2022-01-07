@@ -14,8 +14,10 @@ contract TestContract {
         string test7
     );
     event DoNothing();
+    event DoEvenLess();
     event FnWithSingleParam(uint256);
     event FnWithTwoParams(uint256, uint256);
+    event FnWithThreeParams(uint256, uint256, uint256);
 
     receive() external payable {
         emit Receive();
@@ -43,11 +45,23 @@ contract TestContract {
         emit DoNothing();
     }
 
+    function doEvenLess() public {
+        emit DoEvenLess();
+    }
+
     function fnWithSingleParam(uint256 p) public {
         emit FnWithSingleParam(p);
     }
 
     function fnWithTwoParams(uint256 a, uint256 b) public {
         emit FnWithTwoParams(a, b);
+    }
+
+    function fnWithThreeParams(
+        uint256 a,
+        uint256 b,
+        uint256 c
+    ) public {
+        emit FnWithThreeParams(a, b, c);
     }
 }

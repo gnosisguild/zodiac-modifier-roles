@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "./Roles.sol";
-import "./Comp.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 enum Clearance {
     NONE,
     TARGET,
     FUNCTION
+}
+
+enum Comparison {
+    EqualTo,
+    GreaterThan,
+    LessThan
 }
 
 struct Parameter {
@@ -29,12 +33,11 @@ struct Role {
     mapping(bytes32 => Parameter) compValues;
 }
 
-struct RoleList {
-    mapping(uint16 => Role) roles;
-}
-
 library Permissions {
-    uint256 constant FUNCTION_WHITELIST = 2**256 - 1;
+    uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
+    // 60 bit mask
+    uint256 internal constant IS_SCOPED_MASK =
+        uint256(0xfffffffffffffff << 186);
 
     /// Function signature too short
     error FunctionSignatureTooShort();
@@ -63,14 +66,19 @@ library Permissions {
     // only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
+    /*
+     *
+     * CHECKERS
+     *
+     */
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultiSend(
-        RoleList storage self,
-        bytes memory data,
-        uint16 role
-    ) public view {
+    function checkMultisendTransaction(Role storage role, bytes memory data)
+        public
+        view
+    {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -105,32 +113,91 @@ library Permissions {
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 out := add(data, add(i, 0x35))
             }
-            checkTransaction(self, to, value, out, operation, role);
+            checkTransaction(role, to, value, out, operation);
+        }
+    }
+
+    function checkTransaction(
+        Role storage role,
+        address targetAddress,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public view {
+        TargetAddress memory target = role.targets[targetAddress];
+
+        // CLEARANCE: transversal - checks
+        if (value > 0 && !target.canSend) {
+            revert SendNotAllowed();
+        }
+
+        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
+            revert DelegateCallNotAllowed();
+        }
+
+        if (data.length != 0 && data.length < 4) {
+            revert FunctionSignatureTooShort();
+        }
+
+        // CLEARANCE: levels 1 2 and 3 - checks
+        /*
+         * For each address we have three clearance checks:
+         * Forbidden     - nothing was setup
+         * AddressPass   - all calls to this address are go, nothing more to check
+         * FunctionCheck - some functions on this address are allowed
+         */
+
+        // isForbidden
+        if (target.clearance == Clearance.NONE) {
+            revert TargetAddressNotAllowed();
+        }
+
+        // isAddressPass
+        if (target.clearance == Clearance.TARGET) {
+            // good to go
+            return;
+        }
+
+        //isFunctionCheck
+        if (target.clearance == Clearance.FUNCTION) {
+            uint256 paramConfig = role.functions[
+                keyForFunctions(targetAddress, bytes4(data))
+            ];
+
+            if (paramConfig == FUNCTION_WHITELIST) {
+                return;
+            } else {
+                checkParameters(role, paramConfig, targetAddress, data);
+            }
         }
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param self reference to roles storage
-    /// @param role Role to check for.
+    /// @param role reference to role storage
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
-        RoleList storage self,
+        Role storage role,
         uint256 paramConfig,
-        uint16 role,
         address targetAddress,
         bytes memory data
     ) public view {
-        bytes4 functionSig = bytes4(data);
+        if (paramConfig & IS_SCOPED_MASK == 0) {
+            // is there no single param scoped?
+            // either config bug or unset
+            // semantically the same, not allowed
+            revert FunctionNotAllowed();
+        }
 
+        bytes4 functionSig = bytes4(data);
         uint8 paramCount = unpackParamCount(paramConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
                 bool isParamDynamic,
-                Comp.Comparison compType
-            ) = unpackParamConfig(paramConfig, i);
+                Comparison compType
+            ) = unpackParamEntry(paramConfig, i);
 
             if (!isParamScoped) {
                 continue;
@@ -142,39 +209,90 @@ library Permissions {
 
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
-                compType = Comp.Comparison.EqualTo;
+                compType = Comparison.EqualTo;
             } else {
                 value = pluckParamValue(data, i);
             }
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-            if (compType == Comp.Comparison.EqualTo) {
-                isAllowed = self.roles[role].compValues[key].allowed[value];
+            if (compType == Comparison.EqualTo) {
+                isAllowed = role.compValues[key].allowed[value];
             } else {
-                compValue = self.roles[role].compValues[key].compValue;
+                compValue = role.compValues[key].compValue;
             }
-
             compareParameterValues(compType, compValue, isAllowed, value);
         }
     }
 
+    // should this go inline?
     function compareParameterValues(
-        Comp.Comparison compType,
+        Comparison compType,
         bytes32 compValue,
         bool isAllowed,
         bytes32 value
     ) internal pure {
-        if (compType == Comp.Comparison.EqualTo && !isAllowed) {
+        if (compType == Comparison.EqualTo && !isAllowed) {
             revert ParameterNotAllowed();
-        } else if (
-            compType == Comp.Comparison.GreaterThan && value <= compValue
-        ) {
+        } else if (compType == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
-        } else if (compType == Comp.Comparison.LessThan && value >= compValue) {
+        } else if (compType == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
         }
     }
 
+    /*
+     *
+     * SETTERS
+     *
+     */
+    function resetParamConfig(
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comparison[] memory paramCompType
+    ) external pure returns (uint256) {
+        uint8 paramCount = uint8(isParamScoped.length);
+        uint256 paramConfig = packParamCount(0, paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            paramConfig = packParamEntry(
+                paramConfig,
+                i,
+                isParamScoped[i],
+                isParamDynamic[i],
+                paramCompType[i]
+            );
+        }
+        return paramConfig;
+    }
+
+    function setParamConfig(
+        uint256 prevParamConfig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comparison compType
+    ) external pure returns (uint256) {
+        if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
+        uint8 prevParamCount = unpackParamCount(prevParamConfig);
+
+        uint8 nextParamCount = paramIndex + 1 > prevParamCount
+            ? paramIndex + 1
+            : prevParamCount;
+
+        return
+            packParamEntry(
+                packParamCount(prevParamConfig, nextParamCount),
+                paramIndex,
+                isScoped,
+                isDynamic,
+                compType
+            );
+    }
+
+    /*
+     *
+     * HELPERS
+     *
+     */
     function pluckDynamicParamValue(bytes memory data, uint256 paramIndex)
         internal
         pure
@@ -228,178 +346,69 @@ library Permissions {
         }
     }
 
-    function checkTransaction(
-        RoleList storage self,
-        address targetAddress,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation,
-        uint16 role
-    ) public view {
-        TargetAddress memory target = self.roles[role].targets[targetAddress];
-
-        // CLEARANCE: transversal - checks
-        if (value > 0 && !target.canSend) {
-            revert SendNotAllowed();
-        }
-
-        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
-            revert DelegateCallNotAllowed();
-        }
-
-        if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
-        }
-
-        // CLEARANCE: levels 1 2 and 3 - checks
-
-        /*
-         * For each address we have three clearance checks:
-         * Forbidden     - nothing was setup
-         * AddressPass   - all calls to this address are go, nothing more to check
-         * FunctionCheck - some functions on this address are allowed
-         */
-
-        // isForbidden
-        if (target.clearance == Clearance.NONE) {
-            revert TargetAddressNotAllowed();
-        }
-
-        // isAddressPass
-        if (target.clearance == Clearance.TARGET) {
-            // good to go
-            return;
-        }
-
-        //isFunctionCheck
-        if (target.clearance == Clearance.FUNCTION) {
-            uint256 paramConfig = self.roles[role].functions[
-                keyForFunctions(targetAddress, bytes4(data))
-            ];
-
-            // FunctionCheck can be:
-            // 1: wildcard, allowed/white-listed function
-            // 2: paramConfig/scoped function
-            // 3: nothing, meaning no rules for the current function were defined
-
-            if (paramConfig == FUNCTION_WHITELIST) {
-                return;
-            } else if (paramConfig != 0) {
-                checkParameters(self, paramConfig, role, targetAddress, data);
-            } else {
-                revert FunctionNotAllowed();
-            }
-        }
-    }
-
-    function setAllowedFunction(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool allow
-    ) external {
-        // MAX-INT represents function allowed/whitelist
-
-        self.roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = allow ? (FUNCTION_WHITELIST) : 0;
-    }
-
-    /// @dev Sets whether or not calls should be scoped to specific parameter value or range of values.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param isParamScoped false for un-scoped, true for scoped.
-    /// @param isParamDynamic false for static, true for dynamic.
-    /// @param paramCompType Any, or EqualTo, GreaterThan, or LessThan compValue.
-    function setParametersScoped(
-        RoleList storage self,
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comp.Comparison[] memory paramCompType
-    ) external {
-        require(
-            isParamScoped.length == isParamDynamic.length,
-            "Mismatch: isParamScoped and isParamDynamic arrays have different lengths"
-        );
-
-        require(
-            isParamScoped.length == paramCompType.length,
-            "Mismatch: isParamScoped and paramCompType arrays have different lengths"
-        );
-
-        uint8 paramCount = uint8(isParamScoped.length);
-        uint256 paramConfig = packParamCount(paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            paramConfig = packParamConfig(
-                paramConfig,
-                i,
-                isParamScoped[i],
-                isParamDynamic[i],
-                paramCompType[i]
-            );
-        }
-
-        self.roles[role].functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = paramConfig;
-    }
-
-    function packParamConfig(
+    function packParamEntry(
         uint256 config,
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
-        Comp.Comparison compType
+        Comparison compType
     ) internal pure returns (uint256) {
         // we restrict paramCount to 62:
         // 8   bits -> length
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits for each compType 62*2 = 124
+        uint256 scopedMask = 1 << (paramIndex + 62 + 124);
+        uint256 dynamicMask = 1 << (paramIndex + 124);
+        uint256 compTypeMask = 3 << (paramIndex * 2);
+
         if (isScoped) {
-            config |= 1 << (paramIndex + 62 + 124);
+            config |= scopedMask;
             config |= uint256(compType) << (paramIndex * 2);
+        } else {
+            config &= ~scopedMask;
+            config &= ~compTypeMask;
         }
 
-        if (isDynamic) {
-            config |= 1 << (paramIndex + 124);
+        if (isScoped && isDynamic) {
+            config |= dynamicMask;
+        } else {
+            config &= ~dynamicMask;
         }
+
         return config;
     }
 
-    function unpackParamConfig(uint256 config, uint8 paramIndex)
+    function unpackParamEntry(uint256 config, uint8 paramIndex)
         internal
         pure
         returns (
             bool isScoped,
             bool isDynamic,
-            Comp.Comparison compType
+            Comparison compType
         )
     {
         uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
         uint256 isDynamicMask = 1 << (paramIndex + 124);
-        // 3 -> 11 in binary
         uint256 compTypeMask = 3 << (2 * paramIndex);
 
         isScoped = (config & isScopedMask) != 0;
         isDynamic = (config & isDynamicMask) != 0;
-        compType = Comp.Comparison((config & compTypeMask) >> (2 * paramIndex));
+        compType = Comparison((config & compTypeMask) >> (2 * paramIndex));
     }
 
-    function packParamCount(uint8 paramCount) internal pure returns (uint256) {
+    function packParamCount(uint256 config, uint8 paramCount)
+        internal
+        pure
+        returns (uint256)
+    {
         // 8   bits -> length
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits represents for each compType 62*2 = 124
-        return (uint256(paramCount) << (62 + 62 + 124));
+        uint256 left = (uint256(paramCount) << (62 + 62 + 124));
+        uint256 right = (config << 8) >> 8;
+        return left | right;
     }
 
     function unpackParamCount(uint256 config) internal pure returns (uint8) {
@@ -422,8 +431,6 @@ library Permissions {
     ) public pure returns (bytes32) {
         // fits in 32 bytes
         return
-            bytes32(
-                abi.encodePacked(targetAddress, functionSig, paramIndex)
-            );
+            bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
     }
 }
