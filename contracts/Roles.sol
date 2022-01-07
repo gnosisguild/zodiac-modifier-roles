@@ -44,22 +44,7 @@ contract Roles is Modifier {
         bool isDynamic,
         Comparison compType
     );
-
-    event SetParameterAllowedValue(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex,
-        bytes value,
-        bool allowed
-    );
-    event SetParameterCompValue(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex,
-        bytes compValue
-    );
+  
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
