@@ -163,14 +163,14 @@ library Permissions {
 
         //isFunctionCheck
         if (target.clearance == Clearance.FUNCTION) {
-            uint256 paramConfig = role.functions[
+            uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (paramConfig == FUNCTION_WHITELIST) {
+            if (scopeConfig == FUNCTION_WHITELIST) {
                 return;
             } else {
-                checkParameters(role, paramConfig, targetAddress, data);
+                checkParameters(role, scopeConfig, targetAddress, data);
             }
         }
     }
@@ -181,11 +181,11 @@ library Permissions {
     /// @param data the transaction data to check
     function checkParameters(
         Role storage role,
-        uint256 paramConfig,
+        uint256 scopeConfig,
         address targetAddress,
         bytes memory data
     ) public view {
-        if (paramConfig & IS_SCOPED_MASK == 0) {
+        if (scopeConfig & IS_SCOPED_MASK == 0) {
             // is there no single param scoped?
             // either config bug or unset
             // semantically the same, not allowed
@@ -193,14 +193,14 @@ library Permissions {
         }
 
         bytes4 functionSig = bytes4(data);
-        uint8 paramCount = unpackParamCount(paramConfig);
+        uint8 paramCount = unpackParamCount(scopeConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
                 bool isParamDynamic,
                 Comparison compType
-            ) = unpackParamEntry(paramConfig, i);
+            ) = unpackParamEntry(scopeConfig, i);
 
             if (!isParamScoped) {
                 continue;
