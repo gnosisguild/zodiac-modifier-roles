@@ -272,15 +272,24 @@ library Permissions {
             "Mismatch: isParamScoped and paramCompType length"
         );
 
-        resetScopeConfig(
-            role,
-            targetAddress,
-            functionSig,
+        for(uint256 i = 0; i < paramCompType.length; i++){
+            if(paramCompType[i] == Comparison.OneOf){
+                revert OneOfNotAllowed();
+            }
+        }
+
+        uint256 scopeConfig = resetScopeConfig(
             isParamScoped,
             isParamDynamic,
             paramCompType
         );
 
+        // set scopeConfig
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
+
+        // set respective compValues
         for (uint8 i = 0; i < paramCompType.length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
@@ -303,15 +312,16 @@ library Permissions {
             revert OneOfNotAllowed();
         }
 
-        setScopeConfig(
-            role,
-            targetAddress,
-            functionSig,
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
             paramIndex,
             true,
             isDynamic,
             compType
         );
+        role.functions[key] = scopeConfig;
 
         // set compValue
         role.compValues[
@@ -327,19 +337,19 @@ library Permissions {
         bool isDynamic,
         bytes[] calldata compValues
     ) external {
-        setScopeConfig(
-            role,
-            targetAddress,
-            functionSig,
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
             paramIndex,
             true,
             isDynamic,
             Comparison.OneOf
         );
+        role.functions[key] = scopeConfig;
 
         // set compValue
-        bytes32 key = keyForCompValues(targetAddress, functionSig, paramIndex);
-
+        key = keyForCompValues(targetAddress, functionSig, paramIndex);
         delete role.compValuesOneOf[key];
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
         for (uint256 i = 0; i < compValues.length; i++) {
@@ -355,75 +365,21 @@ library Permissions {
         bytes4 functionSig,
         uint8 paramIndex
     ) external {
-        Permissions.setScopeConfig(
-            role,
-            targetAddress,
-            functionSig,
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
             paramIndex,
             false,
             false,
             Comparison(0)
         );
+        role.functions[key] = scopeConfig;
 
         // set compValue
-        bytes32 key = keyForCompValues(targetAddress, functionSig, paramIndex);
-
+        key = keyForCompValues(targetAddress, functionSig, paramIndex);
         delete role.compValues[key];
         delete role.compValuesOneOf[key];
-    }
-
-    function resetScopeConfig(
-        Role storage role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comparison[] memory paramCompType
-    ) internal {
-        uint8 paramCount = uint8(isParamScoped.length);
-        uint256 scopeConfig = packParamCount(0, paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            scopeConfig = packParamEntry(
-                scopeConfig,
-                i,
-                isParamScoped[i],
-                isParamDynamic[i],
-                paramCompType[i]
-            );
-        }
-
-        role.functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = scopeConfig;
-    }
-
-    function setScopeConfig(
-        Role storage role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex,
-        bool isScoped,
-        bool isDynamic,
-        Comparison compType
-    ) internal {
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
-
-        uint256 prevScopeConfig = role.functions[key];
-        if (prevScopeConfig == FUNCTION_WHITELIST) prevScopeConfig = 0;
-        uint8 prevParamCount = unpackParamCount(prevScopeConfig);
-
-        uint8 nextParamCount = paramIndex + 1 > prevParamCount
-            ? paramIndex + 1
-            : prevParamCount;
-
-        uint256 nextScopeConfig = packParamEntry(
-            packParamCount(prevScopeConfig, nextParamCount),
-            paramIndex,
-            isScoped,
-            isDynamic,
-            compType
-        );
-        role.functions[key] = nextScopeConfig;
     }
 
     /*
@@ -482,6 +438,50 @@ library Permissions {
         for (uint256 j = start; j < end; j++) {
             result[i++] = data[j];
         }
+    }
+
+    function resetScopeConfig(
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comparison[] memory paramCompType
+    ) internal pure returns (uint256) {
+        uint8 paramCount = uint8(isParamScoped.length);
+        uint256 scopeConfig = packParamCount(0, paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            scopeConfig = packParamEntry(
+                scopeConfig,
+                i,
+                isParamScoped[i],
+                isParamDynamic[i],
+                paramCompType[i]
+            );
+        }
+
+        return scopeConfig;
+    }
+
+    function setScopeConfig(
+        uint256 scopeConfig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comparison compType
+    ) internal pure returns (uint256) {
+        if (scopeConfig == FUNCTION_WHITELIST) scopeConfig = 0;
+        uint8 prevParamCount = unpackParamCount(scopeConfig);
+
+        uint8 nextParamCount = paramIndex + 1 > prevParamCount
+            ? paramIndex + 1
+            : prevParamCount;
+
+        return
+            packParamEntry(
+                packParamCount(scopeConfig, nextParamCount),
+                paramIndex,
+                isScoped,
+                isDynamic,
+                compType
+            );
     }
 
     function packParamEntry(
