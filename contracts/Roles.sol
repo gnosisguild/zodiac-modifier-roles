@@ -169,7 +169,7 @@ contract Roles is Modifier {
         emit AllowTarget(role, targetAddress, allow);
     }
 
-    /// @dev Allows a specific function on a target address to be called.
+    /// @dev Allows a specific function, on a specific address, to be called.
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
@@ -191,7 +191,7 @@ contract Roles is Modifier {
         emit AllowFunction(role, targetAddress, functionSig, allow);
     }
 
-    /// @dev Sets and enforces scoping for a function on an address
+    /// @dev Sets and enforces scoping for an allowed function, on a specific address
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
@@ -228,7 +228,7 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets and enforces scoping for a single paramater in a function on an address
+    /// @dev Sets and enforces scoping for a single parameter on an allowed function
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
@@ -236,6 +236,7 @@ contract Roles is Modifier {
     /// @param paramIndex the index of the parameter to scope
     /// @param isDynamic false for value, true for dynamic.
     /// @param compType Any, or EqualTo, GreaterThan, or LessThan compValue.
+    /// @param compValue The reference value used while comparing and authorizing
     function scopeParameter(
         uint16 role,
         address targetAddress,
@@ -264,14 +265,14 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets and enforces scoping for a single paramater in a function on an address
+    /// @dev Sets and enforces scoping of type OneOf for a single parameter on an allowed function
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
     /// @param isDynamic false for value, true for dynamic.
-    /// @param compValues todo
+    /// @param compValues The reference values used while comparing and authorizing
     function scopeParameterAsOneOf(
         uint16 role,
         address targetAddress,
@@ -298,6 +299,13 @@ contract Roles is Modifier {
         );
     }
 
+    /// @dev Unsets scoping for a single parameter on an allowed function
+    /// @notice Only callable by owner.
+    /// @notice If no more params remain scoped after this call, the whole access to the function will be revoked.
+    /// @param role Role to set for.
+    /// @param targetAddress Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
+    /// @param paramIndex the index of the parameter to scope
     function unscopeParameter(
         uint16 role,
         address targetAddress,
