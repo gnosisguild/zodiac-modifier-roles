@@ -253,6 +253,135 @@ library Permissions {
      * SETTERS
      *
      */
+     function scopeFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] calldata isParamScoped,
+        bool[] calldata isParamDynamic,
+        Comparison[] calldata paramCompType,
+        bytes[] calldata paramCompValue
+    ) external {
+        
+        require(
+            isParamScoped.length == isParamDynamic.length,
+            "Mismatch: isParamScoped and isParamDynamic length"
+        );
+
+        require(
+            isParamScoped.length == paramCompType.length,
+            "Mismatch: isParamScoped and paramCompType length"
+        );
+
+        resetScopeConfig(
+            role,
+            targetAddress,
+            functionSig,
+            isParamScoped,
+            isParamDynamic,
+            paramCompType
+        );
+
+        for (uint8 i = 0; i < paramCompType.length; i++) {
+            role.compValues[
+                keyForCompValues(targetAddress, functionSig, i)
+            ] = paramCompValue[i].length > 32
+                ? keccak256(paramCompValue[i])
+                : bytes32(paramCompValue[i]);
+        }        
+    }
+
+    function scopeParameter(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        Comparison compType,
+        bytes calldata compValue
+    ) external {
+         if (compType == Comparison.OneOf) {
+            revert OneOfNotAllowed();
+        }
+
+        setScopeConfig(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            true,
+            isDynamic,
+            compType
+        );
+
+        // set compValue
+        role.compValues[
+            keyForCompValues(targetAddress, functionSig, paramIndex)
+        ] = isDynamic ? keccak256(compValue) : bytes32(compValue);
+    }
+
+    function scopeParameterAsOneOf(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        bytes[] calldata compValues
+    ) external {
+        setScopeConfig(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            true,
+            isDynamic,
+            Comparison.OneOf
+        );
+
+        // set compValue
+        bytes32 key = keyForCompValues(
+            targetAddress,
+            functionSig,
+            paramIndex
+        );
+
+        delete role.compValuesOneOf[key];
+        role.compValuesOneOf[key] = new bytes32[](compValues.length);
+        for (uint256 i = 0; i < compValues.length; i++) {
+            role.compValuesOneOf[key][i] = isDynamic
+                ? keccak256(compValues[i])
+                : bytes32(compValues[i]);
+        }
+    }
+
+    function unscopeParameter(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    ) external {
+        Permissions.setScopeConfig(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            false,
+            false,
+            Comparison(0)
+        );
+        
+        // set compValue
+        bytes32 key = keyForCompValues(
+            targetAddress,
+            functionSig,
+            paramIndex
+        );
+
+        delete role.compValues[key];
+        delete role.compValuesOneOf[key];
+    }
+    
+
     function resetScopeConfig(
         Role storage role,
         address targetAddress,
@@ -260,7 +389,7 @@ library Permissions {
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType
-    ) external {
+    ) internal {
         uint8 paramCount = uint8(isParamScoped.length);
         uint256 scopeConfig = packParamCount(0, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
@@ -286,7 +415,7 @@ library Permissions {
         bool isScoped,
         bool isDynamic,
         Comparison compType
-    ) external {
+    ) internal {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
 
         uint256 prevScopeConfig = role.functions[key];

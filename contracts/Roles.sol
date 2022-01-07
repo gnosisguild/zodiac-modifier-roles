@@ -8,7 +8,7 @@ contract Roles is Modifier {
     address public multiSend;
 
     mapping(address => uint16) defaultRoles;
-    mapping(uint16 => Role) roles;
+    mapping(uint16 => Role) private roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
@@ -209,37 +209,15 @@ contract Roles is Modifier {
         Comparison[] calldata paramCompType,
         bytes[] calldata paramCompValue
     ) external onlyOwner {
-        // 24kb
-        // require(
-        //     isParamScoped.length == isParamDynamic.length,
-        //     "Mismatch: isParamScoped and isParamDynamic length"
-        // );
-
-        // require(
-        //     isParamScoped.length == paramCompType.length,
-        //     "Mismatch: isParamScoped and paramCompType length"
-        // );
-
-        // require(
-        //     isParamScoped.length == isParamDynamic.length &&
-        //         isParamScoped.length == paramCompType.length,
-
-        Permissions.resetScopeConfig(
+        Permissions.scopeFunction(
             roles[role],
             targetAddress,
             functionSig,
             isParamScoped,
             isParamDynamic,
-            paramCompType
+            paramCompType,
+            paramCompValue
         );
-
-        for (uint8 i = 0; i < paramCompType.length; i++) {
-            roles[role].compValues[
-                Permissions.keyForCompValues(targetAddress, functionSig, i)
-            ] = paramCompValue[i].length > 32
-                ? keccak256(paramCompValue[i])
-                : bytes32(paramCompValue[i]);
-        }
 
         emit ScopeFunction(
             role,
@@ -269,25 +247,15 @@ contract Roles is Modifier {
         Comparison compType,
         bytes calldata compValue
     ) external onlyOwner {
-        if (compType == Comparison.OneOf) {
-            revert Permissions.OneOfNotAllowed();
-        }
-
-        Permissions.setScopeConfig(
+        Permissions.scopeParameter(
             roles[role],
             targetAddress,
             functionSig,
-            paramIndex,
-            true,
+            paramIndex,            
             isDynamic,
-            Comparison(0)
+            compType,
+            compValue
         );
-
-        // set compValue
-        roles[role].compValues[
-            Permissions.keyForCompValues(targetAddress, functionSig, paramIndex)
-        ] = isDynamic ? keccak256(compValue) : bytes32(compValue);
-
         emit ScopeParameter(
             role,
             targetAddress,
@@ -314,30 +282,14 @@ contract Roles is Modifier {
         bool isDynamic,
         bytes[] calldata compValues
     ) external onlyOwner {
-        Permissions.setScopeConfig(
+        Permissions.scopeParameterAsOneOf(
             roles[role],
             targetAddress,
             functionSig,
-            paramIndex,
-            true,
+            paramIndex,            
             isDynamic,
-            Comparison(0)
+            compValues
         );
-
-        // set compValue
-        bytes32 key = Permissions.keyForCompValues(
-            targetAddress,
-            functionSig,
-            paramIndex
-        );
-
-        //delete roles[role].compValuesOneOf[key];
-        roles[role].compValuesOneOf[key] = new bytes32[](compValues.length);
-        for (uint256 i = 0; i < compValues.length; i++) {
-            roles[role].compValuesOneOf[key][i] = isDynamic
-                ? keccak256(compValues[i])
-                : bytes32(compValues[i]);
-        }
     }
 
     function unscopeParameter(
@@ -346,26 +298,12 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint8 paramIndex
     ) external {
-        Permissions.setScopeConfig(
+        Permissions.unscopeParameter(
             roles[role],
             targetAddress,
             functionSig,
-            paramIndex,
-            false,
-            false,
-            Comparison(0)
+            paramIndex
         );
-
-        // Uncomment but move to Library file
-        // // set compValue
-        // bytes32 key = Permissions.keyForCompValues(
-        //     targetAddress,
-        //     functionSig,
-        //     paramIndex
-        // );
-
-        // delete roles[role].compValues[key];
-        // delete roles[role].compValuesOneOf[key];
     }
 
     /// @dev Assigns and revokes roles to a given module.
