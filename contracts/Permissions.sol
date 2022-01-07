@@ -67,7 +67,7 @@ library Permissions {
     error UnacceptableMultiSendOffset();
 
     // must call scopeParameterAsOne
-    error OneOfNotAllowed();
+    error SettingOneOfNotAllowedInThisFunction();
 
     /*
      *
@@ -274,7 +274,7 @@ library Permissions {
 
         for(uint256 i = 0; i < paramCompType.length; i++){
             if(paramCompType[i] == Comparison.OneOf){
-                revert OneOfNotAllowed();
+                revert SettingOneOfNotAllowedInThisFunction();
             }
         }
 
@@ -309,7 +309,7 @@ library Permissions {
         bytes calldata compValue
     ) external {
         if (compType == Comparison.OneOf) {
-            revert OneOfNotAllowed();
+            revert SettingOneOfNotAllowedInThisFunction();
         }
 
         // set scopeConfig
