@@ -72,28 +72,28 @@ describe("RolesModifier", async () => {
       ["address"],
       [user1.address]
     );
-    const paramAllowed_1 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x40c10f19",
-        0,
-        encodedParam_1,
-        true
-      );
+    // const paramAllowed_1 =
+    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
+    //     1,
+    //     baseAvatar.testContract.address,
+    //     "0x40c10f19",
+    //     0,
+    //     encodedParam_1,
+    //     true
+    //   );
     const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
       ["uint256"],
       [99]
     );
-    const paramAllowed_2 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x40c10f19",
-        1,
-        encodedParam_2,
-        true
-      );
+    // const paramAllowed_2 =
+    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
+    //     1,
+    //     baseAvatar.testContract.address,
+    //     "0x40c10f19",
+    //     1,
+    //     encodedParam_2,
+    //     true
+    //   );
     const encodedParam_3 = ethers.utils.solidityPack(
       ["string"],
       ["This is a dynamic array"]
@@ -114,73 +114,6 @@ describe("RolesModifier", async () => {
       [
         "This is an input that is larger than 32 bytes and must be scanned for correctness",
       ]
-    );
-    const paramAllowed_3 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        0,
-        encodedParam_3,
-        true
-      );
-    const paramAllowed_4 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        1,
-        encodedParam_4,
-        true
-      );
-    const paramAllowed_5 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        2,
-        encodedParam_5,
-        true
-      );
-    const paramAllowed_6 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        3,
-        encodedParam_6,
-        true
-      );
-    const paramAllowed_7 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        4,
-        encodedParam_7,
-        true
-      );
-    const paramAllowed_8 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        5,
-        encodedParam_8,
-        true
-      );
-    const paramAllowed_9 =
-      await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        baseAvatar.testContract.address,
-        "0x273454bf",
-        6,
-        encodedParam_9,
-        true
-      );
-    const mint = await baseAvatar.testContract.populateTransaction.mint(
-      user1.address,
-      99
     );
     const tx_1 = buildContractCall(
       baseAvatar.testContract,
@@ -210,15 +143,15 @@ describe("RolesModifier", async () => {
     );
     return {
       ...baseAvatar,
-      paramAllowed_1,
-      paramAllowed_2,
-      paramAllowed_3,
-      paramAllowed_4,
-      paramAllowed_5,
-      paramAllowed_6,
-      paramAllowed_7,
-      paramAllowed_8,
-      paramAllowed_9,
+      encodedParam_1,
+      encodedParam_2,
+      encodedParam_3,
+      encodedParam_4,
+      encodedParam_5,
+      encodedParam_6,
+      encodedParam_7,
+      encodedParam_8,
+      encodedParam_9,
       tx_1,
       tx_2,
       tx_3,
@@ -573,7 +506,7 @@ describe("RolesModifier", async () => {
     });
 
     it("reverts if value parameter is not allowed", async () => {
-      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+      const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -602,12 +535,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 0]
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -627,7 +558,7 @@ describe("RolesModifier", async () => {
     it("executes a call with allowed value parameter", async () => {
       const user1 = (await hre.ethers.getSigners())[0];
 
-      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+      const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -656,12 +587,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 0]
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -683,13 +612,13 @@ describe("RolesModifier", async () => {
         avatar,
         modifier,
         testContract,
-        paramAllowed_3,
-        paramAllowed_4,
-        paramAllowed_5,
-        paramAllowed_6,
-        paramAllowed_7,
-        paramAllowed_8,
-        paramAllowed_9,
+        encodedParam_3,
+        encodedParam_4,
+        encodedParam_5,
+        encodedParam_6,
+        encodedParam_7,
+        encodedParam_8,
+        encodedParam_9,
       } = await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -719,17 +648,18 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [true, true, true, true, true, true, true],
         [true, false, true, false, false, true, true],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0],
+        [
+          encodedParam_3,
+          encodedParam_4,
+          encodedParam_5,
+          encodedParam_6,
+          encodedParam_7,
+          encodedParam_8,
+          encodedParam_9,
+        ]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_8.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_9.data);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
         "This is a dynamic array that is not allowed",
@@ -756,13 +686,13 @@ describe("RolesModifier", async () => {
         avatar,
         modifier,
         testContract,
-        paramAllowed_3,
-        paramAllowed_4,
-        paramAllowed_5,
-        paramAllowed_6,
-        paramAllowed_7,
-        paramAllowed_8,
-        paramAllowed_9,
+        encodedParam_3,
+        encodedParam_4,
+        encodedParam_5,
+        encodedParam_6,
+        encodedParam_7,
+        encodedParam_8,
+        encodedParam_9,
       } = await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -792,17 +722,18 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [true, true, true, true, true, true, true],
         [true, false, true, false, false, true, true],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0],
+        [
+          encodedParam_3,
+          encodedParam_4,
+          encodedParam_5,
+          encodedParam_6,
+          encodedParam_7,
+          encodedParam_8,
+          encodedParam_9,
+        ]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_8.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_9.data);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
         "This is a dynamic array",
@@ -829,15 +760,15 @@ describe("RolesModifier", async () => {
         avatar,
         modifier,
         testContract,
-        paramAllowed_1,
-        paramAllowed_2,
-        paramAllowed_3,
-        paramAllowed_4,
-        paramAllowed_5,
-        paramAllowed_6,
-        paramAllowed_7,
-        paramAllowed_8,
-        paramAllowed_9,
+        encodedParam_1,
+        encodedParam_2,
+        encodedParam_3,
+        encodedParam_4,
+        encodedParam_5,
+        encodedParam_6,
+        encodedParam_7,
+        encodedParam_8,
+        encodedParam_9,
         tx_1,
         tx_2,
         tx_3,
@@ -886,7 +817,8 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 0]
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -896,19 +828,18 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [true, true, true, true, true, true, true],
         [true, false, true, false, false, true, true],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0],
+        [
+          encodedParam_3,
+          encodedParam_4,
+          encodedParam_5,
+          encodedParam_6,
+          encodedParam_7,
+          encodedParam_8,
+          encodedParam_9,
+        ]
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_8.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_9.data);
 
       const tx_bad = buildContractCall(
         testContract,
@@ -938,8 +869,8 @@ describe("RolesModifier", async () => {
         avatar,
         modifier,
         testContract,
-        paramAllowed_1,
-        paramAllowed_2,
+        encodedParam_1,
+        encodedParam_2,
         tx_1,
       } = await txSetup();
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
@@ -977,12 +908,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 0]
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
       const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
 
@@ -1004,15 +933,15 @@ describe("RolesModifier", async () => {
         avatar,
         modifier,
         testContract,
-        paramAllowed_1,
-        paramAllowed_2,
-        paramAllowed_3,
-        paramAllowed_4,
-        paramAllowed_5,
-        paramAllowed_6,
-        paramAllowed_7,
-        paramAllowed_8,
-        paramAllowed_9,
+        encodedParam_1,
+        encodedParam_2,
+        encodedParam_3,
+        encodedParam_4,
+        encodedParam_5,
+        encodedParam_6,
+        encodedParam_7,
+        encodedParam_8,
+        encodedParam_9,
         tx_1,
         tx_2,
         tx_3,
@@ -1060,7 +989,8 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 0]
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1070,19 +1000,18 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [true, true, true, true, true, true, true],
         [true, false, true, false, false, true, true],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0],
+        [
+          encodedParam_3,
+          encodedParam_4,
+          encodedParam_5,
+          encodedParam_6,
+          encodedParam_7,
+          encodedParam_8,
+          encodedParam_9,
+        ]
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_2.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_3.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_4.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_5.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_6.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_7.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_8.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_9.data);
 
       const multiTx = buildMultiSendSafeTx(
         multisend,
@@ -1101,7 +1030,7 @@ describe("RolesModifier", async () => {
     });
 
     it("reverts if value parameter is less than allowed", async () => {
-      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+      const { avatar, modifier, testContract, encodedParam_1 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -1128,14 +1057,6 @@ describe("RolesModifier", async () => {
         ["uint256"],
         [99]
       );
-      const paramAllowed_lessThan =
-        await modifier.populateTransaction.setParameterCompValue(
-          1,
-          testContract.address,
-          "0x40c10f19",
-          1,
-          encodedParam_2
-        );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1143,12 +1064,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 1] // set param 2 to greater than
+        [0, 1],
+        [encodedParam_1, encodedParam_2] // set param 2 to greater than
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1166,7 +1085,7 @@ describe("RolesModifier", async () => {
     });
 
     it("executes if value parameter is greater than allowed", async () => {
-      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+      const { avatar, modifier, testContract, encodedParam_1 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -1193,15 +1112,6 @@ describe("RolesModifier", async () => {
         ["uint256"],
         [99]
       );
-      const paramAllowed_lessThan =
-        await modifier.populateTransaction.setParameterAllowedValue(
-          1,
-          testContract.address,
-          "0x40c10f19",
-          1,
-          encodedParam_2,
-          encodedParam_2
-        );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1209,12 +1119,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 1] // set param 2 to greater than
+        [0, 1],
+        [encodedParam_1, encodedParam_2] // set param 2 to greater than
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1232,7 +1140,7 @@ describe("RolesModifier", async () => {
     });
 
     it("reverts if value parameter is greater than allowed", async () => {
-      const { avatar, modifier, testContract, paramAllowed_1, paramAllowed_2 } =
+      const { avatar, modifier, testContract, encodedParam_1 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -1259,15 +1167,15 @@ describe("RolesModifier", async () => {
         ["uint256"],
         [99]
       );
-      const paramAllowed_lessThan =
-        await modifier.populateTransaction.setParameterAllowedValue(
-          1,
-          testContract.address,
-          "0x40c10f19",
-          1,
-          encodedParam_2,
-          encodedParam_2
-        );
+      // const paramAllowed_lessThan =
+      //   await modifier.populateTransaction.setParameterAllowedValue(
+      //     1,
+      //     testContract.address,
+      //     "0x40c10f19",
+      //     1,
+      //     encodedParam_2,
+      //     encodedParam_2
+      //   );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1275,12 +1183,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 2] // set param 2 to less than
+        [0, 2],
+        [encodedParam_1, encodedParam_2] // set param 2 to less than
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1298,7 +1204,7 @@ describe("RolesModifier", async () => {
     });
 
     it("executes if value parameter is less than allowed", async () => {
-      const { avatar, modifier, testContract, paramAllowed_1 } =
+      const { avatar, modifier, testContract, encodedParam_1 } =
         await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -1332,14 +1238,14 @@ describe("RolesModifier", async () => {
         ["uint256"],
         [99]
       );
-      const paramAllowed_lessThan =
-        await modifier.populateTransaction.setParameterCompValue(
-          1,
-          testContract.address,
-          "0x40c10f19",
-          1,
-          encodedParam_2
-        );
+      // const paramAllowed_lessThan =
+      //   await modifier.populateTransaction.setParameterCompValue(
+      //     1,
+      //     testContract.address,
+      //     "0x40c10f19",
+      //     1,
+      //     encodedParam_2
+      //   );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1347,12 +1253,10 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [true, true],
         [false, false],
-        [0, 2] // set param 2 to less than
+        [0, 2],
+        [encodedParam_1, encodedParam_2] // set param 2 to less than
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      await avatar.exec(modifier.address, 0, paramAllowed_lessThan.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1728,7 +1632,8 @@ describe("RolesModifier", async () => {
           "0x12345678",
           [true, true],
           [true, true],
-          [1, 1]
+          [1, 1],
+          ["0x", "0x"]
         )
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -1777,19 +1682,8 @@ describe("RolesModifier", async () => {
           SELECTOR,
           [true],
           [false],
-          [COMP_TYPE_EQ]
-        );
-
-      // turn scoping on
-      await modifier
-        .connect(owner)
-        .setParameterAllowedValue(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          0,
-          ethers.utils.defaultAbiCoder.encode(["uint256"], [2]),
-          true
+          [COMP_TYPE_EQ],
+          [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])]
         );
 
       // ngmi
@@ -1811,8 +1705,12 @@ describe("RolesModifier", async () => {
         AddressOne,
         "0x12345678",
         [true, true],
-        [true, true],
-        [1, 1]
+        [false, false],
+        [1, 1],
+        [
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
+        ]
       );
 
       await expect(await avatar.exec(modifier.address, 0, tx.data))
@@ -1822,8 +1720,12 @@ describe("RolesModifier", async () => {
           AddressOne,
           "0x12345678",
           [true, true],
-          [true, true],
-          [1, 1]
+          [false, false],
+          [1, 1],
+          [
+            ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
+            ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
+          ]
         );
     });
   });
@@ -1984,131 +1886,6 @@ describe("RolesModifier", async () => {
       )
         .to.emit(modifier, "AllowFunction")
         .withArgs(1, AddressOne, "0x12345678", true);
-    });
-  });
-
-  describe("setParameterAllowedValue()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await txSetup();
-      expect(
-        modifier.setParameterAllowedValue(
-          1,
-          AddressOne,
-          "0x12345678",
-          1,
-          "0xabcd",
-          true
-        )
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("sets different allowed value parameters", async () => {
-      const { modifier, testContract, owner, invoker } =
-        await setupRolesWithOwnerAndInvoker();
-
-      const ROLE_ID = 0;
-      const COMP_TYPE_EQ = 0;
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("fnWithTwoParams")
-      );
-      const EXEC_ARGS = (a: number, b: number) => [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData(
-          "fnWithTwoParams(uint256,uint256)",
-          [a, b]
-        ),
-        0,
-      ];
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-      await modifier
-        .connect(owner)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
-
-      await modifier
-        .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [false, true],
-          [false, false],
-          [COMP_TYPE_EQ, COMP_TYPE_EQ]
-        );
-
-      // should fail before setting an allowedValue -> compValue
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(...EXEC_ARGS(10, 20))
-      ).to.be.revertedWith("ParameterNotAllowed");
-
-      await modifier
-        .connect(owner)
-        .setParameterAllowedValue(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          1,
-          ethers.utils.defaultAbiCoder.encode(["uint256"], [10]),
-          true
-        );
-
-      // should fail because second param not allowed
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(...EXEC_ARGS(20, 20))
-      ).to.be.revertedWith("ParameterNotAllowed");
-
-      // should succeed with allowed value
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(...EXEC_ARGS(10, 10))
-      ).to.not.be.reverted;
-    });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setParameterAllowedValue(
-        1,
-        AddressOne,
-        "0x12345678",
-        1,
-        "0xabcd",
-        true
-      );
-      await expect(await avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "SetParameterAllowedValue")
-        .withArgs(1, AddressOne, "0x12345678", 1, "0xabcd", true);
-    });
-  });
-
-  describe("setParameterCompValue()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await txSetup();
-      expect(
-        modifier.setParameterCompValue(1, AddressOne, "0x12345678", 1, "0xabcd")
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setParameterCompValue(
-        1,
-        AddressOne,
-        "0x12345678",
-        1,
-        "0xabcd"
-      );
-      await expect(await avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "SetParameterCompValue")
-        .withArgs(1, AddressOne, "0x12345678", 1, "0xabcd");
     });
   });
 

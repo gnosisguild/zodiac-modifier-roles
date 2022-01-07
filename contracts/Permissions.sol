@@ -12,12 +12,8 @@ enum Clearance {
 enum Comparison {
     EqualTo,
     GreaterThan,
-    LessThan
-}
-
-struct Parameter {
-    mapping(bytes32 => bool) allowed;
-    bytes32 compValue;
+    LessThan,
+    OneOf
 }
 
 struct TargetAddress {
@@ -30,14 +26,18 @@ struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => uint256) functions;
-    mapping(bytes32 => Parameter) compValues;
+    mapping(bytes32 => bytes32) compValues;
+    mapping(bytes32 => bytes32[]) compValuesOneOf;
 }
 
 library Permissions {
     uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
-    // 60 bit mask
+    // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
-        uint256(0xfffffffffffffff << 186);
+        uint256(0x3fffffffffffffff << (62 + 124));
+
+    /// Arrays must be the same length
+    error ArraysDifferentLength();
 
     /// Function signature too short
     error FunctionSignatureTooShort();
@@ -57,14 +57,23 @@ library Permissions {
     /// Role not allowed to use bytes for parameter
     error ParameterNotAllowed();
 
+    /// Role not allowed to use bytes for parameter
+    error ParameterNotOneOfAllowed();
+
     /// Role not allowed to use bytes less than value for parameter
     error ParameterLessThanAllowed();
 
     /// Role not allowed to use bytes greater than value for parameter
     error ParameterGreaterThanAllowed();
 
-    // only multisend txs with an offset of 32 bytes are allowed
+    /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
+
+    /// OneOf Comparison must be set via dedicated function
+    error UnsuitableOneOfComparison();
+
+    /// Not possible to define gt/lt for Dynamic types
+    error UnsuitableRelativeComparison();
 
     /*
      *
@@ -139,7 +148,6 @@ library Permissions {
             revert FunctionSignatureTooShort();
         }
 
-        // CLEARANCE: levels 1 2 and 3 - checks
         /*
          * For each address we have three clearance checks:
          * Forbidden     - nothing was setup
@@ -160,14 +168,14 @@ library Permissions {
 
         //isFunctionCheck
         if (target.clearance == Clearance.FUNCTION) {
-            uint256 paramConfig = role.functions[
+            uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (paramConfig == FUNCTION_WHITELIST) {
+            if (scopeConfig == FUNCTION_WHITELIST) {
                 return;
             } else {
-                checkParameters(role, paramConfig, targetAddress, data);
+                checkParameters(role, scopeConfig, targetAddress, data);
             }
         }
     }
@@ -178,11 +186,11 @@ library Permissions {
     /// @param data the transaction data to check
     function checkParameters(
         Role storage role,
-        uint256 paramConfig,
+        uint256 scopeConfig,
         address targetAddress,
         bytes memory data
     ) public view {
-        if (paramConfig & IS_SCOPED_MASK == 0) {
+        if (scopeConfig & IS_SCOPED_MASK == 0) {
             // is there no single param scoped?
             // either config bug or unset
             // semantically the same, not allowed
@@ -190,48 +198,41 @@ library Permissions {
         }
 
         bytes4 functionSig = bytes4(data);
-        uint8 paramCount = unpackParamCount(paramConfig);
+        uint8 paramCount = unpackParamCount(scopeConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
                 bool isParamDynamic,
                 Comparison compType
-            ) = unpackParamEntry(paramConfig, i);
+            ) = unpackParamEntry(scopeConfig, i);
 
             if (!isParamScoped) {
                 continue;
             }
 
-            bool isAllowed;
+            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             bytes32 value;
-            bytes32 compValue;
-
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
-                compType = Comparison.EqualTo;
             } else {
                 value = pluckParamValue(data, i);
             }
 
-            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-            if (compType == Comparison.EqualTo) {
-                isAllowed = role.compValues[key].allowed[value];
+            if (compType != Comparison.OneOf) {
+                compare(compType, role.compValues[key], value);
             } else {
-                compValue = role.compValues[key].compValue;
+                compareOneOf(role.compValuesOneOf[key], value);
             }
-            compareParameterValues(compType, compValue, isAllowed, value);
         }
     }
 
-    // should this go inline?
-    function compareParameterValues(
+    function compare(
         Comparison compType,
         bytes32 compValue,
-        bool isAllowed,
         bytes32 value
     ) internal pure {
-        if (compType == Comparison.EqualTo && !isAllowed) {
+        if (compType == Comparison.EqualTo && value != compValue) {
             revert ParameterNotAllowed();
         } else if (compType == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
@@ -240,52 +241,144 @@ library Permissions {
         }
     }
 
+    function compareOneOf(bytes32[] storage compValue, bytes32 value)
+        internal
+        view
+    {
+        for (uint256 i = 0; i < compValue.length; i++) {
+            if (value == compValue[i]) return;
+        }
+        revert ParameterNotOneOfAllowed();
+    }
+
     /*
      *
      * SETTERS
      *
      */
-    function resetParamConfig(
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comparison[] memory paramCompType
-    ) external pure returns (uint256) {
-        uint8 paramCount = uint8(isParamScoped.length);
-        uint256 paramConfig = packParamCount(0, paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            paramConfig = packParamEntry(
-                paramConfig,
-                i,
-                isParamScoped[i],
-                isParamDynamic[i],
-                paramCompType[i]
-            );
+    function scopeFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] calldata isParamScoped,
+        bool[] calldata isParamDynamic,
+        Comparison[] calldata paramCompType,
+        bytes[] calldata paramCompValue
+    ) external {
+        if (
+            isParamScoped.length != isParamDynamic.length ||
+            isParamScoped.length != paramCompType.length ||
+            isParamScoped.length != paramCompValue.length
+        ) {
+            revert ArraysDifferentLength();
         }
-        return paramConfig;
+
+        for (uint256 i = 0; i < isParamDynamic.length; i++) {
+            if (isParamScoped[i]) {
+                enforceCompType(isParamDynamic[i], paramCompType[i]);
+            }
+        }
+
+        uint256 scopeConfig = resetScopeConfig(
+            isParamScoped,
+            isParamDynamic,
+            paramCompType
+        );
+
+        // set scopeConfig
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
+
+        // set respective compValues
+        for (uint8 i = 0; i < paramCompType.length; i++) {
+            role.compValues[
+                keyForCompValues(targetAddress, functionSig, i)
+            ] = maybeCompressCompValue(paramCompValue[i]);
+        }
     }
 
-    function setParamConfig(
-        uint256 prevParamConfig,
+    function scopeParameter(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
         uint8 paramIndex,
-        bool isScoped,
         bool isDynamic,
-        Comparison compType
-    ) external pure returns (uint256) {
-        if (prevParamConfig == FUNCTION_WHITELIST) prevParamConfig = 0;
-        uint8 prevParamCount = unpackParamCount(prevParamConfig);
+        Comparison compType,
+        bytes calldata compValue
+    ) external {
+        enforceCompType(isDynamic, compType);
 
-        uint8 nextParamCount = paramIndex + 1 > prevParamCount
-            ? paramIndex + 1
-            : prevParamCount;
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
+            paramIndex,
+            true,
+            isDynamic,
+            compType
+        );
+        role.functions[key] = scopeConfig;
 
-        return
-            packParamEntry(
-                packParamCount(prevParamConfig, nextParamCount),
-                paramIndex,
-                isScoped,
-                isDynamic,
-                compType
+        // set compValue
+        role.compValues[
+            keyForCompValues(targetAddress, functionSig, paramIndex)
+        ] = maybeCompressCompValue(compValue);
+    }
+
+    function scopeParameterAsOneOf(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        bytes[] calldata compValues
+    ) external {
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
+            paramIndex,
+            true,
+            isDynamic,
+            Comparison.OneOf
+        );
+        role.functions[key] = scopeConfig;
+
+        // set compValue
+        key = keyForCompValues(targetAddress, functionSig, paramIndex);
+
+        delete role.compValuesOneOf[key];
+        role.compValuesOneOf[key] = new bytes32[](compValues.length);
+
+        for (uint256 i = 0; i < compValues.length; i++) {
+            role.compValuesOneOf[key][i] = maybeCompressCompValue(
+                compValues[i]
             );
+        }
+    }
+
+    function unscopeParameter(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    ) external {
+        // set scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = setScopeConfig(
+            role.functions[key],
+            paramIndex,
+            false,
+            false,
+            Comparison(0)
+        );
+        role.functions[key] = scopeConfig;
+
+        // set compValue
+        key = keyForCompValues(targetAddress, functionSig, paramIndex);
+        delete role.compValues[key];
+        delete role.compValuesOneOf[key];
     }
 
     /*
@@ -346,6 +439,50 @@ library Permissions {
         }
     }
 
+    function resetScopeConfig(
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comparison[] memory paramCompType
+    ) internal pure returns (uint256) {
+        uint8 paramCount = uint8(isParamScoped.length);
+        uint256 scopeConfig = packParamCount(0, paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            scopeConfig = packParamEntry(
+                scopeConfig,
+                i,
+                isParamScoped[i],
+                isParamDynamic[i],
+                paramCompType[i]
+            );
+        }
+
+        return scopeConfig;
+    }
+
+    function setScopeConfig(
+        uint256 scopeConfig,
+        uint8 paramIndex,
+        bool isScoped,
+        bool isDynamic,
+        Comparison compType
+    ) internal pure returns (uint256) {
+        if (scopeConfig == FUNCTION_WHITELIST) scopeConfig = 0;
+        uint8 prevParamCount = unpackParamCount(scopeConfig);
+
+        uint8 nextParamCount = paramIndex + 1 > prevParamCount
+            ? paramIndex + 1
+            : prevParamCount;
+
+        return
+            packParamEntry(
+                packParamCount(scopeConfig, nextParamCount),
+                paramIndex,
+                isScoped,
+                isDynamic,
+                compType
+            );
+    }
+
     function packParamEntry(
         uint256 config,
         uint8 paramIndex,
@@ -358,23 +495,24 @@ library Permissions {
         // 62  bits -> isParamScoped
         // 62  bits -> isParamDynamic
         // 124 bits -> two bits for each compType 62*2 = 124
-        uint256 scopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 dynamicMask = 1 << (paramIndex + 124);
+        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
+        uint256 isDynamicMask = 1 << (paramIndex + 124);
         uint256 compTypeMask = 3 << (paramIndex * 2);
 
         if (isScoped) {
-            config |= scopedMask;
-            config |= uint256(compType) << (paramIndex * 2);
+            config |= isScopedMask;
         } else {
-            config &= ~scopedMask;
-            config &= ~compTypeMask;
+            config &= ~isScopedMask;
         }
 
-        if (isScoped && isDynamic) {
-            config |= dynamicMask;
+        if (isDynamic) {
+            config |= isDynamicMask;
         } else {
-            config &= ~dynamicMask;
+            config &= ~isDynamicMask;
         }
+
+        config &= ~compTypeMask;
+        config |= uint256(compType) << (paramIndex * 2);
 
         return config;
     }
@@ -415,6 +553,23 @@ library Permissions {
         return uint8(config >> 248);
     }
 
+    function enforceCompType(bool isDynamic, Comparison compType)
+        internal
+        pure
+    {
+        if (compType == Comparison.OneOf) {
+            revert UnsuitableOneOfComparison();
+        }
+
+        if (
+            isDynamic &&
+            (compType == Comparison.GreaterThan ||
+                compType == Comparison.LessThan)
+        ) {
+            revert UnsuitableRelativeComparison();
+        }
+    }
+
     function keyForFunctions(address targetAddress, bytes4 functionSig)
         public
         pure
@@ -432,5 +587,14 @@ library Permissions {
         // fits in 32 bytes
         return
             bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
+    }
+
+    function maybeCompressCompValue(bytes calldata compValue)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            compValue.length > 32 ? keccak256(compValue) : bytes32(compValue);
     }
 }
