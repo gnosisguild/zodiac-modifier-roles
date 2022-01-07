@@ -32,9 +32,9 @@ struct Role {
 
 library Permissions {
     uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
-    // 60 bit mask
+    // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
-        uint256(0xfffffffffffffff << 186);
+        uint256(0x3fffffffffffffff << (62 + 124));
 
     /// Function signature too short
     error FunctionSignatureTooShort();
