@@ -251,7 +251,7 @@ contract Roles is Modifier {
             roles[role],
             targetAddress,
             functionSig,
-            paramIndex,            
+            paramIndex,
             isDynamic,
             compType,
             compValue
@@ -286,7 +286,7 @@ contract Roles is Modifier {
             roles[role],
             targetAddress,
             functionSig,
-            paramIndex,            
+            paramIndex,
             isDynamic,
             compValues
         );

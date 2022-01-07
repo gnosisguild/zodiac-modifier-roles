@@ -253,7 +253,7 @@ library Permissions {
      * SETTERS
      *
      */
-     function scopeFunction(
+    function scopeFunction(
         Role storage role,
         address targetAddress,
         bytes4 functionSig,
@@ -262,7 +262,6 @@ library Permissions {
         Comparison[] calldata paramCompType,
         bytes[] calldata paramCompValue
     ) external {
-        
         require(
             isParamScoped.length == isParamDynamic.length,
             "Mismatch: isParamScoped and isParamDynamic length"
@@ -288,7 +287,7 @@ library Permissions {
             ] = paramCompValue[i].length > 32
                 ? keccak256(paramCompValue[i])
                 : bytes32(paramCompValue[i]);
-        }        
+        }
     }
 
     function scopeParameter(
@@ -300,7 +299,7 @@ library Permissions {
         Comparison compType,
         bytes calldata compValue
     ) external {
-         if (compType == Comparison.OneOf) {
+        if (compType == Comparison.OneOf) {
             revert OneOfNotAllowed();
         }
 
@@ -339,11 +338,7 @@ library Permissions {
         );
 
         // set compValue
-        bytes32 key = keyForCompValues(
-            targetAddress,
-            functionSig,
-            paramIndex
-        );
+        bytes32 key = keyForCompValues(targetAddress, functionSig, paramIndex);
 
         delete role.compValuesOneOf[key];
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
@@ -369,18 +364,13 @@ library Permissions {
             false,
             Comparison(0)
         );
-        
+
         // set compValue
-        bytes32 key = keyForCompValues(
-            targetAddress,
-            functionSig,
-            paramIndex
-        );
+        bytes32 key = keyForCompValues(targetAddress, functionSig, paramIndex);
 
         delete role.compValues[key];
         delete role.compValuesOneOf[key];
     }
-    
 
     function resetScopeConfig(
         Role storage role,
