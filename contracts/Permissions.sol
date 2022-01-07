@@ -272,8 +272,8 @@ library Permissions {
             "Mismatch: isParamScoped and paramCompType length"
         );
 
-        for(uint256 i = 0; i < paramCompType.length; i++){
-            if(paramCompType[i] == Comparison.OneOf){
+        for (uint256 i = 0; i < paramCompType.length; i++) {
+            if (paramCompType[i] == Comparison.OneOf) {
                 revert SettingOneOfNotAllowedInThisFunction();
             }
         }

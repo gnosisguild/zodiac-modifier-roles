@@ -218,7 +218,6 @@ contract Roles is Modifier {
             paramCompType,
             paramCompValue
         );
-
         emit ScopeFunction(
             role,
             targetAddress,
