@@ -209,17 +209,6 @@ contract Roles is Modifier {
         bool[] calldata isParamDynamic,
         Comparison[] calldata paramCompType
     ) external onlyOwner {
-        // 24kb
-        // require(
-        //     isParamScoped.length == isParamDynamic.length,
-        //     "Mismatch: isParamScoped and isParamDynamic length"
-        // );
-
-        // require(
-        //     isParamScoped.length == paramCompType.length,
-        //     "Mismatch: isParamScoped and paramCompType length"
-        // );
-
         require(
             isParamScoped.length == isParamDynamic.length &&
                 isParamScoped.length == paramCompType.length,
