@@ -44,6 +44,20 @@ contract Roles is Modifier {
         bool isDynamic,
         Comparison compType
     );
+    event ScopeParameterAsOneOf(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        bytes[] compValues
+    );
+    event UnscopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    );
 
     event RolesModSetup(
         address indexed initiator,
@@ -274,6 +288,14 @@ contract Roles is Modifier {
             isDynamic,
             compValues
         );
+        emit ScopeParameterAsOneOf(
+            role,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            isDynamic,
+            compValues
+        );
     }
 
     function unscopeParameter(
@@ -288,6 +310,7 @@ contract Roles is Modifier {
             functionSig,
             paramIndex
         );
+        emit UnscopeParameter(role, targetAddress, functionSig, paramIndex);
     }
 
     /// @dev Assigns and revokes roles to a given module.
