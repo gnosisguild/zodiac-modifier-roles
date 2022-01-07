@@ -66,11 +66,13 @@ library Permissions {
     /// Role not allowed to use bytes greater than value for parameter
     error ParameterGreaterThanAllowed();
 
-    // only multisend txs with an offset of 32 bytes are allowed
+    /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
+    /// OneOf Comparison must be set via dedicated function
     error UnsuitableOneOfComparison();
 
+    /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
 
     /*
