@@ -146,7 +146,6 @@ library Permissions {
             revert FunctionSignatureTooShort();
         }
 
-        // CLEARANCE: levels 1 2 and 3 - checks
         /*
          * For each address we have three clearance checks:
          * Forbidden     - nothing was setup
@@ -556,7 +555,6 @@ library Permissions {
         internal
         pure
     {
-        // OneOf comparison must be set explicitly, via scopeParameterAsOneOf
         if (compType == Comparison.OneOf) {
             revert UnsuitableOneOfComparison();
         }
@@ -589,11 +587,6 @@ library Permissions {
             bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
     }
 
-    /*
-     *
-     * ALL COMPVALUE STORAGE INSERTS ARE TO PIPE THRU THIS FUNCTION
-     *
-     */
     function maybeCompressCompValue(bytes calldata compValue)
         internal
         pure
