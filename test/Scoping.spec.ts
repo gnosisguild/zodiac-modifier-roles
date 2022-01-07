@@ -625,6 +625,6 @@ describe("Scoping", async () => {
       );
 
     await expect(invoke(421)).to.not.be.reverted;
-    await expect(invoke(419)).to.be.revertedWith("ParameterLessThanAllowed");
+    await expect(invoke(419)).to.be.revertedWith("ParameterLessThanAllowed()");
   });
 });
