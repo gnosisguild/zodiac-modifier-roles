@@ -18,6 +18,7 @@ contract TestContract {
     event FnWithSingleParam(uint256);
     event FnWithTwoParams(uint256, uint256);
     event FnWithThreeParams(uint256, uint256, uint256);
+    event FnWithTwoMixedParams(bool, string);
 
     receive() external payable {
         emit Receive();
@@ -55,6 +56,10 @@ contract TestContract {
 
     function fnWithTwoParams(uint256 a, uint256 b) public {
         emit FnWithTwoParams(a, b);
+    }
+
+    function fnWithTwoMixedParams(bool a, string calldata s) public {
+        emit FnWithTwoMixedParams(a, s);
     }
 
     function fnWithThreeParams(
