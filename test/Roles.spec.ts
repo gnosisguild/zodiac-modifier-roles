@@ -115,73 +115,6 @@ describe("RolesModifier", async () => {
         "This is an input that is larger than 32 bytes and must be scanned for correctness",
       ]
     );
-    // const paramAllowed_3 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     0,
-    //     encodedParam_3,
-    //     true
-    //   );
-    // const paramAllowed_4 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     1,
-    //     encodedParam_4,
-    //     true
-    //   );
-    // const paramAllowed_5 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     2,
-    //     encodedParam_5,
-    //     true
-    //   );
-    // const paramAllowed_6 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     3,
-    //     encodedParam_6,
-    //     true
-    //   );
-    // const paramAllowed_7 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     4,
-    //     encodedParam_7,
-    //     true
-    //   );
-    // const paramAllowed_8 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     5,
-    //     encodedParam_8,
-    //     true
-    //   );
-    // const paramAllowed_9 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x273454bf",
-    //     6,
-    //     encodedParam_9,
-    //     true
-    //   );
-    const mint = await baseAvatar.testContract.populateTransaction.mint(
-      user1.address,
-      99
-    );
     const tx_1 = buildContractCall(
       baseAvatar.testContract,
       "mint",
@@ -607,9 +540,6 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
-      // await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      // await avatar.exec(modifier.address, 0, paramAllowed_2.data);
-
       const mint = await testContract.populateTransaction.mint(
         user1.address,
         98
@@ -661,9 +591,6 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2]
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
-
-      // await avatar.exec(modifier.address, 0, paramAllowed_1.data);
-      // await avatar.exec(modifier.address, 0, paramAllowed_2.data);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
