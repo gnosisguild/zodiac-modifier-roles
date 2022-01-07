@@ -51,6 +51,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -74,17 +75,14 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 1, false, 0);
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         1,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [4]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
 
     await expect(
@@ -104,6 +102,7 @@ describe("Scoping", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
+    const COMP_EQ = 0;
     const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
@@ -119,32 +118,26 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 0, false, 0);
-
-    await modifier
-      .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 1, false, 0);
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [4]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
 
     await modifier
       .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         1,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [5]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [5])
       );
 
     const { data: dataFail } =
@@ -186,6 +179,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -197,17 +191,14 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 0, false, 0);
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
     await expect(
@@ -245,6 +236,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -256,17 +248,14 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 0, false, 0);
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
     await expect(
@@ -303,6 +292,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -320,17 +310,14 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 0, false, 0);
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
     await expect(
@@ -367,6 +354,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -389,18 +377,8 @@ describe("Scoping", async () => {
         SELECTOR,
         [false, true, false],
         [false, false, false],
-        [0, 0, 0]
-      );
-
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        1,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7]),
-        true
+        [COMP_EQ, COMP_EQ, COMP_EQ],
+        ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"]
       );
 
     await expect(
@@ -418,16 +396,14 @@ describe("Scoping", async () => {
     // set last param also as scoped
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 2, false, 0);
-    await modifier
-      .connect(owner)
-      .setParameterAllowedValue(
+      .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         2,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [8]),
-        true
+        false,
+        COMP_EQ,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [8])
       );
 
     // should account for last param
@@ -477,6 +453,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -488,7 +465,15 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeParameter(ROLE_ID, testContract.address, SELECTOR, 0, false, 0);
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        false,
+        COMP_EQ,
+        "0x"
+      );
 
     await modifier
       .connect(owner)
@@ -498,7 +483,8 @@ describe("Scoping", async () => {
         SELECTOR,
         [false, false, false],
         [false, false, false],
-        [0, 0, 0]
+        [0, 0, 0],
+        ["0x", "0x", "0x"]
       );
 
     await expect(
@@ -523,6 +509,7 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
+    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -540,7 +527,8 @@ describe("Scoping", async () => {
         SELECTOR,
         [true, true, false],
         [false, false, false],
-        [0, 0, 0]
+        [0, 0, 0],
+        ["0x", "0x", "0x"]
       );
 
     await modifier

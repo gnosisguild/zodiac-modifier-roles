@@ -12,12 +12,8 @@ enum Clearance {
 enum Comparison {
     EqualTo,
     GreaterThan,
-    LessThan
-}
-
-struct Parameter {
-    mapping(bytes32 => bool) allowed;
-    bytes32 compValue;
+    LessThan,
+    OneOf
 }
 
 struct TargetAddress {
@@ -30,7 +26,8 @@ struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => uint256) functions;
-    mapping(bytes32 => Parameter) compValues;
+    mapping(bytes32 => bytes32) compValues;
+    mapping(bytes32 => bytes32[]) compValuesOneOf;
 }
 
 library Permissions {
@@ -57,6 +54,9 @@ library Permissions {
     /// Role not allowed to use bytes for parameter
     error ParameterNotAllowed();
 
+    /// Role not allowed to use bytes for parameter
+    error ParameterNotOneOfAllowed();
+
     /// Role not allowed to use bytes less than value for parameter
     error ParameterLessThanAllowed();
 
@@ -65,6 +65,9 @@ library Permissions {
 
     // only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
+
+    // must call scopeParameterAsOne
+    error OneOfNotAllowed();
 
     /*
      *
@@ -203,35 +206,30 @@ library Permissions {
                 continue;
             }
 
-            bool isAllowed;
+            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             bytes32 value;
-            bytes32 compValue;
-
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
-                compType = Comparison.EqualTo;
             } else {
                 value = pluckParamValue(data, i);
             }
 
-            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-            if (compType == Comparison.EqualTo) {
-                isAllowed = role.compValues[key].allowed[value];
+            compType = coerceCompType(compType, isParamDynamic);
+
+            if (compType != Comparison.OneOf) {
+                compare(compType, role.compValues[key], value);
             } else {
-                compValue = role.compValues[key].compValue;
+                compareOneOf(role.compValuesOneOf[key], value);
             }
-            compareParameterValues(compType, compValue, isAllowed, value);
         }
     }
 
-    // should this go inline?
-    function compareParameterValues(
+    function compare(
         Comparison compType,
         bytes32 compValue,
-        bool isAllowed,
         bytes32 value
     ) internal pure {
-        if (compType == Comparison.EqualTo && !isAllowed) {
+        if (compType == Comparison.EqualTo && value != compValue) {
             revert ParameterNotAllowed();
         } else if (compType == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
@@ -240,16 +238,29 @@ library Permissions {
         }
     }
 
+    function compareOneOf(bytes32[] storage compValue, bytes32 value)
+        internal
+        view
+    {
+        for (uint256 i = 0; i < compValue.length; i++) {
+            if (value == compValue[i]) return;
+        }
+        revert ParameterNotOneOfAllowed();
+    }
+
     /*
      *
      * SETTERS
      *
      */
     function resetScopeConfig(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType
-    ) external pure returns (uint256) {
+    ) external {
         uint8 paramCount = uint8(isParamScoped.length);
         uint256 scopeConfig = packParamCount(0, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
@@ -261,15 +272,24 @@ library Permissions {
                 paramCompType[i]
             );
         }
-        return scopeConfig;
+
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
     }
 
     function setScopeConfig(
-        uint256 prevScopeConfig,
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
         uint8 paramIndex,
+        bool isScoped,
         bool isDynamic,
         Comparison compType
-    ) external pure returns (uint256) {
+    ) external {
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+
+        uint256 prevScopeConfig = role.functions[key];
         if (prevScopeConfig == FUNCTION_WHITELIST) prevScopeConfig = 0;
         uint8 prevParamCount = unpackParamCount(prevScopeConfig);
 
@@ -277,38 +297,14 @@ library Permissions {
             ? paramIndex + 1
             : prevParamCount;
 
-        return
-            packParamEntry(
-                packParamCount(prevScopeConfig, nextParamCount),
-                paramIndex,
-                true,
-                isDynamic,
-                compType
-            );
-    }
-
-    function unsetScopeConfig(uint256 prevScopeConfig, uint8 paramIndex)
-        external
-        pure
-        returns (uint256)
-    {
-        /*
-         * Note scoping single parameter in a previously allowed function makes sense
-         * the opposite doesn't
-         */
-        require(
-            prevScopeConfig != FUNCTION_WHITELIST,
-            "Unsetting param in whitelisted function"
+        uint256 nextScopeConfig = packParamEntry(
+            packParamCount(prevScopeConfig, nextParamCount),
+            paramIndex,
+            isScoped,
+            isDynamic,
+            compType
         );
-
-        return
-            packParamEntry(
-                prevScopeConfig,
-                paramIndex,
-                false,
-                false,
-                Comparison(0)
-            );
+        role.functions[key] = nextScopeConfig;
     }
 
     /*
@@ -437,6 +433,22 @@ library Permissions {
 
     function unpackParamCount(uint256 config) internal pure returns (uint8) {
         return uint8(config >> 248);
+    }
+
+    function coerceCompType(Comparison compType, bool isDynamic)
+        internal
+        pure
+        returns (Comparison)
+    {
+        if (
+            isDynamic &&
+            (compType == Comparison.GreaterThan ||
+                compType == Comparison.LessThan)
+        ) {
+            return Comparison.EqualTo;
+        }
+
+        return compType;
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
