@@ -559,11 +559,7 @@ library Permissions {
         pure
         returns (Comparison)
     {
-        if (
-            isDynamic &&
-            (compType == Comparison.GreaterThan ||
-                compType == Comparison.LessThan)
-        ) {
+        if (isDynamic && compType != Comparison.OneOf) {
             return Comparison.EqualTo;
         }
 
