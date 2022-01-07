@@ -2,6 +2,11 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
+const COMP_EQUAL = 0;
+const COMP_GREATER = 1;
+const COMP_LESS = 2;
+const COMP_ONE_OF = 3;
+
 describe("Scoping", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -51,7 +56,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -81,7 +85,7 @@ describe("Scoping", async () => {
         SELECTOR,
         1,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
 
@@ -102,7 +106,6 @@ describe("Scoping", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const COMP_EQ = 0;
     const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
@@ -124,7 +127,7 @@ describe("Scoping", async () => {
         SELECTOR,
         0,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
 
@@ -136,7 +139,7 @@ describe("Scoping", async () => {
         SELECTOR,
         1,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [5])
       );
 
@@ -179,7 +182,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -197,7 +199,7 @@ describe("Scoping", async () => {
         SELECTOR,
         0,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
@@ -236,7 +238,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -254,7 +255,7 @@ describe("Scoping", async () => {
         SELECTOR,
         0,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
@@ -292,7 +293,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -316,7 +316,7 @@ describe("Scoping", async () => {
         SELECTOR,
         0,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
 
@@ -354,7 +354,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -377,7 +376,7 @@ describe("Scoping", async () => {
         SELECTOR,
         [false, true, false],
         [false, false, false],
-        [COMP_EQ, COMP_EQ, COMP_EQ],
+        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
         ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"]
       );
 
@@ -402,7 +401,7 @@ describe("Scoping", async () => {
         SELECTOR,
         2,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [8])
       );
 
@@ -453,7 +452,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -471,7 +469,7 @@ describe("Scoping", async () => {
         SELECTOR,
         0,
         false,
-        COMP_EQ,
+        COMP_EQUAL,
         "0x"
       );
 
@@ -509,7 +507,6 @@ describe("Scoping", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
-    const COMP_EQ = 0;
 
     await modifier
       .connect(owner)
@@ -566,5 +563,68 @@ describe("Scoping", async () => {
           0
         )
     ).to.be.revertedWith("FunctionNotAllowed()");
+  });
+
+  it("update compType should work on already scoped parameter", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+
+    const invoke = async (param: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(param))
+            .data,
+          0
+        );
+
+    // sanity
+    await expect(invoke(2021)).to.not.be.reverted;
+
+    modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        false,
+        COMP_LESS,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [420])
+      );
+
+    await expect(invoke(421)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+    await expect(invoke(419)).to.not.be.reverted;
+
+    // FLIP THE SAME PARAM to greater
+    modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        false,
+        COMP_GREATER,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [420])
+      );
+
+    await expect(invoke(421)).to.not.be.reverted;
+    await expect(invoke(419)).to.be.revertedWith("ParameterLessThanAllowed");
   });
 });
