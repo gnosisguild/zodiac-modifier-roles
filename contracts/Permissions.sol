@@ -36,6 +36,9 @@ library Permissions {
     uint256 internal constant IS_SCOPED_MASK =
         uint256(0x3fffffffffffffff << (62 + 124));
 
+    /// Arrays must be the same length
+    error ArraysDifferentLength();
+
     /// Function signature too short
     error FunctionSignatureTooShort();
 
@@ -66,8 +69,9 @@ library Permissions {
     // only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
-    // must call scopeParameterAsOne
-    error SettingOneOfNotAllowedInThisFunction();
+    error UnsuitableOneOfComparison();
+
+    error UnsuitableRelativeComparison();
 
     /*
      *
@@ -214,8 +218,6 @@ library Permissions {
                 value = pluckParamValue(data, i);
             }
 
-            compType = coerceCompType(compType, isParamDynamic);
-
             if (compType != Comparison.OneOf) {
                 compare(compType, role.compValues[key], value);
             } else {
@@ -262,19 +264,17 @@ library Permissions {
         Comparison[] calldata paramCompType,
         bytes[] calldata paramCompValue
     ) external {
-        require(
-            isParamScoped.length == isParamDynamic.length,
-            "Mismatch: isParamScoped and isParamDynamic length"
-        );
+        if (
+            isParamScoped.length != isParamDynamic.length ||
+            isParamScoped.length != paramCompType.length ||
+            isParamScoped.length != paramCompValue.length
+        ) {
+            revert ArraysDifferentLength();
+        }
 
-        require(
-            isParamScoped.length == paramCompType.length,
-            "Mismatch: isParamScoped and paramCompType length"
-        );
-
-        for (uint256 i = 0; i < paramCompType.length; i++) {
-            if (paramCompType[i] == Comparison.OneOf) {
-                revert SettingOneOfNotAllowedInThisFunction();
+        for (uint256 i = 0; i < isParamDynamic.length; i++) {
+            if (isParamScoped[i]) {
+                enforceCompType(isParamDynamic[i], paramCompType[i]);
             }
         }
 
@@ -308,9 +308,7 @@ library Permissions {
         Comparison compType,
         bytes calldata compValue
     ) external {
-        if (compType == Comparison.OneOf) {
-            revert SettingOneOfNotAllowedInThisFunction();
-        }
+        enforceCompType(isDynamic, compType);
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
@@ -554,16 +552,22 @@ library Permissions {
         return uint8(config >> 248);
     }
 
-    function coerceCompType(Comparison compType, bool isDynamic)
+    function enforceCompType(bool isDynamic, Comparison compType)
         internal
         pure
-        returns (Comparison)
     {
-        if (isDynamic && compType != Comparison.OneOf) {
-            return Comparison.EqualTo;
+        // OneOf comparison must be set explicitly, via scopeParameterAsOneOf
+        if (compType == Comparison.OneOf) {
+            revert UnsuitableOneOfComparison();
         }
 
-        return compType;
+        if (
+            isDynamic &&
+            (compType == Comparison.GreaterThan ||
+                compType == Comparison.LessThan)
+        ) {
+            revert UnsuitableRelativeComparison();
+        }
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)

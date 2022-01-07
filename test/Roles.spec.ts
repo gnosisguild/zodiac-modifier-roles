@@ -1705,7 +1705,7 @@ describe("RolesModifier", async () => {
         AddressOne,
         "0x12345678",
         [true, true],
-        [true, true],
+        [false, false],
         [1, 1],
         [
           ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
@@ -1720,7 +1720,7 @@ describe("RolesModifier", async () => {
           AddressOne,
           "0x12345678",
           [true, true],
-          [true, true],
+          [false, false],
           [1, 1],
           [
             ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),

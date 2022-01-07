@@ -44,7 +44,7 @@ contract Roles is Modifier {
         bool isDynamic,
         Comparison compType
     );
-  
+
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
