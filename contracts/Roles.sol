@@ -27,7 +27,7 @@ contract Roles is Modifier {
     );
     event RevokeTarget(uint16 role, address targetAddress);
 
-    event ScopeWhitelistFunction(
+    event ScopeAllowFunction(
         uint16 role,
         address targetAddress,
         bytes4 selector
@@ -193,15 +193,15 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
     /// @param functionSig Function signature to be allowed/disallowed.
-    function scopeWhitelistFunction(
+    function scopeAllowFunction(
         uint16 role,
         address targetAddress,
         bytes4 functionSig
     ) external onlyOwner {
         roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = Permissions.FUNCTION_WHITELIST;
-        emit ScopeWhitelistFunction(role, targetAddress, functionSig);
+        ] = Permissions.SCOPE_WHITELIST;
+        emit ScopeAllowFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Disallows a specific function, on a specific address from being called.
@@ -218,7 +218,7 @@ contract Roles is Modifier {
         roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
         ] = 0;
-        emit ScopeWhitelistFunction(role, targetAddress, functionSig);
+        emit ScopeAllowFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Sets and enforces scoping for an allowed function, on a specific address

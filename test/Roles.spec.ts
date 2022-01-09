@@ -1811,11 +1811,11 @@ describe("RolesModifier", async () => {
     });
   });
 
-  describe("scopeWhitelistFunction()", () => {
+  describe("scopeAllowFunction()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       expect(
-        modifier.scopeWhitelistFunction(1, AddressOne, "0x12345678")
+        modifier.scopeAllowFunction(1, AddressOne, "0x12345678")
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -1846,7 +1846,7 @@ describe("RolesModifier", async () => {
       // allow the function
       await modifier
         .connect(owner)
-        .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
       // gmi
       await expect(
@@ -1868,11 +1868,9 @@ describe("RolesModifier", async () => {
       const { modifier, owner } = await setupRolesWithOwnerAndInvoker();
 
       await expect(
-        modifier
-          .connect(owner)
-          .scopeWhitelistFunction(1, AddressOne, "0x12345678")
+        modifier.connect(owner).scopeAllowFunction(1, AddressOne, "0x12345678")
       )
-        .to.emit(modifier, "ScopeWhitelistFunction")
+        .to.emit(modifier, "ScopeAllowFunction")
         .withArgs(1, AddressOne, "0x12345678");
     });
   });

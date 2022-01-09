@@ -31,7 +31,7 @@ struct Role {
 }
 
 library Permissions {
-    uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
+    uint256 public constant SCOPE_WHITELIST = 2**256 - 1;
     // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
         uint256(0x3fffffffffffffff << (62 + 124));
@@ -172,7 +172,7 @@ library Permissions {
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (scopeConfig == FUNCTION_WHITELIST) {
+            if (scopeConfig == SCOPE_WHITELIST) {
                 return;
             } else {
                 checkParameters(role, scopeConfig, targetAddress, data);
@@ -466,7 +466,7 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        if (scopeConfig == FUNCTION_WHITELIST) scopeConfig = 0;
+        if (scopeConfig == SCOPE_WHITELIST) scopeConfig = 0;
         uint8 prevParamCount = unpackParamCount(scopeConfig);
 
         uint8 nextParamCount = paramIndex + 1 > prevParamCount

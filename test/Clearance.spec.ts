@@ -127,7 +127,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -167,7 +167,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -219,7 +219,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -257,7 +257,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -308,11 +308,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SEL_DONOTHING);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DONOTHING);
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier

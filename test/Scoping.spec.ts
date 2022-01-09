@@ -73,7 +73,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -198,7 +198,7 @@ describe("Scoping", async () => {
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await modifier
       .connect(owner)
@@ -475,7 +475,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const invoke = async (param: number) =>
       modifier
