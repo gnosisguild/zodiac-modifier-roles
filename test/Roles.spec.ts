@@ -1363,6 +1363,97 @@ describe("RolesModifier", async () => {
           )
       ).to.be.revertedWith("NoMembership()");
     });
+
+    it("executes a call with multisend tx", async () => {
+      const {
+        avatar,
+        modifier,
+        testContract,
+        encodedParam_1,
+        encodedParam_2,
+        encodedParam_3,
+        encodedParam_4,
+        encodedParam_5,
+        encodedParam_6,
+        encodedParam_7,
+        encodedParam_8,
+        encodedParam_9,
+        tx_1,
+        tx_2,
+        tx_3,
+      } = await txSetup();
+      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const multisend = await MultiSend.deploy();
+
+      const ROLE_ID = 1;
+
+      const assign = await modifier.populateTransaction.assignRoles(
+        user1.address,
+        [ROLE_ID],
+        [true]
+      );
+      await avatar.exec(modifier.address, 0, assign.data);
+
+      const multiSendTarget = await modifier.populateTransaction.setMultiSend(
+        multisend.address
+      );
+      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+
+      const allowTargetPartially =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address,
+          false,
+          false
+        );
+      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
+
+      const paramScoped = await modifier.populateTransaction.scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        "0x40c10f19",
+        [true, true],
+        [false, false],
+        [0, 0],
+        [encodedParam_1, encodedParam_2]
+      );
+      await avatar.exec(modifier.address, 0, paramScoped.data);
+
+      const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        "0x273454bf",
+        [true, true, true, true, true, true, true],
+        [true, false, true, false, false, true, true],
+        [0, 0, 0, 0, 0, 0, 0],
+        [
+          encodedParam_3,
+          encodedParam_4,
+          encodedParam_5,
+          encodedParam_6,
+          encodedParam_7,
+          encodedParam_8,
+          encodedParam_9,
+        ]
+      );
+      await avatar.exec(modifier.address, 0, paramScoped_2.data);
+
+      const multiTx = buildMultiSendSafeTx(
+        multisend,
+        [tx_1, tx_2, tx_3, tx_1, tx_2, tx_3],
+        0
+      );
+
+      await expect(
+        modifier.execTransactionWithRoleReturnData(
+          multisend.address,
+          0,
+          multiTx.data,
+          1,
+          ROLE_ID
+        )
+      ).to.emit(testContract, "TestDynamic");
+    });
   });
   describe("setMultiSend()", () => {
     it("reverts if not authorized", async () => {
