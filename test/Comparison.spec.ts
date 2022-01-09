@@ -48,6 +48,74 @@ describe("Comparison", async () => {
   const COMP_LESS = 2;
   const COMP_ONE_OF = 3;
 
+  it("scopeFunction throws on input length mistmatch", async () => {
+    const { modifier, testContract, owner } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithTwoMixedParams")
+    );
+
+    const IS_DYNAMIC = true;
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [true, false],
+          [!IS_DYNAMIC, IS_DYNAMIC, IS_DYNAMIC],
+          [COMP_EQUAL, COMP_EQUAL],
+          ["0x", "0x"]
+        )
+    ).to.be.revertedWith("ArraysDifferentLength()");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [true, false],
+          [!IS_DYNAMIC, IS_DYNAMIC],
+          [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
+          ["0x", "0x"]
+        )
+    ).to.be.revertedWith("ArraysDifferentLength()");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [true, false],
+          [!IS_DYNAMIC, IS_DYNAMIC],
+          [COMP_EQUAL, COMP_EQUAL],
+          ["0x", "0x", "0x"]
+        )
+    ).to.be.revertedWith("ArraysDifferentLength()");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [true, false],
+          [!IS_DYNAMIC, IS_DYNAMIC],
+          [COMP_EQUAL, COMP_EQUAL],
+          ["0x", "0x"]
+        )
+    ).to.not.be.reverted;
+  });
+
   it("enforces compType for scopeFunction", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
@@ -208,8 +276,50 @@ describe("Comparison", async () => {
     ).to.not.be.reverted;
   });
 
-  // for the next PR
-  it("passes an eq comparison", async () => {});
+  it("passes an eq comparison", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+    const IS_DYNAMIC = true;
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a)).data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.solidityPack(["uint256"], [123])
+      );
+
+    await expect(invoke(321)).to.be.revertedWith("ParameterNotAllowed()");
+    await expect(invoke(123)).to.not.be.reverted;
+  });
   it("passes an eq comparison for dynamic", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -258,7 +368,65 @@ describe("Comparison", async () => {
       "ParameterNotAllowed()"
     );
   });
-  it("re-scopes an eq compType");
+  it("re-scopes an eq compType", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+    const IS_DYNAMIC = true;
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a)).data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.solidityPack(["uint256"], [123])
+      );
+
+    await expect(invoke(321)).to.be.revertedWith("ParameterNotAllowed()");
+    await expect(invoke(123)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_GREATER,
+        ethers.utils.solidityPack(["uint256"], [123])
+      );
+
+    await expect(invoke(123)).to.be.revertedWith("ParameterLessThanAllowed()");
+    await expect(invoke(124)).to.not.be.reverted;
+  });
 
   it("passes a oneOf comparison", async () => {
     const { modifier, testContract, owner, invoker } =
@@ -360,12 +528,134 @@ describe("Comparison", async () => {
       "ParameterNotOneOfAllowed()"
     );
   });
-  it("re-scopes a oneOf comparison to simple compType");
-  it("re-scopes simple compType to oneOf");
+  it("re-scopes a oneOf comparison to simple compType", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
 
-  it("should pass a gt/lt comparison");
-  it("should update a gt/lt comparison");
-  it("should coerce compType eq for dynamic");
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+    const IS_DYNAMIC = true;
 
-  it("mixed misc comparisons");
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a)).data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameterAsOneOf(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        [
+          ethers.utils.solidityPack(["uint256"], [501]),
+          ethers.utils.solidityPack(["uint256"], [602]),
+          ethers.utils.solidityPack(["uint256"], [703]),
+        ]
+      );
+
+    await expect(invoke(501)).to.not.be.reverted;
+    await expect(invoke(602)).to.not.be.reverted;
+    await expect(invoke(703)).to.not.be.reverted;
+    await expect(invoke(123)).to.be.revertedWith("ParameterNotOneOfAllowed()");
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.solidityPack(["uint256"], [123])
+      );
+
+    await expect(invoke(602)).to.be.revertedWith("ParameterNotAllowed()");
+    await expect(invoke(123)).to.not.be.reverted;
+  });
+
+  it("should pass a gt/lt comparison", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+    const IS_DYNAMIC = true;
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a)).data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_GREATER,
+        ethers.utils.solidityPack(["uint256"], [1234])
+      );
+
+    await expect(invoke(1233)).to.be.revertedWith("ParameterLessThanAllowed()");
+    await expect(invoke(1234)).to.be.revertedWith("ParameterLessThanAllowed()");
+    await expect(invoke(1235)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_LESS,
+        ethers.utils.solidityPack(["uint256"], [2345])
+      );
+
+    await expect(invoke(2346)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+    await expect(invoke(2345)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+    await expect(invoke(2344)).to.not.be.reverted;
+  });
 });
