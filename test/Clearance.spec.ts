@@ -59,7 +59,9 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data, 0)
     ).to.be.revertedWith("TargetAddressNotAllowed()");
 
-    await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
+    await modifier
+      .connect(owner)
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     await expect(
       modifier
@@ -86,7 +88,9 @@ describe("Clearance", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
+    await modifier
+      .connect(owner)
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -119,7 +123,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -159,7 +163,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -194,7 +198,9 @@ describe("Clearance", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
+    await modifier
+      .connect(owner)
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -209,7 +215,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -247,7 +253,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -265,7 +271,9 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
     ).to.be.revertedWith("FunctionNotAllowed()");
 
-    await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
+    await modifier
+      .connect(owner)
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     await expect(
       modifier
@@ -296,7 +304,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)

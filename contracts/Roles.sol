@@ -13,15 +13,18 @@ contract Roles is Modifier {
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
 
-    event SetCanDelegateToTarget(
+    event AllowTarget(
         uint16 role,
         address targetAddress,
-        bool enabled
+        bool canSend,
+        bool canDelegate
     );
-    event SetCanSendToTarget(uint16 role, address targetAddress, bool enabled);
-
-    event AllowTarget(uint16 role, address targetAddress);
-    event AllowTargetPartially(uint16 role, address targetAddress);
+    event AllowTargetPartially(
+        uint16 role,
+        address targetAddress,
+        bool canSend,
+        bool canDelegate
+    );
     event RevokeTarget(uint16 role, address targetAddress);
 
     event AllowFunction(
@@ -123,59 +126,45 @@ contract Roles is Modifier {
     function setMultiSend(address _multiSend) external onlyOwner {
         multiSend = _multiSend;
         emit SetMulitSendAddress(multiSend);
-    }
-
-    /// @dev Set whether or not delegate calls can be made to a target address.
-    /// @notice Only callable by owner.
-    /// @notice Is not an allowance. Depends on call having require clearance. Transversal.
-    /// @param role Role to set for
-    /// @param targetAddress Address to which delegate calls should be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) delegate calls to target address.
-    function setCanDelegateToTarget(
-        uint16 role,
-        address targetAddress,
-        bool allow
-    ) external onlyOwner {
-        roles[role].targets[targetAddress].canDelegate = allow;
-        emit SetCanDelegateToTarget(role, targetAddress, allow);
-    }
-
-    /// @dev Sets whether or not a target address can be sent to (incluces fallback/receive functions).
-    /// @notice Only callable by owner.
-    /// @notice Is not an allowance. Depends on call having require clearance. Transversal.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be allow/disallow sends to.
-    /// @param allow Bool to allow (true) or disallow (false) sends on target address.
-    function setCanSendToTarget(
-        uint16 role,
-        address targetAddress,
-        bool allow
-    ) external onlyOwner {
-        roles[role].targets[targetAddress].canSend = allow;
-        emit SetCanSendToTarget(role, targetAddress, allow);
-    }
+    }   
 
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    function allowTarget(uint16 role, address targetAddress)
-        external
-        onlyOwner
-    {
-        roles[role].targets[targetAddress].clearance = Clearance.TARGET;
-        emit AllowTarget(role, targetAddress);
+    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    function allowTarget(
+        uint16 role,
+        address targetAddress,
+        bool canSend,
+        bool canDelegate
+    ) external onlyOwner {
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.TARGET,
+            canSend,
+            canDelegate
+        );
+        emit AllowTarget(role, targetAddress, canSend, canDelegate);
     }
 
     /// @dev Partially allows calls to a Target - subject to function scoping rules.
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Address to be allowed/disallowed.
-    function allowTargetPartially(uint16 role, address targetAddress)
-        external
-        onlyOwner
-    {
-        roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
-        emit AllowTargetPartially(role, targetAddress);
+    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    function allowTargetPartially(
+        uint16 role,
+        address targetAddress,
+        bool canSend,
+        bool canDelegate
+    ) external onlyOwner {
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.FUNCTION,
+            canSend,
+            canDelegate
+        );
+        emit AllowTargetPartially(role, targetAddress, canSend, canDelegate);
     }
 
     /// @dev Disallows all calls made to an address.
@@ -185,7 +174,11 @@ contract Roles is Modifier {
         external
         onlyOwner
     {
-        roles[role].targets[targetAddress].clearance = Clearance.NONE;
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.NONE,
+            false,
+            false
+        );
         emit RevokeTarget(role, targetAddress);
     }
 

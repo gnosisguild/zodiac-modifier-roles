@@ -69,7 +69,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -121,7 +121,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -193,7 +193,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
@@ -259,7 +259,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -352,7 +352,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -407,7 +407,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -471,7 +471,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
