@@ -127,7 +127,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -139,7 +139,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, false);
+      .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -167,7 +167,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -219,7 +219,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -257,7 +257,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -308,11 +308,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DONOTHING, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SEL_DONOTHING);
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, true);
+      .scopeWhitelistFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier
@@ -328,7 +328,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, false);
+      .scopeRevokeFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier

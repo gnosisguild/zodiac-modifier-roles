@@ -27,11 +27,15 @@ contract Roles is Modifier {
     );
     event RevokeTarget(uint16 role, address targetAddress);
 
-    event AllowFunction(
+    event ScopeWhitelistFunction(
         uint16 role,
         address targetAddress,
-        bytes4 selector,
-        bool allow
+        bytes4 selector
+    );
+    event ScopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector
     );
     event ScopeFunction(
         uint16 role,
@@ -42,6 +46,7 @@ contract Roles is Modifier {
         Comparison[] paramCompType,
         bytes[] paramCompValue
     );
+
     event ScopeParameter(
         uint16 role,
         address targetAddress,
@@ -126,7 +131,7 @@ contract Roles is Modifier {
     function setMultiSend(address _multiSend) external onlyOwner {
         multiSend = _multiSend;
         emit SetMulitSendAddress(multiSend);
-    }   
+    }
 
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
@@ -187,17 +192,32 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
     /// @param functionSig Function signature to be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) call to a function on an address.
-    function allowFunction(
+    function scopeWhitelistFunction(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
-        bool allow
+        bytes4 functionSig
     ) external onlyOwner {
         roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = allow ? Permissions.FUNCTION_WHITELIST : 0;
-        emit AllowFunction(role, targetAddress, functionSig, allow);
+        ] = Permissions.FUNCTION_WHITELIST;
+        emit ScopeWhitelistFunction(role, targetAddress, functionSig);
+    }
+
+    /// @dev Disallows a specific function, on a specific address from being called.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
+    /// @param functionSig Function signature to be allowed/disallowed.
+    function scopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external onlyOwner {
+        // would a delete be more performant?
+        roles[role].functions[
+            Permissions.keyForFunctions(targetAddress, functionSig)
+        ] = 0;
+        emit ScopeWhitelistFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Sets and enforces scoping for an allowed function, on a specific address

@@ -16,11 +16,10 @@ enum Comparison {
     OneOf
 }
 
-struct TargetAddress {    
+struct TargetAddress {
     Clearance clearance;
     bool canSend;
     bool canDelegate;
-    
 }
 
 struct Role {

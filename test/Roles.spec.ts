@@ -1782,11 +1782,11 @@ describe("RolesModifier", async () => {
     });
   });
 
-  describe("allowFunction()", () => {
+  describe("scopeWhitelistFunction()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       expect(
-        modifier.allowFunction(1, AddressOne, "0x12345678", true)
+        modifier.scopeWhitelistFunction(1, AddressOne, "0x12345678")
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -1814,13 +1814,10 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
-      const toggle = (allow: boolean) =>
-        modifier
-          .connect(owner)
-          .allowFunction(ROLE_ID, testContract.address, SELECTOR, allow);
-
       // allow the function
-      await toggle(true);
+      await modifier
+        .connect(owner)
+        .scopeWhitelistFunction(ROLE_ID, testContract.address, SELECTOR);
 
       // gmi
       await expect(
@@ -1828,7 +1825,9 @@ describe("RolesModifier", async () => {
       ).to.emit(testContract, "DoNothing");
 
       // revoke the function
-      await toggle(false);
+      await modifier
+        .connect(owner)
+        .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR);
 
       // ngmi again
       await expect(
@@ -1840,10 +1839,12 @@ describe("RolesModifier", async () => {
       const { modifier, owner } = await setupRolesWithOwnerAndInvoker();
 
       await expect(
-        modifier.connect(owner).allowFunction(1, AddressOne, "0x12345678", true)
+        modifier
+          .connect(owner)
+          .scopeWhitelistFunction(1, AddressOne, "0x12345678")
       )
-        .to.emit(modifier, "AllowFunction")
-        .withArgs(1, AddressOne, "0x12345678", true);
+        .to.emit(modifier, "ScopeWhitelistFunction")
+        .withArgs(1, AddressOne, "0x12345678");
     });
   });
 
