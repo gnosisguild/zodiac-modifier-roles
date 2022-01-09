@@ -347,10 +347,8 @@ library Permissions {
 
         // set compValue
         key = keyForCompValues(targetAddress, functionSig, paramIndex);
-
-        delete role.compValuesOneOf[key];
+        
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
-
         for (uint256 i = 0; i < compValues.length; i++) {
             role.compValuesOneOf[key][i] = maybeCompressCompValue(
                 compValues[i]
