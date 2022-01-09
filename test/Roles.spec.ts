@@ -399,6 +399,20 @@ describe("RolesModifier", async () => {
   });
 
   describe("execTransactionFromModule()", () => {
+    it("reverts if data is set and is not at least 4 bytes", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+
+      await modifier.assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, "0xab", 0)
+      ).to.be.revertedWith("FunctionSignatureTooShort()");
+    });
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
