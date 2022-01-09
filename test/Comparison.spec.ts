@@ -238,7 +238,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -286,7 +286,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -335,7 +335,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

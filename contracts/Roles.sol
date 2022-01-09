@@ -20,7 +20,10 @@ contract Roles is Modifier {
     );
     event SetCanSendToTarget(uint16 role, address targetAddress, bool enabled);
 
-    event AllowTarget(uint16 role, address targetAddress, bool allow);
+    event AllowTarget(uint16 role, address targetAddress);
+    event AllowTargetPartially(uint16 role, address targetAddress);
+    event RevokeTarget(uint16 role, address targetAddress);
+
     event AllowFunction(
         uint16 role,
         address targetAddress,
@@ -155,18 +158,35 @@ contract Roles is Modifier {
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param targetAddress Address to be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) call to an address.
-    function allowTarget(
-        uint16 role,
-        address targetAddress,
-        bool allow
-    ) external onlyOwner {
-        roles[role].targets[targetAddress].clearance = allow
-            ? Clearance.TARGET
-            : Clearance.NONE;
+    function allowTarget(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        roles[role].targets[targetAddress].clearance = Clearance.TARGET;
+        emit AllowTarget(role, targetAddress);
+    }
 
-        emit AllowTarget(role, targetAddress, allow);
+    /// @dev Partially allows calls to a Target - subject to function scoping rules.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to be allowed/disallowed.
+    function allowTargetPartially(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
+        emit AllowTargetPartially(role, targetAddress);
+    }
+
+    /// @dev Disallows all calls made to an address.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    function revokeTarget(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        roles[role].targets[targetAddress].clearance = Clearance.NONE;
+        emit RevokeTarget(role, targetAddress);
     }
 
     /// @dev Allows a specific function, on a specific address, to be called.
@@ -181,10 +201,6 @@ contract Roles is Modifier {
         bytes4 functionSig,
         bool allow
     ) external onlyOwner {
-        if (allow) {
-            roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
-        }
-
         roles[role].functions[
             Permissions.keyForFunctions(targetAddress, functionSig)
         ] = allow ? Permissions.FUNCTION_WHITELIST : 0;

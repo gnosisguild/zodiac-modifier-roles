@@ -3,8 +3,7 @@ import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { buildContractCall, buildMultiSendSafeTx } from "./utils";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-const ZeroState =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
 const FirstAddress = "0x0000000000000000000000000000000000000001";
 
@@ -72,28 +71,10 @@ describe("RolesModifier", async () => {
       ["address"],
       [user1.address]
     );
-    // const paramAllowed_1 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x40c10f19",
-    //     0,
-    //     encodedParam_1,
-    //     true
-    //   );
     const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
       ["uint256"],
       [99]
     );
-    // const paramAllowed_2 =
-    //   await baseAvatar.modifier.populateTransaction.setParameterAllowedValue(
-    //     1,
-    //     baseAvatar.testContract.address,
-    //     "0x40c10f19",
-    //     1,
-    //     encodedParam_2,
-    //     true
-    //   );
     const encodedParam_3 = ethers.utils.solidityPack(
       ["string"],
       ["This is a dynamic array"]
@@ -289,14 +270,13 @@ describe("RolesModifier", async () => {
     });
 
     it("assigns roles to a module", async () => {
-      // api doesn't have the function to check explicitly
-      // lets assert implicitly
+      const ROLE_ID = 0;
 
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
       // blank allow all calls to testContract from role 0
-      await modifier.connect(owner).allowTarget(0, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       // expect it to fail, before assigning role
       await expect(
@@ -310,7 +290,9 @@ describe("RolesModifier", async () => {
           )
       ).to.be.revertedWith("NoMembership()");
 
-      await modifier.connect(owner).assignRoles(invoker.address, [0], [true]);
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
 
       // expect it to succeed, after assigning role
       await expect(
@@ -332,9 +314,7 @@ describe("RolesModifier", async () => {
       const ROLE_ID = 0;
 
       // blank allow all calls to testContract from role 0
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       //authorize
       await modifier
@@ -410,14 +390,12 @@ describe("RolesModifier", async () => {
 
   describe("execTransactionFromModule()", () => {
     it("reverts if called from module not assigned any role", async () => {
-      const { avatar, modifier, testContract } = await txSetup();
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
 
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
-        1,
-        testContract.address,
-        true
-      );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      const ROLE_ID = 0;
+
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -445,8 +423,7 @@ describe("RolesModifier", async () => {
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
-        testContract.address,
-        true
+        testContract.address
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -478,8 +455,7 @@ describe("RolesModifier", async () => {
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
-        testContract.address,
-        true
+        testContract.address
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -521,12 +497,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -573,12 +548,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -634,12 +608,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x273454bf",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -708,12 +681,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x273454bf",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -794,22 +766,12 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionAllowed_1 =
-        await modifier.populateTransaction.allowFunction(
+      const allowTargetPartially =
+        await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          "0x40c10f19",
-          true
+          testContract.address
         );
-      await avatar.exec(modifier.address, 0, functionAllowed_1.data);
-      const functionAllowed_2 =
-        await modifier.populateTransaction.allowFunction(
-          1,
-          testContract.address,
-          "0x273454bf",
-          true
-        );
-      await avatar.exec(modifier.address, 0, functionAllowed_2.data);
+      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -894,12 +856,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -967,21 +928,12 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
-
-      const functionScoped_2 = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x273454bf",
-        true
-      );
-      await avatar.exec(modifier.address, 0, functionScoped_2.data);
+      const allowTargetPartially =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
+      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1045,13 +997,12 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      const allowTargetPartially =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
+      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1100,12 +1051,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
@@ -1155,27 +1105,17 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
         [99]
       );
-      // const paramAllowed_lessThan =
-      //   await modifier.populateTransaction.setParameterAllowedValue(
-      //     1,
-      //     testContract.address,
-      //     "0x40c10f19",
-      //     1,
-      //     encodedParam_2,
-      //     encodedParam_2
-      //   );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1213,39 +1153,23 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data);
 
-      const allowTarget = await modifier.populateTransaction.allowTarget(
-        1,
-        testContract.address,
-        true
-      );
-      await avatar.exec(modifier.address, 0, allowTarget.data);
-
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped = await modifier.populateTransaction.allowFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        true
-      );
+      const functionScoped =
+        await modifier.populateTransaction.allowTargetPartially(
+          1,
+          testContract.address
+        );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
         [99]
       );
-      // const paramAllowed_lessThan =
-      //   await modifier.populateTransaction.setParameterCompValue(
-      //     1,
-      //     testContract.address,
-      //     "0x40c10f19",
-      //     1,
-      //     encodedParam_2
-      //   );
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1280,8 +1204,7 @@ describe("RolesModifier", async () => {
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
-        testContract.address,
-        true
+        testContract.address
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1311,8 +1234,7 @@ describe("RolesModifier", async () => {
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
-        testContract.address,
-        true
+        testContract.address
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1349,8 +1271,7 @@ describe("RolesModifier", async () => {
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
-        testContract.address,
-        true
+        testContract.address
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1402,8 +1323,8 @@ describe("RolesModifier", async () => {
 
   describe("allowTarget()", () => {
     it("reverts if not authorized", async () => {
-      const { avatar, modifier } = await txSetup();
-      expect(modifier.allowTarget(1, AddressOne, true)).to.be.revertedWith(
+      const { modifier } = await txSetup();
+      expect(modifier.allowTarget(1, AddressOne)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
     });
@@ -1433,10 +1354,10 @@ describe("RolesModifier", async () => {
 
       // allow testContract address for role
       await expect(
-        modifier.connect(owner).allowTarget(ROLE_ID, testContract.address, true)
+        modifier.connect(owner).allowTarget(ROLE_ID, testContract.address)
       )
         .to.emit(modifier, "AllowTarget")
-        .withArgs(ROLE_ID, testContract.address, true);
+        .withArgs(ROLE_ID, testContract.address);
 
       // expect to fail with default role
       await expect(
@@ -1472,7 +1393,7 @@ describe("RolesModifier", async () => {
 
       // allow testContract address for role
       await expect(
-        modifier.connect(owner).allowTarget(ROLE_ID, testContract.address, true)
+        modifier.connect(owner).allowTarget(ROLE_ID, testContract.address)
       );
 
       // this call should work
@@ -1482,12 +1403,10 @@ describe("RolesModifier", async () => {
 
       // Revoke access
       await expect(
-        modifier
-          .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, false)
+        modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address)
       )
-        .to.emit(modifier, "AllowTarget")
-        .withArgs(ROLE_ID, testContract.address, false);
+        .to.emit(modifier, "RevokeTarget")
+        .withArgs(ROLE_ID, testContract.address);
 
       // fails after revoke
       await expect(
@@ -1497,20 +1416,16 @@ describe("RolesModifier", async () => {
 
     it("emits event with correct params", async () => {
       const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.allowTarget(
-        1,
-        AddressOne,
-        true
-      );
+      const tx = await modifier.populateTransaction.allowTarget(1, AddressOne);
       expect(await avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, true);
+        .withArgs(1, AddressOne);
     });
   });
 
   describe("setCanDelegateToTarget()", () => {
     it("reverts if not authorized", async () => {
-      const { avatar, modifier } = await txSetup();
+      const { modifier } = await txSetup();
       expect(
         modifier.setCanDelegateToTarget(1, AddressOne, true)
       ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -1533,9 +1448,7 @@ describe("RolesModifier", async () => {
       ];
 
       // allow calls (but not delegate)
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       // still getting the delegateCallNotAllowed error
       await expect(
@@ -1577,9 +1490,7 @@ describe("RolesModifier", async () => {
       ];
 
       // allow calls (but not delegate)
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       // allow delegate calls to address
       await modifier
@@ -1661,9 +1572,7 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       // works before making function parameter scoped
       await expect(
@@ -1672,7 +1581,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+        .allowTargetPartially(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -1743,14 +1652,12 @@ describe("RolesModifier", async () => {
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
-      // blank allow all calls to testContract from role 0
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
 
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       await expect(
         modifier
@@ -1779,14 +1686,11 @@ describe("RolesModifier", async () => {
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
-      // blank allow all calls to testContract from role 0
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true);
-
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier.connect(owner).allowTarget(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -1845,6 +1749,7 @@ describe("RolesModifier", async () => {
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("doNothing")
       );
+
       const EXEC_ARGS = [
         testContract.address,
         0,
@@ -1852,14 +1757,18 @@ describe("RolesModifier", async () => {
         0,
       ];
 
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTargetPartially(ROLE_ID, testContract.address);
+
       const toggle = (allow: boolean) =>
         modifier
           .connect(owner)
           .allowFunction(ROLE_ID, testContract.address, SELECTOR, allow);
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
 
       // allow the function
       await toggle(true);
@@ -1913,9 +1822,7 @@ describe("RolesModifier", async () => {
       await modifier.connect(owner).setDefaultRole(invoker.address, ROLE2);
 
       // allow all calls to testContract from ROLE1
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE1, testContract.address, true);
+      await modifier.connect(owner).allowTarget(ROLE1, testContract.address);
 
       // expect it to fail
       await expect(
