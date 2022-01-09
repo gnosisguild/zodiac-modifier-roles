@@ -155,7 +155,7 @@ contract Roles is Modifier {
     /// @dev Partially allows calls to a Target - subject to function scoping rules.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param targetAddress Address to be allowed/disallowed.
+    /// @param targetAddress Address to be allowed
     /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
     /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
     function allowTargetPartially(
@@ -175,6 +175,7 @@ contract Roles is Modifier {
     /// @dev Disallows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
+    /// @param targetAddress Address to be disallowed
     function revokeTarget(uint16 role, address targetAddress)
         external
         onlyOwner
