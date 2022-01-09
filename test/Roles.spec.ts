@@ -262,6 +262,12 @@ describe("RolesModifier", async () => {
   });
 
   describe("assignRoles()", () => {
+    it("should throw on length mismatch", async () => {
+      const { modifier, owner } = await setupRolesWithOwnerAndInvoker();
+      await expect(
+        modifier.connect(owner).assignRoles(user1.address, [1, 2], [true])
+      ).to.be.revertedWith("ArraysDifferentLength()");
+    });
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
@@ -1333,6 +1339,29 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
+    });
+  });
+  describe("execTransactionWithRoleReturnData()", () => {
+    it("reverts if called from module not assigned any role", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const mint = await testContract.populateTransaction.mint(
+        user1.address,
+        99
+      );
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRoleReturnData(
+            testContract.address,
+            0,
+            mint.data,
+            0,
+            1
+          )
+      ).to.be.revertedWith("NoMembership()");
     });
   });
   describe("setMultiSend()", () => {
