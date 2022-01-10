@@ -393,13 +393,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        _checkRolePermissions(
-            to,
-            value,
-            data,
-            operation,
-            defaultRoles[msg.sender]
-        );
+        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
         return exec(to, value, data, operation);
     }
 
@@ -415,13 +409,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        _checkRolePermissions(
-            to,
-            value,
-            data,
-            operation,
-            defaultRoles[msg.sender]
-        );
+        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
         return execAndReturnData(to, value, data, operation);
     }
 
@@ -439,7 +427,7 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly {
-        _checkRolePermissions(to, value, data, operation, role);
+        checkPermission(to, value, data, operation, role);
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
         }
@@ -459,7 +447,7 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bytes memory returnData) {
-        _checkRolePermissions(to, value, data, operation, role);
+        checkPermission(to, value, data, operation, role);
         bool success;
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (!success) {
@@ -467,7 +455,7 @@ contract Roles is Modifier {
         }
     }
 
-    function _checkRolePermissions(
+    function checkPermission(
         address to,
         uint256 value,
         bytes calldata data,
