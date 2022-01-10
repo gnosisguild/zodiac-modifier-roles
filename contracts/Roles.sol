@@ -332,7 +332,7 @@ contract Roles is Modifier {
 
     /// @dev Unsets scoping for a single parameter on an allowed function
     /// @notice Only callable by owner.
-    /// @notice If no more params remain scoped after this call, the whole access to the function will be revoked.
+    /// @notice If no parameter remains scoped after this call, access to the function is revoked.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.

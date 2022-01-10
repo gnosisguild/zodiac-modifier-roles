@@ -524,4 +524,126 @@ describe("Scoping", async () => {
     await expect(invoke(421)).to.not.be.reverted;
     await expect(invoke(419)).to.be.revertedWith("ParameterLessThanAllowed()");
   });
+
+  it("scoping a high parameter index, after a lower one should work", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const IS_DYNAMIC = true;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithThreeParams")
+    );
+
+    const invoke = async (a: number, b: number, c: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithThreeParams(a, b, c))
+            .data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
+      );
+
+    await expect(invoke(1, 3, 2021)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        1,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [2])
+      );
+    await expect(invoke(1, 3, 2021)).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+
+    await expect(invoke(1, 2, 3000)).to.not.be.reverted;
+  });
+
+  it("scoping a low parameter index, after a higher one should work", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const IS_DYNAMIC = true;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithThreeParams")
+    );
+
+    const invoke = async (a: number, b: number, c: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithThreeParams(a, b, c))
+            .data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        2,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [3])
+      );
+
+    await expect(invoke(2000, 3000, 3)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
+      );
+    await expect(invoke(2000, 3000, 3)).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+
+    await expect(invoke(1, 3000, 3)).to.not.be.reverted;
+  });
 });
