@@ -414,7 +414,7 @@ describe("RolesModifier", async () => {
       ).to.be.revertedWith("FunctionSignatureTooShort()");
     });
     it("reverts if called from module not assigned any role", async () => {
-      const { modifier, testContract, owner, invoker } =
+      const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
@@ -1247,6 +1247,34 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
+    });
+
+    it("reverts if inner tx reverted", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const fnThatReverts =
+        await testContract.populateTransaction.fnThatReverts();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false, false);
+
+      expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            fnThatReverts.data,
+            0
+          )
+      ).to.be.revertedWith("ModuleTransactionFailed()");
     });
   });
 
