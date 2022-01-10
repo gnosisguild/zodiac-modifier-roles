@@ -8,7 +8,7 @@ contract Roles is Modifier {
     address public multiSend;
 
     mapping(address => uint16) defaultRoles;
-    mapping(uint16 => Role) private roles;
+    mapping(uint16 => Role) roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
@@ -393,14 +393,14 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        return
-            execTransactionWithRole(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender]
-            );
+        (success, ) = _executeTransaction(
+            to,
+            value,
+            data,
+            operation,
+            defaultRoles[msg.sender],
+            false
+        );
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -416,12 +416,13 @@ contract Roles is Modifier {
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
         return
-            execTransactionWithRoleReturnData(
+            _executeTransaction(
                 to,
                 value,
                 data,
                 operation,
-                defaultRoles[msg.sender]
+                defaultRoles[msg.sender],
+                false
             );
     }
 
@@ -438,21 +439,15 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bool) {
-        Role storage _role = roles[role];
-
-        if (!_role.members[msg.sender]) {
-            revert NoMembership();
-        }
-        if (to == multiSend) {
-            Permissions.checkMultisendTransaction(_role, data);
-        } else {
-            Permissions.checkTransaction(_role, to, value, data, operation);
-        }
-        if (!exec(to, value, data, operation)) {
-            revert ModuleTransactionFailed();
-        }
-        return true;
+    ) public moduleOnly returns (bool success) {
+        (success, ) = _executeTransaction(
+            to,
+            value,
+            data,
+            operation,
+            role,
+            true
+        );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
@@ -468,7 +463,18 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bool, bytes memory) {
+    ) public moduleOnly returns (bool success, bytes memory returnData) {
+        return _executeTransaction(to, value, data, operation, role, false);
+    }
+
+    function _executeTransaction(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint16 role,
+        bool shouldRevert
+    ) private moduleOnly returns (bool success, bytes memory returnData) {
         Role storage _role = roles[role];
 
         if (!_role.members[msg.sender]) {
@@ -479,6 +485,10 @@ contract Roles is Modifier {
         } else {
             Permissions.checkTransaction(_role, to, value, data, operation);
         }
-        return execAndReturnData(to, value, data, operation);
+
+        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (shouldRevert && !success) {
+            revert ModuleTransactionFailed();
+        }
     }
 }

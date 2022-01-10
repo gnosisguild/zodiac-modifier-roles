@@ -1249,7 +1249,7 @@ describe("RolesModifier", async () => {
       ).to.emit(testContract, "Mint");
     });
 
-    it("reverts if inner tx reverted", async () => {
+    it.skip("reverts if inner tx reverted", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
