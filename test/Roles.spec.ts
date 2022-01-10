@@ -1265,7 +1265,7 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .allowTarget(ROLE_ID, testContract.address, false, false);
 
-      expect(
+      await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
@@ -1508,14 +1508,14 @@ describe("RolesModifier", async () => {
     it("sets multisend address to true", async () => {
       const { avatar, modifier } = await txSetup();
       const tx = await modifier.populateTransaction.setMultiSend(AddressOne);
-      expect(avatar.exec(modifier.address, 0, tx.data));
+      await avatar.exec(modifier.address, 0, tx.data);
       expect(await modifier.multiSend()).to.be.equals(AddressOne);
     });
 
     it("emits event with correct params", async () => {
       const { avatar, modifier } = await txSetup();
       const tx = await modifier.populateTransaction.setMultiSend(AddressOne);
-      expect(await avatar.exec(modifier.address, 0, tx.data))
+      await expect(avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "SetMulitSendAddress")
         .withArgs(AddressOne);
     });
@@ -1524,7 +1524,7 @@ describe("RolesModifier", async () => {
   describe("allowTarget()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
-      expect(
+      await expect(
         modifier.allowTarget(1, AddressOne, false, false)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -1626,7 +1626,7 @@ describe("RolesModifier", async () => {
         false,
         false
       );
-      expect(await avatar.exec(modifier.address, 0, tx.data))
+      await expect(avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
         .withArgs(1, AddressOne, false, false);
     });
@@ -1635,7 +1635,7 @@ describe("RolesModifier", async () => {
   describe("allowTarget() canDelegate", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
-      expect(
+      await expect(
         modifier.allowTarget(1, AddressOne, false, true)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -1735,7 +1735,7 @@ describe("RolesModifier", async () => {
         false,
         true
       );
-      expect(await avatar.exec(modifier.address, 0, tx.data))
+      await expect(avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
         .withArgs(1, AddressOne, false, true);
     });
@@ -1744,7 +1744,7 @@ describe("RolesModifier", async () => {
   describe("scopeFunction()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
-      expect(
+      await expect(
         modifier.scopeFunction(
           1,
           AddressOne,
@@ -1852,7 +1852,7 @@ describe("RolesModifier", async () => {
   describe("allowTarget - canSend", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
-      expect(
+      await expect(
         modifier.allowTarget(1, AddressOne, true, false)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -1947,7 +1947,7 @@ describe("RolesModifier", async () => {
   describe("scopeAllowFunction()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
-      expect(
+      await expect(
         modifier.scopeAllowFunction(1, AddressOne, "0x12345678")
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -2011,7 +2011,7 @@ describe("RolesModifier", async () => {
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
       const { avatar, modifier } = await txSetup();
-      expect(modifier.setDefaultRole(AddressOne, 1)).to.be.revertedWith(
+      await expect(modifier.setDefaultRole(AddressOne, 1)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
     });
