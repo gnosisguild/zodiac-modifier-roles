@@ -393,15 +393,14 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        (success, ) = _executeTransaction(
+        _checkRolePermissions(
             to,
             value,
             data,
             operation,
-            defaultRoles[msg.sender],
-            false,
-            false
+            defaultRoles[msg.sender]
         );
+        return exec(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -416,16 +415,14 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        return
-            _executeTransaction(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender],
-                true,
-                false
-            );
+        _checkRolePermissions(
+            to,
+            value,
+            data,
+            operation,
+            defaultRoles[msg.sender]
+        );
+        return execAndReturnData(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
@@ -441,16 +438,11 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bool success) {
-        (success, ) = _executeTransaction(
-            to,
-            value,
-            data,
-            operation,
-            role,
-            false,
-            true
-        );
+    ) public moduleOnly {
+        _checkRolePermissions(to, value, data, operation, role);
+        if (!exec(to, value, data, operation)) {
+            revert ModuleTransactionFailed();
+        }
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
@@ -466,20 +458,22 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bool success, bytes memory returnData) {
-        return
-            _executeTransaction(to, value, data, operation, role, true, false);
+    ) public moduleOnly returns (bytes memory returnData) {
+        _checkRolePermissions(to, value, data, operation, role);
+        bool success;
+        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (!success) {
+            revert ModuleTransactionFailed();
+        }
     }
 
-    function _executeTransaction(
+    function _checkRolePermissions(
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 role,
-        bool shouldReturnData,
-        bool shouldRevert
-    ) private returns (bool success, bytes memory returnData) {
+        uint16 role
+    ) internal view {
         Role storage _role = roles[role];
 
         if (!_role.members[msg.sender]) {
@@ -489,21 +483,6 @@ contract Roles is Modifier {
             Permissions.checkMultisendTransaction(_role, data);
         } else {
             Permissions.checkTransaction(_role, to, value, data, operation);
-        }
-
-        if (shouldReturnData) {
-            (success, returnData) = execAndReturnData(
-                to,
-                value,
-                data,
-                operation
-            );
-        } else {
-            success = exec(to, value, data, operation);
-        }
-
-        if (shouldRevert && !success) {
-            revert ModuleTransactionFailed();
         }
     }
 }
