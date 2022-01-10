@@ -108,7 +108,7 @@ describe("Clearance", async () => {
   });
 
   it("allows and then disallows a function", async () => {
-    const { modifier, testContract, testContractClone, owner, invoker } =
+    const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;

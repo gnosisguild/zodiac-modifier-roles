@@ -1,8 +1,8 @@
+import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
+import { AbiCoder } from "ethers/lib/utils";
 import hre, { deployments, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { AbiCoder } from "ethers/lib/utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 
 const FirstAddress = "0x0000000000000000000000000000000000000001";
 const saltNonce = "0xfa";

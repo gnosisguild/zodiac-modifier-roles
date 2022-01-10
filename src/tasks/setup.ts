@@ -1,15 +1,15 @@
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
+// import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
 import { task, types } from "hardhat/config";
-import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+// import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-interface RolesTaskArgs {
-  owner: string;
-  avatar: string;
-  target: string;
-  proxied: boolean;
-}
+// interface RolesTaskArgs {
+//   owner: string;
+//   avatar: string;
+//   target: string;
+//   proxied: boolean;
+// }
 
 // const deployRolesModifier = async (
 //   taskArgs: RolesTaskArgs,

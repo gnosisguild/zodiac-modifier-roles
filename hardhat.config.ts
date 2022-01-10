@@ -86,12 +86,4 @@ export default {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
-  gasReporter: {
-    // @ts-ignore-next-line
-    proxyResolver(transaction) {
-      throw transaction;
-      // @ts-ignore-next-line
-      console.log(this.data);
-    },
-  },
 };
