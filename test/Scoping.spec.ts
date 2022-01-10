@@ -69,7 +69,11 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -117,7 +121,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -174,62 +178,6 @@ describe("Scoping", async () => {
     ).to.not.be.reverted;
   });
 
-  it("param scoping should work after allow function", async () => {
-    const { modifier, testContract, owner, invoker } =
-      await setupRolesWithOwnerAndInvoker();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithThreeParams")
-    );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    await modifier
-      .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
-
-    await modifier
-      .connect(owner)
-      .scopeParameter(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        0,
-        false,
-        COMP_EQUAL,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
-      );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (
-            await testContract.populateTransaction.fnWithThreeParams(1, 2, 3)
-          ).data,
-          0
-        )
-    ).to.be.revertedWith("ParameterNotAllowed()");
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (
-            await testContract.populateTransaction.fnWithThreeParams(7, 2, 3)
-          ).data,
-          0
-        )
-    ).to.not.be.reverted;
-  });
-
   it("scoping one param should work after allow function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -245,7 +193,12 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await modifier
       .connect(owner)
@@ -285,68 +238,8 @@ describe("Scoping", async () => {
         )
     ).to.not.be.reverted;
   });
-  it("scoping one param should work after revoke function", async () => {
-    const { modifier, testContract, owner, invoker } =
-      await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithThreeParams")
-    );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier
-      .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
-
-    // set it to false
-    await modifier
-      .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, false);
-
-    await modifier
-      .connect(owner)
-      .scopeParameter(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        0,
-        false,
-        COMP_EQUAL,
-        ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
-      );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (
-            await testContract.populateTransaction.fnWithThreeParams(1, 2, 3)
-          ).data,
-          0
-        )
-    ).to.be.revertedWith("ParameterNotAllowed()");
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (
-            await testContract.populateTransaction.fnWithThreeParams(7, 2, 3)
-          ).data,
-          0
-        )
-    ).to.not.be.reverted;
-  });
-  it("scoping one param should work from scoped state", async () => {
+  it("scoping one param should work after scope function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -366,7 +259,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -459,7 +352,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -514,7 +407,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
@@ -578,7 +471,11 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const invoke = async (param: number) =>
       modifier
@@ -626,5 +523,127 @@ describe("Scoping", async () => {
 
     await expect(invoke(421)).to.not.be.reverted;
     await expect(invoke(419)).to.be.revertedWith("ParameterLessThanAllowed()");
+  });
+
+  it("scoping a high parameter index, after a lower one should work", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const IS_DYNAMIC = true;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithThreeParams")
+    );
+
+    const invoke = async (a: number, b: number, c: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithThreeParams(a, b, c))
+            .data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
+      );
+
+    await expect(invoke(1, 3, 2021)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        1,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [2])
+      );
+    await expect(invoke(1, 3, 2021)).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+
+    await expect(invoke(1, 2, 3000)).to.not.be.reverted;
+  });
+
+  it("scoping a low parameter index, after a higher one should work", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const IS_DYNAMIC = true;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithThreeParams")
+    );
+
+    const invoke = async (a: number, b: number, c: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithThreeParams(a, b, c))
+            .data,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        2,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [3])
+      );
+
+    await expect(invoke(2000, 3000, 3)).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
+      );
+    await expect(invoke(2000, 3000, 3)).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+
+    await expect(invoke(1, 3000, 3)).to.not.be.reverted;
   });
 });

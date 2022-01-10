@@ -7,25 +7,35 @@ import "./Permissions.sol";
 contract Roles is Modifier {
     address public multiSend;
 
-    mapping(address => uint16) defaultRoles;
-    mapping(uint16 => Role) private roles;
+    mapping(address => uint16) public defaultRoles;
+    mapping(uint16 => Role) internal roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
 
-    event SetCanDelegateToTarget(
+    event AllowTarget(
         uint16 role,
         address targetAddress,
-        bool enabled
+        bool canSend,
+        bool canDelegate
     );
-    event SetCanSendToTarget(uint16 role, address targetAddress, bool enabled);
-
-    event AllowTarget(uint16 role, address targetAddress, bool allow);
-    event AllowFunction(
+    event AllowTargetPartially(
         uint16 role,
         address targetAddress,
-        bytes4 selector,
-        bool allow
+        bool canSend,
+        bool canDelegate
+    );
+    event RevokeTarget(uint16 role, address targetAddress);
+
+    event ScopeAllowFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector
+    );
+    event ScopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector
     );
     event ScopeFunction(
         uint16 role,
@@ -36,13 +46,15 @@ contract Roles is Modifier {
         Comparison[] paramCompType,
         bytes[] paramCompValue
     );
+
     event ScopeParameter(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
         bool isDynamic,
-        Comparison compType
+        Comparison compType,
+        bytes compValue
     );
     event ScopeParameterAsOneOf(
         uint16 role,
@@ -122,51 +134,59 @@ contract Roles is Modifier {
         emit SetMulitSendAddress(multiSend);
     }
 
-    /// @dev Set whether or not delegate calls can be made to a target address.
-    /// @notice Only callable by owner.
-    /// @notice Is not an allowance. Depends on call having require clearance. Transversal.
-    /// @param role Role to set for
-    /// @param targetAddress Address to which delegate calls should be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) delegate calls to target address.
-    function setCanDelegateToTarget(
-        uint16 role,
-        address targetAddress,
-        bool allow
-    ) external onlyOwner {
-        roles[role].targets[targetAddress].canDelegate = allow;
-        emit SetCanDelegateToTarget(role, targetAddress, allow);
-    }
-
-    /// @dev Sets whether or not a target address can be sent to (incluces fallback/receive functions).
-    /// @notice Only callable by owner.
-    /// @notice Is not an allowance. Depends on call having require clearance. Transversal.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be allow/disallow sends to.
-    /// @param allow Bool to allow (true) or disallow (false) sends on target address.
-    function setCanSendToTarget(
-        uint16 role,
-        address targetAddress,
-        bool allow
-    ) external onlyOwner {
-        roles[role].targets[targetAddress].canSend = allow;
-        emit SetCanSendToTarget(role, targetAddress, allow);
-    }
-
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param targetAddress Address to be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) call to an address.
+    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
     function allowTarget(
         uint16 role,
         address targetAddress,
-        bool allow
+        bool canSend,
+        bool canDelegate
     ) external onlyOwner {
-        roles[role].targets[targetAddress].clearance = allow
-            ? Clearance.TARGET
-            : Clearance.NONE;
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.TARGET,
+            canSend,
+            canDelegate
+        );
+        emit AllowTarget(role, targetAddress, canSend, canDelegate);
+    }
 
-        emit AllowTarget(role, targetAddress, allow);
+    /// @dev Partially allows calls to a Target - subject to function scoping rules.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to be allowed
+    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    function allowTargetPartially(
+        uint16 role,
+        address targetAddress,
+        bool canSend,
+        bool canDelegate
+    ) external onlyOwner {
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.FUNCTION,
+            canSend,
+            canDelegate
+        );
+        emit AllowTargetPartially(role, targetAddress, canSend, canDelegate);
+    }
+
+    /// @dev Disallows all calls made to an address.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to be disallowed
+    function revokeTarget(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        roles[role].targets[targetAddress] = TargetAddress(
+            Clearance.NONE,
+            false,
+            false
+        );
+        emit RevokeTarget(role, targetAddress);
     }
 
     /// @dev Allows a specific function, on a specific address, to be called.
@@ -174,21 +194,31 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
     /// @param functionSig Function signature to be allowed/disallowed.
-    /// @param allow Bool to allow (true) or disallow (false) call to a function on an address.
-    function allowFunction(
+    function scopeAllowFunction(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
-        bool allow
+        bytes4 functionSig
     ) external onlyOwner {
-        if (allow) {
-            roles[role].targets[targetAddress].clearance = Clearance.FUNCTION;
-        }
+        Permissions.scopeAllowFunction(roles[role], targetAddress, functionSig);
+        emit ScopeAllowFunction(role, targetAddress, functionSig);
+    }
 
-        roles[role].functions[
-            Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = allow ? Permissions.FUNCTION_WHITELIST : 0;
-        emit AllowFunction(role, targetAddress, functionSig, allow);
+    /// @dev Disallows a specific function, on a specific address from being called.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
+    /// @param functionSig Function signature to be allowed/disallowed.
+    function scopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external onlyOwner {
+        Permissions.scopeRevokeFunction(
+            roles[role],
+            targetAddress,
+            functionSig
+        );
+        emit ScopeRevokeFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Sets and enforces scoping for an allowed function, on a specific address
@@ -261,7 +291,8 @@ contract Roles is Modifier {
             functionSig,
             paramIndex,
             isDynamic,
-            compType
+            compType,
+            compValue
         );
     }
 
@@ -301,7 +332,7 @@ contract Roles is Modifier {
 
     /// @dev Unsets scoping for a single parameter on an allowed function
     /// @notice Only callable by owner.
-    /// @notice If no more params remain scoped after this call, the whole access to the function will be revoked.
+    /// @notice If no parameter remains scoped after this call, access to the function is revoked.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
@@ -311,7 +342,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex
-    ) external {
+    ) external onlyOwner {
         Permissions.unscopeParameter(
             roles[role],
             targetAddress,
@@ -362,14 +393,8 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        return
-            execTransactionWithRole(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender]
-            );
+        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
+        return exec(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -384,14 +409,8 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        return
-            execTransactionWithRoleReturnData(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender]
-            );
+        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
+        return execAndReturnData(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
@@ -408,16 +427,7 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool) {
-        Role storage _role = roles[role];
-
-        if (!_role.members[msg.sender]) {
-            revert NoMembership();
-        }
-        if (to == multiSend) {
-            Permissions.checkMultisendTransaction(_role, data);
-        } else {
-            Permissions.checkTransaction(_role, to, value, data, operation);
-        }
+        checkPermission(to, value, data, operation, role);
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
         }
@@ -437,7 +447,21 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bool, bytes memory) {
+    ) public moduleOnly returns (bool success, bytes memory returnData) {
+        checkPermission(to, value, data, operation, role);
+        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (!success) {
+            revert ModuleTransactionFailed();
+        }
+    }
+
+    function checkPermission(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint16 role
+    ) internal view {
         Role storage _role = roles[role];
 
         if (!_role.members[msg.sender]) {
@@ -448,6 +472,5 @@ contract Roles is Modifier {
         } else {
             Permissions.checkTransaction(_role, to, value, data, operation);
         }
-        return execAndReturnData(to, value, data, operation);
     }
 }

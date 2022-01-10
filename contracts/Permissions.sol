@@ -17,9 +17,9 @@ enum Comparison {
 }
 
 struct TargetAddress {
-    bool canDelegate;
-    bool canSend;
     Clearance clearance;
+    bool canSend;
+    bool canDelegate;
 }
 
 struct Role {
@@ -31,7 +31,7 @@ struct Role {
 }
 
 library Permissions {
-    uint256 public constant FUNCTION_WHITELIST = 2**256 - 1;
+    uint256 internal constant SCOPE_WILDCARD = 2**256 - 1;
     // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
         uint256(0x3fffffffffffffff << (62 + 124));
@@ -172,7 +172,7 @@ library Permissions {
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (scopeConfig == FUNCTION_WHITELIST) {
+            if (scopeConfig == SCOPE_WILDCARD) {
                 return;
             } else {
                 checkParameters(role, scopeConfig, targetAddress, data);
@@ -256,6 +256,25 @@ library Permissions {
      * SETTERS
      *
      */
+    function scopeAllowFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external {
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = SCOPE_WILDCARD;
+    }
+
+    function scopeRevokeFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external {
+        // would a delete be more performant?
+        role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
+    }
+
     function scopeFunction(
         Role storage role,
         address targetAddress,
@@ -348,9 +367,7 @@ library Permissions {
         // set compValue
         key = keyForCompValues(targetAddress, functionSig, paramIndex);
 
-        delete role.compValuesOneOf[key];
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
-
         for (uint256 i = 0; i < compValues.length; i++) {
             role.compValuesOneOf[key][i] = maybeCompressCompValue(
                 compValues[i]
@@ -466,7 +483,7 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        if (scopeConfig == FUNCTION_WHITELIST) scopeConfig = 0;
+        if (scopeConfig == SCOPE_WILDCARD) scopeConfig = 0;
         uint8 prevParamCount = unpackParamCount(scopeConfig);
 
         uint8 nextParamCount = paramIndex + 1 > prevParamCount

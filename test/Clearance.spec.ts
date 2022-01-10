@@ -61,7 +61,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, true);
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     await expect(
       modifier
@@ -69,9 +69,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data, 0)
     ).to.not.be.reverted;
 
-    await modifier
-      .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false);
+    await modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address);
 
     await expect(
       modifier
@@ -79,6 +77,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data, 0)
     ).to.be.revertedWith("TargetAddressNotAllowed()");
   });
+
   it("allowing a target does not allow other targets", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -91,7 +90,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, true);
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -107,6 +106,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContractClone.address, 0, data, 0)
     ).to.be.revertedWith("TargetAddressNotAllowed()");
   });
+
   it("allows and then disallows a function", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -123,7 +123,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -135,7 +139,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, false);
+      .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -159,7 +163,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -192,7 +200,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, true);
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -207,7 +215,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -221,6 +233,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
     ).to.be.revertedWith("FunctionNotAllowed()");
   });
+
   it("allowing a target loosens a previously allowed function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -240,7 +253,11 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -256,7 +273,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, true);
+      .allowTarget(ROLE_ID, testContract.address, false, false);
 
     await expect(
       modifier
@@ -264,6 +281,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
     ).to.emit(testContract, "DoEvenLess");
   });
+
   it("disallowing one function does not impact other function allowances", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -286,11 +304,15 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DONOTHING, true);
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, true);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DONOTHING);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier
@@ -306,7 +328,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS, false);
+      .scopeRevokeFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier

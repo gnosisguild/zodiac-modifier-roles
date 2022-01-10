@@ -20,6 +20,8 @@ contract TestContract {
     event FnWithThreeParams(uint256, uint256, uint256);
     event FnWithTwoMixedParams(bool, string);
 
+    error AnError();
+
     receive() external payable {
         emit Receive();
     }
@@ -68,5 +70,9 @@ contract TestContract {
         uint256 c
     ) public {
         emit FnWithThreeParams(a, b, c);
+    }
+
+    function fnThatReverts() public pure {
+        revert AnError();
     }
 }
