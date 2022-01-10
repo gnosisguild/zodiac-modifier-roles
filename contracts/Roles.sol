@@ -342,7 +342,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex
-    ) external {
+    ) external onlyOwner {
         Permissions.unscopeParameter(
             roles[role],
             targetAddress,
