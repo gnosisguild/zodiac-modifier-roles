@@ -399,6 +399,7 @@ contract Roles is Modifier {
             data,
             operation,
             defaultRoles[msg.sender],
+            false,
             false
         );
     }
@@ -422,6 +423,7 @@ contract Roles is Modifier {
                 data,
                 operation,
                 defaultRoles[msg.sender],
+                true,
                 false
             );
     }
@@ -446,6 +448,7 @@ contract Roles is Modifier {
             data,
             operation,
             role,
+            false,
             true
         );
     }
@@ -464,7 +467,8 @@ contract Roles is Modifier {
         Enum.Operation operation,
         uint16 role
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        return _executeTransaction(to, value, data, operation, role, false);
+        return
+            _executeTransaction(to, value, data, operation, role, true, false);
     }
 
     function _executeTransaction(
@@ -473,8 +477,9 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role,
+        bool shouldReturnData,
         bool shouldRevert
-    ) private moduleOnly returns (bool success, bytes memory returnData) {
+    ) private returns (bool success, bytes memory returnData) {
         Role storage _role = roles[role];
 
         if (!_role.members[msg.sender]) {
@@ -486,7 +491,17 @@ contract Roles is Modifier {
             Permissions.checkTransaction(_role, to, value, data, operation);
         }
 
-        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (shouldReturnData) {
+            (success, returnData) = execAndReturnData(
+                to,
+                value,
+                data,
+                operation
+            );
+        } else {
+            success = exec(to, value, data, operation);
+        }
+
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }

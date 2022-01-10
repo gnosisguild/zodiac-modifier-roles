@@ -1248,34 +1248,6 @@ describe("RolesModifier", async () => {
         )
       ).to.emit(testContract, "Mint");
     });
-
-    it.skip("reverts if inner tx reverted", async () => {
-      const { modifier, testContract, owner, invoker } =
-        await setupRolesWithOwnerAndInvoker();
-
-      const ROLE_ID = 0;
-      const fnThatReverts =
-        await testContract.populateTransaction.fnThatReverts();
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
-
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            fnThatReverts.data,
-            0
-          )
-      ).to.be.revertedWith("ModuleTransactionFailed()");
-    });
   });
 
   describe("execTransactionFromModuleReturnData()", () => {
@@ -1381,6 +1353,37 @@ describe("RolesModifier", async () => {
           0
         )
       ).to.emit(testContract, "Mint");
+    });
+  });
+
+  describe("execTransactionWithRole()", () => {
+    it("reverts if inner tx reverted", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const fnThatReverts =
+        await testContract.populateTransaction.fnThatReverts();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContract.address,
+            0,
+            fnThatReverts.data,
+            0,
+            ROLE_ID
+          )
+      ).to.be.revertedWith("ModuleTransactionFailed()");
     });
   });
   describe("execTransactionWithRoleReturnData()", () => {
