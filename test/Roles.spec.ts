@@ -1387,6 +1387,7 @@ describe("RolesModifier", async () => {
       ).to.be.revertedWith("ModuleTransactionFailed()");
     });
   });
+
   describe("execTransactionWithRoleReturnData()", () => {
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, invoker } =
@@ -1408,6 +1409,35 @@ describe("RolesModifier", async () => {
             1
           )
       ).to.be.revertedWith("NoMembership()");
+    });
+
+    it("reverts if inner tx reverted", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const fnThatReverts =
+        await testContract.populateTransaction.fnThatReverts();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRoleReturnData(
+            testContract.address,
+            0,
+            fnThatReverts.data,
+            0,
+            ROLE_ID
+          )
+      ).to.be.revertedWith("ModuleTransactionFailed()");
     });
 
     it("executes a call with multisend tx", async () => {
