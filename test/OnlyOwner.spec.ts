@@ -2,8 +2,6 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-const [, janeDoe] = waffle.provider.getWallets();
-
 describe("EnsureOnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -18,7 +16,7 @@ describe("EnsureOnlyOwner", async () => {
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
     const base = await baseSetup();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+    const [owner, invoker, janeDoe] = waffle.provider.getWallets();
 
     const Permissions = await hre.ethers.getContractFactory("Permissions");
     const permissions = await Permissions.deploy();
@@ -42,11 +40,12 @@ describe("EnsureOnlyOwner", async () => {
       modifier,
       owner,
       invoker,
+      janeDoe,
     };
   });
 
   it("onlyOwner for allowTarget simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -71,7 +70,7 @@ describe("EnsureOnlyOwner", async () => {
   });
 
   it("onlyOwner for allowTargetPartially, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -95,7 +94,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -114,7 +113,7 @@ describe("EnsureOnlyOwner", async () => {
   });
 
   it("onlyOwner for scopeAllowFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -141,7 +140,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeRevokeFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -168,7 +167,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -195,7 +194,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeParameter, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -246,7 +245,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeParameterAsOneOf, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
@@ -294,7 +293,7 @@ describe("EnsureOnlyOwner", async () => {
     ).to.not.be.reverted;
   });
   it("onlyOwner for unscopeParameter, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
+    const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
