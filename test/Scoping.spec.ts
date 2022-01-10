@@ -5,7 +5,6 @@ import "@nomiclabs/hardhat-ethers";
 const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
 const COMP_LESS = 2;
-const COMP_ONE_OF = 3;
 
 describe("Scoping", async () => {
   const baseSetup = deployments.createFixture(async () => {

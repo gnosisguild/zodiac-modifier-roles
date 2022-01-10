@@ -1,8 +1,9 @@
+import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
 import { buildContractCall, buildMultiSendSafeTx } from "./utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
 const FirstAddress = "0x0000000000000000000000000000000000000001";
@@ -400,7 +401,7 @@ describe("RolesModifier", async () => {
 
   describe("execTransactionFromModule()", () => {
     it("reverts if data is set and is not at least 4 bytes", async () => {
-      const { modifier, testContract, owner, invoker } =
+      const { modifier, testContract, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
@@ -1388,7 +1389,7 @@ describe("RolesModifier", async () => {
   });
   describe("execTransactionWithRoleReturnData()", () => {
     it("reverts if called from module not assigned any role", async () => {
-      const { modifier, testContract, owner, invoker } =
+      const { modifier, testContract, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
       const mint = await testContract.populateTransaction.mint(
@@ -1502,7 +1503,7 @@ describe("RolesModifier", async () => {
   });
   describe("setMultiSend()", () => {
     it("reverts if not authorized", async () => {
-      const { avatar, modifier } = await txSetup();
+      const { modifier } = await txSetup();
       await expect(modifier.setMultiSend(AddressOne)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
@@ -2013,7 +2014,7 @@ describe("RolesModifier", async () => {
 
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
-      const { avatar, modifier } = await txSetup();
+      const { modifier } = await txSetup();
       await expect(modifier.setDefaultRole(AddressOne, 1)).to.be.revertedWith(
         "Ownable: caller is not the owner"
       );
