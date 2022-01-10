@@ -426,11 +426,12 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly {
+    ) public moduleOnly returns (bool) {
         checkPermission(to, value, data, operation, role);
         if (!exec(to, value, data, operation)) {
             revert ModuleTransactionFailed();
         }
+        return true;
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
@@ -446,9 +447,8 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation,
         uint16 role
-    ) public moduleOnly returns (bytes memory returnData) {
+    ) public moduleOnly returns (bool success, bytes memory returnData) {
         checkPermission(to, value, data, operation, role);
-        bool success;
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (!success) {
             revert ModuleTransactionFailed();
