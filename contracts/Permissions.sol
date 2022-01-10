@@ -31,7 +31,7 @@ struct Role {
 }
 
 library Permissions {
-    uint256 public constant SCOPE_WHITELIST = 2**256 - 1;
+    uint256 internal constant SCOPE_WHITELIST = 2**256 - 1;
     // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
         uint256(0x3fffffffffffffff << (62 + 124));
@@ -256,6 +256,25 @@ library Permissions {
      * SETTERS
      *
      */
+    function scopeAllowFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external {
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = SCOPE_WHITELIST;
+    }
+
+    function scopeRevokeFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig
+    ) external {
+        // would a delete be more performant?
+        role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
+    }
+
     function scopeFunction(
         Role storage role,
         address targetAddress,

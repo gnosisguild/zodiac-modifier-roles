@@ -199,9 +199,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig
     ) external onlyOwner {
-        roles[role].functions[
-            Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = Permissions.SCOPE_WHITELIST;
+        Permissions.scopeAllowFunction(roles[role], targetAddress, functionSig);
         emit ScopeAllowFunction(role, targetAddress, functionSig);
     }
 
@@ -215,11 +213,12 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig
     ) external onlyOwner {
-        // would a delete be more performant?
-        roles[role].functions[
-            Permissions.keyForFunctions(targetAddress, functionSig)
-        ] = 0;
-        emit ScopeAllowFunction(role, targetAddress, functionSig);
+        Permissions.scopeRevokeFunction(
+            roles[role],
+            targetAddress,
+            functionSig
+        );
+        emit ScopeRevokeFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Sets and enforces scoping for an allowed function, on a specific address
