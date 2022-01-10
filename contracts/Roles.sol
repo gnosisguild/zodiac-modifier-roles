@@ -7,8 +7,8 @@ import "./Permissions.sol";
 contract Roles is Modifier {
     address public multiSend;
 
-    mapping(address => uint16) defaultRoles;
-    mapping(uint16 => Role) roles;
+    mapping(address => uint16) public defaultRoles;
+    mapping(uint16 => Role) internal roles;
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
