@@ -53,7 +53,8 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint8 paramIndex,
         bool isDynamic,
-        Comparison compType
+        Comparison compType,
+        bytes compValue
     );
     event ScopeParameterAsOneOf(
         uint16 role,
@@ -291,7 +292,8 @@ contract Roles is Modifier {
             functionSig,
             paramIndex,
             isDynamic,
-            compType
+            compType,
+            compValue
         );
     }
 
