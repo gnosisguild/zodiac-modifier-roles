@@ -79,6 +79,9 @@ library Permissions {
     /// Exceeds the max number of params supported
     error ScopeMaxParametersExceeded();
 
+    /// Not possible to a compValue of more than 32 bytes for non static type
+    error StaticCompValueSizeExceeded();
+
     /*
      *
      * CHECKERS
@@ -303,6 +306,7 @@ library Permissions {
         for (uint256 i = 0; i < isParamDynamic.length; i++) {
             if (isParamScoped[i]) {
                 enforceCompType(isParamDynamic[i], paramCompType[i]);
+                enforceCompValue(isParamDynamic[i], paramCompValue[i]);
             }
         }
 
@@ -339,6 +343,7 @@ library Permissions {
         }
 
         enforceCompType(isDynamic, compType);
+        enforceCompValue(isDynamic, compValue);
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
@@ -367,6 +372,10 @@ library Permissions {
     ) external {
         if (paramIndex >= SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
+        }
+
+        for (uint256 i = 0; i < compValues.length; i++) {
+            enforceCompValue(isDynamic, compValues[i]);
         }
 
         // set scopeConfig
@@ -400,6 +409,7 @@ library Permissions {
         if (paramIndex >= SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
         }
+
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = setScopeConfig(
@@ -597,12 +607,17 @@ library Permissions {
             revert UnsuitableOneOfComparison();
         }
 
-        if (
-            isDynamic &&
-            (compType == Comparison.GreaterThan ||
-                compType == Comparison.LessThan)
-        ) {
+        if (isDynamic && (compType != Comparison.EqualTo)) {
             revert UnsuitableRelativeComparison();
+        }
+    }
+
+    function enforceCompValue(bool isDynamic, bytes calldata compValue)
+        internal
+        pure
+    {
+        if (!isDynamic && compValue.length > 32) {
+            revert StaticCompValueSizeExceeded();
         }
     }
 

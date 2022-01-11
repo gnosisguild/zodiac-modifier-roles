@@ -646,7 +646,7 @@ describe("Scoping", async () => {
     await expect(invoke(1, 3000, 3)).to.not.be.reverted;
   });
 
-  describe("Checks for max param limit", () => {
+  describe("Enforces Scope Max Param limit", () => {
     it("checks limit on scopeFunction", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
@@ -780,6 +780,144 @@ describe("Scoping", async () => {
         modifier
           .connect(owner)
           .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 61)
+      ).to.not.be.reverted;
+    });
+  });
+
+  describe("Enforces Static Parameter Size limit", () => {
+    const MORE_THAN_32_BYTES_TEXT =
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+    const LESS_THAN_32_BYTES_TEXT = "Lorem Ipsum";
+
+    it("checks limit on scopeFunction", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const COMP_EQUAL = 0;
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            [true],
+            [false],
+            [COMP_EQUAL],
+            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
+          )
+      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            [true],
+            [false],
+            [COMP_EQUAL],
+            [ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])]
+          )
+      ).to.be.not.reverted;
+
+      // it doesn't check for unscoped parameter
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            [true, false],
+            [false, false],
+            [COMP_EQUAL, COMP_EQUAL],
+            [
+              ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT]),
+              ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
+            ]
+          )
+      ).to.not.be.reverted;
+    });
+
+    it("checks limit on scopeParameter", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const COMP_EQUAL = 0;
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            false,
+            COMP_EQUAL,
+            ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])
+          )
+      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            false,
+            COMP_EQUAL,
+            ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])
+          )
+      ).to.not.be.reverted;
+    });
+
+    it("checks limit on scopeParameterAsOneOf", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            false,
+            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
+          )
+      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            false,
+            [ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])]
+          )
       ).to.not.be.reverted;
     });
   });
