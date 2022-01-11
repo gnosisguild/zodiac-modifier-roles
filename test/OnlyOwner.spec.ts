@@ -210,7 +210,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           0,
           "0x"
         )
@@ -224,7 +224,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           0,
           "0x"
         )
@@ -238,7 +238,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           0,
           "0x"
         )
@@ -261,7 +261,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -274,7 +274,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -287,7 +287,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          false,
+          true,
           ["0x12", "0x23"]
         )
     ).to.not.be.reverted;

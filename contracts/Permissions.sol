@@ -616,7 +616,7 @@ library Permissions {
         internal
         pure
     {
-        if (!isDynamic && compValue.length > 32) {
+        if (!isDynamic && compValue.length != 32) {
             revert StaticCompValueSizeExceeded();
         }
     }

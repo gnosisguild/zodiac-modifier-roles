@@ -111,7 +111,7 @@ describe("Comparison", async () => {
           [true, false],
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
-          ["0x", "0x"]
+          [ethers.utils.defaultAbiCoder.encode(["bool"], [false]), "0x"]
         )
     ).to.not.be.reverted;
   });
@@ -120,6 +120,8 @@ describe("Comparison", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
 
+    const IS_SCOPED = true;
+    const IS_DYNAMIC = true;
     const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -132,10 +134,14 @@ describe("Comparison", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [false, true, false],
-          [false, false, false],
+          [!IS_SCOPED, IS_SCOPED, !IS_SCOPED],
+          [!IS_DYNAMIC, !IS_DYNAMIC, !IS_DYNAMIC],
           [COMP_EQUAL, COMP_ONE_OF, COMP_EQUAL],
-          ["0x", "0x", "0x"]
+          [
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+          ]
         )
     ).to.be.revertedWith("UnsuitableOneOfComparison");
 
@@ -146,10 +152,14 @@ describe("Comparison", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [false, true, false],
-          [false, true, false],
+          [!IS_SCOPED, IS_SCOPED, !IS_SCOPED],
+          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
           [COMP_EQUAL, COMP_GREATER, COMP_GREATER],
-          ["0x", "0x", "0x"]
+          [
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+            "0x",
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+          ]
         )
     ).to.be.revertedWith("UnsuitableRelativeComparison");
 
@@ -160,12 +170,16 @@ describe("Comparison", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [false, true, true],
-          [false, true, false],
+          [!IS_SCOPED, IS_SCOPED, IS_SCOPED],
+          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_GREATER],
-          ["0x", "0x", "0x"]
+          [
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+            "0x",
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+          ]
         )
-    ).to.not.be.reverted;
+    ).to.be.not.be.reverted;
 
     await expect(
       modifier
@@ -174,10 +188,14 @@ describe("Comparison", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [false, true, true],
-          [false, true, false],
+          [!IS_SCOPED, IS_SCOPED, IS_SCOPED],
+          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_LESS],
-          ["0x", "0x", "0x"]
+          [
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+            "0x",
+            ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+          ]
         )
     ).to.not.be.reverted;
   });
@@ -243,7 +261,7 @@ describe("Comparison", async () => {
           0,
           !IS_DYNAMIC,
           COMP_ONE_OF,
-          "0x"
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
     ).to.be.revertedWith("UnsuitableOneOfComparison");
 
@@ -257,7 +275,7 @@ describe("Comparison", async () => {
           0,
           !IS_DYNAMIC,
           COMP_GREATER,
-          "0x"
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
     ).to.not.be.reverted;
 
@@ -271,7 +289,7 @@ describe("Comparison", async () => {
           0,
           !IS_DYNAMIC,
           COMP_EQUAL,
-          "0x"
+          ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
     ).to.not.be.reverted;
   });

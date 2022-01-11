@@ -6,6 +6,11 @@ const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
 const COMP_LESS = 2;
 
+const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
+  ["uint256"],
+  [123]
+);
+
 describe("Scoping", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -362,7 +367,7 @@ describe("Scoping", async () => {
         0,
         false,
         COMP_EQUAL,
-        "0x"
+        SOME_STATIC_COMP_VALUE
       );
 
     await modifier
@@ -417,7 +422,7 @@ describe("Scoping", async () => {
         [true, true, false],
         [false, false, false],
         [0, 0, 0],
-        ["0x", "0x", "0x"]
+        [SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE]
       );
 
     await modifier
@@ -664,7 +669,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(63).fill(true),
+            new Array(63).fill(false),
             new Array(63).fill(false),
             new Array(63).fill(COMP_EQUAL),
             new Array(63).fill("0x")
@@ -678,7 +683,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(62).fill(true),
+            new Array(62).fill(false),
             new Array(62).fill(false),
             new Array(62).fill(0),
             new Array(62).fill("0x")
@@ -696,6 +701,7 @@ describe("Scoping", async () => {
 
       const COMP_EQUAL = 0;
       const ROLE_ID = 0;
+      const IS_DYNAMIC = true;
       await expect(
         modifier
           .connect(owner)
@@ -704,7 +710,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             62,
-            false,
+            IS_DYNAMIC,
             COMP_EQUAL,
             "0x"
           )
@@ -718,7 +724,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             61,
-            false,
+            IS_DYNAMIC,
             COMP_EQUAL,
             "0x"
           )
@@ -733,6 +739,7 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
+      const IS_DYNAMIC = true;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -742,7 +749,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             62,
-            false,
+            IS_DYNAMIC,
             ["0x"]
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
@@ -755,7 +762,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             61,
-            false,
+            IS_DYNAMIC,
             ["0x"]
           )
       ).to.not.be.reverted;
@@ -787,7 +794,10 @@ describe("Scoping", async () => {
   describe("Enforces Static Parameter Size limit", () => {
     const MORE_THAN_32_BYTES_TEXT =
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
-    const LESS_THAN_32_BYTES_TEXT = "Lorem Ipsum";
+    const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(
+      ["uint256"],
+      [123]
+    );
 
     it("checks limit on scopeFunction", async () => {
       const { modifier, testContract, owner } =
@@ -799,6 +809,8 @@ describe("Scoping", async () => {
 
       const COMP_EQUAL = 0;
       const ROLE_ID = 0;
+      const IS_SCOPED = true;
+      const IS_DYNAMIC = true;
       await expect(
         modifier
           .connect(owner)
@@ -806,8 +818,8 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            [true],
-            [false],
+            [IS_SCOPED],
+            [!IS_DYNAMIC],
             [COMP_EQUAL],
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
           )
@@ -820,10 +832,10 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            [true],
-            [false],
+            [IS_SCOPED],
+            [!IS_DYNAMIC],
             [COMP_EQUAL],
-            [ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])]
+            [A_32_BYTES_VALUE]
           )
       ).to.be.not.reverted;
 
@@ -835,11 +847,11 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            [true, false],
-            [false, false],
+            [IS_SCOPED, !IS_SCOPED],
+            [!IS_DYNAMIC, !IS_DYNAMIC],
             [COMP_EQUAL, COMP_EQUAL],
             [
-              ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT]),
+              A_32_BYTES_VALUE,
               ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
             ]
           )
@@ -880,7 +892,7 @@ describe("Scoping", async () => {
             0,
             false,
             COMP_EQUAL,
-            ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])
+            A_32_BYTES_VALUE
           )
       ).to.not.be.reverted;
     });
@@ -916,7 +928,7 @@ describe("Scoping", async () => {
             SELECTOR,
             0,
             false,
-            [ethers.utils.solidityPack(["string"], [LESS_THAN_32_BYTES_TEXT])]
+            [A_32_BYTES_VALUE]
           )
       ).to.not.be.reverted;
     });
