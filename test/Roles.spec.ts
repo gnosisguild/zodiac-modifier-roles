@@ -1254,7 +1254,7 @@ describe("RolesModifier", async () => {
   describe("execTransactionFromModuleReturnData()", () => {
     it("reverts if called from module not assigned any role", async () => {
       const { avatar, modifier, testContract } = await txSetup();
-
+      const ROLE_ID = 0;
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
@@ -1273,7 +1273,7 @@ describe("RolesModifier", async () => {
           testContract.address,
           0,
           mint.data,
-          0
+          ROLE_ID
         )
       ).to.be.revertedWith("Module not authorized");
     });
@@ -1358,11 +1358,12 @@ describe("RolesModifier", async () => {
   });
 
   describe("execTransactionWithRole()", () => {
-    it("reverts if inner tx reverted", async () => {
+    it("reverts if inner tx reverted and shouldRevert true", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
+      const SHOULD_REVERT = true;
       const fnThatReverts =
         await testContract.populateTransaction.fnThatReverts();
 
@@ -1382,9 +1383,40 @@ describe("RolesModifier", async () => {
             0,
             fnThatReverts.data,
             0,
-            ROLE_ID
+            ROLE_ID,
+            SHOULD_REVERT
           )
       ).to.be.revertedWith("ModuleTransactionFailed()");
+    });
+    it("does not revert if inner tx reverted and shouldRevert false", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 0;
+      const SHOULD_REVERT = true;
+      const fnThatReverts =
+        await testContract.populateTransaction.fnThatReverts();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContract.address,
+            0,
+            fnThatReverts.data,
+            0,
+            ROLE_ID,
+            !SHOULD_REVERT
+          )
+      ).to.not.be.reverted;
     });
   });
 
@@ -1392,6 +1424,9 @@ describe("RolesModifier", async () => {
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, invoker } =
         await setupRolesWithOwnerAndInvoker();
+
+      const ROLE_ID = 1;
+      const SHOULD_REVERT = true;
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1406,15 +1441,17 @@ describe("RolesModifier", async () => {
             0,
             mint.data,
             0,
-            1
+            ROLE_ID,
+            !SHOULD_REVERT
           )
       ).to.be.revertedWith("NoMembership()");
     });
 
-    it("reverts if inner tx reverted", async () => {
+    it("reverts if inner tx reverted and shouldRevert true", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
+      const SHOULD_REVERT = true;
       const ROLE_ID = 0;
       const fnThatReverts =
         await testContract.populateTransaction.fnThatReverts();
@@ -1435,9 +1472,41 @@ describe("RolesModifier", async () => {
             0,
             fnThatReverts.data,
             0,
-            ROLE_ID
+            ROLE_ID,
+            SHOULD_REVERT
           )
       ).to.be.revertedWith("ModuleTransactionFailed()");
+    });
+
+    it("does not revert if inner tx reverted and shouldRevert false", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SHOULD_REVERT = true;
+      const ROLE_ID = 0;
+      const fnThatReverts =
+        await testContract.populateTransaction.fnThatReverts();
+
+      await modifier
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, false, false);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionWithRoleReturnData(
+            testContract.address,
+            0,
+            fnThatReverts.data,
+            0,
+            ROLE_ID,
+            !SHOULD_REVERT
+          )
+      ).to.be.not.be.reverted;
     });
 
     it("executes a call with multisend tx", async () => {
@@ -1458,6 +1527,9 @@ describe("RolesModifier", async () => {
         tx_2,
         tx_3,
       } = await txSetup();
+
+      const SHOULD_REVERT = true;
+
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
 
@@ -1526,7 +1598,8 @@ describe("RolesModifier", async () => {
           0,
           multiTx.data,
           1,
-          ROLE_ID
+          ROLE_ID,
+          !SHOULD_REVERT
         )
       ).to.emit(testContract, "TestDynamic");
     });
@@ -1567,6 +1640,7 @@ describe("RolesModifier", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
+      const SHOULD_REVERT = true;
       const ROLE_ID = 1;
 
       const doNothingArgs = [
@@ -1604,7 +1678,9 @@ describe("RolesModifier", async () => {
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionWithRole(...[...doNothingArgs, ROLE_ID])
+          .execTransactionWithRole(
+            ...[...doNothingArgs, ROLE_ID, !SHOULD_REVERT]
+          )
       ).to.emit(testContract, "DoNothing");
     });
 
@@ -1612,6 +1688,7 @@ describe("RolesModifier", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
+      const SHOULD_REVERT = true;
       const ROLE_ID = 1;
 
       const execWithRoleArgs = [
@@ -1620,6 +1697,7 @@ describe("RolesModifier", async () => {
         testContract.interface.encodeFunctionData("doNothing()"),
         0,
         ROLE_ID,
+        !SHOULD_REVERT,
       ];
 
       // assign a role to invoker
