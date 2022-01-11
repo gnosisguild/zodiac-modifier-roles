@@ -645,4 +645,142 @@ describe("Scoping", async () => {
 
     await expect(invoke(1, 3000, 3)).to.not.be.reverted;
   });
+
+  describe("Checks for max param limit", () => {
+    it("checks limit on scopeFunction", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const COMP_EQUAL = 0;
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            new Array(63).fill(true),
+            new Array(63).fill(false),
+            new Array(63).fill(COMP_EQUAL),
+            new Array(63).fill("0x")
+          )
+      ).to.be.revertedWith("ScopeMaxParametersExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            new Array(62).fill(true),
+            new Array(62).fill(false),
+            new Array(62).fill(0),
+            new Array(62).fill("0x")
+          )
+      ).to.not.be.reverted;
+    });
+
+    it("checks limit on scopeParameter", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const COMP_EQUAL = 0;
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            62,
+            false,
+            COMP_EQUAL,
+            "0x"
+          )
+      ).to.be.revertedWith("ScopeMaxParametersExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            61,
+            false,
+            COMP_EQUAL,
+            "0x"
+          )
+      ).to.not.be.reverted;
+    });
+
+    it("checks limit on scopeParameterAsOneOf", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            62,
+            false,
+            ["0x"]
+          )
+      ).to.be.revertedWith("ScopeMaxParametersExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            61,
+            false,
+            ["0x"]
+          )
+      ).to.not.be.reverted;
+    });
+
+    it("checks limit on unscopeParameter", async () => {
+      const { modifier, testContract, owner } =
+        await setupRolesWithOwnerAndInvoker();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("doNothing")
+      );
+
+      const ROLE_ID = 0;
+      await expect(
+        modifier
+          .connect(owner)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 62)
+      ).to.be.revertedWith("ScopeMaxParametersExceeded()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 61)
+      ).to.not.be.reverted;
+    });
+  });
 });

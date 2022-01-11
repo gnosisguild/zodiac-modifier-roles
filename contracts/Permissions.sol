@@ -32,6 +32,7 @@ struct Role {
 
 library Permissions {
     uint256 internal constant SCOPE_WILDCARD = 2**256 - 1;
+    uint256 internal constant SCOPE_MAX_PARAMS = 62;
     // 62 bit mask
     uint256 internal constant IS_SCOPED_MASK =
         uint256(0x3fffffffffffffff << (62 + 124));
@@ -74,6 +75,9 @@ library Permissions {
 
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
+
+    /// Exceeds the max number of params supported
+    error ScopeMaxParametersExceeded();
 
     /*
      *
@@ -292,6 +296,10 @@ library Permissions {
             revert ArraysDifferentLength();
         }
 
+        if (isParamScoped.length > SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
         for (uint256 i = 0; i < isParamDynamic.length; i++) {
             if (isParamScoped[i]) {
                 enforceCompType(isParamDynamic[i], paramCompType[i]);
@@ -326,6 +334,10 @@ library Permissions {
         Comparison compType,
         bytes calldata compValue
     ) external {
+        if (paramIndex >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
         enforceCompType(isDynamic, compType);
 
         // set scopeConfig
@@ -353,6 +365,10 @@ library Permissions {
         bool isDynamic,
         bytes[] calldata compValues
     ) external {
+        if (paramIndex >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = setScopeConfig(
@@ -381,6 +397,9 @@ library Permissions {
         bytes4 functionSig,
         uint8 paramIndex
     ) external {
+        if (paramIndex >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = setScopeConfig(
