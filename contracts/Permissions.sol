@@ -325,7 +325,7 @@ library Permissions {
         for (uint8 i = 0; i < paramCompType.length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
-            ] = maybeCompressCompValue(isParamDynamic[i], paramCompValue[i]);
+            ] = compressCompValue(isParamDynamic[i], paramCompValue[i]);
         }
     }
 
@@ -359,7 +359,7 @@ library Permissions {
         // set compValue
         role.compValues[
             keyForCompValues(targetAddress, functionSig, paramIndex)
-        ] = maybeCompressCompValue(isDynamic, compValue);
+        ] = compressCompValue(isDynamic, compValue);
     }
 
     function scopeParameterAsOneOf(
@@ -394,7 +394,7 @@ library Permissions {
 
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
         for (uint256 i = 0; i < compValues.length; i++) {
-            role.compValuesOneOf[key][i] = maybeCompressCompValue(
+            role.compValuesOneOf[key][i] = compressCompValue(
                 isDynamic,
                 compValues[i]
             );
@@ -633,7 +633,7 @@ library Permissions {
             bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
     }
 
-    function maybeCompressCompValue(bool isDynamic, bytes calldata compValue)
+    function compressCompValue(bool isDynamic, bytes calldata compValue)
         internal
         pure
         returns (bytes32)
