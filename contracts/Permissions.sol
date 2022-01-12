@@ -271,8 +271,7 @@ library Permissions {
         Role storage role,
         address targetAddress,
         bytes4 functionSig
-    ) external {
-        // would a delete be more performant?
+    ) external {        
         role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
     }
 
