@@ -142,7 +142,7 @@ library Permissions {
     ) public view {
         TargetAddress memory target = role.targets[targetAddress];
 
-        // CLEARANCE: transversal - checks
+        // transversal checks
         if (value > 0 && !target.canSend) {
             revert SendNotAllowed();
         }
@@ -158,22 +158,18 @@ library Permissions {
         /*
          * For each address we have three clearance checks:
          * Forbidden     - nothing was setup
-         * AddressPass   - all calls to this address are go, nothing more to check
+         * AddressPass   - address is go, nothing more to check
          * FunctionCheck - some functions on this address are allowed
          */
 
-        // isForbidden
         if (target.clearance == Clearance.NONE) {
             revert TargetAddressNotAllowed();
         }
 
-        // isAddressPass
         if (target.clearance == Clearance.TARGET) {
-            // good to go
             return;
         }
 
-        //isFunctionCheck
         if (target.clearance == Clearance.FUNCTION) {
             uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
@@ -181,6 +177,12 @@ library Permissions {
 
             if (scopeConfig == SCOPE_WILDCARD) {
                 return;
+            }
+            else if (scopeConfig & IS_SCOPED_MASK == 0) {
+                // is there no single param scoped?
+                // either config bug or unset
+                // semantically the same, not allowed
+                revert FunctionNotAllowed();
             } else {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
@@ -197,13 +199,6 @@ library Permissions {
         address targetAddress,
         bytes memory data
     ) public view {
-        if (scopeConfig & IS_SCOPED_MASK == 0) {
-            // is there no single param scoped?
-            // either config bug or unset
-            // semantically the same, not allowed
-            revert FunctionNotAllowed();
-        }
-
         bytes4 functionSig = bytes4(data);
         uint8 paramCount = unpackParamCount(scopeConfig);
 
