@@ -271,7 +271,7 @@ library Permissions {
         Role storage role,
         address targetAddress,
         bytes4 functionSig
-    ) external {        
+    ) external {
         role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
     }
 
@@ -414,11 +414,6 @@ library Permissions {
             Comparison(0)
         );
         role.functions[key] = scopeConfig;
-
-        // set compValue
-        key = keyForCompValues(targetAddress, functionSig, paramIndex);
-        delete role.compValues[key];
-        delete role.compValuesOneOf[key];
     }
 
     function enforceCompType(bool isDynamic, Comparison compType)
