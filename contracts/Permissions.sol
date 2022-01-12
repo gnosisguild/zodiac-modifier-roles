@@ -76,11 +76,11 @@ library Permissions {
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
 
+    /// CompValue for static types should have a size of exactly 32 bytes
+    error UnsuitableStaticCompValueSize();
+
     /// Exceeds the max number of params supported
     error ScopeMaxParametersExceeded();
-
-    /// Not possible to a compValue of more than 32 bytes for non static type
-    error StaticCompValueSizeExceeded();
 
     /*
      *
@@ -178,9 +178,21 @@ library Permissions {
             if (scopeConfig == SCOPE_WILDCARD) {
                 return;
             } else if (scopeConfig & IS_SCOPED_MASK == 0) {
-                // is there no single param scoped?
-                // either config bug or unset
-                // semantically the same, not allowed
+                /*
+                 * If the function is not allowlisted, and no single parameter has isScoped=true,
+                 * then we deny access to the function
+                 *
+                 * Note: checking scopeConfig == 0 is not enough!
+                 * By using a combination `scopeParameter`/`unscopeParameter` calls, or by
+                 * invoking `scopeFunction` with all isParamScoped=false, it is possible
+                 * to reach a scopeConfig that has length and isDynamic bits packed and set,
+                 * while all isScope bits are unset.
+                 *
+                 * In such case, deny access to the function. Doing otherwise would be equivalent
+                 * to WILDCARDing the function, and there's an explicit way to do that
+                 * (calling `scopeAllowFunction`)
+                 *
+                 */
                 revert FunctionNotAllowed();
             } else {
                 checkParameters(role, scopeConfig, targetAddress, data);
@@ -434,7 +446,7 @@ library Permissions {
         pure
     {
         if (!isDynamic && compValue.length != 32) {
-            revert StaticCompValueSizeExceeded();
+            revert UnsuitableStaticCompValueSize();
         }
     }
 

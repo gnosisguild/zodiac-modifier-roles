@@ -341,7 +341,7 @@ describe("Scoping", async () => {
     ).to.not.be.reverted;
   });
 
-  it("function scoping all params off, should result in FunctionNotAllowed", async () => {
+  it("function scoping all params off emits FunctionNotAllowed", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -396,7 +396,74 @@ describe("Scoping", async () => {
     ).to.be.revertedWith("FunctionNotAllowed()");
   });
 
-  it("unscoping all params one by one, should result in FunctionNotAllowed", async () => {
+  it("function scoping all params off, including dynamic types, emits FunctionNotAllowed", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const IS_DYNAMIC = true;
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithTwoMixedParams")
+    );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithTwoMixedParams(
+              false,
+              "Hello World!"
+            )
+          ).data,
+          0
+        )
+    ).to.emit(testContract, "FnWithTwoMixedParams");
+
+    await modifier
+      .connect(owner)
+      .scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        [false, false],
+        [!IS_DYNAMIC, IS_DYNAMIC],
+        [0, 0],
+        ["0x", "0x"]
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithTwoMixedParams(
+              false,
+              "Hello World!"
+            )
+          ).data,
+          0
+        )
+    ).to.be.revertedWith("FunctionNotAllowed()");
+  });
+
+  it("unscoping all params one by one emits FunctionNotAllowed", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -456,6 +523,108 @@ describe("Scoping", async () => {
           0,
           (
             await testContract.populateTransaction.fnWithThreeParams(1, 2, 3)
+          ).data,
+          0
+        )
+    ).to.be.revertedWith("FunctionNotAllowed()");
+  });
+  it("unscoping all params one by one, including dynamic types, emits FunctionNotAllowed", async () => {
+    const { modifier, testContract, owner, invoker } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const IS_DYNAMIC = true;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithTwoMixedParams")
+    );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        0,
+        !IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.defaultAbiCoder.encode(["bool"], [false])
+      );
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        1,
+        IS_DYNAMIC,
+        COMP_EQUAL,
+        ethers.utils.solidityPack(["string"], ["Hello World!"])
+      );
+
+    // should fail because first parameter doesn't comply
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithTwoMixedParams(
+              true,
+              "Hello World!"
+            )
+          ).data,
+          0
+        )
+    ).to.be.revertedWith("ParameterNotAllowed()");
+
+    // should work after we unscope first parameter
+    await modifier
+      .connect(owner)
+      .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 0);
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithTwoMixedParams(
+              true,
+              "Hello World!"
+            )
+          ).data,
+          0
+        )
+    ).to.emit(testContract, "FnWithTwoMixedParams");
+
+    // unscope second parameter, leaves no parameter scoped
+    await modifier
+      .connect(owner)
+      .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 1);
+
+    // whole function should be not allowed
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithTwoMixedParams(
+              false,
+              "Hello World!"
+            )
           ).data,
           0
         )
@@ -823,7 +992,7 @@ describe("Scoping", async () => {
             [COMP_EQUAL],
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
           )
-      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+      ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
       await expect(
         modifier
@@ -880,7 +1049,7 @@ describe("Scoping", async () => {
             COMP_EQUAL,
             ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])
           )
-      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+      ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
       await expect(
         modifier
@@ -917,7 +1086,7 @@ describe("Scoping", async () => {
             false,
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
           )
-      ).to.be.revertedWith("StaticCompValueSizeExceeded()");
+      ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
       await expect(
         modifier
