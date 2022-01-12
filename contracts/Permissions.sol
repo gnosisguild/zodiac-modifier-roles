@@ -140,7 +140,7 @@ library Permissions {
         bytes memory data,
         Enum.Operation operation
     ) public view {
-        TargetAddress memory target = role.targets[targetAddress];
+        TargetAddress storage target = role.targets[targetAddress];
 
         // transversal checks
         if (value > 0 && !target.canSend) {
