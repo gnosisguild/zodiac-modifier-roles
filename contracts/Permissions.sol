@@ -177,8 +177,7 @@ library Permissions {
 
             if (scopeConfig == SCOPE_WILDCARD) {
                 return;
-            }
-            else if (scopeConfig & IS_SCOPED_MASK == 0) {
+            } else if (scopeConfig & IS_SCOPED_MASK == 0) {
                 // is there no single param scoped?
                 // either config bug or unset
                 // semantically the same, not allowed
@@ -213,7 +212,6 @@ library Permissions {
                 continue;
             }
 
-            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             bytes32 value;
             if (isParamDynamic) {
                 value = pluckDynamicParamValue(data, i);
@@ -221,6 +219,7 @@ library Permissions {
                 value = pluckParamValue(data, i);
             }
 
+            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             if (compType != Comparison.OneOf) {
                 compare(compType, role.compValues[key], value);
             } else {
@@ -423,6 +422,28 @@ library Permissions {
         delete role.compValuesOneOf[key];
     }
 
+    function enforceCompType(bool isDynamic, Comparison compType)
+        internal
+        pure
+    {
+        if (compType == Comparison.OneOf) {
+            revert UnsuitableOneOfComparison();
+        }
+
+        if (isDynamic && (compType != Comparison.EqualTo)) {
+            revert UnsuitableRelativeComparison();
+        }
+    }
+
+    function enforceCompValue(bool isDynamic, bytes calldata compValue)
+        internal
+        pure
+    {
+        if (!isDynamic && compValue.length != 32) {
+            revert StaticCompValueSizeExceeded();
+        }
+    }
+
     /*
      *
      * HELPERS
@@ -585,28 +606,6 @@ library Permissions {
 
     function unpackParamCount(uint256 config) internal pure returns (uint8) {
         return uint8(config >> 248);
-    }
-
-    function enforceCompType(bool isDynamic, Comparison compType)
-        internal
-        pure
-    {
-        if (compType == Comparison.OneOf) {
-            revert UnsuitableOneOfComparison();
-        }
-
-        if (isDynamic && (compType != Comparison.EqualTo)) {
-            revert UnsuitableRelativeComparison();
-        }
-    }
-
-    function enforceCompValue(bool isDynamic, bytes calldata compValue)
-        internal
-        pure
-    {
-        if (!isDynamic && compValue.length != 32) {
-            revert StaticCompValueSizeExceeded();
-        }
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
