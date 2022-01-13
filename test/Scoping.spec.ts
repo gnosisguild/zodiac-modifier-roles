@@ -838,10 +838,10 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(63).fill(false),
-            new Array(63).fill(false),
-            new Array(63).fill(COMP_EQUAL),
-            new Array(63).fill("0x")
+            new Array(62).fill(false),
+            new Array(62).fill(false),
+            new Array(62).fill(COMP_EQUAL),
+            new Array(62).fill("0x")
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -852,10 +852,10 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(62).fill(false),
-            new Array(62).fill(false),
-            new Array(62).fill(0),
-            new Array(62).fill("0x")
+            new Array(61).fill(false),
+            new Array(61).fill(false),
+            new Array(61).fill(0),
+            new Array(61).fill("0x")
           )
       ).to.not.be.reverted;
     });
@@ -878,7 +878,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            62,
+            61,
             IS_DYNAMIC,
             COMP_EQUAL,
             "0x"
@@ -892,7 +892,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            61,
+            60,
             IS_DYNAMIC,
             COMP_EQUAL,
             "0x"
@@ -917,7 +917,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            62,
+            61,
             IS_DYNAMIC,
             ["0x"]
           )
@@ -930,7 +930,7 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            61,
+            60,
             IS_DYNAMIC,
             ["0x"]
           )
@@ -949,13 +949,13 @@ describe("Scoping", async () => {
       await expect(
         modifier
           .connect(owner)
-          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 62)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 61)
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
       await expect(
         modifier
           .connect(owner)
-          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 61)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 60)
       ).to.not.be.reverted;
     });
   });

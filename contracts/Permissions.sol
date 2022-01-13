@@ -32,10 +32,10 @@ struct Role {
 
 library Permissions {
     uint256 internal constant SCOPE_WILDCARD = 2**256 - 1;
-    uint256 internal constant SCOPE_MAX_PARAMS = 62;
-    // 62 bit mask
+    uint256 internal constant SCOPE_MAX_PARAMS = 61;
+    // 61 bit mask
     uint256 internal constant IS_SCOPED_MASK =
-        uint256(0x3fffffffffffffff << (62 + 124));
+        uint256(0x1fffffffffffffff << (61 + 122));
 
     /// Arrays must be the same length
     error ArraysDifferentLength();
@@ -142,12 +142,26 @@ library Permissions {
     ) public view {
         TargetAddress storage target = role.targets[targetAddress];
 
+        uint256 scopeConfig = target.clearance == Clearance.FUNCTION
+            ? role.functions[keyForFunctions(targetAddress, bytes4(data))]
+            : // if clearance is Target or None, scopeConfig is not in play
+            0;
+
+        (
+            ,
+            bool canSendToFunction,
+            bool canDelegateToFunction
+        ) = unpackFunctionConfig(scopeConfig);
+
         // transversal checks
-        if (value > 0 && !target.canSend) {
+        bool isSend = value > 0;
+        bool isDelegate = operation == Enum.Operation.DelegateCall;
+
+        if (isSend && !target.canSend && !canSendToFunction) {
             revert SendNotAllowed();
         }
 
-        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
+        if (isDelegate && !target.canDelegate && !canDelegateToFunction) {
             revert DelegateCallNotAllowed();
         }
 
@@ -171,10 +185,6 @@ library Permissions {
         }
 
         if (target.clearance == Clearance.FUNCTION) {
-            uint256 scopeConfig = role.functions[
-                keyForFunctions(targetAddress, bytes4(data))
-            ];
-
             if (scopeConfig == SCOPE_WILDCARD) {
                 return;
             } else if (scopeConfig & IS_SCOPED_MASK == 0) {
@@ -209,16 +219,16 @@ library Permissions {
         uint256 scopeConfig,
         address targetAddress,
         bytes memory data
-    ) public view {
+    ) internal view {
         bytes4 functionSig = bytes4(data);
-        uint8 paramCount = unpackLength(scopeConfig);
+        (uint8 paramCount, , ) = unpackFunctionConfig(scopeConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
                 bool isParamDynamic,
                 Comparison compType
-            ) = unpackEntry(scopeConfig, i);
+            ) = unpackParamConfig(scopeConfig, i);
 
             if (!isParamScoped) {
                 continue;
@@ -505,9 +515,9 @@ library Permissions {
         Comparison[] memory paramCompType
     ) internal pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
-        uint256 scopeConfig = packLength(0, paramCount);
+        uint256 scopeConfig = packFunctionConfig(0, paramCount, false, false);
         for (uint8 i = 0; i < paramCount; i++) {
-            scopeConfig = packEntry(
+            scopeConfig = packParamConfig(
                 scopeConfig,
                 i,
                 isParamScoped[i],
@@ -527,15 +537,24 @@ library Permissions {
         Comparison compType
     ) internal pure returns (uint256) {
         if (scopeConfig == SCOPE_WILDCARD) scopeConfig = 0;
-        uint8 prevParamCount = unpackLength(scopeConfig);
+        (
+            uint8 prevParamCount,
+            bool canSend,
+            bool canDelegate
+        ) = unpackFunctionConfig(scopeConfig);
 
         uint8 nextParamCount = paramIndex + 1 > prevParamCount
             ? paramIndex + 1
             : prevParamCount;
 
         return
-            packEntry(
-                packLength(scopeConfig, nextParamCount),
+            packParamConfig(
+                packFunctionConfig(
+                    scopeConfig,
+                    nextParamCount,
+                    canSend,
+                    canDelegate
+                ),
                 paramIndex,
                 isScoped,
                 isDynamic,
@@ -543,20 +562,22 @@ library Permissions {
             );
     }
 
-    function packEntry(
+    function packParamConfig(
         uint256 scopeConfig,
         uint8 paramIndex,
         bool isScoped,
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        // we restrict paramCount to 62:
         // 8   bits -> length
-        // 62  bits -> isParamScoped
-        // 62  bits -> isParamDynamic
-        // 124 bits -> two bits for each compType 62*2 = 124
-        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 isDynamicMask = 1 << (paramIndex + 124);
+        // 2   bits -> not used
+        // 1   bit  -> canSend
+        // 1   bit  -> canDelegate
+        // 61  bits -> isParamScoped
+        // 61  bits -> isParamDynamic
+        // 122 bits -> two bits represents for each compType 61*2 = 122
+        uint256 isScopedMask = 1 << (paramIndex + 61 + 122);
+        uint256 isDynamicMask = 1 << (paramIndex + 122);
         uint256 compTypeMask = 3 << (paramIndex * 2);
 
         if (isScoped) {
@@ -577,21 +598,42 @@ library Permissions {
         return scopeConfig;
     }
 
-    function packLength(uint256 scopeConfig, uint8 paramCount)
-        internal
-        pure
-        returns (uint256)
-    {
+    function packFunctionConfig(
+        uint256 scopeConfig,
+        uint8 paramCount,
+        bool canSend,
+        bool canDelegate
+    ) internal pure returns (uint256) {
         // 8   bits -> length
-        // 62  bits -> isParamScoped
-        // 62  bits -> isParamDynamic
-        // 124 bits -> two bits represents for each compType 62*2 = 124
-        uint256 left = (uint256(paramCount) << (62 + 62 + 124));
+        // 2   bits -> not used
+        // 1   bit  -> canSend
+        // 1   bit  -> canDelegate
+        // 61  bits -> isParamScoped
+        // 61  bits -> isParamDynamic
+        // 122 bits -> two bits represents for each compType 61*2 = 122
+        uint256 canSendMask = 1 << (61 + 61 + 122);
+        uint256 canDelegateMask = 1 << (1 + 61 + 61 + 122);
+
+        uint256 left = (uint256(paramCount) << 248);
         uint256 right = (scopeConfig << 8) >> 8;
-        return left | right;
+        scopeConfig = left | right;
+
+        if (canSend) {
+            scopeConfig |= canSendMask;
+        } else {
+            scopeConfig &= ~canSendMask;
+        }
+
+        if (canDelegate) {
+            scopeConfig |= canDelegateMask;
+        } else {
+            scopeConfig &= ~canDelegateMask;
+        }
+
+        return scopeConfig;
     }
 
-    function unpackEntry(uint256 scopeConfig, uint8 paramIndex)
+    function unpackParamConfig(uint256 scopeConfig, uint8 paramIndex)
         internal
         pure
         returns (
@@ -600,8 +642,8 @@ library Permissions {
             Comparison compType
         )
     {
-        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 isDynamicMask = 1 << (paramIndex + 124);
+        uint256 isScopedMask = 1 << (paramIndex + 61 + 122);
+        uint256 isDynamicMask = 1 << (paramIndex + 122);
         uint256 compTypeMask = 3 << (2 * paramIndex);
 
         isScoped = (scopeConfig & isScopedMask) != 0;
@@ -609,8 +651,21 @@ library Permissions {
         compType = Comparison((scopeConfig & compTypeMask) >> (2 * paramIndex));
     }
 
-    function unpackLength(uint256 scopeConfig) internal pure returns (uint8) {
-        return uint8(scopeConfig >> 248);
+    function unpackFunctionConfig(uint256 scopeConfig)
+        internal
+        pure
+        returns (
+            uint8 paramCount,
+            bool canSend,
+            bool canDelegate
+        )
+    {
+        uint256 canSendMask = 1 << (61 + 61 + 122);
+        uint256 canDelegateMask = 1 << (1 + 61 + 61 + 122);
+
+        paramCount = uint8(scopeConfig >> 248);
+        canSend = canSendMask & scopeConfig != 0;
+        canDelegate = canDelegateMask & scopeConfig != 0;
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
