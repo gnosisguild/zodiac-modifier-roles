@@ -1,0 +1,9 @@
+{
+  "name": "zodiac-roles-modifier-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "LGPL-3.0+",
+  "scripts": {
+    "build": "echo \"No build yet\""
+  }
+}
