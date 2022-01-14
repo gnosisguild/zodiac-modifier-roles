@@ -44,6 +44,11 @@ describe("EnsureOnlyOwner", async () => {
     };
   });
 
+  const MODE_BARE = 0;
+  const MODE_SEND = 1;
+  const MODE_DELEGATE = 2;
+  const MODE_BOTH = 3;
+
   it("onlyOwner for allowTarget simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
@@ -53,19 +58,19 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE)
     ).to.not.be.reverted;
   });
 
@@ -78,19 +83,19 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {

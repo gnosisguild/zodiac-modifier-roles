@@ -141,6 +141,10 @@ describe("RolesModifier", async () => {
   });
 
   const [user1] = waffle.provider.getWallets();
+  const MODE_BARE = 0;
+  const MODE_SEND = 1;
+  const MODE_DELEGATE = 2;
+  const MODE_BOTH = 3;
 
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
@@ -285,7 +289,7 @@ describe("RolesModifier", async () => {
       // blank allow all calls to testContract from role 0
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       // expect it to fail, before assigning role
       await expect(
@@ -325,7 +329,7 @@ describe("RolesModifier", async () => {
       // blank allow all calls to testContract from role 0
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       //authorize
       await modifier
@@ -422,7 +426,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -451,8 +455,7 @@ describe("RolesModifier", async () => {
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
-        false,
-        false
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -485,8 +488,7 @@ describe("RolesModifier", async () => {
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
-        false,
-        false
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -532,8 +534,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -585,8 +586,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -647,8 +647,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -722,8 +721,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -809,8 +807,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -901,8 +898,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -975,8 +971,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1046,8 +1041,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1102,8 +1096,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1158,8 +1151,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1214,8 +1206,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1258,8 +1249,7 @@ describe("RolesModifier", async () => {
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
-        false,
-        false
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1290,8 +1280,7 @@ describe("RolesModifier", async () => {
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
-        false,
-        false
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1329,8 +1318,7 @@ describe("RolesModifier", async () => {
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
-        false,
-        false
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, allowTargetAddress.data);
 
@@ -1373,7 +1361,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       await expect(
         modifier
@@ -1403,7 +1391,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       await expect(
         modifier
@@ -1462,7 +1450,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       await expect(
         modifier
@@ -1493,7 +1481,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       await expect(
         modifier
@@ -1551,8 +1539,7 @@ describe("RolesModifier", async () => {
         await modifier.populateTransaction.allowTargetPartially(
           1,
           testContract.address,
-          false,
-          false
+          MODE_BARE
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1632,7 +1619,7 @@ describe("RolesModifier", async () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
-        modifier.allowTarget(1, AddressOne, false, false)
+        modifier.allowTarget(1, AddressOne, MODE_BARE)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -1664,10 +1651,10 @@ describe("RolesModifier", async () => {
       await expect(
         modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, false, false)
+          .allowTarget(ROLE_ID, testContract.address, MODE_BARE)
       )
         .to.emit(modifier, "AllowTarget")
-        .withArgs(ROLE_ID, testContract.address, false, false);
+        .withArgs(ROLE_ID, testContract.address, MODE_BARE);
 
       // expect to fail with default role
       await expect(
@@ -1709,7 +1696,7 @@ describe("RolesModifier", async () => {
       await expect(
         modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, false, false)
+          .allowTarget(ROLE_ID, testContract.address, MODE_BARE)
       );
 
       // this call should work
@@ -1735,12 +1722,11 @@ describe("RolesModifier", async () => {
       const tx = await modifier.populateTransaction.allowTarget(
         1,
         AddressOne,
-        false,
-        false
+        MODE_BARE
       );
       await expect(avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, false, false);
+        .withArgs(1, AddressOne, MODE_BARE);
     });
   });
 
@@ -1748,7 +1734,7 @@ describe("RolesModifier", async () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
-        modifier.allowTarget(1, AddressOne, false, true)
+        modifier.allowTarget(1, AddressOne, MODE_DELEGATE)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -1771,7 +1757,7 @@ describe("RolesModifier", async () => {
       // allow calls (but not delegate)
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       // still getting the delegateCallNotAllowed error
       await expect(
@@ -1781,7 +1767,7 @@ describe("RolesModifier", async () => {
       // allow delegate calls to address
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, true);
+        .allowTarget(ROLE_ID, testContract.address, MODE_DELEGATE);
 
       // ok
       await expect(
@@ -1814,7 +1800,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, true);
+        .allowTarget(ROLE_ID, testContract.address, MODE_DELEGATE);
 
       // ok
       await expect(
@@ -1831,7 +1817,7 @@ describe("RolesModifier", async () => {
       // revoke delegate calls to address
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       // still getting the delegateCallNotAllowed error
       await expect(
@@ -1844,12 +1830,11 @@ describe("RolesModifier", async () => {
       const tx = await modifier.populateTransaction.allowTarget(
         1,
         AddressOne,
-        false,
-        true
+        MODE_DELEGATE
       );
       await expect(avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, false, true);
+        .withArgs(1, AddressOne, MODE_DELEGATE);
     });
   });
 
@@ -1894,7 +1879,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       // works before making function parameter scoped
       await expect(
@@ -1903,7 +1888,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+        .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
       await modifier
         .connect(owner)
@@ -1965,7 +1950,7 @@ describe("RolesModifier", async () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
-        modifier.allowTarget(1, AddressOne, true, false)
+        modifier.allowTarget(1, AddressOne, MODE_SEND)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -1981,7 +1966,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       await expect(
         modifier
@@ -1991,7 +1976,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_SEND);
 
       await expect(
         modifier
@@ -2016,7 +2001,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, true, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_SEND);
 
       // should work with sendAllowed true
       await expect(
@@ -2032,7 +2017,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false);
+        .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
       // should work with sendAllowed false
       await expect(
@@ -2047,12 +2032,11 @@ describe("RolesModifier", async () => {
       const tx = await modifier.populateTransaction.allowTarget(
         1,
         AddressOne,
-        true,
-        false
+        MODE_SEND
       );
       await expect(await avatar.exec(modifier.address, 0, tx.data))
         .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, true, false);
+        .withArgs(1, AddressOne, MODE_SEND);
     });
   });
 
@@ -2086,7 +2070,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+        .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
       // allow the function
       await modifier
@@ -2146,7 +2130,7 @@ describe("RolesModifier", async () => {
       // allow all calls to testContract from ROLE1
       await modifier
         .connect(owner)
-        .allowTarget(ROLE1, testContract.address, false, false);
+        .allowTarget(ROLE1, testContract.address, MODE_BARE);
 
       // expect it to fail
       await expect(

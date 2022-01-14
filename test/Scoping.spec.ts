@@ -6,6 +6,11 @@ const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
 const COMP_LESS = 2;
 
+const MODE_BARE = 0;
+const MODE_SEND = 1;
+const MODE_DELEGATE = 2;
+const MODE_BOTH = 3;
+
 const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
   ["uint256"],
   [123]
@@ -73,7 +78,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -125,7 +130,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -197,7 +202,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
@@ -263,7 +268,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -356,7 +361,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -425,7 +430,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -491,7 +496,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -557,7 +562,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -657,7 +662,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -738,7 +743,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -799,7 +804,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)

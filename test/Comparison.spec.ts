@@ -48,6 +48,11 @@ describe("Comparison", async () => {
   const COMP_LESS = 2;
   const COMP_ONE_OF = 3;
 
+  const MODE_BARE = 0;
+  const MODE_SEND = 1;
+  const MODE_DELEGATE = 2;
+  const MODE_BOTH = 3;
+
   it("scopeFunction throws on input length mistmatch", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
@@ -321,7 +326,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -366,7 +371,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -413,7 +418,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -472,7 +477,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -521,7 +526,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -573,7 +578,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -638,7 +643,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)

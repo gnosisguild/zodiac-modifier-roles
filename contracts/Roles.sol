@@ -13,17 +13,11 @@ contract Roles is Modifier {
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
 
-    event AllowTarget(
-        uint16 role,
-        address targetAddress,
-        bool canSend,
-        bool canDelegate
-    );
+    event AllowTarget(uint16 role, address targetAddress, ExecutionMode mode);
     event AllowTargetPartially(
         uint16 role,
         address targetAddress,
-        bool canSend,
-        bool canDelegate
+        ExecutionMode mode
     );
     event RevokeTarget(uint16 role, address targetAddress);
     event ScopeAllowFunction(
@@ -140,25 +134,10 @@ contract Roles is Modifier {
     function allowTarget(
         uint16 role,
         address targetAddress,
-        bool canSend,
-        bool canDelegate
+        ExecutionMode mode
     ) external onlyOwner {
-        // temporary
-        ExecutionMode mode;
-        if (!canSend && !canDelegate) {
-            mode = ExecutionMode.BARE;
-        } else if (canSend && !canDelegate) {
-            mode = ExecutionMode.SEND;
-        } else if (!canSend && canDelegate) {
-            mode = ExecutionMode.DELEGATE;
-        } else {
-            mode = ExecutionMode.BOTH;
-        }
-        roles[role].targets[targetAddress] = TargetAddress(
-            Clearance.TARGET,
-            mode
-        );
-        emit AllowTarget(role, targetAddress, canSend, canDelegate);
+        Permissions.allowTarget(roles[role], targetAddress, mode);
+        emit AllowTarget(role, targetAddress, mode);
     }
 
     /// @dev Partially allows calls to a Target - subject to function scoping rules.
@@ -170,25 +149,10 @@ contract Roles is Modifier {
     function allowTargetPartially(
         uint16 role,
         address targetAddress,
-        bool canSend,
-        bool canDelegate
+        ExecutionMode mode
     ) external onlyOwner {
-        // temporary
-        ExecutionMode mode;
-        if (!canSend && !canDelegate) {
-            mode = ExecutionMode.BARE;
-        } else if (canSend && !canDelegate) {
-            mode = ExecutionMode.SEND;
-        } else if (!canSend && canDelegate) {
-            mode = ExecutionMode.DELEGATE;
-        } else {
-            mode = ExecutionMode.BOTH;
-        }
-        roles[role].targets[targetAddress] = TargetAddress(
-            Clearance.FUNCTION,
-            mode
-        );
-        emit AllowTargetPartially(role, targetAddress, canSend, canDelegate);
+        Permissions.allowTargetPartially(roles[role], targetAddress, mode);
+        emit AllowTargetPartially(role, targetAddress, mode);
     }
 
     /// @dev Disallows all calls made to an address.
@@ -199,10 +163,7 @@ contract Roles is Modifier {
         external
         onlyOwner
     {
-        roles[role].targets[targetAddress] = TargetAddress(
-            Clearance.NONE,
-            ExecutionMode(0)
-        );
+        Permissions.revokeTarget(roles[role], targetAddress);
         emit RevokeTarget(role, targetAddress);
     }
 

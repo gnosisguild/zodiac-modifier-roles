@@ -43,6 +43,11 @@ describe("Clearance", async () => {
     };
   });
 
+  const MODE_BARE = 0;
+  const MODE_SEND = 1;
+  const MODE_DELEGATE = 1;
+  const MODE_BOTH = 2;
+
   it("allows and then disallows a target", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -61,7 +66,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
     await expect(
       modifier
@@ -90,7 +95,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -123,7 +128,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -163,7 +168,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -200,7 +205,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -215,7 +220,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -253,7 +258,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -273,7 +278,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
 
     await expect(
       modifier
@@ -304,7 +309,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
 
     await modifier
       .connect(owner)
