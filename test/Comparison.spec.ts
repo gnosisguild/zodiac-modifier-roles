@@ -74,7 +74,8 @@ describe("Comparison", async () => {
           [true, false],
           [!IS_DYNAMIC, IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
-          ["0x", "0x"]
+          ["0x", "0x"],
+          MODE_BARE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -88,7 +89,8 @@ describe("Comparison", async () => {
           [true, false],
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-          ["0x", "0x"]
+          ["0x", "0x"],
+          MODE_BARE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -102,7 +104,8 @@ describe("Comparison", async () => {
           [true, false],
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
-          ["0x", "0x", "0x"]
+          ["0x", "0x", "0x"],
+          MODE_BARE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -116,7 +119,8 @@ describe("Comparison", async () => {
           [true, false],
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
-          [ethers.utils.defaultAbiCoder.encode(["bool"], [false]), "0x"]
+          [ethers.utils.defaultAbiCoder.encode(["bool"], [false]), "0x"],
+          MODE_BARE
         )
     ).to.not.be.reverted;
   });
@@ -146,7 +150,8 @@ describe("Comparison", async () => {
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-          ]
+          ],
+          MODE_BARE
         )
     ).to.be.revertedWith("UnsuitableOneOfComparison");
 
@@ -164,7 +169,8 @@ describe("Comparison", async () => {
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-          ]
+          ],
+          MODE_BARE
         )
     ).to.be.revertedWith("UnsuitableRelativeComparison");
 
@@ -182,7 +188,8 @@ describe("Comparison", async () => {
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-          ]
+          ],
+          MODE_BARE
         )
     ).to.be.not.be.reverted;
 
@@ -200,7 +207,8 @@ describe("Comparison", async () => {
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-          ]
+          ],
+          MODE_BARE
         )
     ).to.not.be.reverted;
   });

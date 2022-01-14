@@ -23,7 +23,8 @@ contract Roles is Modifier {
     event ScopeAllowFunction(
         uint16 role,
         address targetAddress,
-        bytes4 selector
+        bytes4 selector,
+        ExecutionMode mode
     );
     event ScopeRevokeFunction(
         uint16 role,
@@ -37,7 +38,8 @@ contract Roles is Modifier {
         bool[] paramIsScoped,
         bool[] paramIsDynamic,
         Comparison[] paramCompType,
-        bytes[] paramCompValue
+        bytes[] paramCompValue,
+        ExecutionMode mode
     );
     event ScopeParameter(
         uint16 role,
@@ -175,15 +177,16 @@ contract Roles is Modifier {
     function scopeAllowFunction(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig
+        bytes4 functionSig,
+        ExecutionMode mode
     ) external onlyOwner {
         Permissions.scopeAllowFunction(
             roles[role],
             targetAddress,
             functionSig,
-            ExecutionMode(0)
+            mode
         );
-        emit ScopeAllowFunction(role, targetAddress, functionSig);
+        emit ScopeAllowFunction(role, targetAddress, functionSig, mode);
     }
 
     /// @dev Disallows a specific function, on a specific address from being called.
@@ -219,7 +222,8 @@ contract Roles is Modifier {
         bool[] calldata isParamScoped,
         bool[] calldata isParamDynamic,
         Comparison[] calldata paramCompType,
-        bytes[] calldata paramCompValue
+        bytes[] memory paramCompValue,
+        ExecutionMode mode
     ) external onlyOwner {
         Permissions.scopeFunction(
             roles[role],
@@ -229,7 +233,7 @@ contract Roles is Modifier {
             isParamDynamic,
             paramCompType,
             paramCompValue,
-            ExecutionMode(0)
+            mode
         );
         emit ScopeFunction(
             role,
@@ -238,7 +242,8 @@ contract Roles is Modifier {
             isParamScoped,
             isParamDynamic,
             paramCompType,
-            paramCompValue
+            paramCompValue,
+            mode
         );
     }
 

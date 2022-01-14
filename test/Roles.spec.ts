@@ -545,7 +545,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -597,7 +598,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -666,7 +668,8 @@ describe("RolesModifier", async () => {
           encodedParam_7,
           encodedParam_8,
           encodedParam_9,
-        ]
+        ],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -740,7 +743,8 @@ describe("RolesModifier", async () => {
           encodedParam_7,
           encodedParam_8,
           encodedParam_9,
-        ]
+        ],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -818,7 +822,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -837,7 +842,8 @@ describe("RolesModifier", async () => {
           encodedParam_7,
           encodedParam_8,
           encodedParam_9,
-        ]
+        ],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data);
 
@@ -909,7 +915,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -982,7 +989,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1001,7 +1009,8 @@ describe("RolesModifier", async () => {
           encodedParam_7,
           encodedParam_8,
           encodedParam_9,
-        ]
+        ],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data);
 
@@ -1057,7 +1066,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 1],
-        [encodedParam_1, encodedParam_2] // set param 2 to greater than
+        [encodedParam_1, encodedParam_2], // set param 2 to greater than
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1112,7 +1122,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 1],
-        [encodedParam_1, encodedParam_2] // set param 2 to greater than
+        [encodedParam_1, encodedParam_2], // set param 2 to greater than
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1167,7 +1178,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 2],
-        [encodedParam_1, encodedParam_2] // set param 2 to less than
+        [encodedParam_1, encodedParam_2], // set param 2 to less than
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1222,7 +1234,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 2],
-        [encodedParam_1, encodedParam_2] // set param 2 to less than
+        [encodedParam_1, encodedParam_2], // set param 2 to less than
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1550,7 +1563,8 @@ describe("RolesModifier", async () => {
         [true, true],
         [false, false],
         [0, 0],
-        [encodedParam_1, encodedParam_2]
+        [encodedParam_1, encodedParam_2],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data);
 
@@ -1569,7 +1583,8 @@ describe("RolesModifier", async () => {
           encodedParam_7,
           encodedParam_8,
           encodedParam_9,
-        ]
+        ],
+        MODE_BARE
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data);
 
@@ -1849,7 +1864,8 @@ describe("RolesModifier", async () => {
           [true, true],
           [true, true],
           [1, 1],
-          ["0x", "0x"]
+          ["0x", "0x"],
+          MODE_BARE
         )
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
@@ -1899,7 +1915,8 @@ describe("RolesModifier", async () => {
           [true],
           [false],
           [COMP_TYPE_EQ],
-          [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])]
+          [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
+          MODE_BARE
         );
 
       // ngmi
@@ -1926,7 +1943,8 @@ describe("RolesModifier", async () => {
         [
           ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
           ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-        ]
+        ],
+        MODE_BARE
       );
 
       await expect(await avatar.exec(modifier.address, 0, tx.data))
@@ -1941,7 +1959,8 @@ describe("RolesModifier", async () => {
           [
             ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
             ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-          ]
+          ],
+          MODE_BARE
         );
     });
   });
@@ -2044,7 +2063,7 @@ describe("RolesModifier", async () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
-        modifier.scopeAllowFunction(1, AddressOne, "0x12345678")
+        modifier.scopeAllowFunction(1, AddressOne, "0x12345678", MODE_BARE)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -2075,7 +2094,7 @@ describe("RolesModifier", async () => {
       // allow the function
       await modifier
         .connect(owner)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
 
       // gmi
       await expect(
@@ -2097,10 +2116,12 @@ describe("RolesModifier", async () => {
       const { modifier, owner } = await setupRolesWithOwnerAndInvoker();
 
       await expect(
-        modifier.connect(owner).scopeAllowFunction(1, AddressOne, "0x12345678")
+        modifier
+          .connect(owner)
+          .scopeAllowFunction(1, AddressOne, "0x12345678", MODE_BARE)
       )
         .to.emit(modifier, "ScopeAllowFunction")
-        .withArgs(1, AddressOne, "0x12345678");
+        .withArgs(1, AddressOne, "0x12345678", MODE_BARE);
     });
   });
 

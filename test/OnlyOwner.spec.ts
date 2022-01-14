@@ -129,19 +129,19 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE)
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeRevokeFunction, simple invoker fails", async () => {
@@ -183,19 +183,46 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          MODE_BARE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          MODE_BARE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          MODE_BARE
+        )
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeParameter, simple invoker fails", async () => {

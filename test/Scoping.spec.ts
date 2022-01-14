@@ -82,7 +82,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
 
     await expect(
       modifier
@@ -207,7 +207,7 @@ describe("Scoping", async () => {
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
 
     await modifier
       .connect(owner)
@@ -279,7 +279,8 @@ describe("Scoping", async () => {
         [false, true, false],
         [false, false, false],
         [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"]
+        ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"],
+        MODE_BARE
       );
 
     await expect(
@@ -397,7 +398,8 @@ describe("Scoping", async () => {
         [false, false, false],
         [false, false, false],
         [0, 0, 0],
-        ["0x", "0x", "0x"]
+        ["0x", "0x", "0x"],
+        MODE_BARE
       );
 
     await expect(
@@ -434,7 +436,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
 
     await expect(
       modifier
@@ -461,7 +463,8 @@ describe("Scoping", async () => {
         [false, false],
         [!IS_DYNAMIC, IS_DYNAMIC],
         [0, 0],
-        ["0x", "0x"]
+        ["0x", "0x"],
+        MODE_BARE
       );
 
     await expect(
@@ -507,7 +510,12 @@ describe("Scoping", async () => {
         [true, true, false],
         [false, false, false],
         [0, 0, 0],
-        [SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE]
+        [
+          SOME_STATIC_COMP_VALUE,
+          SOME_STATIC_COMP_VALUE,
+          SOME_STATIC_COMP_VALUE,
+        ],
+        MODE_BARE
       );
 
     await modifier
@@ -666,7 +674,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
 
     const invoke = async (param: number) =>
       modifier
@@ -859,7 +867,8 @@ describe("Scoping", async () => {
             new Array(62).fill(false),
             new Array(62).fill(false),
             new Array(62).fill(COMP_EQUAL),
-            new Array(62).fill("0x")
+            new Array(62).fill("0x"),
+            MODE_BARE
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -873,7 +882,8 @@ describe("Scoping", async () => {
             new Array(61).fill(false),
             new Array(61).fill(false),
             new Array(61).fill(0),
-            new Array(61).fill("0x")
+            new Array(61).fill("0x"),
+            MODE_BARE
           )
       ).to.not.be.reverted;
     });
@@ -1008,7 +1018,8 @@ describe("Scoping", async () => {
             [IS_SCOPED],
             [!IS_DYNAMIC],
             [COMP_EQUAL],
-            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
+            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])],
+            MODE_BARE
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -1022,7 +1033,8 @@ describe("Scoping", async () => {
             [IS_SCOPED],
             [!IS_DYNAMIC],
             [COMP_EQUAL],
-            [A_32_BYTES_VALUE]
+            [A_32_BYTES_VALUE],
+            MODE_BARE
           )
       ).to.be.not.reverted;
 
@@ -1040,7 +1052,8 @@ describe("Scoping", async () => {
             [
               A_32_BYTES_VALUE,
               ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
-            ]
+            ],
+            MODE_BARE
           )
       ).to.not.be.reverted;
     });
