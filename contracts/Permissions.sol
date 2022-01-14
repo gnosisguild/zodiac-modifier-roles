@@ -277,6 +277,29 @@ library Permissions {
      * SETTERS
      *
      */
+    function setCanSendOrDelegateToFunction(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool canSend,
+        bool canDelegate
+    ) external {
+        // retrieve scopeConfig
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+
+        uint256 scopeConfig = role.functions[key];
+
+        (uint8 paramCount, , ) = unpackFunction(scopeConfig);
+
+        // set scopeConfig
+        role.functions[key] = packFunction(
+            scopeConfig,
+            paramCount,
+            canSend,
+            canDelegate
+        );
+    }
+
     function scopeAllowFunction(
         Role storage role,
         address targetAddress,
