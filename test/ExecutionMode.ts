@@ -11,7 +11,7 @@ const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
   [123]
 );
 
-describe("CanSendOrDelegate", async () => {
+describe("ExecutionMode", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -53,23 +53,25 @@ describe("CanSendOrDelegate", async () => {
   });
 
   describe("clearance NONE", async () => {
-    it("canSend not taken into consideration");
-    it("canDelegate not taken into consideration");
-    it("canSendToFunction not taken into consideration");
-    it("canDelegateToFunction not taken into consideration");
+    it("SEND not taken into consideration");
+    it("DELEGATE not taken into consideration");
+    it("scope SEND not taken into consideration");
+    it("scope DELEGATE not taken into consideration");
   });
 
   describe("clearance TARGET", async () => {
-    it("canSend works");
-    it("canDelegate works");
-    it("canSendToFunction not taken into consideration");
-    it("canDelegateToFunction not taken into consideration");
+    it("SEND works");
+    it("DELEGATE works");
+    it("scope SEND not taken into consideration");
+    it("scope DELEGATE not taken into consideration");
   });
 
   describe("clearance FUNCTION", async () => {
-    it("canSend takes precedence and works");
-    it("canDelegate takes precedence and works");
-    it("canSendToFunction works");
-    it("canDelegateToFunction works");
+    it("SEND takes precedence and works");
+    it("DELEGATE takes precedence and works");
+    it("scope SEND works");
+    it("scope DELEGATE works");
+    it("scope SEND does not work if function revoked");
+    it("scope DELEGATE does not work if function revoked");
   });
 });

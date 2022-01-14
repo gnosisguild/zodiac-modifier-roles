@@ -26,13 +26,6 @@ contract Roles is Modifier {
         bool canDelegate
     );
     event RevokeTarget(uint16 role, address targetAddress);
-    event SetCanSendOrDelegateToFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool canSend,
-        bool canDelegate
-    );
     event ScopeAllowFunction(
         uint16 role,
         address targetAddress,
@@ -142,18 +135,28 @@ contract Roles is Modifier {
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
-    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    // /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    // /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
     function allowTarget(
         uint16 role,
         address targetAddress,
         bool canSend,
         bool canDelegate
     ) external onlyOwner {
+        // temporary
+        ExecutionMode mode;
+        if (!canSend && !canDelegate) {
+            mode = ExecutionMode.BARE;
+        } else if (canSend && !canDelegate) {
+            mode = ExecutionMode.SEND;
+        } else if (!canSend && canDelegate) {
+            mode = ExecutionMode.DELEGATE;
+        } else {
+            mode = ExecutionMode.BOTH;
+        }
         roles[role].targets[targetAddress] = TargetAddress(
             Clearance.TARGET,
-            canSend,
-            canDelegate
+            mode
         );
         emit AllowTarget(role, targetAddress, canSend, canDelegate);
     }
@@ -162,18 +165,28 @@ contract Roles is Modifier {
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Address to be partially allowed
-    /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
-    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    // /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
+    // /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
     function allowTargetPartially(
         uint16 role,
         address targetAddress,
         bool canSend,
         bool canDelegate
     ) external onlyOwner {
+        // temporary
+        ExecutionMode mode;
+        if (!canSend && !canDelegate) {
+            mode = ExecutionMode.BARE;
+        } else if (canSend && !canDelegate) {
+            mode = ExecutionMode.SEND;
+        } else if (!canSend && canDelegate) {
+            mode = ExecutionMode.DELEGATE;
+        } else {
+            mode = ExecutionMode.BOTH;
+        }
         roles[role].targets[targetAddress] = TargetAddress(
             Clearance.FUNCTION,
-            canSend,
-            canDelegate
+            mode
         );
         emit AllowTargetPartially(role, targetAddress, canSend, canDelegate);
     }
@@ -188,41 +201,9 @@ contract Roles is Modifier {
     {
         roles[role].targets[targetAddress] = TargetAddress(
             Clearance.NONE,
-            false,
-            false
+            ExecutionMode(0)
         );
         emit RevokeTarget(role, targetAddress);
-    }
-
-    /// @dev Sets and enforces whether a specific function can sent or delegated to
-    /// @notice Only callable by owner.
-    /// @notice Only in play when targetAddress is partially allowed.
-    /// @param role Role to set for.
-    /// @param targetAddress Address with the function to be configured
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param canSend allows/disallows whether or not a function on a target address can be sent to.
-    /// @param canDelegate allows/disallows whether or not delegate calls can be made to a function on a target address.
-    function setCanSendOrDelegateToFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool canSend,
-        bool canDelegate
-    ) external onlyOwner {
-        Permissions.setCanSendOrDelegateToFunction(
-            roles[role],
-            targetAddress,
-            functionSig,
-            canSend,
-            canDelegate
-        );
-        emit SetCanSendOrDelegateToFunction(
-            role,
-            targetAddress,
-            functionSig,
-            canSend,
-            canDelegate
-        );
     }
 
     /// @dev Allows a specific function, on a specific address, to be called.
@@ -235,7 +216,12 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig
     ) external onlyOwner {
-        Permissions.scopeAllowFunction(roles[role], targetAddress, functionSig);
+        Permissions.scopeAllowFunction(
+            roles[role],
+            targetAddress,
+            functionSig,
+            ExecutionMode(0)
+        );
         emit ScopeAllowFunction(role, targetAddress, functionSig);
     }
 
@@ -281,7 +267,8 @@ contract Roles is Modifier {
             isParamScoped,
             isParamDynamic,
             paramCompType,
-            paramCompValue
+            paramCompValue,
+            ExecutionMode(0)
         );
         emit ScopeFunction(
             role,
@@ -428,9 +415,16 @@ contract Roles is Modifier {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) public override moduleOnly returns (bool success) {
-        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
-        return exec(to, value, data, operation);
+    ) public override moduleOnly returns (bool) {
+        return
+            execTransactionWithRole(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[msg.sender],
+                false
+            );
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -445,8 +439,15 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        checkPermission(to, value, data, operation, defaultRoles[msg.sender]);
-        return execAndReturnData(to, value, data, operation);
+        return
+            execTransactionWithRoleReturnData(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[msg.sender],
+                false
+            );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
@@ -464,7 +465,7 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        checkPermission(to, value, data, operation, role);
+        Permissions.check(roles[role], multiSend, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -486,29 +487,10 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        checkPermission(to, value, data, operation, role);
+        Permissions.check(roles[role], multiSend, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
-        }
-    }
-
-    function checkPermission(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint16 role
-    ) internal view {
-        Role storage _role = roles[role];
-
-        if (!_role.members[msg.sender]) {
-            revert NoMembership();
-        }
-        if (to == multiSend) {
-            Permissions.checkMultisendTransaction(_role, data);
-        } else {
-            Permissions.checkTransaction(_role, to, value, data, operation);
         }
     }
 }

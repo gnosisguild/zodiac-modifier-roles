@@ -341,7 +341,7 @@ describe("Scoping", async () => {
     ).to.not.be.reverted;
   });
 
-  it("function scoping all params off emits FunctionNotAllowed", async () => {
+  it("function scoping all params off is equivalent to allowing function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -370,6 +370,19 @@ describe("Scoping", async () => {
         SOME_STATIC_COMP_VALUE
       );
 
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithThreeParams(1, 2, 3)
+          ).data,
+          0
+        )
+    ).to.be.revertedWith("ParameterNotAllowed()");
+
     await modifier
       .connect(owner)
       .scopeFunction(
@@ -393,10 +406,10 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.emit(testContract, "FnWithThreeParams");
   });
 
-  it("function scoping all params off, including dynamic types, emits FunctionNotAllowed", async () => {
+  it("function scoping all params off, including dynamic types, is equivalent to allow function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -460,10 +473,10 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.emit(testContract, "FnWithTwoMixedParams");
   });
 
-  it("unscoping all params one by one emits FunctionNotAllowed", async () => {
+  it("unscoping all params one by one is equivalent to allowFunction", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -526,9 +539,9 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.emit(testContract, "FnWithThreeParams");
   });
-  it("unscoping all params one by one, including dynamic types, emits FunctionNotAllowed", async () => {
+  it("unscoping all params one by one, including dynamic types, is equivalent to allowFunction", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -623,12 +636,12 @@ describe("Scoping", async () => {
           (
             await testContract.populateTransaction.fnWithTwoMixedParams(
               false,
-              "Hello World!"
+              "Something not previously allowed"
             )
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.emit(testContract, "FnWithTwoMixedParams");
   });
 
   it("update compType should work on already scoped parameter", async () => {

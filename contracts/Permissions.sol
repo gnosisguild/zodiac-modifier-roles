@@ -9,6 +9,13 @@ enum Clearance {
     FUNCTION
 }
 
+enum ExecutionMode {
+    BARE,
+    SEND,
+    DELEGATE,
+    BOTH
+}
+
 enum Comparison {
     EqualTo,
     GreaterThan,
@@ -18,8 +25,7 @@ enum Comparison {
 
 struct TargetAddress {
     Clearance clearance;
-    bool canSend;
-    bool canDelegate;
+    ExecutionMode mode;
 }
 
 struct Role {
@@ -31,11 +37,10 @@ struct Role {
 }
 
 library Permissions {
-    uint256 internal constant SCOPE_WILDCARD = 2**256 - 1;
     uint256 internal constant SCOPE_MAX_PARAMS = 61;
-    // 61 bit mask
-    uint256 internal constant IS_SCOPED_MASK =
-        uint256(0x1fffffffffffffff << (61 + 122));
+
+    /// Sender is not a member of the role
+    error NoMembership();
 
     /// Arrays must be the same length
     error ArraysDifferentLength();
@@ -88,11 +93,29 @@ library Permissions {
      *
      */
 
+    function check(
+        Role storage role,
+        address multisend,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) public view {
+        if (!role.members[msg.sender]) {
+            revert NoMembership();
+        }
+        if (multisend == to) {
+            checkMultisendTransaction(role, data);
+        } else {
+            checkTransaction(role, to, value, data, operation);
+        }
+    }
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
     function checkMultisendTransaction(Role storage role, bytes memory data)
-        public
+        internal
         view
     {
         Enum.Operation operation;
@@ -139,69 +162,57 @@ library Permissions {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) public view {
-        TargetAddress storage target = role.targets[targetAddress];
-
-        // if clearance is Target or None, scopeConfig is not in play
-        uint256 scopeConfig = target.clearance == Clearance.FUNCTION
-            ? role.functions[keyForFunctions(targetAddress, bytes4(data))]
-            : 0;
-
-        (, bool canSendToFunction, bool canDelegateToFunction) = unpackFunction(
-            scopeConfig
-        );
-
-        // transversal checks
-        bool isSend = value > 0;
-        bool isDelegate = operation == Enum.Operation.DelegateCall;
-
-        if (isSend && !target.canSend && !canSendToFunction) {
-            revert SendNotAllowed();
-        }
-
-        if (isDelegate && !target.canDelegate && !canDelegateToFunction) {
-            revert DelegateCallNotAllowed();
-        }
-
+    ) internal view {
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
-        /*
-         * For each address we have three clearance checks:
-         * Forbidden     - nothing was setup
-         * AddressPass   - address is go, nothing more to check
-         * FunctionCheck - some functions on this address are allowed
-         */
-
+        TargetAddress storage target = role.targets[targetAddress];
         if (target.clearance == Clearance.NONE) {
             revert TargetAddressNotAllowed();
         }
 
-        if (target.clearance == Clearance.TARGET) {
-            return;
-        }
+        bool isSend = value > 0;
+        bool isDelegate = operation == Enum.Operation.DelegateCall;
 
-        if (target.clearance == Clearance.FUNCTION) {
-            if (scopeConfig == SCOPE_WILDCARD) {
-                return;
-            } else if (scopeConfig & IS_SCOPED_MASK == 0) {
-                /*
-                 * If the function is not allowlisted, and no single parameter has isScoped=true,
-                 * then we deny access to the function
-                 *
-                 * Note: checking scopeConfig == 0 is not enough!
-                 * By using a combination `scopeParameter`/`unscopeParameter` calls, or by
-                 * invoking `scopeFunction` with all isParamScoped=false, it is possible
-                 * to reach a scopeConfig that has length and isDynamic bits packed and set,
-                 * while all isScope bits are unset.
-                 *
-                 * In such case, deny access to the function. Doing otherwise would be equivalent
-                 * to WILDCARDing the function, and there's an explicit way to do that
-                 * (calling `scopeAllowFunction`)
-                 *
-                 */
+        if (target.clearance == Clearance.TARGET) {
+            (bool canSend, bool canDelegate) = modeToFlags(target.mode);
+
+            if (isSend && !canSend) {
+                revert SendNotAllowed();
+            }
+
+            if (isDelegate && !canDelegate) {
+                revert DelegateCallNotAllowed();
+            }
+            // cleared
+        } else {
+            assert(target.clearance == Clearance.FUNCTION);
+
+            uint256 scopeConfig = role.functions[
+                keyForFunctions(targetAddress, bytes4(data))
+            ];
+
+            if (scopeConfig == 0) {
                 revert FunctionNotAllowed();
+            }
+
+            (ExecutionMode mode, bool isWildcarded, ) = unpackFunction(
+                scopeConfig
+            );
+
+            (bool canSend, bool canDelegate) = modeToFlags(mode);
+            if (isSend && !canSend) {
+                revert SendNotAllowed();
+            }
+
+            if (isDelegate && !canDelegate) {
+                revert DelegateCallNotAllowed();
+            }
+
+            if (isWildcarded) {
+                // ok
+                return;
             } else {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
@@ -219,8 +230,7 @@ library Permissions {
         bytes memory data
     ) internal view {
         bytes4 functionSig = bytes4(data);
-        (uint8 paramCount, , ) = unpackFunction(scopeConfig);
-
+        (, , uint8 paramCount) = unpackFunction(scopeConfig);
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
@@ -277,37 +287,39 @@ library Permissions {
      * SETTERS
      *
      */
-    function setCanSendOrDelegateToFunction(
+
+    function allowTarget(
         Role storage role,
         address targetAddress,
-        bytes4 functionSig,
-        bool canSend,
-        bool canDelegate
+        ExecutionMode mode
     ) external {
-        // retrieve scopeConfig
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        role.targets[targetAddress] = TargetAddress(Clearance.TARGET, mode);
+    }
 
-        uint256 scopeConfig = role.functions[key];
+    function allowTargetPartially(
+        Role storage role,
+        address targetAddress,
+        ExecutionMode mode
+    ) external {
+        role.targets[targetAddress] = TargetAddress(Clearance.FUNCTION, mode);
+    }
 
-        (uint8 paramCount, , ) = unpackFunction(scopeConfig);
-
-        // set scopeConfig
-        role.functions[key] = packFunction(
-            scopeConfig,
-            paramCount,
-            canSend,
-            canDelegate
+    function revokeTarget(Role storage role, address targetAddress) external {
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.NONE,
+            ExecutionMode(0)
         );
     }
 
     function scopeAllowFunction(
         Role storage role,
         address targetAddress,
-        bytes4 functionSig
+        bytes4 functionSig,
+        ExecutionMode mode
     ) external {
         role.functions[
             keyForFunctions(targetAddress, functionSig)
-        ] = SCOPE_WILDCARD;
+        ] = packFunction(0, mode, true, 0);
     }
 
     function scopeRevokeFunction(
@@ -322,10 +334,11 @@ library Permissions {
         Role storage role,
         address targetAddress,
         bytes4 functionSig,
-        bool[] calldata isParamScoped,
-        bool[] calldata isParamDynamic,
-        Comparison[] calldata paramCompType,
-        bytes[] calldata paramCompValue
+        bool[] memory isParamScoped,
+        bool[] memory isParamDynamic,
+        Comparison[] memory paramCompType,
+        bytes[] calldata paramCompValue,
+        ExecutionMode mode
     ) external {
         if (
             isParamScoped.length != isParamDynamic.length ||
@@ -347,17 +360,18 @@ library Permissions {
         }
 
         uint256 scopeConfig = scopeConfigCreate(
+            mode,
             isParamScoped,
             isParamDynamic,
             paramCompType
         );
 
-        // set scopeConfig
+        //set scopeConfig
         role.functions[
             keyForFunctions(targetAddress, functionSig)
         ] = scopeConfig;
 
-        // set respective compValues
+        //set compValues
         for (uint8 i = 0; i < paramCompType.length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
@@ -531,12 +545,14 @@ library Permissions {
     }
 
     function scopeConfigCreate(
+        ExecutionMode mode,
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType
     ) internal pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
-        uint256 scopeConfig = packFunction(0, paramCount, false, false);
+        //pack -> mode, isWildcarded, Lengh
+        uint256 scopeConfig = packFunction(0, mode, false, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
             scopeConfig = packParameter(
                 scopeConfig,
@@ -557,8 +573,7 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        if (scopeConfig == SCOPE_WILDCARD) scopeConfig = 0;
-        (uint8 prevParamCount, bool canSend, bool canDelegate) = unpackFunction(
+        (ExecutionMode mode, , uint8 prevParamCount) = unpackFunction(
             scopeConfig
         );
 
@@ -575,9 +590,10 @@ library Permissions {
                     isDynamic,
                     compType
                 ),
-                nextParamCount,
-                canSend,
-                canDelegate
+                mode,
+                // isWildcarded=false
+                false,
+                nextParamCount
             );
     }
 
@@ -586,35 +602,34 @@ library Permissions {
      */
     function packFunction(
         uint256 scopeConfig,
-        uint8 paramCount,
-        bool canSend,
-        bool canDelegate
+        ExecutionMode mode,
+        bool isWildcarded,
+        uint8 paramCount
     ) internal pure returns (uint256) {
+        // 2   bits -> mode
+        // 1   bits -> isWildcarded
+        // 1   bits -> unused
         // 8   bits -> length
-        // 2   bits -> not used
-        // 1   bits -> canSend
-        // 1   bits -> canDelegate
         // 61  bits -> isParamScoped
         // 61  bits -> isParamDynamic
         // 122 bits -> two bits represents for each compType 61*2 = 122
-        uint256 canSendMask = 1 << (61 + 61 + 122);
-        uint256 canDelegateMask = 1 << (1 + 61 + 61 + 122);
 
-        uint256 left = (uint256(paramCount) << 248);
-        uint256 right = (scopeConfig << 8) >> 8;
-        scopeConfig = left | right;
+        // wipe the left clean, and start from there
+        scopeConfig = (scopeConfig << 12) >> 12;
 
-        if (canSend) {
-            scopeConfig |= canSendMask;
+        // set mode
+        scopeConfig |= uint256(mode) << 254;
+
+        // set isWildcarded
+        uint256 isWildcardedMask = 1 << 253;
+        if (isWildcarded) {
+            scopeConfig |= isWildcardedMask;
         } else {
-            scopeConfig &= ~canSendMask;
+            scopeConfig &= ~isWildcardedMask;
         }
 
-        if (canDelegate) {
-            scopeConfig |= canDelegateMask;
-        } else {
-            scopeConfig &= ~canDelegateMask;
-        }
+        // set Length
+        scopeConfig |= uint256(paramCount) << 244;
 
         return scopeConfig;
     }
@@ -626,10 +641,10 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
+        // 2   bits -> mode
+        // 1   bits -> isWildcarded
+        // 1   bits -> unused
         // 8   bits -> length
-        // 2   bits -> not used
-        // 1   bits -> canSend
-        // 1   bits -> canDelegate
         // 61  bits -> isParamScoped
         // 61  bits -> isParamDynamic
         // 122 bits -> two bits represents for each compType 61*2 = 122
@@ -659,17 +674,16 @@ library Permissions {
         internal
         pure
         returns (
-            uint8 paramCount,
-            bool canSend,
-            bool canDelegate
+            ExecutionMode mode,
+            bool isWildcarded,
+            uint8 paramCount
         )
     {
-        uint256 canSendMask = 1 << (61 + 61 + 122);
-        uint256 canDelegateMask = 1 << (1 + 61 + 61 + 122);
+        uint256 isWildcardedMask = 1 << 253;
 
-        paramCount = uint8(scopeConfig >> 248);
-        canSend = canSendMask & scopeConfig != 0;
-        canDelegate = canDelegateMask & scopeConfig != 0;
+        mode = ExecutionMode(scopeConfig >> 254);
+        isWildcarded = scopeConfig & isWildcardedMask != 0;
+        paramCount = uint8((scopeConfig << 4) >> 248);
     }
 
     function unpackParameter(uint256 scopeConfig, uint8 paramIndex)
@@ -688,6 +702,22 @@ library Permissions {
         isScoped = (scopeConfig & isScopedMask) != 0;
         isDynamic = (scopeConfig & isDynamicMask) != 0;
         compType = Comparison((scopeConfig & compTypeMask) >> (2 * paramIndex));
+    }
+
+    function modeToFlags(ExecutionMode mode)
+        internal
+        pure
+        returns (bool canSend, bool canDelegate)
+    {
+        if (mode == ExecutionMode.BARE) {
+            (canSend, canDelegate) = (false, false);
+        } else if (mode == ExecutionMode.SEND) {
+            (canSend, canDelegate) = (true, false);
+        } else if (mode == ExecutionMode.DELEGATE) {
+            (canSend, canDelegate) = (false, true);
+        } else {
+            (canSend, canDelegate) = (true, true);
+        }
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
