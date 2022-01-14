@@ -9,10 +9,10 @@ enum Clearance {
     FUNCTION
 }
 
-enum ExecutionMode {
-    BARE,
+enum ExecutionOptions {
+    NONE,
     SEND,
-    DELEGATE,
+    DELEGATECALL,
     BOTH
 }
 
@@ -25,7 +25,7 @@ enum Comparison {
 
 struct TargetAddress {
     Clearance clearance;
-    ExecutionMode mode;
+    ExecutionOptions options;
 }
 
 struct Role {
@@ -176,7 +176,7 @@ library Permissions {
         bool isDelegate = operation == Enum.Operation.DelegateCall;
 
         if (target.clearance == Clearance.TARGET) {
-            (bool canSend, bool canDelegate) = modeToFlags(target.mode);
+            (bool canSend, bool canDelegate) = optionsToFlags(target.options);
 
             if (isSend && !canSend) {
                 revert SendNotAllowed();
@@ -197,11 +197,11 @@ library Permissions {
                 revert FunctionNotAllowed();
             }
 
-            (ExecutionMode mode, bool isWildcarded, ) = unpackFunction(
+            (ExecutionOptions options, bool isWildcarded, ) = unpackFunction(
                 scopeConfig
             );
 
-            (bool canSend, bool canDelegate) = modeToFlags(mode);
+            (bool canSend, bool canDelegate) = optionsToFlags(options);
             if (isSend && !canSend) {
                 revert SendNotAllowed();
             }
@@ -291,23 +291,26 @@ library Permissions {
     function allowTarget(
         Role storage role,
         address targetAddress,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external {
-        role.targets[targetAddress] = TargetAddress(Clearance.TARGET, mode);
+        role.targets[targetAddress] = TargetAddress(Clearance.TARGET, options);
     }
 
     function allowTargetPartially(
         Role storage role,
         address targetAddress,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external {
-        role.targets[targetAddress] = TargetAddress(Clearance.FUNCTION, mode);
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.FUNCTION,
+            options
+        );
     }
 
     function revokeTarget(Role storage role, address targetAddress) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.NONE,
-            ExecutionMode(0)
+            ExecutionOptions(0)
         );
     }
 
@@ -315,11 +318,11 @@ library Permissions {
         Role storage role,
         address targetAddress,
         bytes4 functionSig,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external {
         role.functions[
             keyForFunctions(targetAddress, functionSig)
-        ] = packFunction(0, mode, true, 0);
+        ] = packFunction(0, options, true, 0);
     }
 
     function scopeRevokeFunction(
@@ -338,7 +341,7 @@ library Permissions {
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType,
         bytes[] calldata paramCompValue,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external {
         if (
             isParamScoped.length != isParamDynamic.length ||
@@ -360,7 +363,7 @@ library Permissions {
         }
 
         uint256 scopeConfig = scopeConfigCreate(
-            mode,
+            options,
             isParamScoped,
             isParamDynamic,
             paramCompType
@@ -545,14 +548,14 @@ library Permissions {
     }
 
     function scopeConfigCreate(
-        ExecutionMode mode,
+        ExecutionOptions options,
         bool[] memory isParamScoped,
         bool[] memory isParamDynamic,
         Comparison[] memory paramCompType
     ) internal pure returns (uint256) {
         uint8 paramCount = uint8(isParamScoped.length);
-        //pack -> mode, isWildcarded, Lengh
-        uint256 scopeConfig = packFunction(0, mode, false, paramCount);
+        //pack -> options, isWildcarded, Lengh
+        uint256 scopeConfig = packFunction(0, options, false, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
             scopeConfig = packParameter(
                 scopeConfig,
@@ -573,7 +576,7 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        (ExecutionMode mode, , uint8 prevParamCount) = unpackFunction(
+        (ExecutionOptions options, , uint8 prevParamCount) = unpackFunction(
             scopeConfig
         );
 
@@ -590,7 +593,7 @@ library Permissions {
                     isDynamic,
                     compType
                 ),
-                mode,
+                options,
                 // isWildcarded=false
                 false,
                 nextParamCount
@@ -602,11 +605,11 @@ library Permissions {
      */
     function packFunction(
         uint256 scopeConfig,
-        ExecutionMode mode,
+        ExecutionOptions options,
         bool isWildcarded,
         uint8 paramCount
     ) internal pure returns (uint256) {
-        // 2   bits -> mode
+        // 2   bits -> options
         // 1   bits -> isWildcarded
         // 1   bits -> unused
         // 8   bits -> length
@@ -617,8 +620,8 @@ library Permissions {
         // wipe the left clean, and start from there
         scopeConfig = (scopeConfig << 12) >> 12;
 
-        // set mode
-        scopeConfig |= uint256(mode) << 254;
+        // set options
+        scopeConfig |= uint256(options) << 254;
 
         // set isWildcarded
         uint256 isWildcardedMask = 1 << 253;
@@ -641,7 +644,7 @@ library Permissions {
         bool isDynamic,
         Comparison compType
     ) internal pure returns (uint256) {
-        // 2   bits -> mode
+        // 2   bits -> options
         // 1   bits -> isWildcarded
         // 1   bits -> unused
         // 8   bits -> length
@@ -674,14 +677,14 @@ library Permissions {
         internal
         pure
         returns (
-            ExecutionMode mode,
+            ExecutionOptions options,
             bool isWildcarded,
             uint8 paramCount
         )
     {
         uint256 isWildcardedMask = 1 << 253;
 
-        mode = ExecutionMode(scopeConfig >> 254);
+        options = ExecutionOptions(scopeConfig >> 254);
         isWildcarded = scopeConfig & isWildcardedMask != 0;
         paramCount = uint8((scopeConfig << 4) >> 248);
     }
@@ -704,16 +707,16 @@ library Permissions {
         compType = Comparison((scopeConfig & compTypeMask) >> (2 * paramIndex));
     }
 
-    function modeToFlags(ExecutionMode mode)
+    function optionsToFlags(ExecutionOptions options)
         internal
         pure
         returns (bool canSend, bool canDelegate)
     {
-        if (mode == ExecutionMode.BARE) {
+        if (options == ExecutionOptions.NONE) {
             (canSend, canDelegate) = (false, false);
-        } else if (mode == ExecutionMode.SEND) {
+        } else if (options == ExecutionOptions.SEND) {
             (canSend, canDelegate) = (true, false);
-        } else if (mode == ExecutionMode.DELEGATE) {
+        } else if (options == ExecutionOptions.DELEGATECALL) {
             (canSend, canDelegate) = (false, true);
         } else {
             (canSend, canDelegate) = (true, true);

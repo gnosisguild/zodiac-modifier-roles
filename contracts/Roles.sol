@@ -13,18 +13,22 @@ contract Roles is Modifier {
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
 
-    event AllowTarget(uint16 role, address targetAddress, ExecutionMode mode);
+    event AllowTarget(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
     event AllowTargetPartially(
         uint16 role,
         address targetAddress,
-        ExecutionMode mode
+        ExecutionOptions options
     );
     event RevokeTarget(uint16 role, address targetAddress);
     event ScopeAllowFunction(
         uint16 role,
         address targetAddress,
         bytes4 selector,
-        ExecutionMode mode
+        ExecutionOptions options
     );
     event ScopeRevokeFunction(
         uint16 role,
@@ -39,7 +43,7 @@ contract Roles is Modifier {
         bool[] paramIsDynamic,
         Comparison[] paramCompType,
         bytes[] paramCompValue,
-        ExecutionMode mode
+        ExecutionOptions options
     );
     event ScopeParameter(
         uint16 role,
@@ -136,10 +140,10 @@ contract Roles is Modifier {
     function allowTarget(
         uint16 role,
         address targetAddress,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external onlyOwner {
-        Permissions.allowTarget(roles[role], targetAddress, mode);
-        emit AllowTarget(role, targetAddress, mode);
+        Permissions.allowTarget(roles[role], targetAddress, options);
+        emit AllowTarget(role, targetAddress, options);
     }
 
     /// @dev Partially allows calls to a Target - subject to function scoping rules.
@@ -151,10 +155,10 @@ contract Roles is Modifier {
     function allowTargetPartially(
         uint16 role,
         address targetAddress,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external onlyOwner {
-        Permissions.allowTargetPartially(roles[role], targetAddress, mode);
-        emit AllowTargetPartially(role, targetAddress, mode);
+        Permissions.allowTargetPartially(roles[role], targetAddress, options);
+        emit AllowTargetPartially(role, targetAddress, options);
     }
 
     /// @dev Disallows all calls made to an address.
@@ -178,15 +182,15 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external onlyOwner {
         Permissions.scopeAllowFunction(
             roles[role],
             targetAddress,
             functionSig,
-            mode
+            options
         );
-        emit ScopeAllowFunction(role, targetAddress, functionSig, mode);
+        emit ScopeAllowFunction(role, targetAddress, functionSig, options);
     }
 
     /// @dev Disallows a specific function, on a specific address from being called.
@@ -223,7 +227,7 @@ contract Roles is Modifier {
         bool[] calldata isParamDynamic,
         Comparison[] calldata paramCompType,
         bytes[] memory paramCompValue,
-        ExecutionMode mode
+        ExecutionOptions options
     ) external onlyOwner {
         Permissions.scopeFunction(
             roles[role],
@@ -233,7 +237,7 @@ contract Roles is Modifier {
             isParamDynamic,
             paramCompType,
             paramCompValue,
-            mode
+            options
         );
         emit ScopeFunction(
             role,
@@ -243,7 +247,7 @@ contract Roles is Modifier {
             isParamDynamic,
             paramCompType,
             paramCompValue,
-            mode
+            options
         );
     }
 

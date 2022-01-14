@@ -6,10 +6,10 @@ const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
 const COMP_LESS = 2;
 
-const MODE_BARE = 0;
-const MODE_SEND = 1;
-const MODE_DELEGATE = 2;
-const MODE_BOTH = 3;
+const OPTIONS_NONE = 0;
+const OPTIONS_SEND = 1;
+const OPTIONS_DELEGATECALL = 2;
+const OPTIONS_BOTH = 3;
 
 const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
   ["uint256"],
@@ -78,11 +78,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -130,7 +135,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -202,12 +207,17 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await modifier
       .connect(owner)
@@ -268,7 +278,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -280,7 +290,7 @@ describe("Scoping", async () => {
         [false, false, false],
         [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
         ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"],
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await expect(
@@ -362,7 +372,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -399,7 +409,7 @@ describe("Scoping", async () => {
         [false, false, false],
         [0, 0, 0],
         ["0x", "0x", "0x"],
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await expect(
@@ -432,11 +442,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -464,7 +479,7 @@ describe("Scoping", async () => {
         [!IS_DYNAMIC, IS_DYNAMIC],
         [0, 0],
         ["0x", "0x"],
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await expect(
@@ -499,7 +514,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -515,7 +530,7 @@ describe("Scoping", async () => {
           SOME_STATIC_COMP_VALUE,
           SOME_STATIC_COMP_VALUE,
         ],
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await modifier
@@ -570,7 +585,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -670,11 +685,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const invoke = async (param: number) =>
       modifier
@@ -751,7 +771,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -812,7 +832,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -868,7 +888,7 @@ describe("Scoping", async () => {
             new Array(62).fill(false),
             new Array(62).fill(COMP_EQUAL),
             new Array(62).fill("0x"),
-            MODE_BARE
+            OPTIONS_NONE
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -883,7 +903,7 @@ describe("Scoping", async () => {
             new Array(61).fill(false),
             new Array(61).fill(0),
             new Array(61).fill("0x"),
-            MODE_BARE
+            OPTIONS_NONE
           )
       ).to.not.be.reverted;
     });
@@ -1019,7 +1039,7 @@ describe("Scoping", async () => {
             [!IS_DYNAMIC],
             [COMP_EQUAL],
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])],
-            MODE_BARE
+            OPTIONS_NONE
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -1034,7 +1054,7 @@ describe("Scoping", async () => {
             [!IS_DYNAMIC],
             [COMP_EQUAL],
             [A_32_BYTES_VALUE],
-            MODE_BARE
+            OPTIONS_NONE
           )
       ).to.be.not.reverted;
 
@@ -1053,7 +1073,7 @@ describe("Scoping", async () => {
               A_32_BYTES_VALUE,
               ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
             ],
-            MODE_BARE
+            OPTIONS_NONE
           )
       ).to.not.be.reverted;
     });

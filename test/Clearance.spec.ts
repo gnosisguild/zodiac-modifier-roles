@@ -43,10 +43,10 @@ describe("Clearance", async () => {
     };
   });
 
-  const MODE_BARE = 0;
-  const MODE_SEND = 1;
-  const MODE_DELEGATE = 1;
-  const MODE_BOTH = 2;
+  const OPTIONS_NONE = 0;
+  const OPTIONS_SEND = 1;
+  const OPTIONS_DELEGATECALL = 1;
+  const OPTIONS_BOTH = 2;
 
   it("allows and then disallows a target", async () => {
     const { modifier, testContract, owner, invoker } =
@@ -66,7 +66,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await expect(
       modifier
@@ -95,7 +95,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -128,11 +128,16 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -168,11 +173,16 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -205,7 +215,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -220,11 +230,16 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -258,11 +273,16 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR, MODE_BARE);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -278,7 +298,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await expect(
       modifier
@@ -309,7 +329,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -317,7 +337,7 @@ describe("Clearance", async () => {
         ROLE_ID,
         testContract.address,
         SEL_DONOTHING,
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await modifier
@@ -326,7 +346,7 @@ describe("Clearance", async () => {
         ROLE_ID,
         testContract.address,
         SEL_DOEVENLESS,
-        MODE_BARE
+        OPTIONS_NONE
       );
 
     await expect(

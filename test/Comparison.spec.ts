@@ -48,10 +48,10 @@ describe("Comparison", async () => {
   const COMP_LESS = 2;
   const COMP_ONE_OF = 3;
 
-  const MODE_BARE = 0;
-  const MODE_SEND = 1;
-  const MODE_DELEGATE = 2;
-  const MODE_BOTH = 3;
+  const OPTIONS_NONE = 0;
+  const OPTIONS_SEND = 1;
+  const OPTIONS_DELEGATECALL = 2;
+  const OPTIONS_BOTH = 3;
 
   it("scopeFunction throws on input length mistmatch", async () => {
     const { modifier, testContract, owner } =
@@ -75,7 +75,7 @@ describe("Comparison", async () => {
           [!IS_DYNAMIC, IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x"],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -90,7 +90,7 @@ describe("Comparison", async () => {
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x"],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -105,7 +105,7 @@ describe("Comparison", async () => {
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x", "0x"],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.revertedWith("ArraysDifferentLength()");
 
@@ -120,7 +120,7 @@ describe("Comparison", async () => {
           [!IS_DYNAMIC, IS_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           [ethers.utils.defaultAbiCoder.encode(["bool"], [false]), "0x"],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.not.be.reverted;
   });
@@ -151,7 +151,7 @@ describe("Comparison", async () => {
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
           ],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.revertedWith("UnsuitableOneOfComparison");
 
@@ -170,7 +170,7 @@ describe("Comparison", async () => {
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
           ],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.revertedWith("UnsuitableRelativeComparison");
 
@@ -189,7 +189,7 @@ describe("Comparison", async () => {
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
           ],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.be.not.be.reverted;
 
@@ -208,7 +208,7 @@ describe("Comparison", async () => {
             "0x",
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
           ],
-          MODE_BARE
+          OPTIONS_NONE
         )
     ).to.not.be.reverted;
   });
@@ -334,7 +334,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -379,7 +379,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -426,7 +426,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -485,7 +485,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -534,7 +534,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -586,7 +586,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
@@ -651,7 +651,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, MODE_BARE);
+      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await modifier
       .connect(owner)
