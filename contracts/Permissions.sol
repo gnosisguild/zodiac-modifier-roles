@@ -5,8 +5,8 @@ import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 enum ParameterType {
     STATIC,
-    DYNAMIC
-    // next step include DYNAMIC32
+    DYNAMIC,
+    DYNAMIC32
 }
 
 enum Comparison {
@@ -311,7 +311,7 @@ library Permissions {
 
             bytes32 value;
             if (paramType != ParameterType.STATIC) {
-                value = pluckDynamicParamValue(data, i);
+                value = pluckDynamicParamValue(data, paramType, i);
             } else {
                 value = pluckParamValue(data, i);
             }
@@ -620,11 +620,11 @@ library Permissions {
      * HELPERS
      *
      */
-    function pluckDynamicParamValue(bytes memory data, uint256 paramIndex)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function pluckDynamicParamValue(
+        bytes memory data,
+        ParameterType paramType,
+        uint256 paramIndex
+    ) internal pure returns (bytes32) {
         // get the pointer to the start of the buffer
         uint256 offset = 32 + 4 + paramIndex * 32;
         uint256 start;
@@ -637,7 +637,11 @@ library Permissions {
             length := mload(add(data, start))
         }
 
-        return keccak256(slice(data, start, start + length));
+        if (paramType == ParameterType.DYNAMIC32) {
+            return keccak256(slice(data, start - 32, start + length * 32));
+        } else {
+            return keccak256(slice(data, start, start + length));
+        }
     }
 
     function pluckParamValue(bytes memory data, uint256 paramIndex)
