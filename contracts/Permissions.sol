@@ -172,14 +172,15 @@ library Permissions {
             revert TargetAddressNotAllowed();
         }
 
-        bool isSend = value > 0;
-        bool isDelegateCall = operation == Enum.Operation.DelegateCall;
-
         if (target.clearance == Clearance.TARGET) {
-            checkExecution(target.options, isSend, isDelegateCall);
-        } else {
-            assert(target.clearance == Clearance.FUNCTION);
+            checkExecution(
+                target.options,
+                value > 0,
+                operation == Enum.Operation.DelegateCall
+            );
+        }
 
+        if (target.clearance == Clearance.FUNCTION) {
             uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
@@ -192,12 +193,13 @@ library Permissions {
                 scopeConfig
             );
 
-            checkExecution(options, isSend, isDelegateCall);
+            checkExecution(
+                options,
+                value > 0,
+                operation == Enum.Operation.DelegateCall
+            );
 
-            if (isWildcarded) {
-                // ok
-                return;
-            } else {
+            if (isWildcarded == false) {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
         }
