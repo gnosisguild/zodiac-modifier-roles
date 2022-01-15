@@ -12,6 +12,10 @@ const OPTIONS_SEND = 1;
 const OPTIONS_DELEGATECALL = 2;
 const OPTIONS_BOTH = 3;
 
+const TYPE_STATIC = 0;
+const TYPE_DYNAMIC = 1;
+const TYPE_DYNAMIC32 = 2;
+
 describe("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -133,7 +137,15 @@ describe("EmitsEvent", async () => {
         )
     )
       .to.emit(modifier, "ScopeParameter")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, true, COMP_EQUAL, "0x");
+      .withArgs(
+        ROLE_ID,
+        AddressOne,
+        "0x12345678",
+        0,
+        TYPE_DYNAMIC,
+        COMP_EQUAL,
+        "0x"
+      );
   });
   it("ScopeParameterAsOneOf", async () => {
     const { modifier, owner } = await setup();
@@ -143,7 +155,7 @@ describe("EmitsEvent", async () => {
         .scopeParameterAsOneOf(ROLE_ID, AddressOne, "0x12345678", 0, true, [])
     )
       .to.emit(modifier, "ScopeParameterAsOneOf")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, true, []);
+      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, TYPE_DYNAMIC, []);
   });
   it("UnscopeParameter", async () => {
     const { modifier, owner } = await setup();
