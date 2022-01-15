@@ -178,6 +178,7 @@ library Permissions {
                 value > 0,
                 operation == Enum.Operation.DelegateCall
             );
+            return;
         }
 
         if (target.clearance == Clearance.FUNCTION) {
@@ -202,7 +203,10 @@ library Permissions {
             if (isWildcarded == false) {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
+            return;
         }
+
+        assert(false);
     }
 
     function checkExecution(
