@@ -83,7 +83,7 @@ describe("PluckParam - Decoding", async () => {
           encodeStatic(["bytes4"], ["0x12345678"]),
           encodeDynamic(["string"], ["Hello World!"]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data } = await testPluckParam.populateTransaction.staticDynamic(
@@ -119,7 +119,7 @@ describe("PluckParam - Decoding", async () => {
           encodeDynamic(["bytes"], ["0xabcd"]),
           encodeDynamic32(["uint32[]"], [[1, 2, 3]]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
@@ -169,7 +169,7 @@ describe("PluckParam - Decoding", async () => {
           encodeDynamic32(["bytes4[]"], [["0xabcdef12"]]),
           encodeDynamic(["string"], ["Hello World!"]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
@@ -220,7 +220,7 @@ describe("PluckParam - Decoding", async () => {
           encodeStatic(["bool"], [false]),
           encodeDynamic32(["bytes2[]"], [["0x1122", "0x3344"]]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
@@ -270,7 +270,7 @@ describe("PluckParam - Decoding", async () => {
           encodeDynamic32(["uint32[]"], [[1975, 2000, 2025]]),
           encodeStatic(["uint256"], [123456789]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
@@ -320,7 +320,7 @@ describe("PluckParam - Decoding", async () => {
           encodeStatic(["bytes2"], ["0xaabb"]),
           encodeDynamic(["bytes"], ["0x0123456789abcdef"]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
@@ -370,7 +370,7 @@ describe("PluckParam - Decoding", async () => {
           encodeDynamic(["string"], ["Hello World!"]),
           encodeStatic(["uint32"], [8976]),
         ],
-        [OPTIONS_NONE, OPTIONS_NONE, OPTIONS_NONE]
+        OPTIONS_NONE
       );
 
     const { data: dataGood } =
