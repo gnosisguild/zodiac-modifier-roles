@@ -229,7 +229,7 @@ library Permissions {
         }
 
         if (target.clearance == Clearance.TARGET) {
-            checkExecution(target.options, value, operation);
+            checkExecutionOptions(target.options, value, operation);
             return;
         }
 
@@ -246,7 +246,7 @@ library Permissions {
                 scopeConfig
             );
 
-            checkExecution(options, value, operation);
+            checkExecutionOptions(options, value, operation);
 
             if (isWildcarded == false) {
                 checkParameters(role, scopeConfig, targetAddress, data);
@@ -257,7 +257,7 @@ library Permissions {
         assert(false);
     }
 
-    function checkExecution(
+    function checkExecutionOptions(
         ExecutionOptions options,
         uint256 value,
         Enum.Operation operation
