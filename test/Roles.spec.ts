@@ -1667,9 +1667,7 @@ describe("RolesModifier", async () => {
         modifier
           .connect(owner)
           .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
-      )
-        .to.emit(modifier, "AllowTarget")
-        .withArgs(ROLE_ID, testContract.address, OPTIONS_NONE);
+      ).to.not.be.reverted;
 
       // expect to fail with default role
       await expect(
@@ -1722,26 +1720,12 @@ describe("RolesModifier", async () => {
       // Revoke access
       await expect(
         modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address)
-      )
-        .to.emit(modifier, "RevokeTarget")
-        .withArgs(ROLE_ID, testContract.address);
+      ).to.not.be.reverted;
 
       // fails after revoke
       await expect(
         modifier.connect(invoker).execTransactionWithRole(...execWithRoleArgs)
       ).to.be.revertedWith("TargetAddressNotAllowed()");
-    });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.allowTarget(
-        1,
-        AddressOne,
-        OPTIONS_NONE
-      );
-      await expect(avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, OPTIONS_NONE);
     });
   });
 
@@ -1839,18 +1823,6 @@ describe("RolesModifier", async () => {
         modifier.connect(invoker).execTransactionFromModule(...execArgs)
       ).to.be.revertedWith("DelegateCallNotAllowed()");
     });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.allowTarget(
-        1,
-        AddressOne,
-        OPTIONS_DELEGATECALL
-      );
-      await expect(avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, OPTIONS_DELEGATECALL);
-    });
   });
 
   describe("scopeFunction()", () => {
@@ -1928,40 +1900,6 @@ describe("RolesModifier", async () => {
       await expect(
         modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
       ).to.not.be.reverted;
-    });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-
-      const tx = await modifier.populateTransaction.scopeFunction(
-        1,
-        AddressOne,
-        "0x12345678",
-        [true, true],
-        [false, false],
-        [1, 1],
-        [
-          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-          ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-        ],
-        OPTIONS_NONE
-      );
-
-      await expect(await avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "ScopeFunction")
-        .withArgs(
-          1,
-          AddressOne,
-          "0x12345678",
-          [true, true],
-          [false, false],
-          [1, 1],
-          [
-            ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-            ethers.utils.defaultAbiCoder.encode(["uint256"], [0]),
-          ],
-          OPTIONS_NONE
-        );
     });
   });
 
@@ -2045,18 +1983,6 @@ describe("RolesModifier", async () => {
           .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
       ).to.be.revertedWith("SendNotAllowed");
     });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.allowTarget(
-        1,
-        AddressOne,
-        OPTIONS_SEND
-      );
-      await expect(await avatar.exec(modifier.address, 0, tx.data))
-        .to.emit(modifier, "AllowTarget")
-        .withArgs(1, AddressOne, OPTIONS_SEND);
-    });
   });
 
   describe("scopeAllowFunction()", () => {
@@ -2115,18 +2041,6 @@ describe("RolesModifier", async () => {
       await expect(
         modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
       ).to.be.revertedWith("FunctionNotAllowed");
-    });
-
-    it("emits event with correct params", async () => {
-      const { modifier, owner } = await setupRolesWithOwnerAndInvoker();
-
-      await expect(
-        modifier
-          .connect(owner)
-          .scopeAllowFunction(1, AddressOne, "0x12345678", OPTIONS_NONE)
-      )
-        .to.emit(modifier, "ScopeAllowFunction")
-        .withArgs(1, AddressOne, "0x12345678", OPTIONS_NONE);
     });
   });
 

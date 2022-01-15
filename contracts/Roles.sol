@@ -20,6 +20,68 @@ contract Roles is Modifier {
     );
     event SetDefaultRole(address module, uint16 defaultRole);
 
+    /*
+     * TODO when we get openZeppeling expectEvent working, remove
+     *
+     */
+    event AllowTarget(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
+    event AllowTargetPartially(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
+    event RevokeTarget(uint16 role, address targetAddress);
+    event ScopeAllowFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        ExecutionOptions options
+    );
+    event ScopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector
+    );
+    event ScopeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] paramIsScoped,
+        bool[] paramIsDynamic,
+        Comparison[] paramCompType,
+        bytes[] paramCompValue,
+        ExecutionOptions options
+    );
+    event ScopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        Comparison compType,
+        bytes compValue
+    );
+    event ScopeParameterAsOneOf(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        bytes[] compValues
+    );
+    event UnscopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    );
+
+    /* END OF TODO DELETE EVENTS */
+
     /// `setUpModules` has already been called
     error SetUpModulesAlreadyCalled();
 
