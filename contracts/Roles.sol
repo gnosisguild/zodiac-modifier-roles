@@ -12,63 +12,6 @@ contract Roles is Modifier {
 
     event AssignRoles(address module, uint16[] roles);
     event SetMulitSendAddress(address multiSendAddress);
-
-    event AllowTarget(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    );
-    event AllowTargetPartially(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    );
-    event RevokeTarget(uint16 role, address targetAddress);
-    event ScopeAllowFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 selector,
-        ExecutionOptions options
-    );
-    event ScopeRevokeFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 selector
-    );
-    event ScopeFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool[] paramIsScoped,
-        bool[] paramIsDynamic,
-        Comparison[] paramCompType,
-        bytes[] paramCompValue,
-        ExecutionOptions options
-    );
-    event ScopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex,
-        bool isDynamic,
-        Comparison compType,
-        bytes compValue
-    );
-    event ScopeParameterAsOneOf(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex,
-        bool isDynamic,
-        bytes[] compValues
-    );
-    event UnscopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex
-    );
-
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
@@ -142,8 +85,7 @@ contract Roles is Modifier {
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        Permissions.allowTarget(roles[role], targetAddress, options);
-        emit AllowTarget(role, targetAddress, options);
+        Permissions.allowTarget(roles[role], role, targetAddress, options);
     }
 
     /// @dev Partially allows calls to a Target - subject to function scoping rules.
@@ -157,8 +99,12 @@ contract Roles is Modifier {
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        Permissions.allowTargetPartially(roles[role], targetAddress, options);
-        emit AllowTargetPartially(role, targetAddress, options);
+        Permissions.allowTargetPartially(
+            roles[role],
+            role,
+            targetAddress,
+            options
+        );
     }
 
     /// @dev Disallows all calls made to an address.
@@ -169,8 +115,7 @@ contract Roles is Modifier {
         external
         onlyOwner
     {
-        Permissions.revokeTarget(roles[role], targetAddress);
-        emit RevokeTarget(role, targetAddress);
+        Permissions.revokeTarget(roles[role], role, targetAddress);
     }
 
     /// @dev Allows a specific function, on a specific address, to be called.
@@ -186,11 +131,11 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.scopeAllowFunction(
             roles[role],
+            role,
             targetAddress,
             functionSig,
             options
         );
-        emit ScopeAllowFunction(role, targetAddress, functionSig, options);
     }
 
     /// @dev Disallows a specific function, on a specific address from being called.
@@ -205,10 +150,10 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.scopeRevokeFunction(
             roles[role],
+            role,
             targetAddress,
             functionSig
         );
-        emit ScopeRevokeFunction(role, targetAddress, functionSig);
     }
 
     /// @dev Sets and enforces scoping for an allowed function, on a specific address
@@ -231,15 +176,6 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.scopeFunction(
             roles[role],
-            targetAddress,
-            functionSig,
-            isParamScoped,
-            isParamDynamic,
-            paramCompType,
-            paramCompValue,
-            options
-        );
-        emit ScopeFunction(
             role,
             targetAddress,
             functionSig,
@@ -271,14 +207,6 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.scopeParameter(
             roles[role],
-            targetAddress,
-            functionSig,
-            paramIndex,
-            isDynamic,
-            compType,
-            compValue
-        );
-        emit ScopeParameter(
             role,
             targetAddress,
             functionSig,
@@ -307,13 +235,6 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.scopeParameterAsOneOf(
             roles[role],
-            targetAddress,
-            functionSig,
-            paramIndex,
-            isDynamic,
-            compValues
-        );
-        emit ScopeParameterAsOneOf(
             role,
             targetAddress,
             functionSig,
@@ -338,11 +259,11 @@ contract Roles is Modifier {
     ) external onlyOwner {
         Permissions.unscopeParameter(
             roles[role],
+            role,
             targetAddress,
             functionSig,
             paramIndex
         );
-        emit UnscopeParameter(role, targetAddress, functionSig, paramIndex);
     }
 
     /// @dev Assigns and revokes roles to a given module.

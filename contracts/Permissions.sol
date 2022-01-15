@@ -39,6 +39,62 @@ struct Role {
 library Permissions {
     uint256 internal constant SCOPE_MAX_PARAMS = 61;
 
+    event AllowTarget(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
+    event AllowTargetPartially(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
+    event RevokeTarget(uint16 role, address targetAddress);
+    event ScopeAllowFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        ExecutionOptions options
+    );
+    event ScopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector
+    );
+    event ScopeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] paramIsScoped,
+        bool[] paramIsDynamic,
+        Comparison[] paramCompType,
+        bytes[] paramCompValue,
+        ExecutionOptions options
+    );
+    event ScopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        Comparison compType,
+        bytes compValue
+    );
+    event ScopeParameterAsOneOf(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex,
+        bool isDynamic,
+        bytes[] compValues
+    );
+    event UnscopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint8 paramIndex
+    );
+
     /// Sender is not a member of the role
     error NoMembership();
 
@@ -295,14 +351,17 @@ library Permissions {
 
     function allowTarget(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         ExecutionOptions options
     ) external {
         role.targets[targetAddress] = TargetAddress(Clearance.TARGET, options);
+        emit AllowTarget(roleId, targetAddress, options);
     }
 
     function allowTargetPartially(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         ExecutionOptions options
     ) external {
@@ -310,17 +369,24 @@ library Permissions {
             Clearance.FUNCTION,
             options
         );
+        emit AllowTargetPartially(roleId, targetAddress, options);
     }
 
-    function revokeTarget(Role storage role, address targetAddress) external {
+    function revokeTarget(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress
+    ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.NONE,
             ExecutionOptions(0)
         );
+        emit RevokeTarget(roleId, targetAddress);
     }
 
     function scopeAllowFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
         ExecutionOptions options
@@ -328,18 +394,22 @@ library Permissions {
         role.functions[
             keyForFunctions(targetAddress, functionSig)
         ] = packFunction(0, options, true, 0);
+        emit ScopeAllowFunction(roleId, targetAddress, functionSig, options);
     }
 
     function scopeRevokeFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig
     ) external {
         role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
+        emit ScopeRevokeFunction(roleId, targetAddress, functionSig);
     }
 
     function scopeFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
         bool[] memory isParamScoped,
@@ -385,10 +455,21 @@ library Permissions {
                 keyForCompValues(targetAddress, functionSig, i)
             ] = compressCompValue(isParamDynamic[i], paramCompValue[i]);
         }
+        emit ScopeFunction(
+            roleId,
+            targetAddress,
+            functionSig,
+            isParamScoped,
+            isParamDynamic,
+            paramCompType,
+            paramCompValue,
+            options
+        );
     }
 
     function scopeParameter(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
@@ -418,10 +499,21 @@ library Permissions {
         role.compValues[
             keyForCompValues(targetAddress, functionSig, paramIndex)
         ] = compressCompValue(isDynamic, compValue);
+
+        emit ScopeParameter(
+            roleId,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            isDynamic,
+            compType,
+            compValue
+        );
     }
 
     function scopeParameterAsOneOf(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
@@ -456,10 +548,20 @@ library Permissions {
                 compValues[i]
             );
         }
+
+        emit ScopeParameterAsOneOf(
+            roleId,
+            targetAddress,
+            functionSig,
+            paramIndex,
+            isDynamic,
+            compValues
+        );
     }
 
     function unscopeParameter(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex
@@ -478,6 +580,8 @@ library Permissions {
             Comparison(0)
         );
         role.functions[key] = scopeConfig;
+
+        emit UnscopeParameter(roleId, targetAddress, functionSig, paramIndex);
     }
 
     function enforceCompType(bool isDynamic, Comparison compType)
