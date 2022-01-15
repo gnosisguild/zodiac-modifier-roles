@@ -53,6 +53,10 @@ describe("Comparison", async () => {
   const OPTIONS_DELEGATECALL = 2;
   const OPTIONS_BOTH = 3;
 
+  const TYPE_STATIC = 0;
+  const TYPE_DYNAMIC = 1;
+  const TYPE_DYNAMIC32 = 2;
+
   it("scopeFunction throws on input length mistmatch", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
@@ -62,8 +66,6 @@ describe("Comparison", async () => {
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
 
-    const IS_DYNAMIC = true;
-
     await expect(
       modifier
         .connect(owner)
@@ -72,7 +74,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [true, false],
-          [!IS_DYNAMIC, IS_DYNAMIC, IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC, TYPE_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x"],
           OPTIONS_NONE
@@ -87,7 +89,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [true, false],
-          [!IS_DYNAMIC, IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x"],
           OPTIONS_NONE
@@ -102,7 +104,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [true, false],
-          [!IS_DYNAMIC, IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           ["0x", "0x", "0x"],
           OPTIONS_NONE
@@ -117,7 +119,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [true, false],
-          [!IS_DYNAMIC, IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC],
           [COMP_EQUAL, COMP_EQUAL],
           [ethers.utils.defaultAbiCoder.encode(["bool"], [false]), "0x"],
           OPTIONS_NONE
@@ -130,7 +132,6 @@ describe("Comparison", async () => {
       await setupRolesWithOwnerAndInvoker();
 
     const IS_SCOPED = true;
-    const IS_DYNAMIC = true;
     const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -144,7 +145,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [!IS_SCOPED, IS_SCOPED, !IS_SCOPED],
-          [!IS_DYNAMIC, !IS_DYNAMIC, !IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_STATIC, TYPE_STATIC],
           [COMP_EQUAL, COMP_ONE_OF, COMP_EQUAL],
           [
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
@@ -163,7 +164,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [!IS_SCOPED, IS_SCOPED, !IS_SCOPED],
-          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC, TYPE_STATIC],
           [COMP_EQUAL, COMP_GREATER, COMP_GREATER],
           [
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
@@ -182,7 +183,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [!IS_SCOPED, IS_SCOPED, IS_SCOPED],
-          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC, TYPE_STATIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_GREATER],
           [
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
@@ -201,7 +202,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           [!IS_SCOPED, IS_SCOPED, IS_SCOPED],
-          [!IS_DYNAMIC, IS_DYNAMIC, !IS_DYNAMIC],
+          [TYPE_STATIC, TYPE_DYNAMIC, TYPE_STATIC],
           [COMP_EQUAL, COMP_EQUAL, COMP_LESS],
           [
             ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
@@ -220,7 +221,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
     );
-    const IS_DYNAMIC = true;
 
     await expect(
       modifier
@@ -230,7 +230,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          IS_DYNAMIC,
+          TYPE_DYNAMIC,
           COMP_ONE_OF,
           "0x"
         )
@@ -244,7 +244,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          IS_DYNAMIC,
+          TYPE_DYNAMIC,
           COMP_GREATER,
           "0x"
         )
@@ -258,7 +258,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          IS_DYNAMIC,
+          TYPE_DYNAMIC,
           COMP_EQUAL,
           "0x"
         )
@@ -272,7 +272,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          !IS_DYNAMIC,
+          TYPE_STATIC,
           COMP_ONE_OF,
           ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
@@ -286,7 +286,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          !IS_DYNAMIC,
+          TYPE_STATIC,
           COMP_GREATER,
           ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
@@ -300,7 +300,7 @@ describe("Comparison", async () => {
           testContract.address,
           SELECTOR,
           0,
-          !IS_DYNAMIC,
+          TYPE_STATIC,
           COMP_EQUAL,
           ethers.utils.defaultAbiCoder.encode(["uint256"], [123])
         )
@@ -315,7 +315,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
-    const IS_DYNAMIC = true;
 
     const invoke = async (a: number) =>
       modifier
@@ -343,7 +342,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.solidityPack(["uint256"], [123])
       );
@@ -359,7 +358,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
-    const IS_DYNAMIC = true;
 
     const invoke = async (a: boolean, b: string) =>
       modifier
@@ -388,7 +386,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         1,
-        IS_DYNAMIC,
+        TYPE_DYNAMIC,
         COMP_EQUAL,
         ethers.utils.solidityPack(["string"], ["Some string"])
       );
@@ -407,7 +405,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
-    const IS_DYNAMIC = true;
 
     const invoke = async (a: number) =>
       modifier
@@ -435,7 +432,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.solidityPack(["uint256"], [123])
       );
@@ -450,7 +447,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_GREATER,
         ethers.utils.solidityPack(["uint256"], [123])
       );
@@ -511,7 +508,6 @@ describe("Comparison", async () => {
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
-    const IS_DYNAMIC = true;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
@@ -543,7 +539,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         1,
-        IS_DYNAMIC,
+        TYPE_DYNAMIC,
         [
           ethers.utils.solidityPack(["string"], ["Hello World!"]),
           ethers.utils.solidityPack(["string"], ["Good Morning!"]),
@@ -567,7 +563,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
-    const IS_DYNAMIC = true;
 
     const invoke = async (a: number) =>
       modifier
@@ -595,7 +590,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         [
           ethers.utils.solidityPack(["uint256"], [501]),
           ethers.utils.solidityPack(["uint256"], [602]),
@@ -615,7 +610,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.solidityPack(["uint256"], [123])
       );
@@ -632,7 +627,6 @@ describe("Comparison", async () => {
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
-    const IS_DYNAMIC = true;
 
     const invoke = async (a: number) =>
       modifier
@@ -660,7 +654,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_GREATER,
         ethers.utils.solidityPack(["uint256"], [1234])
       );
@@ -676,7 +670,7 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_LESS,
         ethers.utils.solidityPack(["uint256"], [2345])
       );

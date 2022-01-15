@@ -66,6 +66,10 @@ describe("RolesModifier", async () => {
     };
   });
 
+  const TYPE_STATIC = 0;
+  const TYPE_DYNAMIC = 1;
+  const TYPE_DYNAMIC32 = 2;
+
   const txSetup = deployments.createFixture(async () => {
     const baseAvatar = await setupTestWithTestAvatar();
     const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
@@ -543,7 +547,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -596,7 +600,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -658,7 +662,15 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x273454bf",
         [true, true, true, true, true, true, true],
-        [true, false, true, false, false, true, true],
+        [
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_DYNAMIC,
+        ],
         [0, 0, 0, 0, 0, 0, 0],
         [
           encodedParam_3,
@@ -733,7 +745,15 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x273454bf",
         [true, true, true, true, true, true, true],
-        [true, false, true, false, false, true, true],
+        [
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_DYNAMIC,
+        ],
         [0, 0, 0, 0, 0, 0, 0],
         [
           encodedParam_3,
@@ -820,7 +840,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -832,7 +852,15 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x273454bf",
         [true, true, true, true, true, true, true],
-        [true, false, true, false, false, true, true],
+        [
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_DYNAMIC,
+        ],
         [0, 0, 0, 0, 0, 0, 0],
         [
           encodedParam_3,
@@ -913,7 +941,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -987,7 +1015,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -999,7 +1027,15 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x273454bf",
         [true, true, true, true, true, true, true],
-        [true, false, true, false, false, true, true],
+        [
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_DYNAMIC,
+        ],
         [0, 0, 0, 0, 0, 0, 0],
         [
           encodedParam_3,
@@ -1064,7 +1100,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 1],
         [encodedParam_1, encodedParam_2], // set param 2 to greater than
         OPTIONS_NONE
@@ -1120,7 +1156,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 1],
         [encodedParam_1, encodedParam_2], // set param 2 to greater than
         OPTIONS_NONE
@@ -1176,7 +1212,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 2],
         [encodedParam_1, encodedParam_2], // set param 2 to less than
         OPTIONS_NONE
@@ -1232,7 +1268,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 2],
         [encodedParam_1, encodedParam_2], // set param 2 to less than
         OPTIONS_NONE
@@ -1561,7 +1597,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x40c10f19",
         [true, true],
-        [false, false],
+        [TYPE_STATIC, TYPE_STATIC],
         [0, 0],
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
@@ -1573,7 +1609,15 @@ describe("RolesModifier", async () => {
         testContract.address,
         "0x273454bf",
         [true, true, true, true, true, true, true],
-        [true, false, true, false, false, true, true],
+        [
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_STATIC,
+          TYPE_STATIC,
+          TYPE_DYNAMIC,
+          TYPE_DYNAMIC,
+        ],
         [0, 0, 0, 0, 0, 0, 0],
         [
           encodedParam_3,
@@ -1834,7 +1878,7 @@ describe("RolesModifier", async () => {
           AddressOne,
           "0x12345678",
           [true, true],
-          [true, true],
+          [TYPE_DYNAMIC, TYPE_DYNAMIC],
           [1, 1],
           ["0x", "0x"],
           OPTIONS_NONE
@@ -1885,7 +1929,7 @@ describe("RolesModifier", async () => {
           testContract.address,
           SELECTOR,
           [true],
-          [false],
+          [TYPE_STATIC],
           [COMP_TYPE_EQ],
           [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
           OPTIONS_NONE

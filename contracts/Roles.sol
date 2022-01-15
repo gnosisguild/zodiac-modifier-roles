@@ -223,7 +223,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param isParamScoped false for un-scoped, true for scoped.
-    /// @param isParamDynamic false for static, true for dynamic.
+    /// @param paramType TODO
     /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
     /// @param compValue TODO
     /// @param options TODO
@@ -232,7 +232,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         bool[] calldata isParamScoped,
-        bool[] calldata isParamDynamic,
+        ParameterType[] calldata paramType,
         Comparison[] calldata paramComp,
         bytes[] memory compValue,
         ExecutionOptions options
@@ -243,7 +243,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             isParamScoped,
-            toParameterTypeArray(isParamDynamic),
+            paramType,
             paramComp,
             compValue,
             options
@@ -256,7 +256,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
-    /// @param isDynamic false for value, true for dynamic.
+    /// @param paramType TODO
     /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
     /// @param compValue The reference value used while comparing and authorizing
     function scopeParameter(
@@ -264,7 +264,7 @@ contract Roles is Modifier {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bool isDynamic,
+        ParameterType paramType,
         Comparison paramComp,
         bytes calldata compValue
     ) external onlyOwner {
@@ -274,7 +274,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex,
-            toParameterType(isDynamic),
+            paramType,
             paramComp,
             compValue
         );
@@ -286,14 +286,14 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
-    /// @param isDynamic false for value, true for dynamic.
-    /// @param compValues The reference values used while comparing and authorizing
+    /// @param paramType TODO.
+    /// @param compValues The reference values used while comparing and authorizing.
     function scopeParameterAsOneOf(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex,
-        bool isDynamic,
+        ParameterType paramType,
         bytes[] calldata compValues
     ) external onlyOwner {
         Permissions.scopeParameterAsOneOf(
@@ -302,7 +302,7 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex,
-            toParameterType(isDynamic),
+            paramType,
             compValues
         );
     }
@@ -313,7 +313,7 @@ contract Roles is Modifier {
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param paramIndex the index of the parameter to scope
+    /// @param paramIndex the index of the parameter to scope.
     function unscopeParameter(
         uint16 role,
         address targetAddress,
@@ -446,26 +446,5 @@ contract Roles is Modifier {
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-    }
-
-    // TEMPORARY FUNCTION
-    function toParameterType(bool isDynamic)
-        internal
-        pure
-        returns (ParameterType)
-    {
-        return isDynamic ? ParameterType.DYNAMIC : ParameterType.STATIC;
-    }
-
-    function toParameterTypeArray(bool[] memory isDynamic)
-        internal
-        pure
-        returns (ParameterType[] memory)
-    {
-        ParameterType[] memory result = new ParameterType[](isDynamic.length);
-        for (uint256 i = 0; i < isDynamic.length; i++) {
-            result[i] = toParameterType(isDynamic[i]);
-        }
-        return result;
     }
 }

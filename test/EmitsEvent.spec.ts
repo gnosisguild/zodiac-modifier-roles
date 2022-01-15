@@ -131,7 +131,7 @@ describe("EmitsEvent", async () => {
           AddressOne,
           "0x12345678",
           0,
-          true,
+          TYPE_DYNAMIC,
           COMP_EQUAL,
           "0x"
         )
@@ -152,7 +152,14 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .scopeParameterAsOneOf(ROLE_ID, AddressOne, "0x12345678", 0, true, [])
+        .scopeParameterAsOneOf(
+          ROLE_ID,
+          AddressOne,
+          "0x12345678",
+          0,
+          TYPE_DYNAMIC,
+          []
+        )
     )
       .to.emit(modifier, "ScopeParameterAsOneOf")
       .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, TYPE_DYNAMIC, []);

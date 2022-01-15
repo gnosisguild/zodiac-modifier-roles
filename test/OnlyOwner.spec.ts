@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-describe("EnsureOnlyOwner", async () => {
+describe("OnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -48,6 +48,10 @@ describe("EnsureOnlyOwner", async () => {
   const OPTIONS_SEND = 1;
   const OPTIONS_DELEGATECALL = 2;
   const OPTIONS_BOTH = 3;
+
+  const TYPE_STATIC = 0;
+  const TYPE_DYNAMIC = 1;
+  const TYPE_DYNAMIC32 = 2;
 
   it("onlyOwner for allowTarget simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
@@ -257,7 +261,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -271,7 +275,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -285,7 +289,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -308,7 +312,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -321,7 +325,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -334,7 +338,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.not.be.reverted;
