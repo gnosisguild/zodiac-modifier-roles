@@ -11,7 +11,7 @@ const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
   [123]
 );
 
-describe("ExecutionMode", async () => {
+describe("ExecutionOptions", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");

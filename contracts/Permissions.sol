@@ -173,19 +173,10 @@ library Permissions {
         }
 
         bool isSend = value > 0;
-        bool isDelegate = operation == Enum.Operation.DelegateCall;
+        bool isDelegateCall = operation == Enum.Operation.DelegateCall;
 
         if (target.clearance == Clearance.TARGET) {
-            (bool canSend, bool canDelegate) = optionsToFlags(target.options);
-
-            if (isSend && !canSend) {
-                revert SendNotAllowed();
-            }
-
-            if (isDelegate && !canDelegate) {
-                revert DelegateCallNotAllowed();
-            }
-            // cleared
+            checkExecution(target.options, isSend, isDelegateCall);
         } else {
             assert(target.clearance == Clearance.FUNCTION);
 
@@ -201,14 +192,7 @@ library Permissions {
                 scopeConfig
             );
 
-            (bool canSend, bool canDelegate) = optionsToFlags(options);
-            if (isSend && !canSend) {
-                revert SendNotAllowed();
-            }
-
-            if (isDelegate && !canDelegate) {
-                revert DelegateCallNotAllowed();
-            }
+            checkExecution(options, isSend, isDelegateCall);
 
             if (isWildcarded) {
                 // ok
@@ -217,6 +201,26 @@ library Permissions {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
         }
+    }
+
+    function checkExecution(
+        ExecutionOptions options,
+        bool isSend,
+        bool isDelegateCall
+    ) internal pure {
+        bool canSend = options == ExecutionOptions.SEND ||
+            options == ExecutionOptions.BOTH;
+        bool canDelegateCall = options == ExecutionOptions.DELEGATECALL ||
+            options == ExecutionOptions.BOTH;
+
+        if (isSend && !canSend) {
+            revert SendNotAllowed();
+        }
+
+        if (isDelegateCall && !canDelegateCall) {
+            revert DelegateCallNotAllowed();
+        }
+        // cleared
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
@@ -705,22 +709,6 @@ library Permissions {
         isScoped = (scopeConfig & isScopedMask) != 0;
         isDynamic = (scopeConfig & isDynamicMask) != 0;
         compType = Comparison((scopeConfig & compTypeMask) >> (2 * paramIndex));
-    }
-
-    function optionsToFlags(ExecutionOptions options)
-        internal
-        pure
-        returns (bool canSend, bool canDelegate)
-    {
-        if (options == ExecutionOptions.NONE) {
-            (canSend, canDelegate) = (false, false);
-        } else if (options == ExecutionOptions.SEND) {
-            (canSend, canDelegate) = (true, false);
-        } else if (options == ExecutionOptions.DELEGATECALL) {
-            (canSend, canDelegate) = (false, true);
-        } else {
-            (canSend, canDelegate) = (true, true);
-        }
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
