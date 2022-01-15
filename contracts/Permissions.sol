@@ -173,11 +173,7 @@ library Permissions {
         }
 
         if (target.clearance == Clearance.TARGET) {
-            checkExecution(
-                target.options,
-                value > 0,
-                operation == Enum.Operation.DelegateCall
-            );
+            checkExecution(target.options, value, operation);
             return;
         }
 
@@ -194,11 +190,7 @@ library Permissions {
                 scopeConfig
             );
 
-            checkExecution(
-                options,
-                value > 0,
-                operation == Enum.Operation.DelegateCall
-            );
+            checkExecution(options, value, operation);
 
             if (isWildcarded == false) {
                 checkParameters(role, scopeConfig, targetAddress, data);
@@ -211,9 +203,12 @@ library Permissions {
 
     function checkExecution(
         ExecutionOptions options,
-        bool isSend,
-        bool isDelegateCall
+        uint256 value,
+        Enum.Operation operation
     ) internal pure {
+        bool isSend = value > 0;
+        bool isDelegateCall = operation == Enum.Operation.DelegateCall;
+
         bool canSend = options == ExecutionOptions.SEND ||
             options == ExecutionOptions.BOTH;
         bool canDelegateCall = options == ExecutionOptions.DELEGATECALL ||
