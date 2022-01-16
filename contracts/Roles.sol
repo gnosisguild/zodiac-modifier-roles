@@ -139,8 +139,7 @@ contract Roles is Modifier {
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    // /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
-    // /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    /// @param options defines whether or not send and/or delegate calls can be made to a target address.
     function allowTarget(
         uint16 role,
         address targetAddress,
@@ -153,8 +152,7 @@ contract Roles is Modifier {
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Address to be partially allowed
-    // /// @param canSend allows/disallows whether or not a target address can be sent to (incluces fallback/receive functions).
-    // /// @param canDelegate allows/disallows whether or not delegate calls can be made to a target address.
+    /// @param options defines whether or not send and/or delegate calls can be made to a target address.
     function allowTargetPartially(
         uint16 role,
         address targetAddress,
@@ -184,6 +182,7 @@ contract Roles is Modifier {
     /// @param role Role to set for
     /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
     /// @param functionSig Function signature to be allowed/disallowed.
+    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
     function scopeAllowFunction(
         uint16 role,
         address targetAddress,
@@ -223,10 +222,10 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param isParamScoped false for un-scoped, true for scoped.
-    /// @param paramType TODO
+    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
     /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
-    /// @param compValue TODO
-    /// @param options TODO
+    /// @param compValue The reference value used while comparing and authorizing.
+    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
     function scopeFunction(
         uint16 role,
         address targetAddress,
@@ -256,9 +255,9 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
-    /// @param paramType TODO
+    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
     /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
-    /// @param compValue The reference value used while comparing and authorizing
+    /// @param compValue The reference value used while comparing and authorizing.
     function scopeParameter(
         uint16 role,
         address targetAddress,
@@ -286,7 +285,7 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param paramIndex the index of the parameter to scope
-    /// @param paramType TODO.
+    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
     /// @param compValues The reference values used while comparing and authorizing.
     function scopeParameterAsOneOf(
         uint16 role,
