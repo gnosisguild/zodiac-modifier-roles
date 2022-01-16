@@ -691,6 +691,15 @@ library Permissions {
             lengthPayload := mload(add(data, offsetPayload))
         }
 
+        /*
+         * above, the function uses memory byte offset
+         * bellow, slice will use array byte offset
+         * Therefore the start in array byte index for slice is:
+         * offsetPayload - 32 + 32
+         *      (-32 overall buffer length chunk)
+         *      (+32 encoded payload length chunk)
+         *
+         */
         uint256 start = offsetPayload;
         uint256 end = start +
             (
