@@ -174,4 +174,15 @@ describe("EmitsEvent", async () => {
       .to.emit(modifier, "UnscopeParameter")
       .withArgs(ROLE_ID, AddressOne, "0x12345678", 0);
   });
+
+  it("ScopeFunctionOptions", async () => {
+    const { modifier, owner } = await setup();
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunctionOptions(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND)
+    )
+      .to.emit(modifier, "ScopeFunctionOptions")
+      .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND);
+  });
 });

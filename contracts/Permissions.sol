@@ -101,6 +101,13 @@ library Permissions {
         uint8 paramIndex
     );
 
+    event ScopeFunctionOptions(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    );
+
     /// Sender is not a member of the role
     error NoMembership();
 
@@ -588,6 +595,25 @@ library Permissions {
         role.functions[key] = scopeConfig;
 
         emit UnscopeParameter(roleId, targetAddress, functionSig, paramIndex);
+    }
+
+    function scopeFunctionOptions(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    ) external {
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = role.functions[key];
+        (, bool isWildcarded, uint8 paramCount) = unpackFunction(scopeConfig);
+
+        //set scopeConfig
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = packFunction(scopeConfig, options, isWildcarded, paramCount);
+
+        emit ScopeFunctionOptions(roleId, targetAddress, functionSig, options);
     }
 
     function enforceComp(ParameterType paramType, Comparison paramComp)

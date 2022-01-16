@@ -79,6 +79,12 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint8 paramIndex
     );
+    event ScopeFunctionOptions(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    );
     /* END OF TODO DELETE EVENTS */
 
     /// `setUpModules` has already been called
@@ -308,7 +314,6 @@ contract Roles is Modifier {
 
     /// @dev Unsets scoping for a single parameter on an allowed function
     /// @notice Only callable by owner.
-    /// @notice If no parameter remains scoped after this call, access to the function is revoked.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
@@ -325,6 +330,28 @@ contract Roles is Modifier {
             targetAddress,
             functionSig,
             paramIndex
+        );
+    }
+
+    /// @dev Sets ExecutionOptions for a function on a target address.
+    /// @notice Only callable by owner.
+    /// @notice Only in play when an address is partially allowed
+    /// @param role Role to set for.
+    /// @param targetAddress Address to be scoped/unscoped.
+    /// @param functionSig first 4 bytes of the sha256 of the function signature.
+    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
+    function scopeFunctionOptions(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    ) external onlyOwner {
+        Permissions.scopeFunctionOptions(
+            roles[role],
+            role,
+            targetAddress,
+            functionSig,
+            options
         );
     }
 
