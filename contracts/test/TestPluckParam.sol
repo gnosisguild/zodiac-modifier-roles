@@ -11,10 +11,6 @@ contract TestPluckParam {
     event Dynamic32StaticDynamic(address[] first, bytes2 second, bytes third);
     event Dynamic32DynamicStatic(bytes2[] first, string second, uint32 third);
 
-    function dynamic32(uint256[] memory first) external {
-        emit Dynamic32(first);
-    }
-
     function staticDynamic(bytes4 first, string memory second) external {
         emit StaticDynamic(first, second);
     }
