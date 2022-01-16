@@ -368,16 +368,16 @@ contract Roles is Modifier {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) public override moduleOnly returns (bool) {
-        return
-            execTransactionWithRole(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender],
-                false
-            );
+    ) public override moduleOnly returns (bool success) {
+        Permissions.check(
+            roles[defaultRoles[msg.sender]],
+            multiSend,
+            to,
+            value,
+            data,
+            operation
+        );
+        return exec(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -392,15 +392,15 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        return
-            execTransactionWithRoleReturnData(
-                to,
-                value,
-                data,
-                operation,
-                defaultRoles[msg.sender],
-                false
-            );
+        Permissions.check(
+            roles[defaultRoles[msg.sender]],
+            multiSend,
+            to,
+            value,
+            data,
+            operation
+        );
+        return execAndReturnData(to, value, data, operation);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
