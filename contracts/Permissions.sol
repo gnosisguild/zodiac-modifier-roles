@@ -286,7 +286,6 @@ library Permissions {
         if (isDelegateCall && !canDelegateCall) {
             revert DelegateCallNotAllowed();
         }
-        // cleared
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
@@ -301,6 +300,7 @@ library Permissions {
     ) internal view {
         bytes4 functionSig = bytes4(data);
         (, , uint8 paramCount) = unpackFunction(scopeConfig);
+
         for (uint8 i = 0; i < paramCount; i++) {
             (
                 bool isParamScoped,
@@ -651,23 +651,60 @@ library Permissions {
         ParameterType paramType,
         uint256 paramIndex
     ) internal pure returns (bytes32) {
-        // get the pointer to the start of the buffer
-        uint256 offset = 32 + 4 + paramIndex * 32;
-        uint256 start;
+        assert(paramType != ParameterType.STATIC);
+
+        /*
+         * Encoded calldata:
+         * 32 bytes -> length in bytes of the buffer
+         * 4  bytes -> function selector
+         * 32 bytes -> A sequence, one chunk per parameter
+         *
+         * There is one (byte32) chunk per paremeter. Depending on type it contains:
+         * Static    -> value encoded inline (not plucked by this function)
+         * Dynamic   -> a byte offset to encoded data payload
+         * Dynamic32 -> a byte offset to encoded data payload
+         *
+         *
+         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline (in the "chunks")
+         * Note: Nested types also do not follow the above described rules, and are unsupported
+         * Note: The offset to encoded data payload is relative, (minus 32 bytes that include over buffer length and minut 4 bytes for functionSig)
+         *
+         * We call the byte offset encoded data payload -> "offsetPointer".
+         * At offsetPointer, there is another offset stored, the "offsetPayloadRelative"
+         * The offsetPayload points at the beggining of the encoded payload. The first 32 bytes of the payload area contain the payload's length. Depending on ParameterType:
+         * Dynamic   -> length in bytes
+         * Dynamic32 -> length in bytes32
+         *
+         * Note: Dynamic types are: bytes, string
+         * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
+         */
+
+        // offsetPointer         - real     offset in bytes to the location
+        // offsetPayloadRelative - relative offset in bytes (without buffer lenth and functionSig)
+        // offsetPayload         - real     offset in bytes
+
+        uint256 offsetPointer = 32 + 4 + paramIndex * 32;
+        uint256 offsetPayloadRelative;
+        uint256 offsetPayload;
         assembly {
-            start := add(32, add(4, mload(add(data, offset))))
+            offsetPayloadRelative := mload(add(data, offsetPointer))
+            offsetPayload := add(32, add(4, offsetPayloadRelative))
         }
 
-        uint256 length;
+        uint256 lengthPayload;
         assembly {
-            length := mload(add(data, start))
+            lengthPayload := mload(add(data, offsetPayload))
         }
 
-        if (paramType == ParameterType.DYNAMIC32) {
-            return keccak256(slice(data, start - 32, start + length * 32));
-        } else {
-            return keccak256(slice(data, start, start + length));
-        }
+        uint256 start = offsetPayload;
+        uint256 end = start +
+            (
+                paramType == ParameterType.DYNAMIC32
+                    ? lengthPayload * 32
+                    : lengthPayload
+            );
+
+        return keccak256(slice(data, start, end));
     }
 
     function pluckParamValue(bytes memory data, uint256 paramIndex)

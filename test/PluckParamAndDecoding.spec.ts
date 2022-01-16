@@ -421,6 +421,5 @@ function encodeDynamic(types: any[], values: any[]) {
 }
 
 function encodeDynamic32(types: any[], values: any[]) {
-  const encoded = ethers.utils.defaultAbiCoder.encode(types, values).slice(66);
-  return `0x${encoded}`;
+  return ethers.utils.solidityPack(types, values);
 }
