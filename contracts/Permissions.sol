@@ -665,7 +665,7 @@ library Permissions {
          * Dynamic32 -> a byte offset to encoded data payload
          * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline (in the "chunks")
          * Note: Nested types also do not follow the above described rules, and are unsupported
-         * Note: The offset to encoded data payload is relative, (minus 32 bytes that include over buffer length and minut 4 bytes for functionSig)
+         * Note: The offset to encoded data payload is relative, (minus 32 bytes that include overall buffer length and 4 bytes for functionSig)
          *
          * Names:
          * offsetPointer -> The offset to the initial 32 byte chunks (one per Parameter)
