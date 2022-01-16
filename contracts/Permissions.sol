@@ -911,7 +911,6 @@ library Permissions {
         pure
         returns (bytes32)
     {
-        // fits in 32 bytes
         return bytes32(abi.encodePacked(targetAddress, functionSig));
     }
 
@@ -920,7 +919,6 @@ library Permissions {
         bytes4 functionSig,
         uint8 paramIndex
     ) public pure returns (bytes32) {
-        // fits in 32 bytes
         return
             bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
     }
