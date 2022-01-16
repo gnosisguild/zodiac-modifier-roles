@@ -333,7 +333,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -377,7 +377,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -423,7 +423,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -482,7 +482,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -530,7 +530,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -581,7 +581,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -645,7 +645,7 @@ describe("Comparison", async () => {
     // set it to true
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

@@ -59,12 +59,10 @@ describe("EmitsEvent", async () => {
     const { owner, modifier } = await setup();
 
     await expect(
-      modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, AddressOne, OPTIONS_DELEGATECALL)
+      modifier.connect(owner).allowTargetPartially(ROLE_ID, AddressOne)
     )
       .to.emit(modifier, "AllowTargetPartially")
-      .withArgs(ROLE_ID, AddressOne, OPTIONS_DELEGATECALL);
+      .withArgs(ROLE_ID, AddressOne);
   });
   it("RevokeTarget", async () => {
     const { owner, modifier } = await setup();
@@ -175,14 +173,19 @@ describe("EmitsEvent", async () => {
       .withArgs(ROLE_ID, AddressOne, "0x12345678", 0);
   });
 
-  it("ScopeFunctionOptions", async () => {
+  it("ScopeFunctionExecutionOptions", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier
         .connect(owner)
-        .scopeFunctionOptions(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND)
+        .scopeFunctionExecutionOptions(
+          ROLE_ID,
+          AddressOne,
+          "0x12345678",
+          OPTIONS_SEND
+        )
     )
-      .to.emit(modifier, "ScopeFunctionOptions")
+      .to.emit(modifier, "ScopeFunctionExecutionOptions")
       .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND);
   });
 });

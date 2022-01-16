@@ -537,8 +537,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -590,8 +589,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -652,8 +650,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -735,8 +732,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -830,8 +826,7 @@ describe("RolesModifier", async () => {
       const allowTargetPartially =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -931,8 +926,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1005,8 +999,7 @@ describe("RolesModifier", async () => {
       const allowTargetPartially =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1085,8 +1078,7 @@ describe("RolesModifier", async () => {
       const allowTargetPartially =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1141,8 +1133,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1197,8 +1188,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1253,8 +1243,7 @@ describe("RolesModifier", async () => {
       const functionScoped =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
@@ -1587,8 +1576,7 @@ describe("RolesModifier", async () => {
       const allowTargetPartially =
         await modifier.populateTransaction.allowTargetPartially(
           1,
-          testContract.address,
-          OPTIONS_NONE
+          testContract.address
         );
       await avatar.exec(modifier.address, 0, allowTargetPartially.data);
 
@@ -1920,7 +1908,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+        .allowTargetPartially(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -2059,7 +2047,7 @@ describe("RolesModifier", async () => {
 
       await modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+        .allowTargetPartially(ROLE_ID, testContract.address);
 
       // allow the function
       await modifier

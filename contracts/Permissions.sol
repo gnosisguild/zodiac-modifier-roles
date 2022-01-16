@@ -50,11 +50,7 @@ library Permissions {
         address targetAddress,
         ExecutionOptions options
     );
-    event AllowTargetPartially(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    );
+    event AllowTargetPartially(uint16 role, address targetAddress);
     event RevokeTarget(uint16 role, address targetAddress);
     event ScopeAllowFunction(
         uint16 role,
@@ -101,7 +97,7 @@ library Permissions {
         uint8 paramIndex
     );
 
-    event ScopeFunctionOptions(
+    event ScopeFunctionExecutionOptions(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
@@ -375,14 +371,13 @@ library Permissions {
     function allowTargetPartially(
         Role storage role,
         uint16 roleId,
-        address targetAddress,
-        ExecutionOptions options
+        address targetAddress
     ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.FUNCTION,
-            options
+            ExecutionOptions(0)
         );
-        emit AllowTargetPartially(roleId, targetAddress, options);
+        emit AllowTargetPartially(roleId, targetAddress);
     }
 
     function revokeTarget(
@@ -597,7 +592,7 @@ library Permissions {
         emit UnscopeParameter(roleId, targetAddress, functionSig, paramIndex);
     }
 
-    function scopeFunctionOptions(
+    function scopeFunctionExecutionOptions(
         Role storage role,
         uint16 roleId,
         address targetAddress,
@@ -613,7 +608,12 @@ library Permissions {
             keyForFunctions(targetAddress, functionSig)
         ] = packFunction(scopeConfig, options, isWildcarded, paramCount);
 
-        emit ScopeFunctionOptions(roleId, targetAddress, functionSig, options);
+        emit ScopeFunctionExecutionOptions(
+            roleId,
+            targetAddress,
+            functionSig,
+            options
+        );
     }
 
     function enforceComp(ParameterType paramType, Comparison paramComp)

@@ -2,28 +2,20 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-const COMP_EQUAL = 0;
-const COMP_GREATER = 1;
-const COMP_LESS = 2;
+const OPTIONS_NONE = 0;
+const OPTIONS_SEND = 1;
+const OPTIONS_DELEGATECALL = 2;
+const OPTIONS_BOTH = 3;
 
-const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
-  ["uint256"],
-  [123]
-);
+const ROLE_ID = 0;
 
 describe("ExecutionOptions", async () => {
-  const baseSetup = deployments.createFixture(async () => {
+  const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    const testContractClone = await TestContract.deploy();
-    return { Avatar, avatar, testContract, testContractClone };
-  });
-
-  const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
-    const base = await baseSetup();
 
     const [owner, invoker] = waffle.provider.getWallets();
 
@@ -37,14 +29,26 @@ describe("ExecutionOptions", async () => {
 
     const modifier = await Modifier.deploy(
       owner.address,
-      base.avatar.address,
-      base.avatar.address
+      avatar.address,
+      avatar.address
     );
 
     await modifier.enableModule(invoker.address);
 
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // fund avatar
+    await invoker.sendTransaction({
+      to: avatar.address,
+      value: ethers.utils.parseEther("10"),
+    });
+
     return {
-      ...base,
+      Avatar,
+      avatar,
+      testContract,
       Modifier,
       modifier,
       owner,
@@ -52,26 +56,588 @@ describe("ExecutionOptions", async () => {
     };
   });
 
-  describe("clearance NONE", async () => {
-    it("SEND not taken into consideration");
-    it("DELEGATE not taken into consideration");
-    it("scope SEND not taken into consideration");
-    it("scope DELEGATE not taken into consideration");
+  describe("sending eth", () => {
+    describe("target allowed - aka Clearance.TARGET", () => {
+      it("ExecutionOptions.NONE - FAILS sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+
+      it("ExecutionOptions.NONE - FAILS sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+
+      it("ExecutionOptions.SEND - OK sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_SEND);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        )
+          .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+          .withArgs(value);
+      });
+
+      it("ExecutionOptions.SEND - OK sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_SEND);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        )
+          .to.be.emit(testContract, "ReceiveFallback")
+          .withArgs(value);
+      });
+
+      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_DELEGATECALL);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_DELEGATECALL);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+      it("ExecutionOptions.BOTH - OK sending ETH to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_BOTH);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        )
+          .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+          .withArgs(value);
+      });
+
+      it("ExecutionOptions.BOTH - OK sending ETH to fallback function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTarget(ROLE_ID, testContract.address, OPTIONS_BOTH);
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        )
+          .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+          .withArgs(value);
+      });
+    });
+
+    describe("target allowed partially - aka Clearance.FUNCTION", () => {
+      it("ExecutionOptions.NONE - FAILS sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_NONE
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+
+      it("ExecutionOptions.NONE - FAILS sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            "0x00000000",
+            OPTIONS_NONE
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+
+      it("ExecutionOptions.SEND - OK sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_SEND
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        )
+          .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+          .withArgs(value);
+      });
+
+      it("ExecutionOptions.SEND - OK sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            "0x00000000",
+            OPTIONS_SEND
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        )
+          .to.be.emit(testContract, "ReceiveFallback")
+          .withArgs(value);
+      });
+      it("ExecutionOptions.SEND - only updating options is not an allowance", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        // missing allowTargetPartially
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_SEND
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("TargetAddressNotAllowed()");
+      });
+
+      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_DELEGATECALL
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1");
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            "0x00000000",
+            OPTIONS_DELEGATECALL
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        ).to.be.revertedWith("SendNotAllowed()");
+      });
+
+      it("ExecutionOptions.BOTH - OK sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_BOTH
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        )
+          .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+          .withArgs(value);
+      });
+
+      it("ExecutionOptions.BOTH - OK sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+        await modifier
+          .connect(owner)
+          .allowTargetPartially(ROLE_ID, testContract.address);
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            "0x00000000",
+            OPTIONS_BOTH
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, "0x", 0)
+        )
+          .to.be.emit(testContract, "ReceiveFallback")
+          .withArgs(value);
+      });
+      it("ExecutionOptions.BOTH - only updating options is not an allowance", async () => {
+        const { modifier, testContract, owner, invoker } = await setup();
+
+        const value = ethers.utils.parseEther("1.123");
+
+        const SELECTOR = testContract.interface.getSighash(
+          testContract.interface.getFunction("receiveEthAndDoNothing")
+        );
+
+        const { data } =
+          await testContract.populateTransaction.receiveEthAndDoNothing();
+
+        // missing allowTargetPartially
+
+        await modifier
+          .connect(owner)
+          .scopeAllowFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            OPTIONS_BOTH
+          );
+
+        await expect(
+          modifier
+            .connect(invoker)
+            .execTransactionFromModule(testContract.address, value, data, 0)
+        ).to.be.revertedWith("TargetAddressNotAllowed()");
+      });
+    });
   });
 
-  describe("clearance TARGET", async () => {
-    it("SEND works");
-    it("DELEGATE works");
-    it("scope SEND not taken into consideration");
-    it("scope DELEGATE not taken into consideration");
+  describe("delegatecall", () => {
+    it("target allowed - can delegatecall", async () => {
+      const { modifier, testContract, owner, invoker } = await setup();
+
+      const { data } = await testContract.populateTransaction.emitTheSender();
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, OPTIONS_DELEGATECALL);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 1)
+      ).to.not.be.reverted;
+    });
+    it("target allowed - cannot delegatecall", async () => {
+      const { modifier, testContract, owner, invoker } = await setup();
+
+      const { data } = await testContract.populateTransaction.emitTheSender();
+
+      await modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 1)
+      ).to.be.revertedWith("DelegateCallNotAllowed()");
+    });
+    it("target partially allowed - can delegatecall", async () => {
+      const { modifier, testContract, owner, invoker } = await setup();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("emitTheSender")
+      );
+
+      const { data } = await testContract.populateTransaction.emitTheSender();
+
+      await modifier
+        .connect(owner)
+        .allowTargetPartially(ROLE_ID, testContract.address);
+
+      await modifier
+        .connect(owner)
+        .scopeAllowFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_BOTH
+        );
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 1)
+      ).not.to.be.reverted;
+    });
+
+    it("target partially allowed - cannot delegatecall", async () => {
+      const { modifier, testContract, owner, invoker } = await setup();
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("emitTheSender")
+      );
+
+      const { data } = await testContract.populateTransaction.emitTheSender();
+
+      await modifier
+        .connect(owner)
+        .allowTargetPartially(ROLE_ID, testContract.address);
+
+      await modifier
+        .connect(owner)
+        .scopeAllowFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        );
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContract.address, 0, data, 1)
+      ).to.be.revertedWith("DelegateCallNotAllowed()");
+    });
   });
 
-  describe("clearance FUNCTION", async () => {
-    it("SEND takes precedence and works");
-    it("DELEGATE takes precedence and works");
-    it("scope SEND works");
-    it("scope DELEGATE works");
-    it("scope SEND does not work if function revoked");
-    it("scope DELEGATE does not work if function revoked");
+  it("ExecutionOptions can be set independently", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const value = ethers.utils.parseEther("1.123");
+
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("receiveEthAndDoNothing")
+    );
+
+    const { data } =
+      await testContract.populateTransaction.receiveEthAndDoNothing();
+
+    await modifier
+      .connect(owner)
+      .allowTargetPartially(ROLE_ID, testContract.address);
+
+    await modifier
+      .connect(owner)
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_SEND
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testContract.address, value, data, 0)
+    )
+      .to.be.emit(testContract, "ReceiveEthAndDoNothing")
+      .withArgs(value);
+
+    await modifier
+      .connect(owner)
+      .scopeFunctionExecutionOptions(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testContract.address, value, data, 0)
+    ).to.be.revertedWith("SendNotAllowed");
   });
 });

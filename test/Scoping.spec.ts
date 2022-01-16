@@ -82,7 +82,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -139,7 +139,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -211,7 +211,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
@@ -282,7 +282,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -376,7 +376,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -445,7 +445,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -517,7 +517,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -587,7 +587,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -687,7 +687,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -773,7 +773,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -834,7 +834,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

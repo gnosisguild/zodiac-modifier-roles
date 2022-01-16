@@ -29,11 +29,7 @@ contract Roles is Modifier {
         address targetAddress,
         ExecutionOptions options
     );
-    event AllowTargetPartially(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    );
+    event AllowTargetPartially(uint16 role, address targetAddress);
     event RevokeTarget(uint16 role, address targetAddress);
     event ScopeAllowFunction(
         uint16 role,
@@ -79,7 +75,7 @@ contract Roles is Modifier {
         bytes4 functionSig,
         uint8 paramIndex
     );
-    event ScopeFunctionOptions(
+    event ScopeFunctionExecutionOptions(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
@@ -158,18 +154,11 @@ contract Roles is Modifier {
     /// @notice Only callable by owner.
     /// @param role Role to set for
     /// @param targetAddress Address to be partially allowed
-    /// @param options defines whether or not send and/or delegate calls can be made to a target address.
-    function allowTargetPartially(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    ) external onlyOwner {
-        Permissions.allowTargetPartially(
-            roles[role],
-            role,
-            targetAddress,
-            options
-        );
+    function allowTargetPartially(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        Permissions.allowTargetPartially(roles[role], role, targetAddress);
     }
 
     /// @dev Disallows all calls made to an address.
@@ -340,13 +329,13 @@ contract Roles is Modifier {
     /// @param targetAddress Address to be scoped/unscoped.
     /// @param functionSig first 4 bytes of the sha256 of the function signature.
     /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
-    function scopeFunctionOptions(
+    function scopeFunctionExecutionOptions(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
         ExecutionOptions options
     ) external onlyOwner {
-        Permissions.scopeFunctionOptions(
+        Permissions.scopeFunctionExecutionOptions(
             roles[role],
             role,
             targetAddress,

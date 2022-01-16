@@ -52,7 +52,7 @@ describe("PluckParam - Decoding", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testPluckParam.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testPluckParam.address);
 
     return {
       testPluckParam,

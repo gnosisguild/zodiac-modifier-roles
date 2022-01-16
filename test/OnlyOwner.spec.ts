@@ -87,19 +87,19 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {

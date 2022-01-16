@@ -128,7 +128,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -173,7 +173,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -230,7 +230,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -273,7 +273,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -329,7 +329,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
