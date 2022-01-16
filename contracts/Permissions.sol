@@ -149,6 +149,9 @@ library Permissions {
     /// CompValue for static types should have a size of exactly 32 bytes
     error UnsuitableStaticCompValueSize();
 
+    /// CompValue for Dynamic32 types should be a multiple of exactly 32 bytes
+    error UnsuitableDynamic32CompValueSize();
+
     /// Exceeds the max number of params supported
     error ScopeMaxParametersExceeded();
 
@@ -638,6 +641,12 @@ library Permissions {
     {
         if (paramType == ParameterType.STATIC && compValue.length != 32) {
             revert UnsuitableStaticCompValueSize();
+        }
+
+        if (
+            paramType == ParameterType.DYNAMIC32 && compValue.length % 32 != 0
+        ) {
+            revert UnsuitableDynamic32CompValueSize();
         }
     }
 

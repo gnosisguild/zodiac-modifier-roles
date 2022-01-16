@@ -27,8 +27,7 @@ describe("Scoping", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    const testContractClone = await TestContract.deploy();
-    return { Avatar, avatar, testContract, testContractClone };
+    return { Avatar, avatar, testContract };
   });
 
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
@@ -877,7 +876,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -918,7 +916,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
 
       await expect(
@@ -1009,7 +1006,7 @@ describe("Scoping", async () => {
     });
   });
 
-  describe("Enforces Static Parameter Size limit", () => {
+  describe("Enforces Parameter Size constraints", () => {
     const MORE_THAN_32_BYTES_TEXT =
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
     const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(
@@ -1025,7 +1022,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       const IS_SCOPED = true;
 
@@ -1043,6 +1039,21 @@ describe("Scoping", async () => {
             OPTIONS_NONE
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            [IS_SCOPED],
+            [TYPE_DYNAMIC32],
+            [COMP_EQUAL],
+            [ethers.utils.solidityPack(["string"], ["abcdefghijg"])],
+            OPTIONS_NONE
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
       await expect(
         modifier
@@ -1087,7 +1098,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -1102,6 +1112,20 @@ describe("Scoping", async () => {
             ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            TYPE_DYNAMIC32,
+            COMP_EQUAL,
+            ethers.utils.solidityPack(["string"], ["abcdefghijg"])
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
       await expect(
         modifier
@@ -1139,6 +1163,19 @@ describe("Scoping", async () => {
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            TYPE_DYNAMIC32,
+            [ethers.utils.solidityPack(["string"], ["abcdefghijg"])]
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
       await expect(
         modifier
