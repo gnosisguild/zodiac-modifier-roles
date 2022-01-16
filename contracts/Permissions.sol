@@ -655,26 +655,25 @@ library Permissions {
 
         /*
          * Encoded calldata:
-         * 32 bytes -> length in bytes of the buffer
+         * 32 bytes -> length in bytes of the entire buffer
          * 4  bytes -> function selector
-         * 32 bytes -> A sequence, one chunk per parameter
+         * 32 bytes -> sequence, one chunk per parameter
          *
          * There is one (byte32) chunk per paremeter. Depending on type it contains:
          * Static    -> value encoded inline (not plucked by this function)
          * Dynamic   -> a byte offset to encoded data payload
          * Dynamic32 -> a byte offset to encoded data payload
-         *
-         *
          * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline (in the "chunks")
          * Note: Nested types also do not follow the above described rules, and are unsupported
          * Note: The offset to encoded data payload is relative, (minus 32 bytes that include over buffer length and minut 4 bytes for functionSig)
          *
-         * We call the byte offset encoded data payload -> "offsetPointer".
-         * At offsetPointer, there is another offset stored, the "offsetPayload"
-         * The offsetPayload points to the beggining of the encoded payload. The first 32 bytes of the payload area contain the payload's length. Depending on ParameterType:
+         * Names:
+         * offsetPointer -> The offset to the initial 32 byte chunks (one per Parameter)
+         * offsetPayload -> The offset to the encoded parameter payload
+         *
+         * At encoded payload, the first 32 bytes contain the payload's length. Depending on ParameterType:
          * Dynamic   -> length in bytes
          * Dynamic32 -> length in bytes32
-         *
          * Note: Dynamic types are: bytes, string
          * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
          */
@@ -683,8 +682,7 @@ library Permissions {
         uint256 offsetPayload;
         assembly {
             offsetPayload := mload(add(data, offsetPointer))
-            // the stored offset is actually relative.
-            // Must adjust to account for overral buffer lenthg and functionSig
+            // this offset is relative: must adjust for overral buffer lenthg and functionSig
             offsetPayload := add(32, add(4, offsetPayload))
         }
 
