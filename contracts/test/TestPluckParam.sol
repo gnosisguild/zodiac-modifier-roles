@@ -10,6 +10,7 @@ contract TestPluckParam {
     event DynamicDynamic32Static(string first, uint32[] second, uint256 third);
     event Dynamic32StaticDynamic(address[] first, bytes2 second, bytes third);
     event Dynamic32DynamicStatic(bytes2[] first, string second, uint32 third);
+    event UnsupportedFixedSizeAndDynamic(bool[2] first, string second);
 
     function staticDynamic(bytes4 first, string memory second) external {
         emit StaticDynamic(first, second);
@@ -61,5 +62,12 @@ contract TestPluckParam {
         uint32 third
     ) external {
         emit Dynamic32DynamicStatic(first, second, third);
+    }
+
+    function unsupportedFixedSizeAndDynamic(
+        bool[2] memory first,
+        string memory second
+    ) external {
+        emit UnsupportedFixedSizeAndDynamic(first, second);
     }
 }

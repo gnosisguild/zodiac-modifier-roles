@@ -413,7 +413,54 @@ describe("PluckParam - Decoding", async () => {
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
-  // TODO add a test for JEDI use case fixed size array
+  it("don't try this at home", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("unsupportedFixedSizeAndDynamic")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeFunction(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        [true, true, true],
+        [TYPE_STATIC, TYPE_STATIC, TYPE_DYNAMIC],
+        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
+        [
+          encodeStatic(["bool"], [false]),
+          encodeStatic(["bool"], [false]),
+          encodeDynamic(["string"], ["Hello World!"]),
+        ],
+        OPTIONS_NONE
+      );
+
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.unsupportedFixedSizeAndDynamic(
+        [false, false],
+        "Hello World!"
+      );
+
+    const { data: dataBad } =
+      await testPluckParam.populateTransaction.unsupportedFixedSizeAndDynamic(
+        [true, false],
+        "Hello World!"
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+    ).to.emit(testPluckParam, "UnsupportedFixedSizeAndDynamic");
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+    ).to.be.revertedWith("ParameterNotAllowed()");
+  });
 });
 
 function splitAndPrint(s: string | undefined) {
