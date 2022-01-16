@@ -73,6 +73,12 @@ library Permissions {
         bytes[] compValue,
         ExecutionOptions options
     );
+    event ScopeFunctionExecutionOptions(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    );
     event ScopeParameter(
         uint16 role,
         address targetAddress,
@@ -95,13 +101,6 @@ library Permissions {
         address targetAddress,
         bytes4 functionSig,
         uint8 paramIndex
-    );
-
-    event ScopeFunctionExecutionOptions(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        ExecutionOptions options
     );
 
     /// Sender is not a member of the role
@@ -478,6 +477,30 @@ library Permissions {
         );
     }
 
+    function scopeFunctionExecutionOptions(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    ) external {
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        uint256 scopeConfig = role.functions[key];
+        (, bool isWildcarded, uint8 paramCount) = unpackFunction(scopeConfig);
+
+        //set scopeConfig
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = packFunction(scopeConfig, options, isWildcarded, paramCount);
+
+        emit ScopeFunctionExecutionOptions(
+            roleId,
+            targetAddress,
+            functionSig,
+            options
+        );
+    }
+
     function scopeParameter(
         Role storage role,
         uint16 roleId,
@@ -593,30 +616,6 @@ library Permissions {
         role.functions[key] = scopeConfig;
 
         emit UnscopeParameter(roleId, targetAddress, functionSig, paramIndex);
-    }
-
-    function scopeFunctionExecutionOptions(
-        Role storage role,
-        uint16 roleId,
-        address targetAddress,
-        bytes4 functionSig,
-        ExecutionOptions options
-    ) external {
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint8 paramCount) = unpackFunction(scopeConfig);
-
-        //set scopeConfig
-        role.functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = packFunction(scopeConfig, options, isWildcarded, paramCount);
-
-        emit ScopeFunctionExecutionOptions(
-            roleId,
-            targetAddress,
-            functionSig,
-            options
-        );
     }
 
     function enforceComp(ParameterType paramType, Comparison paramComp)
