@@ -670,8 +670,8 @@ library Permissions {
          * Note: The offset to encoded data payload is relative, (minus 32 bytes that include over buffer length and minut 4 bytes for functionSig)
          *
          * We call the byte offset encoded data payload -> "offsetPointer".
-         * At offsetPointer, there is another offset stored, the "offsetPayloadRelative"
-         * The offsetPayload points at the beggining of the encoded payload. The first 32 bytes of the payload area contain the payload's length. Depending on ParameterType:
+         * At offsetPointer, there is another offset stored, the "offsetPayload"
+         * The offsetPayload points to the beggining of the encoded payload. The first 32 bytes of the payload area contain the payload's length. Depending on ParameterType:
          * Dynamic   -> length in bytes
          * Dynamic32 -> length in bytes32
          *
@@ -679,16 +679,13 @@ library Permissions {
          * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
          */
 
-        // offsetPointer         - real     offset in bytes to the location
-        // offsetPayloadRelative - relative offset in bytes (without buffer lenth and functionSig)
-        // offsetPayload         - real     offset in bytes
-
         uint256 offsetPointer = 32 + 4 + paramIndex * 32;
-        uint256 offsetPayloadRelative;
         uint256 offsetPayload;
         assembly {
-            offsetPayloadRelative := mload(add(data, offsetPointer))
-            offsetPayload := add(32, add(4, offsetPayloadRelative))
+            offsetPayload := mload(add(data, offsetPointer))
+            // the stored offset is actually relative.
+            // Must adjust to account for overral buffer lenthg and functionSig
+            offsetPayload := add(32, add(4, offsetPayload))
         }
 
         uint256 lengthPayload;

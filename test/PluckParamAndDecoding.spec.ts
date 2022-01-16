@@ -86,16 +86,29 @@ describe("PluckParam - Decoding", async () => {
         OPTIONS_NONE
       );
 
-    const { data } = await testPluckParam.populateTransaction.staticDynamic(
-      "0x12345678",
-      "Hello World!"
-    );
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
+
+    const { data: dataBad } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Good Morning!"
+      );
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, data, 0)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
     ).to.emit(testPluckParam, "StaticDynamic");
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+    ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
   it("static, dynamic, dynamic32 - (address,bytes,uint32[])", async () => {
@@ -183,7 +196,7 @@ describe("PluckParam - Decoding", async () => {
       await testPluckParam.populateTransaction.staticDynamic32Dynamic(
         [123],
         ["0xabcdef12"],
-        "Good Morning!"
+        "Hello World?"
       );
 
     await expect(
@@ -233,8 +246,8 @@ describe("PluckParam - Decoding", async () => {
     const { data: dataBad } =
       await testPluckParam.populateTransaction.dynamicStaticDynamic32(
         "0x12ab45",
-        true,
-        ["0x1122", "0x3344"]
+        false,
+        ["0x1122", "0x3344", "0x5566"]
       );
 
     await expect(
@@ -283,8 +296,8 @@ describe("PluckParam - Decoding", async () => {
     const { data: dataBad } =
       await testPluckParam.populateTransaction.dynamicDynamic32Static(
         "Hello World!",
-        [1975, 2000, 2025],
-        987654321
+        [1975, 2000],
+        123456789
       );
 
     await expect(
