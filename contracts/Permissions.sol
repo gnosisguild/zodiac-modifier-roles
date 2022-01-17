@@ -83,7 +83,7 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         Comparison paramComp,
         bytes compValue
@@ -92,7 +92,7 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         bytes[] compValues
     );
@@ -100,7 +100,7 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex
+        uint256 paramIndex
     );
 
     /// Sender is not a member of the role
@@ -306,9 +306,9 @@ library Permissions {
         bytes memory data
     ) internal view {
         bytes4 functionSig = bytes4(data);
-        (, , uint8 paramCount) = unpackFuntion(scopeConfig);
+        (, , uint256 paramCount) = unpackFuntion(scopeConfig);
 
-        for (uint8 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < paramCount; i++) {
             (
                 bool paramIsScoped,
                 ParameterType paramType,
@@ -444,7 +444,7 @@ library Permissions {
         bytes[] calldata compValue,
         ExecutionOptions options
     ) external {
-        uint8 paramCount = uint8(paramIsScoped.length);
+        uint256 paramCount = paramIsScoped.length;
 
         if (
             paramCount != paramType.length ||
@@ -474,7 +474,7 @@ library Permissions {
          * )
          */
         uint256 scopeConfig = packLeft(0, options, false, paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < paramCount; i++) {
             scopeConfig = packParameter(
                 scopeConfig,
                 i,
@@ -490,7 +490,7 @@ library Permissions {
         ] = scopeConfig;
 
         //set compValues
-        for (uint8 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < paramCount; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
             ] = compressCompValue(paramType[i], compValue[i]);
@@ -516,7 +516,7 @@ library Permissions {
     ) external {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint8 paramCount) = unpackFuntion(scopeConfig);
+        (, bool isWildcarded, uint256 paramCount) = unpackFuntion(scopeConfig);
 
         //set scopeConfig
         role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
@@ -539,7 +539,7 @@ library Permissions {
         uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         Comparison paramComp,
         bytes calldata compValue
@@ -583,7 +583,7 @@ library Permissions {
         uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         bytes[] calldata compValues
     ) external {
@@ -635,7 +635,7 @@ library Permissions {
         uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex
+        uint256 paramIndex
     ) external {
         if (paramIndex >= SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
@@ -780,16 +780,16 @@ library Permissions {
      */
     function packParameter(
         uint256 scopeConfig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         bool isScoped,
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        (ExecutionOptions options, , uint8 prevParamCount) = unpackFuntion(
+        (ExecutionOptions options, , uint256 prevParamCount) = unpackFuntion(
             scopeConfig
         );
 
-        uint8 nextParamCount = paramIndex + 1 > prevParamCount
+        uint256 nextParamCount = paramIndex + 1 > prevParamCount
             ? paramIndex + 1
             : prevParamCount;
 
@@ -807,8 +807,7 @@ library Permissions {
                     paramComp
                 ),
                 options,
-                // isWildcarded=false
-                false,
+                false, // isWildcarded=false
                 nextParamCount
             );
     }
@@ -817,7 +816,7 @@ library Permissions {
         uint256 scopeConfig,
         ExecutionOptions options,
         bool isWildcarded,
-        uint8 paramCount
+        uint256 paramCount
     ) internal pure returns (uint256) {
         // LEFT SIDE
         // 2   bits -> options
@@ -844,14 +843,14 @@ library Permissions {
         }
 
         // set Length -> 48 + 96 + 96 = 240
-        scopeConfig |= uint256(paramCount) << 240;
+        scopeConfig |= paramCount << 240;
 
         return scopeConfig;
     }
 
     function packRight(
         uint256 scopeConfig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         bool isScoped,
         ParameterType paramType,
         Comparison paramComp
@@ -890,17 +889,17 @@ library Permissions {
         returns (
             ExecutionOptions options,
             bool isWildcarded,
-            uint8 paramCount
+            uint256 paramCount
         )
     {
         uint256 isWildcardedMask = 1 << 253;
 
         options = ExecutionOptions(scopeConfig >> 254);
         isWildcarded = scopeConfig & isWildcardedMask != 0;
-        paramCount = uint8((scopeConfig << 8) >> 248);
+        paramCount = (scopeConfig << 8) >> 248;
     }
 
-    function unpackParameter(uint256 scopeConfig, uint8 paramIndex)
+    function unpackParameter(uint256 scopeConfig, uint256 paramIndex)
         internal
         pure
         returns (
@@ -933,10 +932,12 @@ library Permissions {
     function keyForCompValues(
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex
+        uint256 paramIndex
     ) public pure returns (bytes32) {
         return
-            bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
+            bytes32(
+                abi.encodePacked(targetAddress, functionSig, uint8(paramIndex))
+            );
     }
 
     function compressCompValue(

@@ -216,7 +216,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         Comparison paramComp,
         bytes calldata compValue
@@ -245,7 +245,7 @@ contract Roles is Modifier {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
+        uint256 paramIndex,
         ParameterType paramType,
         bytes[] calldata compValues
     ) external onlyOwner {
