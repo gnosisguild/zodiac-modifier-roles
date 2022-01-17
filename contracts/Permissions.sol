@@ -273,19 +273,21 @@ library Permissions {
         uint256 value,
         Enum.Operation operation
     ) internal pure {
-        bool isSend = value > 0;
-        bool isDelegateCall = operation == Enum.Operation.DelegateCall;
-
-        bool canSend = options == ExecutionOptions.SEND ||
-            options == ExecutionOptions.BOTH;
-        bool canDelegateCall = options == ExecutionOptions.DELEGATECALL ||
-            options == ExecutionOptions.BOTH;
-
-        if (isSend && !canSend) {
+        // isSend && !canSend
+        if (
+            value > 0 &&
+            !(options == ExecutionOptions.SEND ||
+                options == ExecutionOptions.BOTH)
+        ) {
             revert SendNotAllowed();
         }
 
-        if (isDelegateCall && !canDelegateCall) {
+        // isDelegateCall && !canDelegateCall
+        if (
+            operation == Enum.Operation.DelegateCall &&
+            !(options == ExecutionOptions.DELEGATECALL ||
+                options == ExecutionOptions.BOTH)
+        ) {
             revert DelegateCallNotAllowed();
         }
     }
