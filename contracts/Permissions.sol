@@ -256,7 +256,7 @@ library Permissions {
                 revert FunctionNotAllowed();
             }
 
-            (ExecutionOptions options, bool isWildcarded, ) = unpackFuntion(
+            (ExecutionOptions options, bool isWildcarded, ) = unpackFunction(
                 scopeConfig
             );
 
@@ -306,7 +306,7 @@ library Permissions {
         bytes memory data
     ) internal view {
         bytes4 functionSig = bytes4(data);
-        (, , uint256 length) = unpackFuntion(scopeConfig);
+        (, , uint256 length) = unpackFunction(scopeConfig);
 
         for (uint256 i = 0; i < length; i++) {
             (
@@ -516,7 +516,7 @@ library Permissions {
     ) external {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint256 length) = unpackFuntion(scopeConfig);
+        (, bool isWildcarded, uint256 length) = unpackFunction(scopeConfig);
 
         //set scopeConfig
         role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
@@ -789,7 +789,7 @@ library Permissions {
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        (ExecutionOptions options, , uint256 prevLength) = unpackFuntion(
+        (ExecutionOptions options, , uint256 prevLength) = unpackFunction(
             scopeConfig
         );
 
@@ -875,7 +875,7 @@ library Permissions {
         return scopeConfig;
     }
 
-    function unpackFuntion(uint256 scopeConfig)
+    function unpackFunction(uint256 scopeConfig)
         internal
         pure
         returns (
