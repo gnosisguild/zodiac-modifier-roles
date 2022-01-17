@@ -711,34 +711,38 @@ library Permissions {
          * Note: Nested types also do not follow the above described rules, and are unsupported
          * Note: The offset to payload does not include 4 bytes for functionSig
          *
-         * Names:
-         * offsetPointer -> The offset to the initial 32 byte chunk
-         * offsetPayload -> The offset to the encoded parameter payload
          *
-         * At encoded payload, the first 32 bytes are the encoded length. Depending on ParameterType:
+         * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
          * Dynamic   -> length in bytes
          * Dynamic32 -> length in bytes32
          * Note: Dynamic types are: bytes, string
          * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
          */
 
-        uint256 offsetPointer = 4 + paramIndex * 32;
+        // the start of the parameter block
+        // 32 bytes - length encoding of the data bytes array
+        // 4  bytes - function sig
+        uint256 argumentsBlock;
+        assembly {
+            argumentsBlock := add(data, 36)
+        }
+
+        // the two offsets are relative to argumentBlock
+        uint256 offset = paramIndex * 32;
         uint256 offsetPayload;
         assembly {
-            // add 32 - jump over the length encoding of the data bytes array
-            offsetPayload := mload(add(32, add(data, offsetPointer)))
+            offsetPayload := mload(add(argumentsBlock, offset))
         }
-        // the loaded offset doesn't account for 4bytes functionSig
-        offsetPayload += 4;
 
         uint256 lengthPayload;
         assembly {
-            // add 32 - jump over the length encoding of the data bytes array
-            lengthPayload := mload(add(32, add(data, offsetPayload)))
+            lengthPayload := mload(add(argumentsBlock, offsetPayload))
         }
 
-        // the encoded parameter payload starts also with 32 bytes length encoding
-        uint256 start = offsetPayload + 32;
+        // account for:
+        // 4  bytes - functionSig
+        // 32 bytes - length encoding for the parameter payload
+        uint256 start = 4 + offsetPayload + 32;
         uint256 end = start +
             (
                 paramType == ParameterType.DYNAMIC32
@@ -757,7 +761,7 @@ library Permissions {
         uint256 offset = 4 + paramIndex * 32;
         bytes32 value;
         assembly {
-            // add 32 - jump over the length encoding
+            // add 32 - jump over the length encoding of the data bytes array
             value := mload(add(32, add(data, offset)))
         }
         return value;
