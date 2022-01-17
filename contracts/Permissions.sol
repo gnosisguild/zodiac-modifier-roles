@@ -4,9 +4,9 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 enum ParameterType {
-    STATIC,
-    DYNAMIC,
-    DYNAMIC32
+    Static,
+    Dynamic,
+    Dynamic32
 }
 
 enum Comparison {
@@ -17,16 +17,16 @@ enum Comparison {
 }
 
 enum ExecutionOptions {
-    NONE,
-    SEND,
-    DELEGATECALL,
-    BOTH
+    None,
+    Send,
+    DelegateCall,
+    Both
 }
 
 enum Clearance {
-    NONE,
-    TARGET,
-    FUNCTION
+    None,
+    Target,
+    Function
 }
 
 struct TargetAddress {
@@ -238,16 +238,16 @@ library Permissions {
         }
 
         TargetAddress storage target = role.targets[targetAddress];
-        if (target.clearance == Clearance.NONE) {
+        if (target.clearance == Clearance.None) {
             revert TargetAddressNotAllowed();
         }
 
-        if (target.clearance == Clearance.TARGET) {
+        if (target.clearance == Clearance.Target) {
             checkExecutionOptions(target.options, value, operation);
             return;
         }
 
-        if (target.clearance == Clearance.FUNCTION) {
+        if (target.clearance == Clearance.Function) {
             uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
@@ -279,8 +279,8 @@ library Permissions {
         // isSend && !canSend
         if (
             value > 0 &&
-            !(options == ExecutionOptions.SEND ||
-                options == ExecutionOptions.BOTH)
+            !(options == ExecutionOptions.Send ||
+                options == ExecutionOptions.Both)
         ) {
             revert SendNotAllowed();
         }
@@ -288,8 +288,8 @@ library Permissions {
         // isDelegateCall && !canDelegateCall
         if (
             operation == Enum.Operation.DelegateCall &&
-            !(options == ExecutionOptions.DELEGATECALL ||
-                options == ExecutionOptions.BOTH)
+            !(options == ExecutionOptions.DelegateCall ||
+                options == ExecutionOptions.Both)
         ) {
             revert DelegateCallNotAllowed();
         }
@@ -320,7 +320,7 @@ library Permissions {
             }
 
             bytes32 value;
-            if (paramType != ParameterType.STATIC) {
+            if (paramType != ParameterType.Static) {
                 value = pluckDynamicParamValue(data, paramType, i);
             } else {
                 value = pluckParamValue(data, i);
@@ -371,7 +371,7 @@ library Permissions {
         address targetAddress,
         ExecutionOptions options
     ) external {
-        role.targets[targetAddress] = TargetAddress(Clearance.TARGET, options);
+        role.targets[targetAddress] = TargetAddress(Clearance.Target, options);
         emit AllowTarget(roleId, targetAddress, options);
     }
 
@@ -381,8 +381,8 @@ library Permissions {
         address targetAddress
     ) external {
         role.targets[targetAddress] = TargetAddress(
-            Clearance.FUNCTION,
-            ExecutionOptions.NONE
+            Clearance.Function,
+            ExecutionOptions.None
         );
         emit AllowTargetPartially(roleId, targetAddress);
     }
@@ -393,8 +393,8 @@ library Permissions {
         address targetAddress
     ) external {
         role.targets[targetAddress] = TargetAddress(
-            Clearance.NONE,
-            ExecutionOptions.NONE
+            Clearance.None,
+            ExecutionOptions.None
         );
         emit RevokeTarget(roleId, targetAddress);
     }
@@ -664,7 +664,7 @@ library Permissions {
         }
 
         if (
-            (paramType != ParameterType.STATIC) &&
+            (paramType != ParameterType.Static) &&
             (paramComp != Comparison.EqualTo)
         ) {
             revert UnsuitableRelativeComparison();
@@ -675,12 +675,12 @@ library Permissions {
         internal
         pure
     {
-        if (paramType == ParameterType.STATIC && compValue.length != 32) {
+        if (paramType == ParameterType.Static && compValue.length != 32) {
             revert UnsuitableStaticCompValueSize();
         }
 
         if (
-            paramType == ParameterType.DYNAMIC32 && compValue.length % 32 != 0
+            paramType == ParameterType.Dynamic32 && compValue.length % 32 != 0
         ) {
             revert UnsuitableDynamic32CompValueSize();
         }
@@ -696,7 +696,7 @@ library Permissions {
         ParameterType paramType,
         uint256 paramIndex
     ) internal pure returns (bytes32) {
-        assert(paramType != ParameterType.STATIC);
+        assert(paramType != ParameterType.Static);
 
         /*
          * Encoded calldata:
@@ -745,7 +745,7 @@ library Permissions {
         uint256 start = 4 + offsetPayload + 32;
         uint256 end = start +
             (
-                paramType == ParameterType.DYNAMIC32
+                paramType == ParameterType.Dynamic32
                     ? lengthPayload * 32
                     : lengthPayload
             );
@@ -945,7 +945,7 @@ library Permissions {
         bytes calldata compValue
     ) internal pure returns (bytes32) {
         return
-            paramType == ParameterType.STATIC
+            paramType == ParameterType.Static
                 ? bytes32(compValue)
                 : keccak256(compValue);
     }
