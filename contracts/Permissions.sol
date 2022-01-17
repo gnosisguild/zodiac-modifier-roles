@@ -310,12 +310,12 @@ library Permissions {
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
-                bool isParamScoped,
+                bool paramIsScoped,
                 ParameterType paramType,
                 Comparison paramComp
             ) = unpackParameter(scopeConfig, i);
 
-            if (!isParamScoped) {
+            if (!paramIsScoped) {
                 continue;
             }
 
@@ -406,6 +406,14 @@ library Permissions {
         bytes4 functionSig,
         ExecutionOptions options
     ) external {
+        /*
+         * packFunction(
+         *    0           -> start from a fresh scopeConfig
+         *    options     -> externally provided options
+         *    true        -> mark the function as wildcarded
+         *    0           -> paramCount
+         * )
+         */
         role.functions[
             keyForFunctions(targetAddress, functionSig)
         ] = packFunction(0, options, true, 0);
@@ -433,31 +441,45 @@ library Permissions {
         bytes[] calldata compValue,
         ExecutionOptions options
     ) external {
+        uint8 paramCount = uint8(paramIsScoped.length);
+
         if (
-            paramIsScoped.length != paramType.length ||
-            paramIsScoped.length != paramComp.length ||
-            paramIsScoped.length != compValue.length
+            paramCount != paramType.length ||
+            paramCount != paramComp.length ||
+            paramCount != compValue.length
         ) {
             revert ArraysDifferentLength();
         }
 
-        if (paramIsScoped.length > SCOPE_MAX_PARAMS) {
+        if (paramCount > SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
         }
 
-        for (uint256 i = 0; i < paramType.length; i++) {
+        for (uint256 i = 0; i < paramCount; i++) {
             if (paramIsScoped[i]) {
                 enforceComp(paramType[i], paramComp[i]);
                 enforceCompValue(paramType[i], compValue[i]);
             }
         }
 
-        uint256 scopeConfig = scopeConfigCreate(
-            options,
-            paramIsScoped,
-            paramType,
-            paramComp
-        );
+        /*
+         * packFunction(
+         *    0           -> start from a fresh scopeConfig
+         *    options     -> externally provided options
+         *    true        -> mark the function as wildcarded
+         *    0           -> paramCount
+         * )
+         */
+        uint256 scopeConfig = packFunction(0, options, false, paramCount);
+        for (uint8 i = 0; i < paramCount; i++) {
+            scopeConfig = packParameter(
+                scopeConfig,
+                i,
+                paramIsScoped[i],
+                paramType[i],
+                paramComp[i]
+            );
+        }
 
         //set scopeConfig
         role.functions[
@@ -465,7 +487,7 @@ library Permissions {
         ] = scopeConfig;
 
         //set compValues
-        for (uint8 i = 0; i < paramComp.length; i++) {
+        for (uint8 i = 0; i < paramCount; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
             ] = compressCompValue(paramType[i], compValue[i]);
@@ -528,7 +550,7 @@ library Permissions {
         uint256 scopeConfig = scopeConfigSet(
             role.functions[key],
             paramIndex,
-            true,
+            true, // paramIsScoped
             paramType,
             paramComp
         );
@@ -576,7 +598,7 @@ library Permissions {
         uint256 scopeConfig = scopeConfigSet(
             role.functions[key],
             paramIndex,
-            true,
+            true, // paramIsScoped
             paramType,
             Comparison.OneOf
         );
@@ -618,7 +640,7 @@ library Permissions {
         uint256 scopeConfig = scopeConfigSet(
             role.functions[key],
             paramIndex,
-            false,
+            false, // paramIsScoped
             ParameterType(0),
             Comparison(0)
         );
@@ -747,28 +769,6 @@ library Permissions {
         }
     }
 
-    function scopeConfigCreate(
-        ExecutionOptions options,
-        bool[] memory isParamScoped,
-        ParameterType[] memory paramType,
-        Comparison[] memory paramComp
-    ) internal pure returns (uint256) {
-        uint8 paramCount = uint8(isParamScoped.length);
-        //pack -> options, isWildcarded, Lengh
-        uint256 scopeConfig = packFunction(0, options, false, paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            scopeConfig = packParameter(
-                scopeConfig,
-                i,
-                isParamScoped[i],
-                paramType[i],
-                paramComp[i]
-            );
-        }
-
-        return scopeConfig;
-    }
-
     function scopeConfigSet(
         uint256 scopeConfig,
         uint8 paramIndex,
@@ -784,6 +784,11 @@ library Permissions {
             ? paramIndex + 1
             : prevParamCount;
 
+        /*
+         * Packing parameter information into scopeConfig
+         * whether setting or unsetting the parameter,
+         * function is no longer wildcarded
+         */
         return
             packFunction(
                 packParameter(
@@ -813,7 +818,7 @@ library Permissions {
         // 1   bits -> isWildcarded
         // 5   bits -> unused
         // 8   bits -> length
-        // 48  bits -> isParamScoped
+        // 48  bits -> paramIsScoped
         // 96  bits -> paramType (2 bits per entry 48*2)
         // 96  bits -> paramComp (2 bits per entry 48*2)
 
@@ -848,7 +853,7 @@ library Permissions {
         // 1   bits -> isWildcarded
         // 5   bits -> unused
         // 8   bits -> length
-        // 48  bits -> isParamScoped
+        // 48  bits -> paramIsScoped
         // 96  bits -> paramType (2 bits per entry 48*2)
         // 96  bits -> paramComp (2 bits per entry 48*2)
         uint256 isScopedMask = 1 << (paramIndex + 96 + 96);
