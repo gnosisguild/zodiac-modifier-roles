@@ -668,29 +668,29 @@ library Permissions {
          * 4  bytes -> function selector
          * 32 bytes -> sequence, one chunk per parameter
          *
-         * There is one (byte32) chunk per paremeter. Depending on type it contains:
+         * There is one (byte32) chunk per parameter. Depending on type it contains:
          * Static    -> value encoded inline (not plucked by this function)
          * Dynamic   -> a byte offset to encoded data payload
          * Dynamic32 -> a byte offset to encoded data payload
-         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline (in the "chunks")
+         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
          * Note: Nested types also do not follow the above described rules, and are unsupported
-         * Note: The offset to encoded data payload does not include 4 bytes for functionSig
+         * Note: The offset to payload does not include 4 bytes for functionSig
          *
          * Names:
-         * offsetPointer -> The offset to the initial 32 byte chunks (one per Parameter)
+         * offsetPointer -> The offset to the initial 32 byte chunk
          * offsetPayload -> The offset to the encoded parameter payload
          *
-         * At encoded payload, the first 32 bytes contain the payload's length. Depending on ParameterType:
+         * At encoded payload, the first 32 bytes are the encoded length. Depending on ParameterType:
          * Dynamic   -> length in bytes
          * Dynamic32 -> length in bytes32
          * Note: Dynamic types are: bytes, string
-         * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
+         * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
          */
 
         uint256 offsetPointer = 4 + paramIndex * 32;
         uint256 offsetPayload;
         assembly {
-            // add 32 - must jump over the length encoding
+            // add 32 - jump over the length encoding
             offsetPayload := mload(add(32, add(data, offsetPointer)))
         }
         // the loaded offset doesn't account for 4bytes functionSig
@@ -698,7 +698,7 @@ library Permissions {
 
         uint256 lengthPayload;
         assembly {
-            // add 32 - must jump over the length encoding
+            // add 32 - jump over the length encoding
             lengthPayload := mload(add(32, add(data, offsetPayload)))
         }
 
@@ -719,10 +719,11 @@ library Permissions {
         pure
         returns (bytes32)
     {
-        uint256 offset = 32 + 4 + paramIndex * 32;
+        uint256 offset = 4 + paramIndex * 32;
         bytes32 value;
         assembly {
-            value := mload(add(data, offset))
+            // add 32 - jump over the length encoding
+            value := mload(add(32, add(data, offset)))
         }
         return value;
     }
