@@ -382,7 +382,7 @@ library Permissions {
     ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.FUNCTION,
-            ExecutionOptions(0)
+            ExecutionOptions.NONE
         );
         emit AllowTargetPartially(roleId, targetAddress);
     }
@@ -394,7 +394,7 @@ library Permissions {
     ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.NONE,
-            ExecutionOptions(0)
+            ExecutionOptions.NONE
         );
         emit RevokeTarget(roleId, targetAddress);
     }
