@@ -685,7 +685,6 @@ library Permissions {
          * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
          */
 
-
         uint256 offsetPointer = 4 + paramIndex * 32;
         uint256 offsetPayload;
         assembly {
@@ -695,11 +694,10 @@ library Permissions {
         // the loaded offset doesn't account for 4bytes functionSig
         offsetPayload += 4;
 
-
         uint256 lengthPayload;
         assembly {
             // add 32 - must jump over the length encoding
-            lengthPayload := mload(add(32 ,add(data, offsetPayload)))
+            lengthPayload := mload(add(32, add(data, offsetPayload)))
         }
 
         // the encoded parameter payload starts also with 32 bytes length encoding
