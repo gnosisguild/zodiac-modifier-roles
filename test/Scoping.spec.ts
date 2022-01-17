@@ -673,7 +673,7 @@ describe("Scoping", async () => {
     ).to.emit(testContract, "FnWithTwoMixedParams");
   });
 
-  it("update compType should work on already scoped parameter", async () => {
+  it("update paramComp should work on already scoped parameter", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
     const ROLE_ID = 0;

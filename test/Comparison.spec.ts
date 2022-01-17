@@ -127,7 +127,7 @@ describe("Comparison", async () => {
     ).to.not.be.reverted;
   });
 
-  it("enforces compType for scopeFunction", async () => {
+  it("enforces paramComp for scopeFunction", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -213,7 +213,7 @@ describe("Comparison", async () => {
         )
     ).to.not.be.reverted;
   });
-  it("enforces compType for scopeParam", async () => {
+  it("enforces paramComp for scopeParameter", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -397,7 +397,7 @@ describe("Comparison", async () => {
       "ParameterNotAllowed()"
     );
   });
-  it("re-scopes an eq compType", async () => {
+  it("re-scopes an eq paramComp", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -555,7 +555,7 @@ describe("Comparison", async () => {
       "ParameterNotOneOfAllowed()"
     );
   });
-  it("re-scopes a oneOf comparison to simple compType", async () => {
+  it("re-scopes a oneOf comparison to simple paramComp", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 

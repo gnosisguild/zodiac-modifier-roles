@@ -309,7 +309,7 @@ library Permissions {
             (
                 bool isParamScoped,
                 ParameterType paramType,
-                Comparison compType
+                Comparison paramComp
             ) = unpackParameter(scopeConfig, i);
 
             if (!isParamScoped) {
@@ -324,8 +324,8 @@ library Permissions {
             }
 
             bytes32 key = keyForCompValues(targetAddress, functionSig, i);
-            if (compType != Comparison.OneOf) {
-                compare(compType, role.compValues[key], value);
+            if (paramComp != Comparison.OneOf) {
+                compare(paramComp, role.compValues[key], value);
             } else {
                 compareOneOf(role.compValuesOneOf[key], value);
             }
@@ -333,15 +333,15 @@ library Permissions {
     }
 
     function compare(
-        Comparison compType,
+        Comparison paramComp,
         bytes32 compValue,
         bytes32 value
     ) internal pure {
-        if (compType == Comparison.EqualTo && value != compValue) {
+        if (paramComp == Comparison.EqualTo && value != compValue) {
             revert ParameterNotAllowed();
-        } else if (compType == Comparison.GreaterThan && value <= compValue) {
+        } else if (paramComp == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
-        } else if (compType == Comparison.LessThan && value >= compValue) {
+        } else if (paramComp == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
         }
     }
