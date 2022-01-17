@@ -306,9 +306,9 @@ library Permissions {
         bytes memory data
     ) internal view {
         bytes4 functionSig = bytes4(data);
-        (, , uint256 paramCount) = unpackFuntion(scopeConfig);
+        (, , uint256 length) = unpackFuntion(scopeConfig);
 
-        for (uint256 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (
                 bool paramIsScoped,
                 ParameterType paramType,
@@ -411,7 +411,7 @@ library Permissions {
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    true        -> mark the function as wildcarded
-         *    0           -> paramCount
+         *    0           -> length
          * )
          */
         role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
@@ -444,21 +444,21 @@ library Permissions {
         bytes[] calldata compValue,
         ExecutionOptions options
     ) external {
-        uint256 paramCount = paramIsScoped.length;
+        uint256 length = paramIsScoped.length;
 
         if (
-            paramCount != paramType.length ||
-            paramCount != paramComp.length ||
-            paramCount != compValue.length
+            length != paramType.length ||
+            length != paramComp.length ||
+            length != compValue.length
         ) {
             revert ArraysDifferentLength();
         }
 
-        if (paramCount > SCOPE_MAX_PARAMS) {
+        if (length > SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
         }
 
-        for (uint256 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < length; i++) {
             if (paramIsScoped[i]) {
                 enforceComp(paramType[i], paramComp[i]);
                 enforceCompValue(paramType[i], compValue[i]);
@@ -470,11 +470,11 @@ library Permissions {
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    true        -> mark the function as wildcarded
-         *    0           -> paramCount
+         *    0           -> length
          * )
          */
-        uint256 scopeConfig = packLeft(0, options, false, paramCount);
-        for (uint256 i = 0; i < paramCount; i++) {
+        uint256 scopeConfig = packLeft(0, options, false, length);
+        for (uint256 i = 0; i < length; i++) {
             scopeConfig = packParameter(
                 scopeConfig,
                 i,
@@ -490,7 +490,7 @@ library Permissions {
         ] = scopeConfig;
 
         //set compValues
-        for (uint256 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
             ] = compressCompValue(paramType[i], compValue[i]);
@@ -516,14 +516,14 @@ library Permissions {
     ) external {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint256 paramCount) = unpackFuntion(scopeConfig);
+        (, bool isWildcarded, uint256 length) = unpackFuntion(scopeConfig);
 
         //set scopeConfig
         role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
             scopeConfig,
             options,
             isWildcarded,
-            paramCount
+            length
         );
 
         emit ScopeFunctionExecutionOptions(
@@ -725,7 +725,7 @@ library Permissions {
         uint256 offsetPointer = 4 + paramIndex * 32;
         uint256 offsetPayload;
         assembly {
-            // add 32 - jump over the length encoding
+            // add 32 - jump over the length encoding of the data bytes array
             offsetPayload := mload(add(32, add(data, offsetPointer)))
         }
         // the loaded offset doesn't account for 4bytes functionSig
@@ -733,7 +733,7 @@ library Permissions {
 
         uint256 lengthPayload;
         assembly {
-            // add 32 - jump over the length encoding
+            // add 32 - jump over the length encoding of the data bytes array
             lengthPayload := mload(add(32, add(data, offsetPayload)))
         }
 
@@ -785,13 +785,13 @@ library Permissions {
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        (ExecutionOptions options, , uint256 prevParamCount) = unpackFuntion(
+        (ExecutionOptions options, , uint256 prevLength) = unpackFuntion(
             scopeConfig
         );
 
-        uint256 nextParamCount = paramIndex + 1 > prevParamCount
+        uint256 nextLength = paramIndex + 1 > prevLength
             ? paramIndex + 1
-            : prevParamCount;
+            : prevLength;
 
         /*
          * whether setting or unsetting the parameter,
@@ -808,7 +808,7 @@ library Permissions {
                 ),
                 options,
                 false, // isWildcarded=false
-                nextParamCount
+                nextLength
             );
     }
 
@@ -816,7 +816,7 @@ library Permissions {
         uint256 scopeConfig,
         ExecutionOptions options,
         bool isWildcarded,
-        uint256 paramCount
+        uint256 length
     ) internal pure returns (uint256) {
         // LEFT SIDE
         // 2   bits -> options
@@ -843,7 +843,7 @@ library Permissions {
         }
 
         // set Length -> 48 + 96 + 96 = 240
-        scopeConfig |= paramCount << 240;
+        scopeConfig |= length << 240;
 
         return scopeConfig;
     }
@@ -889,14 +889,14 @@ library Permissions {
         returns (
             ExecutionOptions options,
             bool isWildcarded,
-            uint256 paramCount
+            uint256 length
         )
     {
         uint256 isWildcardedMask = 1 << 253;
 
         options = ExecutionOptions(scopeConfig >> 254);
         isWildcarded = scopeConfig & isWildcardedMask != 0;
-        paramCount = (scopeConfig << 8) >> 248;
+        length = (scopeConfig << 8) >> 248;
     }
 
     function unpackParameter(uint256 scopeConfig, uint256 paramIndex)
