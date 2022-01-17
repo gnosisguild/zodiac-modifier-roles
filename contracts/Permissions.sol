@@ -663,7 +663,6 @@ library Permissions {
 
         /*
          * Encoded calldata:
-         * 32 bytes -> length in bytes of the entire buffer
          * 4  bytes -> function selector
          * 32 bytes -> sequence, one chunk per parameter
          *
@@ -673,7 +672,7 @@ library Permissions {
          * Dynamic32 -> a byte offset to encoded data payload
          * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline (in the "chunks")
          * Note: Nested types also do not follow the above described rules, and are unsupported
-         * Note: The offset to encoded data payload is relative, (minus 32 bytes that include overall buffer length and 4 bytes for functionSig)
+         * Note: The offset to encoded data payload does not include 4 bytes for functionSig
          *
          * Names:
          * offsetPointer -> The offset to the initial 32 byte chunks (one per Parameter)
@@ -686,29 +685,27 @@ library Permissions {
          * Note: Dynamic32 types are all non-nested arrays: address[] bytes32[] uint[] etc
          */
 
-        uint256 offsetPointer = 32 + 4 + paramIndex * 32;
+
+        uint256 offsetPointer = 4 + paramIndex * 32;
         uint256 offsetPayload;
         assembly {
-            offsetPayload := mload(add(data, offsetPointer))
-            // this offset is relative: must adjust for overral buffer lenthg and functionSig
-            offsetPayload := add(32, add(4, offsetPayload))
+            // add 32 - must jump over the length encoding
+            offsetPayload := mload(add(32, add(data, offsetPointer)))
         }
+        // the loaded offset doesn't account for 4bytes functionSig
+        offsetPayload += 4;
+
 
         uint256 lengthPayload;
         assembly {
-            lengthPayload := mload(add(data, offsetPayload))
+            // add 32 - must jump over the length encoding
+            lengthPayload := mload(add(32 ,add(data, offsetPayload)))
         }
 
-        /*
-         * above, the function uses memory byte offset
-         * bellow, slice will use array byte offset
-         * Therefore the start in array byte index for slice is:
-         * offsetPayload - 32 + 32
-         *      (-32 overall buffer length chunk)
-         *      (+32 encoded payload length chunk)
-         *
-         */
-        uint256 start = offsetPayload;
+        // the encoded parameter payload starts also with 32 bytes length encoding
+        // in bytes for DYNAMIC
+        // in bytes32 for DYNAMIC32
+        uint256 start = offsetPayload + 32;
         uint256 end = start +
             (
                 paramType == ParameterType.DYNAMIC32
