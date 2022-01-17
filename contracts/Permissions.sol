@@ -703,8 +703,6 @@ library Permissions {
         }
 
         // the encoded parameter payload starts also with 32 bytes length encoding
-        // in bytes for DYNAMIC
-        // in bytes32 for DYNAMIC32
         uint256 start = offsetPayload + 32;
         uint256 end = start +
             (

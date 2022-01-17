@@ -16,7 +16,9 @@ const TYPE_STATIC = 0;
 const TYPE_DYNAMIC = 1;
 const TYPE_DYNAMIC32 = 2;
 
-describe("EmitsEvent", async () => {
+// Pending: https://github.com/EthWorks/Waffle/issues/609
+
+describe.skip("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
