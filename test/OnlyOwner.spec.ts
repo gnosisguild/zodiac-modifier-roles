@@ -9,8 +9,7 @@ describe("OnlyOwner", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    const testContractClone = await TestContract.deploy();
-    return { Avatar, avatar, testContract, testContractClone };
+    return { Avatar, avatar, testContract };
   });
 
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
@@ -240,6 +239,48 @@ describe("OnlyOwner", async () => {
           [],
           [],
           [],
+          OPTIONS_NONE
+        )
+    ).to.not.be.reverted;
+  });
+  it("onlyOwner for scopeFunctionExecutionOptions, simple invoker fails", async () => {
+    const { modifier, testContract, owner, invoker, janeDoe } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("doNothing")
+    );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .scopeFunctionExecutionOptions(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        )
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .scopeFunctionExecutionOptions(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        )
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeFunctionExecutionOptions(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
           OPTIONS_NONE
         )
     ).to.not.be.reverted;
