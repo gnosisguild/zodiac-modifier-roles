@@ -965,7 +965,7 @@ describe("Scoping", async () => {
             SELECTOR,
             48,
             TYPE_DYNAMIC,
-            ["0x"]
+            ["0x", "0x"]
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -978,7 +978,7 @@ describe("Scoping", async () => {
             SELECTOR,
             47,
             TYPE_DYNAMIC,
-            ["0x"]
+            ["0x", "0x"]
           )
       ).to.not.be.reverted;
     });
@@ -1160,7 +1160,10 @@ describe("Scoping", async () => {
             SELECTOR,
             0,
             TYPE_STATIC,
-            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
+            [
+              ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
+              ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
+            ]
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -1173,7 +1176,10 @@ describe("Scoping", async () => {
             SELECTOR,
             0,
             TYPE_DYNAMIC32,
-            [ethers.utils.solidityPack(["string"], ["abcdefghijg"])]
+            [
+              ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
+              ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
+            ]
           )
       ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
@@ -1186,9 +1192,60 @@ describe("Scoping", async () => {
             SELECTOR,
             0,
             TYPE_STATIC,
-            [A_32_BYTES_VALUE]
+            [A_32_BYTES_VALUE, A_32_BYTES_VALUE]
           )
       ).to.not.be.reverted;
     });
+  });
+  it("enforces minimum 2 compValues when setting Comparison.OneOf", async () => {
+    const { modifier, testContract, owner } =
+      await setupRolesWithOwnerAndInvoker();
+
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("doNothing")
+    );
+
+    const ROLE_ID = 0;
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeParameterAsOneOf(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          0,
+          TYPE_STATIC,
+          []
+        )
+    ).to.be.revertedWith("NotEnoughCompValuesForOneOf()");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeParameterAsOneOf(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          0,
+          TYPE_STATIC,
+          [ethers.utils.defaultAbiCoder.encode(["uint256"], [123])]
+        )
+    ).to.be.revertedWith("NotEnoughCompValuesForOneOf()");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .scopeParameterAsOneOf(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          0,
+          TYPE_STATIC,
+          [
+            ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
+            ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
+          ]
+        )
+    ).to.not.be.reverted;
   });
 });

@@ -154,6 +154,9 @@ library Permissions {
     /// Exceeds the max number of params supported
     error ScopeMaxParametersExceeded();
 
+    /// OneOf Comparison requires at least two compValues
+    error NotEnoughCompValuesForOneOf();
+
     /*
      *
      * CHECKERS
@@ -558,6 +561,10 @@ library Permissions {
     ) external {
         if (paramIndex >= SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
+        }
+
+        if (compValues.length < 2) {
+            revert NotEnoughCompValuesForOneOf();
         }
 
         for (uint256 i = 0; i < compValues.length; i++) {
