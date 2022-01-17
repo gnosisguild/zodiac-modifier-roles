@@ -256,7 +256,7 @@ library Permissions {
                 revert FunctionNotAllowed();
             }
 
-            (ExecutionOptions options, bool isWildcarded, ) = unpackFunction(
+            (ExecutionOptions options, bool isWildcarded, ) = unpackFuntion(
                 scopeConfig
             );
 
@@ -306,7 +306,7 @@ library Permissions {
         bytes memory data
     ) internal view {
         bytes4 functionSig = bytes4(data);
-        (, , uint8 paramCount) = unpackFunction(scopeConfig);
+        (, , uint8 paramCount) = unpackFuntion(scopeConfig);
 
         for (uint8 i = 0; i < paramCount; i++) {
             (
@@ -407,16 +407,19 @@ library Permissions {
         ExecutionOptions options
     ) external {
         /*
-         * packFunction(
+         * packLeft(
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    true        -> mark the function as wildcarded
          *    0           -> paramCount
          * )
          */
-        role.functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = packFunction(0, options, true, 0);
+        role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
+            0,
+            options,
+            true,
+            0
+        );
         emit ScopeAllowFunction(roleId, targetAddress, functionSig, options);
     }
 
@@ -463,14 +466,14 @@ library Permissions {
         }
 
         /*
-         * packFunction(
+         * packLeft(
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    true        -> mark the function as wildcarded
          *    0           -> paramCount
          * )
          */
-        uint256 scopeConfig = packFunction(0, options, false, paramCount);
+        uint256 scopeConfig = packLeft(0, options, false, paramCount);
         for (uint8 i = 0; i < paramCount; i++) {
             scopeConfig = packParameter(
                 scopeConfig,
@@ -513,12 +516,15 @@ library Permissions {
     ) external {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
         uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint8 paramCount) = unpackFunction(scopeConfig);
+        (, bool isWildcarded, uint8 paramCount) = unpackFuntion(scopeConfig);
 
         //set scopeConfig
-        role.functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = packFunction(scopeConfig, options, isWildcarded, paramCount);
+        role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
+            scopeConfig,
+            options,
+            isWildcarded,
+            paramCount
+        );
 
         emit ScopeFunctionExecutionOptions(
             roleId,
@@ -547,7 +553,7 @@ library Permissions {
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = scopeConfigSet(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
             paramIndex,
             true, // paramIsScoped
@@ -595,7 +601,7 @@ library Permissions {
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = scopeConfigSet(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
             paramIndex,
             true, // paramIsScoped
@@ -637,7 +643,7 @@ library Permissions {
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = scopeConfigSet(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
             paramIndex,
             false, // paramIsScoped
@@ -769,14 +775,17 @@ library Permissions {
         }
     }
 
-    function scopeConfigSet(
+    /*
+     * pack/unpack are bit helpers for scopeConfig
+     */
+    function packParameter(
         uint256 scopeConfig,
         uint8 paramIndex,
         bool isScoped,
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        (ExecutionOptions options, , uint8 prevParamCount) = unpackFunction(
+        (ExecutionOptions options, , uint8 prevParamCount) = unpackFuntion(
             scopeConfig
         );
 
@@ -785,13 +794,12 @@ library Permissions {
             : prevParamCount;
 
         /*
-         * Packing parameter information into scopeConfig
          * whether setting or unsetting the parameter,
          * function is no longer wildcarded
          */
         return
-            packFunction(
-                packParameter(
+            packLeft(
+                packRight(
                     scopeConfig,
                     paramIndex,
                     isScoped,
@@ -805,19 +813,18 @@ library Permissions {
             );
     }
 
-    /*
-     * pack/unpack are bit helpers for scopeConfig
-     */
-    function packFunction(
+    function packLeft(
         uint256 scopeConfig,
         ExecutionOptions options,
         bool isWildcarded,
         uint8 paramCount
     ) internal pure returns (uint256) {
+        // LEFT SIDE
         // 2   bits -> options
         // 1   bits -> isWildcarded
         // 5   bits -> unused
         // 8   bits -> length
+        // RIGHT SIDE
         // 48  bits -> paramIsScoped
         // 96  bits -> paramType (2 bits per entry 48*2)
         // 96  bits -> paramComp (2 bits per entry 48*2)
@@ -842,17 +849,19 @@ library Permissions {
         return scopeConfig;
     }
 
-    function packParameter(
+    function packRight(
         uint256 scopeConfig,
         uint8 paramIndex,
         bool isScoped,
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
+        // LEFT SIDE
         // 2   bits -> options
         // 1   bits -> isWildcarded
         // 5   bits -> unused
         // 8   bits -> length
+        // RIGHT SIDE
         // 48  bits -> paramIsScoped
         // 96  bits -> paramType (2 bits per entry 48*2)
         // 96  bits -> paramComp (2 bits per entry 48*2)
@@ -875,7 +884,7 @@ library Permissions {
         return scopeConfig;
     }
 
-    function unpackFunction(uint256 scopeConfig)
+    function unpackFuntion(uint256 scopeConfig)
         internal
         pure
         returns (
