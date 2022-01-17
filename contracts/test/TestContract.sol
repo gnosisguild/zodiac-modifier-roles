@@ -22,6 +22,10 @@ contract TestContract {
     event FnWithThreeParams(uint256, uint256, uint256);
     event FnWithTwoMixedParams(bool, string);
     event EmitTheSender(address);
+    event DynamicDynamic32(string, bytes2[]);
+
+    event Dynamic(bytes);
+    event Dynamic32(bytes8[]);
 
     error AnError();
 
@@ -86,5 +90,19 @@ contract TestContract {
 
     function emitTheSender() public {
         emit EmitTheSender(msg.sender);
+    }
+
+    function dynamicDynamic32(string calldata first, bytes2[] calldata second)
+        public
+    {
+        emit DynamicDynamic32(first, second);
+    }
+
+    function dynamic(bytes calldata first) public {
+        emit Dynamic(first);
+    }
+
+    function dynamic32(bytes8[] calldata first) public {
+        emit Dynamic32(first);
     }
 }
