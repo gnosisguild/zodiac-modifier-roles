@@ -469,7 +469,7 @@ library Permissions {
          * packLeft(
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
-         *    true        -> mark the function as wildcarded
+         *    false       -> mark the function as not wildcarded
          *    0           -> length
          * )
          */
@@ -727,7 +727,7 @@ library Permissions {
             argumentsBlock := add(data, 36)
         }
 
-        // the two offsets are relative to argumentBlock
+        // the two offsets are relative to argumentsBlock
         uint256 offset = paramIndex * 32;
         uint256 offsetPayload;
         assembly {
@@ -797,10 +797,6 @@ library Permissions {
             ? paramIndex + 1
             : prevLength;
 
-        /*
-         * whether setting or unsetting the parameter,
-         * function is no longer wildcarded
-         */
         return
             packLeft(
                 packRight(
