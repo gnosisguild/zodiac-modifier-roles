@@ -1,9 +1,50 @@
 {
   "name": "zodiac-roles-modifier-app",
   "version": "1.0.0",
-  "main": "index.ts",
-  "license": "LGPL-3.0+",
+  "private": true,
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.7.1",
+    "bnc-onboard": "^1.37.0",
+    "ethers": "^5.5.3",
+    "lodash.memoize": "^4.1.2",
+    "prettier": "^2.5.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-redux": "^7.2.6"
+  },
+  "devDependencies": {
+    "@typechain/ethers-v5": "^9.0.0",
+    "@types/lodash.memoize": "^4.1.6",
+    "@types/react": "^17.0.20",
+    "@types/react-dom": "^17.0.9",
+    "react-scripts": "5.0.0",
+    "typechain": "^7.0.0",
+    "typescript": "^4.4.2"
+  },
   "scripts": {
-    "build": "echo \"No build yet\""
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./src/contracts/abi/*.json",
+    "postinstall": "yarn build:types"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
