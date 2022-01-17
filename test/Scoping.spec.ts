@@ -6,6 +6,15 @@ const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
 const COMP_LESS = 2;
 
+const OPTIONS_NONE = 0;
+const OPTIONS_SEND = 1;
+const OPTIONS_DELEGATECALL = 2;
+const OPTIONS_BOTH = 3;
+
+const TYPE_STATIC = 0;
+const TYPE_DYNAMIC = 1;
+const TYPE_DYNAMIC32 = 2;
+
 const SOME_STATIC_COMP_VALUE = ethers.utils.defaultAbiCoder.encode(
   ["uint256"],
   [123]
@@ -18,8 +27,7 @@ describe("Scoping", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    const testContractClone = await TestContract.deploy();
-    return { Avatar, avatar, testContract, testContractClone };
+    return { Avatar, avatar, testContract };
   });
 
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
@@ -73,11 +81,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -92,7 +105,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         1,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
@@ -125,7 +138,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -134,7 +147,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [4])
       );
@@ -146,7 +159,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         1,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [5])
       );
@@ -197,12 +210,17 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await modifier
       .connect(owner)
@@ -211,7 +229,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [7])
       );
@@ -263,7 +281,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -272,9 +290,10 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         [false, true, false],
-        [false, false, false],
+        [TYPE_STATIC, TYPE_STATIC, TYPE_STATIC],
         [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"]
+        ["0x", ethers.utils.defaultAbiCoder.encode(["uint256"], [7]), "0x"],
+        OPTIONS_NONE
       );
 
     await expect(
@@ -297,7 +316,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         2,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [8])
       );
@@ -341,7 +360,7 @@ describe("Scoping", async () => {
     ).to.not.be.reverted;
   });
 
-  it("function scoping all params off emits FunctionNotAllowed", async () => {
+  it("function scoping all params off is equivalent to allowing function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -356,7 +375,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -365,21 +384,9 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        false,
+        TYPE_STATIC,
         COMP_EQUAL,
         SOME_STATIC_COMP_VALUE
-      );
-
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [false, false, false],
-        [false, false, false],
-        [0, 0, 0],
-        ["0x", "0x", "0x"]
       );
 
     await expect(
@@ -393,14 +400,39 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.revertedWith("ParameterNotAllowed()");
+
+    await modifier
+      .connect(owner)
+      .scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        [false, false, false],
+        [TYPE_STATIC, TYPE_STATIC, TYPE_STATIC],
+        [0, 0, 0],
+        ["0x", "0x", "0x"],
+        OPTIONS_NONE
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (
+            await testContract.populateTransaction.fnWithThreeParams(1, 2, 3)
+          ).data,
+          0
+        )
+    ).to.emit(testContract, "FnWithThreeParams");
   });
 
-  it("function scoping all params off, including dynamic types, emits FunctionNotAllowed", async () => {
+  it("function scoping all params off, including dynamic types, is equivalent to allow function", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const IS_DYNAMIC = true;
     const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
@@ -412,11 +444,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -441,9 +478,10 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         [false, false],
-        [!IS_DYNAMIC, IS_DYNAMIC],
+        [TYPE_STATIC, TYPE_DYNAMIC],
         [0, 0],
-        ["0x", "0x"]
+        ["0x", "0x"],
+        OPTIONS_NONE
       );
 
     await expect(
@@ -460,10 +498,10 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.emit(testContract, "FnWithTwoMixedParams");
   });
 
-  it("unscoping all params one by one emits FunctionNotAllowed", async () => {
+  it("unscoping all params one by one is equivalent to allowFunction", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -478,7 +516,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -487,9 +525,14 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         [true, true, false],
-        [false, false, false],
+        [TYPE_STATIC, TYPE_STATIC, TYPE_STATIC],
         [0, 0, 0],
-        [SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE, SOME_STATIC_COMP_VALUE]
+        [
+          SOME_STATIC_COMP_VALUE,
+          SOME_STATIC_COMP_VALUE,
+          SOME_STATIC_COMP_VALUE,
+        ],
+        OPTIONS_NONE
       );
 
     await modifier
@@ -526,14 +569,13 @@ describe("Scoping", async () => {
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.emit(testContract, "FnWithThreeParams");
   });
-  it("unscoping all params one by one, including dynamic types, emits FunctionNotAllowed", async () => {
+  it("unscoping all params one by one, including dynamic types, is equivalent to allowFunction", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
-    const IS_DYNAMIC = true;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
@@ -544,7 +586,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -553,7 +595,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["bool"], [false])
       );
@@ -565,7 +607,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         1,
-        IS_DYNAMIC,
+        TYPE_DYNAMIC,
         COMP_EQUAL,
         ethers.utils.solidityPack(["string"], ["Hello World!"])
       );
@@ -623,12 +665,12 @@ describe("Scoping", async () => {
           (
             await testContract.populateTransaction.fnWithTwoMixedParams(
               false,
-              "Hello World!"
+              "Something not previously allowed"
             )
           ).data,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.emit(testContract, "FnWithTwoMixedParams");
   });
 
   it("update compType should work on already scoped parameter", async () => {
@@ -644,11 +686,16 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const invoke = async (param: number) =>
       modifier
@@ -664,14 +711,14 @@ describe("Scoping", async () => {
     // sanity
     await expect(invoke(2021)).to.not.be.reverted;
 
-    modifier
+    await modifier
       .connect(owner)
       .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        false,
+        TYPE_STATIC,
         COMP_LESS,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [420])
       );
@@ -682,14 +729,14 @@ describe("Scoping", async () => {
     await expect(invoke(419)).to.not.be.reverted;
 
     // FLIP THE SAME PARAM to greater
-    modifier
+    await modifier
       .connect(owner)
       .scopeParameter(
         ROLE_ID,
         testContract.address,
         SELECTOR,
         0,
-        false,
+        TYPE_STATIC,
         COMP_GREATER,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [420])
       );
@@ -703,7 +750,7 @@ describe("Scoping", async () => {
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
-    const IS_DYNAMIC = true;
+
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
@@ -725,7 +772,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -734,7 +781,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
       );
@@ -748,7 +795,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         1,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [2])
       );
@@ -764,7 +811,7 @@ describe("Scoping", async () => {
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
-    const IS_DYNAMIC = true;
+
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithThreeParams")
     );
@@ -786,7 +833,7 @@ describe("Scoping", async () => {
 
     await modifier
       .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+      .allowTargetPartially(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -795,7 +842,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         2,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [3])
       );
@@ -809,7 +856,7 @@ describe("Scoping", async () => {
         testContract.address,
         SELECTOR,
         0,
-        !IS_DYNAMIC,
+        TYPE_STATIC,
         COMP_EQUAL,
         ethers.utils.defaultAbiCoder.encode(["uint256"], [1])
       );
@@ -829,7 +876,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -838,10 +884,11 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(63).fill(false),
-            new Array(63).fill(false),
-            new Array(63).fill(COMP_EQUAL),
-            new Array(63).fill("0x")
+            new Array(49).fill(false),
+            new Array(49).fill(TYPE_STATIC),
+            new Array(49).fill(COMP_EQUAL),
+            new Array(49).fill("0x"),
+            OPTIONS_NONE
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -852,10 +899,11 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            new Array(62).fill(false),
-            new Array(62).fill(false),
-            new Array(62).fill(0),
-            new Array(62).fill("0x")
+            new Array(48).fill(false),
+            new Array(48).fill(TYPE_STATIC),
+            new Array(48).fill(0),
+            new Array(48).fill("0x"),
+            OPTIONS_NONE
           )
       ).to.not.be.reverted;
     });
@@ -868,9 +916,8 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
-      const IS_DYNAMIC = true;
+
       await expect(
         modifier
           .connect(owner)
@@ -878,8 +925,8 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            62,
-            IS_DYNAMIC,
+            48,
+            TYPE_DYNAMIC,
             COMP_EQUAL,
             "0x"
           )
@@ -892,8 +939,8 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            61,
-            IS_DYNAMIC,
+            47,
+            TYPE_DYNAMIC,
             COMP_EQUAL,
             "0x"
           )
@@ -908,7 +955,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const IS_DYNAMIC = true;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -917,8 +963,8 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            62,
-            IS_DYNAMIC,
+            48,
+            TYPE_DYNAMIC,
             ["0x"]
           )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
@@ -930,8 +976,8 @@ describe("Scoping", async () => {
             ROLE_ID,
             testContract.address,
             SELECTOR,
-            61,
-            IS_DYNAMIC,
+            47,
+            TYPE_DYNAMIC,
             ["0x"]
           )
       ).to.not.be.reverted;
@@ -949,18 +995,18 @@ describe("Scoping", async () => {
       await expect(
         modifier
           .connect(owner)
-          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 62)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 48)
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
       await expect(
         modifier
           .connect(owner)
-          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 61)
+          .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 47)
       ).to.not.be.reverted;
     });
   });
 
-  describe("Enforces Static Parameter Size limit", () => {
+  describe("Enforces Parameter Size constraints", () => {
     const MORE_THAN_32_BYTES_TEXT =
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
     const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(
@@ -976,10 +1022,9 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       const IS_SCOPED = true;
-      const IS_DYNAMIC = true;
+
       await expect(
         modifier
           .connect(owner)
@@ -988,9 +1033,10 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             [IS_SCOPED],
-            [!IS_DYNAMIC],
+            [TYPE_STATIC],
             [COMP_EQUAL],
-            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
+            [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])],
+            OPTIONS_NONE
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -1002,9 +1048,25 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             [IS_SCOPED],
-            [!IS_DYNAMIC],
+            [TYPE_DYNAMIC32],
             [COMP_EQUAL],
-            [A_32_BYTES_VALUE]
+            [ethers.utils.solidityPack(["string"], ["abcdefghijg"])],
+            OPTIONS_NONE
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeFunction(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            [IS_SCOPED],
+            [TYPE_STATIC],
+            [COMP_EQUAL],
+            [A_32_BYTES_VALUE],
+            OPTIONS_NONE
           )
       ).to.be.not.reverted;
 
@@ -1017,12 +1079,13 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             [IS_SCOPED, !IS_SCOPED],
-            [!IS_DYNAMIC, !IS_DYNAMIC],
+            [TYPE_STATIC, TYPE_STATIC],
             [COMP_EQUAL, COMP_EQUAL],
             [
               A_32_BYTES_VALUE,
               ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
-            ]
+            ],
+            OPTIONS_NONE
           )
       ).to.not.be.reverted;
     });
@@ -1035,7 +1098,6 @@ describe("Scoping", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const COMP_EQUAL = 0;
       const ROLE_ID = 0;
       await expect(
         modifier
@@ -1045,7 +1107,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             0,
-            false,
+            TYPE_STATIC,
             COMP_EQUAL,
             ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])
           )
@@ -1059,7 +1121,21 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             0,
-            false,
+            TYPE_DYNAMIC32,
+            COMP_EQUAL,
+            ethers.utils.solidityPack(["string"], ["abcdefghijg"])
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameter(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            TYPE_STATIC,
             COMP_EQUAL,
             A_32_BYTES_VALUE
           )
@@ -1083,7 +1159,7 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             0,
-            false,
+            TYPE_STATIC,
             [ethers.utils.solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT])]
           )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
@@ -1096,7 +1172,20 @@ describe("Scoping", async () => {
             testContract.address,
             SELECTOR,
             0,
-            false,
+            TYPE_DYNAMIC32,
+            [ethers.utils.solidityPack(["string"], ["abcdefghijg"])]
+          )
+      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
+
+      await expect(
+        modifier
+          .connect(owner)
+          .scopeParameterAsOneOf(
+            ROLE_ID,
+            testContract.address,
+            SELECTOR,
+            0,
+            TYPE_STATIC,
             [A_32_BYTES_VALUE]
           )
       ).to.not.be.reverted;

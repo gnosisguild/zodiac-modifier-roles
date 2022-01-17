@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-describe("EnsureOnlyOwner", async () => {
+describe("OnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -44,6 +44,15 @@ describe("EnsureOnlyOwner", async () => {
     };
   });
 
+  const OPTIONS_NONE = 0;
+  const OPTIONS_SEND = 1;
+  const OPTIONS_DELEGATECALL = 2;
+  const OPTIONS_BOTH = 3;
+
+  const TYPE_STATIC = 0;
+  const TYPE_DYNAMIC = 1;
+  const TYPE_DYNAMIC32 = 2;
+
   it("onlyOwner for allowTarget simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
@@ -53,19 +62,19 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, false, false)
+        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
     ).to.not.be.reverted;
   });
 
@@ -78,19 +87,19 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address, false, false)
+        .allowTargetPartially(ROLE_ID, testContract.address)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {
@@ -124,19 +133,34 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR)
+        .scopeAllowFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          OPTIONS_NONE
+        )
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeRevokeFunction, simple invoker fails", async () => {
@@ -178,19 +202,46 @@ describe("EnsureOnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          OPTIONS_NONE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          OPTIONS_NONE
+        )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeFunction(ROLE_ID, testContract.address, SELECTOR, [], [], [], [])
+        .scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          SELECTOR,
+          [],
+          [],
+          [],
+          [],
+          OPTIONS_NONE
+        )
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeParameter, simple invoker fails", async () => {
@@ -210,7 +261,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -224,7 +275,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -238,7 +289,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           0,
           "0x"
         )
@@ -261,7 +312,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -274,7 +325,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -287,7 +338,7 @@ describe("EnsureOnlyOwner", async () => {
           testContract.address,
           SELECTOR,
           0,
-          true,
+          TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
     ).to.not.be.reverted;
