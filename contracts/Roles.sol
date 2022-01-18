@@ -5,13 +5,13 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./Permissions.sol";
 
 contract Roles is Modifier {
-    address public multiSend;
+    address public multisend;
 
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) internal roles;
 
     event AssignRoles(address module, uint16[] roles, bool[] memberOf);
-    event SetMulitSendAddress(address multisendAddress);
+    event SetMultisendAddress(address multisendAddress);
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
@@ -69,10 +69,10 @@ contract Roles is Modifier {
 
     /// @dev Set the address of the expected multisend library
     /// @notice Only callable by owner.
-    /// @param _multiSend address of the multisend library contract
-    function setMultiSend(address _multiSend) external onlyOwner {
-        multiSend = _multiSend;
-        emit SetMulitSendAddress(multiSend);
+    /// @param _multisend address of the multisend library contract
+    function setMultisend(address _multisend) external onlyOwner {
+        multisend = _multisend;
+        emit SetMultisendAddress(multisend);
     }
 
     /// @dev Allows all calls made to an address.
@@ -324,7 +324,7 @@ contract Roles is Modifier {
     ) public override moduleOnly returns (bool success) {
         Permissions.check(
             roles[defaultRoles[msg.sender]],
-            multiSend,
+            multisend,
             to,
             value,
             data,
@@ -347,7 +347,7 @@ contract Roles is Modifier {
     ) public override moduleOnly returns (bool, bytes memory) {
         Permissions.check(
             roles[defaultRoles[msg.sender]],
-            multiSend,
+            multisend,
             to,
             value,
             data,
@@ -371,7 +371,7 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Permissions.check(roles[role], multiSend, to, value, data, operation);
+        Permissions.check(roles[role], multisend, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -393,7 +393,7 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Permissions.check(roles[role], multiSend, to, value, data, operation);
+        Permissions.check(roles[role], multisend, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
