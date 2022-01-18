@@ -461,6 +461,201 @@ describe("PluckParam - Decoding", async () => {
         .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
+
+  it("static - fails if calldata is too short", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticFn")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeFunction(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        [true],
+        [TYPE_STATIC],
+        [COMP_EQUAL],
+        [encodeStatic(["bytes4"], ["0x12345678"])],
+        OPTIONS_NONE
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          `${SELECTOR}aabbccdd`,
+          0
+        )
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+  });
+
+  it("static - fails with param scoped out of bounds", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticFn")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        0,
+        TYPE_STATIC,
+        COMP_EQUAL,
+        encodeStatic(["bytes4"], ["0x12345678"])
+      );
+
+    const { data } = await testPluckParam.populateTransaction.staticFn(
+      "0x12345678"
+    );
+
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, data, 0)
+    ).to.emit(testPluckParam, "Static");
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        1,
+        TYPE_STATIC,
+        COMP_EQUAL,
+        encodeStatic(["bytes4"], ["0x12345678"])
+      );
+
+    // ngmi
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, data, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+  });
+
+  it("dynamic - fails if calldata too short", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticDynamic")
+    );
+
+    const SELECTOR_OTHER = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticFn")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        1,
+        TYPE_DYNAMIC,
+        COMP_EQUAL,
+        encodeDynamic(["string"], ["Hello World!"])
+      );
+
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
+
+    const dataShort = (
+      (await testPluckParam.populateTransaction.staticFn("0x12345678"))
+        .data as string
+    ).replace(SELECTOR_OTHER.slice(2), SELECTOR.slice(2));
+
+    // shortned call
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataShort, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+
+    // just the selector
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+    ).to.not.be.reverted;
+  });
+
+  it("dynamic - fails with parameter scoped out of bounds", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticDynamic")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        1,
+        TYPE_DYNAMIC,
+        COMP_EQUAL,
+        encodeDynamic(["string"], ["Hello World!"])
+      );
+
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
+
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+    ).to.not.be.reverted;
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        15,
+        TYPE_DYNAMIC,
+        COMP_EQUAL,
+        encodeDynamic(["string"], ["Hello World!"])
+      );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+  });
 });
 
 function splitAndPrint(s: string | undefined) {

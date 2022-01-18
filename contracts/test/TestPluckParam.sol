@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 contract TestPluckParam {
     event Dynamic32(uint256[] first);
+    event Static(bytes4 first);
     event StaticDynamic(bytes4 first, string second);
     event StaticDynamicDynamic32(address first, bytes second, uint32[] third);
     event StaticDynamic32Dynamic(uint32 first, bytes4[] second, string third);
@@ -11,6 +12,10 @@ contract TestPluckParam {
     event Dynamic32StaticDynamic(address[] first, bytes2 second, bytes third);
     event Dynamic32DynamicStatic(bytes2[] first, string second, uint32 third);
     event UnsupportedFixedSizeAndDynamic(bool[2] first, string second);
+
+    function staticFn(bytes4 first) external {
+        emit Static(first);
+    }
 
     function staticDynamic(bytes4 first, string memory second) external {
         emit StaticDynamic(first, second);

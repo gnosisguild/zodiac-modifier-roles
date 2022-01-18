@@ -164,6 +164,9 @@ library Permissions {
     /// OneOf Comparison requires at least two compValues
     error NotEnoughCompValuesForOneOf();
 
+    /// The provided calldata for execution is too short, or an OutOfBounds scoped parameter was configured
+    error CalldataOutOfBounds();
+
     /*
      *
      * CHECKERS
@@ -737,6 +740,11 @@ library Permissions {
          * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
          */
 
+        // pre-check is there a word at parameter pointer slot?
+        if (data.length < 4 + index * 32 + 32) {
+            revert CalldataOutOfBounds();
+        }
+
         // the start of the parameter block
         // 32 bytes - length encoding of the data bytes array
         // 4  bytes - function sig
@@ -768,6 +776,11 @@ library Permissions {
                     : lengthPayload
             );
 
+        // are we slicing out of bounds?
+        if (data.length < end) {
+            revert CalldataOutOfBounds();
+        }
+
         return keccak256(slice(data, start, end));
     }
 
@@ -778,6 +791,11 @@ library Permissions {
     {
         uint256 offset = 4 + index * 32;
         bytes32 value;
+
+        if (data.length < offset + 32) {
+            revert CalldataOutOfBounds();
+        }
+
         assembly {
             // add 32 - jump over the length encoding of the data bytes array
             value := mload(add(32, add(data, offset)))
