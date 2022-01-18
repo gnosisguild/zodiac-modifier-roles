@@ -606,6 +606,51 @@ describe("PluckParam - Decoding", async () => {
     ).to.not.be.reverted;
   });
 
+  it("dynamic - fails if payload is missing", async () => {
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticDynamic")
+    );
+
+    await modifier
+      .connect(owner)
+      .scopeParameter(
+        ROLE_ID,
+        testPluckParam.address,
+        SELECTOR,
+        1,
+        TYPE_DYNAMIC,
+        COMP_EQUAL,
+        encodeDynamic(["string"], ["Hello World!"])
+      );
+
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
+
+    // 0x737c0619 -> staticDynamic selector
+    const dataBad = `\
+0x737c0619\
+0000000000000000000000000000000000000000000000000000000012345678\
+0000000000000000000000000000000000000000000000000000000000300001`;
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+    ).to.not.be.reverted;
+  });
+
   it("dynamic - fails with parameter scoped out of bounds", async () => {
     const { modifier, testPluckParam, owner, invoker } = await setup();
 
