@@ -791,9 +791,8 @@ library Permissions {
         uint256 end
     ) internal pure returns (bytes memory result) {
         result = new bytes(end - start);
-        uint256 i;
         for (uint256 j = start; j < end; j++) {
-            result[i++] = data[j];
+            result[j - start] = data[j];
         }
     }
 
