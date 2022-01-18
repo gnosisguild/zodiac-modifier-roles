@@ -56,12 +56,14 @@ library Permissions {
         uint16 role,
         address targetAddress,
         bytes4 selector,
-        ExecutionOptions options
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
     );
     event ScopeRevokeFunction(
         uint16 role,
         address targetAddress,
-        bytes4 selector
+        bytes4 selector,
+        uint256 resultingScopeConfig
     );
     event ScopeFunction(
         uint16 role,
@@ -71,13 +73,15 @@ library Permissions {
         ParameterType[] paramType,
         Comparison[] paramComp,
         bytes[] compValue,
-        ExecutionOptions options
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
     );
     event ScopeFunctionExecutionOptions(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        ExecutionOptions options
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
     );
     event ScopeParameter(
         uint16 role,
@@ -86,7 +90,8 @@ library Permissions {
         uint256 index,
         ParameterType paramType,
         Comparison paramComp,
-        bytes compValue
+        bytes compValue,
+        uint256 resultingScopeConfig
     );
     event ScopeParameterAsOneOf(
         uint16 role,
@@ -94,13 +99,15 @@ library Permissions {
         bytes4 functionSig,
         uint256 index,
         ParameterType paramType,
-        bytes[] compValues
+        bytes[] compValues,
+        uint256 resultingScopeConfig
     );
     event UnscopeParameter(
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        uint256 index
+        uint256 index,
+        uint256 resultingScopeConfig
     );
 
     /// Sender is not a member of the role
@@ -414,13 +421,17 @@ library Permissions {
          *    0           -> length
          * )
          */
-        role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
-            0,
+        uint256 scopeConfig = packLeft(0, options, true, 0);
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
+        emit ScopeAllowFunction(
+            roleId,
+            targetAddress,
+            functionSig,
             options,
-            true,
-            0
+            scopeConfig
         );
-        emit ScopeAllowFunction(roleId, targetAddress, functionSig, options);
     }
 
     function scopeRevokeFunction(
@@ -430,7 +441,7 @@ library Permissions {
         bytes4 functionSig
     ) external {
         role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
-        emit ScopeRevokeFunction(roleId, targetAddress, functionSig);
+        emit ScopeRevokeFunction(roleId, targetAddress, functionSig, 0);
     }
 
     function scopeFunction(
@@ -503,7 +514,8 @@ library Permissions {
             paramType,
             paramComp,
             compValue,
-            options
+            options,
+            scopeConfig
         );
     }
 
@@ -519,18 +531,17 @@ library Permissions {
         (, bool isWildcarded, uint256 length) = unpackFunction(scopeConfig);
 
         //set scopeConfig
-        role.functions[keyForFunctions(targetAddress, functionSig)] = packLeft(
-            scopeConfig,
-            options,
-            isWildcarded,
-            length
-        );
+        scopeConfig = packLeft(scopeConfig, options, isWildcarded, length);
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
 
         emit ScopeFunctionExecutionOptions(
             roleId,
             targetAddress,
             functionSig,
-            options
+            options,
+            scopeConfig
         );
     }
 
@@ -574,7 +585,8 @@ library Permissions {
             index,
             paramType,
             paramComp,
-            compValue
+            compValue,
+            scopeConfig
         );
     }
 
@@ -626,7 +638,8 @@ library Permissions {
             functionSig,
             index,
             paramType,
-            compValues
+            compValues,
+            scopeConfig
         );
     }
 
@@ -652,7 +665,13 @@ library Permissions {
         );
         role.functions[key] = scopeConfig;
 
-        emit UnscopeParameter(roleId, targetAddress, functionSig, index);
+        emit UnscopeParameter(
+            roleId,
+            targetAddress,
+            functionSig,
+            index,
+            scopeConfig
+        );
     }
 
     function enforceComp(ParameterType paramType, Comparison paramComp)
