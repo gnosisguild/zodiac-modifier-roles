@@ -486,7 +486,7 @@ library Permissions {
          */
         uint256 scopeConfig = packLeft(0, options, false, length);
         for (uint256 i = 0; i < length; i++) {
-            scopeConfig = packParameter(
+            scopeConfig = packRight(
                 scopeConfig,
                 i,
                 isScoped[i],
@@ -527,11 +527,10 @@ library Permissions {
         ExecutionOptions options
     ) external {
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = role.functions[key];
-        (, bool isWildcarded, uint256 length) = unpackFunction(scopeConfig);
 
         //set scopeConfig
-        scopeConfig = packLeft(scopeConfig, options, isWildcarded, length);
+        uint256 scopeConfig = packOptions(role.functions[key], options);
+
         role.functions[
             keyForFunctions(targetAddress, functionSig)
         ] = scopeConfig;
@@ -821,6 +820,19 @@ library Permissions {
                 false, // isWildcarded=false
                 nextLength
             );
+    }
+
+    function packOptions(uint256 scopeConfig, ExecutionOptions options)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 optionsMask = 3 << 254;
+
+        scopeConfig &= ~optionsMask;
+        scopeConfig |= uint256(options) << 254;
+
+        return scopeConfig;
     }
 
     function packLeft(
