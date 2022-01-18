@@ -403,7 +403,7 @@ describe("RolesModifier", async () => {
 
       await expect(avatar.exec(modifier.address, 0, assign.data))
         .to.emit(modifier, "AssignRoles")
-        .withArgs(user1.address, [1]);
+        .withArgs(user1.address, [1], [true]);
     });
   });
 

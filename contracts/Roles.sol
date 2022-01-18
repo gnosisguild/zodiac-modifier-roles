@@ -10,8 +10,8 @@ contract Roles is Modifier {
     mapping(address => uint16) public defaultRoles;
     mapping(uint16 => Role) internal roles;
 
-    event AssignRoles(address module, uint16[] roles);
-    event SetMulitSendAddress(address multiSendAddress);
+    event AssignRoles(address module, uint16[] roles, bool[] memberOf);
+    event SetMulitSendAddress(address multisendAddress);
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
@@ -299,7 +299,7 @@ contract Roles is Modifier {
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }
-        emit AssignRoles(module, _roles);
+        emit AssignRoles(module, _roles, memberOf);
     }
 
     /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
