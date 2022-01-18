@@ -851,18 +851,17 @@ library Permissions {
         // 96  bits -> paramType (2 bits per entry 48*2)
         // 96  bits -> paramComp (2 bits per entry 48*2)
 
-        // wipe the left clean, and start from there
+        // Wipe the LEFT SIDE clean. Start from there
         scopeConfig = (scopeConfig << 16) >> 16;
 
         // set options -> 256 - 2 = 254
         scopeConfig |= uint256(options) << 254;
 
         // set isWildcarded -> 256 - 2 - 1 = 253
-        uint256 isWildcardedMask = 1 << 253;
+
         if (isWildcarded) {
-            scopeConfig |= isWildcardedMask;
-        } else {
-            scopeConfig &= ~isWildcardedMask;
+            // uint256 isWildcardedMask = 1 << 253;
+            scopeConfig |= 1 << 253;
         }
 
         // set Length -> 48 + 96 + 96 = 240
