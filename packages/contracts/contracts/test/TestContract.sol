@@ -3,6 +3,8 @@ pragma solidity >=0.8.0;
 
 contract TestContract {
     event Receive();
+    event ReceiveFallback(uint256 amount);
+    event ReceiveEthAndDoNothing(uint256 amount);
     event Mint(address to, uint256 amount);
     event TestDynamic(
         string test,
@@ -19,11 +21,21 @@ contract TestContract {
     event FnWithTwoParams(uint256, uint256);
     event FnWithThreeParams(uint256, uint256, uint256);
     event FnWithTwoMixedParams(bool, string);
+    event EmitTheSender(address);
+    event DynamicDynamic32(string, bytes2[]);
+
+    event Dynamic(bytes);
+    event Dynamic32(bytes8[]);
 
     error AnError();
 
     receive() external payable {
         emit Receive();
+        emit ReceiveFallback(msg.value);
+    }
+
+    function receiveEthAndDoNothing() public payable {
+        emit ReceiveEthAndDoNothing(msg.value);
     }
 
     function mint(address to, uint256 amount) public returns (uint256) {
@@ -74,5 +86,23 @@ contract TestContract {
 
     function fnThatReverts() public pure {
         revert AnError();
+    }
+
+    function emitTheSender() public {
+        emit EmitTheSender(msg.sender);
+    }
+
+    function dynamicDynamic32(string calldata first, bytes2[] calldata second)
+        public
+    {
+        emit DynamicDynamic32(first, second);
+    }
+
+    function dynamic(bytes calldata first) public {
+        emit Dynamic(first);
+    }
+
+    function dynamic32(bytes8[] calldata first) public {
+        emit Dynamic32(first);
     }
 }
