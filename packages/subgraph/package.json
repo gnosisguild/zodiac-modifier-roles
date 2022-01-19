@@ -3,7 +3,7 @@
   "license": "LGPL-3.0+",
   "scripts": {
     "codegen": "graph codegen",
-    "build": "graph build",
+    "build": "yarn codegen & graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ zodiac-modifier-roles",
     "create-local": "graph create --node http://localhost:8020/ zodiac-modifier-roles",
     "remove-local": "graph remove --node http://localhost:8020/ zodiac-modifier-roles",
