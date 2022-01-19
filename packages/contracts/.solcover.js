@@ -3,6 +3,7 @@ module.exports = {
     "test/Mock.sol",
     "test/TestAvatar.sol",
     "test/TestContract.sol",
+    "test/TestPluckParam.sol",
     "test/TestFactory.sol",
     "test/MultiSend.sol"
   ],
