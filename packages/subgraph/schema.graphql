@@ -1,0 +1,23 @@
+type Role @entity {
+  id: ID!
+  target: [Target!]! @derivedFrom(field: "role")
+  members: [ModuleRole!]! @derivedFrom(field: "role")
+}
+
+type Target @entity {
+  id: ID!
+  address: Bytes!
+  role: Role!
+}
+
+type Module @entity {
+  id: ID!
+  address: Bytes!
+  roles: [ModuleRole!] @derivedFrom(field: "module")
+}
+
+type ModuleRole @entity {
+  id: ID! # Set to `${module.id}-${role.id}`
+  module: Module!
+  role: Role!
+}

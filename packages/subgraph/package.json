@@ -1,9 +1,16 @@
 {
-  "name": "zodiac-roles-modifier-subgraph",
-  "version": "1.0.0",
-  "main": "index.ts",
+  "name": "zodiac-modifier-roles-subgraph",
   "license": "LGPL-3.0+",
   "scripts": {
-    "build": "echo \"No build yet\""
+    "codegen": "graph codegen",
+    "build": "yarn codegen && graph build",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ zodiac-modifier-roles",
+    "create-local": "graph create --node http://localhost:8020/ zodiac-modifier-roles",
+    "remove-local": "graph remove --node http://localhost:8020/ zodiac-modifier-roles",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 zodiac-modifier-roles"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.25.2",
+    "@graphprotocol/graph-ts": "0.24.1"
   }
 }

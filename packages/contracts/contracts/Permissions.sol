@@ -3,10 +3,10 @@ pragma solidity ^0.8.6;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-enum Clearance {
-    NONE,
-    TARGET,
-    FUNCTION
+enum ParameterType {
+    Static,
+    Dynamic,
+    Dynamic32
 }
 
 enum Comparison {
@@ -16,10 +16,22 @@ enum Comparison {
     OneOf
 }
 
+enum ExecutionOptions {
+    None,
+    Send,
+    DelegateCall,
+    Both
+}
+
+enum Clearance {
+    None,
+    Target,
+    Function
+}
+
 struct TargetAddress {
     Clearance clearance;
-    bool canSend;
-    bool canDelegate;
+    ExecutionOptions options;
 }
 
 struct Role {
@@ -31,10 +43,75 @@ struct Role {
 }
 
 library Permissions {
-    uint256 internal constant SCOPE_WILDCARD = 2**256 - 1;
-    // 62 bit mask
-    uint256 internal constant IS_SCOPED_MASK =
-        uint256(0x3fffffffffffffff << (62 + 124));
+    uint256 internal constant SCOPE_MAX_PARAMS = 48;
+
+    event AllowTarget(
+        uint16 role,
+        address targetAddress,
+        ExecutionOptions options
+    );
+    event AllowTargetPartially(uint16 role, address targetAddress);
+    event RevokeTarget(uint16 role, address targetAddress);
+    event ScopeAllowFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
+    );
+    event ScopeRevokeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 selector,
+        uint256 resultingScopeConfig
+    );
+    event ScopeFunction(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        bool[] isParamScoped,
+        ParameterType[] paramType,
+        Comparison[] paramComp,
+        bytes[] compValue,
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
+    );
+    event ScopeFunctionExecutionOptions(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options,
+        uint256 resultingScopeConfig
+    );
+    event ScopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint256 index,
+        ParameterType paramType,
+        Comparison paramComp,
+        bytes compValue,
+        uint256 resultingScopeConfig
+    );
+    event ScopeParameterAsOneOf(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint256 index,
+        ParameterType paramType,
+        bytes[] compValues,
+        uint256 resultingScopeConfig
+    );
+    event UnscopeParameter(
+        uint16 role,
+        address targetAddress,
+        bytes4 functionSig,
+        uint256 index,
+        uint256 resultingScopeConfig
+    );
+
+    /// Sender is not a member of the role
+    error NoMembership();
 
     /// Arrays must be the same length
     error ArraysDifferentLength();
@@ -75,17 +152,50 @@ library Permissions {
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
 
+    /// CompValue for static types should have a size of exactly 32 bytes
+    error UnsuitableStaticCompValueSize();
+
+    /// CompValue for Dynamic32 types should be a multiple of exactly 32 bytes
+    error UnsuitableDynamic32CompValueSize();
+
+    /// Exceeds the max number of params supported
+    error ScopeMaxParametersExceeded();
+
+    /// OneOf Comparison requires at least two compValues
+    error NotEnoughCompValuesForOneOf();
+
+    /// The provided calldata for execution is too short, or an OutOfBounds scoped parameter was configured
+    error CalldataOutOfBounds();
+
     /*
      *
      * CHECKERS
      *
      */
 
+    function check(
+        Role storage role,
+        address multisend,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) public view {
+        if (!role.members[msg.sender]) {
+            revert NoMembership();
+        }
+        if (multisend == to) {
+            checkMultisendTransaction(role, data);
+        } else {
+            checkTransaction(role, to, value, data, operation);
+        }
+    }
+
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
     function checkMultisendTransaction(Role storage role, bytes memory data)
-        public
+        internal
         view
     {
         Enum.Operation operation;
@@ -132,51 +242,66 @@ library Permissions {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) public view {
-        TargetAddress memory target = role.targets[targetAddress];
-
-        // CLEARANCE: transversal - checks
-        if (value > 0 && !target.canSend) {
-            revert SendNotAllowed();
-        }
-
-        if (operation == Enum.Operation.DelegateCall && !target.canDelegate) {
-            revert DelegateCallNotAllowed();
-        }
-
+    ) internal view {
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
-        /*
-         * For each address we have three clearance checks:
-         * Forbidden     - nothing was setup
-         * AddressPass   - all calls to this address are go, nothing more to check
-         * FunctionCheck - some functions on this address are allowed
-         */
-
-        // isForbidden
-        if (target.clearance == Clearance.NONE) {
+        TargetAddress storage target = role.targets[targetAddress];
+        if (target.clearance == Clearance.None) {
             revert TargetAddressNotAllowed();
         }
 
-        // isAddressPass
-        if (target.clearance == Clearance.TARGET) {
-            // good to go
+        if (target.clearance == Clearance.Target) {
+            checkExecutionOptions(value, operation, target.options);
             return;
         }
 
-        //isFunctionCheck
-        if (target.clearance == Clearance.FUNCTION) {
+        if (target.clearance == Clearance.Function) {
             uint256 scopeConfig = role.functions[
                 keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (scopeConfig == SCOPE_WILDCARD) {
-                return;
-            } else {
+            if (scopeConfig == 0) {
+                revert FunctionNotAllowed();
+            }
+
+            (ExecutionOptions options, bool isWildcarded, ) = unpackFunction(
+                scopeConfig
+            );
+
+            checkExecutionOptions(value, operation, options);
+
+            if (isWildcarded == false) {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
+            return;
+        }
+
+        assert(false);
+    }
+
+    function checkExecutionOptions(
+        uint256 value,
+        Enum.Operation operation,
+        ExecutionOptions options
+    ) internal pure {
+        // isSend && !canSend
+        if (
+            value > 0 &&
+            options != ExecutionOptions.Send &&
+            options != ExecutionOptions.Both
+        ) {
+            revert SendNotAllowed();
+        }
+
+        // isDelegateCall && !canDelegateCall
+        if (
+            operation == Enum.Operation.DelegateCall &&
+            options != ExecutionOptions.DelegateCall &&
+            options != ExecutionOptions.Both
+        ) {
+            revert DelegateCallNotAllowed();
         }
     }
 
@@ -189,38 +314,31 @@ library Permissions {
         uint256 scopeConfig,
         address targetAddress,
         bytes memory data
-    ) public view {
-        if (scopeConfig & IS_SCOPED_MASK == 0) {
-            // is there no single param scoped?
-            // either config bug or unset
-            // semantically the same, not allowed
-            revert FunctionNotAllowed();
-        }
-
+    ) internal view {
         bytes4 functionSig = bytes4(data);
-        uint8 paramCount = unpackParamCount(scopeConfig);
+        (, , uint256 length) = unpackFunction(scopeConfig);
 
-        for (uint8 i = 0; i < paramCount; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (
-                bool isParamScoped,
-                bool isParamDynamic,
-                Comparison compType
-            ) = unpackParamEntry(scopeConfig, i);
+                bool isScoped,
+                ParameterType paramType,
+                Comparison paramComp
+            ) = unpackParameter(scopeConfig, i);
 
-            if (!isParamScoped) {
+            if (!isScoped) {
                 continue;
             }
 
-            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
             bytes32 value;
-            if (isParamDynamic) {
-                value = pluckDynamicParamValue(data, i);
+            if (paramType != ParameterType.Static) {
+                value = pluckDynamicValue(data, paramType, i);
             } else {
-                value = pluckParamValue(data, i);
+                value = pluckStaticValue(data, i);
             }
 
-            if (compType != Comparison.OneOf) {
-                compare(compType, role.compValues[key], value);
+            bytes32 key = keyForCompValues(targetAddress, functionSig, i);
+            if (paramComp != Comparison.OneOf) {
+                compare(paramComp, role.compValues[key], value);
             } else {
                 compareOneOf(role.compValuesOneOf[key], value);
             }
@@ -228,15 +346,15 @@ library Permissions {
     }
 
     function compare(
-        Comparison compType,
+        Comparison paramComp,
         bytes32 compValue,
         bytes32 value
     ) internal pure {
-        if (compType == Comparison.EqualTo && value != compValue) {
+        if (paramComp == Comparison.EqualTo && value != compValue) {
             revert ParameterNotAllowed();
-        } else if (compType == Comparison.GreaterThan && value <= compValue) {
+        } else if (paramComp == Comparison.GreaterThan && value <= compValue) {
             revert ParameterLessThanAllowed();
-        } else if (compType == Comparison.LessThan && value >= compValue) {
+        } else if (paramComp == Comparison.LessThan && value >= compValue) {
             revert ParameterGreaterThanAllowed();
         }
     }
@@ -256,146 +374,337 @@ library Permissions {
      * SETTERS
      *
      */
+
+    function allowTarget(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress,
+        ExecutionOptions options
+    ) external {
+        role.targets[targetAddress] = TargetAddress(Clearance.Target, options);
+        emit AllowTarget(roleId, targetAddress, options);
+    }
+
+    function allowTargetPartially(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress
+    ) external {
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.Function,
+            ExecutionOptions.None
+        );
+        emit AllowTargetPartially(roleId, targetAddress);
+    }
+
+    function revokeTarget(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress
+    ) external {
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.None,
+            ExecutionOptions.None
+        );
+        emit RevokeTarget(roleId, targetAddress);
+    }
+
     function scopeAllowFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
-        bytes4 functionSig
+        bytes4 functionSig,
+        ExecutionOptions options
     ) external {
+        /*
+         * packLeft(
+         *    0           -> start from a fresh scopeConfig
+         *    options     -> externally provided options
+         *    true        -> mark the function as wildcarded
+         *    0           -> length
+         * )
+         */
+        uint256 scopeConfig = packLeft(0, options, true, 0);
         role.functions[
             keyForFunctions(targetAddress, functionSig)
-        ] = SCOPE_WILDCARD;
+        ] = scopeConfig;
+        emit ScopeAllowFunction(
+            roleId,
+            targetAddress,
+            functionSig,
+            options,
+            scopeConfig
+        );
     }
 
     function scopeRevokeFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig
     ) external {
-        // would a delete be more performant?
         role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
+        emit ScopeRevokeFunction(roleId, targetAddress, functionSig, 0);
     }
 
     function scopeFunction(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        bool[] calldata isParamScoped,
-        bool[] calldata isParamDynamic,
-        Comparison[] calldata paramCompType,
-        bytes[] calldata paramCompValue
+        bool[] memory isScoped,
+        ParameterType[] memory paramType,
+        Comparison[] memory paramComp,
+        bytes[] calldata compValue,
+        ExecutionOptions options
     ) external {
+        uint256 length = isScoped.length;
+
         if (
-            isParamScoped.length != isParamDynamic.length ||
-            isParamScoped.length != paramCompType.length ||
-            isParamScoped.length != paramCompValue.length
+            length != paramType.length ||
+            length != paramComp.length ||
+            length != compValue.length
         ) {
             revert ArraysDifferentLength();
         }
 
-        for (uint256 i = 0; i < isParamDynamic.length; i++) {
-            if (isParamScoped[i]) {
-                enforceCompType(isParamDynamic[i], paramCompType[i]);
+        if (length > SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
+        for (uint256 i = 0; i < length; i++) {
+            if (isScoped[i]) {
+                enforceComp(paramType[i], paramComp[i]);
+                enforceCompValue(paramType[i], compValue[i]);
             }
         }
 
-        uint256 scopeConfig = resetScopeConfig(
-            isParamScoped,
-            isParamDynamic,
-            paramCompType
-        );
+        /*
+         * packLeft(
+         *    0           -> start from a fresh scopeConfig
+         *    options     -> externally provided options
+         *    false       -> mark the function as not wildcarded
+         *    0           -> length
+         * )
+         */
+        uint256 scopeConfig = packLeft(0, options, false, length);
+        for (uint256 i = 0; i < length; i++) {
+            scopeConfig = packRight(
+                scopeConfig,
+                i,
+                isScoped[i],
+                paramType[i],
+                paramComp[i]
+            );
+        }
 
-        // set scopeConfig
+        //set scopeConfig
         role.functions[
             keyForFunctions(targetAddress, functionSig)
         ] = scopeConfig;
 
-        // set respective compValues
-        for (uint8 i = 0; i < paramCompType.length; i++) {
+        //set compValues
+        for (uint256 i = 0; i < length; i++) {
             role.compValues[
                 keyForCompValues(targetAddress, functionSig, i)
-            ] = maybeCompressCompValue(paramCompValue[i]);
+            ] = compressCompValue(paramType[i], compValue[i]);
         }
+        emit ScopeFunction(
+            roleId,
+            targetAddress,
+            functionSig,
+            isScoped,
+            paramType,
+            paramComp,
+            compValue,
+            options,
+            scopeConfig
+        );
+    }
+
+    function scopeFunctionExecutionOptions(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress,
+        bytes4 functionSig,
+        ExecutionOptions options
+    ) external {
+        bytes32 key = keyForFunctions(targetAddress, functionSig);
+
+        //set scopeConfig
+        uint256 scopeConfig = packOptions(role.functions[key], options);
+
+        role.functions[
+            keyForFunctions(targetAddress, functionSig)
+        ] = scopeConfig;
+
+        emit ScopeFunctionExecutionOptions(
+            roleId,
+            targetAddress,
+            functionSig,
+            options,
+            scopeConfig
+        );
     }
 
     function scopeParameter(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
-        bool isDynamic,
-        Comparison compType,
+        uint256 index,
+        ParameterType paramType,
+        Comparison paramComp,
         bytes calldata compValue
     ) external {
-        enforceCompType(isDynamic, compType);
+        if (index >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
+        enforceComp(paramType, paramComp);
+        enforceCompValue(paramType, compValue);
 
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = setScopeConfig(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
-            paramIndex,
-            true,
-            isDynamic,
-            compType
+            index,
+            true, // isScoped
+            paramType,
+            paramComp
         );
         role.functions[key] = scopeConfig;
 
         // set compValue
         role.compValues[
-            keyForCompValues(targetAddress, functionSig, paramIndex)
-        ] = maybeCompressCompValue(compValue);
+            keyForCompValues(targetAddress, functionSig, index)
+        ] = compressCompValue(paramType, compValue);
+
+        emit ScopeParameter(
+            roleId,
+            targetAddress,
+            functionSig,
+            index,
+            paramType,
+            paramComp,
+            compValue,
+            scopeConfig
+        );
     }
 
     function scopeParameterAsOneOf(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex,
-        bool isDynamic,
+        uint256 index,
+        ParameterType paramType,
         bytes[] calldata compValues
     ) external {
+        if (index >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
+        if (compValues.length < 2) {
+            revert NotEnoughCompValuesForOneOf();
+        }
+
+        for (uint256 i = 0; i < compValues.length; i++) {
+            enforceCompValue(paramType, compValues[i]);
+        }
+
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = setScopeConfig(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
-            paramIndex,
-            true,
-            isDynamic,
+            index,
+            true, // isScoped
+            paramType,
             Comparison.OneOf
         );
         role.functions[key] = scopeConfig;
 
         // set compValue
-        key = keyForCompValues(targetAddress, functionSig, paramIndex);
-
+        key = keyForCompValues(targetAddress, functionSig, index);
         role.compValuesOneOf[key] = new bytes32[](compValues.length);
         for (uint256 i = 0; i < compValues.length; i++) {
-            role.compValuesOneOf[key][i] = maybeCompressCompValue(
+            role.compValuesOneOf[key][i] = compressCompValue(
+                paramType,
                 compValues[i]
             );
         }
+
+        emit ScopeParameterAsOneOf(
+            roleId,
+            targetAddress,
+            functionSig,
+            index,
+            paramType,
+            compValues,
+            scopeConfig
+        );
     }
 
     function unscopeParameter(
         Role storage role,
+        uint16 roleId,
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex
+        uint256 index
     ) external {
+        if (index >= SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
         // set scopeConfig
         bytes32 key = keyForFunctions(targetAddress, functionSig);
-        uint256 scopeConfig = setScopeConfig(
+        uint256 scopeConfig = packParameter(
             role.functions[key],
-            paramIndex,
-            false,
-            false,
+            index,
+            false, // isScoped
+            ParameterType(0),
             Comparison(0)
         );
         role.functions[key] = scopeConfig;
 
-        // set compValue
-        key = keyForCompValues(targetAddress, functionSig, paramIndex);
-        delete role.compValues[key];
-        delete role.compValuesOneOf[key];
+        emit UnscopeParameter(
+            roleId,
+            targetAddress,
+            functionSig,
+            index,
+            scopeConfig
+        );
+    }
+
+    function enforceComp(ParameterType paramType, Comparison paramComp)
+        internal
+        pure
+    {
+        if (paramComp == Comparison.OneOf) {
+            revert UnsuitableOneOfComparison();
+        }
+
+        if (
+            (paramType != ParameterType.Static) &&
+            (paramComp != Comparison.EqualTo)
+        ) {
+            revert UnsuitableRelativeComparison();
+        }
+    }
+
+    function enforceCompValue(ParameterType paramType, bytes calldata compValue)
+        internal
+        pure
+    {
+        if (paramType == ParameterType.Static && compValue.length != 32) {
+            revert UnsuitableStaticCompValueSize();
+        }
+
+        if (
+            paramType == ParameterType.Dynamic32 && compValue.length % 32 != 0
+        ) {
+            revert UnsuitableDynamic32CompValueSize();
+        }
     }
 
     /*
@@ -403,43 +712,93 @@ library Permissions {
      * HELPERS
      *
      */
-    function pluckDynamicParamValue(bytes memory data, uint256 paramIndex)
-        internal
-        pure
-        returns (bytes32)
-    {
-        // get the pointer to the start of the buffer
-        uint256 offset = 32 + 4 + paramIndex * 32;
-        uint256 start;
+    function pluckDynamicValue(
+        bytes memory data,
+        ParameterType paramType,
+        uint256 index
+    ) internal pure returns (bytes32) {
+        assert(paramType != ParameterType.Static);
+        // pre-check: is there a word available for the current parameter at argumentsBlock?
+        if (data.length < 4 + index * 32 + 32) {
+            revert CalldataOutOfBounds();
+        }
+        //ensureArgumentsBlockSpace(data, index);
+
+        /*
+         * Encoded calldata:
+         * 4  bytes -> function selector
+         * 32 bytes -> sequence, one chunk per parameter
+         *
+         * There is one (byte32) chunk per parameter. Depending on type it contains:
+         * Static    -> value encoded inline (not plucked by this function)
+         * Dynamic   -> a byte offset to encoded data payload
+         * Dynamic32 -> a byte offset to encoded data payload
+         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
+         * Note: Nested types also do not follow the above described rules, and are unsupported
+         * Note: The offset to payload does not include 4 bytes for functionSig
+         *
+         *
+         * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
+         * Dynamic   -> length in bytes
+         * Dynamic32 -> length in bytes32
+         * Note: Dynamic types are: bytes, string
+         * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
+         */
+
+        // the start of the parameter block
+        // 32 bytes - length encoding of the data bytes array
+        // 4  bytes - function sig
+        uint256 argumentsBlock;
         assembly {
-            start := add(32, add(4, mload(add(data, offset))))
+            argumentsBlock := add(data, 36)
         }
 
-        uint256 length;
+        // the two offsets are relative to argumentsBlock
+        uint256 offset = index * 32;
+        uint256 offsetPayload;
         assembly {
-            length := mload(add(data, start))
+            offsetPayload := mload(add(argumentsBlock, offset))
         }
 
-        if (length > 32) {
-            return keccak256(slice(data, start, start + length));
-        } else {
-            bytes32 content;
-            assembly {
-                content := mload(add(add(data, start), 32))
-            }
-            return content;
+        uint256 lengthPayload;
+        assembly {
+            lengthPayload := mload(add(argumentsBlock, offsetPayload))
         }
+
+        // account for:
+        // 4  bytes - functionSig
+        // 32 bytes - length encoding for the parameter payload
+        uint256 start = 4 + offsetPayload + 32;
+        uint256 end = start +
+            (
+                paramType == ParameterType.Dynamic32
+                    ? lengthPayload * 32
+                    : lengthPayload
+            );
+
+        // are we slicing out of bounds?
+        if (data.length < end) {
+            revert CalldataOutOfBounds();
+        }
+
+        return keccak256(slice(data, start, end));
     }
 
-    function pluckParamValue(bytes memory data, uint256 paramIndex)
+    function pluckStaticValue(bytes memory data, uint256 index)
         internal
         pure
         returns (bytes32)
     {
-        uint256 offset = 32 + 4 + paramIndex * 32;
+        // pre-check: is there a word available for the current parameter at argumentsBlock?
+        if (data.length < 4 + index * 32 + 32) {
+            revert CalldataOutOfBounds();
+        }
+
+        uint256 offset = 4 + index * 32;
         bytes32 value;
         assembly {
-            value := mload(add(data, offset))
+            // add 32 - jump over the length encoding of the data bytes array
+            value := mload(add(32, add(data, offset)))
         }
         return value;
     }
@@ -450,141 +809,153 @@ library Permissions {
         uint256 end
     ) internal pure returns (bytes memory result) {
         result = new bytes(end - start);
-        uint256 i;
         for (uint256 j = start; j < end; j++) {
-            result[i++] = data[j];
+            result[j - start] = data[j];
         }
     }
 
-    function resetScopeConfig(
-        bool[] memory isParamScoped,
-        bool[] memory isParamDynamic,
-        Comparison[] memory paramCompType
-    ) internal pure returns (uint256) {
-        uint8 paramCount = uint8(isParamScoped.length);
-        uint256 scopeConfig = packParamCount(0, paramCount);
-        for (uint8 i = 0; i < paramCount; i++) {
-            scopeConfig = packParamEntry(
-                scopeConfig,
-                i,
-                isParamScoped[i],
-                isParamDynamic[i],
-                paramCompType[i]
-            );
-        }
-
-        return scopeConfig;
-    }
-
-    function setScopeConfig(
+    /*
+     * pack/unpack are bit helpers for scopeConfig
+     */
+    function packParameter(
         uint256 scopeConfig,
-        uint8 paramIndex,
+        uint256 index,
         bool isScoped,
-        bool isDynamic,
-        Comparison compType
+        ParameterType paramType,
+        Comparison paramComp
     ) internal pure returns (uint256) {
-        if (scopeConfig == SCOPE_WILDCARD) scopeConfig = 0;
-        uint8 prevParamCount = unpackParamCount(scopeConfig);
+        (ExecutionOptions options, , uint256 prevLength) = unpackFunction(
+            scopeConfig
+        );
 
-        uint8 nextParamCount = paramIndex + 1 > prevParamCount
-            ? paramIndex + 1
-            : prevParamCount;
+        uint256 nextLength = index + 1 > prevLength ? index + 1 : prevLength;
 
         return
-            packParamEntry(
-                packParamCount(scopeConfig, nextParamCount),
-                paramIndex,
-                isScoped,
-                isDynamic,
-                compType
+            packLeft(
+                packRight(scopeConfig, index, isScoped, paramType, paramComp),
+                options,
+                false, // isWildcarded=false
+                nextLength
             );
     }
 
-    function packParamEntry(
-        uint256 config,
-        uint8 paramIndex,
-        bool isScoped,
-        bool isDynamic,
-        Comparison compType
-    ) internal pure returns (uint256) {
-        // we restrict paramCount to 62:
-        // 8   bits -> length
-        // 62  bits -> isParamScoped
-        // 62  bits -> isParamDynamic
-        // 124 bits -> two bits for each compType 62*2 = 124
-        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 isDynamicMask = 1 << (paramIndex + 124);
-        uint256 compTypeMask = 3 << (paramIndex * 2);
-
-        if (isScoped) {
-            config |= isScopedMask;
-        } else {
-            config &= ~isScopedMask;
-        }
-
-        if (isDynamic) {
-            config |= isDynamicMask;
-        } else {
-            config &= ~isDynamicMask;
-        }
-
-        config &= ~compTypeMask;
-        config |= uint256(compType) << (paramIndex * 2);
-
-        return config;
-    }
-
-    function unpackParamEntry(uint256 config, uint8 paramIndex)
-        internal
-        pure
-        returns (
-            bool isScoped,
-            bool isDynamic,
-            Comparison compType
-        )
-    {
-        uint256 isScopedMask = 1 << (paramIndex + 62 + 124);
-        uint256 isDynamicMask = 1 << (paramIndex + 124);
-        uint256 compTypeMask = 3 << (2 * paramIndex);
-
-        isScoped = (config & isScopedMask) != 0;
-        isDynamic = (config & isDynamicMask) != 0;
-        compType = Comparison((config & compTypeMask) >> (2 * paramIndex));
-    }
-
-    function packParamCount(uint256 config, uint8 paramCount)
+    function packOptions(uint256 scopeConfig, ExecutionOptions options)
         internal
         pure
         returns (uint256)
     {
+        uint256 optionsMask = 3 << 254;
+
+        scopeConfig &= ~optionsMask;
+        scopeConfig |= uint256(options) << 254;
+
+        return scopeConfig;
+    }
+
+    function packLeft(
+        uint256 scopeConfig,
+        ExecutionOptions options,
+        bool isWildcarded,
+        uint256 length
+    ) internal pure returns (uint256) {
+        // LEFT SIDE
+        // 2   bits -> options
+        // 1   bits -> isWildcarded
+        // 5   bits -> unused
         // 8   bits -> length
-        // 62  bits -> isParamScoped
-        // 62  bits -> isParamDynamic
-        // 124 bits -> two bits represents for each compType 62*2 = 124
-        uint256 left = (uint256(paramCount) << (62 + 62 + 124));
-        uint256 right = (config << 8) >> 8;
-        return left | right;
+        // RIGHT SIDE
+        // 48  bits -> isScoped
+        // 96  bits -> paramType (2 bits per entry 48*2)
+        // 96  bits -> paramComp (2 bits per entry 48*2)
+
+        // Wipe the LEFT SIDE clean. Start from there
+        scopeConfig = (scopeConfig << 16) >> 16;
+
+        // set options -> 256 - 2 = 254
+        scopeConfig |= uint256(options) << 254;
+
+        // set isWildcarded -> 256 - 2 - 1 = 253
+
+        if (isWildcarded) {
+            // uint256 isWildcardedMask = 1 << 253;
+            scopeConfig |= 1 << 253;
+        }
+
+        // set Length -> 48 + 96 + 96 = 240
+        scopeConfig |= length << 240;
+
+        return scopeConfig;
     }
 
-    function unpackParamCount(uint256 config) internal pure returns (uint8) {
-        return uint8(config >> 248);
+    function packRight(
+        uint256 scopeConfig,
+        uint256 index,
+        bool isScoped,
+        ParameterType paramType,
+        Comparison paramComp
+    ) internal pure returns (uint256) {
+        // LEFT SIDE
+        // 2   bits -> options
+        // 1   bits -> isWildcarded
+        // 5   bits -> unused
+        // 8   bits -> length
+        // RIGHT SIDE
+        // 48  bits -> isScoped
+        // 96  bits -> paramType (2 bits per entry 48*2)
+        // 96  bits -> paramComp (2 bits per entry 48*2)
+        uint256 isScopedMask = 1 << (index + 96 + 96);
+        uint256 paramTypeMask = 3 << (index * 2 + 96);
+        uint256 paramCompMask = 3 << (index * 2);
+
+        if (isScoped) {
+            scopeConfig |= isScopedMask;
+        } else {
+            scopeConfig &= ~isScopedMask;
+        }
+
+        scopeConfig &= ~paramTypeMask;
+        scopeConfig |= uint256(paramType) << (index * 2 + 96);
+
+        scopeConfig &= ~paramCompMask;
+        scopeConfig |= uint256(paramComp) << (index * 2);
+
+        return scopeConfig;
     }
 
-    function enforceCompType(bool isDynamic, Comparison compType)
+    function unpackFunction(uint256 scopeConfig)
         internal
         pure
+        returns (
+            ExecutionOptions options,
+            bool isWildcarded,
+            uint256 length
+        )
     {
-        if (compType == Comparison.OneOf) {
-            revert UnsuitableOneOfComparison();
-        }
+        uint256 isWildcardedMask = 1 << 253;
 
-        if (
-            isDynamic &&
-            (compType == Comparison.GreaterThan ||
-                compType == Comparison.LessThan)
-        ) {
-            revert UnsuitableRelativeComparison();
-        }
+        options = ExecutionOptions(scopeConfig >> 254);
+        isWildcarded = scopeConfig & isWildcardedMask != 0;
+        length = (scopeConfig << 8) >> 248;
+    }
+
+    function unpackParameter(uint256 scopeConfig, uint256 index)
+        internal
+        pure
+        returns (
+            bool isScoped,
+            ParameterType paramType,
+            Comparison paramComp
+        )
+    {
+        uint256 isScopedMask = 1 << (index + 96 + 96);
+        uint256 paramTypeMask = 3 << (index * 2 + 96);
+        uint256 paramCompMask = 3 << (index * 2);
+
+        isScoped = (scopeConfig & isScopedMask) != 0;
+        paramType = ParameterType(
+            (scopeConfig & paramTypeMask) >> (index * 2 + 96)
+        );
+        paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 2));
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
@@ -592,26 +963,25 @@ library Permissions {
         pure
         returns (bytes32)
     {
-        // fits in 32 bytes
         return bytes32(abi.encodePacked(targetAddress, functionSig));
     }
 
     function keyForCompValues(
         address targetAddress,
         bytes4 functionSig,
-        uint8 paramIndex
+        uint256 index
     ) public pure returns (bytes32) {
-        // fits in 32 bytes
         return
-            bytes32(abi.encodePacked(targetAddress, functionSig, paramIndex));
+            bytes32(abi.encodePacked(targetAddress, functionSig, uint8(index)));
     }
 
-    function maybeCompressCompValue(bytes calldata compValue)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function compressCompValue(
+        ParameterType paramType,
+        bytes calldata compValue
+    ) internal pure returns (bytes32) {
         return
-            compValue.length > 32 ? keccak256(compValue) : bytes32(compValue);
+            paramType == ParameterType.Static
+                ? bytes32(compValue)
+                : keccak256(compValue);
     }
 }
