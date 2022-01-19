@@ -14,7 +14,7 @@ function ContractInteractions() {
     if (!from || !provider) return;
     const signer = provider.getSigner();
     const rolesMod = RolesModifier__factory.connect(from, signer);
-    rolesMod.assignRoles();
+    // rolesMod.assignRoles();
   };
 
   return (
