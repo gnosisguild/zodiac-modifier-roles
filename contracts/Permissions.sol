@@ -718,6 +718,11 @@ library Permissions {
         uint256 index
     ) internal pure returns (bytes32) {
         assert(paramType != ParameterType.Static);
+        // pre-check: is there a word available for the current parameter at argumentsBlock?
+        if (data.length < 4 + index * 32 + 32) {
+            revert CalldataOutOfBounds();
+        }
+        //ensureArgumentsBlockSpace(data, index);
 
         /*
          * Encoded calldata:
@@ -739,11 +744,6 @@ library Permissions {
          * Note: Dynamic types are: bytes, string
          * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
          */
-
-        // pre-check is there a word at parameter pointer slot?
-        if (data.length < 4 + index * 32 + 32) {
-            revert CalldataOutOfBounds();
-        }
 
         // the start of the parameter block
         // 32 bytes - length encoding of the data bytes array
@@ -789,13 +789,13 @@ library Permissions {
         pure
         returns (bytes32)
     {
-        uint256 offset = 4 + index * 32;
-        bytes32 value;
-
-        if (data.length < offset + 32) {
+        // pre-check: is there a word available for the current parameter at argumentsBlock?
+        if (data.length < 4 + index * 32 + 32) {
             revert CalldataOutOfBounds();
         }
 
+        uint256 offset = 4 + index * 32;
+        bytes32 value;
         assembly {
             // add 32 - jump over the length encoding of the data bytes array
             value := mload(add(32, add(data, offset)))
