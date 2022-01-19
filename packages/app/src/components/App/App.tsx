@@ -2,20 +2,20 @@ import React from "react";
 import logo from "../../assets/images/logo.svg";
 import "./App.css";
 import { useWallet } from "../../hooks/useWallet";
-import { RolesModifier__factory } from "../../contracts/type";
-import { useRootSelector } from "../../store";
-import { getWalletAddress } from "../../store/main/selectors";
+// import { RolesModifier__factory } from "../../contracts/type";
+// import { useRootSelector } from "../../store";
+// import { getWalletAddress } from "../../store/main/selectors";
 
 function ContractInteractions() {
-  const { provider } = useWallet();
-  const from = useRootSelector(getWalletAddress);
+  // const { provider } = useWallet();
+  // const from = useRootSelector(getWalletAddress);
 
-  const handleAssignRole = async () => {
-    if (!from || !provider) return;
-    const signer = provider.getSigner();
-    const rolesMod = RolesModifier__factory.connect(from, signer);
-    // rolesMod.assignRoles();
-  };
+  // const handleAssignRole = async () => {
+  //   if (!from || !provider) return;
+  //   const signer = provider.getSigner();
+  //   const rolesMod = RolesModifier__factory.connect(from, signer);
+  //   rolesMod.assignRoles();
+  // };
 
   return (
     <div style={{ marginTop: 24 }}>
