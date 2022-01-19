@@ -875,9 +875,7 @@ library Permissions {
         scopeConfig |= uint256(options) << 254;
 
         // set isWildcarded -> 256 - 2 - 1 = 253
-
         if (isWildcarded) {
-            // uint256 isWildcardedMask = 1 << 253;
             scopeConfig |= 1 << 253;
         }
 
