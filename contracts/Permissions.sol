@@ -722,7 +722,6 @@ library Permissions {
         if (data.length < 4 + index * 32 + 32) {
             revert CalldataOutOfBounds();
         }
-        //ensureArgumentsBlockSpace(data, index);
 
         /*
          * Encoded calldata:
