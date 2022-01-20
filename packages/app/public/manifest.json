@@ -1,6 +1,8 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Roles Modifier App",
+  "name": "Roles Modifier App",
+  "description": "The expansion pack for DAOs",
+  "iconPath": "logo.png",
   "icons": [
     {
       "src": "favicon.ico",

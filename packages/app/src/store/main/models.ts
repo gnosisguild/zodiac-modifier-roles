@@ -2,6 +2,7 @@ import { NETWORK } from "../../utils/networks";
 
 export interface Web3State {
   chainId: NETWORK;
-  wallet?: string;
+  safeAddress?: string;
   ens?: string;
+  userAddress?: string;
 }

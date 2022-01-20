@@ -15,7 +15,7 @@ try {
 
 const web3InitialState: Web3State = {
   chainId: initialChainId || NETWORK.MAINNET,
-  wallet: "",
+  safeAddress: "",
   ens: "",
 };
 
@@ -23,8 +23,8 @@ export const web3Slice = createSlice({
   name: "web3",
   initialState: web3InitialState,
   reducers: {
-    setWallet(state, action: PayloadAction<string>) {
-      state.wallet = action.payload;
+    setSafeAddress(state, action: PayloadAction<string>) {
+      state.safeAddress = action.payload;
     },
     setChainId(state, action: PayloadAction<number>) {
       state.chainId = action.payload;
@@ -32,11 +32,14 @@ export const web3Slice = createSlice({
     setENS(state, action: PayloadAction<string>) {
       state.ens = action.payload;
     },
-    resetWallet(state) {
-      state.wallet = undefined;
+    resetSafeAddress(state) {
+      state.safeAddress = undefined;
       state.ens = undefined;
+    },
+    setUserAddress(state, action: PayloadAction<string>) {
+      state.userAddress = action.payload
     },
   },
 });
 
-export const { setChainId, setENS, setWallet, resetWallet } = web3Slice.actions;
+export const { setChainId, setENS, setSafeAddress, resetSafeAddress, setUserAddress } = web3Slice.actions;

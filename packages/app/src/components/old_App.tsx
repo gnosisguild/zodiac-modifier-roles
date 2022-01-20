@@ -1,7 +1,6 @@
 import React from "react";
-import logo from "../../assets/images/logo.svg";
-import "./App.css";
-import { useWallet } from "../../hooks/useWallet";
+import logo from "../assets/images/logo.svg";
+import { useWallet } from "../hooks/useWallet";
 // import { RolesModifier__factory } from "../../contracts/type";
 // import { useRootSelector } from "../../store";
 // import { getWalletAddress } from "../../store/main/selectors";
