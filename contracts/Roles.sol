@@ -87,17 +87,6 @@ contract Roles is Modifier {
         Permissions.allowTarget(roles[role], role, targetAddress, options);
     }
 
-    /// @dev Partially allows calls to a Target - subject to function scoping rules.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be partially allowed
-    function allowTargetPartially(uint16 role, address targetAddress)
-        external
-        onlyOwner
-    {
-        Permissions.allowTargetPartially(roles[role], role, targetAddress);
-    }
-
     /// @dev Disallows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
@@ -107,6 +96,17 @@ contract Roles is Modifier {
         onlyOwner
     {
         Permissions.revokeTarget(roles[role], role, targetAddress);
+    }
+
+    /// @dev Partially allows calls to a Target - subject to function scoping rules.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for
+    /// @param targetAddress Address to be partially allowed
+    function scopeTarget(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        Permissions.scopeTarget(roles[role], role, targetAddress);
     }
 
     /// @dev Allows a specific function, on a specific address, to be called.

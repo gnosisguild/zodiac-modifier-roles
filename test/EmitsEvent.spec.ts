@@ -57,13 +57,11 @@ describe.skip("EmitsEvent", async () => {
       .to.emit(modifier, "AllowTarget")
       .withArgs(ROLE_ID, AddressOne, OPTIONS_SEND);
   });
-  it("AllowTargetPartially", async () => {
+  it("ScopeTarget", async () => {
     const { owner, modifier } = await setup();
 
-    await expect(
-      modifier.connect(owner).allowTargetPartially(ROLE_ID, AddressOne)
-    )
-      .to.emit(modifier, "AllowTargetPartially")
+    await expect(modifier.connect(owner).scopeTarget(ROLE_ID, AddressOne))
+      .to.emit(modifier, "ScopeTarget")
       .withArgs(ROLE_ID, AddressOne);
   });
   it("RevokeTarget", async () => {

@@ -534,11 +534,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -586,11 +585,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -647,11 +645,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -729,11 +726,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -823,12 +819,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const allowTargetPartially =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
-      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
+      const scopeTarget = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
+      await avatar.exec(modifier.address, 0, scopeTarget.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -923,11 +918,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
@@ -996,12 +990,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const allowTargetPartially =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
-      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
+      const scopeTarget = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
+      await avatar.exec(modifier.address, 0, scopeTarget.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1075,12 +1068,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const allowTargetPartially =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
-      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
+      const scopeTarget = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
+      await avatar.exec(modifier.address, 0, scopeTarget.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1130,11 +1122,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
@@ -1185,11 +1176,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
@@ -1240,11 +1230,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, defaultRole.data);
 
-      const functionScoped =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
+      const functionScoped = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
       await avatar.exec(modifier.address, 0, functionScoped.data);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
@@ -1573,12 +1562,11 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, multiSendTarget.data);
 
-      const allowTargetPartially =
-        await modifier.populateTransaction.allowTargetPartially(
-          1,
-          testContract.address
-        );
-      await avatar.exec(modifier.address, 0, allowTargetPartially.data);
+      const scopeTarget = await modifier.populateTransaction.scopeTarget(
+        1,
+        testContract.address
+      );
+      await avatar.exec(modifier.address, 0, scopeTarget.data);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_ID,
@@ -1906,9 +1894,7 @@ describe("RolesModifier", async () => {
         modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
       ).to.not.be.reverted;
 
-      await modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -2045,9 +2031,7 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-      await modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
       // allow the function
       await modifier

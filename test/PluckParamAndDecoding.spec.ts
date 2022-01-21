@@ -50,9 +50,7 @@ describe("PluckParam - Decoding", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testPluckParam.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testPluckParam.address);
 
     return {
       testPluckParam,
