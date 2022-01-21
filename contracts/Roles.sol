@@ -99,7 +99,7 @@ contract Roles is Modifier {
         Permissions.revokeTarget(roles[role], role, targetAddress);
     }
 
-    /// @dev Scopes calls to an address, limited to specific function signatures, and specific scoping rules.
+    /// @dev Scopes calls to an address, limited to specific function signatures, and per function scoping rules.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Address to be scoped.
@@ -236,7 +236,7 @@ contract Roles is Modifier {
 
     /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
-    /// @notice Parameter will be scoped with comparison OneOf.
+    /// @notice Parameter will be scoped with comparison type OneOf.
     /// @param role Role to set for.
     /// @param targetAddress Scoped address on which functionSig lives.
     /// @param functionSig Function signature to be scoped.
@@ -262,7 +262,7 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Unscopes a single parameter of a function, on a scoped target.
+    /// @dev Un-scopes a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
     /// @param targetAddress Scoped address on which functionSig lives.
@@ -358,12 +358,13 @@ contract Roles is Modifier {
         return execAndReturnData(to, value, data, operation);
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
+    /// @dev Passes a transaction to the modifier assuming the specified role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction.
+    /// @param role Identifier of the role to assume for this transaction
+    /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRole(
         address to,
@@ -380,12 +381,13 @@ contract Roles is Modifier {
         }
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
+    /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction.
+    /// @param role Identifier of the role to assume for this transaction
+    /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRoleReturnData(
         address to,
