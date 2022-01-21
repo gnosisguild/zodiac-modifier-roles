@@ -1,12 +1,12 @@
-import React from 'react'
-import { Checkbox as MUICheckbox, CheckboxProps, makeStyles } from '@material-ui/core'
-import CheckMarkCheckedIcon from '../../../assets/icons/checkbox-checked.svg'
-import CheckMarkUncheckedIcon from '../../../assets/icons/checkbox-unchecked.svg'
+import React from "react"
+import { Checkbox as MUICheckbox, CheckboxProps, makeStyles } from "@material-ui/core"
+import CheckMarkCheckedIcon from "../../../assets/icons/checkbox-checked.svg"
+import CheckMarkUncheckedIcon from "../../../assets/icons/checkbox-unchecked.svg"
 
 const useStyles = makeStyles(() => ({
   root: {
     padding: 0,
-    backgroundColor: 'transparent !important',
+    backgroundColor: "transparent !important",
     borderRadius: 0,
   },
 }))

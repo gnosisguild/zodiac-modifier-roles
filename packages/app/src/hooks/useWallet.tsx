@@ -1,12 +1,12 @@
-import Onboard from 'bnc-onboard'
-import { ethers } from 'ethers'
-import { REDUX_STORE, useRootSelector } from '../store'
-import { resetSafeAddress, setChainId, setENS, setUserAddress } from '../store/main'
-import { useEffect, useMemo, useState } from 'react'
-import { getChainId, getSafeAddress } from '../store/main/selectors'
-import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
-import { getNetworkRPC } from '../utils/networks'
-import memoize from 'lodash.memoize'
+import Onboard from "bnc-onboard"
+import { ethers } from "ethers"
+import { REDUX_STORE, useRootSelector } from "../store"
+import { resetSafeAddress, setChainId, setENS, setUserAddress } from "../store/main"
+import { useEffect, useMemo, useState } from "react"
+import { getChainId, getSafeAddress } from "../store/main/selectors"
+import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
+import { getNetworkRPC } from "../utils/networks"
+import memoize from "lodash.memoize"
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
@@ -24,13 +24,13 @@ const configureOnboardJS = memoize(
     _provider = new ethers.providers.JsonRpcProvider(rpcUrl, networkId)
 
     const wallets = [
-      { walletName: 'metamask', preferred: true },
-      { walletName: 'gnosis', preferred: true },
-      { walletName: 'coinbase', preferred: true },
-      { walletName: 'ledger', rpcUrl: rpcUrl, preferred: true },
-      { walletName: 'walletConnect', infuraKey: INFURA_KEY, preferred: true },
-      { walletName: 'opera' },
-      { walletName: 'operaTouch' },
+      { walletName: "metamask", preferred: true },
+      { walletName: "gnosis", preferred: true },
+      { walletName: "coinbase", preferred: true },
+      { walletName: "ledger", rpcUrl: rpcUrl, preferred: true },
+      { walletName: "walletConnect", infuraKey: INFURA_KEY, preferred: true },
+      { walletName: "opera" },
+      { walletName: "operaTouch" },
     ]
 
     return Onboard({
@@ -60,10 +60,10 @@ const configureOnboardJS = memoize(
         wallets,
       },
       walletCheck: [
-        { checkName: 'derivationPath' },
-        { checkName: 'accounts' },
-        { checkName: 'connect' },
-        { checkName: 'network' },
+        { checkName: "derivationPath" },
+        { checkName: "accounts" },
+        { checkName: "connect" },
+        { checkName: "network" },
       ],
     })
   },
@@ -81,11 +81,11 @@ export const useWallet = () => {
     try {
       const selected = await onboard.walletSelect()
       if (selected) {
-        await onboard.walletCheck();
-        setProvider(_provider);
+        await onboard.walletCheck()
+        setProvider(_provider)
       }
     } catch (err) {
-      console.warn('startOnboard error', err)
+      console.warn("startOnboard error", err)
     }
   }
 

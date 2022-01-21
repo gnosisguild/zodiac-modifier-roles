@@ -55,9 +55,7 @@ export const App = (): React.ReactElement => {
           >
             Create a new role
           </Button>
-          {isOpen && (
-            <CreateRoleModal onClose={() => setIsOpen(false)}/>
-          )}
+          {isOpen && <CreateRoleModal onClose={() => setIsOpen(false)} />}
         </div>
       </Grid>
     </Grid>

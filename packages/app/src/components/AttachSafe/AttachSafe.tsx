@@ -1,17 +1,17 @@
-import { Button, CircularProgress, makeStyles, Paper, Typography } from '@material-ui/core'
-import { TextField } from '../commons/input/TextField'
-import { ReactComponent as ArrowUp } from '../../assets/icons/arrow-up.svg'
-import { useRootDispatch } from '../../store'
-import { useState } from 'react'
-import { ethers } from 'ethers'
-import { setSafeAddress } from '../../store/main'
-import { useWallet } from '../../hooks/useWallet'
+import { Button, CircularProgress, makeStyles, Paper, Typography } from "@material-ui/core"
+import { TextField } from "../commons/input/TextField"
+import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg"
+import { useRootDispatch } from "../../store"
+import { useState } from "react"
+import { ethers } from "ethers"
+import { setSafeAddress } from "../../store/main"
+import { useWallet } from "../../hooks/useWallet"
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   card: {
     maxWidth: 400,
@@ -32,7 +32,7 @@ export const AttachSafe = () => {
   const [loading, setLoading] = useState(false)
   const dispatch = useRootDispatch()
   const { provider } = useWallet()
-  const [safeAddress, _setSafeAddress] = useState('')
+  const [safeAddress, _setSafeAddress] = useState("")
   const isValid = ethers.utils.isAddress(safeAddress)
 
   const handleAttach = async () => {
@@ -43,7 +43,7 @@ export const AttachSafe = () => {
         // const exitModule = await getExitModulesFromSafe(provider, account)
         dispatch(setSafeAddress(safeAddress))
       } catch (err) {
-        console.warn('attach error', err)
+        console.warn("attach error", err)
         setInvalidSafe(true)
       } finally {
         setLoading(false)
@@ -76,7 +76,7 @@ export const AttachSafe = () => {
           disabled={!isValid || loading}
           startIcon={loading ? <CircularProgress size={18} color="primary" /> : <ArrowUp />}
         >
-          {loading ? 'Attaching Gnosis Safe...' : 'Attach Safe'}
+          {loading ? "Attaching Gnosis Safe..." : "Attach Safe"}
         </Button>
 
         {invalidSafe ? (
