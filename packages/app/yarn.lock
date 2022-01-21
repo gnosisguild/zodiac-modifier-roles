@@ -1752,17 +1752,40 @@
     "@gnosis.pm/safe-apps-sdk" "3.0.0"
     events "^3.3.0"
 
+"@gnosis.pm/safe-apps-react-sdk@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-react-sdk/-/safe-apps-react-sdk-4.1.0.tgz#52d60ba0a9e9594b1df0c7c24e520666566550af"
+  integrity sha512-nkQHLqMVRwmdmXXI2I2zK2+/U+m7yer38hWAt2es7cUeZ5QWaNoRmdNwA8v02WoMpVJDq8/7gtfesYK7dFdLQA==
+  dependencies:
+    "@gnosis.pm/safe-apps-sdk" "6.2.0"
+
 "@gnosis.pm/safe-apps-sdk@3.0.0", "@gnosis.pm/safe-apps-sdk@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-sdk/-/safe-apps-sdk-3.0.0.tgz#0f90185c3693f2683322d275e796e61ff99ce87d"
   integrity sha512-dLCSlniYnxEqCglx4XdhByvi7KKuSYRWJKm1lVXAc4oJqwwVkoCwp0bFIejLZ/dnf7cQSBUUVsTGWhvSda511w==
 
-"@gnosis.pm/safe-react-components@^0.8.0":
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-react-components/-/safe-react-components-0.8.6.tgz#a8275b02d41a7b0d69abef867900843a1a49bb11"
-  integrity sha512-lWHSjOQFmeck6D4cpzs6un09Zx7jptmdR3+QtUkB0obsmguU0o6fXtkK91SYE2Fm86GpmjhA03rKrOqzEeklBA==
+"@gnosis.pm/safe-apps-sdk@6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-apps-sdk/-/safe-apps-sdk-6.2.0.tgz#05751b4ae4c6cfa7e19839d3655e7d9b5fb72dfe"
+  integrity sha512-dOpVBlu+Nv7bOrOl9llTeRriEpdUnnbXEM/RgTkS1v8Q2swT6+M+WIKTuKB/cadFXbjUsBD/nd3IsihHP24b5g==
+  dependencies:
+    "@gnosis.pm/safe-react-gateway-sdk" "^2.5.6"
+    ethers "^5.4.7"
+
+"@gnosis.pm/safe-react-components@^0.9.6":
+  version "0.9.6"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-react-components/-/safe-react-components-0.9.6.tgz#709a9766711d8afe0e1286ddba2240a0c2f94dc3"
+  integrity sha512-VeqocdbnpuWZUMPBkyV3xGP75Sb+3nyxbD6RyouLuLINIGDdm+ZF95neWWqa5N0qznrfkXy2ORKC8UWMy0Czmg==
   dependencies:
     react-media "^1.10.0"
+    web3-utils "^1.6.0"
+
+"@gnosis.pm/safe-react-gateway-sdk@^2.5.6":
+  version "2.8.3"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-react-gateway-sdk/-/safe-react-gateway-sdk-2.8.3.tgz#413875ab6eaedf5cad6c2d6f27e503e9a7715d21"
+  integrity sha512-M0Ay+A3ea+5eHD3uSQ+Hu3h7EzAE8F8pI0mZGuFioCUmZMa3Sv1K7OFDvXoL7Na/J2MVmOpyamBlyB5CPHpGyQ==
+  dependencies:
+    isomorphic-unfetch "^3.1.0"
 
 "@hapi/address@2.x.x":
   version "2.1.4"
@@ -9252,6 +9275,14 @@ isobject@^3.0.0, isobject@^3.0.1:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha1-TkMekrEalzFjaqH5yNHMvP2reN8=
 
+isomorphic-unfetch@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/isomorphic-unfetch/-/isomorphic-unfetch-3.1.0.tgz#87341d5f4f7b63843d468438128cb087b7c3e98f"
+  integrity sha512-geDJjpoZ8N0kWexiwkX8F9NkTsXhetLPVbZFQ+JTW239QNOwvB0gniuR1Wc6f0AMTn7/mFGyXvHTifrCp/GH8Q==
+  dependencies:
+    node-fetch "^2.6.1"
+    unfetch "^4.2.0"
+
 isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
@@ -15311,6 +15342,11 @@ underscore@1.9.1:
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
   integrity sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg==
 
+unfetch@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/unfetch/-/unfetch-4.2.0.tgz#7e21b0ef7d363d8d9af0fb929a5555f6ef97a3be"
+  integrity sha512-F9p7yYCn6cIW9El1zi0HI6vqpeIvBsr3dSuRO6Xuppb1u5rXpCPmMvLSyECLhybr9isec8Ohl0hPekMVrEinDA==
+
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/unicode-canonical-property-names-ecmascript/-/unicode-canonical-property-names-ecmascript-2.0.0.tgz#301acdc525631670d39f6146e0e77ff6bbdebddc"
@@ -15902,6 +15938,19 @@ web3-utils@1.6.1, web3-utils@^1.0.0-beta.31, web3-utils@^1.6.1:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/web3-utils/-/web3-utils-1.6.1.tgz#befcb23922b00603ab56d8c5b4158468dc494aca"
   integrity sha512-RidGKv5kOkcerI6jQqDFDoTllQQqV+rPhTzZHhmbqtFObbYpU93uc+yG1LHivRTQhA6llIx67iudc/vzisgO+w==
+  dependencies:
+    bn.js "^4.11.9"
+    ethereum-bloom-filters "^1.0.6"
+    ethereumjs-util "^7.1.0"
+    ethjs-unit "0.1.6"
+    number-to-bn "1.7.0"
+    randombytes "^2.1.0"
+    utf8 "3.0.0"
+
+web3-utils@^1.6.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/web3-utils/-/web3-utils-1.7.0.tgz#c59f0fd43b2449357296eb54541810b99b1c771c"
+  integrity sha512-O8Tl4Ky40Sp6pe89Olk2FsaUkgHyb5QAXuaKo38ms3CxZZ4d3rPGfjP9DNKGm5+IUgAZBNpF1VmlSmNCqfDI1w==
   dependencies:
     bn.js "^4.11.9"
     ethereum-bloom-filters "^1.0.6"

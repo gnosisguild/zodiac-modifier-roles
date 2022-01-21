@@ -53,68 +53,6 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "canSend",
-        type: "bool",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "canDelegate",
-        type: "bool",
-      },
-    ],
-    name: "AllowTarget",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "canSend",
-        type: "bool",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "canDelegate",
-        type: "bool",
-      },
-    ],
-    name: "AllowTargetPartially",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
         internalType: "address",
         name: "module",
         type: "address",
@@ -124,6 +62,12 @@ const _abi = [
         internalType: "uint16[]",
         name: "roles",
         type: "uint16[]",
+      },
+      {
+        indexed: false,
+        internalType: "bool[]",
+        name: "memberOf",
+        type: "bool[]",
       },
     ],
     name: "AssignRoles",
@@ -210,25 +154,6 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-    ],
-    name: "RevokeTarget",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: true,
         internalType: "address",
         name: "initiator",
@@ -261,197 +186,6 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes4",
-        name: "selector",
-        type: "bytes4",
-      },
-    ],
-    name: "ScopeAllowFunction",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes4",
-        name: "functionSig",
-        type: "bytes4",
-      },
-      {
-        indexed: false,
-        internalType: "bool[]",
-        name: "paramIsScoped",
-        type: "bool[]",
-      },
-      {
-        indexed: false,
-        internalType: "bool[]",
-        name: "paramIsDynamic",
-        type: "bool[]",
-      },
-      {
-        indexed: false,
-        internalType: "enum Comparison[]",
-        name: "paramCompType",
-        type: "uint8[]",
-      },
-      {
-        indexed: false,
-        internalType: "bytes[]",
-        name: "paramCompValue",
-        type: "bytes[]",
-      },
-    ],
-    name: "ScopeFunction",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes4",
-        name: "functionSig",
-        type: "bytes4",
-      },
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "paramIndex",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "isDynamic",
-        type: "bool",
-      },
-      {
-        indexed: false,
-        internalType: "enum Comparison",
-        name: "compType",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "compValue",
-        type: "bytes",
-      },
-    ],
-    name: "ScopeParameter",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes4",
-        name: "functionSig",
-        type: "bytes4",
-      },
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "paramIndex",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "isDynamic",
-        type: "bool",
-      },
-      {
-        indexed: false,
-        internalType: "bytes[]",
-        name: "compValues",
-        type: "bytes[]",
-      },
-    ],
-    name: "ScopeParameterAsOneOf",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes4",
-        name: "selector",
-        type: "bytes4",
-      },
-    ],
-    name: "ScopeRevokeFunction",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
         internalType: "address",
         name: "module",
         type: "address",
@@ -472,11 +206,11 @@ const _abi = [
       {
         indexed: false,
         internalType: "address",
-        name: "multiSendAddress",
+        name: "multisendAddress",
         type: "address",
       },
     ],
-    name: "SetMulitSendAddress",
+    name: "SetMultisendAddress",
     type: "event",
   },
   {
@@ -499,57 +233,21 @@ const _abi = [
     type: "event",
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: false,
         internalType: "uint16",
         name: "role",
         type: "uint16",
       },
       {
-        indexed: false,
         internalType: "address",
         name: "targetAddress",
         type: "address",
       },
       {
-        indexed: false,
-        internalType: "bytes4",
-        name: "functionSig",
-        type: "bytes4",
-      },
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "paramIndex",
+        internalType: "enum ExecutionOptions",
+        name: "options",
         type: "uint8",
-      },
-    ],
-    name: "UnscopeParameter",
-    type: "event",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint16",
-        name: "role",
-        type: "uint16",
-      },
-      {
-        internalType: "address",
-        name: "targetAddress",
-        type: "address",
-      },
-      {
-        internalType: "bool",
-        name: "canSend",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "canDelegate",
-        type: "bool",
       },
     ],
     name: "allowTarget",
@@ -568,16 +266,6 @@ const _abi = [
         internalType: "address",
         name: "targetAddress",
         type: "address",
-      },
-      {
-        internalType: "bool",
-        name: "canSend",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "canDelegate",
-        type: "bool",
       },
     ],
     name: "allowTargetPartially",
@@ -913,7 +601,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "multiSend",
+    name: "multisend",
     outputs: [
       {
         internalType: "address",
@@ -979,6 +667,11 @@ const _abi = [
         name: "functionSig",
         type: "bytes4",
       },
+      {
+        internalType: "enum ExecutionOptions",
+        name: "options",
+        type: "uint8",
+      },
     ],
     name: "scopeAllowFunction",
     outputs: [],
@@ -1008,19 +701,24 @@ const _abi = [
         type: "bool[]",
       },
       {
-        internalType: "bool[]",
-        name: "isParamDynamic",
-        type: "bool[]",
+        internalType: "enum ParameterType[]",
+        name: "paramType",
+        type: "uint8[]",
       },
       {
         internalType: "enum Comparison[]",
-        name: "paramCompType",
+        name: "paramComp",
         type: "uint8[]",
       },
       {
         internalType: "bytes[]",
-        name: "paramCompValue",
+        name: "compValue",
         type: "bytes[]",
+      },
+      {
+        internalType: "enum ExecutionOptions",
+        name: "options",
+        type: "uint8",
       },
     ],
     name: "scopeFunction",
@@ -1046,18 +744,46 @@ const _abi = [
         type: "bytes4",
       },
       {
-        internalType: "uint8",
+        internalType: "enum ExecutionOptions",
+        name: "options",
+        type: "uint8",
+      },
+    ],
+    name: "scopeFunctionExecutionOptions",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint16",
+        name: "role",
+        type: "uint16",
+      },
+      {
+        internalType: "address",
+        name: "targetAddress",
+        type: "address",
+      },
+      {
+        internalType: "bytes4",
+        name: "functionSig",
+        type: "bytes4",
+      },
+      {
+        internalType: "uint256",
         name: "paramIndex",
+        type: "uint256",
+      },
+      {
+        internalType: "enum ParameterType",
+        name: "paramType",
         type: "uint8",
       },
       {
-        internalType: "bool",
-        name: "isDynamic",
-        type: "bool",
-      },
-      {
         internalType: "enum Comparison",
-        name: "compType",
+        name: "paramComp",
         type: "uint8",
       },
       {
@@ -1089,14 +815,14 @@ const _abi = [
         type: "bytes4",
       },
       {
-        internalType: "uint8",
+        internalType: "uint256",
         name: "paramIndex",
-        type: "uint8",
+        type: "uint256",
       },
       {
-        internalType: "bool",
-        name: "isDynamic",
-        type: "bool",
+        internalType: "enum ParameterType",
+        name: "paramType",
+        type: "uint8",
       },
       {
         internalType: "bytes[]",
@@ -1180,11 +906,11 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_multiSend",
+        name: "_multisend",
         type: "address",
       },
     ],
-    name: "setMultiSend",
+    name: "setMultisend",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

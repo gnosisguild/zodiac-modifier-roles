@@ -20,8 +20,8 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface RolesModifierInterface extends utils.Interface {
   contractName: "RolesModifier";
   functions: {
-    "allowTarget(uint16,address,bool,bool)": FunctionFragment;
-    "allowTargetPartially(uint16,address,bool,bool)": FunctionFragment;
+    "allowTarget(uint16,address,uint8)": FunctionFragment;
+    "allowTargetPartially(uint16,address)": FunctionFragment;
     "assignRoles(address,uint16[],bool[])": FunctionFragment;
     "avatar()": FunctionFragment;
     "defaultRoles(address)": FunctionFragment;
@@ -35,19 +35,20 @@ export interface RolesModifierInterface extends utils.Interface {
     "getModulesPaginated(address,uint256)": FunctionFragment;
     "guard()": FunctionFragment;
     "isModuleEnabled(address)": FunctionFragment;
-    "multiSend()": FunctionFragment;
+    "multisend()": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "revokeTarget(uint16,address)": FunctionFragment;
-    "scopeAllowFunction(uint16,address,bytes4)": FunctionFragment;
-    "scopeFunction(uint16,address,bytes4,bool[],bool[],uint8[],bytes[])": FunctionFragment;
-    "scopeParameter(uint16,address,bytes4,uint8,bool,uint8,bytes)": FunctionFragment;
-    "scopeParameterAsOneOf(uint16,address,bytes4,uint8,bool,bytes[])": FunctionFragment;
+    "scopeAllowFunction(uint16,address,bytes4,uint8)": FunctionFragment;
+    "scopeFunction(uint16,address,bytes4,bool[],uint8[],uint8[],bytes[],uint8)": FunctionFragment;
+    "scopeFunctionExecutionOptions(uint16,address,bytes4,uint8)": FunctionFragment;
+    "scopeParameter(uint16,address,bytes4,uint256,uint8,uint8,bytes)": FunctionFragment;
+    "scopeParameterAsOneOf(uint16,address,bytes4,uint256,uint8,bytes[])": FunctionFragment;
     "scopeRevokeFunction(uint16,address,bytes4)": FunctionFragment;
     "setAvatar(address)": FunctionFragment;
     "setDefaultRole(address,uint16)": FunctionFragment;
     "setGuard(address)": FunctionFragment;
-    "setMultiSend(address)": FunctionFragment;
+    "setMultisend(address)": FunctionFragment;
     "setTarget(address)": FunctionFragment;
     "setUp(bytes)": FunctionFragment;
     "target()": FunctionFragment;
@@ -57,11 +58,11 @@ export interface RolesModifierInterface extends utils.Interface {
 
   encodeFunctionData(
     functionFragment: "allowTarget",
-    values: [BigNumberish, string, boolean, boolean]
+    values: [BigNumberish, string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "allowTargetPartially",
-    values: [BigNumberish, string, boolean, boolean]
+    values: [BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "assignRoles",
@@ -120,7 +121,7 @@ export interface RolesModifierInterface extends utils.Interface {
     functionFragment: "isModuleEnabled",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "multiSend", values?: undefined): string;
+  encodeFunctionData(functionFragment: "multisend", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -132,7 +133,7 @@ export interface RolesModifierInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "scopeAllowFunction",
-    values: [BigNumberish, string, BytesLike]
+    values: [BigNumberish, string, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "scopeFunction",
@@ -141,10 +142,15 @@ export interface RolesModifierInterface extends utils.Interface {
       string,
       BytesLike,
       boolean[],
-      boolean[],
       BigNumberish[],
-      BytesLike[]
+      BigNumberish[],
+      BytesLike[],
+      BigNumberish
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "scopeFunctionExecutionOptions",
+    values: [BigNumberish, string, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "scopeParameter",
@@ -153,7 +159,7 @@ export interface RolesModifierInterface extends utils.Interface {
       string,
       BytesLike,
       BigNumberish,
-      boolean,
+      BigNumberish,
       BigNumberish,
       BytesLike
     ]
@@ -165,7 +171,7 @@ export interface RolesModifierInterface extends utils.Interface {
       string,
       BytesLike,
       BigNumberish,
-      boolean,
+      BigNumberish,
       BytesLike[]
     ]
   ): string;
@@ -180,7 +186,7 @@ export interface RolesModifierInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "setGuard", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "setMultiSend",
+    functionFragment: "setMultisend",
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "setTarget", values: [string]): string;
@@ -246,7 +252,7 @@ export interface RolesModifierInterface extends utils.Interface {
     functionFragment: "isModuleEnabled",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "multiSend", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "multisend", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
@@ -262,6 +268,10 @@ export interface RolesModifierInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "scopeFunction",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "scopeFunctionExecutionOptions",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -283,7 +293,7 @@ export interface RolesModifierInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "setGuard", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setMultiSend",
+    functionFragment: "setMultisend",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setTarget", data: BytesLike): Result;
@@ -299,76 +309,33 @@ export interface RolesModifierInterface extends utils.Interface {
   ): Result;
 
   events: {
-    "AllowTarget(uint16,address,bool,bool)": EventFragment;
-    "AllowTargetPartially(uint16,address,bool,bool)": EventFragment;
-    "AssignRoles(address,uint16[])": EventFragment;
+    "AssignRoles(address,uint16[],bool[])": EventFragment;
     "AvatarSet(address,address)": EventFragment;
     "ChangedGuard(address)": EventFragment;
     "DisabledModule(address)": EventFragment;
     "EnabledModule(address)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "RevokeTarget(uint16,address)": EventFragment;
     "RolesModSetup(address,address,address,address)": EventFragment;
-    "ScopeAllowFunction(uint16,address,bytes4)": EventFragment;
-    "ScopeFunction(uint16,address,bytes4,bool[],bool[],uint8[],bytes[])": EventFragment;
-    "ScopeParameter(uint16,address,bytes4,uint8,bool,uint8,bytes)": EventFragment;
-    "ScopeParameterAsOneOf(uint16,address,bytes4,uint8,bool,bytes[])": EventFragment;
-    "ScopeRevokeFunction(uint16,address,bytes4)": EventFragment;
     "SetDefaultRole(address,uint16)": EventFragment;
-    "SetMulitSendAddress(address)": EventFragment;
+    "SetMultisendAddress(address)": EventFragment;
     "TargetSet(address,address)": EventFragment;
-    "UnscopeParameter(uint16,address,bytes4,uint8)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "AllowTarget"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "AllowTargetPartially"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AssignRoles"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AvatarSet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ChangedGuard"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "DisabledModule"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "EnabledModule"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RevokeTarget"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RolesModSetup"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ScopeAllowFunction"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ScopeFunction"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ScopeParameter"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ScopeParameterAsOneOf"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ScopeRevokeFunction"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetDefaultRole"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetMulitSendAddress"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetMultisendAddress"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TargetSet"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UnscopeParameter"): EventFragment;
 }
 
-export type AllowTargetEvent = TypedEvent<
-  [number, string, boolean, boolean],
-  {
-    role: number;
-    targetAddress: string;
-    canSend: boolean;
-    canDelegate: boolean;
-  }
->;
-
-export type AllowTargetEventFilter = TypedEventFilter<AllowTargetEvent>;
-
-export type AllowTargetPartiallyEvent = TypedEvent<
-  [number, string, boolean, boolean],
-  {
-    role: number;
-    targetAddress: string;
-    canSend: boolean;
-    canDelegate: boolean;
-  }
->;
-
-export type AllowTargetPartiallyEventFilter =
-  TypedEventFilter<AllowTargetPartiallyEvent>;
-
 export type AssignRolesEvent = TypedEvent<
-  [string, number[]],
-  { module: string; roles: number[] }
+  [string, number[], boolean[]],
+  { module: string; roles: number[]; memberOf: boolean[] }
 >;
 
 export type AssignRolesEventFilter = TypedEventFilter<AssignRolesEvent>;
@@ -400,80 +367,12 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export type RevokeTargetEvent = TypedEvent<
-  [number, string],
-  { role: number; targetAddress: string }
->;
-
-export type RevokeTargetEventFilter = TypedEventFilter<RevokeTargetEvent>;
-
 export type RolesModSetupEvent = TypedEvent<
   [string, string, string, string],
   { initiator: string; owner: string; avatar: string; target: string }
 >;
 
 export type RolesModSetupEventFilter = TypedEventFilter<RolesModSetupEvent>;
-
-export type ScopeAllowFunctionEvent = TypedEvent<
-  [number, string, string],
-  { role: number; targetAddress: string; selector: string }
->;
-
-export type ScopeAllowFunctionEventFilter =
-  TypedEventFilter<ScopeAllowFunctionEvent>;
-
-export type ScopeFunctionEvent = TypedEvent<
-  [number, string, string, boolean[], boolean[], number[], string[]],
-  {
-    role: number;
-    targetAddress: string;
-    functionSig: string;
-    paramIsScoped: boolean[];
-    paramIsDynamic: boolean[];
-    paramCompType: number[];
-    paramCompValue: string[];
-  }
->;
-
-export type ScopeFunctionEventFilter = TypedEventFilter<ScopeFunctionEvent>;
-
-export type ScopeParameterEvent = TypedEvent<
-  [number, string, string, number, boolean, number, string],
-  {
-    role: number;
-    targetAddress: string;
-    functionSig: string;
-    paramIndex: number;
-    isDynamic: boolean;
-    compType: number;
-    compValue: string;
-  }
->;
-
-export type ScopeParameterEventFilter = TypedEventFilter<ScopeParameterEvent>;
-
-export type ScopeParameterAsOneOfEvent = TypedEvent<
-  [number, string, string, number, boolean, string[]],
-  {
-    role: number;
-    targetAddress: string;
-    functionSig: string;
-    paramIndex: number;
-    isDynamic: boolean;
-    compValues: string[];
-  }
->;
-
-export type ScopeParameterAsOneOfEventFilter =
-  TypedEventFilter<ScopeParameterAsOneOfEvent>;
-
-export type ScopeRevokeFunctionEvent = TypedEvent<
-  [number, string, string],
-  { role: number; targetAddress: string; selector: string }
->;
-
-export type ScopeRevokeFunctionEventFilter =
-  TypedEventFilter<ScopeRevokeFunctionEvent>;
 
 export type SetDefaultRoleEvent = TypedEvent<
   [string, number],
@@ -482,13 +381,13 @@ export type SetDefaultRoleEvent = TypedEvent<
 
 export type SetDefaultRoleEventFilter = TypedEventFilter<SetDefaultRoleEvent>;
 
-export type SetMulitSendAddressEvent = TypedEvent<
+export type SetMultisendAddressEvent = TypedEvent<
   [string],
-  { multiSendAddress: string }
+  { multisendAddress: string }
 >;
 
-export type SetMulitSendAddressEventFilter =
-  TypedEventFilter<SetMulitSendAddressEvent>;
+export type SetMultisendAddressEventFilter =
+  TypedEventFilter<SetMultisendAddressEvent>;
 
 export type TargetSetEvent = TypedEvent<
   [string, string],
@@ -496,19 +395,6 @@ export type TargetSetEvent = TypedEvent<
 >;
 
 export type TargetSetEventFilter = TypedEventFilter<TargetSetEvent>;
-
-export type UnscopeParameterEvent = TypedEvent<
-  [number, string, string, number],
-  {
-    role: number;
-    targetAddress: string;
-    functionSig: string;
-    paramIndex: number;
-  }
->;
-
-export type UnscopeParameterEventFilter =
-  TypedEventFilter<UnscopeParameterEvent>;
 
 export interface RolesModifier extends BaseContract {
   contractName: "RolesModifier";
@@ -541,16 +427,13 @@ export interface RolesModifier extends BaseContract {
     allowTarget(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     allowTargetPartially(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -627,7 +510,7 @@ export interface RolesModifier extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    multiSend(overrides?: CallOverrides): Promise<[string]>;
+    multisend(overrides?: CallOverrides): Promise<[string]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -645,6 +528,7 @@ export interface RolesModifier extends BaseContract {
       role: BigNumberish,
       targetAddress: string,
       functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -653,9 +537,18 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       isParamScoped: boolean[],
-      isParamDynamic: boolean[],
-      paramCompType: BigNumberish[],
-      paramCompValue: BytesLike[],
+      paramType: BigNumberish[],
+      paramComp: BigNumberish[],
+      compValue: BytesLike[],
+      options: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    scopeFunctionExecutionOptions(
+      role: BigNumberish,
+      targetAddress: string,
+      functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -664,8 +557,8 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
-      compType: BigNumberish,
+      paramType: BigNumberish,
+      paramComp: BigNumberish,
       compValue: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -675,7 +568,7 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
+      paramType: BigNumberish,
       compValues: BytesLike[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -703,8 +596,8 @@ export interface RolesModifier extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMultiSend(
-      _multiSend: string,
+    setMultisend(
+      _multisend: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -737,16 +630,13 @@ export interface RolesModifier extends BaseContract {
   allowTarget(
     role: BigNumberish,
     targetAddress: string,
-    canSend: boolean,
-    canDelegate: boolean,
+    options: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   allowTargetPartially(
     role: BigNumberish,
     targetAddress: string,
-    canSend: boolean,
-    canDelegate: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -820,7 +710,7 @@ export interface RolesModifier extends BaseContract {
 
   isModuleEnabled(_module: string, overrides?: CallOverrides): Promise<boolean>;
 
-  multiSend(overrides?: CallOverrides): Promise<string>;
+  multisend(overrides?: CallOverrides): Promise<string>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -838,6 +728,7 @@ export interface RolesModifier extends BaseContract {
     role: BigNumberish,
     targetAddress: string,
     functionSig: BytesLike,
+    options: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -846,9 +737,18 @@ export interface RolesModifier extends BaseContract {
     targetAddress: string,
     functionSig: BytesLike,
     isParamScoped: boolean[],
-    isParamDynamic: boolean[],
-    paramCompType: BigNumberish[],
-    paramCompValue: BytesLike[],
+    paramType: BigNumberish[],
+    paramComp: BigNumberish[],
+    compValue: BytesLike[],
+    options: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  scopeFunctionExecutionOptions(
+    role: BigNumberish,
+    targetAddress: string,
+    functionSig: BytesLike,
+    options: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -857,8 +757,8 @@ export interface RolesModifier extends BaseContract {
     targetAddress: string,
     functionSig: BytesLike,
     paramIndex: BigNumberish,
-    isDynamic: boolean,
-    compType: BigNumberish,
+    paramType: BigNumberish,
+    paramComp: BigNumberish,
     compValue: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -868,7 +768,7 @@ export interface RolesModifier extends BaseContract {
     targetAddress: string,
     functionSig: BytesLike,
     paramIndex: BigNumberish,
-    isDynamic: boolean,
+    paramType: BigNumberish,
     compValues: BytesLike[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -896,8 +796,8 @@ export interface RolesModifier extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMultiSend(
-    _multiSend: string,
+  setMultisend(
+    _multisend: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -930,16 +830,13 @@ export interface RolesModifier extends BaseContract {
     allowTarget(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
+      options: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
     allowTargetPartially(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1013,7 +910,7 @@ export interface RolesModifier extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    multiSend(overrides?: CallOverrides): Promise<string>;
+    multisend(overrides?: CallOverrides): Promise<string>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -1029,6 +926,7 @@ export interface RolesModifier extends BaseContract {
       role: BigNumberish,
       targetAddress: string,
       functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1037,9 +935,18 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       isParamScoped: boolean[],
-      isParamDynamic: boolean[],
-      paramCompType: BigNumberish[],
-      paramCompValue: BytesLike[],
+      paramType: BigNumberish[],
+      paramComp: BigNumberish[],
+      compValue: BytesLike[],
+      options: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    scopeFunctionExecutionOptions(
+      role: BigNumberish,
+      targetAddress: string,
+      functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1048,8 +955,8 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
-      compType: BigNumberish,
+      paramType: BigNumberish,
+      paramComp: BigNumberish,
       compValue: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1059,7 +966,7 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
+      paramType: BigNumberish,
       compValues: BytesLike[],
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1081,7 +988,7 @@ export interface RolesModifier extends BaseContract {
 
     setGuard(_guard: string, overrides?: CallOverrides): Promise<void>;
 
-    setMultiSend(_multiSend: string, overrides?: CallOverrides): Promise<void>;
+    setMultisend(_multisend: string, overrides?: CallOverrides): Promise<void>;
 
     setTarget(_target: string, overrides?: CallOverrides): Promise<void>;
 
@@ -1104,37 +1011,16 @@ export interface RolesModifier extends BaseContract {
   };
 
   filters: {
-    "AllowTarget(uint16,address,bool,bool)"(
-      role?: null,
-      targetAddress?: null,
-      canSend?: null,
-      canDelegate?: null
-    ): AllowTargetEventFilter;
-    AllowTarget(
-      role?: null,
-      targetAddress?: null,
-      canSend?: null,
-      canDelegate?: null
-    ): AllowTargetEventFilter;
-
-    "AllowTargetPartially(uint16,address,bool,bool)"(
-      role?: null,
-      targetAddress?: null,
-      canSend?: null,
-      canDelegate?: null
-    ): AllowTargetPartiallyEventFilter;
-    AllowTargetPartially(
-      role?: null,
-      targetAddress?: null,
-      canSend?: null,
-      canDelegate?: null
-    ): AllowTargetPartiallyEventFilter;
-
-    "AssignRoles(address,uint16[])"(
+    "AssignRoles(address,uint16[],bool[])"(
       module?: null,
-      roles?: null
+      roles?: null,
+      memberOf?: null
     ): AssignRolesEventFilter;
-    AssignRoles(module?: null, roles?: null): AssignRolesEventFilter;
+    AssignRoles(
+      module?: null,
+      roles?: null,
+      memberOf?: null
+    ): AssignRolesEventFilter;
 
     "AvatarSet(address,address)"(
       previousAvatar?: string | null,
@@ -1163,12 +1049,6 @@ export interface RolesModifier extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "RevokeTarget(uint16,address)"(
-      role?: null,
-      targetAddress?: null
-    ): RevokeTargetEventFilter;
-    RevokeTarget(role?: null, targetAddress?: null): RevokeTargetEventFilter;
-
     "RolesModSetup(address,address,address,address)"(
       initiator?: string | null,
       owner?: string | null,
@@ -1182,83 +1062,6 @@ export interface RolesModifier extends BaseContract {
       target?: null
     ): RolesModSetupEventFilter;
 
-    "ScopeAllowFunction(uint16,address,bytes4)"(
-      role?: null,
-      targetAddress?: null,
-      selector?: null
-    ): ScopeAllowFunctionEventFilter;
-    ScopeAllowFunction(
-      role?: null,
-      targetAddress?: null,
-      selector?: null
-    ): ScopeAllowFunctionEventFilter;
-
-    "ScopeFunction(uint16,address,bytes4,bool[],bool[],uint8[],bytes[])"(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIsScoped?: null,
-      paramIsDynamic?: null,
-      paramCompType?: null,
-      paramCompValue?: null
-    ): ScopeFunctionEventFilter;
-    ScopeFunction(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIsScoped?: null,
-      paramIsDynamic?: null,
-      paramCompType?: null,
-      paramCompValue?: null
-    ): ScopeFunctionEventFilter;
-
-    "ScopeParameter(uint16,address,bytes4,uint8,bool,uint8,bytes)"(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null,
-      isDynamic?: null,
-      compType?: null,
-      compValue?: null
-    ): ScopeParameterEventFilter;
-    ScopeParameter(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null,
-      isDynamic?: null,
-      compType?: null,
-      compValue?: null
-    ): ScopeParameterEventFilter;
-
-    "ScopeParameterAsOneOf(uint16,address,bytes4,uint8,bool,bytes[])"(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null,
-      isDynamic?: null,
-      compValues?: null
-    ): ScopeParameterAsOneOfEventFilter;
-    ScopeParameterAsOneOf(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null,
-      isDynamic?: null,
-      compValues?: null
-    ): ScopeParameterAsOneOfEventFilter;
-
-    "ScopeRevokeFunction(uint16,address,bytes4)"(
-      role?: null,
-      targetAddress?: null,
-      selector?: null
-    ): ScopeRevokeFunctionEventFilter;
-    ScopeRevokeFunction(
-      role?: null,
-      targetAddress?: null,
-      selector?: null
-    ): ScopeRevokeFunctionEventFilter;
-
     "SetDefaultRole(address,uint16)"(
       module?: null,
       defaultRole?: null
@@ -1268,12 +1071,12 @@ export interface RolesModifier extends BaseContract {
       defaultRole?: null
     ): SetDefaultRoleEventFilter;
 
-    "SetMulitSendAddress(address)"(
-      multiSendAddress?: null
-    ): SetMulitSendAddressEventFilter;
-    SetMulitSendAddress(
-      multiSendAddress?: null
-    ): SetMulitSendAddressEventFilter;
+    "SetMultisendAddress(address)"(
+      multisendAddress?: null
+    ): SetMultisendAddressEventFilter;
+    SetMultisendAddress(
+      multisendAddress?: null
+    ): SetMultisendAddressEventFilter;
 
     "TargetSet(address,address)"(
       previousTarget?: string | null,
@@ -1283,35 +1086,19 @@ export interface RolesModifier extends BaseContract {
       previousTarget?: string | null,
       newTarget?: string | null
     ): TargetSetEventFilter;
-
-    "UnscopeParameter(uint16,address,bytes4,uint8)"(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null
-    ): UnscopeParameterEventFilter;
-    UnscopeParameter(
-      role?: null,
-      targetAddress?: null,
-      functionSig?: null,
-      paramIndex?: null
-    ): UnscopeParameterEventFilter;
   };
 
   estimateGas: {
     allowTarget(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     allowTargetPartially(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1388,7 +1175,7 @@ export interface RolesModifier extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    multiSend(overrides?: CallOverrides): Promise<BigNumber>;
+    multisend(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1406,6 +1193,7 @@ export interface RolesModifier extends BaseContract {
       role: BigNumberish,
       targetAddress: string,
       functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1414,9 +1202,18 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       isParamScoped: boolean[],
-      isParamDynamic: boolean[],
-      paramCompType: BigNumberish[],
-      paramCompValue: BytesLike[],
+      paramType: BigNumberish[],
+      paramComp: BigNumberish[],
+      compValue: BytesLike[],
+      options: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    scopeFunctionExecutionOptions(
+      role: BigNumberish,
+      targetAddress: string,
+      functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1425,8 +1222,8 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
-      compType: BigNumberish,
+      paramType: BigNumberish,
+      paramComp: BigNumberish,
       compValue: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1436,7 +1233,7 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
+      paramType: BigNumberish,
       compValues: BytesLike[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1464,8 +1261,8 @@ export interface RolesModifier extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMultiSend(
-      _multiSend: string,
+    setMultisend(
+      _multisend: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1499,16 +1296,13 @@ export interface RolesModifier extends BaseContract {
     allowTarget(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     allowTargetPartially(
       role: BigNumberish,
       targetAddress: string,
-      canSend: boolean,
-      canDelegate: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1588,7 +1382,7 @@ export interface RolesModifier extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    multiSend(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    multisend(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1606,6 +1400,7 @@ export interface RolesModifier extends BaseContract {
       role: BigNumberish,
       targetAddress: string,
       functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1614,9 +1409,18 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       isParamScoped: boolean[],
-      isParamDynamic: boolean[],
-      paramCompType: BigNumberish[],
-      paramCompValue: BytesLike[],
+      paramType: BigNumberish[],
+      paramComp: BigNumberish[],
+      compValue: BytesLike[],
+      options: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    scopeFunctionExecutionOptions(
+      role: BigNumberish,
+      targetAddress: string,
+      functionSig: BytesLike,
+      options: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1625,8 +1429,8 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
-      compType: BigNumberish,
+      paramType: BigNumberish,
+      paramComp: BigNumberish,
       compValue: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -1636,7 +1440,7 @@ export interface RolesModifier extends BaseContract {
       targetAddress: string,
       functionSig: BytesLike,
       paramIndex: BigNumberish,
-      isDynamic: boolean,
+      paramType: BigNumberish,
       compValues: BytesLike[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -1664,8 +1468,8 @@ export interface RolesModifier extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMultiSend(
-      _multiSend: string,
+    setMultisend(
+      _multisend: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
