@@ -1,7 +1,7 @@
 import Onboard from "bnc-onboard"
 import { ethers } from "ethers"
 import { REDUX_STORE, useRootSelector } from "../store"
-import { resetSafeAddress, setChainId, setENS, setUserAddress } from "../store/main"
+import { resetSafeAddress, setChainId, setENS, setSafeAddress } from "../store/main"
 import { useEffect, useMemo, useState } from "react"
 import { getChainId, getSafeAddress } from "../store/main/selectors"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
@@ -45,7 +45,7 @@ const configureOnboardJS = memoize(
         },
         address(address) {
           if (address) {
-            REDUX_STORE.dispatch(setUserAddress(address))
+            REDUX_STORE.dispatch(setSafeAddress(address))
           } else {
             REDUX_STORE.dispatch(resetSafeAddress())
           }

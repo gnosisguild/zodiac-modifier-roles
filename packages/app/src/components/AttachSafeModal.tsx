@@ -1,12 +1,17 @@
-import { Button, CircularProgress, makeStyles, Paper, Typography } from "@material-ui/core"
-import { TextField } from "../commons/input/TextField"
-import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg"
-import { useRootDispatch } from "../../store"
+import { Button, CircularProgress, makeStyles, Typography } from "@material-ui/core"
+import { TextField } from "./commons/input/TextField"
+import { ReactComponent as ArrowUp } from "../assets/icons/arrow-up.svg"
+import { useRootDispatch } from "../store"
 import { useState } from "react"
 import { ethers } from "ethers"
-import { setSafeAddress } from "../../store/main"
-import { useWallet } from "../../hooks/useWallet"
-import Modal from "../commons/Modal"
+import { setSafeAddress } from "../store/main"
+import { useWallet } from "../hooks/useWallet"
+import Modal from "./commons/Modal"
+
+type Props = {
+  isOpen: boolean
+  onClose: () => void
+}
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -17,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const AttachSafe = () => {
+export const AttachSafeModal = ({isOpen, onClose}: Props) => {
   const classes = useStyles()
   const [invalidSafe, setInvalidSafe] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -42,7 +47,7 @@ export const AttachSafe = () => {
   }
 
   return (
-    <Modal>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <Typography className={classes.spacing} variant="h4">
         Attach an Gnosis Safe
       </Typography>
@@ -77,4 +82,4 @@ export const AttachSafe = () => {
   )
 }
 
-export default AttachSafe
+export default AttachSafeModal
