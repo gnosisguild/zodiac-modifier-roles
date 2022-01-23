@@ -42,6 +42,7 @@
     "eslint-plugin-prettier": "3.1.4",
     "ethereum-waffle": "3.2.0",
     "hardhat": "2.6.4",
+    "hardhat-abi-exporter": "^2.8.0",
     "hardhat-contract-sizer": "^2.1.1",
     "hardhat-deploy": "0.7.0-beta.38",
     "hardhat-gas-reporter": "^1.0.4",
