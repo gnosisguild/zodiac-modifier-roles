@@ -45,7 +45,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./contracts/abi/*.json",
-    "prebuild": "yarn build:types"
+    "getabi:permissions": "cp ../contracts/build/artifacts/contracts/Permissions.sol/Permissions.json ./contracts/abi/Permissions.json",
+    "getabi:roles": "cp ../contracts/build/artifacts/contracts/Roles.sol/Roles.json ./contracts/abi/Roles.json",
+    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn build:types"
   },
   "eslintConfig": {
     "extends": [

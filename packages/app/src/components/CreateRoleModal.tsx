@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Button, CircularProgress, makeStyles, TextField, Typography } from "@material-ui/core"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
-import { RolesModifier__factory } from "../contracts/type"
+import { Roles__factory } from "../contracts/type/factories/Roles__factory"
 import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
@@ -46,7 +46,7 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElem
       }
 
       const signer = await provider.getSigner()
-      const RolesModifier = RolesModifier__factory.connect(rolesModifierAddress, signer)
+      const RolesModifier = Roles__factory.connect(rolesModifierAddress, signer)
 
       const txs: PopulatedTransaction[] = []
       txs.push(await RolesModifier.populateTransaction.allowTarget("1", targetAddress, "3"))
