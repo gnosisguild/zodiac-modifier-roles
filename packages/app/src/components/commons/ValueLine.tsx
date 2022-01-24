@@ -1,8 +1,8 @@
-import React from 'react'
-import { Row } from './layout/Row'
-import { makeStyles, Typography } from '@material-ui/core'
-import { Grow } from './Grow'
-import Skeleton from '@material-ui/lab/Skeleton'
+import React from "react"
+import { Row } from "./layout/Row"
+import { makeStyles, Typography } from "@material-ui/core"
+import { Grow } from "./Grow"
+import Skeleton from "@material-ui/lab/Skeleton"
 
 interface ValueLineProps {
   label: string
@@ -13,13 +13,13 @@ interface ValueLineProps {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    alignItems: 'center',
-    '& + &': {
+    alignItems: "center",
+    "& + &": {
       marginTop: theme.spacing(2),
     },
   },
   skeleton: {
-    transform: 'none',
+    transform: "none",
   },
   space: {
     marginLeft: theme.spacing(1),

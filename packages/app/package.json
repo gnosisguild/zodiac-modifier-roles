@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@gnosis.pm/safe-react-components": "^0.8.0",
+    "@gnosis.pm/safe-apps-react-sdk": "^4.1.0",
+    "@gnosis.pm/safe-react-components": "^0.9.6",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "@reduxjs/toolkit": "^1.7.1",
     "bnc-onboard": "^1.37.0",
+    "classnames": "^2.3.1",
     "ethers": "^5.5.3",
     "lodash.memoize": "^4.1.2",
-    "classnames": "^2.3.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6",
@@ -44,7 +45,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./contracts/abi/*.json",
-    "prebuild": "yarn build:types"
+    "getabi:permissions": "cp ../contracts/build/artifacts/contracts/Permissions.sol/Permissions.json ./contracts/abi/Permissions.json",
+    "getabi:roles": "cp ../contracts/build/artifacts/contracts/Roles.sol/Roles.json ./contracts/abi/Roles.json",
+    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn build:types"
   },
   "eslintConfig": {
     "extends": [

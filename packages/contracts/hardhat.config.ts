@@ -4,7 +4,6 @@ import "solidity-coverage";
 import "hardhat-deploy";
 import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
-import "hardhat-abi-exporter";
 import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
@@ -87,15 +86,6 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
-  },
-  abiExporter: {
-    path: "../app/contracts/abi",
-    runOnCompile: true,
-    clear: true,
-    only: ["Roles", "Permissions"],
-    spacing: 2,
-    flat: true,
-    pretty: true,
   },
 };
 

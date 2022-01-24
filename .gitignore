@@ -9,5 +9,5 @@
 **/deployments
 .devcontainer
 packages/subgraph/generated
-packages/app/contracts
+packages/app/contracts/abi/*.json
 packages/app/src/contracts

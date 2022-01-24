@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react"
 import {
   Grid,
   GridProps,
@@ -8,36 +8,36 @@ import {
   StandardTextFieldProps,
   TextField as MUITextField,
   withStyles,
-} from '@material-ui/core'
-import classNames from 'classnames'
+} from "@material-ui/core"
+import classNames from "classnames"
 
 const StyledTextField = withStyles((theme) => ({
   root: {
-    '& label.Mui-focused': {
-      position: 'relative',
-      transform: 'none',
+    "& label.Mui-focused": {
+      position: "relative",
+      transform: "none",
       color: theme.palette.text.primary,
       marginBottom: theme.spacing(1),
     },
-    '& .MuiInputBase-root': {
+    "& .MuiInputBase-root": {
       marginTop: 0,
-      minHeight: '37px',
+      minHeight: "37px",
     },
-    '& .MuiInputBase-root input': {
-      fontFamily: 'Roboto Mono',
-      fontSize: '14px',
+    "& .MuiInputBase-root input": {
+      fontFamily: "Roboto Mono",
+      fontSize: "14px",
     },
-    '& .MuiSelect-select:focus': {
-      backgroundColor: 'transparent',
+    "& .MuiSelect-select:focus": {
+      backgroundColor: "transparent",
     },
   },
 }))(MUITextField)
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    position: 'relative',
-    flexWrap: 'nowrap',
-    justifyContent: 'flex-end',
+    position: "relative",
+    flexWrap: "nowrap",
+    justifyContent: "flex-end",
   },
   label: {
     color: theme.palette.text.primary,
@@ -49,31 +49,31 @@ const useStyles = makeStyles((theme) => ({
   input: {
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
-    padding: '8px 0 8px 8px',
-    border: '1px solid rgb(255,255,255)',
-    '& input': {
+    padding: "8px 0 8px 8px",
+    border: "1px solid rgb(255,255,255)",
+    "& input": {
       borderRightWidth: 1,
-      borderRightStyle: 'solid',
+      borderRightStyle: "solid",
       borderRightColor: theme.palette.secondary.main,
       paddingRight: theme.spacing(1),
     },
-    '&:after': {
-      content: '',
-      display: 'none',
+    "&:after": {
+      content: "",
+      display: "none",
     },
   },
   append: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     padding: theme.spacing(1),
     borderWidth: 1,
-    borderStyle: 'solid',
+    borderStyle: "solid",
     borderColor: theme.palette.text.primary,
     borderLeftWidth: 0,
   },
 }))
 
-export interface TextFieldProps extends Omit<StandardTextFieldProps, 'variant' | 'label'> {
+export interface TextFieldProps extends Omit<StandardTextFieldProps, "variant" | "label"> {
   label?: string
   append?: React.ReactElement | string
   AppendProps?: GridProps
