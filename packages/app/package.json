@@ -44,8 +44,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./src/contracts/abi/*.json",
-    "postinstall": "yarn build:types"
+    "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./contracts/abi/*.json",
+    "prebuild": "yarn build:types"
   },
   "eslintConfig": {
     "extends": [
