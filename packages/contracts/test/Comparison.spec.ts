@@ -327,9 +327,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -370,9 +368,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -415,9 +411,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -458,9 +452,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -516,9 +508,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -561,9 +551,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -619,9 +607,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -666,9 +652,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -717,9 +701,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -781,9 +763,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -844,9 +824,7 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

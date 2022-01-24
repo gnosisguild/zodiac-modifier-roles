@@ -223,7 +223,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -248,7 +248,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -280,7 +280,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -306,7 +306,7 @@ describe("ExecutionOptions", async () => {
         const value = ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -337,7 +337,7 @@ describe("ExecutionOptions", async () => {
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
 
-        // missing allowTargetPartially
+        // missing scopeTarget
 
         await modifier
           .connect(owner)
@@ -369,7 +369,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -393,7 +393,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -425,7 +425,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -451,7 +451,7 @@ describe("ExecutionOptions", async () => {
         const value = ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
-          .allowTargetPartially(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_ID, testContract.address);
 
         await modifier
           .connect(owner)
@@ -482,7 +482,7 @@ describe("ExecutionOptions", async () => {
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
 
-        // missing allowTargetPartially
+        // missing scopeTarget
 
         await modifier
           .connect(owner)
@@ -542,9 +542,7 @@ describe("ExecutionOptions", async () => {
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
-      await modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -571,9 +569,7 @@ describe("ExecutionOptions", async () => {
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
-      await modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
       await modifier
         .connect(owner)
@@ -604,9 +600,7 @@ describe("ExecutionOptions", async () => {
     const { data } =
       await testContract.populateTransaction.receiveEthAndDoNothing();
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

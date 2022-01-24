@@ -77,28 +77,22 @@ describe("OnlyOwner", async () => {
     ).to.not.be.reverted;
   });
 
-  it("onlyOwner for allowTargetPartially, simple invoker fails", async () => {
+  it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
 
     await expect(
-      modifier
-        .connect(invoker)
-        .allowTargetPartially(ROLE_ID, testContract.address)
+      modifier.connect(invoker).scopeTarget(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier
-        .connect(janeDoe)
-        .allowTargetPartially(ROLE_ID, testContract.address)
+      modifier.connect(janeDoe).scopeTarget(ROLE_ID, testContract.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier
-        .connect(owner)
-        .allowTargetPartially(ROLE_ID, testContract.address)
+      modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {

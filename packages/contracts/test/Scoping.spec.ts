@@ -79,9 +79,7 @@ describe("Scoping", async () => {
     const { data: dataOk } =
       await testContract.populateTransaction.fnWithThreeParams(1, 4, 3);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -136,9 +134,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -208,9 +204,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     // this call is supposed to be redudant. This test is checking that scoping one para after scoping all works
     await modifier
@@ -279,9 +273,7 @@ describe("Scoping", async () => {
     const { data: dataOk } =
       await testContract.populateTransaction.fnWithThreeParams(1, 7, 3);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -373,9 +365,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -442,9 +432,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -514,9 +502,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -584,9 +570,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -684,9 +668,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -770,9 +752,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -831,9 +811,7 @@ describe("Scoping", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

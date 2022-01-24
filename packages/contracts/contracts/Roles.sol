@@ -78,24 +78,14 @@ contract Roles is Modifier {
     /// @dev Allows all calls made to an address.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param options defines whether or not send and/or delegate calls can be made to a target address.
+    /// @param targetAddress Address to be allowed
+    /// @param options defines whether or not delegate calls and/or eth can be sent to the target address.
     function allowTarget(
         uint16 role,
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
         Permissions.allowTarget(roles[role], role, targetAddress, options);
-    }
-
-    /// @dev Partially allows calls to a Target - subject to function scoping rules.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be partially allowed
-    function allowTargetPartially(uint16 role, address targetAddress)
-        external
-        onlyOwner
-    {
-        Permissions.allowTargetPartially(roles[role], role, targetAddress);
     }
 
     /// @dev Disallows all calls made to an address.
@@ -109,12 +99,23 @@ contract Roles is Modifier {
         Permissions.revokeTarget(roles[role], role, targetAddress);
     }
 
-    /// @dev Allows a specific function, on a specific address, to be called.
+    /// @dev Scopes calls to an address, limited to specific function signatures, and per function scoping rules.
+    /// @notice Only callable by owner.
+    /// @param role Role to set for.
+    /// @param targetAddress Address to be scoped.
+    function scopeTarget(uint16 role, address targetAddress)
+        external
+        onlyOwner
+    {
+        Permissions.scopeTarget(roles[role], role, targetAddress);
+    }
+
+    /// @dev Allows a specific function signature on a scoped target.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
-    /// @param functionSig Function signature to be allowed/disallowed.
-    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
+    /// @param targetAddress Scoped address on which a function signature should be allowed.
+    /// @param functionSig Function signature to be allowed.
+    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
     function scopeAllowFunction(
         uint16 role,
         address targetAddress,
@@ -130,11 +131,11 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Disallows a specific function, on a specific address from being called.
+    /// @dev Disallows a specific function signature on a scoped target.
     /// @notice Only callable by owner.
     /// @param role Role to set for
-    /// @param targetAddress Scoped address on which a function signature should be allowed/disallowed.
-    /// @param functionSig Function signature to be allowed/disallowed.
+    /// @param targetAddress Scoped address on which a function signature should be disallowed.
+    /// @param functionSig Function signature to be disallowed.
     function scopeRevokeFunction(
         uint16 role,
         address targetAddress,
@@ -148,16 +149,16 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets and enforces scoping for an allowed function, on a specific address
+    /// @dev Sets scoping rules for a function, on a scoped address.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
+    /// @param targetAddress Scoped address on which scoping rules for a function are to be set.
+    /// @param functionSig Function signature to be scoped.
     /// @param isParamScoped false for un-scoped, true for scoped.
     /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
+    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan, depending on comparison type.
     /// @param compValue The reference value used while comparing and authorizing.
-    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
+    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
     function scopeFunction(
         uint16 role,
         address targetAddress,
@@ -181,13 +182,13 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets ExecutionOptions for a function on a target address.
+    /// @dev Sets whether or not delegate calls and/or eth can be sent to a function on a scoped target.
     /// @notice Only callable by owner.
-    /// @notice Only in play when an address is partially allowed
+    /// @notice Only in play when target is scoped.
     /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param options defines whether or not send and/or delegate calls can be made to a function on a target address.
+    /// @param targetAddress Scoped address on which the ExecutionOptions for a function are to be set.
+    /// @param functionSig Function signature on which the ExecutionOptions are to be set.
+    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
     function scopeFunctionExecutionOptions(
         uint16 role,
         address targetAddress,
@@ -203,14 +204,14 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets and enforces scoping for a single parameter on an allowed function
+    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param paramIndex the index of the parameter to scope
+    /// @param targetAddress Scoped address on which functionSig lives.
+    /// @param functionSig Function signature to be scoped.
+    /// @param paramIndex The index of the parameter to scope.
     /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan compValue.
+    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan, depending on comparison type.
     /// @param compValue The reference value used while comparing and authorizing.
     function scopeParameter(
         uint16 role,
@@ -233,12 +234,13 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Sets and enforces scoping of type OneOf for a single parameter on an allowed function
+    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
+    /// @notice Parameter will be scoped with comparison type OneOf.
     /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param paramIndex the index of the parameter to scope
+    /// @param targetAddress Scoped address on which functionSig lives.
+    /// @param functionSig Function signature to be scoped.
+    /// @param paramIndex The index of the parameter to scope.
     /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
     /// @param compValues The reference values used while comparing and authorizing.
     function scopeParameterAsOneOf(
@@ -260,12 +262,12 @@ contract Roles is Modifier {
         );
     }
 
-    /// @dev Unsets scoping for a single parameter on an allowed function
+    /// @dev Un-scopes a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
     /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped/unscoped.
-    /// @param functionSig first 4 bytes of the sha256 of the function signature.
-    /// @param paramIndex the index of the parameter to scope.
+    /// @param targetAddress Scoped address on which functionSig lives.
+    /// @param functionSig Function signature to be scoped.
+    /// @param paramIndex The index of the parameter to un-scope.
     function unscopeParameter(
         uint16 role,
         address targetAddress,
@@ -356,12 +358,13 @@ contract Roles is Modifier {
         return execAndReturnData(to, value, data, operation);
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. Reverts if the passed transaction fails.
+    /// @dev Passes a transaction to the modifier assuming the specified role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction.
+    /// @param role Identifier of the role to assume for this transaction
+    /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRole(
         address to,
@@ -378,12 +381,13 @@ contract Roles is Modifier {
         }
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. expects return data.
+    /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction.
+    /// @param role Identifier of the role to assume for this transaction
+    /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRoleReturnData(
         address to,

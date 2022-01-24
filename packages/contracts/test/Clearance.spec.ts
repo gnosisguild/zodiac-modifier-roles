@@ -126,9 +126,7 @@ describe("Clearance", async () => {
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -171,9 +169,7 @@ describe("Clearance", async () => {
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -228,9 +224,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
     ).to.not.be.reverted;
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -271,9 +265,7 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
@@ -327,9 +319,7 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)

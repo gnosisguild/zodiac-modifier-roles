@@ -50,8 +50,8 @@ library Permissions {
         address targetAddress,
         ExecutionOptions options
     );
-    event AllowTargetPartially(uint16 role, address targetAddress);
     event RevokeTarget(uint16 role, address targetAddress);
+    event ScopeTarget(uint16 role, address targetAddress);
     event ScopeAllowFunction(
         uint16 role,
         address targetAddress,
@@ -385,18 +385,6 @@ library Permissions {
         emit AllowTarget(roleId, targetAddress, options);
     }
 
-    function allowTargetPartially(
-        Role storage role,
-        uint16 roleId,
-        address targetAddress
-    ) external {
-        role.targets[targetAddress] = TargetAddress(
-            Clearance.Function,
-            ExecutionOptions.None
-        );
-        emit AllowTargetPartially(roleId, targetAddress);
-    }
-
     function revokeTarget(
         Role storage role,
         uint16 roleId,
@@ -407,6 +395,18 @@ library Permissions {
             ExecutionOptions.None
         );
         emit RevokeTarget(roleId, targetAddress);
+    }
+
+    function scopeTarget(
+        Role storage role,
+        uint16 roleId,
+        address targetAddress
+    ) external {
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.Function,
+            ExecutionOptions.None
+        );
+        emit ScopeTarget(roleId, targetAddress);
     }
 
     function scopeAllowFunction(
@@ -722,7 +722,6 @@ library Permissions {
         if (data.length < 4 + index * 32 + 32) {
             revert CalldataOutOfBounds();
         }
-        //ensureArgumentsBlockSpace(data, index);
 
         /*
          * Encoded calldata:
@@ -875,9 +874,7 @@ library Permissions {
         scopeConfig |= uint256(options) << 254;
 
         // set isWildcarded -> 256 - 2 - 1 = 253
-
         if (isWildcarded) {
-            // uint256 isWildcardedMask = 1 << 253;
             scopeConfig |= 1 << 253;
         }
 
