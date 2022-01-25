@@ -1,26 +1,17 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt } from "@graphprotocol/graph-ts";
 import {
-  Roles,
+  Permissions,
   AllowTarget,
   AllowTargetPartially,
-  AssignRoles,
-  AvatarSet,
-  ChangedGuard,
-  DisabledModule,
-  EnabledModule,
-  OwnershipTransferred,
   RevokeTarget,
-  RolesModSetup,
   ScopeAllowFunction,
   ScopeFunction,
+  ScopeFunctionExecutionOptions,
   ScopeParameter,
   ScopeParameterAsOneOf,
   ScopeRevokeFunction,
-  SetDefaultRole,
-  SetMulitSendAddress,
-  TargetSet,
-  UnscopeParameter
-} from "../generated/Roles/Roles"
+  UnscopeParameter,
+} from "../generated/Permissions/Permissions";
 import { Role, Module, Target } from "../generated/schema"
 
 export function handleAllowTarget(event: AllowTarget): void {
@@ -75,44 +66,24 @@ export function handleAllowTarget(event: AllowTarget): void {
   // - contract.target(...)
 }
 
-export function handleAllowTargetPartially(event: AllowTargetPartially): void { }
+export function handleAllowTargetPartially(event: AllowTargetPartially): void {}
 
-export function handleAssignRoles(event: AssignRoles): void {
+export function handleRevokeTarget(event: RevokeTarget): void {}
 
+export function handleScopeAllowFunction(event: ScopeAllowFunction): void {}
 
-}
+export function handleScopeFunction(event: ScopeFunction): void {}
 
-export function handleAvatarSet(event: AvatarSet): void { }
+export function handleScopeFunctionExecutionOptions(
+  event: ScopeFunctionExecutionOptions
+): void {}
 
-export function handleChangedGuard(event: ChangedGuard): void { }
-
-export function handleDisabledModule(event: DisabledModule): void { }
-
-export function handleEnabledModule(event: EnabledModule): void { }
-
-export function handleOwnershipTransferred(event: OwnershipTransferred): void { }
-
-export function handleRevokeTarget(event: RevokeTarget): void {
-}
-
-export function handleRolesModSetup(event: RolesModSetup): void { }
-
-export function handleScopeAllowFunction(event: ScopeAllowFunction): void { }
-
-export function handleScopeFunction(event: ScopeFunction): void { }
-
-export function handleScopeParameter(event: ScopeParameter): void { }
+export function handleScopeParameter(event: ScopeParameter): void {}
 
 export function handleScopeParameterAsOneOf(
   event: ScopeParameterAsOneOf
-): void { }
+): void {}
 
-export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void { }
+export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {}
 
-export function handleSetDefaultRole(event: SetDefaultRole): void { }
-
-export function handleSetMulitSendAddress(event: SetMulitSendAddress): void { }
-
-export function handleTargetSet(event: TargetSet): void { }
-
-export function handleUnscopeParameter(event: UnscopeParameter): void { }
+export function handleUnscopeParameter(event: UnscopeParameter): void {}

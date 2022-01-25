@@ -1,6 +1,4 @@
 specVersion: 0.0.2
-description: The Zodiac roles modifier allows avatars to enforce granular, role-based, permissions for attached modules.
-repository: https://github.com/gnosis/zodiac-modifier-roles
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,42 +6,29 @@ dataSources:
     name: Roles
     network: rinkeby
     source:
-      address: "0xfbefef0c544bb5b151a1e72d6db24054d9b52cbd"
+      address: "0x233E94a1b2CCf51C6AF4D39ba43b128EA84E39b2"
       abi: Roles
-      startBlock: 9984189  
+      startBlock: 10047274
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - AllowTarget
-        - AllowTargetPartially
         - AssignRoles
         - AvatarSet
         - ChangedGuard
         - DisabledModule
         - EnabledModule
         - OwnershipTransferred
-        - RevokeTarget
         - RolesModSetup
-        - ScopeAllowFunction
-        - ScopeFunction
-        - ScopeParameter
-        - ScopeParameterAsOneOf
-        - ScopeRevokeFunction
         - SetDefaultRole
-        - SetMulitSendAddress
+        - SetMultisendAddress
         - TargetSet
-        - UnscopeParameter
       abis:
         - name: Roles
           file: ./abis/Roles.json
       eventHandlers:
-        - event: AllowTarget(uint16,address,bool,bool)
-          handler: handleAllowTarget
-        - event: AllowTargetPartially(uint16,address,bool,bool)
-          handler: handleAllowTargetPartially
-        - event: AssignRoles(address,uint16[])
+        - event: AssignRoles(address,uint16[],bool[])
           handler: handleAssignRoles
         - event: AvatarSet(indexed address,indexed address)
           handler: handleAvatarSet
@@ -55,26 +40,59 @@ dataSources:
           handler: handleEnabledModule
         - event: OwnershipTransferred(indexed address,indexed address)
           handler: handleOwnershipTransferred
-        - event: RevokeTarget(uint16,address)
-          handler: handleRevokeTarget
         - event: RolesModSetup(indexed address,indexed address,indexed address,address)
           handler: handleRolesModSetup
-        - event: ScopeAllowFunction(uint16,address,bytes4)
-          handler: handleScopeAllowFunction
-        - event: ScopeFunction(uint16,address,bytes4,bool[],bool[],uint8[],bytes[])
-          handler: handleScopeFunction
-        - event: ScopeParameter(uint16,address,bytes4,uint8,bool,uint8,bytes)
-          handler: handleScopeParameter
-        - event: ScopeParameterAsOneOf(uint16,address,bytes4,uint8,bool,bytes[])
-          handler: handleScopeParameterAsOneOf
-        - event: ScopeRevokeFunction(uint16,address,bytes4)
-          handler: handleScopeRevokeFunction
         - event: SetDefaultRole(address,uint16)
           handler: handleSetDefaultRole
-        - event: SetMulitSendAddress(address)
-          handler: handleSetMulitSendAddress
+        - event: SetMultisendAddress(address)
+          handler: handleSetMultisendAddress
         - event: TargetSet(indexed address,indexed address)
           handler: handleTargetSet
-        - event: UnscopeParameter(uint16,address,bytes4,uint8)
+      file: ./src/roles.mapping.ts
+  - kind: ethereum
+    name: Permissions
+    network: rinkeby
+    source:
+      address: "0xB251678078d9791eE0aF2eBcc2D76A6401d3EDAa"
+      abi: Permissions
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - AllowTarget
+        - AllowTargetPartially
+        - RevokeTarget
+        - ScopeAllowFunction
+        - ScopeFunction
+        - ScopeFunctionExecutionOptions
+        - ScopeParameter
+        - ScopeParameterAsOneOf
+        - ScopeRevokeFunction
+        - UnscopeParameter
+      abis:
+        - name: Permissions
+          file: ./abis/Permissions.json
+      eventHandlers:
+        - event: AllowTarget(uint16,address,uint8)
+          handler: handleAllowTarget
+        - event: AllowTargetPartially(uint16,address)
+          handler: handleAllowTargetPartially
+        - event: RevokeTarget(uint16,address)
+          handler: handleRevokeTarget
+        - event: ScopeAllowFunction(uint16,address,bytes4,uint8,uint256)
+          handler: handleScopeAllowFunction
+        - event: ScopeFunction(uint16,address,bytes4,bool[],uint8[],uint8[],bytes[],uint8,uint256)
+          handler: handleScopeFunction
+        - event: ScopeFunctionExecutionOptions(uint16,address,bytes4,uint8,uint256)
+          handler: handleScopeFunctionExecutionOptions
+        - event: ScopeParameter(uint16,address,bytes4,uint256,uint8,uint8,bytes,uint256)
+          handler: handleScopeParameter
+        - event: ScopeParameterAsOneOf(uint16,address,bytes4,uint256,uint8,bytes[],uint256)
+          handler: handleScopeParameterAsOneOf
+        - event: ScopeRevokeFunction(uint16,address,bytes4,uint256)
+          handler: handleScopeRevokeFunction
+        - event: UnscopeParameter(uint16,address,bytes4,uint256,uint256)
           handler: handleUnscopeParameter
-      file: ./src/mapping.ts
+      file: ./src/permissions.mapping.ts
+

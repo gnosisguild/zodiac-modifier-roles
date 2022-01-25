@@ -11,3 +11,4 @@
 packages/subgraph/generated
 packages/app/contracts/abi/*.json
 packages/app/src/contracts
+packages/subgraph/abis/*.json
