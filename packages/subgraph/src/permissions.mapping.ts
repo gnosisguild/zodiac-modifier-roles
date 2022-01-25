@@ -2,7 +2,7 @@ import { BigInt } from "@graphprotocol/graph-ts";
 import {
   Permissions,
   AllowTarget,
-  AllowTargetPartially,
+  ScopeTarget,
   RevokeTarget,
   ScopeAllowFunction,
   ScopeFunction,
@@ -66,7 +66,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   // - contract.target(...)
 }
 
-export function handleAllowTargetPartially(event: AllowTargetPartially): void {}
+export function handleScopeTarget(event: ScopeTarget): void {}
 
 export function handleRevokeTarget(event: RevokeTarget): void {}
 

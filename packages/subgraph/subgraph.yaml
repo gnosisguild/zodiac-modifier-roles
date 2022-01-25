@@ -61,7 +61,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - AllowTarget
-        - AllowTargetPartially
+        - ScopeTarget
         - RevokeTarget
         - ScopeAllowFunction
         - ScopeFunction
@@ -76,8 +76,8 @@ dataSources:
       eventHandlers:
         - event: AllowTarget(uint16,address,uint8)
           handler: handleAllowTarget
-        - event: AllowTargetPartially(uint16,address)
-          handler: handleAllowTargetPartially
+        - event: ScopeTarget(uint16,address)
+          handler: handleScopeTarget
         - event: RevokeTarget(uint16,address)
           handler: handleRevokeTarget
         - event: ScopeAllowFunction(uint16,address,bytes4,uint8,uint256)
