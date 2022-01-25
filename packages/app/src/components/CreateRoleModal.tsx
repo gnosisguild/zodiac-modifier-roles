@@ -29,7 +29,7 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElem
   const [isValidAddress, setIsValidAddress] = useState(false)
   const { sdk } = useSafeAppsSDK()
   const { provider } = useWallet()
-  const rolesModifierAddress = "0x233E94a1b2CCf51C6AF4D39ba43b128EA84E39b2" // TODO: should not be hardcoded
+  const rolesModifierAddress = "0xbDFDF9b21E18883a107D185ec80733c402357fDc" // TODO: should not be hardcoded
   // need to get it from the current safe
 
   const onClose = () => {

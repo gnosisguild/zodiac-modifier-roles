@@ -6,7 +6,7 @@ dataSources:
     name: Roles
     network: rinkeby
     source:
-      address: "0x233E94a1b2CCf51C6AF4D39ba43b128EA84E39b2"
+      address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
       abi: Roles
       startBlock: 10047274
     mapping:
@@ -53,8 +53,9 @@ dataSources:
     name: Permissions
     network: rinkeby
     source:
-      address: "0xB251678078d9791eE0aF2eBcc2D76A6401d3EDAa"
+      address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
       abi: Permissions
+      startBlock: 10047274
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
