@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigInt } from "@graphprotocol/graph-ts"
 import {
   Roles,
   AssignRoles,
@@ -11,7 +11,7 @@ import {
   SetDefaultRole,
   SetMultisendAddress,
   TargetSet,
-} from "../generated/Roles/Roles";
+} from "../generated/Roles/Roles"
 
 export function handleAssignRoles(event: AssignRoles): void {}
 
