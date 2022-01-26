@@ -12,20 +12,28 @@ import {
   ScopeRevokeFunction,
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
-import { Role, Module, Target } from "../generated/schema"
+import { Role, Target, RolesModifier } from "../generated/schema"
+import { log } from '@graphprotocol/graph-ts'
 
 export function handleAllowTarget(event: AllowTarget): void {
+  const rolesModifierAddress = event.address
+  let rolesModifierId = rolesModifierAddress.toHexString()
+  let rolesModifier = RolesModifier.load(rolesModifierId)
+
+  if (!rolesModifier) {
+    log.error("RolesModifier not found", [rolesModifierId])
+  }
+
   const roleId = event.params.role.toString()
   let role = Role.load(roleId)
-  const rolesModifierAddress = event.address
-  const safeAddress = event.transaction.from
 
   if (!role) {
     role = new Role(roleId)
+    role.rolesModifier = rolesModifierId
     role.save()
   }
 
-  const targetId = event.params.role.toString() + "-" + event.params.targetAddress.toHex()
+  const targetId = event.params.targetAddress.toHex() + "-" + event.params.role.toString()
   let target = Target.load(targetId)
 
   if (!target) {

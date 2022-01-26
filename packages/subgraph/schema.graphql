@@ -26,12 +26,8 @@ type MemberRole @entity {
 type RolesModifier @entity {
   id: ID!
   address: Bytes!
-  safe: Safe!
+  owner: Bytes!
+  avatar: Bytes!
+  exec_target: Bytes!
   roles: [Role!] @derivedFrom(field: "rolesModifier")
-}
-
-type Safe @entity {
-  id: ID!
-  address: Bytes!
-  rolesModifiers: [RolesModifier!]! @derivedFrom(field: "safe")
 }
