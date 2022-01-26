@@ -49,7 +49,7 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElem
       const RolesModifier = Roles__factory.connect(rolesModifierAddress, signer)
 
       const txs: PopulatedTransaction[] = []
-      txs.push(await RolesModifier.populateTransaction.allowTarget("1", targetAddress, "3"))
+      txs.push(await RolesModifier.populateTransaction.allowTarget(Date.now().toString().slice(-4), targetAddress, "3"))
       await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
       onClose()
     } catch (err: any) {

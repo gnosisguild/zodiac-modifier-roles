@@ -3,6 +3,7 @@ import { Grid, makeStyles, Button } from "@material-ui/core"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import CreateRoleModal from "./CreateRoleModal"
 import AttachSafeModal from "./AttachSafeModal"
+import RoleList from "./RoleList"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -44,22 +45,16 @@ export const App = (): React.ReactElement => {
   return (
     <div className={classes.root}>
       <div className={classes.space}>
-          <Grid container spacing={1} className={classes.container}>
-            <Grid item xs={12}>
-              <div className={classes.item}>
-                <Button
-                  size="large"
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => setCreateRoleModalIsOpen(true)}
-                >
-                  Create a new role
-                </Button>
-                <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
-              </div>
-            </Grid>
+        <Grid container spacing={1} className={classes.container}>
+          <Grid item xs={12}>
+            <RoleList modifierAddress="0xbdfdf9b21e18883a107d185ec80733c402357fdc" />
+            <Button size="large" variant="contained" color="secondary" onClick={() => setCreateRoleModalIsOpen(true)}>
+              Create a new role
+            </Button>
+            <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
           </Grid>
-          <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")}/>
+        </Grid>
+        <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} />
       </div>
     </div>
   )

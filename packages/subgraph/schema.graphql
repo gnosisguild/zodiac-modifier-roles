@@ -1,7 +1,7 @@
 type Role @entity {
   id: ID!
   rolesModifier: RolesModifier!
-  target: [Target!] @derivedFrom(field: "role")
+  targets: [Target!] @derivedFrom(field: "role")
   members: [MemberRole!] @derivedFrom(field: "role")
 }
 

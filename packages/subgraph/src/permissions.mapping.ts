@@ -13,7 +13,7 @@ import {
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
 import { Role, Target, RolesModifier } from "../generated/schema"
-import { log } from '@graphprotocol/graph-ts'
+import { log } from "@graphprotocol/graph-ts"
 
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
@@ -22,6 +22,7 @@ export function handleAllowTarget(event: AllowTarget): void {
 
   if (!rolesModifier) {
     log.error("RolesModifier not found", [rolesModifierId])
+    return
   }
 
   const roleId = event.params.role.toString()
