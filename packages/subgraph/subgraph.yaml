@@ -6,7 +6,7 @@ dataSources:
     name: Roles
     network: rinkeby
     source:
-      address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
+      # address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
       abi: Roles
       startBlock: 10047274
     mapping:
@@ -53,7 +53,7 @@ dataSources:
     name: Permissions
     network: rinkeby
     source:
-      address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
+      # address: "0xbDFDF9b21E18883a107D185ec80733c402357fDc"
       abi: Permissions
       startBlock: 10047274
     mapping:
