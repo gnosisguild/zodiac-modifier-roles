@@ -27,6 +27,17 @@ export const useGetRolesForRolesModifier = (rolesModifierAddress: string) => {
     				avatar
 						roles {
 							id
+							targets {
+							 id
+							address
+							}
+							members{
+								id
+								member {
+									id
+									address
+								}
+							}
 						}
   				}
 				}
