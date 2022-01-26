@@ -5,6 +5,8 @@ import CreateRoleModal from "./CreateRoleModal"
 import AttachSafeModal from "./AttachSafeModal"
 import RoleList from "./RoleList"
 
+const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
+
 const useStyles = makeStyles((theme) => ({
   root: {
     padding: theme.spacing(3),
@@ -47,11 +49,15 @@ export const App = (): React.ReactElement => {
       <div className={classes.space}>
         <Grid container spacing={1} className={classes.container}>
           <Grid item xs={12}>
-            <RoleList modifierAddress="0xbdfdf9b21e18883a107d185ec80733c402357fdc" />
+            <RoleList modifierAddress={rolesModifierAddress} />
             <Button size="large" variant="contained" color="secondary" onClick={() => setCreateRoleModalIsOpen(true)}>
               Create a new role
             </Button>
-            <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
+            <CreateRoleModal
+              isOpen={createRoleModalIsOpen}
+              onClose={() => setCreateRoleModalIsOpen(false)}
+              rolesModifierAddress={rolesModifierAddress}
+            />
           </Grid>
         </Grid>
         <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} />

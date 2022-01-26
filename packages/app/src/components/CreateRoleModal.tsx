@@ -10,6 +10,7 @@ import Modal from "./commons/Modal"
 type Props = {
   isOpen: boolean
   onClose: () => void
+  rolesModifierAddress: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -21,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElement => {
+const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: Props): React.ReactElement => {
   const classes = useStyles()
   const [targetAddress, setTargetAddress] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
@@ -29,8 +30,6 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElem
   const [isValidAddress, setIsValidAddress] = useState(false)
   const { sdk } = useSafeAppsSDK()
   const { provider } = useWallet()
-  const rolesModifierAddress = "0xbDFDF9b21E18883a107D185ec80733c402357fDc" // TODO: should not be hardcoded
-  // need to get it from the current safe
 
   const onClose = () => {
     onCloseIn()

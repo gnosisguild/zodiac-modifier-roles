@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { createClient } from "urql"
 
-const APIURL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.18"
+const APIURL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.18" // TODO: this is for testing
 
 const client = createClient({
   url: APIURL,
@@ -31,7 +31,6 @@ export const useGetRolesForRolesModifier = (rolesModifierAddress: string) => {
   				}
 				}
 			`
-      console.log(rolesQuery)
       const roles = await client.query(rolesQuery).toPromise()
       if (roles.data != null) {
         setRoles(roles.data.rolesModifier.roles)
