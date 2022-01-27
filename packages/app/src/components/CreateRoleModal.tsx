@@ -1,12 +1,14 @@
 import React, { useState } from "react"
-import { Button, CircularProgress, makeStyles, Typography } from "@material-ui/core"
+import { Box, Button, CircularProgress, makeStyles, Typography } from "@material-ui/core"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import { Roles__factory } from "../contracts/type/factories/Roles__factory"
 import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
+import RolesModuleLogo from '../assets/images/roles-module-logo.png'
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
+import AddIcon from '@material-ui/icons/Add'
 
 type Props = {
   isOpen: boolean
@@ -15,11 +17,14 @@ type Props = {
 }
 
 const useStyles = makeStyles((theme) => ({
-  spacing: {
-    marginBottom: theme.spacing(2),
-  },
   errorSpacing: {
     marginTop: theme.spacing(2),
+  },
+  img: {
+    borderRadius: '50%',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    padding: 4,
+    width: 68,
   },
 }))
 
@@ -78,30 +83,46 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <Typography className={classes.spacing} variant="h4">
-        Create a new role
-      </Typography>
-      <Typography className={classes.spacing} variant="body1">
-        Create a new role that allows all calls to this target
-      </Typography>
+      <Box
+        display="flex"
+        sx={{
+          mb: 3,
+        }}
+      >
+        <Box sx={{mr: 2}}>
+          <img src={RolesModuleLogo} alt="Roles App Logo" className={classes.img} />
+        </Box>
+        <Box>
+          <Typography variant="h4">
+            Create a new role
+          </Typography>
+          <Box sx={{mt: 1}}>
+            <Typography variant="body1">
+              Create a new role that allows all calls to this target
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
 
       <TextField
-        className={classes.spacing}
         onChange={(e) => onTargetAddressChange(e.target.value)}
         label="Target Address"
         placeholder="0x..."
       />
 
-      <Button
-        fullWidth
-        color="secondary"
-        variant="contained"
-        onClick={onSubmit}
-        disabled={!isValidAddress || isWaiting}
-        startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : null}
-      >
-        {isWaiting ? "Creating role..." : "Create role"}
-      </Button>
+      <Box sx={{mt: 2}}>
+        <Button
+          fullWidth
+          color="secondary"
+          size="large"
+          variant="contained"
+          onClick={onSubmit}
+          disabled={!isValidAddress || isWaiting}
+          startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddIcon />}
+        >
+          {isWaiting ? "Creating role..." : "Create role"}
+        </Button>
+      </Box>
       {error != null ? (
         <Typography align="center" color="error" className={classes.errorSpacing}>
           {error}
