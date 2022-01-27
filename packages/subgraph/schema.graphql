@@ -8,6 +8,7 @@ type Role @entity {
 type Target @entity {
   id: ID!
   address: Bytes!
+  executionOption: Int!
   role: Role!
 }
 

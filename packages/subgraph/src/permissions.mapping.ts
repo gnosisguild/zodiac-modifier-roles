@@ -13,7 +13,7 @@ import {
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
 import { Role, Target, RolesModifier } from "../generated/schema"
-import { log } from "@graphprotocol/graph-ts"
+import { log, store } from "@graphprotocol/graph-ts"
 
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
@@ -40,6 +40,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   if (!target) {
     target = new Target(targetId)
     target.address = event.params.targetAddress
+    target.executionOption = event.params.options
     target.role = roleId
     target.save()
   }
@@ -47,7 +48,11 @@ export function handleAllowTarget(event: AllowTarget): void {
 
 export function handleScopeTarget(event: ScopeTarget): void {}
 
-export function handleRevokeTarget(event: RevokeTarget): void {}
+export function handleRevokeTarget(event: RevokeTarget): void {
+  // remove target
+  const targetId = event.params.targetAddress.toHex() + "-" + event.params.role.toString()
+  store.remove("Target", targetId)
+}
 
 export function handleScopeAllowFunction(event: ScopeAllowFunction): void {}
 
