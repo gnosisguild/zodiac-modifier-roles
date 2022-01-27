@@ -43,6 +43,11 @@ describe("Clearance", async () => {
     };
   });
 
+  const OPTIONS_NONE = 0;
+  const OPTIONS_SEND = 1;
+  const OPTIONS_DELEGATECALL = 1;
+  const OPTIONS_BOTH = 2;
+
   it("allows and then disallows a target", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -61,7 +66,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await expect(
       modifier
@@ -90,7 +95,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -121,13 +126,16 @@ describe("Clearance", async () => {
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -161,13 +169,16 @@ describe("Clearance", async () => {
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -200,7 +211,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -213,13 +224,16 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, dataDoEvenLess, 0)
     ).to.not.be.reverted;
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -251,13 +265,16 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SELECTOR);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
@@ -273,7 +290,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, false, false);
+      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
     await expect(
       modifier
@@ -302,17 +319,25 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier
-      .connect(owner)
-      .allowTargetPartially(ROLE_ID, testContract.address, false, false);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DONOTHING);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SEL_DONOTHING,
+        OPTIONS_NONE
+      );
 
     await modifier
       .connect(owner)
-      .scopeAllowFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
+      .scopeAllowFunction(
+        ROLE_ID,
+        testContract.address,
+        SEL_DOEVENLESS,
+        OPTIONS_NONE
+      );
 
     await expect(
       modifier
