@@ -2,13 +2,12 @@ import React, { useState } from "react"
 import { Box, Button, Grid, InputAdornment, makeStyles } from "@material-ui/core"
 import { TextField } from "./commons/input/TextField"
 import { Header } from "./Header"
+import AddIcon from '@material-ui/icons/Add'
 import SearchIcon from '@material-ui/icons/Search'
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import CreateRoleModal from "./CreateRoleModal"
 import AttachSafeModal from "./AttachSafeModal"
 import RoleList from "./RoleList"
-import AddIcon from "../assets/icons/add.svg";
-
 const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
 
 const useStyles = makeStyles((theme) => ({
@@ -71,7 +70,7 @@ export const App = (): React.ReactElement => {
               }}
             />
             <Button
-              startIcon={<img src={AddIcon} alt="add" />}
+              startIcon={<AddIcon />}
               variant="contained"
               color="secondary" onClick={() => setCreateRoleModalIsOpen(true)}
             >
