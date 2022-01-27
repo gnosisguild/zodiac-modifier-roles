@@ -1,19 +1,16 @@
-import { Box, makeStyles, Paper, Modal as MUIModal } from "@material-ui/core"
+import { makeStyles, Paper, Modal as MUIModal } from "@material-ui/core"
 import { PropsWithChildren } from "react"
 
 const useStyles = makeStyles((theme) => ({
   paper: {
-    maxWidth: 400,
-    padding: theme.spacing(1.5),
-  },
-  box: {
-    position: "absolute" as "absolute",
-    top: "50%",
+    backgroundColor: "rgba(78, 72, 87, 0.8)",
     left: "50%",
+    maxWidth: 400,
+    padding: theme.spacing(3),
+    position: "absolute",
+    top: "50%",
     transform: "translate(-50%, -50%)",
     width: 400,
-    border: "2px solid #000",
-    boxShadow: "24",
   },
 }))
 
@@ -27,9 +24,7 @@ export const Modal = ({ children, isOpen, onClose }: Props) => {
 
   return (
     <MUIModal open={isOpen} onClose={onClose}>
-      <Box className={classes.box}>
-        <Paper classes={{ root: classes.paper }}>{children}</Paper>
-      </Box>
+      <Paper elevation={3} classes={{ root: classes.paper }}>{children}</Paper>
     </MUIModal>
   )
 }
