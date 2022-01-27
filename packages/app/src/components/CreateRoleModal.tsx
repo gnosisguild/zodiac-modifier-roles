@@ -1,11 +1,12 @@
 import React, { useState } from "react"
-import { Button, CircularProgress, makeStyles, TextField, Typography } from "@material-ui/core"
+import { Button, CircularProgress, makeStyles, Typography } from "@material-ui/core"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import { Roles__factory } from "../contracts/type/factories/Roles__factory"
 import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
 import Modal from "./commons/Modal"
+import { TextField } from "./commons/input/TextField"
 
 type Props = {
   isOpen: boolean
