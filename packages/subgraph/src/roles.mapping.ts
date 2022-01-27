@@ -12,10 +12,64 @@ import {
   SetMultisendAddress,
   TargetSet,
 } from "../generated/Roles/Roles"
-import { RolesModifier } from "../generated/schema"
-import { log } from "@graphprotocol/graph-ts"
+import { RolesModifier, Role, Member, MemberRole } from "../generated/schema"
+import { log, store } from "@graphprotocol/graph-ts"
 
-export function handleAssignRoles(event: AssignRoles): void {}
+export function handleAssignRoles(event: AssignRoles): void {
+  // add and remove member from roles
+
+  const rolesModifierAddress = event.address
+  const rolesModifierId = rolesModifierAddress.toHexString()
+  const rolesModifier = RolesModifier.load(rolesModifierId) // must this be loaded?
+
+  if (!rolesModifier) {
+    log.error("a uninitialized rolesModifier is assigning roles", [rolesModifierAddress.toString()])
+    return
+  }
+
+  const memberAddress = event.params.module
+  const memberId = memberAddress.toHexString()
+  const roles = event.params.roles
+  const memberOf = event.params.memberOf
+
+  for (let i = 0; i < roles.length; i++) {
+    const roleId = roles[i].toString()
+    const memberRoleId = memberId + "-" + roleId
+    let memberRole = MemberRole.load(memberRoleId)
+    if (!memberRole) {
+      if (memberOf[i]) {
+        // adding a member
+        let role = Role.load(roleId)
+        if (!role) {
+          role = new Role(roleId)
+          role.rolesModifier = rolesModifierId
+          role.save()
+        }
+        let member = Member.load(memberId)
+        if (!member) {
+          member = new Member(memberId)
+          member.address = memberAddress
+          member.save()
+        }
+        memberRole = new MemberRole(memberRoleId)
+        memberRole.member = memberId
+        memberRole.role = roleId
+        memberRole.save()
+      } else {
+        // nothing to do the member - role relationship does not exist
+        log.info("trying to remove a member from a role it is not a member of", [memberId, roleId])
+      }
+    } else {
+      if (memberOf[i]) {
+        // adding a member that is already a member
+        log.info("trying to add a member to a role it is already a member of", [memberId, roleId])
+      } else {
+        // removing a member-role relationship
+        store.remove("MemberRole", memberRoleId)
+      }
+    }
+  }
+}
 
 export function handleAvatarSet(event: AvatarSet): void {}
 
