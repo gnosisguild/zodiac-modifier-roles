@@ -5,12 +5,12 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     backgroundColor: "rgba(78, 72, 87, 0.8)",
     left: "50%",
-    maxWidth: 400,
+    maxWidth: 500,
     padding: theme.spacing(3),
     position: "absolute",
     top: "50%",
     transform: "translate(-50%, -50%)",
-    width: 400,
+    width: '100%',
   },
 }))
 

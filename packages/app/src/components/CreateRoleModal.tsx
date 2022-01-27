@@ -6,6 +6,7 @@ import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
 import RolesModuleLogo from '../assets/images/roles-module-logo.png'
+import RoleParameters from "./RoleParameters"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from '@material-ui/icons/Add'
@@ -22,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
   },
   img: {
     borderRadius: '50%',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    border: '1px solid rgba(250, 132, 132, 0.2)',
     padding: 4,
     width: 68,
   },
@@ -109,6 +110,10 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
         label="Target Address"
         placeholder="0x..."
       />
+
+      {/* <Box sx={{mt: 2}}>
+        <RoleParameters />
+      </Box> */}
 
       <Box sx={{mt: 2}}>
         <Button

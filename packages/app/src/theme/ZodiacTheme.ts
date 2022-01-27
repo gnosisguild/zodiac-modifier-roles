@@ -129,6 +129,14 @@ export const ZODIAC_THEME = createTheme({
         padding: '4px 8px',
       },
     },
+    MuiCheckbox: {
+      colorSecondary: {
+        color: '#ffffff',
+        '&$checked': {
+          color: '#ffffff',
+        },
+      },
+    },
     MuiInputBase: {
       root: {
         borderRadius: 0,
