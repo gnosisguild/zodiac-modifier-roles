@@ -1,9 +1,12 @@
-import { Button, Box, Table, TableHead, TableBody, TableRow, TableCell, makeStyles} from "@material-ui/core"
 import React  from "react"
 import { useGetRolesForRolesModifier } from "../hooks/useSubgraph"
+import { Button, Box, Table, TableHead, TableBody, TableRow, TableCell, makeStyles} from "@material-ui/core"
 import clsx from "clsx"
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
+  root: {
+    marginTop: theme.spacing(2),
+  },
   memberCell: {
     width: '50%',
   },
@@ -13,6 +16,10 @@ const useStyles = makeStyles(() => ({
   tableHeadCell: {
     borderBottom: '1px solid rgba(217, 212, 173, 0.7)',
     borderTop: '1px solid rgba(217, 212, 173, 0.7)',
+    color: 'rgba(217, 212, 173)',
+    fontSize: 14,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 }))
 
@@ -27,42 +34,44 @@ const RoleList = ({ modifierAddress }: Props): React.ReactElement => {
 	console.log(roles)
 
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell className={classes.tableHeadCell}>
-            Roles
-          </TableCell>
-          <TableCell className={clsx(classes.tableHeadCell, classes.memberCell)}>
-            Members
-          </TableCell>
-          <TableCell className={classes.tableHeadCell} />
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {roles.map((role) => (
-          <TableRow key={role.id} >
-            <TableCell className={classes.tableCell}>
-              {`Role #${role.id}`}
+    <Box className={classes.root}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell className={classes.tableHeadCell}>
+              Role
             </TableCell>
-            <TableCell className={classes.tableCell}>
-              {`${role.members.length} Members`}
+            <TableCell className={clsx(classes.tableHeadCell, classes.memberCell)}>
+              Members
             </TableCell>
-            <TableCell className={classes.tableCell}>
-              <Box display="flex" justifyContent="flex-end">
-                <Button>
-                  Edit
-                </Button>
-                <Button>
-                  Delete
-                </Button>
-                <div>^</div>
-              </Box>
-            </TableCell>
+            <TableCell className={classes.tableHeadCell} />
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {roles.map((role) => (
+            <TableRow key={role.id} >
+              <TableCell className={classes.tableCell}>
+                {`Role #${role.id}`}
+              </TableCell>
+              <TableCell className={classes.tableCell}>
+                {`${role.members.length} Members`}
+              </TableCell>
+              <TableCell className={classes.tableCell}>
+                <Box display="flex" justifyContent="flex-end">
+                  <Button>
+                    Edit
+                  </Button>
+                  <Button>
+                    Delete
+                  </Button>
+                  <div>^</div>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Box>
   )
 }
 

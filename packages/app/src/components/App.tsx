@@ -1,18 +1,29 @@
 import React, { useState } from "react"
-import { Grid, makeStyles, Button } from "@material-ui/core"
+import { Box, Button, Grid, InputAdornment, makeStyles } from "@material-ui/core"
+import { TextField } from "./commons/input/TextField"
+import { Header } from "./Header"
+import SearchIcon from '@material-ui/icons/Search'
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import CreateRoleModal from "./CreateRoleModal"
 import AttachSafeModal from "./AttachSafeModal"
 import RoleList from "./RoleList"
+import AddIcon from "../assets/icons/add.svg";
 
 const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    display: 'flex',
+    flexDirection: 'column',
+    flexGrow: 1,
+    minHeight: '100vh',
     padding: theme.spacing(3),
   },
   container: {
-    minHeight: "90vh",
+    display: 'flex',
+    flexDirection: 'column',
+    flexGrow: 1,
+    padding: theme.spacing(2),
     position: "relative",
     "&::before": {
       content: '" "',
@@ -31,8 +42,8 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
     textAlign: "center",
   },
-  space: {
-    marginTop: theme.spacing(3),
+  search: {
+    maxWidth: 240,
   },
   tableCard: {
     paddingLeft: "0px !important",
@@ -46,22 +57,38 @@ export const App = (): React.ReactElement => {
 
   return (
     <div className={classes.root}>
-      <div className={classes.space}>
-        <Grid container spacing={1} className={classes.container}>
-          <Grid item xs={12}>
-            <RoleList modifierAddress={rolesModifierAddress} />
-            <Button size="large" variant="contained" color="secondary" onClick={() => setCreateRoleModalIsOpen(true)}>
-              Create a new role
-            </Button>
-            <CreateRoleModal
-              isOpen={createRoleModalIsOpen}
-              onClose={() => setCreateRoleModalIsOpen(false)}
-              rolesModifierAddress={rolesModifierAddress}
+      <Header/>
+      <Grid container spacing={1} className={classes.container}>
+        <Grid item xs={12}>
+          <Box display="flex" justifyContent="space-between">
+            <TextField
+              placeholder="Filter by Members"
+              className={classes.search}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
             />
-          </Grid>
+            <Button
+              startIcon={<img src={AddIcon} alt="add" />}
+              variant="contained"
+              color="secondary" onClick={() => setCreateRoleModalIsOpen(true)}
+            >
+              Create a role
+            </Button>
+          </Box>
+          <RoleList modifierAddress={rolesModifierAddress} />
+          <CreateRoleModal
+            isOpen={createRoleModalIsOpen}
+            onClose={() => setCreateRoleModalIsOpen(false)}
+            rolesModifierAddress={rolesModifierAddress}
+          />
         </Grid>
-        <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} />
-      </div>
+      </Grid>
+      <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} />
     </div>
   )
 }

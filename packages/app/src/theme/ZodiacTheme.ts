@@ -105,6 +105,7 @@ export const ZODIAC_THEME = createTheme({
         textTransform: 'none',
         position: 'relative',
         borderRadius: 0,
+        cursor: 'pointer',
         '&::before': {
           content: '" "',
           position: 'absolute',
@@ -116,6 +117,9 @@ export const ZODIAC_THEME = createTheme({
           border: '1px solid rgba(217, 212, 173, 0.3)',
           pointerEvents: 'none',
         },
+        '&:hover': {
+          opacity: 0.9,
+        }
       },
       contained: {
         boxShadow: 'none',
