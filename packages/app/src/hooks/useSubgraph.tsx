@@ -7,11 +7,11 @@ const client = createClient({
   url: APIURL,
 })
 
-type Role = {
+export type Role = {
   id: string
   rolesModifier: string
-  targets: string[]
-  members: string[]
+  targets: { id: string; address: string }[]
+  members: { member: { id: string; address: string } }[]
 }
 
 export const useGetRolesForRolesModifier = (rolesModifierAddress: string) => {
