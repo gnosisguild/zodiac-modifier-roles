@@ -100,7 +100,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
     }
   }
 
-  const onSubmit = async () => {
+  const onAddMember = async () => {
     setIsWaiting(true)
     try {
       if (!provider) {
@@ -113,6 +113,29 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
 
       const txs: PopulatedTransaction[] = []
       txs.push(await RolesModifier.populateTransaction.assignRoles(memberAddress, [role.id], [true]))
+      await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
+      onClose()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsWaiting(false)
+    }
+    console.log("Transaction initiated")
+  }
+
+  const onRemoveMember = async (memberToRemove: string) => {
+    setIsWaiting(true)
+    try {
+      if (!provider) {
+        console.error("No provider")
+        return
+      }
+
+      const signer = await provider.getSigner()
+      const RolesModifier = Roles__factory.connect(modifierAddress, signer)
+
+      const txs: PopulatedTransaction[] = []
+      txs.push(await RolesModifier.populateTransaction.assignRoles(memberToRemove, [role.id], [false]))
       await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
       onClose()
     } catch (err: any) {
@@ -153,6 +176,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
                         size="small"
                         aria-label="Remove member"
                         className={clsx(classes.iconButton, classes.deleteButton)}
+                        onClick={() => onRemoveMember(member.address)}
                       >
                         <DeleteOutlineSharp className={classes.deleteIcon} />
                       </IconButton>
@@ -176,7 +200,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
           color="secondary"
           size="large"
           variant="contained"
-          onClick={onSubmit}
+          onClick={onAddMember}
           disabled={!isValidAddress || isWaiting}
           startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddIcon />}
         >
