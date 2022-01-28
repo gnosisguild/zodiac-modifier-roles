@@ -6,7 +6,7 @@ import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
 import RolesModuleLogo from '../assets/images/roles-module-logo.png'
-import RoleParameters from "./RoleParameters"
+// import RoleParameters from "./RoleParameters"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from '@material-ui/icons/Add'
