@@ -1,5 +1,7 @@
 import {
   Box,
+  Button,
+  CircularProgress,
   IconButton,
   makeStyles,
   Table,
@@ -9,11 +11,18 @@ import {
   TableRow,
   Typography,
 } from "@material-ui/core"
-import React from "react"
+import React, { useState } from "react"
 import { Role } from "../hooks/useSubgraph"
 import Modal from "./commons/Modal"
 import clsx from "clsx"
 import { DeleteOutlineSharp } from "@material-ui/icons"
+import { TextField } from "./commons/input/TextField"
+import { ethers, PopulatedTransaction } from "ethers"
+import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
+import { useWallet } from "../hooks/useWallet"
+import { Roles__factory } from "../contracts/type"
+import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
+import AddIcon from '@material-ui/icons/Add'
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -66,13 +75,59 @@ type Props = {
 
 const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props): React.ReactElement => {
   const classes = useStyles()
+  const [isValidAddress, setIsValidAddress] = useState(false)
+  const [memberAddress, setMemberAddress] = useState("")
+  const [isWaiting, setIsWaiting] = useState(false)
+  const { sdk } = useSafeAppsSDK()
+  const [error, setError] = useState<string | undefined>(undefined)
+  const { provider } = useWallet()
+
   if (role == null) {
     return <></>
   }
   const onClose = () => {
     oncloseIn()
-    // cleanup when closing
+    setError(undefined)
   }
+
+  const onMemberAddressChange = (address: string) => {
+    if (ethers.utils.isAddress(address)) {
+      setIsValidAddress(true)
+      setMemberAddress(address)
+    } else {
+      setIsValidAddress(false)
+      setMemberAddress(address)
+    }
+  }
+
+  const onSubmit = async () => {
+    setIsWaiting(true)
+    try {
+      if (!provider) {
+        console.error("No provider")
+        return
+      }
+
+      const signer = await provider.getSigner()
+      const RolesModifier = Roles__factory.connect(modifierAddress, signer)
+
+      const txs: PopulatedTransaction[] = []
+      txs.push(await RolesModifier.populateTransaction.assignRoles(memberAddress, [role.id], [true]))
+      await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
+      onClose()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsWaiting(false)
+    }
+    console.log("Transaction initiated")
+  }
+
+  const convertTxToSafeTx = (tx: PopulatedTransaction): SafeTransaction => ({
+    to: tx.to as string,
+    value: "0",
+    data: tx.data as string,
+  })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -114,6 +169,25 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
           )}
         </TableBody>
       </Table>
+      <TextField onChange={(e) => onMemberAddressChange(e.target.value)} label="Member Address" placeholder="0x..." />
+      <Box sx={{mt: 2}}>
+        <Button
+          fullWidth
+          color="secondary"
+          size="large"
+          variant="contained"
+          onClick={onSubmit}
+          disabled={!isValidAddress || isWaiting}
+          startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddIcon />}
+        >
+          {isWaiting ? "Adding member..." : "Add member"}
+        </Button>
+      </Box>
+      {error != null ? (
+        <Typography align="center" color="error" className={classes.errorSpacing}>
+          {error}
+        </Typography>
+      ) : null}
     </Modal>
   )
 }

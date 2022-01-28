@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { createClient } from "urql"
 
-const APIURL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.18" // TODO: this is for testing
+const APIURL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.19" // TODO: this is for testing
 
 const client = createClient({
   url: APIURL,
