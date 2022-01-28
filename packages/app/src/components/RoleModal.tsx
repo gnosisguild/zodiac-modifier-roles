@@ -17,12 +17,11 @@ import Modal from "./commons/Modal"
 import clsx from "clsx"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
-import { ethers, PopulatedTransaction } from "ethers"
+import { ethers } from "ethers"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import { useWallet } from "../hooks/useWallet"
-import { Roles__factory } from "../contracts/type"
-import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
-import AddIcon from '@material-ui/icons/Add'
+import AddIcon from "@material-ui/icons/Add"
+import * as rolesModifier from "../services/rolesModifier"
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -103,18 +102,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onAddMember = async () => {
     setIsWaiting(true)
     try {
-      if (!provider) {
-        console.error("No provider")
-        return
-      }
-
-      const signer = await provider.getSigner()
-      const RolesModifier = Roles__factory.connect(modifierAddress, signer)
-
-      const txs: PopulatedTransaction[] = []
-      txs.push(await RolesModifier.populateTransaction.assignRoles(memberAddress, [role.id], [true]))
-      await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
-      onClose()
+      await rolesModifier.addMember(provider, sdk, modifierAddress, role.id, memberAddress)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -123,21 +111,10 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
     console.log("Transaction initiated")
   }
 
-  const onRemoveMember = async (memberToRemove: string) => {
+  const onRemoveMember = async (memberToBeRemoved: string) => {
     setIsWaiting(true)
     try {
-      if (!provider) {
-        console.error("No provider")
-        return
-      }
-
-      const signer = await provider.getSigner()
-      const RolesModifier = Roles__factory.connect(modifierAddress, signer)
-
-      const txs: PopulatedTransaction[] = []
-      txs.push(await RolesModifier.populateTransaction.assignRoles(memberToRemove, [role.id], [false]))
-      await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
-      onClose()
+      await rolesModifier.removeMember(provider, sdk, modifierAddress, role.id, memberToBeRemoved)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -145,12 +122,6 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
     }
     console.log("Transaction initiated")
   }
-
-  const convertTxToSafeTx = (tx: PopulatedTransaction): SafeTransaction => ({
-    to: tx.to as string,
-    value: "0",
-    data: tx.data as string,
-  })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -194,7 +165,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
         </TableBody>
       </Table>
       <TextField onChange={(e) => onMemberAddressChange(e.target.value)} label="Member Address" placeholder="0x..." />
-      <Box sx={{mt: 2}}>
+      <Box sx={{ mt: 2 }}>
         <Button
           fullWidth
           color="secondary"
