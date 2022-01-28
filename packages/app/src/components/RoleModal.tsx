@@ -87,24 +87,31 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
           </TableRow>
         </TableHead>
         <TableBody>
-          {role.members.map(({ member }) => (
-            <TableRow key={member.id} className={classes.tableRow}>
-              <TableCell className={classes.tableCell}>{member.id}</TableCell>
-              <TableCell className={classes.tableCell}>
-                <Box display="flex" justifyContent="flex-end">
-                  <Box sx={{ mr: 1 }}>
-                    <IconButton
-                      size="small"
-                      aria-label="Remove member"
-                      className={clsx(classes.iconButton, classes.deleteButton)}
-                    >
-                      <DeleteOutlineSharp className={classes.deleteIcon} />
-                    </IconButton>
+          {role.members.length !== 0 ? (
+            role.members.map(({ member }) => (
+              <TableRow key={member.id} className={classes.tableRow}>
+                <TableCell className={classes.tableCell}>{member.id}</TableCell>
+                <TableCell className={classes.tableCell}>
+                  <Box display="flex" justifyContent="flex-end">
+                    <Box sx={{ mr: 1 }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Remove member"
+                        className={clsx(classes.iconButton, classes.deleteButton)}
+                      >
+                        <DeleteOutlineSharp className={classes.deleteIcon} />
+                      </IconButton>
+                    </Box>
                   </Box>
-                </Box>
-              </TableCell>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow className={classes.tableRow}>
+              <TableCell className={classes.tableCell}>No members</TableCell>
+              <TableCell className={classes.tableCell}></TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </Modal>
