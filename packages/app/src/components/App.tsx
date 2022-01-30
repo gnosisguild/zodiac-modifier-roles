@@ -7,7 +7,7 @@ import SearchIcon from "@material-ui/icons/Search"
 import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import CreateRoleModal from "./CreateRoleModal"
 import AttachSafeModal from "./AttachSafeModal"
-import RoleList from "./RoleList"
+import RoleList from "./RoleTable"
 import RoleModal from "./RoleModal"
 import { Role } from "../hooks/useSubgraph"
 const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
