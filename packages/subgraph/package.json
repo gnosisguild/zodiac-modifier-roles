@@ -10,10 +10,15 @@
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 zodiac-modifier-roles",
     "getabi:permissions": "cp ../evm/build/artifacts/contracts/Permissions.sol/Permissions.json ./abis/Permissions.json",
     "getabi:roles": "cp ../evm/build/artifacts/contracts/Roles.sol/Roles.json ./abis/Roles.json",
-    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn codegen"
+    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn codegen",
+    "fmt": "prettier '(test|src)/**/*.ts' -w",
+    "pre-commit": "yarn fmt"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.25.2",
     "@graphprotocol/graph-ts": "0.24.1"
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1"
   }
 }

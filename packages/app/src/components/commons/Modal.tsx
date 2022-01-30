@@ -10,7 +10,7 @@ const useStyles = makeStyles((theme) => ({
     position: "absolute",
     top: "50%",
     transform: "translate(-50%, -50%)",
-    width: '100%',
+    width: "100%",
   },
 }))
 
@@ -24,7 +24,9 @@ export const Modal = ({ children, isOpen, onClose }: Props) => {
 
   return (
     <MUIModal open={isOpen} onClose={onClose}>
-      <Paper elevation={3} classes={{ root: classes.paper }}>{children}</Paper>
+      <Paper elevation={3} classes={{ root: classes.paper }}>
+        {children}
+      </Paper>
     </MUIModal>
   )
 }

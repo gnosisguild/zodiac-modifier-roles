@@ -1,4 +1,3 @@
-
 {
   "name": "@gnosis.pm/zodiac-roles-modifier",
   "version": "1.0.0",
@@ -10,12 +9,16 @@
     "contracts:build": "cd packages/evm && yarn build",
     "contracts:install": "cd packages/evm && yarn install",
     "contracts:coverage": "cd packages/evm && yarn coverage",
+    "contracts:pre-commit": "cd packages/evm && yarn pre-commit",
     "app:build": "cd packages/app && yarn build",
+    "app:pre-commit": "cd packages/app && yarn pre-commit",
     "app:install": "cd packages/app && yarn install",
     "subgraph:build": "cd packages/subgraph && yarn build",
+    "subgraph:pre-commit": "cd packages/subgraph && yarn pre-commit",
     "subgraph:install": "cd packages/subgraph && yarn install",
     "preinstall": "yarn contracts:install && yarn app:install && yarn subgraph:install",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "pre-commit": "yarn app:pre-commit && yarn subgraph:pre-commit"
   },
   "repository": {
     "type": "git",

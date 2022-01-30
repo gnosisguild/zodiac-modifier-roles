@@ -49,7 +49,9 @@
     "build:types": "typechain --target ethers-v5 --out-dir ./src/contracts/type ./contracts/abi/*.json",
     "getabi:permissions": "cp ../evm/build/artifacts/contracts/Permissions.sol/Permissions.json ./contracts/abi/Permissions.json",
     "getabi:roles": "cp ../evm/build/artifacts/contracts/Roles.sol/Roles.json ./contracts/abi/Roles.json",
-    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn build:types"
+    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn build:types",
+    "fmt": "prettier '(test|src)/**/*.(ts|tsx)' -w",
+    "pre-commit": "yarn fmt"
   },
   "eslintConfig": {
     "extends": [

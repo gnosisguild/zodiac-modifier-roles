@@ -1,17 +1,17 @@
-import { createGlobalStyle } from 'styled-components'
+import { createGlobalStyle } from "styled-components"
 
-import avertaFont from '@gnosis.pm/safe-react-components/dist/fonts/averta-normal.woff2'
-import avertaBoldFont from '@gnosis.pm/safe-react-components/dist/fonts/averta-bold.woff2'
+import avertaFont from "@gnosis.pm/safe-react-components/dist/fonts/averta-normal.woff2"
+import avertaBoldFont from "@gnosis.pm/safe-react-components/dist/fonts/averta-bold.woff2"
 
-import MonacoFont from '../assets/fonts/Monaco.woff'
+import MonacoFont from "../assets/fonts/Monaco.woff"
 
-import RobotoMonoRegularWoff from '../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff2'
-import RobotoMonoRegularWoff2 from '../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff'
+import RobotoMonoRegularWoff from "../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff2"
+import RobotoMonoRegularWoff2 from "../assets/fonts/RobotoMono/roboto-mono-v13-latin-regular.woff"
 
-import SpectralRegularWoff from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff'
-import SpectralRegularWoff2 from '../assets/fonts/Spectral/spectral-v7-latin-regular.woff2'
+import SpectralRegularWoff from "../assets/fonts/Spectral/spectral-v7-latin-regular.woff"
+import SpectralRegularWoff2 from "../assets/fonts/Spectral/spectral-v7-latin-regular.woff2"
 
-import ZodiacBackground from '../assets/images/zodiac-bg.svg'
+import ZodiacBackground from "../assets/images/zodiac-bg.svg"
 
 export const ZodiacStyle = createGlobalStyle`
     html {
