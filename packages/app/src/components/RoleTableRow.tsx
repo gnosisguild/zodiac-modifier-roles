@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
 
 type Props = { role: Role; onClickRole: (role: Role) => void }
 
-const RoleListItem = ({ role, onClickRole }: Props): React.ReactElement => {
+const RoleTableRow = ({ role, onClickRole }: Props): React.ReactElement => {
   const classes = useStyles()
 
   return (
@@ -79,4 +79,4 @@ const RoleListItem = ({ role, onClickRole }: Props): React.ReactElement => {
   )
 }
 
-export default RoleListItem
+export default RoleTableRow

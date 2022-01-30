@@ -29,7 +29,7 @@ type Props = {
   openRole: (role: Role) => void
 }
 
-const RoleList = ({ modifierAddress, openRole }: Props): React.ReactElement => {
+const RoleTable = ({ modifierAddress, openRole }: Props): React.ReactElement => {
   const classes = useStyles()
   const roles = useGetRolesForRolesModifier(modifierAddress)
 
@@ -55,4 +55,4 @@ const RoleList = ({ modifierAddress, openRole }: Props): React.ReactElement => {
   )
 }
 
-export default RoleList
+export default RoleTable
