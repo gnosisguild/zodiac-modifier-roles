@@ -5,11 +5,11 @@ import { Roles__factory } from "../contracts/type/factories/Roles__factory"
 import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
 import { ethers, PopulatedTransaction } from "ethers"
-import RolesModuleLogo from '../assets/images/roles-module-logo.png'
+import RolesModuleLogo from "../assets/images/roles-module-logo.png"
 // import RoleParameters from "./RoleParameters"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
-import AddIcon from '@material-ui/icons/Add'
+import AddIcon from "@material-ui/icons/Add"
 
 type Props = {
   isOpen: boolean
@@ -22,8 +22,8 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   img: {
-    borderRadius: '50%',
-    border: '1px solid rgba(250, 132, 132, 0.2)',
+    borderRadius: "50%",
+    border: "1px solid rgba(250, 132, 132, 0.2)",
     padding: 4,
     width: 68,
   },
@@ -90,32 +90,24 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
           mb: 3,
         }}
       >
-        <Box sx={{mr: 2}}>
+        <Box sx={{ mr: 2 }}>
           <img src={RolesModuleLogo} alt="Roles App Logo" className={classes.img} />
         </Box>
         <Box>
-          <Typography variant="h4">
-            Create a new role
-          </Typography>
-          <Box sx={{mt: 1}}>
-            <Typography variant="body1">
-              Create a new role that allows all calls to this target
-            </Typography>
+          <Typography variant="h4">Create a new role</Typography>
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="body1">Create a new role that allows all calls to this target</Typography>
           </Box>
         </Box>
       </Box>
 
-      <TextField
-        onChange={(e) => onTargetAddressChange(e.target.value)}
-        label="Target Address"
-        placeholder="0x..."
-      />
+      <TextField onChange={(e) => onTargetAddressChange(e.target.value)} label="Target Address" placeholder="0x..." />
 
       {/* <Box sx={{mt: 2}}>
         <RoleParameters />
       </Box> */}
 
-      <Box sx={{mt: 2}}>
+      <Box sx={{ mt: 2 }}>
         <Button
           fullWidth
           color="secondary"
@@ -128,11 +120,11 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
           {isWaiting ? "Creating role..." : "Create role"}
         </Button>
       </Box>
-      {error != null ? (
+      {error != null && (
         <Typography align="center" color="error" className={classes.errorSpacing}>
           {error}
         </Typography>
-      ) : null}
+      )}
     </Modal>
   )
 }

@@ -178,11 +178,11 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
           {isWaiting ? "Adding member..." : "Add member"}
         </Button>
       </Box>
-      {error != null ? (
+      {error != null && (
         <Typography align="center" color="error" className={classes.errorSpacing}>
           {error}
         </Typography>
-      ) : null}
+      )}
     </Modal>
   )
 }

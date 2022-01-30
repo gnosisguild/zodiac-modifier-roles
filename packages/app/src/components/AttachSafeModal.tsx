@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const AttachSafeModal = ({isOpen, onClose}: Props) => {
+export const AttachSafeModal = ({ isOpen, onClose }: Props) => {
   const classes = useStyles()
   const [invalidSafe, setInvalidSafe] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -73,11 +73,11 @@ export const AttachSafeModal = ({isOpen, onClose}: Props) => {
         {loading ? "Attaching Gnosis Safe..." : "Attach Safe"}
       </Button>
 
-      {invalidSafe ? (
+      {invalidSafe && (
         <Typography align="center" color="error" className={classes.errorSpacing}>
           The address you entered is not a Gnosis Safe
         </Typography>
-      ) : null}
+      )}
     </Modal>
   )
 }
