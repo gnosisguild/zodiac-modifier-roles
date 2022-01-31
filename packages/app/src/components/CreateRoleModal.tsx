@@ -32,7 +32,6 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
   const [isWaiting, setIsWaiting] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const [isValidAddress, setIsValidAddress] = useState(false)
-  // const { sdk } = useSafeAppsSDK()
   const { provider } = useWallet()
 
   const onClose = () => {

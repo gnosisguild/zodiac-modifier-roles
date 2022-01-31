@@ -1,9 +1,9 @@
 import Onboard from "bnc-onboard"
 import { ethers } from "ethers"
 import { REDUX_STORE, useRootSelector } from "../store"
-import { resetSafeAddress, setChainId, setENS, setSafeAddress } from "../store/main"
+import { resetConnectedAddress, setChainId, setENS, setConnectedAddress } from "../store/main"
 import { useEffect, useMemo, useState } from "react"
-import { getChainId, getSafeAddress } from "../store/main/selectors"
+import { getChainId, getConnectedAddress } from "../store/main/selectors"
 import { getNetworkRPC } from "../utils/networks"
 import memoize from "lodash.memoize"
 
@@ -41,9 +41,9 @@ const configureOnboardJS = memoize(
         },
         address(address) {
           if (address) {
-            REDUX_STORE.dispatch(setSafeAddress(address))
+            REDUX_STORE.dispatch(setConnectedAddress(address))
           } else {
-            REDUX_STORE.dispatch(resetSafeAddress())
+            REDUX_STORE.dispatch(resetConnectedAddress())
           }
         },
         ens(ens) {
@@ -68,7 +68,7 @@ const configureOnboardJS = memoize(
 
 export const useWallet = () => {
   const chainId = useRootSelector(getChainId)
-  const wallet = useRootSelector(getSafeAddress)
+  const wallet = useRootSelector(getConnectedAddress)
 
   const onboard = useMemo(() => configureOnboardJS(chainId), [chainId])
   const [provider, setProvider] = useState(_provider)
