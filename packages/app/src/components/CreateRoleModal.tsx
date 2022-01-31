@@ -1,12 +1,9 @@
 import React, { useState } from "react"
 import { Box, Button, CircularProgress, makeStyles, Typography } from "@material-ui/core"
-import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import { Roles__factory } from "../contracts/type/factories/Roles__factory"
-import { Transaction as SafeTransaction } from "@gnosis.pm/safe-apps-sdk"
 import { useWallet } from "../hooks/useWallet"
-import { ethers, PopulatedTransaction } from "ethers"
+import { ethers } from "ethers"
 import RolesModuleLogo from "../assets/images/roles-module-logo.png"
-// import RoleParameters from "./RoleParameters"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
@@ -35,7 +32,7 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
   const [isWaiting, setIsWaiting] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const [isValidAddress, setIsValidAddress] = useState(false)
-  const { sdk } = useSafeAppsSDK()
+  // const { sdk } = useSafeAppsSDK()
   const { provider } = useWallet()
 
   const onClose = () => {
@@ -54,9 +51,10 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
       const signer = await provider.getSigner()
       const RolesModifier = Roles__factory.connect(rolesModifierAddress, signer)
 
-      const txs: PopulatedTransaction[] = []
-      txs.push(await RolesModifier.populateTransaction.allowTarget(Date.now().toString().slice(-4), targetAddress, "3"))
-      await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
+      // const txs: PopulatedTransaction[] = []
+      const tx = await RolesModifier.allowTarget(Date.now().toString().slice(-4), targetAddress, "3")
+      await tx.wait()
+      // await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
       onClose()
     } catch (err: any) {
       setError(err.message)
@@ -76,11 +74,11 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
     }
   }
 
-  const convertTxToSafeTx = (tx: PopulatedTransaction): SafeTransaction => ({
-    to: tx.to as string,
-    value: "0",
-    data: tx.data as string,
-  })
+  // const convertTxToSafeTx = (tx: PopulatedTransaction): SafeTransaction => ({
+  //   to: tx.to as string,
+  //   value: "0",
+  //   data: tx.data as string,
+  // })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

@@ -32,8 +32,8 @@ export const web3Slice = createSlice({
       state.ens = action.payload
     },
     resetSafeAddress(state) {
-      state.safeAddress = undefined
-      state.ens = undefined
+      state.safeAddress = ""
+      state.ens = ""
     },
     setUserAddress(state, action: PayloadAction<string>) {
       state.userAddress = action.payload

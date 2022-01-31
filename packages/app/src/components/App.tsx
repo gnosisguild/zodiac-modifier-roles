@@ -1,15 +1,14 @@
 import React, { useState } from "react"
-import { Box, Button, Grid, InputAdornment, makeStyles } from "@material-ui/core"
+import { Box, Button, ButtonProps, Grid, InputAdornment, makeStyles } from "@material-ui/core"
 import { TextField } from "./commons/input/TextField"
 import { Header } from "./Header"
 import AddIcon from "@material-ui/icons/Add"
 import SearchIcon from "@material-ui/icons/Search"
-import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import CreateRoleModal from "./CreateRoleModal"
-import AttachSafeModal from "./AttachSafeModal"
 import RoleTable from "./RoleTable"
 import RoleModal from "./RoleModal"
 import { Role } from "../hooks/useSubgraph"
+import { useWallet } from "../hooks/useWallet"
 const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
 
 const useStyles = makeStyles((theme) => ({
@@ -47,13 +46,27 @@ const useStyles = makeStyles((theme) => ({
   tableCard: {
     paddingLeft: "0px !important",
   },
+  connectWallet: {
+    position: "absolute",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    zIndex: 1,
+    backgroundColor: "rgba(217, 212, 173, 0.3)",
+    backdropFilter: "blur(4px)",
+  },
 }))
 
 export const App = (): React.ReactElement => {
   const classes = useStyles()
   const [createRoleModalIsOpen, setCreateRoleModalIsOpen] = useState(false)
   const [openRole, setOpenRole] = useState<Role | undefined>()
-  const { connected } = useSafeAppsSDK()
+  const { startOnboard, onboard } = useWallet()
 
   return (
     <div className={classes.root}>
@@ -89,13 +102,29 @@ export const App = (): React.ReactElement => {
           />
         </Grid>
       </Grid>
-      <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} />
+      {/* <AttachSafeModal isOpen={!connected} onClose={() => console.log("close")} /> */}
+      {!onboard.getState().address && <ConnectWallet className={classes.connectWallet} onClick={startOnboard} />}
       <RoleModal
         isOpen={openRole != null}
         role={openRole}
         onClose={() => setOpenRole(undefined)}
         modifierAddress={rolesModifierAddress}
       />
+    </div>
+  )
+}
+
+interface ConnectWalletProps {
+  className: string
+  onClick?: ButtonProps["onClick"]
+}
+
+const ConnectWallet = ({ className, onClick }: ConnectWalletProps) => {
+  return (
+    <div className={className}>
+      <Button size="large" variant="contained" color="secondary" onClick={onClick}>
+        Connect Wallet
+      </Button>
     </div>
   )
 }

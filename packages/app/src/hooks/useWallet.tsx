@@ -4,7 +4,6 @@ import { REDUX_STORE, useRootSelector } from "../store"
 import { resetSafeAddress, setChainId, setENS, setSafeAddress } from "../store/main"
 import { useEffect, useMemo, useState } from "react"
 import { getChainId, getSafeAddress } from "../store/main/selectors"
-import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
 import { getNetworkRPC } from "../utils/networks"
 import memoize from "lodash.memoize"
 
@@ -13,10 +12,7 @@ const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
 let _provider: ethers.providers.JsonRpcProvider | undefined
 
-const safeSDK = new SafeAppsSDK()
-safeSDK.getSafeInfo().then(async (safeInfo) => {
-  REDUX_STORE.dispatch(setChainId(safeInfo.chainId))
-})
+REDUX_STORE.dispatch(setChainId(4)) // TODO: get from somewhere
 
 const configureOnboardJS = memoize(
   (networkId: number) => {
@@ -24,8 +20,8 @@ const configureOnboardJS = memoize(
     _provider = new ethers.providers.JsonRpcProvider(rpcUrl, networkId)
 
     const wallets = [
-      { walletName: "metamask", preferred: true },
       { walletName: "gnosis", preferred: true },
+      { walletName: "metamask", preferred: true },
       { walletName: "coinbase", preferred: true },
       { walletName: "ledger", rpcUrl: rpcUrl, preferred: true },
       { walletName: "walletConnect", infuraKey: INFURA_KEY, preferred: true },

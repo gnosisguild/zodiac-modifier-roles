@@ -18,7 +18,6 @@ import clsx from "clsx"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
-import { useSafeAppsSDK } from "@gnosis.pm/safe-apps-react-sdk"
 import { useWallet } from "../hooks/useWallet"
 import AddIcon from "@material-ui/icons/Add"
 import * as rolesModifier from "../services/rolesModifier"
@@ -77,8 +76,8 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const [isValidAddress, setIsValidAddress] = useState(false)
   const [memberAddress, setMemberAddress] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
-  const { sdk } = useSafeAppsSDK()
   const [error, setError] = useState<string | undefined>(undefined)
+  const [info, setInfo] = useState<string | undefined>(undefined)
   const { provider } = useWallet()
 
   if (role == null) {
@@ -87,6 +86,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onClose = () => {
     oncloseIn()
     setError(undefined)
+    setInfo(undefined)
   }
 
   const onMemberAddressChange = (address: string) => {
@@ -102,11 +102,12 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onAddMember = async () => {
     setIsWaiting(true)
     try {
-      await rolesModifier.addMember(provider, sdk, modifierAddress, role.id, memberAddress)
+      await rolesModifier.addMember(provider, modifierAddress, role.id, memberAddress)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setIsWaiting(false)
+      setInfo("Add member transaction initiated")
     }
     console.log("Transaction initiated")
   }
@@ -114,11 +115,12 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onRemoveMember = async (memberToBeRemoved: string) => {
     setIsWaiting(true)
     try {
-      await rolesModifier.removeMember(provider, sdk, modifierAddress, role.id, memberToBeRemoved)
+      await rolesModifier.removeMember(provider, modifierAddress, role.id, memberToBeRemoved)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setIsWaiting(false)
+      setInfo("Remove member transaction initiated")
     }
     console.log("Transaction initiated")
   }
@@ -183,6 +185,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
           {error}
         </Typography>
       )}
+      {info != null && <Typography align="center">{info}</Typography>}
     </Modal>
   )
 }

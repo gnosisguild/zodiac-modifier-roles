@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import { createClient } from "urql"
 
-const APIURL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.19" // TODO: this is for testing
+const API_URL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.19" // TODO: this is for testing
 
 const client = createClient({
-  url: APIURL,
+  url: API_URL,
 })
 
 export type Role = {
@@ -48,6 +48,6 @@ export const useGetRolesForRolesModifier = (rolesModifierAddress: string) => {
       }
     }
     getRoles()
-  })
+  }, [rolesModifierAddress])
   return roles
 }
