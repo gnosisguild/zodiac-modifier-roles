@@ -103,26 +103,24 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
     setIsWaiting(true)
     try {
       await rolesModifier.addMember(provider, modifierAddress, role.id, memberAddress)
+      setInfo("Add member transaction initiated")
     } catch (err: any) {
       setError(err.message)
     } finally {
       setIsWaiting(false)
-      setInfo("Add member transaction initiated")
     }
-    console.log("Transaction initiated")
   }
 
   const onRemoveMember = async (memberToBeRemoved: string) => {
     setIsWaiting(true)
     try {
       await rolesModifier.removeMember(provider, modifierAddress, role.id, memberToBeRemoved)
+      setInfo("Remove member transaction initiated")
     } catch (err: any) {
       setError(err.message)
     } finally {
       setIsWaiting(false)
-      setInfo("Remove member transaction initiated")
     }
-    console.log("Transaction initiated")
   }
 
   return (
