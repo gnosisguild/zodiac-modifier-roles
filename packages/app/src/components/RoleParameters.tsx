@@ -1,5 +1,7 @@
-import * as React from "react"
+import React, { useState } from "react"
 import { Box, Checkbox, FormControlLabel, IconButton, Typography, makeStyles } from "@material-ui/core"
+import { TextField } from "./commons/input/TextField"
+import { ethers } from "ethers"
 import KeyboardArrowDownSharp from "@material-ui/icons/KeyboardArrowDownSharp"
 
 const useStyles = makeStyles((theme) => ({
@@ -16,6 +18,8 @@ const useStyles = makeStyles((theme) => ({
 export default function IndeterminateCheckbox() {
   const classes = useStyles()
   const [checked, setChecked] = React.useState([true, false])
+  const [targetAddress, setTargetAddress] = useState("")
+  const [isValidAddress, setIsValidAddress] = useState(false)
 
   const handleChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked([event.target.checked, event.target.checked])
@@ -27,6 +31,16 @@ export default function IndeterminateCheckbox() {
 
   const handleChange3 = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked([checked[0], event.target.checked])
+  }
+
+  const onTargetAddressChange = (address: string) => {
+    if (ethers.utils.isAddress(address)) {
+      setIsValidAddress(true)
+      setTargetAddress(address)
+    } else {
+      setIsValidAddress(false)
+      setTargetAddress(address)
+    }
   }
 
   const children = (
@@ -52,7 +66,8 @@ export default function IndeterminateCheckbox() {
 
   return (
     <Box>
-      <Box sx={{ pl: 1 }}>
+      <TextField onChange={(e) => onTargetAddressChange(e.target.value)} label="Target Address" placeholder="0x..." />
+      <Box sx={{ pl: 1, mt: 2 }}>
         <FormControlLabel
           label={"Allow all functions"}
           control={
