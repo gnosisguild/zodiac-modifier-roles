@@ -21,6 +21,8 @@ import { ethers } from "ethers"
 import { useWallet } from "../hooks/useWallet"
 import AddIcon from "@material-ui/icons/Add"
 import * as rolesModifier from "../services/rolesModifier"
+import { useRootSelector } from "../store"
+import { getRolesModifierAddress } from "../store/main/selectors"
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -65,13 +67,12 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type Props = {
-  modifierAddress: string
   isOpen: boolean
   role: Role | undefined
   onClose: () => void
 }
 
-const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props): React.ReactElement => {
+const RoleModal = ({ isOpen, role, onClose: oncloseIn }: Props): React.ReactElement => {
   const classes = useStyles()
   const [isValidAddress, setIsValidAddress] = useState(false)
   const [memberAddress, setMemberAddress] = useState("")
@@ -79,10 +80,17 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const [error, setError] = useState<string | undefined>(undefined)
   const [info, setInfo] = useState<string | undefined>(undefined)
   const { provider } = useWallet()
+  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   if (role == null) {
     return <></>
   }
+
+  if (rolesModifierAddress == null) {
+    console.error("No rolesModifierAddress")
+    return <></>
+  }
+
   const onClose = () => {
     oncloseIn()
     setError(undefined)
@@ -102,7 +110,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onAddMember = async () => {
     setIsWaiting(true)
     try {
-      await rolesModifier.addMember(provider, modifierAddress, role.id, memberAddress)
+      await rolesModifier.addMember(provider, rolesModifierAddress, role.id, memberAddress)
       setInfo("Add member transaction initiated")
     } catch (err: any) {
       setError(err.message)
@@ -114,7 +122,7 @@ const RoleModal = ({ modifierAddress, isOpen, role, onClose: oncloseIn }: Props)
   const onRemoveMember = async (memberToBeRemoved: string) => {
     setIsWaiting(true)
     try {
-      await rolesModifier.removeMember(provider, modifierAddress, role.id, memberToBeRemoved)
+      await rolesModifier.removeMember(provider, rolesModifierAddress, role.id, memberToBeRemoved)
       setInfo("Remove member transaction initiated")
     } catch (err: any) {
       setError(err.message)

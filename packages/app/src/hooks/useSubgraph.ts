@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react"
 import { createClient } from "urql"
+import { getRolesModifierAddress } from "../store/main/selectors"
+import { useRootSelector } from "../store"
+import { ethers } from "ethers"
 
 const API_URL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.19" // TODO: this is for testing
 
@@ -14,10 +17,16 @@ export type Role = {
   members: { member: { id: string; address: string } }[]
 }
 
-export const useGetRolesForRolesModifier = (rolesModifierAddress: string) => {
+export const useGetRolesForRolesModifier = () => {
   const [roles, setRoles] = useState<Role[]>([])
+  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   useEffect(() => {
+    console.log("rolesModifierAddress", rolesModifierAddress)
+    if (rolesModifierAddress == null || !ethers.utils.isAddress(rolesModifierAddress)) {
+      console.log("No rolesModifierAddress")
+      return
+    }
     const getRoles = async () => {
       const rolesQuery = `
   			query {

@@ -1,7 +1,7 @@
 import Onboard from "bnc-onboard"
 import { ethers } from "ethers"
 import { REDUX_STORE, useRootSelector } from "../store"
-import { resetConnectedAddress, setChainId, setENS, setConnectedAddress } from "../store/main"
+import { resetConnectedAddress, setENS, setConnectedAddress } from "../store/main"
 import { useEffect, useMemo, useState } from "react"
 import { getChainId, getConnectedAddress } from "../store/main/selectors"
 import { getNetworkRPC } from "../utils/networks"
@@ -11,8 +11,6 @@ const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
 
 let _provider: ethers.providers.JsonRpcProvider | undefined
-
-REDUX_STORE.dispatch(setChainId(4)) // TODO: get from somewhere
 
 const configureOnboardJS = memoize(
   (networkId: number) => {

@@ -7,11 +7,12 @@ import RolesModuleLogo from "../assets/images/roles-module-logo.png"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
+import { useRootSelector } from "../store"
+import { getRolesModifierAddress } from "../store/main/selectors"
 
 type Props = {
   isOpen: boolean
   onClose: () => void
-  rolesModifierAddress: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -26,13 +27,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: Props): React.ReactElement => {
+const CreateRoleModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [targetAddress, setTargetAddress] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const [isValidAddress, setIsValidAddress] = useState(false)
   const { provider } = useWallet()
+  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   const onClose = () => {
     onCloseIn()
@@ -44,6 +46,11 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
     try {
       if (!provider) {
         console.error("No provider")
+        return
+      }
+
+      if (!rolesModifierAddress) {
+        console.error("No rolesModifierAddress")
         return
       }
 
@@ -72,12 +79,6 @@ const CreateRoleModal = ({ onClose: onCloseIn, isOpen, rolesModifierAddress }: P
       setTargetAddress(address)
     }
   }
-
-  // const convertTxToSafeTx = (tx: PopulatedTransaction): SafeTransaction => ({
-  //   to: tx.to as string,
-  //   value: "0",
-  //   data: tx.data as string,
-  // })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

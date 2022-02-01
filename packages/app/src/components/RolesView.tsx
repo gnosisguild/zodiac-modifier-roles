@@ -7,7 +7,6 @@ import CreateRoleModal from "./CreateRoleModal"
 import RoleTable from "./RoleTable"
 import RoleModal from "./RoleModal"
 import { Role } from "../hooks/useSubgraph"
-const rolesModifierAddress = "0xbdfdf9b21e18883a107d185ec80733c402357fdc" // TODO: get this for the current safe in the subgraph
 
 const useStyles = makeStyles((theme) => ({
   item: {
@@ -51,18 +50,9 @@ export const RolesView = (): React.ReactElement => {
           Create a role
         </Button>
       </Box>
-      <RoleTable modifierAddress={rolesModifierAddress} openRole={setOpenRole} />
-      <CreateRoleModal
-        isOpen={createRoleModalIsOpen}
-        onClose={() => setCreateRoleModalIsOpen(false)}
-        rolesModifierAddress={rolesModifierAddress}
-      />
-      <RoleModal
-        isOpen={openRole != null}
-        role={openRole}
-        onClose={() => setOpenRole(undefined)}
-        modifierAddress={rolesModifierAddress}
-      />
+      <RoleTable openRole={setOpenRole} />
+      <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
+      <RoleModal isOpen={openRole != null} role={openRole} onClose={() => setOpenRole(undefined)} />
     </Grid>
   )
 }

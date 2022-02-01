@@ -25,13 +25,12 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type Props = {
-  modifierAddress: string
   openRole: (role: Role) => void
 }
 
-const RoleTable = ({ modifierAddress, openRole }: Props): React.ReactElement => {
+const RoleTable = ({ openRole }: Props): React.ReactElement => {
   const classes = useStyles()
-  const roles = useGetRolesForRolesModifier(modifierAddress)
+  const roles = useGetRolesForRolesModifier()
 
   console.log(roles)
 
