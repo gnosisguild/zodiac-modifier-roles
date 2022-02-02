@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } from "@material-ui/core"
+import AddMemberModal from "./AddMemberModal"
+import AddTargetModal from "./AddTargetModal"
 import AddIcon from "@material-ui/icons/Add"
 import ArrowBackSharp from "@material-ui/icons/ArrowBackSharp"
 
@@ -82,6 +84,8 @@ const RoleView = () => {
   const classes = useStyles()
   const [isWaiting, setIsWaiting] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
+  const [AddMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
+  const [AddTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
 
   return (
     <>
@@ -131,7 +135,7 @@ const RoleView = () => {
                   color="secondary"
                   size="large"
                   variant="contained"
-                  // onClick={onSubmit}
+                  onClick={() => setAddMemberModalIsOpen(true)}
                   startIcon={<AddIcon />}
                 >
                   Add a Member
@@ -153,7 +157,7 @@ const RoleView = () => {
                   color="secondary"
                   size="large"
                   variant="contained"
-                  // onClick={onSubmit}
+                  onClick={() => setAddTargetModalIsOpen(true)}
                   startIcon={<AddIcon />}
                 >
                   Add a Target
@@ -205,6 +209,8 @@ const RoleView = () => {
           </Box>
         </Grid>
       </Grid>
+      <AddMemberModal isOpen={AddMemberModalIsOpen} onClose={() => setAddMemberModalIsOpen(false)} />
+      <AddTargetModal isOpen={AddTargetModalIsOpen} onClose={() => setAddTargetModalIsOpen(false)} />
     </>
   )
 }
