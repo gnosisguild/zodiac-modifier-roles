@@ -26,8 +26,13 @@ const useStyles = makeStyles((theme) => ({
     "&:hover::before": {
       backgroundColor: "rgba(217, 212, 173, 0.3)",
     },
+    "&.isActive": {
+      cursor: "initial",
+      borderColor: "#fff",
+    },
     "&.isActive::before": {
-      backgroundColor: "rgba(217, 212, 173, 0.3)",
+      backgroundColor: "transparent",
+      borderColor: "#fff",
     },
   },
   address: {
@@ -76,21 +81,21 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type TargetProps = {
-  address: string
-  id: number
+  target: { id: string; address: string }
+  onClickTarget: (target: TargetProps["target"]) => void
+  activeTarget: boolean
 }
 
-const RoleTarget = ({ address, id }: TargetProps) => {
+const RoleTarget = ({ target, onClickTarget, activeTarget }: TargetProps) => {
   const classes = useStyles()
+  const { address } = target
 
   const onRemoveTarget = async (targetToBeRemoved: string) => {
     console.log(targetToBeRemoved)
   }
 
-  const active = false
-
   return (
-    <Box key={id} className={clsx(classes.container, active && "isActive")}>
+    <Box className={clsx(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
       <Box className={classes.address}>
         <Box className={classes.targetIconContainer}>
           <Box className={classes.targetIcon} width={16} height={16} />

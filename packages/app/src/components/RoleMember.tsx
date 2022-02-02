@@ -62,12 +62,12 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type MemberProps = {
-  address: string
-  id: string
+  member: { id: string; address: string }
 }
 
-const RoleMember = ({ address, id }: MemberProps) => {
+const RoleMember = ({ member }: MemberProps) => {
   const classes = useStyles()
+  const { id, address } = member
 
   const blockie = useMemo(() => address && makeBlockie(address), [address])
 
@@ -76,7 +76,7 @@ const RoleMember = ({ address, id }: MemberProps) => {
   }
 
   return (
-    <Box key={id} className={classes.container}>
+    <Box className={classes.container}>
       <Box className={classes.address}>
         <Box className={classes.blockieContainer}>
           <img className={classes.blockie} src={blockie} alt={address} width={16} height={16} />

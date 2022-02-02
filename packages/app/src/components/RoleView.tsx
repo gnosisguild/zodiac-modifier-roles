@@ -5,6 +5,7 @@ import ButtonLink from "./ButtonLink"
 import AddMemberModal from "./AddMemberModal"
 import AddTargetModal from "./AddTargetModal"
 import RoleMember from "./RoleMember"
+import RoleParameters from "./RoleParameters"
 import RoleTarget from "./RoleTarget"
 import { Role } from "../typings/role"
 import { useRootSelector } from "../store"
@@ -95,6 +96,7 @@ const RoleView = ({ role }: Props) => {
   const error = useRootSelector(getTransactionError)
   const [AddMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
   const [AddTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
+  const [ActiveTarget, setActiveTarget] = useState(role.targets[0])
 
   return (
     <>
@@ -137,7 +139,7 @@ const RoleView = ({ role }: Props) => {
                 {role.members.length > 0 ? (
                   <>
                     {role.members.map((member) => {
-                      return <RoleMember id={member.member.id} address={member.member.address} />
+                      return <RoleMember key={member.member.id} member={member.member} />
                     })}
                     <Link onClick={() => setAddMemberModalIsOpen(true)} underline="none">
                       <ButtonLink text="Add a Member" icon={<AddSharp fontSize="small" />} />
@@ -169,8 +171,15 @@ const RoleView = ({ role }: Props) => {
               <Box sx={{ mt: 1 }}>
                 {role.targets.length > 0 ? (
                   <>
-                    {role.targets.map((target, id) => {
-                      return <RoleTarget id={id} address={target.address} />
+                    {role.targets.map((target) => {
+                      return (
+                        <RoleTarget
+                          key={target.id}
+                          target={target}
+                          onClickTarget={setActiveTarget}
+                          activeTarget={!!(ActiveTarget && ActiveTarget.id === target.id)}
+                        />
+                      )
                     })}
                     <Link onClick={() => setAddTargetModalIsOpen(true)} underline="none">
                       <ButtonLink text="Add a Target" icon={<AddSharp fontSize="small" />} />
@@ -199,7 +208,13 @@ const RoleView = ({ role }: Props) => {
               disabled={isWaiting}
               startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
             >
-              {isWaiting ? "Creating role..." : "Create role"}
+              {role && isWaiting
+                ? "Updating role..."
+                : role
+                ? "Update role"
+                : isWaiting
+                ? "Creating role..."
+                : "Create role"}
             </Button>
           </Box>
 
@@ -211,24 +226,24 @@ const RoleView = ({ role }: Props) => {
         </Grid>
         <Grid item xs={8} lg={9}>
           <Box className={classes.item}>
-            {/* If the role has no targets set */}
-            <Box className={classes.mainPanelZeroState}>
-              <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
-                <Typography variant="body1" align="center">
-                  You currently have no targets associated with this role.
-                  <br />
-                  Once you’ve added a target, you can configure the permissions here.
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Link href="#" underline="none">
-                    <ButtonLink icon={<ArrowBackSharp fontSize="small" />} text="Go back to Roles" />
-                  </Link>
+            {!ActiveTarget ? (
+              <Box className={classes.mainPanelZeroState}>
+                <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
+                  <Typography variant="body1" align="center">
+                    You currently have no targets associated with this role.
+                    <br />
+                    Once you’ve added a target, you can configure the permissions here.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Link href="#" underline="none">
+                      <ButtonLink icon={<ArrowBackSharp fontSize="small" />} text="Go back to Roles" />
+                    </Link>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-
-            {/* If the role has at least one target set, set the first target in the list as active */}
-            {/* <RoleParameters /> */}
+            ) : (
+              <RoleParameters target={ActiveTarget} />
+            )}
           </Box>
         </Grid>
       </Grid>
