@@ -123,10 +123,18 @@ export const ZODIAC_THEME = createTheme({
       },
       contained: {
         boxShadow: "none",
-        border: "1px solid rgba(217, 212, 173, 0.3);",
+        border: "1px solid rgba(217, 212, 173, 0.3)",
       },
       containedSizeSmall: {
         padding: "4px 8px",
+      },
+      outlinedSecondary: {
+        border: "1px solid rgba(217, 212, 173, 0.3)",
+        color: "#fff",
+        "&:hover": {
+          backgroundColor: "1px solid rgba(217, 212, 173, 0.3)",
+          border: "1px solid rgba(217, 212, 173, 0.3)",
+        },
       },
     },
     MuiCheckbox: {
