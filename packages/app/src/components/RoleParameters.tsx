@@ -34,13 +34,8 @@ export default function IndeterminateCheckbox() {
   }
 
   const onTargetAddressChange = (address: string) => {
-    if (ethers.utils.isAddress(address)) {
-      setIsValidAddress(true)
-      setTargetAddress(address)
-    } else {
-      setIsValidAddress(false)
-      setTargetAddress(address)
-    }
+    setIsValidAddress(ethers.utils.isAddress(address))
+    setTargetAddress(address)
   }
 
   const children = (

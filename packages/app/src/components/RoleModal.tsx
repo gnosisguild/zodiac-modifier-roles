@@ -99,13 +99,8 @@ const RoleModal = ({ isOpen, role, onClose: oncloseIn }: Props): React.ReactElem
   }
 
   const onMemberAddressChange = (address: string) => {
-    if (ethers.utils.isAddress(address)) {
-      setIsValidAddress(true)
-      setMemberAddress(address)
-    } else {
-      setIsValidAddress(false)
-      setMemberAddress(address)
-    }
+    setIsValidAddress(ethers.utils.isAddress(address))
+    setMemberAddress(address)
   }
 
   const onAddMember = async () => {
