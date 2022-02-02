@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } from "@material-ui/core"
+import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
+import ButtonLink from "./ButtonLink"
 import AddMemberModal from "./AddMemberModal"
 import AddTargetModal from "./AddTargetModal"
-import AddIcon from "@material-ui/icons/Add"
-import ArrowBackSharp from "@material-ui/icons/ArrowBackSharp"
+import RoleMember from "./RoleMember"
+import RoleTarget from "./RoleTarget"
 import { Role } from "../typings/role"
 import { useRootSelector } from "../store"
 import { getTransactionError, getTransactionPending } from "../store/main/selectors"
@@ -31,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   },
   img: {
     borderRadius: "50%",
-    border: "1px solid rgba(250, 132, 132, 0.2)",
+    border: "1px solid rgba(217, 212, 173, 0.3)",
     padding: 4,
     width: 68,
   },
@@ -105,12 +107,7 @@ const RoleView = ({ role }: Props) => {
         }}
       >
         <Typography variant="h4">Create a new role</Typography>
-        <Link className={classes.viewRolesLink}>
-          <Box display="flex" alignItems="center">
-            <ArrowBackSharp fontSize="small" />
-            <Box sx={{ ml: 1 }}>View All Roles</Box>
-          </Box>
-        </Link>
+        <ButtonLink text="View all roles" icon={<ArrowBackSharp fontSize="small" />} />
       </Box>
 
       <Grid container spacing={1} className={classes.container}>
@@ -137,16 +134,27 @@ const RoleView = ({ role }: Props) => {
                 </Link>
               </Box>
               <Box sx={{ mt: 1 }}>
-                <Button
-                  fullWidth
-                  color="secondary"
-                  size="large"
-                  variant="contained"
-                  onClick={() => setAddMemberModalIsOpen(true)}
-                  startIcon={<AddIcon />}
-                >
-                  Add a Member
-                </Button>
+                {role.members.length > 0 ? (
+                  <>
+                    {role.members.map((member) => {
+                      return <RoleMember id={member.member.id} address={member.member.address} />
+                    })}
+                    <Link onClick={() => setAddMemberModalIsOpen(true)} underline="none">
+                      <ButtonLink text="Add a Member" icon={<AddSharp fontSize="small" />} />
+                    </Link>
+                  </>
+                ) : (
+                  <Button
+                    fullWidth
+                    color="secondary"
+                    size="large"
+                    variant="contained"
+                    onClick={() => setAddMemberModalIsOpen(true)}
+                    startIcon={<AddSharp />}
+                  >
+                    Add a Member
+                  </Button>
+                )}
               </Box>
               <Box className={classes.labelWrapper} sx={{ mt: 4 }}>
                 <Typography variant="body1" className={classes.label}>
@@ -159,16 +167,27 @@ const RoleView = ({ role }: Props) => {
                 </Link>
               </Box>
               <Box sx={{ mt: 1 }}>
-                <Button
-                  fullWidth
-                  color="secondary"
-                  size="large"
-                  variant="contained"
-                  onClick={() => setAddTargetModalIsOpen(true)}
-                  startIcon={<AddIcon />}
-                >
-                  Add a Target
-                </Button>
+                {role.targets.length > 0 ? (
+                  <>
+                    {role.targets.map((target, id) => {
+                      return <RoleTarget id={id} address={target.address} />
+                    })}
+                    <Link onClick={() => setAddTargetModalIsOpen(true)} underline="none">
+                      <ButtonLink text="Add a Target" icon={<AddSharp fontSize="small" />} />
+                    </Link>
+                  </>
+                ) : (
+                  <Button
+                    fullWidth
+                    color="secondary"
+                    size="large"
+                    variant="contained"
+                    onClick={() => setAddTargetModalIsOpen(true)}
+                    startIcon={<AddSharp />}
+                  >
+                    Add a Target
+                  </Button>
+                )}
               </Box>
             </Box>
             <Button
@@ -178,7 +197,7 @@ const RoleView = ({ role }: Props) => {
               variant="contained"
               // onClick={onSubmit}
               disabled={isWaiting}
-              startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddIcon />}
+              startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
             >
               {isWaiting ? "Creating role..." : "Create role"}
             </Button>
@@ -201,11 +220,8 @@ const RoleView = ({ role }: Props) => {
                   Once you’ve added a target, you can configure the permissions here.
                 </Typography>
                 <Box sx={{ mt: 2 }}>
-                  <Link className={classes.viewRolesLink}>
-                    <Box display="flex" alignItems="center">
-                      <ArrowBackSharp fontSize="small" />
-                      <Box sx={{ ml: 1 }}>Go back to Roles</Box>
-                    </Box>
+                  <Link href="#" underline="none">
+                    <ButtonLink icon={<ArrowBackSharp fontSize="small" />} text="Go back to Roles" />
                   </Link>
                 </Box>
               </Box>
