@@ -54,6 +54,7 @@ const RoleTableRow = ({ role, onClickRole }: Props): React.ReactElement => {
     <TableRow key={role.id} className={classes.tableRow} onClick={() => onClickRole(role)}>
       <TableCell className={classes.tableCell}>{`Role #${role.id}`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.members.length} Members`}</TableCell>
+      <TableCell className={classes.tableCell}>{`${role.targets.length} Targets`}</TableCell>
       <TableCell className={classes.tableCell}>
         <Box display="flex" justifyContent="flex-end">
           <Box sx={{ mr: 1 }}>

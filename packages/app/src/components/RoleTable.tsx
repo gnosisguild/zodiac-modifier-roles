@@ -11,8 +11,8 @@ const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: theme.spacing(2),
   },
-  memberCell: {
-    width: "50%",
+  actionsCell: {
+    width: 200,
   },
   tableCell: {
     borderBottom: "1px solid rgba(217, 212, 173, 0.3)",
@@ -47,8 +47,9 @@ const RoleTable = ({ openRole }: Props): React.ReactElement => {
         <TableHead>
           <TableRow>
             <TableCell className={classes.tableHeadCell}>Role</TableCell>
-            <TableCell className={clsx(classes.tableHeadCell, classes.memberCell)}>Members</TableCell>
-            <TableCell className={classes.tableHeadCell} />
+            <TableCell className={classes.tableHeadCell}>Members</TableCell>
+            <TableCell className={classes.tableHeadCell}>Targets</TableCell>
+            <TableCell className={clsx(classes.tableHeadCell, classes.actionsCell)} />
           </TableRow>
         </TableHead>
         <TableBody>
