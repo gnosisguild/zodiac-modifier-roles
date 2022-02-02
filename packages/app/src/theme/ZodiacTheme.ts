@@ -177,10 +177,5 @@ export const ZODIAC_THEME = createTheme({
         color: "",
       },
     },
-    MuiLink: {
-      root: {
-        textDecoration: "underline !important",
-      },
-    },
   },
 })
