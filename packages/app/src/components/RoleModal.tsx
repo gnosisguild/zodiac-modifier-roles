@@ -19,10 +19,10 @@ import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
 import { useWallet } from "../hooks/useWallet"
 import AddIcon from "@material-ui/icons/Add"
-import * as rolesModifier from "../services/rolesModifierContract"
-import { useRootSelector } from "../store"
-import { getRolesModifierAddress } from "../store/main/selectors"
+import { useRootDispatch, useRootSelector } from "../store"
+import { getRolesModifierAddress, getTransactionError, getTransactionPending } from "../store/main/selectors"
 import { Role } from "../typings/role"
+import { addRoleMember, removeRoleMember, resetTransactionError } from "../store/main/rolesSlice"
 
 const useStyles = makeStyles((theme) => ({
   spacing: {
@@ -76,11 +76,12 @@ const RoleModal = ({ isOpen, role, onClose: oncloseIn }: Props): React.ReactElem
   const classes = useStyles()
   const [isValidAddress, setIsValidAddress] = useState(false)
   const [memberAddress, setMemberAddress] = useState("")
-  const [isWaiting, setIsWaiting] = useState(false)
-  const [error, setError] = useState<string | undefined>(undefined)
+  const isWaiting = useRootSelector(getTransactionPending)
+  const error = useRootSelector(getTransactionError)
   const [info, setInfo] = useState<string | undefined>(undefined)
   const { provider } = useWallet()
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
+  const dispatch = useRootDispatch()
 
   if (role == null) {
     return <></>
@@ -93,7 +94,7 @@ const RoleModal = ({ isOpen, role, onClose: oncloseIn }: Props): React.ReactElem
 
   const onClose = () => {
     oncloseIn()
-    setError(undefined)
+    dispatch(resetTransactionError())
     setInfo(undefined)
   }
 
@@ -108,27 +109,20 @@ const RoleModal = ({ isOpen, role, onClose: oncloseIn }: Props): React.ReactElem
   }
 
   const onAddMember = async () => {
-    setIsWaiting(true)
-    try {
-      await rolesModifier.addMember(provider, rolesModifierAddress, role.id, memberAddress)
-      setInfo("Add member transaction initiated")
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setIsWaiting(false)
+    // setIsWaiting(true)
+    if (provider == null) {
+      console.error("No provider")
+      return
     }
+    dispatch(addRoleMember({ roleId: role.id, memberAddress, provider }))
   }
 
   const onRemoveMember = async (memberToBeRemoved: string) => {
-    setIsWaiting(true)
-    try {
-      await rolesModifier.removeMember(provider, rolesModifierAddress, role.id, memberToBeRemoved)
-      setInfo("Remove member transaction initiated")
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setIsWaiting(false)
+    if (provider == null) {
+      console.error("No provider")
+      return
     }
+    dispatch(removeRoleMember({ roleId: role.id, memberAddress: memberToBeRemoved, provider }))
   }
 
   return (

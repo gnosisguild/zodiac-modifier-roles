@@ -10,3 +10,5 @@ export const getENS = createSelector(getWeb3State, (main) => main.ens)
 
 export const getRolesModifierAddress = createSelector(getRolesAppState, (main) => main.rolesModifierAddress)
 export const getRoles = createSelector(getRolesAppState, (main) => main.roles)
+export const getTransactionError = createSelector(getRolesAppState, (main) => main.transactionError)
+export const getTransactionPending = createSelector(getRolesAppState, (main) => main.transactionPending)

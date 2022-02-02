@@ -10,4 +10,7 @@ export interface Web3State {
 export interface RolesAppState {
   rolesModifierAddress?: string
   roles: Role[]
+  transactions: any[]
+  transactionPending: boolean
+  transactionError: string
 }

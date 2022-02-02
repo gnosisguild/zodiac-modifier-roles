@@ -6,12 +6,15 @@ import { ethers } from "ethers"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
-import { useRootSelector } from "../store"
-import { getRolesModifierAddress } from "../store/main/selectors"
+import { useRootDispatch, useRootSelector } from "../store"
+import { getRolesModifierAddress, getTransactionError, getTransactionPending } from "../store/main/selectors"
+import { addRoleMember, resetTransactionError } from "../store/main/rolesSlice"
+import { Role } from "../typings/role"
 
 type Props = {
   isOpen: boolean
   onClose: () => void
+  role: Role | undefined
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -26,47 +29,30 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-const AddMemberModal = ({ onClose: onCloseIn, isOpen }: Props): React.ReactElement => {
+const AddMemberModal = ({ role, onClose: onCloseIn, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [memberAddress, setMemberAddress] = useState("")
-  const [isWaiting, setIsWaiting] = useState(false)
-  const [error, setError] = useState<string | undefined>(undefined)
+  const isWaiting = useRootSelector(getTransactionPending)
+  const error = useRootSelector(getTransactionError)
   const [isValidAddress, setIsValidAddress] = useState(false)
   const { provider } = useWallet()
-  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
+  const dispatch = useRootDispatch()
 
   const onClose = () => {
     onCloseIn()
-    setError(undefined)
+    dispatch(resetTransactionError())
   }
 
   const onSubmit = async () => {
-    setIsWaiting(true)
-    try {
-      if (!provider) {
-        console.error("No provider")
-        return
-      }
-
-      if (!rolesModifierAddress) {
-        console.error("No rolesModifierAddress")
-        return
-      }
-
-      const signer = await provider.getSigner()
-      const RolesModifier = Roles__factory.connect(rolesModifierAddress, signer)
-
-      // const txs: PopulatedTransaction[] = []
-      const tx = await RolesModifier.allowTarget(Date.now().toString().slice(-4), memberAddress, "3")
-      await tx.wait()
-      // await sdk.txs.send({ txs: txs.map(convertTxToSafeTx) })
-      onClose()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setIsWaiting(false)
+    if (!provider) {
+      console.error("No provider")
+      return
     }
-    console.log("Transaction initiated")
+    if (!role) {
+      console.error("No role")
+      return
+    }
+    dispatch(addRoleMember({ roleId: role.id, memberAddress, provider }))
   }
 
   const onMemberAddressChange = (address: string) => {

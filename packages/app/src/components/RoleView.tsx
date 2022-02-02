@@ -4,6 +4,9 @@ import AddMemberModal from "./AddMemberModal"
 import AddTargetModal from "./AddTargetModal"
 import AddIcon from "@material-ui/icons/Add"
 import ArrowBackSharp from "@material-ui/icons/ArrowBackSharp"
+import { Role } from "../typings/role"
+import { useRootSelector } from "../store"
+import { getTransactionError, getTransactionPending } from "../store/main/selectors"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -80,10 +83,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-const RoleView = () => {
+type Props = {
+  role: Role
+}
+
+const RoleView = ({ role }: Props) => {
   const classes = useStyles()
-  const [isWaiting, setIsWaiting] = useState(false)
-  const [error, setError] = useState<string | undefined>(undefined)
+  const isWaiting = useRootSelector(getTransactionPending)
+  const error = useRootSelector(getTransactionError)
   const [AddMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
   const [AddTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
 
@@ -209,7 +216,7 @@ const RoleView = () => {
           </Box>
         </Grid>
       </Grid>
-      <AddMemberModal isOpen={AddMemberModalIsOpen} onClose={() => setAddMemberModalIsOpen(false)} />
+      <AddMemberModal isOpen={AddMemberModalIsOpen} onClose={() => setAddMemberModalIsOpen(false)} role={role} />
       <AddTargetModal isOpen={AddTargetModalIsOpen} onClose={() => setAddTargetModalIsOpen(false)} />
     </>
   )
