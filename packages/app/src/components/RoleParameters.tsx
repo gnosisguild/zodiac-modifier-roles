@@ -1,8 +1,8 @@
 import React, { useState } from "react"
-import { Box, Checkbox, FormControlLabel, IconButton, Typography, makeStyles } from "@material-ui/core"
+import { Box, Button, Checkbox, FormControlLabel, IconButton, Typography, makeStyles } from "@material-ui/core"
+import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
-import KeyboardArrowDownSharp from "@material-ui/icons/KeyboardArrowDownSharp"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -13,9 +13,19 @@ const useStyles = makeStyles((theme) => ({
     color: "#B2B5B2",
     fontFamily: "Roboto Mono, monospace",
   },
+  removeButton: {
+    marginLeft: theme.spacing(4),
+    whiteSpace: "nowrap",
+    paddingLeft: theme.spacing(4),
+    paddingRight: theme.spacing(4),
+  },
 }))
 
-export default function IndeterminateCheckbox() {
+type Props = {
+  target: { id: string; address: string }
+}
+
+const RoleParameters = ({ target }: Props) => {
   const classes = useStyles()
   const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
@@ -61,7 +71,23 @@ export default function IndeterminateCheckbox() {
 
   return (
     <Box>
-      <TextField onChange={(e) => onTargetAddressChange(e.target.value)} label="Target Address" placeholder="0x..." />
+      <Box alignItems="flex-end" display="flex" justifyContent="space-between">
+        <TextField
+          onChange={(e) => onTargetAddressChange(e.target.value)}
+          label="Target Address"
+          placeholder={target.address}
+        />
+        <Button
+          color="secondary"
+          variant="outlined"
+          className={classes.removeButton}
+          size="large"
+          // onClick={removeTarget}
+          startIcon={<DeleteOutlineSharp />}
+        >
+          Remove Target
+        </Button>
+      </Box>
       <Box sx={{ pl: 1, mt: 2 }}>
         <FormControlLabel
           label={"Allow all functions"}
@@ -107,3 +133,5 @@ export default function IndeterminateCheckbox() {
     </Box>
   )
 }
+
+export default RoleParameters
