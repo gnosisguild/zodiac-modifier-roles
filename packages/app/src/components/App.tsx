@@ -7,11 +7,12 @@ import { useRootDispatch, useRootSelector } from "../store"
 import ConnectWallet from "./ConnectWallet"
 import RolesView from "./RolesView"
 import { useQuery } from "../hooks/useQuery"
-import { setChainId, setRolesModifierAddress } from "../store/main"
+import { setChainId } from "../store/main/web3Slice"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
 import AttachRolesModifierModal from "./AttachRolesModifierModal"
 import { ethers } from "ethers"
 import { getRolesModifierAddress } from "../store/main/selectors"
+import { setRolesModifierAddress } from "../store/main/rolesSlice"
 
 const useStyles = makeStyles((theme) => ({
   root: {

@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@material-ui/core"
 import React, { useState } from "react"
-import { Role } from "../hooks/useSubgraph"
 import Modal from "./commons/Modal"
 import clsx from "clsx"
 import { DeleteOutlineSharp } from "@material-ui/icons"
@@ -20,9 +19,10 @@ import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
 import { useWallet } from "../hooks/useWallet"
 import AddIcon from "@material-ui/icons/Add"
-import * as rolesModifier from "../services/rolesModifier"
+import * as rolesModifier from "../services/rolesModifierContract"
 import { useRootSelector } from "../store"
 import { getRolesModifierAddress } from "../store/main/selectors"
+import { Role } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   spacing: {

@@ -1,9 +1,9 @@
 import React from "react"
-import { Role } from "../hooks/useSubgraph"
 import { Box, Button, IconButton, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
 import DeleteOutlineSharp from "@material-ui/icons/DeleteOutlineSharp"
 import clsx from "clsx"
+import { Role } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   arrowIcon: {

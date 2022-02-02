@@ -6,7 +6,7 @@ import SearchIcon from "@material-ui/icons/Search"
 import CreateRoleModal from "./CreateRoleModal"
 import RoleTable from "./RoleTable"
 import RoleModal from "./RoleModal"
-import { Role } from "../hooks/useSubgraph"
+import { Role } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   item: {

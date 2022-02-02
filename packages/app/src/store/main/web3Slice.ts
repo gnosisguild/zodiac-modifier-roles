@@ -16,7 +16,6 @@ console.log("initialChainId", initialChainId)
 
 const web3InitialState: Web3State = {
   chainId: initialChainId || NETWORK.MAINNET,
-  rolesModifierAddress: "",
   connectedAddress: "",
   ens: "",
 }
@@ -27,9 +26,6 @@ export const web3Slice = createSlice({
   reducers: {
     setConnectedAddress(state, action: PayloadAction<string>) {
       state.connectedAddress = action.payload
-    },
-    setRolesModifierAddress(state, action: PayloadAction<string>) {
-      state.rolesModifierAddress = action.payload
     },
     setChainId(state, action: PayloadAction<number>) {
       console.log("chain is set to:" + action.payload)
@@ -45,5 +41,4 @@ export const web3Slice = createSlice({
   },
 })
 
-export const { setChainId, setENS, setConnectedAddress, resetConnectedAddress, setRolesModifierAddress } =
-  web3Slice.actions
+export const { setChainId, setENS, setConnectedAddress, resetConnectedAddress } = web3Slice.actions

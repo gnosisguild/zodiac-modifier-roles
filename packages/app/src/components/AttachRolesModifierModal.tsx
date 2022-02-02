@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
 
 export const AttachRolesModifierModal = ({ onClose }: Props) => {
   const classes = useStyles()
-  const [rolesModifierAddress, _setRolesModifierAddress] = useState("")
+  const [rolesModifierAddress, setRolesModifierAddress] = useState("")
   const navigate = useNavigate()
   const query = useQuery()
 
@@ -48,7 +48,7 @@ export const AttachRolesModifierModal = ({ onClose }: Props) => {
 
       <TextField
         className={classes.spacing}
-        onChange={(evt: any) => _setRolesModifierAddress(evt.target.value)}
+        onChange={(evt: any) => setRolesModifierAddress(evt.target.value)}
         label="Role Modifier Address"
         placeholder="0x..."
       />

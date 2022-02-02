@@ -1,7 +1,7 @@
 import Onboard from "bnc-onboard"
 import { ethers } from "ethers"
 import { REDUX_STORE, useRootSelector } from "../store"
-import { resetConnectedAddress, setENS, setConnectedAddress } from "../store/main"
+import { resetConnectedAddress, setENS, setConnectedAddress } from "../store/main/web3Slice"
 import { useEffect, useMemo, useState } from "react"
 import { getChainId, getConnectedAddress } from "../store/main/selectors"
 import { getNetworkRPC } from "../utils/networks"

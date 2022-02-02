@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
-import { web3Slice } from "./main"
+import { rolesAppSlice } from "./main/rolesSlice"
+import { web3Slice } from "./main/web3Slice"
 
 export const REDUX_STORE = configureStore({
   reducer: {
     web3: web3Slice.reducer,
+    rolesApp: rolesAppSlice.reducer,
   },
 })
 
