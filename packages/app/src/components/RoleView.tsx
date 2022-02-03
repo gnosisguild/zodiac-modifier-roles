@@ -6,7 +6,7 @@ import ButtonLink from "./ButtonLink"
 import AddMemberModal from "./AddMemberModal"
 import AddTargetModal from "./AddTargetModal"
 import RoleMember from "./RoleMember"
-import RoleParameters from "./RoleParameters"
+import TargetParameters from "./TargetParameters"
 import RoleTarget from "./RoleTarget"
 import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
@@ -258,7 +258,7 @@ const RoleView = () => {
                 </Box>
               </Box>
             ) : (
-              <RoleParameters target={ActiveTarget} />
+              <TargetParameters target={ActiveTarget} />
             )}
           </Box>
         </Grid>

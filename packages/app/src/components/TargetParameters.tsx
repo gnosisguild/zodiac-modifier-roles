@@ -3,6 +3,7 @@ import { Box, Button, Checkbox, FormControlLabel, IconButton, Typography, makeSt
 import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
+import { Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -22,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type Props = {
-  target: { id: string; address: string }
+  target: Target
 }
 
 const RoleParameters = ({ target }: Props) => {
