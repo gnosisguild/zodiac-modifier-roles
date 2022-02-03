@@ -101,6 +101,7 @@ const RoleView = () => {
 
   useEffect(() => {
     dispatch(fetchRoles())
+    setActiveTarget(role?.targets[0])
   }, [dispatch, roleId])
 
   if (!roleId) {
