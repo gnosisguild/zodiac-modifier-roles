@@ -1,6 +1,6 @@
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
-import clsx from "clsx"
+import classNames from "classnames"
 import truncateEthAddress from "truncate-eth-address"
 
 const useStyles = makeStyles((theme) => ({
@@ -95,7 +95,7 @@ const RoleTarget = ({ target, onClickTarget, activeTarget }: TargetProps) => {
   }
 
   return (
-    <Box className={clsx(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
+    <Box className={classNames(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
       <Box className={classes.address}>
         <Box className={classes.targetIconContainer}>
           <Box className={classes.targetIcon} width={16} height={16} />
@@ -106,7 +106,7 @@ const RoleTarget = ({ target, onClickTarget, activeTarget }: TargetProps) => {
         <IconButton
           size="small"
           aria-label="Remove target"
-          className={clsx(classes.iconButton, classes.deleteButton)}
+          className={classNames(classes.iconButton, classes.deleteButton)}
           onClick={() => onRemoveTarget(address)}
         >
           <DeleteOutlineSharp className={classes.deleteIcon} />

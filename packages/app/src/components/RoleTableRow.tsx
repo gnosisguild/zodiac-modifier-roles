@@ -2,7 +2,7 @@ import React from "react"
 import { Box, Button, IconButton, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
 import DeleteOutlineSharp from "@material-ui/icons/DeleteOutlineSharp"
-import clsx from "clsx"
+import classNames from "classnames"
 import { Role } from "../typings/role"
 import { useNavigate } from "react-router-dom"
 
@@ -68,7 +68,7 @@ const RoleTableRow = ({ role }: Props): React.ReactElement => {
             <IconButton
               size="small"
               aria-label="Delete Role"
-              className={clsx(classes.iconButton, classes.deleteButton)}
+              className={classNames(classes.iconButton, classes.deleteButton)}
             >
               <DeleteOutlineSharp className={classes.deleteIcon} />
             </IconButton>

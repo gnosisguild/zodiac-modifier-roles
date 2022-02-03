@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { Box, Table, TableHead, TableBody, TableRow, TableCell, makeStyles } from "@material-ui/core"
-import clsx from "clsx"
+import classNames from "classnames"
 import RoleTableRow from "./RoleTableRow"
 import { useRootDispatch, useRootSelector } from "../store"
 import { getRoles, getRolesModifierAddress } from "../store/main/selectors"
@@ -44,7 +44,7 @@ const RoleTable = (): React.ReactElement => {
             <TableCell className={classes.tableHeadCell}>Role</TableCell>
             <TableCell className={classes.tableHeadCell}>Members</TableCell>
             <TableCell className={classes.tableHeadCell}>Targets</TableCell>
-            <TableCell className={clsx(classes.tableHeadCell, classes.actionsCell)} />
+            <TableCell className={classNames(classes.tableHeadCell, classes.actionsCell)} />
           </TableRow>
         </TableHead>
         <TableBody>

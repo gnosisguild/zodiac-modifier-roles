@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
-import clsx from "clsx"
+import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
 import truncateEthAddress from "truncate-eth-address"
 import { Member } from "../typings/role"
@@ -87,7 +87,7 @@ const RoleMember = ({ member }: MemberProps) => {
       <IconButton
         size="small"
         aria-label="Remove member"
-        className={clsx(classes.iconButton, classes.deleteButton)}
+        className={classNames(classes.iconButton, classes.deleteButton)}
         onClick={() => onRemoveMember(address)}
       >
         <DeleteOutlineSharp className={classes.deleteIcon} />
