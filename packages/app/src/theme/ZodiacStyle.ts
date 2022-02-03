@@ -64,6 +64,10 @@ export const ZodiacStyle = createGlobalStyle`
       z-index: 2;
     }
 
+    a {
+      text-decoration: none;
+    }
+
     @font-face {
         font-family: 'Averta';
         src: local('Averta'), local('Averta Bold'),
