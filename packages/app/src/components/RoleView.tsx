@@ -9,8 +9,15 @@ import TargetParameters from "./TargetParameters"
 import RoleTarget from "./RoleTarget"
 import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
-import { getRoleById, getTransactionError, getTransactionPending } from "../store/main/selectors"
+import {
+  getRoleById,
+  getRolesModifierAddress,
+  getTransactionError,
+  getTransactionPending,
+} from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
+import { updateRole } from "../services/rolesModifierContract"
+import { useWallet } from "../hooks/useWallet"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -101,6 +108,8 @@ const RoleView = () => {
   const [membersToRemove, setMembersToRemove] = useState<string[]>([])
   const [targetsToAdd, setTargetsToAdd] = useState<string[]>([])
   const [targetsToRemove, setTargetsToRemove] = useState<string[]>([])
+  const { provider } = useWallet()
+  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   useEffect(() => {
     dispatch(fetchRoles())
@@ -118,11 +127,13 @@ const RoleView = () => {
   const handleAddMember = (memberAddress: string) => {
     setMembersToAdd((membersToAdd) => [...membersToAdd, memberAddress])
     setAddMemberModalIsOpen(false)
+    console.log(`Added ${memberAddress} to the list of members to add.`)
   }
 
   const handleAddTarget = (targetAddress: string) => {
     setTargetsToAdd((targetsToAdd) => [...targetsToAdd, targetAddress])
     setAddTargetModalIsOpen(false)
+    console.log(`Added ${targetAddress} to the list of targets to add.`)
   }
 
   return (
@@ -233,7 +244,17 @@ const RoleView = () => {
               color="secondary"
               size="large"
               variant="contained"
-              // onClick={onSubmit}
+              onClick={() =>
+                updateRole(
+                  provider,
+                  rolesModifierAddress,
+                  roleId,
+                  membersToAdd,
+                  membersToRemove,
+                  targetsToAdd,
+                  targetsToRemove,
+                )
+              }
               disabled={isWaiting}
               startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
             >

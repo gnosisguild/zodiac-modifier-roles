@@ -2,7 +2,7 @@ import { ethers } from "ethers"
 import { Roles__factory } from "../contracts/type"
 // get the safe and provider here.
 
-export const addMember = async (
+const addMember = async (
   provider: ethers.providers.JsonRpcProvider | undefined,
   modifierAddress: string,
   roleId: string,
@@ -16,10 +16,10 @@ export const addMember = async (
   const signer = await provider.getSigner()
   const RolesModifier = Roles__factory.connect(modifierAddress, signer)
 
-  return RolesModifier.assignRoles(memberToAdd, [roleId], [true])
+  return RolesModifier.populateTransaction.assignRoles(memberToAdd, [roleId], [true])
 }
 
-export const removeMember = async (
+const removeMember = async (
   provider: ethers.providers.JsonRpcProvider | undefined,
   modifierAddress: string,
   roleId: string,
@@ -33,5 +33,17 @@ export const removeMember = async (
   const signer = await provider.getSigner()
   const RolesModifier = Roles__factory.connect(modifierAddress, signer)
 
-  return RolesModifier.assignRoles(memberToRemove, [roleId], [false])
+  return RolesModifier.populateTransaction.assignRoles(memberToRemove, [roleId], [false])
+}
+
+export const updateRole = async (
+  provider: ethers.providers.JsonRpcProvider | undefined,
+  modifierAddress: string | undefined,
+  roleId: string,
+  membersToAdd: string[],
+  membersToRemove: string[],
+  targetsToAdd: string[],
+  targetsToRemove: string[],
+) => {
+  console.log("not implemented yest. Will update the role.")
 }
