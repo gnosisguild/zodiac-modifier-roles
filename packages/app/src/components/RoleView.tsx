@@ -3,8 +3,7 @@ import { useParams, Link as RouterLink } from "react-router-dom"
 import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } from "@material-ui/core"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import ButtonLink from "./ButtonLink"
-import AddMemberModal from "./AddMemberModal"
-import AddTargetModal from "./AddTargetModal"
+import AddAddressModal from "./AddAddressModal"
 import RoleMember from "./RoleMember"
 import TargetParameters from "./TargetParameters"
 import RoleTarget from "./RoleTarget"
@@ -95,9 +94,13 @@ const RoleView = () => {
   const role = useRootSelector(getRoleById(roleId))
   const isWaiting = useRootSelector(getTransactionPending)
   const error = useRootSelector(getTransactionError)
-  const [AddMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
-  const [AddTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
-  const [ActiveTarget, setActiveTarget] = useState<Target>()
+  const [addMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
+  const [addTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
+  const [activeTarget, setActiveTarget] = useState<Target>()
+  const [membersToAdd, setMembersToAdd] = useState<string[]>([])
+  const [membersToRemove, setMembersToRemove] = useState<string[]>([])
+  const [targetsToAdd, setTargetsToAdd] = useState<string[]>([])
+  const [targetsToRemove, setTargetsToRemove] = useState<string[]>([])
 
   useEffect(() => {
     dispatch(fetchRoles())
@@ -110,6 +113,16 @@ const RoleView = () => {
 
   if (!role) {
     return <>Role with id: ${roleId} does not exist in this roles modifier</>
+  }
+
+  const handleAddMember = (memberAddress: string) => {
+    setMembersToAdd((membersToAdd) => [...membersToAdd, memberAddress])
+    setAddMemberModalIsOpen(false)
+  }
+
+  const handleAddTarget = (targetAddress: string) => {
+    setTargetsToAdd((targetsToAdd) => [...targetsToAdd, targetAddress])
+    setAddTargetModalIsOpen(false)
   }
 
   return (
@@ -193,7 +206,7 @@ const RoleView = () => {
                           key={target.id}
                           target={target}
                           onClickTarget={setActiveTarget}
-                          activeTarget={!!(ActiveTarget && ActiveTarget.id === target.id)}
+                          activeTarget={!!(activeTarget && activeTarget.id === target.id)}
                         />
                       )
                     })}
@@ -242,7 +255,7 @@ const RoleView = () => {
         </Grid>
         <Grid item xs={8} lg={9}>
           <Box className={classes.item}>
-            {!ActiveTarget ? (
+            {!activeTarget ? (
               <Box className={classes.mainPanelZeroState}>
                 <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
                   <Typography variant="body1" align="center">
@@ -258,13 +271,23 @@ const RoleView = () => {
                 </Box>
               </Box>
             ) : (
-              <TargetParameters target={ActiveTarget} />
+              <TargetParameters target={activeTarget} />
             )}
           </Box>
         </Grid>
       </Grid>
-      <AddMemberModal isOpen={AddMemberModalIsOpen} onClose={() => setAddMemberModalIsOpen(false)} role={role} />
-      <AddTargetModal isOpen={AddTargetModalIsOpen} onClose={() => setAddTargetModalIsOpen(false)} />
+      <AddAddressModal
+        type="Member"
+        isOpen={addMemberModalIsOpen}
+        onAddAddress={handleAddMember}
+        onClose={() => setAddMemberModalIsOpen(false)}
+      />
+      <AddAddressModal
+        type="Target"
+        isOpen={addTargetModalIsOpen}
+        onAddAddress={handleAddTarget}
+        onClose={() => setAddTargetModalIsOpen(false)}
+      />
     </>
   )
 }
