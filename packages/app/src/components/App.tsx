@@ -23,22 +23,6 @@ const useStyles = makeStyles((theme) => ({
     minHeight: "100vh",
     padding: theme.spacing(3),
   },
-  container: {
-    border: "1px solid rgba(217, 212, 173, 0.3)",
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    padding: theme.spacing(2),
-    position: "relative",
-    "&::before": {
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      inset: 3,
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      pointerEvents: "none",
-    },
-  },
 }))
 
 export const App = (): React.ReactElement => {
@@ -55,9 +39,7 @@ export const App = (): React.ReactElement => {
           element={
             <div className={classes.root}>
               <Header />
-              <Grid container spacing={1} className={classes.container}>
-                <Outlet />
-              </Grid>
+              <Outlet />
               {!onboard.getState().address && <ConnectWallet onClick={startOnboard} />}
               {rolesModifierAddress == null ||
                 (!ethers.utils.isAddress(rolesModifierAddress) && <AttachRolesModifierModal onClose={() => {}} />)}

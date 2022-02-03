@@ -8,6 +8,22 @@ import RoleTable from "./RoleTable"
 import { Role } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
+  container: {
+    border: "1px solid rgba(217, 212, 173, 0.3)",
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    padding: theme.spacing(2),
+    position: "relative",
+    "&::before": {
+      content: '" "',
+      position: "absolute",
+      zIndex: 1,
+      inset: 3,
+      border: "1px solid rgba(217, 212, 173, 0.3)",
+      pointerEvents: "none",
+    },
+  },
   item: {
     border: "1px solid rgba(217, 212, 173, 0.3)",
     height: "100%",
@@ -27,30 +43,32 @@ export const RolesView = (): React.ReactElement => {
   const [openRole, setOpenRole] = useState<Role | undefined>()
 
   return (
-    <Grid item xs={12}>
-      <Box display="flex" justifyContent="space-between">
-        <TextField
-          placeholder="Filter by Members"
-          className={classes.search}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          color="secondary"
-          onClick={() => setCreateRoleModalIsOpen(true)}
-        >
-          Create a role
-        </Button>
-      </Box>
-      <RoleTable />
-      <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
+    <Grid container spacing={1} className={classes.container}>
+      <Grid item xs={12}>
+        <Box display="flex" justifyContent="space-between">
+          <TextField
+            placeholder="Filter by Members"
+            className={classes.search}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            startIcon={<AddIcon />}
+            variant="contained"
+            color="secondary"
+            onClick={() => setCreateRoleModalIsOpen(true)}
+          >
+            Create a role
+          </Button>
+        </Box>
+        <RoleTable />
+        <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
+      </Grid>
     </Grid>
   )
 }
