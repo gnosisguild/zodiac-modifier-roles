@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { Header } from "./Header"
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
-import { Grid, makeStyles } from "@material-ui/core"
+import { makeStyles } from "@material-ui/core"
 import { useWallet } from "../hooks/useWallet"
 import { useRootDispatch, useRootSelector } from "../store"
 import ConnectWallet from "./ConnectWallet"
