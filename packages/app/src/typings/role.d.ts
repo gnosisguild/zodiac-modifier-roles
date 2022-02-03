@@ -1,6 +1,16 @@
 export type Role = {
   id: string
   rolesModifier: string
-  targets: { id: string; address: string }[]
-  members: { member: { id: string; address: string } }[]
+  targets: Target[]
+  members: { member: Member }[]
+}
+
+export type Target = {
+  id: string
+  address: string
+}
+
+export type Member = {
+  id: string
+  address: string
 }

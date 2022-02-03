@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useParams, Link as RouterLink } from "react-router-dom"
 import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } from "@material-ui/core"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import ButtonLink from "./ButtonLink"
@@ -7,9 +8,10 @@ import AddTargetModal from "./AddTargetModal"
 import RoleMember from "./RoleMember"
 import RoleParameters from "./RoleParameters"
 import RoleTarget from "./RoleTarget"
-import { Role } from "../typings/role"
-import { useRootSelector } from "../store"
-import { getTransactionError, getTransactionPending } from "../store/main/selectors"
+import { Target } from "../typings/role"
+import { useRootDispatch, useRootSelector } from "../store"
+import { getRoleById, getTransactionError, getTransactionPending } from "../store/main/selectors"
+import { fetchRoles } from "../store/main/rolesSlice"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -86,17 +88,28 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type Props = {
-  role: Role
-}
-
-const RoleView = ({ role }: Props) => {
+const RoleView = () => {
   const classes = useStyles()
+  const dispatch = useRootDispatch()
+  const { roleId } = useParams()
+  const role = useRootSelector(getRoleById(roleId))
   const isWaiting = useRootSelector(getTransactionPending)
   const error = useRootSelector(getTransactionError)
   const [AddMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
   const [AddTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
-  const [ActiveTarget, setActiveTarget] = useState(role.targets[0])
+  const [ActiveTarget, setActiveTarget] = useState<Target>()
+
+  useEffect(() => {
+    dispatch(fetchRoles())
+  }, [dispatch, roleId])
+
+  if (!roleId) {
+    return <>Missing Id</>
+  }
+
+  if (!role) {
+    return <>Role with id: ${roleId} does not exist in this roles modifier</>
+  }
 
   return (
     <>
@@ -109,7 +122,9 @@ const RoleView = ({ role }: Props) => {
         }}
       >
         <Typography variant="h4">Create a new role</Typography>
-        <ButtonLink text="View all roles" icon={<ArrowBackSharp fontSize="small" />} />
+        <RouterLink to="/">
+          <ButtonLink text="View all roles" icon={<ArrowBackSharp fontSize="small" />} />
+        </RouterLink>
       </Box>
 
       <Grid container spacing={1} className={classes.container}>
@@ -235,9 +250,9 @@ const RoleView = ({ role }: Props) => {
                     Once you’ve added a target, you can configure the permissions here.
                   </Typography>
                   <Box sx={{ mt: 2 }}>
-                    <Link href="#" underline="none">
+                    <RouterLink to="/">
                       <ButtonLink icon={<ArrowBackSharp fontSize="small" />} text="Go back to Roles" />
-                    </Link>
+                    </RouterLink>
                   </Box>
                 </Box>
               </Box>

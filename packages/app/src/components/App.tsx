@@ -13,6 +13,7 @@ import AttachRolesModifierModal from "./AttachRolesModifierModal"
 import { ethers } from "ethers"
 import { getRolesModifierAddress } from "../store/main/selectors"
 import { setRolesModifierAddress } from "../store/main/rolesSlice"
+import RoleView from "./RoleView"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -63,6 +64,7 @@ export const App = (): React.ReactElement => {
             </div>
           }
         >
+          <Route path="/roles/:roleId" element={<RoleView />} />
           <Route path="/" element={<RolesView />} />
         </Route>
       </Routes>

@@ -4,7 +4,6 @@ import clsx from "clsx"
 import RoleTableRow from "./RoleTableRow"
 import { useRootDispatch, useRootSelector } from "../store"
 import { getRoles, getRolesModifierAddress } from "../store/main/selectors"
-import { Role } from "../typings/role"
 import { fetchRoles } from "../store/main/rolesSlice"
 
 const useStyles = makeStyles((theme) => ({
@@ -27,11 +26,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type Props = {
-  openRole: (role: Role) => void
-}
-
-const RoleTable = ({ openRole }: Props): React.ReactElement => {
+const RoleTable = (): React.ReactElement => {
   const classes = useStyles()
   const dispatch = useRootDispatch()
   const roles = useRootSelector(getRoles)
@@ -54,7 +49,7 @@ const RoleTable = ({ openRole }: Props): React.ReactElement => {
         </TableHead>
         <TableBody>
           {roles.map((role) => (
-            <RoleTableRow key={role.id} role={role} onClickRole={openRole} />
+            <RoleTableRow key={role.id} role={role} />
           ))}
         </TableBody>
       </Table>

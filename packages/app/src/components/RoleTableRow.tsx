@@ -4,6 +4,7 @@ import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
 import DeleteOutlineSharp from "@material-ui/icons/DeleteOutlineSharp"
 import clsx from "clsx"
 import { Role } from "../typings/role"
+import { useNavigate } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
   arrowIcon: {
@@ -45,20 +46,21 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type Props = { role: Role; onClickRole: (role: Role) => void }
+type Props = { role: Role }
 
-const RoleTableRow = ({ role, onClickRole }: Props): React.ReactElement => {
+const RoleTableRow = ({ role }: Props): React.ReactElement => {
   const classes = useStyles()
+  let navigate = useNavigate()
 
   return (
-    <TableRow key={role.id} className={classes.tableRow} onClick={() => onClickRole(role)}>
+    <TableRow key={role.id} className={classes.tableRow} onClick={() => navigate(`/roles/${role.id}`)}>
       <TableCell className={classes.tableCell}>{`Role #${role.id}`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.members.length} Members`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.targets.length} Targets`}</TableCell>
       <TableCell className={classes.tableCell}>
         <Box display="flex" justifyContent="flex-end">
           <Box sx={{ mr: 1 }}>
-            <Button aria-label="Edit Role" className={classes.tableButton} onClick={() => onClickRole(role)}>
+            <Button aria-label="Edit Role" className={classes.tableButton}>
               Edit
             </Button>
           </Box>

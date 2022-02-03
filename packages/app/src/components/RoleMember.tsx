@@ -4,6 +4,7 @@ import { DeleteOutlineSharp } from "@material-ui/icons"
 import clsx from "clsx"
 import makeBlockie from "ethereum-blockies-base64"
 import truncateEthAddress from "truncate-eth-address"
+import { Member } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -62,12 +63,12 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type MemberProps = {
-  member: { id: string; address: string }
+  member: Member
 }
 
 const RoleMember = ({ member }: MemberProps) => {
   const classes = useStyles()
-  const { id, address } = member
+  const { address } = member
 
   const blockie = useMemo(() => address && makeBlockie(address), [address])
 

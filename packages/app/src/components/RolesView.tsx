@@ -50,7 +50,7 @@ export const RolesView = (): React.ReactElement => {
           Create a role
         </Button>
       </Box>
-      <RoleTable openRole={setOpenRole} />
+      <RoleTable />
       <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
       <RoleModal isOpen={openRole != null} role={openRole} onClose={() => setOpenRole(undefined)} />
     </Grid>

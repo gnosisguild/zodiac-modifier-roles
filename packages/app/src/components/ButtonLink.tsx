@@ -1,5 +1,4 @@
-import { Box, Button, makeStyles } from "@material-ui/core"
-import { SvgIconComponent } from "@material-ui/icons"
+import { Box, makeStyles } from "@material-ui/core"
 
 const useStyles = makeStyles((theme) => ({
   viewRolesLink: {
