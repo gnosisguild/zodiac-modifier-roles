@@ -5,7 +5,6 @@ import AddIcon from "@material-ui/icons/Add"
 import SearchIcon from "@material-ui/icons/Search"
 import CreateRoleModal from "./CreateRoleModal"
 import RoleTable from "./RoleTable"
-import RoleModal from "./RoleModal"
 import { Role } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
@@ -52,7 +51,6 @@ export const RolesView = (): React.ReactElement => {
       </Box>
       <RoleTable />
       <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
-      <RoleModal isOpen={openRole != null} role={openRole} onClose={() => setOpenRole(undefined)} />
     </Grid>
   )
 }
