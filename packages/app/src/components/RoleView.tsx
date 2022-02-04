@@ -16,7 +16,7 @@ import {
   getTransactionPending,
 } from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
-import { updateRole } from "../services/rolesModifierContract"
+import { updateRole, WalletType } from "../services/rolesModifierContract"
 import { useWallet } from "../hooks/useWallet"
 
 const useStyles = makeStyles((theme) => ({
@@ -108,7 +108,7 @@ const RoleView = () => {
   const [membersToRemove, setMembersToRemove] = useState<string[]>([])
   const [targetsToAdd, setTargetsToAdd] = useState<string[]>([])
   const [targetsToRemove, setTargetsToRemove] = useState<string[]>([])
-  const { provider } = useWallet()
+  const { provider, onboard } = useWallet()
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   useEffect(() => {
@@ -117,11 +117,28 @@ const RoleView = () => {
   }, [dispatch, roleId])
 
   if (!roleId) {
-    return <>Missing Id</>
+    return <>Missing role ID</>
   }
 
   if (!role) {
     return <>Role with id: ${roleId} does not exist in this roles modifier</>
+  }
+
+  if (!rolesModifierAddress) {
+    return <>No modifier address specified</>
+  }
+
+  if (!provider) {
+    return <>No provider available.</>
+  }
+
+  const getWalletType = (): WalletType => {
+    const wallet = onboard.getState().wallet
+    if (wallet.name === "Gnosis Safe") {
+      return "gnosis-safe"
+    } else {
+      return "injected"
+    }
   }
 
   const handleAddMember = (memberAddress: string) => {
@@ -260,6 +277,7 @@ const RoleView = () => {
               onClick={() =>
                 updateRole(
                   provider,
+                  getWalletType(),
                   rolesModifierAddress,
                   roleId,
                   membersToAdd,
