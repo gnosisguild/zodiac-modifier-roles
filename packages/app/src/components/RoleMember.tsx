@@ -62,19 +62,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type MemberProps = {
+type RoleMemberProps = {
   member: Member
+  onRemoveMember: (memberToBeRemoved: string) => void
 }
 
-const RoleMember = ({ member }: MemberProps) => {
+const RoleMember = ({ member, onRemoveMember }: RoleMemberProps) => {
   const classes = useStyles()
   const { address } = member
 
   const blockie = useMemo(() => address && makeBlockie(address), [address])
-
-  const onRemoveMember = async (memberToBeRemoved: string) => {
-    console.log(memberToBeRemoved)
-  }
 
   return (
     <Box className={classes.container}>

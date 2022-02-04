@@ -125,15 +125,25 @@ const RoleView = () => {
   }
 
   const handleAddMember = (memberAddress: string) => {
-    setMembersToAdd((membersToAdd) => [...membersToAdd, memberAddress])
+    setMembersToAdd((current) => [...current, memberAddress])
     setAddMemberModalIsOpen(false)
     console.log(`Added ${memberAddress} to the list of members to add.`)
   }
 
+  const handleRemoveMember = (memberAddress: string) => {
+    setMembersToRemove((current) => [...current, memberAddress])
+    console.log(`Added ${memberAddress} to the list of members to remove.`)
+  }
+
   const handleAddTarget = (targetAddress: string) => {
-    setTargetsToAdd((targetsToAdd) => [...targetsToAdd, targetAddress])
+    setTargetsToAdd((current) => [...current, targetAddress])
     setAddTargetModalIsOpen(false)
     console.log(`Added ${targetAddress} to the list of targets to add.`)
+  }
+
+  const handleRemoveTarget = (targetAddress: string) => {
+    setTargetsToRemove((targetsToRemove) => [...targetsToRemove, targetAddress])
+    console.log(`Added ${targetAddress} to the list of targets to remove.`)
   }
 
   return (
@@ -179,7 +189,9 @@ const RoleView = () => {
                 {role.members.length > 0 ? (
                   <>
                     {role.members.map((member) => {
-                      return <RoleMember key={member.member.id} member={member.member} />
+                      return (
+                        <RoleMember key={member.member.id} member={member.member} onRemoveMember={handleRemoveMember} />
+                      )
                     })}
                     <Link onClick={() => setAddMemberModalIsOpen(true)} underline="none">
                       <ButtonLink text="Add a Member" icon={<AddSharp fontSize="small" />} />
@@ -218,6 +230,7 @@ const RoleView = () => {
                           target={target}
                           onClickTarget={setActiveTarget}
                           activeTarget={!!(activeTarget && activeTarget.id === target.id)}
+                          onRemoveTarget={handleRemoveTarget}
                         />
                       )
                     })}

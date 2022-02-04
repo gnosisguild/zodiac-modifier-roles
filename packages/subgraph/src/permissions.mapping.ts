@@ -40,7 +40,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   if (!target) {
     target = new Target(targetId)
     target.address = event.params.targetAddress
-    target.executionOption = event.params.options
+    target.executionOption = event.params.options // turn into ENUM and make it plural (end with a s)
     target.role = roleId
     target.save()
   }

@@ -80,19 +80,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type TargetProps = {
+type RoleTargetProps = {
   target: { id: string; address: string }
-  onClickTarget: (target: TargetProps["target"]) => void
+  onClickTarget: (target: RoleTargetProps["target"]) => void
   activeTarget: boolean
+  onRemoveTarget: (targetToBeRemoved: string) => void
 }
 
-const RoleTarget = ({ target, onClickTarget, activeTarget }: TargetProps) => {
+const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget }: RoleTargetProps) => {
   const classes = useStyles()
   const { address } = target
-
-  const onRemoveTarget = async (targetToBeRemoved: string) => {
-    console.log(targetToBeRemoved)
-  }
 
   return (
     <Box className={classNames(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>

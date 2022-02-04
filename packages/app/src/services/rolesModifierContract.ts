@@ -45,5 +45,9 @@ export const updateRole = async (
   targetsToAdd: string[],
   targetsToRemove: string[],
 ) => {
+  console.log("members to add: ", membersToAdd)
+  console.log("members to remove: ", membersToRemove)
+  console.log("targets to add: ", targetsToAdd)
+  console.log("targets to remove: ", targetsToRemove)
   console.log("not implemented yest. Will update the role.")
 }
