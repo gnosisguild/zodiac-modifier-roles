@@ -32,6 +32,9 @@ const RoleParameters = ({ target }: Props) => {
   const [targetAddress, setTargetAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
 
+  console.log(targetAddress)
+  console.log(isValidAddress)
+
   const handleChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked([event.target.checked, event.target.checked])
   }

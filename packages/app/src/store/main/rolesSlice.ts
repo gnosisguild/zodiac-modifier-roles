@@ -3,7 +3,6 @@ import { RolesAppState } from "./models"
 import * as subgraph from "../../services/subgraph"
 import { RootState } from ".."
 import { ethers } from "ethers"
-import * as rolesModifierContract from "../../services/rolesModifierContract"
 
 const rolesAppInitialState: RolesAppState = {
   roles: [],
