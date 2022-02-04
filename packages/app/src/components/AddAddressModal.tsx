@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Box, Button, makeStyles, Typography } from "@material-ui/core"
+import { Box, Button, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "./commons/Modal"
 import { TextField } from "./commons/input/TextField"
@@ -12,24 +12,9 @@ type Props = {
   onAddAddress: (address: string) => void
 }
 
-const useStyles = makeStyles((theme) => ({
-  errorSpacing: {
-    marginTop: theme.spacing(2),
-  },
-  img: {
-    borderRadius: "50%",
-    border: "1px solid rgba(250, 132, 132, 0.2)",
-    padding: 4,
-    width: 68,
-  },
-}))
-
 const AddAddressModal = ({ type, onAddAddress, onClose, isOpen }: Props): React.ReactElement => {
-  const classes = useStyles()
   const [address, setAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
-
-  console.log(classes)
 
   const onAddressChange = (address: string) => {
     setIsValidAddress(ethers.utils.isAddress(address))
