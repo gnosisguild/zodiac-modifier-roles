@@ -9,13 +9,7 @@ import TargetParameters from "./TargetParameters"
 import RoleTarget from "./RoleTarget"
 import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
-import {
-  getRoleById,
-  getRoles,
-  getRolesModifierAddress,
-  getTransactionError,
-  getTransactionPending,
-} from "../store/main/selectors"
+import { getRoleById, getRoles, getRolesModifierAddress, getTransactionPending } from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
 import { updateRole, WalletType } from "../services/rolesModifierContract"
 import { useWallet } from "../hooks/useWallet"
@@ -102,7 +96,7 @@ const RoleView = () => {
   const role = useRootSelector(getRoleById(roleId))
   const roles = useRootSelector(getRoles)
   const isWaiting = useRootSelector(getTransactionPending)
-  const error = useRootSelector(getTransactionError)
+  const [error, setError] = useState("")
   const [addMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
   const [addTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
   const [activeTarget, setActiveTarget] = useState<Target>()
@@ -184,6 +178,24 @@ const RoleView = () => {
   const handleRemoveTarget = (targetAddress: string) => {
     setTargetsToRemove((targetsToRemove) => [...targetsToRemove, targetAddress])
     console.log(`Added ${targetAddress} to the list of targets to remove.`)
+  }
+
+  const handleExecuteUpdate = async () => {
+    try {
+      await updateRole(
+        provider,
+        getWalletType(),
+        rolesModifierAddress,
+        getRoleId(),
+        membersToAdd,
+        membersToRemove,
+        targetsToAdd,
+        targetsToRemove,
+      )
+    } catch (error: any) {
+      console.error(error)
+      setError(error.message)
+    }
   }
 
   return (
@@ -301,18 +313,7 @@ const RoleView = () => {
               color="secondary"
               size="large"
               variant="contained"
-              onClick={() =>
-                updateRole(
-                  provider,
-                  getWalletType(),
-                  rolesModifierAddress,
-                  getRoleId(),
-                  membersToAdd,
-                  membersToRemove,
-                  targetsToAdd,
-                  targetsToRemove,
-                )
-              }
+              onClick={handleExecuteUpdate}
               disabled={isWaiting}
               startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
             >
@@ -325,7 +326,6 @@ const RoleView = () => {
                 : "Create role"}
             </Button>
           </Box>
-
           {error != null && (
             <Typography color="error" className={classes.errorSpacing}>
               {error}
