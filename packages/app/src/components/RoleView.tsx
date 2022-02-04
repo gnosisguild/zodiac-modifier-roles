@@ -196,7 +196,11 @@ const RoleView = () => {
           mt: 1,
         }}
       >
-        <Typography variant="h4">Create a new role</Typography>
+        {roleId === "new" ? (
+          <Typography variant="h4">Create a new role</Typography>
+        ) : (
+          <Typography variant="h4">Update role</Typography>
+        )}
         <RouterLink to="/">
           <ButtonLink text="View all roles" icon={<ArrowBackSharp fontSize="small" />} />
         </RouterLink>
@@ -206,7 +210,7 @@ const RoleView = () => {
         <Grid item xs={4} lg={3} className={classes.sideBar}>
           <Box className={classes.item}>
             <Box>
-              <Typography variant="h5">Role #1</Typography>
+              <Typography variant="h5">Role #{getRoleId()}</Typography>
               <Box
                 sx={{
                   bgcolor: "rgba(217, 212, 173, 0.1)",
