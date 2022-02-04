@@ -23,7 +23,7 @@ export const Modal = ({ children, isOpen, onClose }: Props) => {
   const classes = useStyles()
 
   return (
-    <MUIModal open={isOpen} onClose={onClose}>
+    <MUIModal open={isOpen} onClose={onClose} BackdropProps={{ style: { backdropFilter: "blur(4px)" } }}>
       <Paper elevation={3} classes={{ root: classes.paper }}>
         {children}
       </Paper>
