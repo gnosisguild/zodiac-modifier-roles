@@ -23,7 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("Starting to verify now");
 
   await run(TASK_ETHERSCAN_VERIFY, {
-    apiKey: process.env.ETHERSCAN_KEY_API,
+    apiKey: process.env.ETHERSCAN_API_KEY,
     license: "GPL-3.0",
     solcInput: true,
     forceLicense: true, // we need this because contracts license is LGPL-3.0-only
