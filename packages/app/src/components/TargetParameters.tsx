@@ -2,23 +2,70 @@ import React, { useState } from "react"
 import { Box, Button, Checkbox, FormControlLabel, IconButton, Typography, makeStyles } from "@material-ui/core"
 import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
+import classNames from "classnames"
 import { ethers } from "ethers"
 import { Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
+  container: {
+    marginTop: theme.spacing(3),
+    padding: theme.spacing(2),
+    position: "relative",
+    "&::before": {
+      backgroundColor: "rgba(217, 212, 173, 0.1)",
+      content: '" "',
+      position: "absolute",
+      zIndex: 1,
+      inset: -3,
+      border: "1px solid rgba(217, 212, 173, 0.3)",
+      pointerEvents: "none",
+    },
+  },
+  allowAllLabel: {
+    "& .MuiTypography-body1": {
+      fontSize: 16,
+    },
+  },
   root: {
     maxHeight: "calc(100vh - 400px)",
     overflow: "auto",
   },
-  function: {
-    color: "#B2B5B2",
-    fontFamily: "Roboto Mono, monospace",
+  functionWrapper: {
+    backgroundColor: "rgba(217, 212, 173, 0.1)",
+    border: "1px solid rgba(217, 212, 173, 0.3)",
+    marginTop: theme.spacing(1),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+    position: "relative",
+    "&::before": {
+      border: "1px solid rgba(217, 212, 173, 0.3)",
+      content: '" "',
+      position: "absolute",
+      zIndex: 1,
+      inset: 2,
+      pointerEvents: "none",
+    },
+  },
+  functionTrigger: {
+    alignItems: "center",
+    cursor: "pointer",
+    display: "flex",
+    justifyContent: "space-between",
   },
   removeButton: {
     marginLeft: theme.spacing(4),
     whiteSpace: "nowrap",
     paddingLeft: theme.spacing(4),
     paddingRight: theme.spacing(4),
+  },
+  arrow: {
+    height: 32,
+    fill: "#B2B5B2",
+    transition: "transform 0.25s ease-in-out",
+    width: 32,
+    "&.isActive": {
+      transform: "rotate(180deg)",
+    },
   },
 }))
 
@@ -31,6 +78,7 @@ const RoleParameters = ({ target }: Props) => {
   const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
+  const [isFunctionOpen, setFunctionOpen] = useState(false)
 
   console.log(targetAddress)
   console.log(isValidAddress)
@@ -55,19 +103,11 @@ const RoleParameters = ({ target }: Props) => {
   const children = (
     <Box sx={{ display: "flex", flexDirection: "column", ml: 3 }}>
       <FormControlLabel
-        label={
-          <Typography variant="body2" className={classes.function}>
-            parameter1
-          </Typography>
-        }
+        label={<Typography variant="body2">parameter1</Typography>}
         control={<Checkbox size="small" checked={checked[0]} onChange={handleChange2} />}
       />
       <FormControlLabel
-        label={
-          <Typography variant="body2" className={classes.function}>
-            parameter2
-          </Typography>
-        }
+        label={<Typography variant="body2">parameter2</Typography>}
         control={<Checkbox size="small" checked={checked[1]} onChange={handleChange3} />}
       />
     </Box>
@@ -92,46 +132,37 @@ const RoleParameters = ({ target }: Props) => {
           Remove Target
         </Button>
       </Box>
-      <Box sx={{ pl: 1, mt: 2 }}>
-        <FormControlLabel
-          label={"Allow all functions"}
-          control={
-            <Checkbox
-              checked={checked[0] && checked[1]}
-              indeterminate={checked[0] !== checked[1]}
-              onChange={handleChange1}
-            />
-          }
-        />
-      </Box>
-      <Box className={classes.root}>
-        <Box
-          sx={{
-            pl: 1,
-            pr: 1,
-            border: "1px solid rgba(217, 212, 173, 0.1)",
-          }}
-        >
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <FormControlLabel
-              label={
-                <Typography variant="body1" className={classes.function}>
-                  denyAddList
-                </Typography>
-              }
-              control={
-                <Checkbox
-                  checked={checked[0] && checked[1]}
-                  indeterminate={checked[0] !== checked[1]}
-                  onChange={handleChange1}
-                />
-              }
-            />
-            <IconButton size="small" aria-label="Expand function parameters">
-              <KeyboardArrowDownSharp />
-            </IconButton>
+      <Box className={classes.container}>
+        <Box sx={{ pl: 1 }}>
+          <FormControlLabel
+            className={classes.allowAllLabel}
+            label={"Allow all functions"}
+            control={
+              <Checkbox
+                checked={checked[0] && checked[1]}
+                indeterminate={checked[0] !== checked[1]}
+                onChange={handleChange1}
+              />
+            }
+          />
+        </Box>
+        <Box className={classes.root}>
+          <Box className={classes.functionWrapper}>
+            <Box onClick={() => setFunctionOpen(!isFunctionOpen)} className={classes.functionTrigger}>
+              <FormControlLabel
+                label={<Typography variant="body1">denyAddList</Typography>}
+                control={
+                  <Checkbox
+                    checked={checked[0] && checked[1]}
+                    indeterminate={checked[0] !== checked[1]}
+                    onChange={handleChange1}
+                  />
+                }
+              />
+              <KeyboardArrowDownSharp className={classNames(classes.arrow, isFunctionOpen && "isActive")} />
+            </Box>
+            {isFunctionOpen && children}
           </Box>
-          {children}
         </Box>
       </Box>
     </Box>
