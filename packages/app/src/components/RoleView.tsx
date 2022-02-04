@@ -11,6 +11,7 @@ import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
 import {
   getRoleById,
+  getRoles,
   getRolesModifierAddress,
   getTransactionError,
   getTransactionPending,
@@ -99,6 +100,7 @@ const RoleView = () => {
   const dispatch = useRootDispatch()
   const { roleId } = useParams()
   const role = useRootSelector(getRoleById(roleId))
+  const roles = useRootSelector(getRoles)
   const isWaiting = useRootSelector(getTransactionPending)
   const error = useRootSelector(getTransactionError)
   const [addMemberModalIsOpen, setAddMemberModalIsOpen] = useState(false)
@@ -120,7 +122,7 @@ const RoleView = () => {
     return <>Missing role ID</>
   }
 
-  if (!role) {
+  if (roleId !== "new" && !role) {
     return <>Role with id: ${roleId} does not exist in this roles modifier</>
   }
 
@@ -138,6 +140,27 @@ const RoleView = () => {
       return "gnosis-safe"
     } else {
       return "injected"
+    }
+  }
+
+  /**
+   * Security concern: roleId crashes is possible. This uses the currently available information.
+   * - for instance there can be transactions in the mempool or not yet indexed buy the subgraph
+   *
+   * It depends on what the owner is how bad this is...
+   *
+   * @returns the roleId of the current role or the largest roleId+1 of the available roles
+   */
+  const getRoleId: () => string = () => {
+    if (roleId === "new") {
+      return Math.max
+        .apply(
+          Math,
+          roles.map((role) => parseInt(role.id) + 1),
+        )
+        .toString()
+    } else {
+      return roleId
     }
   }
 
@@ -203,7 +226,7 @@ const RoleView = () => {
                 </Link>
               </Box>
               <Box sx={{ mt: 1 }}>
-                {role.members.length > 0 ? (
+                {role != null && role.members.length > 0 ? (
                   <>
                     {role.members.map((member) => {
                       return (
@@ -238,7 +261,7 @@ const RoleView = () => {
                 </Link>
               </Box>
               <Box sx={{ mt: 1 }}>
-                {role.targets.length > 0 ? (
+                {role != null && role.targets.length > 0 ? (
                   <>
                     {role.targets.map((target) => {
                       return (
@@ -279,7 +302,7 @@ const RoleView = () => {
                   provider,
                   getWalletType(),
                   rolesModifierAddress,
-                  roleId,
+                  getRoleId(),
                   membersToAdd,
                   membersToRemove,
                   targetsToAdd,

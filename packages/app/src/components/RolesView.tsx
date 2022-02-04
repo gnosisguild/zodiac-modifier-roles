@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import React from "react"
 import { Box, Button, Grid, InputAdornment, makeStyles } from "@material-ui/core"
 import { TextField } from "./commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
 import SearchIcon from "@material-ui/icons/Search"
-import CreateRoleModal from "./CreateRoleModal"
 import RoleTable from "./RoleTable"
+import { Link } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -38,7 +38,6 @@ const useStyles = makeStyles((theme) => ({
 
 export const RolesView = (): React.ReactElement => {
   const classes = useStyles()
-  const [createRoleModalIsOpen, setCreateRoleModalIsOpen] = useState(false)
 
   return (
     <Grid container spacing={1} className={classes.container}>
@@ -55,17 +54,13 @@ export const RolesView = (): React.ReactElement => {
               ),
             }}
           />
-          <Button
-            startIcon={<AddIcon />}
-            variant="contained"
-            color="secondary"
-            onClick={() => setCreateRoleModalIsOpen(true)}
-          >
-            Create a role
-          </Button>
+          <Link to="/roles/new">
+            <Button startIcon={<AddIcon />} variant="contained" color="secondary">
+              Create a role
+            </Button>
+          </Link>
         </Box>
         <RoleTable />
-        <CreateRoleModal isOpen={createRoleModalIsOpen} onClose={() => setCreateRoleModalIsOpen(false)} />
       </Grid>
     </Grid>
   )
