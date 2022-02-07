@@ -5,6 +5,7 @@ import { TextField } from "./commons/input/TextField"
 import classNames from "classnames"
 import { ethers } from "ethers"
 import { Target } from "../typings/role"
+import { TargetWithOptions } from "../services/rolesModifierContract"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -71,6 +72,7 @@ const useStyles = makeStyles((theme) => ({
 
 type Props = {
   target: Target
+  onChangeTargetExecutionsOptions: (target: TargetWithOptions) => void // TODO: add dropdown for this is the UI
 }
 
 const RoleParameters = ({ target }: Props) => {

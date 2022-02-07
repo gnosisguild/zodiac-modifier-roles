@@ -3,7 +3,20 @@ import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
 // get the safe and provider here.
 
+export enum ExecutionOptions {
+  // hardcoded initialized number representation to make sure it corresponds to the contracts
+  None = 0,
+  Send = 1,
+  DelegateCall = 2,
+  Both = 3,
+}
+
 export type WalletType = "injected" | "gnosis-safe" | "zodiac-pilot"
+
+export type TargetWithOptions = {
+  address: string
+  options: ExecutionOptions
+}
 
 const createUpdateMembershipTransactions = async (
   contract: Roles,
@@ -29,14 +42,16 @@ const createUpdateMembershipTransactions = async (
 const createUpdateTargetTransactions = async (
   contract: Roles,
   roleId: string,
-  targetsToAdd: string[],
+  targetsToAdd: TargetWithOptions[],
   targetsToRemove: string[],
 ) => {
-  const targetIntersection = targetsToAdd.filter((memberAddress) => targetsToRemove.includes(memberAddress))
+  const targetIntersection = targetsToAdd.filter(({ address }) => targetsToRemove.includes(address))
   if (targetIntersection.length > 0) {
     throw new Error("The same address is found in both targets to add and targets to remove")
   }
-  const addTxs = targetsToAdd.map((targetAddress) => contract.populateTransaction.allowTarget(roleId, targetAddress, 3)) // TODO: let user specify `options`
+  const addTxs = targetsToAdd.map(({ address, options }) =>
+    contract.populateTransaction.allowTarget(roleId, address, options),
+  )
 
   const removeTxs = targetsToRemove.map((targetAddress) =>
     contract.populateTransaction.revokeTarget(roleId, targetAddress),
@@ -52,10 +67,10 @@ const createUpdateTargetTransactions = async (
  * @param provider
  * @param modifierAddress
  * @param roleId
- * @param membersToAdd
- * @param membersToRemove
+ * @param memberAddressesToAdd
+ * @param memberAddressesToRemove
  * @param targetsToAdd
- * @param targetsToRemove
+ * @param targetAddressesToRemove
  * @returns
  */
 export const updateRole = async (
@@ -63,15 +78,15 @@ export const updateRole = async (
   walletType: WalletType,
   modifierAddress: string,
   roleId: string,
-  membersToAdd: string[],
-  membersToRemove: string[],
-  targetsToAdd: string[],
-  targetsToRemove: string[],
+  memberAddressesToAdd: string[],
+  memberAddressesToRemove: string[],
+  targetsToAdd: TargetWithOptions[],
+  targetAddressesToRemove: string[],
 ) => {
-  console.log("members to add: ", membersToAdd)
-  console.log("members to remove: ", membersToRemove)
+  console.log("members to add: ", memberAddressesToAdd)
+  console.log("members to remove: ", memberAddressesToRemove)
   console.log("targets to add: ", targetsToAdd)
-  console.log("targets to remove: ", targetsToRemove)
+  console.log("targets to remove: ", targetAddressesToRemove)
 
   const signer = await provider.getSigner()
   const rolesModifierContract = Roles__factory.connect(modifierAddress, signer)
@@ -79,15 +94,15 @@ export const updateRole = async (
   const membershipTransactions = await createUpdateMembershipTransactions(
     rolesModifierContract,
     roleId,
-    membersToAdd,
-    membersToRemove,
+    memberAddressesToAdd,
+    memberAddressesToRemove,
   )
 
   const targetTransactions = await createUpdateTargetTransactions(
     rolesModifierContract,
     roleId,
     targetsToAdd,
-    targetsToRemove,
+    targetAddressesToRemove,
   )
 
   const txs = [...membershipTransactions, ...targetTransactions]
