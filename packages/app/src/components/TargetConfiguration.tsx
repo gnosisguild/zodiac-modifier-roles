@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Box, Button, Checkbox, FormControlLabel, Typography, makeStyles, Select, MenuItem } from "@material-ui/core"
+import { Box, Button, Checkbox, FormControlLabel, InputLabel, Typography, makeStyles, Select, MenuItem } from "@material-ui/core"
 import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import classNames from "classnames"
@@ -20,6 +20,10 @@ const useStyles = makeStyles((theme) => ({
       border: "1px solid rgba(217, 212, 173, 0.3)",
       pointerEvents: "none",
     },
+  },
+  label: {
+    color: theme.palette.text.primary,
+    marginBottom: theme.spacing(1),
   },
   allowAllLabel: {
     "& .MuiTypography-body1": {
@@ -125,15 +129,10 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
           onChange={(e) => onTargetAddressChange(e.target.value)}
           label="Target Address"
           placeholder={target.address}
+          InputProps={{
+            readOnly: true,
+          }}
         />
-        {
-          // TODO: styling
-        }
-        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
-          {ExecutionOptionsArray.map((options) => (
-            <MenuItem value={options}>{options}</MenuItem>
-          ))}
-        </Select>
         <Button
           color="secondary"
           variant="outlined"
@@ -145,20 +144,30 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
           Remove Target
         </Button>
       </Box>
-      <Box className={classes.container}>
-        <Box sx={{ pl: 1 }}>
-          <FormControlLabel
-            className={classes.allowAllLabel}
-            label={"Allow all functions"}
-            control={
-              <Checkbox
-                checked={checked[0] && checked[1]}
-                indeterminate={checked[0] !== checked[1]}
-                onChange={handleChange1}
-              />
-            }
-          />
-        </Box>
+      <Box sx={{mt: 3}}>
+        <InputLabel className={classes.label}>
+          Execution Type
+        </InputLabel>
+        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
+            {ExecutionOptionsArray.map((options) => (
+              <MenuItem value={options}>{options}</MenuItem>
+            ))}
+          </Select>
+      </Box>
+      <Box sx={{ mt: 2 }}>
+        <FormControlLabel
+          className={classes.allowAllLabel}
+          label={"Allow all functions"}
+          control={
+            <Checkbox
+              checked={true}
+              disabled={true}
+              onChange={handleChange1}
+            />
+          }
+        />
+      </Box>
+      {/* <Box className={classes.container}>
         <Box className={classes.root}>
           <Box className={classes.functionWrapper}>
             <Box onClick={() => setFunctionOpen(!isFunctionOpen)} className={classes.functionTrigger}>
@@ -177,7 +186,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
             {isFunctionOpen && children}
           </Box>
         </Box>
-      </Box>
+      </Box> */}
     </Box>
   )
 }
