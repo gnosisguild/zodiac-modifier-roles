@@ -10,9 +10,8 @@ import {
   Select,
   MenuItem,
 } from "@material-ui/core"
-import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
+import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
-import classNames from "classnames"
 import { ethers } from "ethers"
 import { ExecutionOptionsArray, Target } from "../typings/role"
 
@@ -93,7 +92,6 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
   const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
-  const [isFunctionOpen, setFunctionOpen] = useState(false)
 
   console.log(targetAddress)
   console.log(isValidAddress)
@@ -119,18 +117,18 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
     console.log(value)
   }
 
-  const children = (
-    <Box sx={{ display: "flex", flexDirection: "column", ml: 3 }}>
-      <FormControlLabel
-        label={<Typography variant="body2">parameter1</Typography>}
-        control={<Checkbox size="small" checked={checked[0]} onChange={handleChange2} />}
-      />
-      <FormControlLabel
-        label={<Typography variant="body2">parameter2</Typography>}
-        control={<Checkbox size="small" checked={checked[1]} onChange={handleChange3} />}
-      />
-    </Box>
-  )
+  // const children = (
+  //   <Box sx={{ display: "flex", flexDirection: "column", ml: 3 }}>
+  //     <FormControlLabel
+  //       label={<Typography variant="body2">parameter1</Typography>}
+  //       control={<Checkbox size="small" checked={checked[0]} onChange={handleChange2} />}
+  //     />
+  //     <FormControlLabel
+  //       label={<Typography variant="body2">parameter2</Typography>}
+  //       control={<Checkbox size="small" checked={checked[1]} onChange={handleChange3} />}
+  //     />
+  //   </Box>
+  // )
 
   return (
     <Box>
