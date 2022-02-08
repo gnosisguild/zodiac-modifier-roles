@@ -65,6 +65,7 @@ export const ZodiacStyle = createGlobalStyle`
     }
 
     a {
+      cursor: pointer;
       text-decoration: none;
     }
 

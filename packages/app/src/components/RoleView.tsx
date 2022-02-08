@@ -4,6 +4,7 @@ import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } fro
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import ButtonLink from "./ButtonLink"
 import AddAddressModal from "./AddAddressModal"
+import RemovedAddress from "./RemovedAddress"
 import RoleMember from "./RoleMember"
 import TargetParameters from "./TargetConfiguration"
 import RoleTarget from "./RoleTarget"
@@ -248,9 +249,16 @@ const RoleView = () => {
               <Box sx={{ mt: 1 }}>
                 {role != null && role.members.length > 0 ? (
                   <>
-                    {role.members.map((member) => {
+                    {role.members.map((member, index) => {
                       return (
-                        <RoleMember key={member.member.id} member={member.member} onRemoveMember={handleRemoveMember} />
+                        <>
+                          <RoleMember
+                            key={member.member.id}
+                            member={member.member}
+                            onRemoveMember={handleRemoveMember}
+                          />
+                          {index === 1 && <RemovedAddress address={member.member.address} />}
+                        </>
                       )
                     })}
                     <Link onClick={() => setAddMemberModalIsOpen(true)} underline="none">
@@ -283,15 +291,18 @@ const RoleView = () => {
               <Box sx={{ mt: 1 }}>
                 {role != null && role.targets.length > 0 ? (
                   <>
-                    {role.targets.map((target) => {
+                    {role.targets.map((target, index) => {
                       return (
-                        <RoleTarget
-                          key={target.id}
-                          target={target}
-                          onClickTarget={setActiveTarget}
-                          activeTarget={!!(activeTarget && activeTarget.id === target.id)}
-                          onRemoveTarget={handleRemoveTarget}
-                        />
+                        <>
+                          <RoleTarget
+                            key={target.id}
+                            target={target}
+                            onClickTarget={setActiveTarget}
+                            activeTarget={!!(activeTarget && activeTarget.id === target.id)}
+                            onRemoveTarget={handleRemoveTarget}
+                          />
+                          {index === 1 && <RemovedAddress address={target.address} />}
+                        </>
                       )
                     })}
                     <Link onClick={() => setAddTargetModalIsOpen(true)} underline="none">
