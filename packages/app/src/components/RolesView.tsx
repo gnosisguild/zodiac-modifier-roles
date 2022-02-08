@@ -42,8 +42,8 @@ export const RolesView = (): React.ReactElement => {
   return (
     <Grid container spacing={1} className={classes.container}>
       <Grid item xs={12}>
-        <Box display="flex" justifyContent="space-between">
-          <TextField
+        <Box display="flex" justifyContent="flex-end">
+          {/* <TextField
             placeholder="Filter by Members"
             className={classes.search}
             InputProps={{
@@ -53,7 +53,7 @@ export const RolesView = (): React.ReactElement => {
                 </InputAdornment>
               ),
             }}
-          />
+          /> */}
           <Link to="/roles/new">
             <Button startIcon={<AddIcon />} variant="contained" color="secondary">
               Create a role
