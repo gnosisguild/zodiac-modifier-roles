@@ -1,12 +1,10 @@
 import React from "react"
 import { Box, Button, IconButton, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
-import DeleteOutlineSharp from "@material-ui/icons/DeleteOutlineSharp"
-import classNames from "classnames"
 import { Role } from "../typings/role"
 import { useNavigate } from "react-router-dom"
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   arrowIcon: {
     color: "rgba(217, 212, 173, 1)",
   },
@@ -64,7 +62,7 @@ const RoleTableRow = ({ role }: Props): React.ReactElement => {
               Edit
             </Button>
           </Box>
-          <Box sx={{ mr: 1 }}>
+          {/* <Box sx={{ mr: 1 }}>
             <IconButton
               size="small"
               aria-label="Delete Role"
@@ -72,7 +70,7 @@ const RoleTableRow = ({ role }: Props): React.ReactElement => {
             >
               <DeleteOutlineSharp className={classes.deleteIcon} />
             </IconButton>
-          </Box>
+          </Box> */}
           <IconButton size="small" aria-label="View Role" className={classes.iconButton}>
             <KeyboardArrowRightSharp className={classes.arrowIcon} />
           </IconButton>
