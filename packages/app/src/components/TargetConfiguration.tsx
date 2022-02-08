@@ -75,7 +75,7 @@ type Props = {
   onChangeTargetExecutionsOptions: (target: TargetWithOptions) => void // TODO: add dropdown for this is the UI
 }
 
-const RoleParameters = ({ target }: Props) => {
+const TargetConfiguration = ({ target }: Props) => {
   const classes = useStyles()
   const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
@@ -171,4 +171,4 @@ const RoleParameters = ({ target }: Props) => {
   )
 }
 
-export default RoleParameters
+export default TargetConfiguration
