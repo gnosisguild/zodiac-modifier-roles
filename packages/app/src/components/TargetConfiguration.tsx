@@ -1,5 +1,15 @@
 import React, { useState } from "react"
-import { Box, Button, Checkbox, FormControlLabel, InputLabel, Typography, makeStyles, Select, MenuItem } from "@material-ui/core"
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  InputLabel,
+  Typography,
+  makeStyles,
+  Select,
+  MenuItem,
+} from "@material-ui/core"
 import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import classNames from "classnames"
@@ -144,27 +154,19 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
           Remove Target
         </Button>
       </Box>
-      <Box sx={{mt: 3}}>
-        <InputLabel className={classes.label}>
-          Execution Type
-        </InputLabel>
+      <Box sx={{ mt: 3 }}>
+        <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
-            {ExecutionOptionsArray.map((options) => (
-              <MenuItem value={options}>{options}</MenuItem>
-            ))}
-          </Select>
+          {ExecutionOptionsArray.map((options) => (
+            <MenuItem value={options}>{options}</MenuItem>
+          ))}
+        </Select>
       </Box>
       <Box sx={{ mt: 2 }}>
         <FormControlLabel
           className={classes.allowAllLabel}
           label={"Allow all functions"}
-          control={
-            <Checkbox
-              checked={true}
-              disabled={true}
-              onChange={handleChange1}
-            />
-          }
+          control={<Checkbox checked={true} disabled={true} onChange={handleChange1} />}
         />
       </Box>
       {/* <Box className={classes.container}>
