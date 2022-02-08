@@ -11,7 +11,7 @@ import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
 import { getRoleById, getRoles, getRolesModifierAddress, getTransactionPending } from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
-import { ExecutionOptions, TargetWithOptions, updateRole, WalletType } from "../services/rolesModifierContract"
+import { updateRole, WalletType } from "../services/rolesModifierContract"
 import { useWallet } from "../hooks/useWallet"
 
 const useStyles = makeStyles((theme) => ({
@@ -102,7 +102,7 @@ const RoleView = () => {
   const [activeTarget, setActiveTarget] = useState<Target>()
   const [membersToAdd, setMembersToAdd] = useState<string[]>([])
   const [membersToRemove, setMembersToRemove] = useState<string[]>([])
-  const [targetsToAdd, setTargetsToAdd] = useState<TargetWithOptions[]>([])
+  const [targetsToAdd, setTargetsToAdd] = useState<Target[]>([])
   const [targetsToRemove, setTargetsToRemove] = useState<string[]>([])
   const { provider, onboard } = useWallet()
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
@@ -170,30 +170,13 @@ const RoleView = () => {
   }
 
   const handleAddTarget = (address: string) => {
-    setTargetsToAdd((current) => [...current, { address, options: ExecutionOptions.None }])
+    setTargetsToAdd((current) => [...current, { address, executionOptions: "None" }])
     setAddTargetModalIsOpen(false)
     console.log(`Added ${address} to the list of targets to add.`)
   }
 
-  const handleChangeTargetExecutionOptions = ({ address: targetAddress, options: newOptions }: TargetWithOptions) => {
-    const targetBeingAdded = targetsToAdd.filter(({ address }) => address === targetAddress)
-    if (targetBeingAdded.length > 1) {
-      console.error("More then one instance of target address in targets to add list")
-    } else if (targetBeingAdded.length === 1) {
-      // the change is for a new target being added
-      setTargetsToAdd((newTargets) =>
-        newTargets.map((target) => {
-          if (target.address === targetAddress) {
-            return { address: targetAddress, options: newOptions }
-          } else {
-            return target
-          }
-        }),
-      )
-    } else {
-      // change to a preexisting target
-      console.log("Change execution options for a preexisting target - not implemented yet") // TODO
-    }
+  const handleChangeTargetExecutionOptions = ({ address: targetAddress, executionOptions: newOptions }: Target) => {
+    console.log("Change execution options - not implemented yet") // TODO
   }
 
   const handleRemoveTarget = (targetAddress: string) => {

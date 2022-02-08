@@ -1,3 +1,10 @@
+enum ExecutionOptions {
+  None
+  Send
+  DelegateCall
+  Both
+}
+
 type Role @entity {
   id: ID!
   rolesModifier: RolesModifier!
@@ -8,7 +15,7 @@ type Role @entity {
 type Target @entity {
   id: ID!
   address: Bytes!
-  executionOption: Int!
+  executionOptions: ExecutionOptions!
   role: Role!
 }
 

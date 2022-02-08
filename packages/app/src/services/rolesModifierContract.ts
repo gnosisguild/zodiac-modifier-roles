@@ -1,22 +1,23 @@
 import { ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
+import { ExecutionOptions, Target } from "../typings/role"
 // get the safe and provider here.
 
-export enum ExecutionOptions {
-  // hardcoded initialized number representation to make sure it corresponds to the contracts
-  None = 0,
-  Send = 1,
-  DelegateCall = 2,
-  Both = 3,
+const executionOptionsToInt = (executionOptions: ExecutionOptions) => {
+  switch (executionOptions) {
+    case "None":
+      return 0
+    case "Send":
+      return 1
+    case "DelegateCall":
+      return 2
+    case "Both":
+      return 3
+  }
 }
 
 export type WalletType = "injected" | "gnosis-safe" | "zodiac-pilot"
-
-export type TargetWithOptions = {
-  address: string
-  options: ExecutionOptions
-}
 
 const createUpdateMembershipTransactions = async (
   contract: Roles,
@@ -42,15 +43,15 @@ const createUpdateMembershipTransactions = async (
 const createUpdateTargetTransactions = async (
   contract: Roles,
   roleId: string,
-  targetsToAdd: TargetWithOptions[],
+  targetsToAdd: Target[],
   targetsToRemove: string[],
 ) => {
   const targetIntersection = targetsToAdd.filter(({ address }) => targetsToRemove.includes(address))
   if (targetIntersection.length > 0) {
     throw new Error("The same address is found in both targets to add and targets to remove")
   }
-  const addTxs = targetsToAdd.map(({ address, options }) =>
-    contract.populateTransaction.allowTarget(roleId, address, options),
+  const addTxs = targetsToAdd.map(({ address, executionOptions }) =>
+    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOptions)),
   )
 
   const removeTxs = targetsToRemove.map((targetAddress) =>
@@ -80,7 +81,7 @@ export const updateRole = async (
   roleId: string,
   memberAddressesToAdd: string[],
   memberAddressesToRemove: string[],
-  targetsToAdd: TargetWithOptions[],
+  targetsToAdd: Target[],
   targetAddressesToRemove: string[],
 ) => {
   console.log("members to add: ", memberAddressesToAdd)

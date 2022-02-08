@@ -2,7 +2,7 @@ import { createClient } from "urql"
 import { ethers } from "ethers"
 import { Role } from "../typings/role"
 
-const API_URL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.19" // TODO: this is for testing
+const API_URL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.22" // TODO: this is for testing
 
 const client = createClient({
   url: API_URL,
@@ -24,7 +24,8 @@ export const fetchRoles: (rolesModifierAddress: string) => Promise<Role[]> = asy
 							id
 							targets {
 							 id
-							address
+							 address
+							 executionOptions
 							}
 							members{
 								id

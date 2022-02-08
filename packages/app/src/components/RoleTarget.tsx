@@ -2,6 +2,7 @@ import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import truncateEthAddress from "truncate-eth-address"
+import { Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -81,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type RoleTargetProps = {
-  target: { id: string; address: string }
+  target: Target
   onClickTarget: (target: RoleTargetProps["target"]) => void
   activeTarget: boolean
   onRemoveTarget: (targetToBeRemoved: string) => void

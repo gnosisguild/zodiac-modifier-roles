@@ -1,11 +1,10 @@
 import React, { useState } from "react"
-import { Box, Button, Checkbox, FormControlLabel, Typography, makeStyles } from "@material-ui/core"
+import { Box, Button, Checkbox, FormControlLabel, Typography, makeStyles, Select, MenuItem } from "@material-ui/core"
 import { KeyboardArrowDownSharp, DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import classNames from "classnames"
 import { ethers } from "ethers"
-import { Target } from "../typings/role"
-import { TargetWithOptions } from "../services/rolesModifierContract"
+import { ExecutionOptionsArray, Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -72,10 +71,10 @@ const useStyles = makeStyles((theme) => ({
 
 type Props = {
   target: Target
-  onChangeTargetExecutionsOptions: (target: TargetWithOptions) => void // TODO: add dropdown for this is the UI
+  onChangeTargetExecutionsOptions: (target: Target) => void
 }
 
-const TargetConfiguration = ({ target }: Props) => {
+const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props) => {
   const classes = useStyles()
   const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
@@ -102,6 +101,10 @@ const TargetConfiguration = ({ target }: Props) => {
     setTargetAddress(address)
   }
 
+  const handleChangeTargetExecutionsOptions = (value: any) => {
+    console.log(value)
+  }
+
   const children = (
     <Box sx={{ display: "flex", flexDirection: "column", ml: 3 }}>
       <FormControlLabel
@@ -123,6 +126,14 @@ const TargetConfiguration = ({ target }: Props) => {
           label="Target Address"
           placeholder={target.address}
         />
+        {
+          // TODO: styling
+        }
+        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
+          {ExecutionOptionsArray.map((options) => (
+            <MenuItem value={options}>{options}</MenuItem>
+          ))}
+        </Select>
         <Button
           color="secondary"
           variant="outlined"

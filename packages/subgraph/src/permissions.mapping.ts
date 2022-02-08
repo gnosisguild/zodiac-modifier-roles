@@ -40,10 +40,10 @@ export function handleAllowTarget(event: AllowTarget): void {
   if (!target) {
     target = new Target(targetId)
     target.address = event.params.targetAddress
-    target.executionOption = event.params.options // turn into ENUM and make it plural (end with a s)
     target.role = roleId
-    target.save()
   }
+  target.executionOptions = mapIntToExecutionOptions(event.params.options)
+  target.save()
 }
 
 export function handleScopeTarget(event: ScopeTarget): void {}
@@ -67,3 +67,29 @@ export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void 
 export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {}
 
 export function handleUnscopeParameter(event: UnscopeParameter): void {}
+
+// Helper functions
+function mapIntToExecutionOptions(intValue: number): string {
+  switch (i32(intValue)) {
+    case 0: {
+      return "None"
+      break
+    }
+    case 1: {
+      return "Send"
+      break
+    }
+    case 2: {
+      return "DelegateCall"
+      break
+    }
+    case 3: {
+      return "Both"
+      break
+    }
+    default: {
+      log.error("Got unknown executionOptions parameter for target.", [intValue.toString()])
+      return ""
+    }
+  }
+}
