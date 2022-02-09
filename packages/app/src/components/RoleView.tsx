@@ -381,7 +381,6 @@ const RoleView = () => {
         onClose={() => setAddMemberModalIsOpen(false)}
       />
       <AddTargetModal
-        type="Target"
         isOpen={addTargetModalIsOpen}
         onAddTarget={handleAddTarget}
         onClose={() => setAddTargetModalIsOpen(false)}

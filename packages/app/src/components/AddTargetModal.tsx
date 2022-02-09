@@ -14,13 +14,12 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type Props = {
-  type: string
   isOpen: boolean
   onClose: () => void
   onAddTarget: (target: Target) => void
 }
 
-const AddTargetModal = ({ type, onAddTarget, onClose, isOpen }: Props): React.ReactElement => {
+const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [address, setAddress] = useState("")
   const [executionOptions, setExecutionOptions] = useState(ExecutionOptions.NONE)
@@ -37,7 +36,7 @@ const AddTargetModal = ({ type, onAddTarget, onClose, isOpen }: Props): React.Re
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <Typography variant="h4">Add a {type}</Typography>
+      <Typography variant="h4">Add a Target</Typography>
       <Box sx={{ mt: 1 }}>
         <Typography variant="body1">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.
@@ -46,8 +45,8 @@ const AddTargetModal = ({ type, onAddTarget, onClose, isOpen }: Props): React.Re
       <Box sx={{ mt: 2 }}>
         <TextField
           onChange={(e) => onAddressChange(e.target.value)}
-          label={`${type} address`}
-          placeholder={`Add a new ${type} address`}
+          label={`target address`}
+          placeholder={`Add a new target address`}
         />
       </Box>
       <Box sx={{ mt: 2 }}>
@@ -69,7 +68,7 @@ const AddTargetModal = ({ type, onAddTarget, onClose, isOpen }: Props): React.Re
           disabled={!isValidAddress}
           startIcon={<AddIcon />}
         >
-          Add {type}
+          Add target
         </Button>
       </Box>
     </Modal>
