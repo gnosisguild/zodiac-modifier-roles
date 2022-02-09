@@ -1,15 +1,5 @@
 import React, { useState } from "react"
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  InputLabel,
-  Typography,
-  makeStyles,
-  Select,
-  MenuItem,
-} from "@material-ui/core"
+import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, Select, MenuItem } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
@@ -89,24 +79,24 @@ type Props = {
 
 const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props) => {
   const classes = useStyles()
-  const [checked, setChecked] = React.useState([true, false])
+  // const [checked, setChecked] = React.useState([true, false])
   const [targetAddress, setTargetAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
 
   console.log(targetAddress)
   console.log(isValidAddress)
 
-  const handleChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked([event.target.checked, event.target.checked])
-  }
+  // const handleChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setChecked([event.target.checked, event.target.checked])
+  // }
 
-  const handleChange2 = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked([event.target.checked, checked[1]])
-  }
+  // const handleChange2 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setChecked([event.target.checked, checked[1]])
+  // }
 
-  const handleChange3 = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked([checked[0], event.target.checked])
-  }
+  // const handleChange3 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setChecked([checked[0], event.target.checked])
+  // }
 
   const onTargetAddressChange = (address: string) => {
     setIsValidAddress(ethers.utils.isAddress(address))
@@ -164,7 +154,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
         <FormControlLabel
           className={classes.allowAllLabel}
           label={"Allow all functions"}
-          control={<Checkbox checked={true} disabled={true} onChange={handleChange1} />}
+          control={<Checkbox checked={true} disabled={true} />}
         />
       </Box>
       {/* <Box className={classes.container}>
