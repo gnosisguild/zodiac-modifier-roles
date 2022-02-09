@@ -3,7 +3,7 @@ import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, Select
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "./commons/input/TextField"
 import { ethers } from "ethers"
-import { ExecutionOptionsArray, Target } from "../typings/role"
+import { ExecutionOptions, Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -145,7 +145,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
-          {ExecutionOptionsArray.map((options) => (
+          {Object.values(ExecutionOptions).map((options) => (
             <MenuItem value={options}>{options}</MenuItem>
           ))}
         </Select>

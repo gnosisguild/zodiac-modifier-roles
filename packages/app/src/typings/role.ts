@@ -5,13 +5,6 @@ export enum ExecutionOptions {
   BOTH = "Both",
 }
 
-export const ExecutionOptionsArray: ExecutionOptions[] = [
-  ExecutionOptions.NONE,
-  ExecutionOptions.SEND,
-  ExecutionOptions.DELEGATE_CALL,
-  ExecutionOptions.BOTH,
-]
-
 export type Role = {
   id: string
   rolesModifier: string

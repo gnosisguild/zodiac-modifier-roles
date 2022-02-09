@@ -8,12 +8,13 @@ import RemovedAddress from "./RemovedAddress"
 import RoleMember from "./RoleMember"
 import TargetParameters from "./TargetConfiguration"
 import RoleTarget from "./RoleTarget"
-import { ExecutionOptions, Target } from "../typings/role"
+import { Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
 import { getRoleById, getRoles, getRolesModifierAddress, getTransactionPending } from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
 import { updateRole, WalletType } from "../services/rolesModifierContract"
 import { useWallet } from "../hooks/useWallet"
+import AddTargetModal from "./AddTargetModal"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -170,10 +171,10 @@ const RoleView = () => {
     console.log(`Added ${memberAddress} to the list of members to remove.`)
   }
 
-  const handleAddTarget = (address: string) => {
-    setTargetsToAdd((current) => [...current, { address, executionOptions: ExecutionOptions.NONE }])
+  const handleAddTarget = (target: Target) => {
+    setTargetsToAdd((current) => [...current, target])
     setAddTargetModalIsOpen(false)
-    console.log(`Added ${address} to the list of targets to add.`)
+    console.log(`Added ${target.address} to the list of targets to add.`)
   }
 
   const handleChangeTargetExecutionOptions = ({ address: targetAddress, executionOptions: newOptions }: Target) => {
@@ -379,10 +380,10 @@ const RoleView = () => {
         onAddAddress={handleAddMember}
         onClose={() => setAddMemberModalIsOpen(false)}
       />
-      <AddAddressModal
+      <AddTargetModal
         type="Target"
         isOpen={addTargetModalIsOpen}
-        onAddAddress={handleAddTarget}
+        onAddTarget={handleAddTarget}
         onClose={() => setAddTargetModalIsOpen(false)}
       />
     </>
