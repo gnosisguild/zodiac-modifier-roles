@@ -1,5 +1,5 @@
 import { Box, Link, Typography, makeStyles } from "@material-ui/core"
-import truncateEthAddress from "truncate-eth-address"
+import { truncateEthAddress } from "../utils/address"
 
 const useStyles = makeStyles(() => ({
   undoLink: {

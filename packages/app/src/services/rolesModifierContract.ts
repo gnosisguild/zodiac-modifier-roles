@@ -6,18 +6,22 @@ import { ExecutionOptions, Target } from "../typings/role"
 
 const executionOptionsToInt = (executionOptions: ExecutionOptions) => {
   switch (executionOptions) {
-    case "None":
+    case ExecutionOptions.NONE:
       return 0
-    case "Send":
+    case ExecutionOptions.SEND:
       return 1
-    case "DelegateCall":
+    case ExecutionOptions.DELEGATE_CALL:
       return 2
-    case "Both":
+    case ExecutionOptions.BOTH:
       return 3
   }
 }
 
-export type WalletType = "injected" | "gnosis-safe" | "zodiac-pilot"
+export enum WalletType {
+  INJECTED = "injected",
+  GNOSIS_SAFE = "gnosis-safe",
+  ZODIAC_PILOT = "zodiac-pilot",
+}
 
 const createUpdateMembershipTransactions = async (
   contract: Roles,

@@ -1,7 +1,7 @@
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
 import classNames from "classnames"
-import truncateEthAddress from "truncate-eth-address"
+import { truncateEthAddress } from "../utils/address"
 import { Target } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({

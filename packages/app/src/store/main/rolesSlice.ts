@@ -3,6 +3,7 @@ import { RolesAppState } from "./models"
 import * as subgraph from "../../services/subgraph"
 import { RootState } from ".."
 import { ethers } from "ethers"
+import { getRolesModifierAddress } from "./selectors"
 
 const rolesAppInitialState: RolesAppState = {
   roles: [],
@@ -32,11 +33,11 @@ export const rolesAppSlice = createSlice({
 
 export const { setRolesModifierAddress, resetTransactionError } = rolesAppSlice.actions
 
-export const fetchRoles = createAsyncThunk("roles/fetchRoles", async (_, thunkAPI) => {
+export const fetchRoles = createAsyncThunk("roles/fetchRoles", (_, thunkAPI) => {
   const state = thunkAPI.getState() as RootState
-  const rolesModifierAddress = state.rolesApp.rolesModifierAddress
+  const rolesModifierAddress = getRolesModifierAddress(state)
   if (rolesModifierAddress && ethers.utils.isAddress(rolesModifierAddress)) {
-    return await subgraph.fetchRoles(rolesModifierAddress)
+    return subgraph.fetchRoles(rolesModifierAddress)
   } else {
     return []
   }

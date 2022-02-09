@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useParams, Link as RouterLink } from "react-router-dom"
+import { Link as RouterLink, useParams } from "react-router-dom"
 import { Box, Button, CircularProgress, Grid, Link, makeStyles, Typography } from "@material-ui/core"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import ButtonLink from "./ButtonLink"
@@ -8,7 +8,7 @@ import RemovedAddress from "./RemovedAddress"
 import RoleMember from "./RoleMember"
 import TargetParameters from "./TargetConfiguration"
 import RoleTarget from "./RoleTarget"
-import { Target } from "../typings/role"
+import { ExecutionOptions, Target } from "../typings/role"
 import { useRootDispatch, useRootSelector } from "../store"
 import { getRoleById, getRoles, getRolesModifierAddress, getTransactionPending } from "../store/main/selectors"
 import { fetchRoles } from "../store/main/rolesSlice"
@@ -132,9 +132,9 @@ const RoleView = () => {
   const getWalletType = (): WalletType => {
     const wallet = onboard.getState().wallet
     if (wallet.name === "Gnosis Safe") {
-      return "gnosis-safe"
+      return WalletType.GNOSIS_SAFE
     } else {
-      return "injected"
+      return WalletType.INJECTED
     }
   }
 
@@ -171,7 +171,7 @@ const RoleView = () => {
   }
 
   const handleAddTarget = (address: string) => {
-    setTargetsToAdd((current) => [...current, { address, executionOptions: "None" }])
+    setTargetsToAdd((current) => [...current, { address, executionOptions: ExecutionOptions.NONE }])
     setAddTargetModalIsOpen(false)
     console.log(`Added ${address} to the list of targets to add.`)
   }
