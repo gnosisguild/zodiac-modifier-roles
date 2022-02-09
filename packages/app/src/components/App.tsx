@@ -54,7 +54,7 @@ export const App = (): React.ReactElement => {
   )
 }
 
-const StateTracker = (): React.ReactElement => {
+const StateTracker = () => {
   const query = useQuery()
   const chainId = query.get("chainId")
   const rolesModifierAddress = query.get("rolesModifierAddress")
@@ -62,7 +62,7 @@ const StateTracker = (): React.ReactElement => {
 
   useEffect(() => {
     if (chainId) {
-      const chainIdNumber = chainId != null ? parseInt(chainId) : null
+      const chainIdNumber = parseInt(chainId)
       if (chainIdNumber != null && !isNaN(chainIdNumber)) {
         dispatch(setChainId(chainIdNumber))
       } else {
@@ -87,7 +87,7 @@ const StateTracker = (): React.ReactElement => {
     }
   }, [rolesModifierAddress, dispatch])
 
-  return <></>
+  return null
 }
 
 export default App

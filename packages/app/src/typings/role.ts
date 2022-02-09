@@ -1,6 +1,16 @@
-export type ExecutionOptions = "None" | "Send" | "DelegateCall" | "Both"
+export enum ExecutionOptions {
+  NONE = "None",
+  SEND = "Send",
+  DELEGATE_CALL = "DelegateCall",
+  BOTH = "Both",
+}
 
-export const ExecutionOptionsArray: Array<ExecutionOptions> = ["None", "Send", "DelegateCall", "Both"]
+export const ExecutionOptionsArray: ExecutionOptions[] = [
+  ExecutionOptions.NONE,
+  ExecutionOptions.SEND,
+  ExecutionOptions.DELEGATE_CALL,
+  ExecutionOptions.BOTH,
+]
 
 export type Role = {
   id: string

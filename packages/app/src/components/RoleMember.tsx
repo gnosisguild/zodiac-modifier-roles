@@ -3,7 +3,7 @@ import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
-import truncateEthAddress from "truncate-eth-address"
+import { truncateEthAddress } from "../utils/address"
 import { Member } from "../typings/role"
 
 const useStyles = makeStyles((theme) => ({
