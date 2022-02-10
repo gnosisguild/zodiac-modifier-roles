@@ -2,12 +2,14 @@ import { createClient, gql } from "urql"
 import { ethers } from "ethers"
 import { Member, Role, Target } from "../typings/role"
 
-const API_URL = "https://api.studio.thegraph.com/query/19089/zodiac-modifier-roles/0.0.22" // TODO: this is for testing
+// TODO: testing URLs
+const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles"
+const API_URL_GNOSIS_CHAIN = "https://api.thegraph.com/subgraphs/name/asgeir-eth/gnosis-zodiac-modifier-roles" // TODO: Use this when on Gnosis Chain
 
 // Using Module = 0xbdfdf9b21e18883a107d185ec80733c402357fdc
 
 const client = createClient({
-  url: API_URL,
+  url: API_URL_RINKEBY,
 })
 
 const RolesQuery = gql`
