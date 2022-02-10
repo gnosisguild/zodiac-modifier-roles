@@ -19,15 +19,18 @@ interface RoleMenuProps {
   members: string[]
   targets: Target[]
 
+  isOnRemoveMemberQueue(address: string): boolean
+  isOnRemoveTargetQueue(address: string): boolean
+
   onSubmit(): void
 
   onAddTarget(target: Target): void
 
   onAddMember(member: string): void
 
-  onRemoveMember(member: string): void
+  onRemoveMember(member: string, remove?: boolean): void
 
-  onRemoveTarget(target: Target): void
+  onRemoveTarget(target: Target, remove?: boolean): void
 
   onTarget(target: Target): void
 }
@@ -50,6 +53,9 @@ export const RoleMenu = ({
   onRemoveMember,
   onRemoveTarget,
   onSubmit,
+
+  isOnRemoveMemberQueue,
+  isOnRemoveTargetQueue,
 }: RoleMenuProps) => {
   const isWaiting = useRootSelector(getTransactionPending)
 
@@ -77,13 +83,19 @@ export const RoleMenu = ({
             width: "100%",
           }}
         />
-        <RoleMembers members={members} onAdd={handleOpenAddMemberModal} onRemove={onRemoveMember} />
+        <RoleMembers
+          members={members}
+          onAdd={handleOpenAddMemberModal}
+          onRemove={onRemoveMember}
+          isOnRemoveQueue={isOnRemoveMemberQueue}
+        />
         <RoleTargets
           targets={targets}
           target={activeTarget}
           onAdd={handleOpenAddTargetModal}
           onRemove={onRemoveTarget}
           onClick={onTarget}
+          isOnRemoveQueue={isOnRemoveTargetQueue}
         />
       </Box>
 

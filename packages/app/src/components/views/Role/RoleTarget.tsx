@@ -87,7 +87,7 @@ type RoleTargetProps = {
   activeTarget: boolean
   remove?: boolean
   onClickTarget: (target: Target) => void
-  onRemoveTarget: (target: Target) => void
+  onRemoveTarget: (target: Target, remove?: boolean) => void
 }
 
 const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, remove }: RoleTargetProps) => {
@@ -119,7 +119,7 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, remov
           </Box>
         </Box>
       </Box>
-      {remove ? <RemovedAddress address={target.address} /> : null}
+      {remove ? <RemovedAddress onUndo={() => onRemoveTarget(target, false)} address={target.address} /> : null}
     </>
   )
 }

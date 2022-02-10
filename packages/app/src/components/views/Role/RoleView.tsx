@@ -56,15 +56,34 @@ const RoleView = () => {
     setTargetsToAdd((current) => [...current, target])
   }
 
-  const handleChangeTargetExecutionOptions = ({ address: targetAddress, executionOption: newOptions }: Target) => {
+  const handleChangeTargetExecutionOptions = ({ address: targetAddress, executionOptions: newOptions }: Target) => {
     console.log("Change execution options - not implemented yet") // TODO
   }
 
-  const handleRemoveMember = (member: string) => {
-    setMembersToRemove(membersToRemove.filter((address) => member !== address))
+  const handleRemoveMember = (member: string, remove = true) => {
+    if (!remove) {
+      // Remove from delete queue
+      setMembersToRemove((members) => members.filter((_member) => _member !== member))
+      return
+    }
+    if (membersToRemove.includes(member)) {
+      // Already in queue
+      return
+    }
+    setMembersToRemove((members) => [...members, member])
   }
 
-  const handleRemoveTarget = (target: Target) => {
+  const handleRemoveTarget = (target: Target, remove = true) => {
+    console.log("remove")
+    if (!remove) {
+      // Remove from delete queue
+      setTargetsToRemove((targets) => targets.filter((_target) => _target !== target.address))
+      return
+    }
+    if (targetsToRemove.includes(target.address)) {
+      // Already in queue
+      return
+    }
     setTargetsToRemove((targetsToRemove) => [...targetsToRemove, target.address])
   }
 
@@ -86,6 +105,9 @@ const RoleView = () => {
     }
   }
 
+  const isOnRemoveMemberQueue = (address: string) => membersToRemove.includes(address)
+  const isOnRemoveTargetQueue = (address: string) => targetsToRemove.includes(address)
+
   return (
     <Dashboard
       left={
@@ -94,6 +116,8 @@ const RoleView = () => {
           role={role}
           targets={[...(role?.targets || []), ...targetsToAdd]}
           members={[...(role?.members.map((member) => member.address) || []), ...membersToAdd]}
+          isOnRemoveMemberQueue={isOnRemoveMemberQueue}
+          isOnRemoveTargetQueue={isOnRemoveTargetQueue}
           target={activeTarget}
           onTarget={setActiveTarget}
           onSubmit={handleExecuteUpdate}

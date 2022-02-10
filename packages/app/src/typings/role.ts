@@ -14,7 +14,7 @@ export type Role = {
 export type Target = {
   id?: string
   address: string
-  executionOption: ExecutionOption
+  executionOptions: ExecutionOption
 }
 
 export type Member = {

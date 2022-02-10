@@ -54,8 +54,8 @@ const createUpdateTargetTransactions = async (
   if (targetIntersection.length > 0) {
     throw new Error("The same address is found in both targets to add and targets to remove")
   }
-  const addTxs = targetsToAdd.map(({ address, executionOption }) =>
-    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOption)),
+  const addTxs = targetsToAdd.map(({ address, executionOptions }) =>
+    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOptions)),
   )
 
   const removeTxs = targetsToRemove.map((targetAddress) =>

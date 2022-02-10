@@ -129,7 +129,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       </Box>
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
+        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
           {Object.values(ExecutionOption).map((option) => (
             <MenuItem key={option} value={option}>
               {option}

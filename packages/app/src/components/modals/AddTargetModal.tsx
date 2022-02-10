@@ -66,7 +66,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
           color="secondary"
           size="large"
           variant="contained"
-          onClick={() => onAddTarget({ address, executionOption: executionOptions })}
+          onClick={() => onAddTarget({ address, executionOptions: executionOptions })}
           disabled={!isValidAddress}
           startIcon={<AddIcon />}
         >

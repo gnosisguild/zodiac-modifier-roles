@@ -65,7 +65,7 @@ const useStyles = makeStyles((theme) => ({
 type RoleMemberProps = {
   member: string
   remove?: boolean
-  onRemoveMember: (member: string) => void
+  onRemoveMember: (member: string, remove?: boolean) => void
 }
 
 const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
@@ -91,7 +91,7 @@ const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
           <DeleteOutlineSharp className={classes.deleteIcon} />
         </IconButton>
       </Box>
-      {remove ? <RemovedAddress address={member} /> : null}
+      {remove ? <RemovedAddress onUndo={address => onRemoveMember(address, false)} address={member} /> : null}
     </>
   )
 }

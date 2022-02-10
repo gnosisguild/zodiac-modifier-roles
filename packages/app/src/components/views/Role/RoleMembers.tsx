@@ -6,17 +6,18 @@ interface RoleMembersProps {
 
   onAdd(): void
 
-  onRemove(member: string): void
+  onRemove(member: string, remove?: boolean): void
+  isOnRemoveQueue(member: string): boolean
 }
 
-export const RoleMembers = ({ members, onAdd, onRemove }: RoleMembersProps) => {
+export const RoleMembers = ({ members, onAdd, onRemove, isOnRemoveQueue }: RoleMembersProps) => {
   return (
     <MenuEntity
       list={members}
       name={{ singular: "Member", plural: "Members" }}
       onAdd={onAdd}
       renderItem={(member, index) => (
-        <RoleMember key={member} member={member} remove={index === 1} onRemoveMember={onRemove} />
+        <RoleMember key={member} member={member} remove={isOnRemoveQueue(member)} onRemoveMember={onRemove} />
       )}
     />
   )
