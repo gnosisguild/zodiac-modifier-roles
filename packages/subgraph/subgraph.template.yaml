@@ -4,10 +4,12 @@ schema:
 dataSources:
   - kind: ethereum
     name: Roles
-    network: rinkeby
+    # prettier-ignore
+    network: {{network}}
     source:
       abi: Roles
-      startBlock: 10047274
+      # prettier-ignore
+      startBlock: {{startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -50,10 +52,12 @@ dataSources:
       file: ./src/roles.mapping.ts
   - kind: ethereum
     name: Permissions
-    network: rinkeby
+    # prettier-ignore
+    network: {{network}}
     source:
       abi: Permissions
-      startBlock: 10047274
+      # prettier-ignore
+      startBlock: {{startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -94,4 +98,3 @@ dataSources:
         - event: UnscopeParameter(uint16,address,bytes4,uint256,uint256)
           handler: handleUnscopeParameter
       file: ./src/permissions.mapping.ts
-

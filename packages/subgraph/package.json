@@ -4,21 +4,25 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ zodiac-modifier-roles",
-    "create-local": "graph create --node http://localhost:8020/ zodiac-modifier-roles",
-    "remove-local": "graph remove --node http://localhost:8020/ zodiac-modifier-roles",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 zodiac-modifier-roles",
+    "deploy:rinkeby": "yarn prepare:rinkeby && graph deploy --node https://api.thegraph.com/deploy/ gnosis/zodiac-modifier-roles",
+    "deploy:gnosis": "yarn prepare:gnosis && graph deploy --node https://api.thegraph.com/deploy/ gnosis/zodiac-modifier-roles",
+    "create-local": "graph create --node http://localhost:8020/ gnosis/zodiac-modifier-roles",
+    "remove-local": "graph remove --node http://localhost:8020/ gnosis/zodiac-modifier-roles",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gnosis/zodiac-modifier-roles",
     "getabi:permissions": "cp ../evm/build/artifacts/contracts/Permissions.sol/Permissions.json ./abis/Permissions.json",
     "getabi:roles": "cp ../evm/build/artifacts/contracts/Roles.sol/Roles.json ./abis/Roles.json",
-    "prebuild": "yarn getabi:permissions && yarn getabi:roles && yarn codegen",
+    "prebuild": "yarn prepare:gnosis && yarn getabi:permissions && yarn getabi:roles && yarn codegen",
     "fmt": "prettier '(test|src)/**/*.ts' -w",
-    "pre-commit": "yarn fmt"
+    "pre-commit": "yarn fmt",
+    "prepare:rinkeby": "mustache network_configs/rinkeby.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:gnosis": "mustache network_configs/gnosis-chain.json subgraph.template.yaml > subgraph.yaml"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.25.2",
+    "@graphprotocol/graph-cli": "0.26.0",
     "@graphprotocol/graph-ts": "0.24.1"
   },
   "devDependencies": {
+    "mustache": "^4.2.0",
     "prettier": "^2.5.1"
   }
 }
