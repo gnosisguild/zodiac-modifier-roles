@@ -4,7 +4,6 @@ import classNames from "classnames"
 import RoleTableRow from "./RoleTableRow"
 import { useRootSelector } from "../../../store"
 import { getRoles } from "../../../store/main/selectors"
-import { useFetchRoles } from "../../../hooks/useFetchRoles"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,9 +27,6 @@ const useStyles = makeStyles((theme) => ({
 
 const RoleTable = (): React.ReactElement => {
   const classes = useStyles()
-
-  useFetchRoles()
-
   const roles = useRootSelector(getRoles)
 
   return (

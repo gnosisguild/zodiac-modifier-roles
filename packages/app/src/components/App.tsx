@@ -1,6 +1,6 @@
 import React from "react"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
-import RolesView from "./views/RolesList/RolesView"
+import RolesView from "./views/Roles/RolesView"
 import AttachRolesModifierView from "./views/AttachRolesModifier/AttachRolesModifierView"
 import RoleView from "./views/Role/RoleView"
 import { Root } from "./Root"

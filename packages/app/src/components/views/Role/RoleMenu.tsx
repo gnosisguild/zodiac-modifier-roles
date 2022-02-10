@@ -40,6 +40,13 @@ const RoleMenuTitle = ({ role, id }: { id: RoleMenuProps["id"]; role: RoleMenuPr
   return <Typography variant="h5">Create Role #{id}</Typography>
 }
 
+function getButtonText(role: Role | undefined, isWaiting: boolean): string {
+  if (role && isWaiting) return "Updating role..."
+  if (role) return "Update role"
+  if (isWaiting) return "Creating role..."
+  return "Create role"
+}
+
 export const RoleMenu = ({
   id,
   role,
@@ -110,7 +117,7 @@ export const RoleMenu = ({
         disabled={isWaiting}
         startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
       >
-        {role && isWaiting ? "Updating role..." : role ? "Update role" : isWaiting ? "Creating role..." : "Create role"}
+        {getButtonText(role, isWaiting)}
       </Button>
 
       <AddTargetModal
