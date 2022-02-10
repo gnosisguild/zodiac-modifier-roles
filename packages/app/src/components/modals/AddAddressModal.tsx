@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import { Box, Button, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
-import Modal from "./commons/Modal"
-import { TextField } from "./commons/input/TextField"
+import Modal from "../commons/Modal"
+import { TextField } from "../commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
 
 type Props = {

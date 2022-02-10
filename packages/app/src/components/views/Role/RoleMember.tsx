@@ -3,8 +3,8 @@ import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
-import { truncateEthAddress } from "../utils/address"
-import { Member } from "../typings/role"
+import { truncateEthAddress } from "../../../utils/address"
+import RemovedAddress from "./RemovedAddress"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -63,33 +63,36 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 type RoleMemberProps = {
-  member: Member
-  onRemoveMember: (memberToBeRemoved: string) => void
+  member: string
+  remove?: boolean
+  onRemoveMember: (member: string) => void
 }
 
-const RoleMember = ({ member, onRemoveMember }: RoleMemberProps) => {
+const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
   const classes = useStyles()
-  const { address } = member
 
-  const blockie = useMemo(() => address && makeBlockie(address), [address])
+  const blockie = useMemo(() => member && makeBlockie(member), [member])
 
   return (
-    <Box className={classes.container}>
-      <Box className={classes.address}>
-        <Box className={classes.blockieContainer}>
-          <img className={classes.blockie} src={blockie} alt={address} width={16} height={16} />
+    <>
+      <Box className={classes.container}>
+        <Box className={classes.address}>
+          <Box className={classes.blockieContainer}>
+            <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
+          </Box>
+          {truncateEthAddress(member)}
         </Box>
-        {truncateEthAddress(address)}
+        <IconButton
+          size="small"
+          aria-label="Remove member"
+          className={classNames(classes.iconButton, classes.deleteButton)}
+          onClick={() => onRemoveMember(member)}
+        >
+          <DeleteOutlineSharp className={classes.deleteIcon} />
+        </IconButton>
       </Box>
-      <IconButton
-        size="small"
-        aria-label="Remove member"
-        className={classNames(classes.iconButton, classes.deleteButton)}
-        onClick={() => onRemoveMember(address)}
-      >
-        <DeleteOutlineSharp className={classes.deleteIcon} />
-      </IconButton>
-    </Box>
+      {remove ? <RemovedAddress address={member} /> : null}
+    </>
   )
 }
 

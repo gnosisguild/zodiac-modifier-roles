@@ -2,9 +2,9 @@ import React, { useEffect } from "react"
 import { Box, Table, TableHead, TableBody, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import classNames from "classnames"
 import RoleTableRow from "./RoleTableRow"
-import { useRootDispatch, useRootSelector } from "../store"
-import { getRoles, getRolesModifierAddress } from "../store/main/selectors"
-import { fetchRoles } from "../store/main/rolesSlice"
+import { useRootDispatch, useRootSelector } from "../../../store"
+import { getRoles, getRolesModifierAddress } from "../../../store/main/selectors"
+import { fetchRoles } from "../../../store/main/rolesSlice"
 
 const useStyles = makeStyles((theme) => ({
   root: {

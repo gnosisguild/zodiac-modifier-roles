@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import { getChainId, getConnectedAddress } from "../store/main/selectors"
 import { getNetworkRPC } from "../utils/networks"
 import memoize from "lodash.memoize"
+import { WalletType } from "../services/rolesModifierContract"
 
 const ONBOARD_JS_DAPP_ID = process.env.REACT_APP_ONBOARD_JS_DAPP_ID
 const INFURA_KEY = process.env.REACT_APP_INFURA_KEY
@@ -87,5 +88,16 @@ export const useWallet = () => {
     if (_provider) setProvider(_provider)
   }, [chainId, wallet])
 
-  return { provider, onboard, startOnboard }
+  const getWalletType = (): WalletType => {
+    const wallet = onboard.getState().wallet
+    if (wallet.name === "Gnosis Safe") {
+      return WalletType.GNOSIS_SAFE
+    } else {
+      return WalletType.INJECTED
+    }
+  }
+
+  const walletType = getWalletType()
+
+  return { provider, onboard, walletType, startOnboard }
 }

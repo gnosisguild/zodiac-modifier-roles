@@ -1,4 +1,4 @@
-export enum ExecutionOptions {
+export enum ExecutionOption {
   NONE = "None",
   SEND = "Send",
   DELEGATE_CALL = "DelegateCall",
@@ -7,15 +7,14 @@ export enum ExecutionOptions {
 
 export type Role = {
   id: string
-  rolesModifier: string
   targets: Target[]
-  members: { member: Member }[]
+  members: Member[]
 }
 
 export type Target = {
   id?: string
   address: string
-  executionOptions: ExecutionOptions
+  executionOption: ExecutionOption
 }
 
 export type Member = {

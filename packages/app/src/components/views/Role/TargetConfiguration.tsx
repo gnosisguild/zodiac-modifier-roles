@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, Select, MenuItem } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
-import { TextField } from "./commons/input/TextField"
+import { TextField } from "../../commons/input/TextField"
 import { ethers } from "ethers"
-import { ExecutionOptions, Target } from "../typings/role"
+import { ExecutionOption, Target } from "../../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -83,21 +83,6 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
   const [targetAddress, setTargetAddress] = useState("")
   const [isValidAddress, setIsValidAddress] = useState(false)
 
-  console.log(targetAddress)
-  console.log(isValidAddress)
-
-  // const handleChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setChecked([event.target.checked, event.target.checked])
-  // }
-
-  // const handleChange2 = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setChecked([event.target.checked, checked[1]])
-  // }
-
-  // const handleChange3 = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setChecked([checked[0], event.target.checked])
-  // }
-
   const onTargetAddressChange = (address: string) => {
     setIsValidAddress(ethers.utils.isAddress(address))
     setTargetAddress(address)
@@ -144,9 +129,11 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       </Box>
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
-          {Object.values(ExecutionOptions).map((options) => (
-            <MenuItem value={options}>{options}</MenuItem>
+        <Select value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
+          {Object.values(ExecutionOption).map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
           ))}
         </Select>
       </Box>

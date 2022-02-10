@@ -1,18 +1,18 @@
 import { ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
-import { ExecutionOptions, Target } from "../typings/role"
+import { ExecutionOption, Target } from "../typings/role"
 // get the safe and provider here.
 
-const executionOptionsToInt = (executionOptions: ExecutionOptions) => {
+const executionOptionsToInt = (executionOptions: ExecutionOption) => {
   switch (executionOptions) {
-    case ExecutionOptions.NONE:
+    case ExecutionOption.NONE:
       return 0
-    case ExecutionOptions.SEND:
+    case ExecutionOption.SEND:
       return 1
-    case ExecutionOptions.DELEGATE_CALL:
+    case ExecutionOption.DELEGATE_CALL:
       return 2
-    case ExecutionOptions.BOTH:
+    case ExecutionOption.BOTH:
       return 3
   }
 }
@@ -54,8 +54,8 @@ const createUpdateTargetTransactions = async (
   if (targetIntersection.length > 0) {
     throw new Error("The same address is found in both targets to add and targets to remove")
   }
-  const addTxs = targetsToAdd.map(({ address, executionOptions }) =>
-    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOptions)),
+  const addTxs = targetsToAdd.map(({ address, executionOption }) =>
+    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOption)),
   )
 
   const removeTxs = targetsToRemove.map((targetAddress) =>
@@ -70,6 +70,7 @@ const createUpdateTargetTransactions = async (
  * For instance requests for adding a member that is already a member or removing a member
  * that is not a member will be executed.
  * @param provider
+ * @param walletType
  * @param modifierAddress
  * @param roleId
  * @param memberAddressesToAdd
@@ -113,7 +114,7 @@ export const updateRole = async (
   const txs = [...membershipTransactions, ...targetTransactions]
 
   switch (walletType) {
-    case "gnosis-safe": {
+    case WalletType.GNOSIS_SAFE: {
       const safeSDK = new SafeAppsSDK()
       console.log(txs)
       const hash = await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
@@ -121,7 +122,7 @@ export const updateRole = async (
       console.log(hash)
       break
     }
-    case "injected": {
+    case WalletType.INJECTED: {
       await Promise.all(
         txs.map(async (tx) => {
           const recept = await signer.sendTransaction(tx)
@@ -130,7 +131,7 @@ export const updateRole = async (
       )
       break
     }
-    case "zodiac-pilot": {
+    case WalletType.ZODIAC_PILOT: {
       console.warn("Sending transactions via the zodiac pilot in not yet supported")
       break
     }

@@ -1,13 +1,14 @@
 import { Button, makeStyles, Typography } from "@material-ui/core"
-import { TextField } from "./commons/input/TextField"
-import { ReactComponent as ArrowUp } from "../assets/icons/arrow-up.svg"
+import { TextField } from "../commons/input/TextField"
+import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg"
 import { useState } from "react"
 import { ethers } from "ethers"
-import Modal from "./commons/Modal"
+import Modal from "../commons/Modal"
 import { useNavigate } from "react-router-dom"
-import { useQuery } from "../hooks/useQuery"
+import { useQuery } from "../../hooks/useQuery"
 
 type Props = {
+  open: boolean
   onClose: () => void
 }
 
@@ -20,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const AttachRolesModifierModal = ({ onClose }: Props) => {
+export const AttachRolesModifierModal = ({ open, onClose }: Props) => {
   const classes = useStyles()
   const [rolesModifierAddress, setRolesModifierAddress] = useState("")
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ export const AttachRolesModifierModal = ({ onClose }: Props) => {
   }
 
   return (
-    <Modal isOpen={true} onClose={onClose}>
+    <Modal isOpen={open} onClose={onClose}>
       <Typography className={classes.spacing} variant="h4">
         Attach to a Roles Modifier
       </Typography>

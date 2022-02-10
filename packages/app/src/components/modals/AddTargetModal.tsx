@@ -1,10 +1,10 @@
 import React, { useState } from "react"
 import { Box, Button, InputLabel, makeStyles, MenuItem, Select, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
-import Modal from "./commons/Modal"
-import { TextField } from "./commons/input/TextField"
+import Modal from "../commons/Modal"
+import { TextField } from "../commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
-import { ExecutionOptions, Target } from "../typings/role"
+import { ExecutionOption, Target } from "../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   label: {
@@ -22,7 +22,7 @@ type Props = {
 const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [address, setAddress] = useState("")
-  const [executionOptions, setExecutionOptions] = useState(ExecutionOptions.NONE)
+  const [executionOptions, setExecutionOptions] = useState(ExecutionOption.NONE)
   const [isValidAddress, setIsValidAddress] = useState(false)
 
   const onAddressChange = (address: string) => {
@@ -31,7 +31,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
   }
 
   const handleChangeExecutionsOptions = (value: string) => {
-    setExecutionOptions(value as ExecutionOptions)
+    setExecutionOptions(value as ExecutionOption)
   }
 
   return (
@@ -52,8 +52,10 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
       <Box sx={{ mt: 2 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select value={executionOptions} onChange={(e) => handleChangeExecutionsOptions(e.target.value as string)}>
-          {Object.values(ExecutionOptions).map((options) => (
-            <MenuItem value={options}>{options}</MenuItem>
+          {Object.values(ExecutionOption).map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
           ))}
         </Select>
       </Box>
@@ -64,7 +66,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
           color="secondary"
           size="large"
           variant="contained"
-          onClick={() => onAddTarget({ address, executionOptions })}
+          onClick={() => onAddTarget({ address, executionOption: executionOptions })}
           disabled={!isValidAddress}
           startIcon={<AddIcon />}
         >

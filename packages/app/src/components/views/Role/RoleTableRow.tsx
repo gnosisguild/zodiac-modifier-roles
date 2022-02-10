@@ -1,7 +1,7 @@
 import React from "react"
 import { Box, Button, IconButton, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
-import { Role } from "../typings/role"
+import { Role } from "../../../typings/role"
 import { useNavigate } from "react-router-dom"
 
 const useStyles = makeStyles(() => ({

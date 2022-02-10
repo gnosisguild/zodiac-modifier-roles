@@ -1,5 +1,5 @@
 import { Box, Link, Typography, makeStyles } from "@material-ui/core"
-import { truncateEthAddress } from "../utils/address"
+import { truncateEthAddress } from "../../../utils/address"
 
 const useStyles = makeStyles(() => ({
   undoLink: {
@@ -12,7 +12,7 @@ interface RemovedAddressProps {
   address: string
 }
 
-const ConnectWallet = ({ address }: RemovedAddressProps) => {
+const RemovedAddress = ({ address }: RemovedAddressProps) => {
   const classes = useStyles()
 
   return (
@@ -29,4 +29,4 @@ const ConnectWallet = ({ address }: RemovedAddressProps) => {
   )
 }
 
-export default ConnectWallet
+export default RemovedAddress

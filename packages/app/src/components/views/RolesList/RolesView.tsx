@@ -1,7 +1,7 @@
 import React from "react"
 import { Box, Button, Grid, makeStyles } from "@material-ui/core"
 import AddIcon from "@material-ui/icons/Add"
-import RoleTable from "./RoleTable"
+import RoleTable from "../Role/RoleTable"
 import { Link } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({

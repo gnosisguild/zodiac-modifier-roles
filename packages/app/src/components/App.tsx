@@ -5,15 +5,15 @@ import { makeStyles } from "@material-ui/core"
 import { useWallet } from "../hooks/useWallet"
 import { useRootDispatch, useRootSelector } from "../store"
 import ConnectWallet from "./ConnectWallet"
-import RolesView from "./RolesView"
+import RolesView from "./views/RolesList/RolesView"
 import { useQuery } from "../hooks/useQuery"
 import { setChainId } from "../store/main/web3Slice"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
-import AttachRolesModifierModal from "./AttachRolesModifierModal"
+import AttachRolesModifierModal from "./modals/AttachRolesModifierModal"
 import { ethers } from "ethers"
 import { getRolesModifierAddress } from "../store/main/selectors"
 import { setRolesModifierAddress } from "../store/main/rolesSlice"
-import RoleView from "./RoleView"
+import RoleView from "./views/Role/RoleView"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -30,6 +30,8 @@ export const App = (): React.ReactElement => {
   const { startOnboard, onboard } = useWallet()
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
+  const rolesModifierModalOpen = rolesModifierAddress == null || !ethers.utils.isAddress(rolesModifierAddress)
+
   return (
     <BrowserRouter>
       <StateTracker />
@@ -41,8 +43,7 @@ export const App = (): React.ReactElement => {
               <Header />
               <Outlet />
               {!onboard.getState().address && <ConnectWallet onClick={startOnboard} />}
-              {rolesModifierAddress == null ||
-                (!ethers.utils.isAddress(rolesModifierAddress) && <AttachRolesModifierModal onClose={() => {}} />)}
+              {rolesModifierModalOpen && <AttachRolesModifierModal open={rolesModifierModalOpen} onClose={() => {}} />}
             </div>
           }
         >
