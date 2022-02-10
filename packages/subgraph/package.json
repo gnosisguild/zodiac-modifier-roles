@@ -4,8 +4,8 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy:rinkeby": "yarn prepare:rinkeby && graph deploy --node https://api.thegraph.com/deploy/ gnosis/zodiac-modifier-roles",
-    "deploy:gnosis": "yarn prepare:gnosis && graph deploy --node https://api.thegraph.com/deploy/ gnosis/zodiac-modifier-roles",
+    "deploy:rinkeby": "yarn prepare:rinkeby && graph deploy --node https://api.thegraph.com/deploy/ asgeir-eth/zodiac-modifier-roles",
+    "deploy:gnosis": "yarn prepare:gnosis && graph deploy --node https://api.thegraph.com/deploy/ asgeir-eth/gnosis-zodiac-modifier-roles",
     "create-local": "graph create --node http://localhost:8020/ gnosis/zodiac-modifier-roles",
     "remove-local": "graph remove --node http://localhost:8020/ gnosis/zodiac-modifier-roles",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gnosis/zodiac-modifier-roles",
