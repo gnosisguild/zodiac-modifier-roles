@@ -2,7 +2,7 @@ import React from "react"
 import { Box, Button, IconButton, TableRow, TableCell, makeStyles } from "@material-ui/core"
 import KeyboardArrowRightSharp from "@material-ui/icons/KeyboardArrowRightSharp"
 import { Role } from "../../../typings/role"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
 const useStyles = makeStyles(() => ({
   arrowIcon: {
@@ -48,10 +48,12 @@ type Props = { role: Role }
 
 const RoleTableRow = ({ role }: Props): React.ReactElement => {
   const classes = useStyles()
-  let navigate = useNavigate()
+  const { module } = useParams()
+  const navigate = useNavigate()
+  const handleNavigation = () => navigate(`/${module}/roles/${role.id}`)
 
   return (
-    <TableRow key={role.id} className={classes.tableRow} onClick={() => navigate(`/roles/${role.id}`)}>
+    <TableRow key={role.id} className={classes.tableRow} onClick={handleNavigation}>
       <TableCell className={classes.tableCell}>{`Role #${role.id}`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.members.length} Members`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.targets.length} Targets`}</TableCell>

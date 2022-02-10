@@ -4,12 +4,12 @@ import TargetParameters from "./TargetConfiguration"
 import { Role, Target } from "../../../typings/role"
 import { useRootDispatch, useRootSelector } from "../../../store"
 import { getRoleById, getRoles, getRolesModifierAddress } from "../../../store/main/selectors"
-import { fetchRoles } from "../../../store/main/rolesSlice"
 import { updateRole } from "../../../services/rolesModifierContract"
 import { useWallet } from "../../../hooks/useWallet"
 import { Dashboard } from "../../commons/layout/Dashboard"
 import { RoleMenu } from "./RoleMenu"
 import { RoleNoTarget } from "./RoleNoTarget"
+import { useFetchRoles } from "../../../hooks/useFetchRoles"
 
 /**
  * Security concern: roleId crashes is possible. This uses the currently available information.
@@ -43,8 +43,9 @@ const RoleView = () => {
   const [membersToRemove, setMembersToRemove] = useState<string[]>([])
   const [targetsToRemove, setTargetsToRemove] = useState<string[]>([])
 
+  useFetchRoles()
+
   useEffect(() => {
-    dispatch(fetchRoles())
     setActiveTarget(role?.targets[0])
   }, [dispatch, roleId, role?.targets])
 

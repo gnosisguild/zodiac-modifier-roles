@@ -1,10 +1,10 @@
-import React, { useEffect } from "react"
-import { Box, Table, TableHead, TableBody, TableRow, TableCell, makeStyles } from "@material-ui/core"
+import React from "react"
+import { Box, makeStyles, Table, TableBody, TableCell, TableHead, TableRow } from "@material-ui/core"
 import classNames from "classnames"
 import RoleTableRow from "./RoleTableRow"
-import { useRootDispatch, useRootSelector } from "../../../store"
-import { getRoles, getRolesModifierAddress } from "../../../store/main/selectors"
-import { fetchRoles } from "../../../store/main/rolesSlice"
+import { useRootSelector } from "../../../store"
+import { getRoles } from "../../../store/main/selectors"
+import { useFetchRoles } from "../../../hooks/useFetchRoles"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,13 +28,10 @@ const useStyles = makeStyles((theme) => ({
 
 const RoleTable = (): React.ReactElement => {
   const classes = useStyles()
-  const dispatch = useRootDispatch()
-  const roles = useRootSelector(getRoles)
-  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
-  useEffect(() => {
-    dispatch(fetchRoles())
-  }, [rolesModifierAddress, dispatch])
+  useFetchRoles()
+
+  const roles = useRootSelector(getRoles)
 
   return (
     <Box className={classes.root}>

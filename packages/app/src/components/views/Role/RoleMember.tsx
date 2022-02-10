@@ -91,7 +91,7 @@ const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
           <DeleteOutlineSharp className={classes.deleteIcon} />
         </IconButton>
       </Box>
-      {remove ? <RemovedAddress onUndo={address => onRemoveMember(address, false)} address={member} /> : null}
+      {remove ? <RemovedAddress onUndo={(address) => onRemoveMember(address, false)} address={member} /> : null}
     </>
   )
 }

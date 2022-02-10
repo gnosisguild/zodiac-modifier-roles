@@ -5,10 +5,11 @@ import { useState } from "react"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
 import { useNavigate } from "react-router-dom"
-import { useQuery } from "../../hooks/useQuery"
+import { formatAddressEIP3770, getAddress } from "../../utils/address"
+import { useRootSelector } from "../../store"
+import { getRolesModifierAddress } from "../../store/main/selectors"
 
 type Props = {
-  open: boolean
   onClose: () => void
 }
 
@@ -21,22 +22,25 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const AttachRolesModifierModal = ({ open, onClose }: Props) => {
+export const AttachRolesModifierModal = ({ onClose }: Props) => {
   const classes = useStyles()
-  const [rolesModifierAddress, setRolesModifierAddress] = useState("")
   const navigate = useNavigate()
-  const query = useQuery()
+
+  const chainId = 4
+  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
+  console.log("rolesModifierAddress", rolesModifierAddress)
+
+  const [address, setAddress] = useState("")
 
   const handleAttach = async () => {
-    if (ethers.utils.isAddress(rolesModifierAddress)) {
-      const chainIdParam = query.get("chainId")
-      if (chainIdParam != null) {
-        navigate(`/?rolesModifierAddress=${rolesModifierAddress}&chainId=${chainIdParam}`, { replace: true })
-      } else {
-        navigate(`/?rolesModifierAddress=${rolesModifierAddress}`, { replace: true })
-      }
+    const addressData = getAddress(address)
+    if (addressData) {
+      const fullAddress = addressData.fullAddress || formatAddressEIP3770(chainId, addressData.address)
+      navigate(`/${fullAddress}`, { replace: true })
     }
   }
+
+  const open = rolesModifierAddress == null || !getAddress(rolesModifierAddress)
 
   return (
     <Modal isOpen={open} onClose={onClose}>
@@ -49,7 +53,7 @@ export const AttachRolesModifierModal = ({ open, onClose }: Props) => {
 
       <TextField
         className={classes.spacing}
-        onChange={(evt: any) => setRolesModifierAddress(evt.target.value)}
+        onChange={(evt: any) => setAddress(evt.target.value)}
         label="Role Modifier Address"
         placeholder="0x..."
       />
@@ -59,7 +63,7 @@ export const AttachRolesModifierModal = ({ open, onClose }: Props) => {
         color="secondary"
         variant="contained"
         onClick={handleAttach}
-        disabled={!ethers.utils.isAddress(rolesModifierAddress)}
+        disabled={!ethers.utils.isAddress(address)}
         startIcon={<ArrowUp />}
       >
         Attach Roles Modifier

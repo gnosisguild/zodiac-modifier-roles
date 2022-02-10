@@ -2,7 +2,7 @@ import React from "react"
 import { Box, Button, Grid, makeStyles } from "@material-ui/core"
 import AddIcon from "@material-ui/icons/Add"
 import RoleTable from "../Role/RoleTable"
-import { Link } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -36,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
 
 export const RolesView = (): React.ReactElement => {
   const classes = useStyles()
+  const { module } = useParams()
 
   return (
     <Grid container spacing={1} className={classes.container}>
@@ -52,7 +53,7 @@ export const RolesView = (): React.ReactElement => {
               ),
             }}
           /> */}
-          <Link to="/roles/new">
+          <Link to={`/${module}/roles/new`}>
             <Button startIcon={<AddIcon />} variant="contained" color="secondary">
               Create a role
             </Button>

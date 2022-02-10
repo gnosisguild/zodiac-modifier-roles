@@ -6,7 +6,7 @@ import { getTransactionPending } from "../../../store/main/selectors"
 import { Role, Target } from "../../../typings/role"
 import AddTargetModal from "../../modals/AddTargetModal"
 import { useState } from "react"
-import { Link as RouterLink } from "react-router-dom"
+import { Link as RouterLink, useParams } from "react-router-dom"
 import AddAddressModal from "../../modals/AddAddressModal"
 import { RoleMembers } from "./RoleMembers"
 import { RoleTargets } from "./RoleTargets"
@@ -57,6 +57,8 @@ export const RoleMenu = ({
   isOnRemoveMemberQueue,
   isOnRemoveTargetQueue,
 }: RoleMenuProps) => {
+  const { module } = useParams()
+
   const isWaiting = useRootSelector(getTransactionPending)
 
   const [addTargetModalIsOpen, setAddTargetModalIsOpen] = useState(false)
@@ -71,7 +73,7 @@ export const RoleMenu = ({
         <Box sx={{ display: "flex", flexDirection: "row" }}>
           <RoleMenuTitle id={id} role={role} />
           <Box sx={{ flexGrow: 1 }} />
-          <RouterLink to="/">
+          <RouterLink to={`/${module}`}>
             <ButtonLink text="View all roles" icon={<ArrowBackSharp fontSize="small" />} />
           </RouterLink>
         </Box>

@@ -1,54 +1,27 @@
 import React, { useEffect } from "react"
-import { Header } from "./Header"
-import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
-import { makeStyles } from "@material-ui/core"
-import { useWallet } from "../hooks/useWallet"
-import { useRootDispatch, useRootSelector } from "../store"
-import ConnectWallet from "./ConnectWallet"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { useRootDispatch } from "../store"
 import RolesView from "./views/RolesList/RolesView"
 import { useQuery } from "../hooks/useQuery"
 import { setChainId } from "../store/main/web3Slice"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
 import AttachRolesModifierModal from "./modals/AttachRolesModifierModal"
-import { ethers } from "ethers"
-import { getRolesModifierAddress } from "../store/main/selectors"
 import { setRolesModifierAddress } from "../store/main/rolesSlice"
 import RoleView from "./views/Role/RoleView"
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    minHeight: "100vh",
-    padding: theme.spacing(3),
-  },
-}))
+import { Root } from "./Root"
 
 export const App = (): React.ReactElement => {
-  const classes = useStyles()
-  const { startOnboard, onboard } = useWallet()
-  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
-
-  const rolesModifierModalOpen = rolesModifierAddress == null || !ethers.utils.isAddress(rolesModifierAddress)
+  // const { startOnboard, onboard } = useWallet()
 
   return (
     <BrowserRouter>
       <StateTracker />
       <Routes>
-        <Route
-          path="/"
-          element={
-            <div className={classes.root}>
-              <Header />
-              <Outlet />
-              {!onboard.getState().address && <ConnectWallet onClick={startOnboard} />}
-              {rolesModifierModalOpen && <AttachRolesModifierModal open={rolesModifierModalOpen} onClose={() => {}} />}
-            </div>
-          }
-        >
-          <Route path="/roles/:roleId" element={<RoleView />} />
-          <Route path="/" element={<RolesView />} />
+        <Route path="/" element={<Root />}>
+          <Route index element={<AttachRolesModifierModal onClose={() => {}} />} />
+          <Route path=":module" element={<RolesView />} />
+          <Route path=":module/roles/:roleId" element={<RoleView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
