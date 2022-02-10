@@ -7,7 +7,8 @@ import Modal from "../commons/Modal"
 import { useNavigate } from "react-router-dom"
 import { formatAddressEIP3770, getAddress } from "../../utils/address"
 import { useRootSelector } from "../../store"
-import { getRolesModifierAddress } from "../../store/main/selectors"
+import { getChainId, getRolesModifierAddress } from "../../store/main/selectors"
+import { useSafeApp } from "../../hooks/useSafeApp"
 
 type Props = {
   onClose: () => void
@@ -26,9 +27,10 @@ export const AttachRolesModifierModal = ({ onClose }: Props) => {
   const classes = useStyles()
   const navigate = useNavigate()
 
-  const chainId = 4
+  useSafeApp()
+
+  const chainId = useRootSelector(getChainId)
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
-  console.log("rolesModifierAddress", rolesModifierAddress)
 
   const [address, setAddress] = useState("")
 
