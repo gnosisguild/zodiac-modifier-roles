@@ -34,6 +34,11 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
     setExecutionOptions(value as ExecutionOption)
   }
 
+  const handleAdd = () => {
+    onAddTarget({ address, executionOptions: executionOptions })
+    onClose()
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <Typography variant="h4">Add a Target</Typography>
@@ -66,7 +71,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
           color="secondary"
           size="large"
           variant="contained"
-          onClick={() => onAddTarget({ address, executionOptions: executionOptions })}
+          onClick={handleAdd}
           disabled={!isValidAddress}
           startIcon={<AddIcon />}
         >

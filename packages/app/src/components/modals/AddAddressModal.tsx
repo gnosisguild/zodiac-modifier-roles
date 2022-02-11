@@ -21,6 +21,11 @@ const AddAddressModal = ({ type, onAddAddress, onClose, isOpen }: Props): React.
     setAddress(address)
   }
 
+  const handleAdd = () => {
+    onAddAddress(address)
+    onClose()
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <Typography variant="h4">Add a {type}</Typography>
@@ -43,7 +48,7 @@ const AddAddressModal = ({ type, onAddAddress, onClose, isOpen }: Props): React.
           color="secondary"
           size="large"
           variant="contained"
-          onClick={() => onAddAddress(address)}
+          onClick={handleAdd}
           disabled={!isValidAddress}
           startIcon={<AddIcon />}
         >
