@@ -1,4 +1,4 @@
-declare module 'localforage-memoryStorageDriver' {
+declare module "localforage-memoryStorageDriver" {
   const memoryStorageDriver: any = {}
   export default memoryStorageDriver
 }
