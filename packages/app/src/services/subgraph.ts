@@ -3,8 +3,8 @@ import { ethers } from "ethers"
 import { Member, Role, Target } from "../typings/role"
 
 // TODO: testing URLs
-const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles"
-const API_URL_GNOSIS_CHAIN = "https://api.thegraph.com/subgraphs/name/asgeir-eth/gnosis-zodiac-modifier-roles" // TODO: Use this when on Gnosis Chain
+const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-rinkeby"
+// const API_URL_GNOSIS_CHAIN = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-gnosis-chain" // TODO: Use this when on Gnosis Chain
 
 // Using Module = 0xbdfdf9b21e18883a107d185ec80733c402357fdc
 
