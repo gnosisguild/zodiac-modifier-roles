@@ -27,3 +27,10 @@ export enum EntityStatus {
   PENDING,
   NONE,
 }
+
+export const EXECUTION_OPTIONS: ExecutionOption[] = [
+  ExecutionOption.NONE,
+  ExecutionOption.SEND,
+  ExecutionOption.DELEGATE_CALL,
+  ExecutionOption.BOTH,
+]

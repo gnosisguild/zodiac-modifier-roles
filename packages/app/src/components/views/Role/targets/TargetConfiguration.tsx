@@ -1,9 +1,11 @@
-import React, { useState } from "react"
-import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, Select, MenuItem } from "@material-ui/core"
+import React, { useMemo } from "react"
+import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
-import { TextField } from "../../commons/input/TextField"
-import { ethers } from "ethers"
-import { ExecutionOption, Target } from "../../../typings/role"
+import { TextField } from "../../../commons/input/TextField"
+import { EXECUTION_OPTIONS, Target } from "../../../../typings/role"
+import { useAbi } from "../../../../hooks/useAbi"
+import { TargetFunctionList } from "./TargetFunctionList"
+import { FunctionFragment, Interface } from "@ethersproject/abi"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -79,39 +81,23 @@ type Props = {
 
 const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props) => {
   const classes = useStyles()
-  // const [checked, setChecked] = React.useState([true, false])
-  const [targetAddress, setTargetAddress] = useState("")
-  const [isValidAddress, setIsValidAddress] = useState(false)
-
-  const onTargetAddressChange = (address: string) => {
-    setIsValidAddress(ethers.utils.isAddress(address))
-    setTargetAddress(address)
-  }
 
   const handleChangeTargetExecutionsOptions = (value: any) => {
     console.log(value)
   }
 
-  // const children = (
-  //   <Box sx={{ display: "flex", flexDirection: "column", ml: 3 }}>
-  //     <FormControlLabel
-  //       label={<Typography variant="body2">parameter1</Typography>}
-  //       control={<Checkbox size="small" checked={checked[0]} onChange={handleChange2} />}
-  //     />
-  //     <FormControlLabel
-  //       label={<Typography variant="body2">parameter2</Typography>}
-  //       control={<Checkbox size="small" checked={checked[1]} onChange={handleChange3} />}
-  //     />
-  //   </Box>
-  // )
+  const { abi } = useAbi(target.address)
+  const functions = useMemo(() => {
+    if (!abi) return []
+    return new Interface(abi).fragments.filter(FunctionFragment.isFunctionFragment)
+  }, [abi])
 
   return (
     <Box>
       <Box alignItems="flex-end" display="flex" justifyContent="space-between">
         <TextField
-          onChange={(e) => onTargetAddressChange(e.target.value)}
           label="Target Address"
-          placeholder={target.address}
+          value={target.address}
           InputProps={{
             readOnly: true,
           }}
@@ -130,7 +116,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
-          {Object.values(ExecutionOption).map((option) => (
+          {EXECUTION_OPTIONS.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
             </MenuItem>
@@ -144,26 +130,11 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
           control={<Checkbox checked={true} disabled={true} />}
         />
       </Box>
-      {/* <Box className={classes.container}>
+      <Box className={classes.container}>
         <Box className={classes.root}>
-          <Box className={classes.functionWrapper}>
-            <Box onClick={() => setFunctionOpen(!isFunctionOpen)} className={classes.functionTrigger}>
-              <FormControlLabel
-                label={<Typography variant="body1">denyAddList</Typography>}
-                control={
-                  <Checkbox
-                    checked={checked[0] && checked[1]}
-                    indeterminate={checked[0] !== checked[1]}
-                    onChange={handleChange1}
-                  />
-                }
-              />
-              <KeyboardArrowDownSharp className={classNames(classes.arrow, isFunctionOpen && "isActive")} />
-            </Box>
-            {isFunctionOpen && children}
-          </Box>
+          <TargetFunctionList items={functions} />
         </Box>
-      </Box> */}
+      </Box>
     </Box>
   )
 }

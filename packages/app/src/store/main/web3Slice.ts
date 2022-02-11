@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { Web3State } from "./models"
 import { BigNumber, ethers } from "ethers"
-import { getNetworkName, NETWORK } from "../../utils/networks"
+import { getNetwork, Network } from "../../utils/networks"
 
 const ethereum = (window as any).ethereum
 let initialChainId
 try {
   const chainId: BigNumber | undefined = ethereum && ethereum.chainId && ethers.BigNumber.from(ethereum.chainId)
-  if (chainId && getNetworkName(chainId.toNumber())) {
+  if (chainId && getNetwork(chainId.toNumber())) {
     initialChainId = chainId.toNumber()
   }
 } catch (err) {}
@@ -15,7 +15,7 @@ try {
 console.log("initialChainId", initialChainId)
 
 const web3InitialState: Web3State = {
-  chainId: initialChainId || NETWORK.MAINNET,
+  chainId: initialChainId || Network.MAINNET,
   connectedAddress: "",
   ens: "",
 }

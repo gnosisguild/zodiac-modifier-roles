@@ -1,9 +1,9 @@
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
 import classNames from "classnames"
-import { truncateEthAddress } from "../../../utils/address"
-import { EntityStatus, Target } from "../../../typings/role"
-import RemovedAddress from "./RemovedAddress"
+import { truncateEthAddress } from "../../../../utils/address"
+import { EntityStatus, Target } from "../../../../typings/role"
+import RemovedAddress from "../RemovedAddress"
 
 const useStyles = makeStyles((theme) => ({
   container: {

@@ -3,9 +3,9 @@ import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
-import { truncateEthAddress } from "../../../utils/address"
-import RemovedAddress from "./RemovedAddress"
-import { EntityStatus } from "../../../typings/role"
+import { truncateEthAddress } from "../../../../utils/address"
+import RemovedAddress from "../RemovedAddress"
+import { EntityStatus } from "../../../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {

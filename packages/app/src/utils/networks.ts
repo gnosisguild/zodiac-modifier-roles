@@ -1,50 +1,64 @@
-export enum NETWORK {
+import CHAINS from "../data/chains.json"
+
+const INFURA_KEY = process.env.REACT_APP_INFURA_KEY as string
+if (!INFURA_KEY) throw new Error("INFURA KEY NOT SET")
+
+export enum Network {
   MAINNET = 1,
   RINKEBY = 4,
-  XDAI = 100,
+  GOERLI = 5,
+  OPTIMISM = 10,
+  BINANCE = 56,
+  GNOSIS = 100,
   POLYGON = 137,
+  EWT = 246,
+  ARBITRUM = 42161,
+  AVALANCHE = 43114,
+  VOLTA = 73799,
+  AURORA = 1313161554,
 }
 
-export interface Coin {
-  symbol: string
-  decimals: number
+export const NETWORKS = [
+  Network.MAINNET,
+  Network.RINKEBY,
+  Network.GOERLI,
+  Network.OPTIMISM,
+  Network.BINANCE,
+  Network.GNOSIS,
+  Network.POLYGON,
+  Network.EWT,
+  Network.ARBITRUM,
+  Network.AVALANCHE,
+  Network.VOLTA,
+  Network.AURORA,
+]
+
+interface NetworkConfig {
+  name: string
+  chainId: number
+  shortName: string
+  rpc: string[]
+  infoURL: string
+  nativeCurrency: {
+    name: string
+    symbol: string
+    decimals: number
+  }
+  explorers: {
+    name: string
+    url: string
+    standard: string
+  }[]
 }
 
-export const NATIVE_ASSET: Record<string, Coin> = {
-  ETH: { symbol: "ETH", decimals: 18 },
-  XDAI: { symbol: "xDai", decimals: 18 },
-  MATIC: { symbol: "MATIC", decimals: 18 },
+export function getNetworkRPC(network: Network) {
+  const config = getNetwork(network)
+  if (config) {
+    // eslint-disable-next-line no-template-curly-in-string
+    return config.rpc[0].replace("${INFURA_API_KEY}", INFURA_KEY)
+  }
 }
 
-export const NETWORK_NATIVE_ASSET: Record<NETWORK, Coin> = {
-  [NETWORK.MAINNET]: NATIVE_ASSET.ETH,
-  [NETWORK.RINKEBY]: NATIVE_ASSET.ETH,
-  [NETWORK.XDAI]: NATIVE_ASSET.XDAI,
-  [NETWORK.POLYGON]: NATIVE_ASSET.MATIC,
-}
-
-export const NETWORK_NAME: Record<NETWORK, string> = {
-  [NETWORK.MAINNET]: "Mainnet",
-  [NETWORK.RINKEBY]: "Rinkeby",
-  [NETWORK.XDAI]: "Gnosis Chain",
-  [NETWORK.POLYGON]: "Polygon",
-}
-
-export const NETWORK_DEFAULT_RPC: Record<NETWORK, string> = {
-  [NETWORK.MAINNET]: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-  [NETWORK.RINKEBY]: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-  [NETWORK.XDAI]: "https://rpc.xdaichain.com",
-  [NETWORK.POLYGON]: "https://polygon-rpc.com",
-}
-
-export function getNetworkNativeAsset(network: NETWORK) {
-  return NETWORK_NATIVE_ASSET[network]
-}
-
-export function getNetworkRPC(network: NETWORK) {
-  return NETWORK_DEFAULT_RPC[network]
-}
-
-export function getNetworkName(network: NETWORK) {
-  return NETWORK_NAME[network]
+export function getNetwork(network: Network): NetworkConfig {
+  return CHAINS[network]
 }

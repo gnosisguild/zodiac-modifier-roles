@@ -1,5 +1,5 @@
-import { MenuEntity } from "./MenuEntity"
-import { EntityStatus, Target } from "../../../typings/role"
+import { MenuEntity } from "../MenuEntity"
+import { EntityStatus, Target } from "../../../../typings/role"
 import RoleTarget from "./RoleTarget"
 
 interface RoleMembersProps {

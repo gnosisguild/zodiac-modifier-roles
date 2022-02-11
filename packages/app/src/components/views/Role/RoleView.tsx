@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import TargetParameters from "./TargetConfiguration"
+import TargetParameters from "./targets/TargetConfiguration"
 import { EntityStatus, Role, Target } from "../../../typings/role"
 import { useRootDispatch, useRootSelector } from "../../../store"
 import { getRoleById, getRoles, getRolesModifierAddress } from "../../../store/main/selectors"

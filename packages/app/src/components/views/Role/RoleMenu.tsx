@@ -8,8 +8,8 @@ import AddTargetModal from "../../modals/AddTargetModal"
 import { useState } from "react"
 import { Link as RouterLink, useParams } from "react-router-dom"
 import AddAddressModal from "../../modals/AddAddressModal"
-import { RoleMembers } from "./RoleMembers"
-import { RoleTargets } from "./RoleTargets"
+import { RoleMembers } from "./members/RoleMembers"
+import { RoleTargets } from "./targets/RoleTargets"
 
 interface RoleMenuProps {
   id: string

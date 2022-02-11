@@ -1,9 +1,9 @@
 import { InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
 import { useRootDispatch, useRootSelector } from "../../../store"
 import { getChainId, getRolesModifierAddress } from "../../../store/main/selectors"
-import { NETWORK_NAME } from "../../../utils/networks"
 import { setChainId } from "../../../store/main/web3Slice"
 import { HeaderBox } from "./HeaderBox"
+import { getNetwork, NETWORKS } from "../../../utils/networks"
 
 const useStyles = makeStyles((theme) => ({
   networkPickerContainer: {
@@ -21,6 +21,8 @@ const useStyles = makeStyles((theme) => ({
     },
   },
 }))
+
+const networkConfigs = NETWORKS.map(getNetwork)
 
 export const ChainPicker = () => {
   const classes = useStyles()
@@ -41,9 +43,9 @@ export const ChainPicker = () => {
         value={chainId}
         onChange={(evt) => handleNetworkChange(evt.target.value as string)}
       >
-        {Object.entries(NETWORK_NAME).map((pair) => (
-          <MenuItem key={pair[0]} value={pair[0]}>
-            {pair[1]}
+        {networkConfigs.map((config) => (
+          <MenuItem key={config.chainId} value={config.chainId}>
+            {config.name}
           </MenuItem>
         ))}
       </Select>

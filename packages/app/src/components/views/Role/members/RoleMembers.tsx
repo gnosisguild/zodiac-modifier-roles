@@ -1,6 +1,6 @@
 import RoleMember from "./RoleMember"
-import { MenuEntity } from "./MenuEntity"
-import { EntityStatus } from "../../../typings/role"
+import { MenuEntity } from "../MenuEntity"
+import { EntityStatus } from "../../../../typings/role"
 
 interface RoleMembersProps {
   members: string[]

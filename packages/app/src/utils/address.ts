@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import EIP3770List from "./data/EIP3770.json"
+import EIP3770List from "../data/EIP3770.json"
 
 const EIP3770Names = Object.values(EIP3770List).map((name) => name.toLowerCase())
 const EIP3770ChainIds = Object.keys(EIP3770List)

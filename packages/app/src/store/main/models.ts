@@ -1,8 +1,8 @@
 import { Role } from "../../typings/role"
-import { NETWORK } from "../../utils/networks"
+import { Network } from "../../utils/networks"
 
 export interface Web3State {
-  chainId: NETWORK
+  chainId: Network
   connectedAddress?: string
   ens?: string
 }

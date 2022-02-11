@@ -1,4 +1,4 @@
-import { Box, ButtonBase, makeStyles, Typography } from "@material-ui/core"
+import { ButtonBase, makeStyles, Typography } from "@material-ui/core"
 import { truncateEthAddress } from "../../../utils/address"
 
 interface RemovedAddressProps {
@@ -6,6 +6,7 @@ interface RemovedAddressProps {
 
   onUndo(address: string): void
 }
+
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
