@@ -1,4 +1,4 @@
-import { Box, ButtonBase, Typography } from "@material-ui/core"
+import { Box, ButtonBase, makeStyles, Typography } from "@material-ui/core"
 import { truncateEthAddress } from "../../../utils/address"
 
 interface RemovedAddressProps {
@@ -6,19 +6,33 @@ interface RemovedAddressProps {
 
   onUndo(address: string): void
 }
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: "flex",
+    justifyContent: "space-between",
+    margin: theme.spacing(2, 0),
+  },
+  undo: {
+    textDecoration: "underline",
+    "&:hover": {
+      opacity: 0.8,
+    },
+  },
+}))
 
 const RemovedAddress = ({ address, onUndo }: RemovedAddressProps) => {
+  const classes = useStyles()
   return (
-    <Box sx={{ display: "flex", justifyContent: "space-between", my: 2 }}>
+    <div className={classes.root}>
       <Typography variant="body2" color="error">
         {truncateEthAddress(address)} will be removed.
       </Typography>
       <ButtonBase onClick={() => onUndo(address)}>
-        <Typography variant="body2" color="error">
+        <Typography variant="body2" color="error" className={classes.undo}>
           Undo
         </Typography>
       </ButtonBase>
-    </Box>
+    </div>
   )
 }
 
