@@ -5,6 +5,7 @@ import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
 import { truncateEthAddress } from "../../../utils/address"
 import RemovedAddress from "./RemovedAddress"
+import { EntityStatus } from "../../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -60,25 +61,30 @@ const useStyles = makeStyles((theme) => ({
   deleteIcon: {
     width: 12,
   },
+  pending: {
+    "&:before": {
+      borderStyle: "dashed",
+    },
+  },
 }))
 
 type RoleMemberProps = {
   member: string
-  remove?: boolean
+  status: EntityStatus
   onRemoveMember: (member: string, remove?: boolean) => void
 }
 
-const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
+const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
   const classes = useStyles()
 
   const blockie = useMemo(() => member && makeBlockie(member), [member])
 
-  if (remove) {
+  if (status === EntityStatus.REMOVE) {
     return <RemovedAddress onUndo={(address) => onRemoveMember(address, false)} address={member} />
   }
 
   return (
-    <Box className={classes.container}>
+    <Box className={classNames(classes.container, { [classes.pending]: status === EntityStatus.PENDING })}>
       <Box className={classes.address}>
         <Box className={classes.blockieContainer}>
           <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />

@@ -21,3 +21,9 @@ export type Member = {
   id: string
   address: string
 }
+
+export enum EntityStatus {
+  REMOVE,
+  PENDING,
+  NONE,
+}

@@ -2,7 +2,7 @@ import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import { truncateEthAddress } from "../../../utils/address"
-import { Target } from "../../../typings/role"
+import { EntityStatus, Target } from "../../../typings/role"
 import RemovedAddress from "./RemovedAddress"
 
 const useStyles = makeStyles((theme) => ({
@@ -28,11 +28,11 @@ const useStyles = makeStyles((theme) => ({
     "&:hover::before": {
       backgroundColor: "rgba(217, 212, 173, 0.3)",
     },
-    "&.isActive": {
-      cursor: "initial",
-      borderColor: "#fff",
-    },
-    "&.isActive::before": {
+  },
+  active: {
+    cursor: "initial",
+    borderColor: "#fff",
+    "&::before": {
       backgroundColor: "transparent",
       borderColor: "#fff",
     },
@@ -80,26 +80,37 @@ const useStyles = makeStyles((theme) => ({
       opacity: 0.8,
     },
   },
+  pending: {
+    "&:before": {
+      borderStyle: "dashed",
+    },
+  },
 }))
 
 type RoleTargetProps = {
   target: Target
   activeTarget: boolean
-  remove?: boolean
+  status: EntityStatus
   onClickTarget: (target: Target) => void
   onRemoveTarget: (target: Target, remove?: boolean) => void
 }
 
-const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, remove }: RoleTargetProps) => {
+const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, status }: RoleTargetProps) => {
   const classes = useStyles()
   const { address } = target
 
-  if (remove) {
+  if (status === EntityStatus.REMOVE) {
     return <RemovedAddress onUndo={() => onRemoveTarget(target, false)} address={target.address} />
   }
 
   return (
-    <Box className={classNames(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
+    <Box
+      className={classNames(classes.container, {
+        [classes.active]: activeTarget,
+        [classes.pending]: status === EntityStatus.PENDING,
+      })}
+      onClick={() => onClickTarget(target)}
+    >
       <Box className={classes.address}>
         <Box className={classes.targetIconContainer}>
           <Box className={classes.targetIcon} width={16} height={16} />

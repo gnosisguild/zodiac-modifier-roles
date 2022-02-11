@@ -3,7 +3,7 @@ import ButtonLink from "../../commons/input/ButtonLink"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import { useRootSelector } from "../../../store"
 import { getTransactionPending } from "../../../store/main/selectors"
-import { Role, Target } from "../../../typings/role"
+import { EntityStatus, Role, Target } from "../../../typings/role"
 import AddTargetModal from "../../modals/AddTargetModal"
 import { useState } from "react"
 import { Link as RouterLink, useParams } from "react-router-dom"
@@ -19,8 +19,8 @@ interface RoleMenuProps {
   members: string[]
   targets: Target[]
 
-  isOnRemoveMemberQueue(address: string): boolean
-  isOnRemoveTargetQueue(address: string): boolean
+  getMemberStatus(address: string): EntityStatus
+  getTargetStatus(address: string): EntityStatus
 
   onSubmit(): void
 
@@ -61,8 +61,8 @@ export const RoleMenu = ({
   onRemoveTarget,
   onSubmit,
 
-  isOnRemoveMemberQueue,
-  isOnRemoveTargetQueue,
+  getMemberStatus,
+  getTargetStatus,
 }: RoleMenuProps) => {
   const { module } = useParams()
 
@@ -96,7 +96,7 @@ export const RoleMenu = ({
           members={members}
           onAdd={handleOpenAddMemberModal}
           onRemove={onRemoveMember}
-          isOnRemoveQueue={isOnRemoveMemberQueue}
+          getStatus={getMemberStatus}
         />
         <RoleTargets
           targets={targets}
@@ -104,7 +104,7 @@ export const RoleMenu = ({
           onAdd={handleOpenAddTargetModal}
           onRemove={onRemoveTarget}
           onClick={onTarget}
-          isOnRemoveQueue={isOnRemoveTargetQueue}
+          getStatus={getTargetStatus}
         />
       </Box>
 

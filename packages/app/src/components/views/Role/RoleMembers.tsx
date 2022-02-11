@@ -1,5 +1,6 @@
 import RoleMember from "./RoleMember"
 import { MenuEntity } from "./MenuEntity"
+import { EntityStatus } from "../../../typings/role"
 
 interface RoleMembersProps {
   members: string[]
@@ -7,17 +8,17 @@ interface RoleMembersProps {
   onAdd(): void
 
   onRemove(member: string, remove?: boolean): void
-  isOnRemoveQueue(member: string): boolean
+  getStatus(member: string): EntityStatus
 }
 
-export const RoleMembers = ({ members, onAdd, onRemove, isOnRemoveQueue }: RoleMembersProps) => {
+export const RoleMembers = ({ members, onAdd, onRemove, getStatus }: RoleMembersProps) => {
   return (
     <MenuEntity
       list={members}
       name={{ singular: "Member", plural: "Members" }}
       onAdd={onAdd}
-      renderItem={(member, index) => (
-        <RoleMember key={member} member={member} remove={isOnRemoveQueue(member)} onRemoveMember={onRemove} />
+      renderItem={(member) => (
+        <RoleMember key={member} member={member} status={getStatus(member)} onRemoveMember={onRemove} />
       )}
     />
   )

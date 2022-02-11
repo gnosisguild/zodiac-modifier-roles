@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import TargetParameters from "./TargetConfiguration"
-import { Role, Target } from "../../../typings/role"
+import { EntityStatus, Role, Target } from "../../../typings/role"
 import { useRootDispatch, useRootSelector } from "../../../store"
 import { getRoleById, getRoles, getRolesModifierAddress } from "../../../store/main/selectors"
 import { updateRole } from "../../../services/rolesModifierContract"
@@ -106,8 +106,16 @@ const RoleView = () => {
     }
   }
 
-  const isOnRemoveMemberQueue = (address: string) => membersToRemove.includes(address)
-  const isOnRemoveTargetQueue = (address: string) => targetsToRemove.includes(address)
+  const getMemberStatus = (address: string): EntityStatus => {
+    if (membersToRemove.includes(address)) return EntityStatus.REMOVE
+    if (membersToAdd.includes(address)) return EntityStatus.PENDING
+    return EntityStatus.NONE
+  }
+  const getTargetStatus = (address: string): EntityStatus => {
+    if (targetsToRemove.includes(address)) return EntityStatus.REMOVE
+    if (targetsToAdd.find((target) => target.address === address)) return EntityStatus.PENDING
+    return EntityStatus.NONE
+  }
 
   return (
     <Dashboard
@@ -117,8 +125,8 @@ const RoleView = () => {
           role={role}
           targets={[...(role?.targets || []), ...targetsToAdd]}
           members={[...(role?.members.map((member) => member.address) || []), ...membersToAdd]}
-          isOnRemoveMemberQueue={isOnRemoveMemberQueue}
-          isOnRemoveTargetQueue={isOnRemoveTargetQueue}
+          getMemberStatus={getMemberStatus}
+          getTargetStatus={getTargetStatus}
           target={activeTarget}
           onTarget={setActiveTarget}
           onSubmit={handleExecuteUpdate}
