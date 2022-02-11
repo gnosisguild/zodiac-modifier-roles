@@ -7,7 +7,7 @@ import { TextField } from "../../commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
 import SearchIcon from "@material-ui/icons/Search"
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   search: {
     maxWidth: 300,
   },

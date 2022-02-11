@@ -94,33 +94,34 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, remov
   const classes = useStyles()
   const { address } = target
 
+  if (remove) {
+    return <RemovedAddress onUndo={() => onRemoveTarget(target, false)} address={target.address} />
+  }
+
   return (
-    <>
-      <Box className={classNames(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
-        <Box className={classes.address}>
-          <Box className={classes.targetIconContainer}>
-            <Box className={classes.targetIcon} width={16} height={16} />
-          </Box>
-          {truncateEthAddress(address)}
+    <Box className={classNames(classes.container, activeTarget && "isActive")} onClick={() => onClickTarget(target)}>
+      <Box className={classes.address}>
+        <Box className={classes.targetIconContainer}>
+          <Box className={classes.targetIcon} width={16} height={16} />
         </Box>
-        <Box sx={{ alignItems: "center", display: "flex" }}>
-          <IconButton
-            size="small"
-            aria-label="Remove target"
-            className={classNames(classes.iconButton, classes.deleteButton)}
-            onClick={() => onRemoveTarget(target)}
-          >
-            <DeleteOutlineSharp className={classes.deleteIcon} />
+        {truncateEthAddress(address)}
+      </Box>
+      <Box sx={{ alignItems: "center", display: "flex" }}>
+        <IconButton
+          size="small"
+          aria-label="Remove target"
+          className={classNames(classes.iconButton, classes.deleteButton)}
+          onClick={() => onRemoveTarget(target)}
+        >
+          <DeleteOutlineSharp className={classes.deleteIcon} />
+        </IconButton>
+        <Box sx={{ ml: 1 }}>
+          <IconButton size="small" aria-label="View and Edit Target configurations" className={classes.iconButton}>
+            <KeyboardArrowRightSharp className={classes.arrowIcon} />
           </IconButton>
-          <Box sx={{ ml: 1 }}>
-            <IconButton size="small" aria-label="View and Edit Target configurations" className={classes.iconButton}>
-              <KeyboardArrowRightSharp className={classes.arrowIcon} />
-            </IconButton>
-          </Box>
         </Box>
       </Box>
-      {remove ? <RemovedAddress onUndo={() => onRemoveTarget(target, false)} address={target.address} /> : null}
-    </>
+    </Box>
   )
 }
 

@@ -73,26 +73,27 @@ const RoleMember = ({ member, remove, onRemoveMember }: RoleMemberProps) => {
 
   const blockie = useMemo(() => member && makeBlockie(member), [member])
 
+  if (remove) {
+    return <RemovedAddress onUndo={(address) => onRemoveMember(address, false)} address={member} />
+  }
+
   return (
-    <>
-      <Box className={classes.container}>
-        <Box className={classes.address}>
-          <Box className={classes.blockieContainer}>
-            <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
-          </Box>
-          {truncateEthAddress(member)}
+    <Box className={classes.container}>
+      <Box className={classes.address}>
+        <Box className={classes.blockieContainer}>
+          <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
         </Box>
-        <IconButton
-          size="small"
-          aria-label="Remove member"
-          className={classNames(classes.iconButton, classes.deleteButton)}
-          onClick={() => onRemoveMember(member)}
-        >
-          <DeleteOutlineSharp className={classes.deleteIcon} />
-        </IconButton>
+        {truncateEthAddress(member)}
       </Box>
-      {remove ? <RemovedAddress onUndo={(address) => onRemoveMember(address, false)} address={member} /> : null}
-    </>
+      <IconButton
+        size="small"
+        aria-label="Remove member"
+        className={classNames(classes.iconButton, classes.deleteButton)}
+        onClick={() => onRemoveMember(member)}
+      >
+        <DeleteOutlineSharp className={classes.deleteIcon} />
+      </IconButton>
+    </Box>
   )
 }
 
