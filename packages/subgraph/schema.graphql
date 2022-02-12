@@ -5,6 +5,12 @@ enum ExecutionOptions {
   Both
 }
 
+enum Clearance {
+  None
+  Target
+  Function
+}
+
 type Role @entity {
   id: ID!
   rolesModifier: RolesModifier!
@@ -14,9 +20,19 @@ type Role @entity {
 
 type Target @entity {
   id: ID!
-  address: Bytes!
-  executionOptions: ExecutionOptions!
   role: Role!
+  address: Bytes!
+  clearance: Clearance!
+  executionOptions: ExecutionOptions!
+  functions: [Function!]
+}
+
+type Function @entity {
+  id: ID!
+  target: Target
+  functionSig: Bytes!
+  executionOptions: ExecutionOptions!
+  wildcarded: Boolean!
 }
 
 type Member @entity {
