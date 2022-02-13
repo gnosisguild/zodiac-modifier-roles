@@ -11,7 +11,7 @@ export const CLEARANCE__NONE = 0
 export const CLEARANCE__TARGET = 1
 export const CLEARANCE__FUNCTION = 2
 
-export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHexString()
+export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
 export const getRoleId = (roleModifierId: string, role: number): string => roleModifierId + "-" + role.toString()
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (roleId: string, member: Address): string => roleId + "-MEMBER-" + member.toHex()
