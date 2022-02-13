@@ -12,25 +12,26 @@ import {
 } from "../generated/Permissions/Permissions"
 import { Role, Target, RolesModifier, Function } from "../generated/schema"
 import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
-
-const EXECUTION_OPTIONS = ["None", "Send", "DelegateCall", "Both"]
-const EXECUTION_OPTIONS__NONE = 0
-const EXECUTION_OPTIONS__SEND = 1
-const EXECUTION_OPTIONS__DELEGATE_CALL = 2
-const execution_options__both = 3
-
-const CLEARANCE = ["none", "target", "function"]
-const CLEARANCE__NONE = 0
-const CLEARANCE__TARGET = 1
-const CLEARANCE__FUNCTION = 2
+import {
+  CLEARANCE,
+  CLEARANCE__FUNCTION,
+  CLEARANCE__NONE,
+  CLEARANCE__TARGET,
+  EXECUTION_OPTIONS,
+  EXECUTION_OPTIONS__NONE,
+  getFunctionId,
+  getRoleId,
+  getRolesModifierId,
+  getTargetId,
+} from "./helpers"
 
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
 
-  const roleId = getRoleId(rolesModifierAddress, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
 
-  let rolesModifierId = getRolesModifierId(rolesModifierAddress)
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
@@ -40,7 +41,7 @@ export function handleAllowTarget(event: AllowTarget): void {
     role.save()
   }
 
-  const targetId = getTargetId(rolesModifierAddress, roleId, targetAddress)
+  const targetId = getTargetId(roleId, targetAddress)
   let target = Target.load(targetId)
 
   if (!target) {
@@ -56,11 +57,12 @@ export function handleAllowTarget(event: AllowTarget): void {
 export function handleScopeTarget(event: ScopeTarget): void {
   // adding a target to be scoped () will not have any new access yet
   const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
 
-  const roleId = getRoleId(rolesModifierAddress, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
 
-  const targetId = getTargetId(rolesModifierAddress, roleId, targetAddress)
+  const targetId = getTargetId(roleId, targetAddress)
   let target = Target.load(targetId)
 
   if (!target) {
@@ -76,20 +78,22 @@ export function handleScopeTarget(event: ScopeTarget): void {
 export function handleRevokeTarget(event: RevokeTarget): void {
   // remove target
   const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierAddress, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
 
-  const targetId = getTargetId(rolesModifierAddress, roleId, targetAddress)
+  const targetId = getTargetId(roleId, targetAddress)
   store.remove("Target", targetId)
 }
 
 export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   // allow function
   const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
   const functionSig = event.params.selector
-  const roleId = getRoleId(rolesModifierAddress, event.params.role)
-  const targetId = getTargetId(rolesModifierAddress, roleId, targetAddress)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const targetId = getTargetId(roleId, targetAddress)
 
   let target = Target.load(targetId)
 
@@ -102,7 +106,7 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
     target.clearance = CLEARANCE[CLEARANCE__NONE]
   }
 
-  const functionId = getFunctionId(rolesModifierAddress, roleId, targetAddress, functionSig)
+  const functionId = getFunctionId(targetId, functionSig)
 
   let theFunction = Function.load(functionId)
 
@@ -118,9 +122,7 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   }
 }
 
-export function handleScopeFunction(event: ScopeFunction): void {
-  // allow functions
-}
+export function handleScopeFunction(event: ScopeFunction): void {}
 
 export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutionOptions): void {}
 
@@ -131,21 +133,14 @@ export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void 
 export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {
   // remove function
   const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierAddress, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const targetId = getTargetId(roleId, targetAddress)
   const functionSig = event.params.selector
-  const functionId = getFunctionId(rolesModifierAddress, roleId, targetAddress, functionSig)
+  const functionId = getFunctionId(targetId, functionSig)
 
   store.remove("Function", functionId)
 }
 
 export function handleUnscopeParameter(event: UnscopeParameter): void {}
-
-// helpers
-const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHexString()
-const getRoleId = (roleModifier: Address, role: number): string => roleModifier.toHex() + "-" + role.toString()
-const getTargetId = (rolesModifier: Address, roleId: string, target: Address): string =>
-  rolesModifier.toHex() + target.toHex() + "-" + roleId
-
-const getFunctionId = (rolesModifier: Address, roleId: string, target: Address, functionSig: Bytes): string =>
-  rolesModifier.toHex() + target.toHex() + "-" + roleId + "-" + functionSig.toHex()

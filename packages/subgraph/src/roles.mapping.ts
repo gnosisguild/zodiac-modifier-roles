@@ -14,12 +14,25 @@ import {
 } from "../generated/Roles/Roles"
 import { RolesModifier, Role, Member, MemberRole } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
+import {
+  CLEARANCE,
+  CLEARANCE__FUNCTION,
+  CLEARANCE__NONE,
+  CLEARANCE__TARGET,
+  EXECUTION_OPTIONS,
+  EXECUTION_OPTIONS__NONE,
+  getFunctionId,
+  getMemberId,
+  getMemberRoleId,
+  getRoleId,
+  getRolesModifierId,
+  getTargetId,
+} from "./helpers"
 
 export function handleAssignRoles(event: AssignRoles): void {
   // add and remove member from roles
-
   const rolesModifierAddress = event.address
-  const rolesModifierId = rolesModifierAddress.toHexString()
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = RolesModifier.load(rolesModifierId) // must this be loaded?
 
   if (!rolesModifier) {
@@ -28,13 +41,13 @@ export function handleAssignRoles(event: AssignRoles): void {
   }
 
   const memberAddress = event.params.module
-  const memberId = memberAddress.toHexString()
   const roles = event.params.roles
   const memberOf = event.params.memberOf
 
   for (let i = 0; i < roles.length; i++) {
-    const roleId = roles[i].toString()
-    const memberRoleId = memberId + "-" + roleId
+    const roleId = getRoleId(rolesModifierId, roles[i])
+    const memberId = getMemberId(roleId, memberAddress)
+    const memberRoleId = getMemberRoleId(memberId, roleId)
     let memberRole = MemberRole.load(memberRoleId)
     if (!memberRole) {
       if (memberOf[i]) {
