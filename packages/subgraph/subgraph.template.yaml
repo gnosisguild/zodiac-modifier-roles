@@ -39,8 +39,6 @@ dataSources:
           handler: handleDisabledModule
         - event: EnabledModule(address)
           handler: handleEnabledModule
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
         - event: RolesModSetup(indexed address,indexed address,indexed address,address)
           handler: handleRolesModSetup
         - event: SetDefaultRole(address,uint16)

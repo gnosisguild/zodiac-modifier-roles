@@ -92,8 +92,6 @@ export function handleDisabledModule(event: DisabledModule): void {}
 
 export function handleEnabledModule(event: EnabledModule): void {}
 
-export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
-
 export function handleRolesModSetup(event: RolesModSetup): void {
   const rolesModifierAddress = event.address
   let rolesModifierId = rolesModifierAddress.toHexString()
