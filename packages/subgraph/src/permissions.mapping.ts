@@ -44,6 +44,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   // save role if this is the first time we encounter it
   if (!role) {
     role = new Role(roleId)
+    role.name = event.params.role.toString()
     role.rolesModifier = rolesModifierId
     role.save()
   }

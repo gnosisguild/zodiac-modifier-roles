@@ -13,6 +13,7 @@ enum Clearance {
 
 type Role @entity {
   id: ID!
+  name: String!
   rolesModifier: RolesModifier!
   targets: [Target!] @derivedFrom(field: "role")
   members: [MemberRole!] @derivedFrom(field: "role")
