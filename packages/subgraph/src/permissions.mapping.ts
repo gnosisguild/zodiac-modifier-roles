@@ -28,10 +28,17 @@ import {
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  let rolesModifier = RolesModifier.load(rolesModifierId)
+  if (!rolesModifier) {
+    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
+      rolesModifierId,
+    ])
+    return
+  }
+
   const targetAddress = event.params.targetAddress
 
   const roleId = getRoleId(rolesModifierId, event.params.role)
-
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it

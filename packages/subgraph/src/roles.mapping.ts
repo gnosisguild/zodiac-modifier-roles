@@ -33,24 +33,26 @@ export function handleAssignRoles(event: AssignRoles): void {
   // add and remove member from roles
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const rolesModifier = RolesModifier.load(rolesModifierId) // must this be loaded?
 
+  let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.error("a uninitialized rolesModifier is assigning roles", [rolesModifierAddress.toString()])
+    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
+      rolesModifierId,
+    ])
     return
   }
 
   const memberAddress = event.params.module
-  const roles = event.params.roles
-  const memberOf = event.params.memberOf
+  const rolesArray = event.params.roles
+  const memberOfArray = event.params.memberOf
 
-  for (let i = 0; i < roles.length; i++) {
-    const roleId = getRoleId(rolesModifierId, roles[i])
+  for (let i = 0; i < rolesArray.length; i++) {
+    const roleId = getRoleId(rolesModifierId, rolesArray[i])
     const memberId = getMemberId(roleId, memberAddress)
     const memberRoleId = getMemberRoleId(memberId, roleId)
     let memberRole = MemberRole.load(memberRoleId)
     if (!memberRole) {
-      if (memberOf[i]) {
+      if (memberOfArray[i]) {
         // adding a member
         let role = Role.load(roleId)
         if (!role) {
@@ -73,7 +75,7 @@ export function handleAssignRoles(event: AssignRoles): void {
         log.info("trying to remove a member from a role it is not a member of", [memberId, roleId])
       }
     } else {
-      if (memberOf[i]) {
+      if (memberOfArray[i]) {
         // adding a member that is already a member
         log.info("trying to add a member to a role it is already a member of", [memberId, roleId])
       } else {
@@ -94,7 +96,7 @@ export function handleEnabledModule(event: EnabledModule): void {}
 
 export function handleRolesModSetup(event: RolesModSetup): void {
   const rolesModifierAddress = event.address
-  let rolesModifierId = rolesModifierAddress.toHexString()
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   let rolesModifier = RolesModifier.load(rolesModifierId)
 
   if (!rolesModifier) {
