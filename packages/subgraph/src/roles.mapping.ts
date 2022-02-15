@@ -58,6 +58,7 @@ export function handleAssignRoles(event: AssignRoles): void {
         if (!role) {
           role = new Role(roleId)
           role.name = rolesArray[i].toString()
+          role.roleIdInContract = rolesArray[i]
           role.rolesModifier = rolesModifierId
           role.save()
         }

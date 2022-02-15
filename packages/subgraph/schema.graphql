@@ -12,9 +12,10 @@ enum Clearance {
 }
 
 type Role @entity {
-  id: ID!
+  id: ID! # Global unique id for role in subgraph
   name: String!
   rolesModifier: RolesModifier!
+  roleIdInContract: Int! # The role id used to represent this role in context of the role's rolesModifier
   targets: [Target!] @derivedFrom(field: "role")
   members: [MemberRole!] @derivedFrom(field: "role")
 }

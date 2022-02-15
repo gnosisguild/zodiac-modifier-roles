@@ -45,6 +45,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   if (!role) {
     role = new Role(roleId)
     role.name = event.params.role.toString()
+    role.roleIdInContract = event.params.role
     role.rolesModifier = rolesModifierId
     role.save()
   }
