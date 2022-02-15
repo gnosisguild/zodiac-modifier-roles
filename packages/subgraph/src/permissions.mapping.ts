@@ -85,14 +85,19 @@ export function handleScopeTarget(event: ScopeTarget): void {
 }
 
 export function handleRevokeTarget(event: RevokeTarget): void {
-  // remove target
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
   const roleId = getRoleId(rolesModifierId, event.params.role)
 
   const targetId = getTargetId(roleId, targetAddress)
-  store.remove("Target", targetId)
+  let target = Target.load(targetId)
+
+  if (target) {
+    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
+    target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.save()
+  }
 }
 
 export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
