@@ -1,7 +1,10 @@
 import { ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
-import { ExecutionOption, Target } from "../typings/role"
+import { ExecutionOption, FuncParams, Target } from "../typings/role"
+import { RoleContextState } from "../components/views/Role/RoleContext"
+import { FunctionFragment } from "@ethersproject/abi"
+import { _signer } from "../hooks/useWallet"
 // get the safe and provider here.
 
 const executionOptionsToInt = (executionOptions: ExecutionOption) => {
@@ -44,72 +47,91 @@ const createUpdateMembershipTransactions = async (
   return Promise.all([...addTxs, ...removeTxs])
 }
 
-const createUpdateTargetTransactions = async (
-  contract: Roles,
-  roleId: string,
-  targetsToAdd: Target[],
-  targetsToRemove: string[],
-) => {
-  const targetIntersection = targetsToAdd.filter(({ address }) => targetsToRemove.includes(address))
+const createUpdateTargetTransactions = async (contract: Roles, roleId: string, state: RoleContextState) => {
+  const targetIntersection = state.targets.add.filter(({ address }) => state.targets.remove.includes(address))
   if (targetIntersection.length > 0) {
     throw new Error("The same address is found in both targets to add and targets to remove")
   }
-  const addTxs = targetsToAdd.map(({ address, executionOptions }) =>
-    contract.populateTransaction.allowTarget(roleId, address, executionOptionsToInt(executionOptions)),
-  )
+  const addTxs = await createUpdateRoleTransactions(contract, roleId, state)
 
-  const removeTxs = targetsToRemove.map((targetAddress) =>
+  const removeTxs = state.targets.remove.map((targetAddress) =>
     contract.populateTransaction.revokeTarget(roleId, targetAddress),
   )
 
   return Promise.all([...addTxs, ...removeTxs])
 }
 
+async function createUpdateRoleTransactions(
+  contract: Roles,
+  roleId: string,
+  state: RoleContextState,
+): Promise<ethers.PopulatedTransaction[]> {
+  // TODO: Get Role diff
+  return (await Promise.all(state.targets.add.map((target) => getTargetScopeTx(contract, roleId, target)))).flat()
+}
+
+async function getTargetScopeTx(
+  contract: Roles,
+  roleId: string,
+  target: Target,
+): Promise<ethers.PopulatedTransaction[]> {
+  if (!target.funcParams) return []
+  if (areAllFunctionsAllowed(target.funcParams)) {
+    console.log("areAllFunctionsAllowed", roleId, target.address)
+    return Promise.all([
+      contract.populateTransaction.allowTarget(roleId, target.address, executionOptionsToInt(target.executionOptions)),
+    ])
+  }
+
+  return Promise.all([
+    contract.populateTransaction.scopeTarget(roleId, target.address),
+    ...Object.entries(target.funcParams)
+      .filter(([_, params]) => params.some((p) => p))
+      .map(([hash]) => {
+        const func = FunctionFragment.fromString(hash)
+        return contract.populateTransaction.scopeAllowFunction(
+          roleId,
+          target.address,
+          ethers.utils.Interface.getSighash(func),
+          executionOptionsToInt(target.executionOptions),
+        )
+      }),
+  ])
+}
+
 /**
  * Will not check that the members and target operations are valid against the data on chain.
  * For instance requests for adding a member that is already a member or removing a member
  * that is not a member will be executed.
- * @param provider
+ * @param signer
  * @param walletType
  * @param modifierAddress
  * @param roleId
- * @param memberAddressesToAdd
- * @param memberAddressesToRemove
- * @param targetsToAdd
- * @param targetAddressesToRemove
+ * @param state
  * @returns
  */
 export const updateRole = async (
-  provider: ethers.providers.JsonRpcProvider,
   walletType: WalletType,
   modifierAddress: string,
   roleId: string,
-  memberAddressesToAdd: string[],
-  memberAddressesToRemove: string[],
-  targetsToAdd: Target[],
-  targetAddressesToRemove: string[],
+  state: RoleContextState,
 ) => {
-  console.log("members to add: ", memberAddressesToAdd)
-  console.log("members to remove: ", memberAddressesToRemove)
-  console.log("targets to add: ", targetsToAdd)
-  console.log("targets to remove: ", targetAddressesToRemove)
+  console.log("roleId: ", roleId)
+  console.log("members to add: ", state.members.add)
+  console.log("members to remove: ", state.members.remove)
+  console.log("targets to add: ", state.targets.add)
+  console.log("targets to remove: ", state.targets.remove)
 
-  const signer = await provider.getSigner()
-  const rolesModifierContract = Roles__factory.connect(modifierAddress, signer)
+  const rolesModifierContract = Roles__factory.connect(modifierAddress, _signer)
 
   const membershipTransactions = await createUpdateMembershipTransactions(
     rolesModifierContract,
     roleId,
-    memberAddressesToAdd,
-    memberAddressesToRemove,
+    state.members.add,
+    state.members.remove,
   )
 
-  const targetTransactions = await createUpdateTargetTransactions(
-    rolesModifierContract,
-    roleId,
-    targetsToAdd,
-    targetAddressesToRemove,
-  )
+  const targetTransactions = await createUpdateTargetTransactions(rolesModifierContract, roleId, state)
 
   const txs = [...membershipTransactions, ...targetTransactions]
 
@@ -125,7 +147,7 @@ export const updateRole = async (
     case WalletType.INJECTED: {
       await Promise.all(
         txs.map(async (tx) => {
-          const recept = await signer.sendTransaction(tx)
+          const recept = await _signer.sendTransaction(tx)
           await recept.wait()
         }),
       )
@@ -144,4 +166,10 @@ function convertTxToSafeTx(tx: PopulatedTransaction): BaseTransaction {
     value: "0",
     data: tx.data as string,
   }
+}
+
+export function areAllFunctionsAllowed(funcParams: FuncParams): boolean {
+  return !Object.values(funcParams)
+    .flat(2)
+    .some((allowed) => !allowed)
 }

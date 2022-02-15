@@ -80,7 +80,7 @@ const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
   const blockie = useMemo(() => member && makeBlockie(member), [member])
 
   if (status === EntityStatus.REMOVE) {
-    return <RemovedAddress onUndo={(address) => onRemoveMember(address, false)} address={member} />
+    return <RemovedAddress onUndo={() => onRemoveMember(member, false)} address={member} />
   }
 
   return (

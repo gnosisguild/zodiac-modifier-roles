@@ -28,6 +28,9 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   icon: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 60,
     borderWidth: 1,
     borderStyle: "solid",
@@ -48,19 +51,24 @@ const useStyles = makeStyles((theme) => ({
 interface HeaderBoxProps {
   className?: string
   icon?: React.ReactElement | null
+  onClick?(): void
 }
 
-export const HeaderBox = ({ className, icon, children }: PropsWithChildren<HeaderBoxProps>) => {
+export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
 
   if (icon !== undefined) {
     return (
-      <div className={classNames(classes.banner, classes.leftIcon, className)}>
+      <div onClick={onClick} className={classNames(classes.banner, classes.leftIcon, className)}>
         <div className={classes.icon}>{icon}</div>
         {children}
       </div>
     )
   }
 
-  return <div className={classNames(classes.banner, className)}>{children}</div>
+  return (
+    <div onClick={onClick} className={classNames(classes.banner, className)}>
+      {children}
+    </div>
+  )
 }

@@ -11,6 +11,9 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2),
   },
   avatar: {
+    "& div": {
+      margin: 0,
+    },
     "& img": {
       width: 36,
       height: 36,

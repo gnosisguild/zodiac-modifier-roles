@@ -1,10 +1,11 @@
-import { ButtonBase, makeStyles, Typography } from "@material-ui/core"
+import React from "react"
+import { ButtonBase, ButtonBaseProps, makeStyles, Typography } from "@material-ui/core"
 import { truncateEthAddress } from "../../../utils/address"
 
 interface RemovedAddressProps {
   address: string
 
-  onUndo(address: string): void
+  onUndo?: ButtonBaseProps["onClick"]
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -28,7 +29,7 @@ const RemovedAddress = ({ address, onUndo }: RemovedAddressProps) => {
       <Typography variant="body2" color="error">
         {truncateEthAddress(address)} will be removed.
       </Typography>
-      <ButtonBase onClick={() => onUndo(address)}>
+      <ButtonBase onClick={onUndo}>
         <Typography variant="body2" color="error" className={classes.undo}>
           Undo
         </Typography>

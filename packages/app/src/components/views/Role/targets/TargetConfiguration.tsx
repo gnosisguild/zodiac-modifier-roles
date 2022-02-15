@@ -1,16 +1,17 @@
-import React, { useMemo } from "react"
+import React, { useContext, useEffect, useMemo } from "react"
 import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "../../../commons/input/TextField"
-import { EXECUTION_OPTIONS, Target } from "../../../../typings/role"
+import { EXECUTION_OPTIONS, FuncParams, Target } from "../../../../typings/role"
 import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
+import { RoleContext } from "../RoleContext"
+import { areAllFunctionsAllowed } from "../../../../services/rolesModifierContract"
 
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: theme.spacing(3),
-    padding: theme.spacing(2),
     position: "relative",
     "&::before": {
       backgroundColor: "rgba(217, 212, 173, 0.1)",
@@ -32,8 +33,9 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   root: {
+    padding: theme.spacing(2),
     maxHeight: "calc(100vh - 400px)",
-    overflow: "auto",
+    overflowY: "auto",
   },
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
@@ -58,8 +60,8 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
   },
   removeButton: {
-    marginLeft: theme.spacing(4),
     whiteSpace: "nowrap",
+    marginLeft: theme.spacing(4),
     paddingLeft: theme.spacing(4),
     paddingRight: theme.spacing(4),
   },
@@ -79,18 +81,53 @@ type Props = {
   onChangeTargetExecutionsOptions: (target: Target) => void
 }
 
+function isWriteFunction(method: FunctionFragment) {
+  if (!method.stateMutability) return true
+  return !["view", "pure"].includes(method.stateMutability)
+}
+
+function getInitialFuncParams(functions: FunctionFragment[], defaultValue = true): FuncParams {
+  return functions.reduce((obj, func) => {
+    const params = func.inputs.length < 2 ? [defaultValue] : func.inputs.map((_) => defaultValue)
+    return {
+      ...obj,
+      [func.format()]: params,
+    }
+  }, {})
+}
+
 const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props) => {
   const classes = useStyles()
-
-  const handleChangeTargetExecutionsOptions = (value: any) => {
-    console.log(value)
-  }
+  const { setFuncParams, removeTarget } = useContext(RoleContext)
 
   const { abi } = useAbi(target.address)
   const functions = useMemo(() => {
     if (!abi) return []
-    return new Interface(abi).fragments.filter(FunctionFragment.isFunctionFragment)
+    return new Interface(abi).fragments.filter(FunctionFragment.isFunctionFragment).filter(isWriteFunction)
   }, [abi])
+
+  useEffect(() => {
+    setFuncParams({ targetId: target.id, funcParams: getInitialFuncParams(functions) })
+  }, [functions, setFuncParams, target.id])
+
+  const handleChangeTargetExecutionsOptions = (value: any) => {
+    onChangeTargetExecutionsOptions(value)
+  }
+
+  const handleFuncParamsChange = (funcParams: FuncParams) => {
+    setFuncParams({ targetId: target.id, funcParams })
+  }
+
+  const allowAllFunc = areAllFunctionsAllowed(target.funcParams || {})
+
+  const handleAllFuncChange = () => {
+    const newFuncParams = Object.fromEntries(
+      Object.entries(target.funcParams || {}).map(([func, params]) => {
+        return [func, params.map((_) => !allowAllFunc)]
+      }),
+    )
+    setFuncParams({ targetId: target.id, funcParams: newFuncParams })
+  }
 
   return (
     <Box>
@@ -107,7 +144,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
           variant="outlined"
           className={classes.removeButton}
           size="large"
-          // onClick={removeTarget}
+          onClick={() => removeTarget({ target })}
           startIcon={<DeleteOutlineSharp />}
         >
           Remove Target
@@ -115,7 +152,7 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       </Box>
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions} disabled={true}>
+        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
           {EXECUTION_OPTIONS.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
@@ -126,13 +163,13 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       <Box sx={{ mt: 2 }}>
         <FormControlLabel
           className={classes.allowAllLabel}
-          label={"Allow all functions"}
-          control={<Checkbox checked={true} disabled={true} />}
+          label="Allow all functions"
+          control={<Checkbox checked={allowAllFunc} onClick={handleAllFuncChange} />}
         />
       </Box>
       <Box className={classes.container}>
         <Box className={classes.root}>
-          <TargetFunctionList items={functions} />
+          <TargetFunctionList items={functions} funcParams={target.funcParams} onChange={handleFuncParamsChange} />
         </Box>
       </Box>
     </Box>

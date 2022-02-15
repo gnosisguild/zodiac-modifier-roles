@@ -4,7 +4,8 @@ import { ChainPicker } from "./ChainPicker"
 import { HeaderBox } from "./HeaderBox"
 import { HeaderAddressBox } from "./HeaderAddressBox"
 import { useRootSelector } from "../../../store"
-import { getConnectedAddress, getRolesModifierAddress } from "../../../store/main/selectors"
+import { getRolesModifierAddress } from "../../../store/main/selectors"
+import { ConnectWalletBox } from "./ConnectWalletBox"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,7 +30,6 @@ export const Header = () => {
   const classes = useStyles()
 
   const module = useRootSelector(getRolesModifierAddress)
-  const address = useRootSelector(getConnectedAddress)
 
   return (
     <Box className={classes.root}>
@@ -41,7 +41,7 @@ export const Header = () => {
       <HeaderBox className={classes.grow} />
       <ChainPicker />
       <HeaderAddressBox address={module} emptyText="No Safe Attached" />
-      <HeaderAddressBox address={address} emptyText="No Wallet Connected" />
+      <ConnectWalletBox />
     </Box>
   )
 }

@@ -20,6 +20,7 @@ const RolesQuery = gql`
       avatar
       roles {
         id
+        name
         targets {
           id
           address
@@ -44,6 +45,7 @@ interface RolesQueryResponse {
     avatar: string
     roles: {
       id: string
+      name: string
       targets: Target[]
       members: {
         id: string

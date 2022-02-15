@@ -7,14 +7,16 @@ export enum ExecutionOption {
 
 export type Role = {
   id: string
+  name: string
   targets: Target[]
   members: Member[]
 }
 
 export type Target = {
-  id?: string
+  id: string
   address: string
   executionOptions: ExecutionOption
+  funcParams?: FuncParams
 }
 
 export type Member = {
@@ -34,3 +36,5 @@ export const EXECUTION_OPTIONS: ExecutionOption[] = [
   ExecutionOption.DELEGATE_CALL,
   ExecutionOption.BOTH,
 ]
+
+export type FuncParams = Record<string, boolean[]>

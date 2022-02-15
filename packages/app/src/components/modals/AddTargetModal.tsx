@@ -35,7 +35,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
   }
 
   const handleAdd = () => {
-    onAddTarget({ address, executionOptions: executionOptions })
+    onAddTarget({ id: `${address}_${Date.now()}`, address, executionOptions: executionOptions })
     onClose()
   }
 

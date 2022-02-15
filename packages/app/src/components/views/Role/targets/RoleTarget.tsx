@@ -1,4 +1,5 @@
-import { Box, IconButton, makeStyles } from "@material-ui/core"
+import React from "react"
+import { Box, ButtonBaseProps, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import { truncateEthAddress } from "../../../../utils/address"
@@ -7,10 +8,10 @@ import RemovedAddress from "../RemovedAddress"
 
 const useStyles = makeStyles((theme) => ({
   container: {
+    display: "flex",
     alignItems: "center",
     border: "1px solid rgba(217, 212, 173, 0.3)",
     cursor: "pointer",
-    display: "flex",
     fontFamily: "Roboto Mono, monospace",
     justifyContent: "space-between",
     marginBottom: 10,
@@ -36,10 +37,6 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "transparent",
       borderColor: "#fff",
     },
-  },
-  address: {
-    alignItems: "center",
-    display: "flex",
   },
   targetIconContainer: {
     alignItems: "center",
@@ -100,7 +97,16 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
   const { address } = target
 
   if (status === EntityStatus.REMOVE) {
-    return <RemovedAddress onUndo={() => onRemoveTarget(target, false)} address={target.address} />
+    const handleUndo: ButtonBaseProps["onClick"] = (event) => {
+      event.preventDefault()
+      onRemoveTarget(target, false)
+    }
+    return <RemovedAddress onUndo={handleUndo} address={target.address} />
+  }
+
+  const handleRemove: ButtonBaseProps["onClick"] = (event) => {
+    event.stopPropagation()
+    onRemoveTarget(target)
   }
 
   return (
@@ -111,26 +117,25 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
       })}
       onClick={() => onClickTarget(target)}
     >
-      <Box className={classes.address}>
-        <Box className={classes.targetIconContainer}>
-          <Box className={classes.targetIcon} width={16} height={16} />
-        </Box>
-        {truncateEthAddress(address)}
+      <Box className={classes.targetIconContainer}>
+        <Box className={classes.targetIcon} width={16} height={16} />
       </Box>
-      <Box sx={{ alignItems: "center", display: "flex" }}>
-        <IconButton
-          size="small"
-          aria-label="Remove target"
-          className={classNames(classes.iconButton, classes.deleteButton)}
-          onClick={() => onRemoveTarget(target)}
-        >
-          <DeleteOutlineSharp className={classes.deleteIcon} />
+      {truncateEthAddress(address)}
+
+      <Box sx={{ flexGrow: 1 }} />
+
+      <IconButton
+        size="small"
+        aria-label="Remove target"
+        className={classNames(classes.iconButton, classes.deleteButton)}
+        onClick={handleRemove}
+      >
+        <DeleteOutlineSharp className={classes.deleteIcon} />
+      </IconButton>
+      <Box sx={{ ml: 1 }}>
+        <IconButton size="small" aria-label="View and Edit Target configurations" className={classes.iconButton}>
+          <KeyboardArrowRightSharp className={classes.arrowIcon} />
         </IconButton>
-        <Box sx={{ ml: 1 }}>
-          <IconButton size="small" aria-label="View and Edit Target configurations" className={classes.iconButton}>
-            <KeyboardArrowRightSharp className={classes.arrowIcon} />
-          </IconButton>
-        </Box>
       </Box>
     </Box>
   )
