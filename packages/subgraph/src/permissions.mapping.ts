@@ -113,6 +113,7 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
     target.role = roleId
     target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
     target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.save()
   }
 
   const functionId = getFunctionId(targetId, functionSig)
