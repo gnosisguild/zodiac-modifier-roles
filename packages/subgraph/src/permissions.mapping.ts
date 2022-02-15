@@ -99,10 +99,10 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   // allow function
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const targetAddress = event.params.targetAddress
-  const functionSig = event.params.selector
   const roleId = getRoleId(rolesModifierId, event.params.role)
+  const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
+  const functionSig = event.params.selector
 
   let target = Target.load(targetId)
 
@@ -125,7 +125,7 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
     theFunction.functionSig = functionSig
     theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
     theFunction.wildcarded = true
-    target.save()
+    theFunction.save()
   } else {
     log.warning("Function already exists", [functionId])
   }
