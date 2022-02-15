@@ -20,7 +20,7 @@ const RoleView = () => {
     console.log("Change execution options - not implemented yet") // TODO
   }
 
-  console.log('roleId', roleId);
+  console.log("roleId", roleId)
 
   return (
     <RoleContextWrap role={role} id={roleId}>
