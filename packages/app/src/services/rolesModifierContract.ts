@@ -103,20 +103,12 @@ async function getTargetScopeTx(
  * Will not check that the members and target operations are valid against the data on chain.
  * For instance requests for adding a member that is already a member or removing a member
  * that is not a member will be executed.
- * @param signer
- * @param walletType
  * @param modifierAddress
- * @param roleId
  * @param state
  * @returns
  */
-export const updateRole = async (
-  walletType: WalletType,
-  modifierAddress: string,
-  roleId: string,
-  state: RoleContextState,
-) => {
-  console.log("roleId: ", roleId)
+export const updateRole = async (modifierAddress: string, state: RoleContextState) => {
+  console.log("roleId: ", state.id)
   console.log("members to add: ", state.members.add)
   console.log("members to remove: ", state.members.remove)
   console.log("targets to add: ", state.targets.add)
@@ -126,23 +118,26 @@ export const updateRole = async (
 
   const membershipTransactions = await createUpdateMembershipTransactions(
     rolesModifierContract,
-    roleId,
+    state.id,
     state.members.add,
     state.members.remove,
   )
 
-  const targetTransactions = await createUpdateTargetTransactions(rolesModifierContract, roleId, state)
+  const targetTransactions = await createUpdateTargetTransactions(rolesModifierContract, state.id, state)
 
-  const txs = [...membershipTransactions, ...targetTransactions]
+  return [...membershipTransactions, ...targetTransactions]
+}
 
+export async function executeTransactions(walletType: WalletType, txs: PopulatedTransaction[]) {
+  console.log({ _signer, txs })
   switch (walletType) {
     case WalletType.GNOSIS_SAFE: {
       const safeSDK = new SafeAppsSDK()
-      console.log(txs)
       const hash = await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
       console.log("Initiated Gnosis Safe transaction. Hash:")
       console.log(hash)
-      break
+
+      return hash
     }
     case WalletType.INJECTED: {
       await Promise.all(
@@ -166,6 +161,22 @@ function convertTxToSafeTx(tx: PopulatedTransaction): BaseTransaction {
     value: "0",
     data: tx.data as string,
   }
+}
+
+export async function getChainTx(safeTxHash: string, cycles = 20): Promise<string> {
+  try {
+    const safeSDK = new SafeAppsSDK()
+    const safeTx = await safeSDK.txs.getBySafeTxHash(safeTxHash)
+    console.log("safeTx", safeTx)
+    if (safeTx.txHash) return safeTx.txHash
+  } catch (err) {
+    console.log("failed safeTx ", `cycle ${cycles}`, err)
+  }
+
+  if (cycles < 1) throw new Error("failed to fetch chain transaction")
+
+  await new Promise((resolve) => setTimeout(resolve, 12000))
+  return getChainTx(safeTxHash, cycles - 1)
 }
 
 export function areAllFunctionsAllowed(funcParams: FuncParams): boolean {

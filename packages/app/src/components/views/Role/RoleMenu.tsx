@@ -1,21 +1,20 @@
 import { Box, Button, CircularProgress, Tooltip, Typography } from "@material-ui/core"
 import ButtonLink from "../../commons/input/ButtonLink"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
-import { useRootSelector } from "../../../store"
-import {
-  getConnectedAddress,
-  getRoles,
-  getRolesModifierAddress,
-  getTransactionPending,
-} from "../../../store/main/selectors"
+import { useRootDispatch, useRootSelector } from "../../../store"
+import { getConnectedAddress, getRolesModifierAddress, getTransactionPending } from "../../../store/main/selectors"
 import { Role } from "../../../typings/role"
-import { Link as RouterLink, useParams } from "react-router-dom"
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom"
 import { RoleMembers } from "./members/RoleMembers"
 import { RoleTargets } from "./targets/RoleTargets"
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import { RoleContext } from "./RoleContext"
-import { updateRole } from "../../../services/rolesModifierContract"
+import { executeTransactions, getChainTx, updateRole, WalletType } from "../../../services/rolesModifierContract"
 import { useWallet } from "../../../hooks/useWallet"
+import { BigNumber } from "ethers"
+import { setTransactionPending } from "../../../store/main/rolesSlice"
+import { useFetchRoles } from "../../../hooks/useFetchRoles"
+import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
 
 /**
  * Security concern: roleId crashes is possible. This uses the currently available information.
@@ -25,9 +24,16 @@ import { useWallet } from "../../../hooks/useWallet"
  *
  * @returns the roleId of the current role or the largest roleId+1 of the available roles
  */
-function getRoleId(roleId: string, roles: Role[]): string {
+export function getRoleId(roleId: string, roles: Role[]): string {
   if (roleId === "new") {
-    return Math.max(...roles.map((role) => parseInt(role.name) + 1)).toString()
+    return (
+      roles
+        .map((role) => BigNumber.from(role.name)) // Convert all IDs to BigNumber
+        // Get the last ID
+        .reduce((biggest, current) => (biggest.lt(current) ? current : biggest), BigNumber.from(0))
+        .add(1) // Add 1 to the last ID
+        .toString()
+    )
   } else {
     return roleId
   }
@@ -47,30 +53,72 @@ const RoleMenuTitle = ({ role, id }: { id: string; role?: Role }) => {
   )
 }
 
-function getButtonText(role: Role | undefined, isWaiting: boolean): string {
-  if (role && isWaiting) return "Updating role..."
-  if (role) return "Update role"
-  if (isWaiting) return "Creating role..."
-  return "Create role"
+function getButtonText(role: Role | undefined, isWaiting: boolean, indexing: boolean): string {
+  if (indexing) return "Indexing..."
+
+  if (role) {
+    return !isWaiting ? "Update role" : "Updating role..."
+  }
+  return !isWaiting ? "Create role" : "Creating role..."
 }
 
 export const RoleMenu = () => {
   const { module } = useParams()
   const { state } = useContext(RoleContext)
-  const { walletType } = useWallet()
+  const { provider, walletType } = useWallet()
+  const dispatch = useRootDispatch()
+  const navigate = useNavigate()
 
-  const roles = useRootSelector(getRoles)
+  const { fetch: fetchRoles } = useFetchRoles({ lazy: true })
+
   const isWaiting = useRootSelector(getTransactionPending)
   const walletAddress = useRootSelector(getConnectedAddress)
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
+  const [indexing, setIndexing] = useState(false)
+
   const handleExecuteUpdate = async () => {
-    console.log("rolesModifierAddress", rolesModifierAddress)
     if (!rolesModifierAddress) return
+
+    dispatch(setTransactionPending(true))
     try {
-      await updateRole(walletType, rolesModifierAddress, getRoleId(state.id, roles), state)
+      const txs = await updateRole(rolesModifierAddress, state)
+      const tx = await executeTransactions(walletType, txs)
+
+      if (walletType === WalletType.GNOSIS_SAFE) {
+        const safeSDK = new SafeAppsSDK()
+        const info = await safeSDK.safe.getInfo()
+        if (info.threshold > 1) {
+          // Transaction are not executed immediately
+          return
+        }
+
+        const txHash = await getChainTx(tx?.safeTxHash || "")
+        setIndexing(true)
+        if (provider) {
+          // Wait for 3 confirmations
+          await provider.waitForTransaction(txHash, 3)
+        } else {
+          // Wait 10s to wait for a few confirmations
+          await new Promise((resolve) => setTimeout(resolve, 10000))
+        }
+      } else {
+        setIndexing(true)
+        // Wait 5s to wait to the subgraph to index new txs
+        await new Promise((resolve) => setTimeout(resolve, 5000))
+      }
+
+      if (!state.role) {
+        // If role === undefined, it's created
+        navigate(`/${module}/roles/${state.id}`)
+      } else {
+        fetchRoles()
+      }
     } catch (error: any) {
       console.error(error)
+    } finally {
+      dispatch(setTransactionPending(false))
+      setIndexing(false)
     }
   }
 
@@ -84,7 +132,7 @@ export const RoleMenu = () => {
       disabled={isWaiting || !walletAddress}
       startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
     >
-      {getButtonText(state.role, isWaiting)}
+      {getButtonText(state.role, isWaiting, indexing)}
     </Button>
   )
 
@@ -115,6 +163,7 @@ export const RoleMenu = () => {
       {walletAddress ? (
         button
       ) : (
+        // TODO (carlos): Add styling
         <Tooltip title="You must connect your wallet before creating a role.">
           <div>{button}</div>
         </Tooltip>

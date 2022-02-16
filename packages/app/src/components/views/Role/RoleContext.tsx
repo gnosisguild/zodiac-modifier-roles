@@ -1,5 +1,8 @@
-import React, { PropsWithChildren, Reducer, useMemo, useReducer } from "react"
+import React, { PropsWithChildren, Reducer, useEffect, useMemo, useReducer } from "react"
 import { FuncParams, Role, Target } from "../../../typings/role"
+import { getRoleId } from "./RoleMenu"
+import { useRootSelector } from "../../../store"
+import { getRoles } from "../../../store/main/selectors"
 
 export interface RoleContextState {
   id: string
@@ -26,6 +29,7 @@ enum RoleActionType {
   REMOVE_TARGET,
   SET_ACTIVE_TARGET,
   SET_FUNC_PARAMS,
+  RESET_STATE,
 }
 
 interface RoleAction {
@@ -68,10 +72,16 @@ function handleRemoveTarget(state: RoleContextState, payload: RemoveTargetPayloa
 }
 
 function handleAddTarget(state: RoleContextState, target: Target): RoleContextState {
+  const currentTarget =
+    state.targets.add.find((_target) => target.address.toLowerCase() === _target.address.toLowerCase()) ||
+    state.targets.list.find((_target) => target.address.toLowerCase() === _target.address.toLowerCase())
+  if (currentTarget) {
+    return { ...state, activeTarget: currentTarget.id }
+  }
   return {
     ...state,
     activeTarget: target.id,
-    targets: { ...state.targets, add: [...state.targets.add, target] },
+    targets: { ...state.targets, add: [...state.targets.add, { ...target, address: target.address.toLowerCase() }] },
   }
 }
 
@@ -113,10 +123,17 @@ function handleFuncParams(state: RoleContextState, payload: SetFuncParamsPayload
   return { ...state, targets: { ...state.targets, add: replaceValue(state.targets.add) } }
 }
 
+function handleAddMember(state: RoleContextState, payload: string): RoleContextState {
+  if (state.members.add.includes(payload.toLowerCase()) || state.members.list.includes(payload.toLowerCase())) {
+    return state
+  }
+  return { ...state, members: { ...state.members, add: [...state.members.add, payload.toLowerCase()] } }
+}
+
 const roleReducer: Reducer<RoleContextState, RoleAction> = (state, action) => {
   switch (action.type) {
     case RoleActionType.ADD_MEMBER:
-      return { ...state, members: { ...state.members, add: [...state.members.add, action.payload] } }
+      return handleAddMember(state, action.payload)
     case RoleActionType.ADD_TARGET:
       return handleAddTarget(state, action.payload)
     case RoleActionType.REMOVE_TARGET:
@@ -127,6 +144,8 @@ const roleReducer: Reducer<RoleContextState, RoleAction> = (state, action) => {
       return { ...state, activeTarget: action.payload }
     case RoleActionType.SET_FUNC_PARAMS:
       return handleFuncParams(state, action.payload)
+    case RoleActionType.RESET_STATE:
+      return initReducerState(action.payload)
   }
 }
 
@@ -149,6 +168,8 @@ interface RoleContextValue {
   removeTarget(payload: RemoveTargetPayload): void
 
   setFuncParams(payload: SetFuncParamsPayload): void
+
+  reset(payload: RoleContextWrapProps): void
 }
 
 export const RoleContext = React.createContext<RoleContextValue>({
@@ -164,10 +185,11 @@ export const RoleContext = React.createContext<RoleContextValue>({
   addMember() {},
   setActiveTarget() {},
   setFuncParams() {},
+  reset() {},
 })
 
-export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleContextWrapProps>) => {
-  let defaultValue: RoleContextState = {
+function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState {
+  return {
     id,
     role,
     members: {
@@ -194,8 +216,13 @@ export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleCo
       return this.targets.add.find((target) => target.id === this.activeTarget) as Target
     },
   }
+}
 
-  const [state, dispatch] = useReducer(roleReducer, defaultValue)
+export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleContextWrapProps>) => {
+  const roles = useRootSelector(getRoles)
+
+  const [state, dispatch] = useReducer(roleReducer, { id: getRoleId(id, roles), role }, initReducerState)
+
   const methods = useMemo((): Omit<RoleContextValue, "state"> => {
     return {
       addMember(payload: string) {
@@ -216,8 +243,15 @@ export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleCo
       setFuncParams(payload: SetFuncParamsPayload) {
         return dispatch({ type: RoleActionType.SET_FUNC_PARAMS, payload })
       },
+      reset(payload: RoleContextWrapProps) {
+        return dispatch({ type: RoleActionType.RESET_STATE, payload })
+      },
     }
   }, [dispatch])
+
+  useEffect(() => {
+    methods.reset({ role, id: getRoleId(id, roles) })
+  }, [id, methods, role, roles])
 
   const value: RoleContextValue = {
     state,

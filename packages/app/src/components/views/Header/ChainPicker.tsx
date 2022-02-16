@@ -1,6 +1,6 @@
 import { InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
 import { useRootDispatch, useRootSelector } from "../../../store"
-import { getChainId, getNetworkPickerDisabled, getRolesModifierAddress } from '../../../store/main/selectors'
+import { getChainId, getNetworkPickerDisabled, getRolesModifierAddress } from "../../../store/main/selectors"
 import { setChainId } from "../../../store/main/web3Slice"
 import { HeaderBox } from "./HeaderBox"
 import { getNetwork, NETWORKS } from "../../../utils/networks"

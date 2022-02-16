@@ -11,7 +11,7 @@ export const getNetworkPickerDisabled = createSelector(getWeb3State, (main) => m
 
 export const getRolesModifierAddress = createSelector(getRolesAppState, (main) => main.rolesModifierAddress)
 export const getRoles = createSelector(getRolesAppState, (main) => main.roles)
-export const getRoleById = (roleId: string | undefined) =>
+export const getRoleById = (roleId: string) =>
   createSelector(getRolesAppState, (main) => main.roles.find((role) => role.name === roleId))
 export const getTransactionError = createSelector(getRolesAppState, (main) => main.transactionError)
 export const getTransactionPending = createSelector(getRolesAppState, (main) => main.transactionPending)

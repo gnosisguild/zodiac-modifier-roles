@@ -20,6 +20,9 @@ export const rolesAppSlice = createSlice({
     resetTransactionError(state) {
       state.transactionError = ""
     },
+    setTransactionPending(state, action: PayloadAction<boolean>) {
+      state.transactionPending = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchRoles.fulfilled, (state, action) => {
@@ -28,7 +31,7 @@ export const rolesAppSlice = createSlice({
   },
 })
 
-export const { setRolesModifierAddress, resetTransactionError } = rolesAppSlice.actions
+export const { setRolesModifierAddress, setTransactionPending, resetTransactionError } = rolesAppSlice.actions
 
 export const fetchRoles = createAsyncThunk("roles/fetchRoles", (address: string) => {
   return subgraph.fetchRoles(address)
