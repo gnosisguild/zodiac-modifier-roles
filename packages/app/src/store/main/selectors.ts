@@ -7,6 +7,7 @@ const getRolesAppState = (state: RootState) => state.rolesApp
 export const getChainId = createSelector(getWeb3State, (main) => main.chainId)
 export const getConnectedAddress = createSelector(getWeb3State, (main) => main.connectedAddress)
 export const getENS = createSelector(getWeb3State, (main) => main.ens)
+export const getNetworkPickerDisabled = createSelector(getWeb3State, (main) => main.networkPickerDisabled)
 
 export const getRolesModifierAddress = createSelector(getRolesAppState, (main) => main.rolesModifierAddress)
 export const getRoles = createSelector(getRolesAppState, (main) => main.roles)

@@ -1,6 +1,6 @@
 import { InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
 import { useRootDispatch, useRootSelector } from "../../../store"
-import { getChainId, getRolesModifierAddress } from "../../../store/main/selectors"
+import { getChainId, getNetworkPickerDisabled, getRolesModifierAddress } from '../../../store/main/selectors'
 import { setChainId } from "../../../store/main/web3Slice"
 import { HeaderBox } from "./HeaderBox"
 import { getNetwork, NETWORKS } from "../../../utils/networks"
@@ -29,6 +29,7 @@ export const ChainPicker = () => {
   const dispatch = useRootDispatch()
 
   const chainId = useRootSelector(getChainId)
+  const disabled = useRootSelector(getNetworkPickerDisabled)
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   const handleNetworkChange = (value: string) => dispatch(setChainId(parseInt(value)))
@@ -39,7 +40,7 @@ export const ChainPicker = () => {
       <Select
         disableUnderline
         className={classes.networkPicker}
-        disabled={!!rolesModifierAddress}
+        disabled={!!rolesModifierAddress || disabled}
         value={chainId}
         onChange={(evt) => handleNetworkChange(evt.target.value as string)}
       >

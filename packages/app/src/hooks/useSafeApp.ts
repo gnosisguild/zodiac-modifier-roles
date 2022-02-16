@@ -1,7 +1,7 @@
 import { useRootDispatch } from "../store"
 import { useEffect } from "react"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
-import { setChainId } from "../store/main/web3Slice"
+import { setChainId, setNetworkPickerDisabled } from "../store/main/web3Slice"
 
 export const useSafeApp = () => {
   const dispatch = useRootDispatch()
@@ -15,7 +15,9 @@ export const useSafeApp = () => {
         const chainIdNumber = chainId != null ? parseInt(chainId) : null
         if (chainIdNumber != null) {
           dispatch(setChainId(chainIdNumber))
-          console.log("chainIdNumber", chainIdNumber)
+          // Block the user to change the current network
+          dispatch(setNetworkPickerDisabled(true))
+          console.info("[chain-picker] chain set to gnosis safe's chain: ", chainIdNumber)
         }
       })
       .catch(console.warn)

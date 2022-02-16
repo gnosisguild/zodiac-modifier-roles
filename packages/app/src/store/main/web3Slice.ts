@@ -18,6 +18,7 @@ const web3InitialState: Web3State = {
   chainId: initialChainId || Network.MAINNET,
   connectedAddress: "",
   ens: "",
+  networkPickerDisabled: false,
 }
 
 export const web3Slice = createSlice({
@@ -38,7 +39,11 @@ export const web3Slice = createSlice({
       state.connectedAddress = ""
       state.ens = ""
     },
+    setNetworkPickerDisabled(state, action: PayloadAction<boolean>) {
+      state.networkPickerDisabled = action.payload
+    },
   },
 })
 
-export const { setChainId, setENS, setConnectedAddress, resetConnectedAddress } = web3Slice.actions
+export const { setChainId, setENS, setConnectedAddress, resetConnectedAddress, setNetworkPickerDisabled } =
+  web3Slice.actions

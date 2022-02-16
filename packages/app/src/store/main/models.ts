@@ -5,6 +5,7 @@ export interface Web3State {
   chainId: Network
   connectedAddress?: string
   ens?: string
+  networkPickerDisabled: boolean
 }
 
 export interface RolesAppState {
