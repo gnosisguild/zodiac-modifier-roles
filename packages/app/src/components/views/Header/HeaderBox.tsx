@@ -12,6 +12,10 @@ const useStyles = makeStyles((theme) => ({
     background: "rgba(217, 212, 173, 0.1)",
     padding: theme.spacing(0.5),
     position: "relative",
+    transition: "background 0.25s ease-in-out",
+    "&:hover::before": {
+      background: "rgba(217, 212, 173, 0.3)",
+    },
     "&:not(:first-child)": {
       marginLeft: theme.spacing(2),
     },
