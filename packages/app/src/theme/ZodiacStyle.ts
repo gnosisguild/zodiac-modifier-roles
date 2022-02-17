@@ -14,6 +14,10 @@ import SpectralRegularWoff2 from "../assets/fonts/Spectral/spectral-v7-latin-reg
 import ZodiacBackground from "../assets/images/zodiac-bg.svg"
 
 export const ZodiacStyle = createGlobalStyle`
+    :root {
+      --scrollbarWidth: 6px;
+    }
+
     html {
         height: 100%
     }
@@ -33,7 +37,7 @@ export const ZodiacStyle = createGlobalStyle`
 
     /* Works on Chrome, Edge, and Safari */
     *::-webkit-scrollbar {
-      width: 6px;
+      width: var(--scrollbarWidth);
     }
 
     *::-webkit-scrollbar-track {
