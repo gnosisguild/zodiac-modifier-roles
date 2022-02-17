@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: `calc(${theme.spacing(2)}px - var(--scrollbarWidth))`,
     maxHeight: "calc(100vh - 400px)",
     overflowY: "auto",
-    scrollbarGutter: "stable"
+    scrollbarGutter: "stable",
   },
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
