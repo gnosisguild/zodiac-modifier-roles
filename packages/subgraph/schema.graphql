@@ -11,6 +11,19 @@ enum Clearance {
   Function
 }
 
+enum ParameterType {
+  Static
+  Dynamic
+  Dynamic32
+}
+
+enum ParameterComparison {
+  EqualTo
+  GreaterThan
+  LessThan
+  OneOf
+}
+
 type Role @entity {
   id: ID! # Global unique id for role in subgraph
   name: String!
@@ -35,6 +48,17 @@ type Function @entity {
   functionSig: Bytes!
   executionOptions: ExecutionOptions!
   wildcarded: Boolean!
+  parameters: [Parameter!] @derivedFrom(field: "theFunction")
+}
+
+type Parameter @entity {
+  id: ID!
+  theFunction: Function!
+  executionOptions: ExecutionOptions!
+  parameterIndex: Int!
+  parameterType: ParameterType!
+  parameterComparison: ParameterComparison!
+  parameterComparisonValue: Bytes!
 }
 
 type Member @entity {

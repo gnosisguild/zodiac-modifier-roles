@@ -10,7 +10,7 @@ import {
   ScopeRevokeFunction,
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
-import { Role, Target, RolesModifier, Function } from "../generated/schema"
+import { Role, Target, RolesModifier, Function, Parameter } from "../generated/schema"
 import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
 import {
   CLEARANCE,
@@ -20,9 +20,15 @@ import {
   EXECUTION_OPTIONS,
   EXECUTION_OPTIONS__NONE,
   getFunctionId,
+  getOrCreateFunction,
+  getOrCreateRole,
+  getOrCreateTarget,
+  getParameterId,
   getRoleId,
   getRolesModifierId,
   getTargetId,
+  PARAMETER_COMPARISON,
+  PARAMETER_TYPE,
 } from "./helpers"
 
 export function handleAllowTarget(event: AllowTarget): void {
@@ -36,28 +42,12 @@ export function handleAllowTarget(event: AllowTarget): void {
     return
   }
 
-  const targetAddress = event.params.targetAddress
-
   const roleId = getRoleId(rolesModifierId, event.params.role)
-  let role = Role.load(roleId)
+  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
 
-  // save role if this is the first time we encounter it
-  if (!role) {
-    role = new Role(roleId)
-    role.name = event.params.role.toString()
-    role.roleIdInContract = event.params.role
-    role.rolesModifier = rolesModifierId
-    role.save()
-  }
-
+  const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
-  let target = Target.load(targetId)
-
-  if (!target) {
-    target = new Target(targetId)
-    target.address = targetAddress
-    target.role = roleId
-  }
+  const target = getOrCreateTarget(targetId, targetAddress, roleId)
   target.executionOptions = EXECUTION_OPTIONS[event.params.options]
   target.clearance = CLEARANCE[CLEARANCE__TARGET]
   target.save()
@@ -67,18 +57,12 @@ export function handleScopeTarget(event: ScopeTarget): void {
   // adding a target to be scoped () will not have any new access yet
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const targetAddress = event.params.targetAddress
-
   const roleId = getRoleId(rolesModifierId, event.params.role)
+  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
 
+  const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
-  let target = Target.load(targetId)
-
-  if (!target) {
-    target = new Target(targetId)
-    target.address = targetAddress
-    target.role = roleId
-  }
+  const target = getOrCreateTarget(targetId, targetAddress, roleId)
   target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
   target.clearance = CLEARANCE[CLEARANCE__FUNCTION]
   target.save()
@@ -105,39 +89,56 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const roleId = getRoleId(rolesModifierId, event.params.role)
+  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
+  const target = getOrCreateTarget(targetId, targetAddress, roleId)
+
   const functionSig = event.params.selector
-
-  let target = Target.load(targetId)
-
-  if (!target) {
-    // creating a target before scopeTarget (will not be executable, before the target's clearance is set via scopeTarget())
-    target = new Target(targetId)
-    target.address = targetAddress
-    target.role = roleId
-    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    target.clearance = CLEARANCE[CLEARANCE__NONE]
-    target.save()
-  }
-
   const functionId = getFunctionId(targetId, functionSig)
-
-  let theFunction = Function.load(functionId)
-
-  if (!theFunction) {
-    theFunction = new Function(functionId)
-    theFunction.target = targetId
-    theFunction.functionSig = functionSig
-    theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
-    theFunction.wildcarded = true
-    theFunction.save()
-  } else {
-    log.warning("Function already exists", [functionId])
-  }
+  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.wildcarded = true
+  theFunction.save()
 }
 
-export function handleScopeFunction(event: ScopeFunction): void {}
+export function handleScopeFunction(event: ScopeFunction): void {
+  // if role does not exist? create it
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+
+  // if target does not exist? create it with clearance and executionOptions set to None
+  const targetAddress = event.params.targetAddress
+  const targetId = getTargetId(roleId, targetAddress)
+  const target = getOrCreateTarget(targetId, targetAddress, roleId)
+
+  // if function does not exist? create it with the info from the event
+  const functionSig = event.params.functionSig
+  const functionId = getFunctionId(targetId, functionSig)
+  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+
+  const executionOptions = EXECUTION_OPTIONS[event.params.options]
+
+  // create new parameter or override old one
+  for (let i = 0; i < event.params.paramType.length; i++) {
+    const paramType = PARAMETER_TYPE[event.params.paramType[i]]
+    const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
+    const compValue = event.params.compValue[i]
+
+    const parameterId = getParameterId(functionId, i)
+    const parameter = new Parameter(parameterId)
+    parameter.theFunction = functionId
+    parameter.executionOptions = executionOptions
+    parameter.parameterIndex = i
+    parameter.parameterType = paramType
+    parameter.parameterComparison = paramComp
+    parameter.parameterComparisonValue = compValue
+    parameter.save()
+  }
+}
 
 export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutionOptions): void {}
 
