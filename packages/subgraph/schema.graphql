@@ -54,7 +54,6 @@ type Function @entity {
 type Parameter @entity {
   id: ID!
   theFunction: Function!
-  executionOptions: ExecutionOptions!
   parameterIndex: Int!
   parameterType: ParameterType!
   parameterComparison: ParameterComparison!

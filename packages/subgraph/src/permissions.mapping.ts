@@ -119,8 +119,8 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const functionSig = event.params.functionSig
   const functionId = getFunctionId(targetId, functionSig)
   const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
-
-  const executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.save()
 
   // create new parameter or override old one
   for (let i = 0; i < event.params.paramType.length; i++) {
@@ -131,7 +131,6 @@ export function handleScopeFunction(event: ScopeFunction): void {
     const parameterId = getParameterId(functionId, i)
     const parameter = new Parameter(parameterId)
     parameter.theFunction = functionId
-    parameter.executionOptions = executionOptions
     parameter.parameterIndex = i
     parameter.parameterType = paramType
     parameter.parameterComparison = paramComp
