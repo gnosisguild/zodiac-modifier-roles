@@ -63,11 +63,12 @@ type Parameter @entity {
 type Member @entity {
   id: ID!
   address: Bytes!
+  enabledAsModule: Boolean!
   roles: [MemberRole!] @derivedFrom(field: "member")
 }
 
 type MemberRole @entity {
-  id: ID! # Set to `${module.id}-${role.id}`
+  id: ID!
   member: Member!
   role: Role!
 }

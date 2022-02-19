@@ -1,5 +1,5 @@
 import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Parameter } from "../generated/schema"
+import { Function, Role, RolesModifier, Target, Parameter, Member } from "../generated/schema"
 export const EXECUTION_OPTIONS = ["None", "Send", "DelegateCall", "Both"]
 export const EXECUTION_OPTIONS__NONE = 0
 export const EXECUTION_OPTIONS__SEND = 1
@@ -25,14 +25,15 @@ export const PARAMETER_COMPARISON__ONE_OF = 3
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
 export const getRoleId = (roleModifierId: string, role: number): string => roleModifierId + "-ROLE-" + role.toString()
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
-export const getMemberId = (roleId: string, member: Address): string => roleId + "-MEMBER-" + member.toHex()
+export const getMemberId = (rolesModifierId: string, member: Address): string =>
+  rolesModifierId + "-MEMBER-" + member.toHex()
 export const getFunctionId = (targetId: string, functionSig: Bytes): string =>
   targetId + "-FUNCTION-" + functionSig.toHex()
 export const getMemberRoleId = (memberId: string, roleId: string): string => memberId + "-" + roleId
 export const getParameterId = (functionId: string, parameterIndex: number): string =>
   functionId + "-PARAMETER-" + parameterIndex.toString()
 
-export const getOrCreateRole = (rolesModifierId: string, roleId: string, roleIdInContract: i32): Role => {
+export const getOrCreateRole = (roleId: string, rolesModifierId: string, roleIdInContract: i32): Role => {
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
@@ -91,4 +92,18 @@ export const getOrCreateFunction = (functionId: string, targetId: string, functi
     log.debug("Loaded existing function", [functionId])
   }
   return theFunction
+}
+/*
+Fore created Member:
+ - enabledAsModule is false
+*/
+export const getOrCreateMember = (memberId: string, rolesModifierId: string, memberAddress: Address): Member => {
+  let member = Member.load(memberId)
+  if (!member) {
+    member = new Member(memberId)
+    member.address = memberAddress
+    member.enabledAsModule = false
+    member.save()
+  }
+  return member
 }

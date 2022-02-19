@@ -43,7 +43,7 @@ export function handleAllowTarget(event: AllowTarget): void {
   }
 
   const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -58,7 +58,7 @@ export function handleScopeTarget(event: ScopeTarget): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -89,7 +89,7 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -108,7 +108,7 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(rolesModifierId, roleId, event.params.role)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
   // if target does not exist? create it with clearance and executionOptions set to None
   const targetAddress = event.params.targetAddress

@@ -24,6 +24,8 @@ import {
   getFunctionId,
   getMemberId,
   getMemberRoleId,
+  getOrCreateMember,
+  getOrCreateRole,
   getRoleId,
   getRolesModifierId,
   getTargetId,
@@ -43,31 +45,20 @@ export function handleAssignRoles(event: AssignRoles): void {
   }
 
   const memberAddress = event.params.module
+  const memberId = getMemberId(rolesModifierId, memberAddress)
+  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
+
   const rolesArray = event.params.roles
   const memberOfArray = event.params.memberOf
 
   for (let i = 0; i < rolesArray.length; i++) {
     const roleId = getRoleId(rolesModifierId, rolesArray[i])
-    const memberId = getMemberId(roleId, memberAddress)
+    const role = getOrCreateRole(roleId, rolesModifierId, rolesArray[i])
     const memberRoleId = getMemberRoleId(memberId, roleId)
     let memberRole = MemberRole.load(memberRoleId)
     if (!memberRole) {
       if (memberOfArray[i]) {
         // adding a member
-        let role = Role.load(roleId)
-        if (!role) {
-          role = new Role(roleId)
-          role.name = rolesArray[i].toString()
-          role.roleIdInContract = rolesArray[i]
-          role.rolesModifier = rolesModifierId
-          role.save()
-        }
-        let member = Member.load(memberId)
-        if (!member) {
-          member = new Member(memberId)
-          member.address = memberAddress
-          member.save()
-        }
         memberRole = new MemberRole(memberRoleId)
         memberRole.member = memberId
         memberRole.role = roleId
@@ -92,9 +83,13 @@ export function handleAvatarSet(event: AvatarSet): void {}
 
 export function handleChangedGuard(event: ChangedGuard): void {}
 
-export function handleDisabledModule(event: DisabledModule): void {}
+export function handleDisabledModule(event: DisabledModule): void {
+  // TODO: must set member as disabled
+}
 
-export function handleEnabledModule(event: EnabledModule): void {}
+export function handleEnabledModule(event: EnabledModule): void {
+  // TODO: must create member
+}
 
 export function handleRolesModSetup(event: RolesModSetup): void {
   const rolesModifierAddress = event.address
