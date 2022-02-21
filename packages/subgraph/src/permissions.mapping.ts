@@ -172,7 +172,35 @@ export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutio
   theFunction.save()
 }
 
-export function handleScopeParameter(event: ScopeParameter): void {}
+export function handleScopeParameter(event: ScopeParameter): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const targetAddress = event.params.targetAddress
+  const targetId = getTargetId(roleId, targetAddress)
+  getOrCreateTarget(targetId, targetAddress, roleId)
+  const functionSig = event.params.functionSig
+  const functionId = getFunctionId(targetId, functionSig)
+  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+
+  const parameterId = getParameterId(functionId, event.params.index.toI32())
+  const parameter = new Parameter(parameterId) // will always overwrite the parameter
+  const paramType = PARAMETER_TYPE[event.params.paramType]
+  const paramComp = PARAMETER_COMPARISON[event.params.paramComp]
+  const compValue = event.params.compValue
+  parameter.theFunction = functionId
+  parameter.parameterIndex = event.params.index.toI32()
+  parameter.parameterType = paramType
+  parameter.parameterComparison = paramComp
+  parameter.parameterComparisonValue = compValue
+  parameter.save()
+}
 
 export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void {}
 
