@@ -84,11 +84,41 @@ export function handleAvatarSet(event: AvatarSet): void {}
 export function handleChangedGuard(event: ChangedGuard): void {}
 
 export function handleDisabledModule(event: DisabledModule): void {
-  // TODO: must set member as disabled
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+
+  let rolesModifier = RolesModifier.load(rolesModifierId)
+  if (!rolesModifier) {
+    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
+      rolesModifierId,
+    ])
+    return
+  }
+
+  const memberAddress = event.params.module
+  const memberId = getMemberId(rolesModifierId, memberAddress)
+  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
+  member.enabledAsModule = false
+  member.save()
 }
 
 export function handleEnabledModule(event: EnabledModule): void {
-  // TODO: must create member
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+
+  let rolesModifier = RolesModifier.load(rolesModifierId)
+  if (!rolesModifier) {
+    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
+      rolesModifierId,
+    ])
+    return
+  }
+
+  const memberAddress = event.params.module
+  const memberId = getMemberId(rolesModifierId, memberAddress)
+  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
+  member.enabledAsModule = true
+  member.save()
 }
 
 export function handleRolesModSetup(event: RolesModSetup): void {
