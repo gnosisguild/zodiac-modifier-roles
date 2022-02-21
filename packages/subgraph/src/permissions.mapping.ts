@@ -25,6 +25,7 @@ import {
   getOrCreateTarget,
   getParameterId,
   getRoleId,
+  getRolesModifier,
   getRolesModifierId,
   getTargetId,
   PARAMETER_COMPARISON,
@@ -34,11 +35,8 @@ import {
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
     return
   }
 
@@ -57,6 +55,11 @@ export function handleScopeTarget(event: ScopeTarget): void {
   // adding a target to be scoped () will not have any new access yet
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
@@ -88,6 +91,11 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   // allow function
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
@@ -107,6 +115,11 @@ export function handleScopeFunction(event: ScopeFunction): void {
   // if role does not exist? create it
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
 
@@ -139,7 +152,25 @@ export function handleScopeFunction(event: ScopeFunction): void {
   }
 }
 
-export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutionOptions): void {}
+export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutionOptions): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const targetAddress = event.params.targetAddress
+  const targetId = getTargetId(roleId, targetAddress)
+  getOrCreateTarget(targetId, targetAddress, roleId)
+  const functionSig = event.params.functionSig
+  const functionId = getFunctionId(targetId, functionSig)
+  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.save()
+}
 
 export function handleScopeParameter(event: ScopeParameter): void {}
 

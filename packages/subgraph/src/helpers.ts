@@ -107,3 +107,14 @@ export const getOrCreateMember = (memberId: string, rolesModifierId: string, mem
   }
   return member
 }
+
+export const getRolesModifier = (rolesModifierId: string): RolesModifier | null => {
+  let rolesModifier = RolesModifier.load(rolesModifierId)
+  if (!rolesModifier) {
+    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
+      rolesModifierId,
+    ])
+    return null
+  }
+  return rolesModifier
+}
