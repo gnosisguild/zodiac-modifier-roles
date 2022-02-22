@@ -247,4 +247,20 @@ export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {
   store.remove("Function", functionId)
 }
 
-export function handleUnscopeParameter(event: UnscopeParameter): void {}
+export function handleUnscopeParameter(event: UnscopeParameter): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const targetAddress = event.params.targetAddress
+  const targetId = getTargetId(roleId, targetAddress)
+  const functionSig = event.params.functionSig
+  const functionId = getFunctionId(targetId, functionSig)
+  const parameterId = getParameterId(functionId, event.params.index.toI32())
+
+  store.remove("Parameter", parameterId)
+}
