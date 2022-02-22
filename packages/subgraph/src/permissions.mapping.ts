@@ -29,6 +29,7 @@ import {
   getRolesModifierId,
   getTargetId,
   PARAMETER_COMPARISON,
+  PARAMETER_COMPARISON__ONE_OF,
   PARAMETER_TYPE,
 } from "./helpers"
 
@@ -147,7 +148,7 @@ export function handleScopeFunction(event: ScopeFunction): void {
     parameter.parameterIndex = i
     parameter.parameterType = paramType
     parameter.parameterComparison = paramComp
-    parameter.parameterComparisonValue = compValue
+    parameter.parameterComparisonValue = [compValue]
     parameter.save()
   }
 }
@@ -198,11 +199,40 @@ export function handleScopeParameter(event: ScopeParameter): void {
   parameter.parameterIndex = event.params.index.toI32()
   parameter.parameterType = paramType
   parameter.parameterComparison = paramComp
-  parameter.parameterComparisonValue = compValue
+  parameter.parameterComparisonValue = [compValue]
   parameter.save()
 }
 
-export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void {}
+export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  const roleId = getRoleId(rolesModifierId, event.params.role)
+  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const targetAddress = event.params.targetAddress
+  const targetId = getTargetId(roleId, targetAddress)
+  getOrCreateTarget(targetId, targetAddress, roleId)
+  const functionSig = event.params.functionSig
+  const functionId = getFunctionId(targetId, functionSig)
+  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+
+  const parameterId = getParameterId(functionId, event.params.index.toI32())
+  const parameter = new Parameter(parameterId) // will always overwrite the parameter
+  const paramType = PARAMETER_TYPE[event.params.paramType]
+  const paramComp = PARAMETER_COMPARISON[PARAMETER_COMPARISON__ONE_OF]
+  const compValues = event.params.compValues
+
+  parameter.theFunction = functionId
+  parameter.parameterIndex = event.params.index.toI32()
+  parameter.parameterType = paramType
+  parameter.parameterComparison = paramComp
+  parameter.parameterComparisonValue = compValues
+  parameter.save()
+}
 
 export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {
   // remove function

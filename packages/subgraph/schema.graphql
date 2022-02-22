@@ -57,7 +57,7 @@ type Parameter @entity {
   parameterIndex: Int!
   parameterType: ParameterType!
   parameterComparison: ParameterComparison!
-  parameterComparisonValue: Bytes!
+  parameterComparisonValue: [Bytes!]! # Will contain only one value except for onOf the all values it can be will be in the array
 }
 
 type Member @entity {
