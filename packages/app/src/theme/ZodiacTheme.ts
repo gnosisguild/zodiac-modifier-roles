@@ -151,17 +151,6 @@ export const ZODIAC_THEME = createTheme({
         border: "1px solid rgba(217, 212, 173, 0.3)",
         padding: "8px 4px",
         position: "relative",
-        "&:after": {
-          content: "''",
-          border: "1px solid rgba(217, 212, 173, 0.3)",
-          position: "absolute",
-          zIndex: 1,
-          top: -4,
-          bottom: -4,
-          left: -4,
-          right: -4,
-          pointerEvents: "none",
-        },
       },
       input: {
         padding: 0,
@@ -183,6 +172,11 @@ export const ZODIAC_THEME = createTheme({
       },
       footer: {
         color: "",
+      },
+    },
+    MuiFormControlLabel: {
+      root: {
+        marginLeft: 0,
       },
     },
   },

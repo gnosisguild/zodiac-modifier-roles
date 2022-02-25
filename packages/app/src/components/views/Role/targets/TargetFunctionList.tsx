@@ -1,35 +1,39 @@
 import { FunctionFragment } from "@ethersproject/abi"
 import { TargetFunction } from "./TargetFunction"
-import { FuncParams } from "../../../../typings/role"
+import { FunctionConditions, TargetConditions } from "../../../../typings/role"
+import { getKeyFromFunction } from "../../../../utils/conditions"
 
 interface TargetFunctionListProps {
   items: FunctionFragment[]
-  funcParams?: Record<string, boolean[]>
-  onChange(funcParams: FuncParams): void
+  conditions: TargetConditions
+
+  onChange(conditions: TargetConditions): void
 }
 
-export const TargetFunctionList = ({ items, funcParams, onChange }: TargetFunctionListProps) => {
+export const TargetFunctionList = ({ items, conditions, onChange }: TargetFunctionListProps) => {
   if (!items.length) {
     return <>The target has 0 function</>
   }
 
-  const handleFunctionChange = (format: string) => (params: boolean[]) => {
+  const handleFunctionChange = (format: string) => (funcConditions: FunctionConditions) => {
     onChange({
-      ...funcParams,
-      [format]: params,
+      ...conditions,
+      functions: {
+        ...conditions.functions,
+        [format]: funcConditions,
+      },
     })
   }
-
   return (
     <>
       {items.map((func) => {
-        const format = func.format()
-        if (!funcParams || !funcParams[format]) return null
+        const format = getKeyFromFunction(func)
+        if (!conditions.functions[format]) return null
         return (
           <TargetFunction
             key={format}
             func={func}
-            params={funcParams[format]}
+            functionConditions={conditions.functions[format]}
             onChange={handleFunctionChange(format)}
           />
         )

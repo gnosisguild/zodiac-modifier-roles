@@ -4,7 +4,7 @@ import { ethers } from "ethers"
 import Modal from "../commons/Modal"
 import { TextField } from "../commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
-import { ExecutionOption, Target } from "../../typings/role"
+import { ConditionType, ExecutionOption, Target } from "../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   label: {
@@ -35,7 +35,12 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
   }
 
   const handleAdd = () => {
-    onAddTarget({ id: `${address}_${Date.now()}`, address, executionOptions: executionOptions })
+    onAddTarget({
+      id: `${address}_${Date.now()}`,
+      address,
+      executionOptions: executionOptions,
+      conditions: { type: ConditionType.BLOCKED, functions: {} },
+    })
     onClose()
   }
 

@@ -97,7 +97,6 @@ export const useWallet = () => {
       if (selected) {
         await onboard.walletCheck()
         setSigner(_signer)
-        console.log("signer", _signer)
       }
     } catch (err) {
       console.warn("startOnboard error", err)

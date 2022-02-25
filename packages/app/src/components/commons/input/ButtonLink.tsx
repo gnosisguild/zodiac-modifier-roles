@@ -1,6 +1,6 @@
 import { Box, makeStyles } from "@material-ui/core"
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   viewRolesLink: {
     alignItems: "center",
     color: "rgb(217,212,173)",

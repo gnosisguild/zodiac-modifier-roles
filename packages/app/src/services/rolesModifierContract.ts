@@ -1,7 +1,7 @@
 import { ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
-import { ExecutionOption, FuncParams, Target } from "../typings/role"
+import { ConditionType, ExecutionOption, FuncParams, Target } from "../typings/role"
 import { RoleContextState } from "../components/views/Role/RoleContext"
 import { FunctionFragment } from "@ethersproject/abi"
 import { _signer } from "../hooks/useWallet"
@@ -75,9 +75,8 @@ async function getTargetScopeTx(
   roleId: string,
   target: Target,
 ): Promise<ethers.PopulatedTransaction[]> {
-  if (!target.funcParams) return []
-  if (areAllFunctionsAllowed(target.funcParams)) {
-    console.log("areAllFunctionsAllowed", roleId, target.address)
+  if (!target.conditions) return []
+  if (target.conditions.type === ConditionType.WILDCARDED) {
     return Promise.all([
       contract.populateTransaction.allowTarget(roleId, target.address, executionOptionsToInt(target.executionOptions)),
     ])
@@ -85,8 +84,8 @@ async function getTargetScopeTx(
 
   return Promise.all([
     contract.populateTransaction.scopeTarget(roleId, target.address),
-    ...Object.entries(target.funcParams)
-      .filter(([_, params]) => params.some((p) => p))
+    ...Object.entries(target.conditions.functions)
+      .filter(([_, funcConditions]) => funcConditions.type === ConditionType.WILDCARDED)
       .map(([hash]) => {
         const func = FunctionFragment.fromString(hash)
         return contract.populateTransaction.scopeAllowFunction(
@@ -129,15 +128,10 @@ export const updateRole = async (modifierAddress: string, state: RoleContextStat
 }
 
 export async function executeTransactions(walletType: WalletType, txs: PopulatedTransaction[]) {
-  console.log({ _signer, txs })
   switch (walletType) {
     case WalletType.GNOSIS_SAFE: {
       const safeSDK = new SafeAppsSDK()
-      const hash = await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
-      console.log("Initiated Gnosis Safe transaction. Hash:")
-      console.log(hash)
-
-      return hash
+      return await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
     }
     case WalletType.INJECTED: {
       await Promise.all(
@@ -167,7 +161,6 @@ export async function getChainTx(safeTxHash: string, cycles = 20): Promise<strin
   try {
     const safeSDK = new SafeAppsSDK()
     const safeTx = await safeSDK.txs.getBySafeTxHash(safeTxHash)
-    console.log("safeTx", safeTx)
     if (safeTx.txHash) return safeTx.txHash
   } catch (err) {
     console.log("failed safeTx ", `cycle ${cycles}`, err)

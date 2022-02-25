@@ -1,30 +1,31 @@
 import { FunctionFragment } from "@ethersproject/abi"
-import { Box, Checkbox, FormControlLabel, makeStyles, Typography } from "@material-ui/core"
+import { Box, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { KeyboardArrowDownSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import React, { useMemo, useState } from "react"
+import { TargetFunctionParams } from "./TargetFunctionParams"
+import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, FunctionConditions } from "../../../../typings/role"
+import { Select } from "../../../commons/input/Select"
+import { getFunctionConditionType } from "../../../../utils/conditions"
+import { Checkbox } from "../../../commons/input/Checkbox"
 
 const useStyles = makeStyles((theme) => ({
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    margin: theme.spacing(1, 0, 1, 3),
+  },
   wrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
     border: "1px solid rgba(217, 212, 173, 0.3)",
     marginTop: theme.spacing(1),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
-    position: "relative",
-    "&::before": {
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      inset: 2,
-      pointerEvents: "none",
-    },
+    padding: theme.spacing(0, 1),
   },
   trigger: {
     display: "flex",
     alignItems: "center",
     cursor: "pointer",
+    minHeight: 32,
   },
   arrow: {
     height: 32,
@@ -35,24 +36,16 @@ const useStyles = makeStyles((theme) => ({
   rotate: {
     transform: "rotate(180deg)",
   },
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    marginLeft: theme.spacing(3),
-  },
-  hidden: {
-    display: "none",
-  },
-  checkbox: {
-    padding: theme.spacing(1),
-  },
-  row: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
+  name: {
+    fontFamily: "Roboto Mono, Spectral",
+    fontSize: 14,
+    color: "rgb(178,178,178)",
+    marginLeft: theme.spacing(0.5),
   },
   type: {
-    color: "rgb(255,255,255, 0.6)",
+    fontSize: 10,
+    fontFamily: "Roboto Mono, Spectral",
+    color: "rgb(178,178,178, 0.6)",
     marginLeft: theme.spacing(1),
     paddingRight: theme.spacing(2),
     overflow: "hidden",
@@ -60,51 +53,60 @@ const useStyles = makeStyles((theme) => ({
     textOverflow: "ellipsis",
     maxWidth: 600,
   },
-  name: {},
+  hidden: {
+    display: "none",
+  },
+  label: {
+    color: theme.palette.text.primary,
+    marginBottom: theme.spacing(0.5),
+  },
+  select: {
+    margin: theme.spacing(0, 0, 1, 0),
+  },
 }))
 
 interface TargetFunctionProps {
   func: FunctionFragment
-  params: boolean[]
+  functionConditions?: FunctionConditions
 
-  onChange(params: boolean[]): void
+  onChange(value: FunctionConditions): void
 }
 
 function getParamsTypesTitle(func: FunctionFragment): string {
-  if (!func.inputs.length) return "( )"
+  if (!func.inputs.length) return "()"
   return "(" + func.inputs.map((input) => input.format("full")).join(", ") + ")"
 }
 
-export const TargetFunction = ({ func, params, onChange }: TargetFunctionProps) => {
-  const classes = useStyles()
+const defaultFunctionCondition: FunctionConditions = {
+  type: ConditionType.WILDCARDED,
+  executionOption: ExecutionOption.BOTH,
+  params: [],
+}
 
-  const isSimple = func.inputs.length < 2
+export const TargetFunction = ({
+  func,
+  functionConditions = defaultFunctionCondition,
+  onChange,
+}: TargetFunctionProps) => {
+  const classes = useStyles()
+  const isSimple = func.inputs.length === 0
 
   const [open, setOpen] = useState(false)
 
   const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
-  const paramsChecked = params.filter((param) => param)
 
-  const handleParamChange = (index: number, checked: boolean) => {
-    onChange(
-      params.map((current, _index) => {
-        if (_index === index) return checked
-        return current
-      }),
-    )
+  const handleExecutionOption = (option: ExecutionOption) => {
+    onChange({ ...functionConditions, executionOption: option })
   }
 
   const handleFunctionCheck = (checked: boolean) => {
-    if (isSimple) {
-      onChange([checked])
-      return
-    }
-    onChange(params.map((_) => checked))
+    const type = checked ? ConditionType.WILDCARDED : getFunctionConditionType(functionConditions.params)
+    onChange({ ...functionConditions, type })
   }
 
   const handleOpen = () => {
     if (isSimple) {
-      handleFunctionCheck(paramsChecked.length !== params.length)
+      handleFunctionCheck(functionConditions.type !== ConditionType.WILDCARDED)
       return
     }
     setOpen(!open)
@@ -114,12 +116,14 @@ export const TargetFunction = ({ func, params, onChange }: TargetFunctionProps) 
     <div className={classes.wrapper}>
       <div className={classes.trigger} onClick={handleOpen}>
         <Checkbox
-          indeterminate={!!paramsChecked.length && paramsChecked.length !== params.length}
-          checked={paramsChecked.length === params.length}
-          onChange={(_, checked) => handleFunctionCheck(checked)}
+          checked={functionConditions?.type === ConditionType.WILDCARDED}
+          indeterminateIcon={functionConditions?.type === ConditionType.SCOPED}
+          onChange={(evt) => handleFunctionCheck(evt.target.checked)}
           onClick={(evt) => evt.stopPropagation()}
         />
-        <Typography variant="body1">{func.name}</Typography>
+        <Typography variant="body1" className={classes.name}>
+          {func.name}
+        </Typography>
         <Typography variant="body2" className={classes.type}>
           {paramsText}
         </Typography>
@@ -130,32 +134,26 @@ export const TargetFunction = ({ func, params, onChange }: TargetFunctionProps) 
           </>
         ) : null}
       </div>
-      {!isSimple ? (
-        <div className={classNames(classes.content, { [classes.hidden]: !open })}>
-          {func.inputs.map((param, index) => (
-            <FormControlLabel
-              key={index}
-              label={
-                <div className={classes.row}>
-                  <Typography variant="body1" className={classes.name}>
-                    {param.name}
-                  </Typography>
-                  <Typography variant="body2" className={classes.type}>
-                    {param.type}
-                  </Typography>
-                </div>
-              }
-              control={
-                <Checkbox
-                  checked={params[index]}
-                  onChange={(_, checked) => handleParamChange(index, checked)}
-                  size="small"
-                />
-              }
-            />
-          ))}
+
+      <div className={classNames(classes.content, { [classes.hidden]: !open })}>
+        <div className={classes.select}>
+          <InputLabel className={classes.label}>Execution Type</InputLabel>
+          <Select
+            value={functionConditions.executionOption}
+            onChange={(evt) => handleExecutionOption(evt.target.value as ExecutionOption)}
+          >
+            {EXECUTION_OPTIONS.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </Select>
         </div>
-      ) : null}
+
+        {!isSimple ? (
+          <TargetFunctionParams func={func} funcConditions={functionConditions} onChange={onChange} />
+        ) : null}
+      </div>
     </div>
   )
 }

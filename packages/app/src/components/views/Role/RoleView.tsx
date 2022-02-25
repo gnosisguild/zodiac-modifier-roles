@@ -16,8 +16,8 @@ const RoleView = () => {
 
   useFetchRoles()
 
-  const handleChangeTargetExecutionOptions = ({ address: targetAddress, executionOptions: newOptions }: Target) => {
-    console.log("Change execution options - not implemented yet") // TODO
+  const handleTargetChange = (target: Target) => {
+    console.log("target", target) // TODO
   }
 
   return (
@@ -25,11 +25,8 @@ const RoleView = () => {
       <Dashboard left={<RoleMenu />}>
         <RoleContext.Consumer>
           {({ state }) =>
-            state.getActiveRole() ? (
-              <TargetParameters
-                target={state.getActiveRole()}
-                onChangeTargetExecutionsOptions={handleChangeTargetExecutionOptions}
-              />
+            state.activeTarget ? (
+              <TargetParameters target={state.getActiveRole()} onChange={handleTargetChange} />
             ) : (
               <RoleNoTarget />
             )

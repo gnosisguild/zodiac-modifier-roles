@@ -14,95 +14,92 @@ import SpectralRegularWoff2 from "../assets/fonts/Spectral/spectral-v7-latin-reg
 import ZodiacBackground from "../assets/images/zodiac-bg.svg"
 
 export const ZodiacStyle = createGlobalStyle`
-    :root {
-      --scrollbarWidth: 6px;
-    }
+  :root {
+    --scrollbarWidth: 6px;
+  }
 
-    html {
-        height: 100%
-    }
+  html {
+    height: 100%
+  }
 
-    body {
-       height: 100%;
-       margin: 0px;
-       padding: 0px;
-       background: url(${ZodiacBackground}) 0% 0% / cover fixed;
-    }
+  body {
+    margin: 0;
+    padding: 0;
+    background: url(${ZodiacBackground}) 0 0% / cover fixed;
+  }
 
-    /* Works on Firefox*/
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(217, 212, 173, 0.6) rgba(217, 212, 173, 0.1);
-    }
+  /* Works on Firefox*/
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(217, 212, 173, 0.6) rgba(217, 212, 173, 0.1);
+  }
 
-    /* Works on Chrome, Edge, and Safari */
-    *::-webkit-scrollbar {
-      width: var(--scrollbarWidth);
-    }
+  /* Works on Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: var(--scrollbarWidth);
+  }
 
-    *::-webkit-scrollbar-track {
-      background: none;
-    }
+  *::-webkit-scrollbar-track {
+    background: none;
+  }
 
-    *::-webkit-scrollbar-thumb {
-      background-color: rgba(217, 212, 173, 0.3);
-      border-radius: 0px;
-    }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(217, 212, 173, 0.3);
+    border-radius: 0;
+  }
 
-    #root {
-        height: 100%;
-        background: linear-gradient(
-          108.86deg,
-          rgba(26, 33, 66, 0.85) 6.24%,
-          rgba(12, 19, 8, 0.85) 53.08%,
-          rgba(37, 6, 4, 0.85) 96.54%
-        );
-    }
+  #root {
+    height: 100%;
+    background: linear-gradient(108.86deg,
+    rgba(26, 33, 66, 0.85) 6.24%,
+    rgba(12, 19, 8, 0.85) 53.08%,
+    rgba(37, 6, 4, 0.85) 96.54%);
+  }
 
-    .MuiFormControl-root,
-    .MuiInputBase-root {
-        width: 100% !important;
-    }
+  .MuiFormControl-root,
+  .MuiInputBase-root {
+    width: 100%;
+  }
 
-    aside.bn-onboard-custom {
-      z-index: 2;
-    }
+  aside.bn-onboard-custom {
+    z-index: 2;
+  }
 
-    a {
-      cursor: pointer;
-      text-decoration: none;
-    }
+  a {
+    cursor: pointer;
+    text-decoration: none;
+  }
 
-    @font-face {
-        font-family: 'Averta';
-        src: local('Averta'), local('Averta Bold'),
-        url(${avertaFont}) format('woff2'),
-        url(${avertaBoldFont}) format('woff');
-    }
+  @font-face {
+    font-family: 'Averta';
+    src: local('Averta'), local('Averta Bold'),
+    url(${avertaFont}) format('woff2'),
+    url(${avertaBoldFont}) format('woff');
+  }
 
 
-    @font-face {
-      font-family: 'Roboto Mono';
-      font-style: normal;
-      font-weight: 400;
-      src: local(''),
-      url(${RobotoMonoRegularWoff}) format('woff2'),
-      url(${RobotoMonoRegularWoff2}) format('woff');
-    }
+  @font-face {
+    font-family: 'Roboto Mono';
+    font-style: normal;
+    font-weight: 400;
+    src: local(''),
+    url(${RobotoMonoRegularWoff}) format('woff2'),
+    url(${RobotoMonoRegularWoff2}) format('woff');
+  }
 
 
-    @font-face {
-        font-family: 'Monaco';
-        src: local('Monaco'), url(${MonacoFont}) format('woff');
-    }
+  @font-face {
+    font-family: 'Monaco';
+    src: local('Monaco'), url(${MonacoFont}) format('woff');
+  }
 
-    /* spectral-regular - latin */
-    @font-face {
-      font-family: 'Spectral';
-      font-style: normal;
-      font-weight: 400;
-      src: local(''),
-      url(${SpectralRegularWoff2}) format('woff2'),
-      url(${SpectralRegularWoff}) format('woff');
-    }
+  /* spectral-regular - latin */
+  @font-face {
+    font-family: 'Spectral';
+    font-style: normal;
+    font-weight: 400;
+    src: local(''),
+    url(${SpectralRegularWoff2}) format('woff2'),
+    url(${SpectralRegularWoff}) format('woff');
+  }
 `

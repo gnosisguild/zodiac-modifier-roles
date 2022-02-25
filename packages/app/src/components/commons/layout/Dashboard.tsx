@@ -5,7 +5,6 @@ import classNames from "classnames"
 const useStyles = makeStyles((theme) => ({
   container: {
     display: "grid",
-    padding: theme.spacing(0.5),
     gridTemplateColumns: "minmax(360px, 500px) 4px 1fr",
 
     height: "100%",
@@ -15,10 +14,10 @@ const useStyles = makeStyles((theme) => ({
       content: '" "',
       position: "absolute",
       zIndex: 1,
-      top: "0px",
-      left: "0px",
-      right: "0px",
-      bottom: "0px",
+      top: "-4px",
+      left: "-4px",
+      right: "-4px",
+      bottom: "-4px",
       border: "1px solid rgba(217, 212, 173, 0.3)",
       pointerEvents: "none",
     },

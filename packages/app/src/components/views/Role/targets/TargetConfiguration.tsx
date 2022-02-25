@@ -1,13 +1,22 @@
 import React, { useContext, useEffect, useMemo } from "react"
-import { Box, Button, Checkbox, FormControlLabel, InputLabel, makeStyles, MenuItem, Select } from "@material-ui/core"
+import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import { TextField } from "../../../commons/input/TextField"
-import { EXECUTION_OPTIONS, FuncParams, Target } from "../../../../typings/role"
+import {
+  ConditionType,
+  EXECUTION_OPTIONS,
+  ExecutionOption,
+  FunctionConditions,
+  Target,
+  TargetConditions,
+} from "../../../../typings/role"
 import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
-import { areAllFunctionsAllowed } from "../../../../services/rolesModifierContract"
+import { Checkbox } from "../../../commons/input/Checkbox"
+import { Select } from "../../../commons/input/Select"
+import { getKeyFromFunction, getTargetConditionType } from "../../../../utils/conditions"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -78,9 +87,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type Props = {
+type TargetConfigurationProps = {
   target: Target
-  onChangeTargetExecutionsOptions: (target: Target) => void
+  onChange: (target: Target) => void
 }
 
 function isWriteFunction(method: FunctionFragment) {
@@ -88,19 +97,27 @@ function isWriteFunction(method: FunctionFragment) {
   return !["view", "pure"].includes(method.stateMutability)
 }
 
-function getInitialFuncParams(functions: FunctionFragment[], defaultValue = true): FuncParams {
-  return functions.reduce((obj, func) => {
-    const params = func.inputs.length < 2 ? [defaultValue] : func.inputs.map((_) => defaultValue)
+function getInitialTargetConditions(functions: FunctionFragment[]): TargetConditions {
+  const functionConditions = functions.reduce((obj, func): Record<string, FunctionConditions> => {
+    const funcCondition: FunctionConditions = {
+      type: ConditionType.WILDCARDED,
+      executionOption: ExecutionOption.BOTH,
+      params: func.inputs.map(() => undefined),
+    }
     return {
       ...obj,
-      [func.format()]: params,
+      [getKeyFromFunction(func)]: funcCondition,
     }
   }, {})
+  return {
+    type: ConditionType.WILDCARDED,
+    functions: functionConditions,
+  }
 }
 
-const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props) => {
+const TargetConfiguration = ({ target, onChange }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { setFuncParams, removeTarget } = useContext(RoleContext)
+  const { setTargetConditions, removeTarget } = useContext(RoleContext)
 
   const { abi } = useAbi(target.address)
   const functions = useMemo(() => {
@@ -109,26 +126,27 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
   }, [abi])
 
   useEffect(() => {
-    setFuncParams({ targetId: target.id, funcParams: getInitialFuncParams(functions) })
-  }, [functions, setFuncParams, target.id])
+    const initial = getInitialTargetConditions(functions)
+    const conditions: TargetConditions = {
+      ...initial,
+      functions: { ...initial.functions, ...target.conditions.functions },
+    }
+    setTargetConditions({ targetId: target.id, conditions })
+  }, [functions, setTargetConditions, target.id])
 
-  const handleChangeTargetExecutionsOptions = (value: any) => {
-    onChangeTargetExecutionsOptions(value)
+  const handleChangeTargetExecutionsOptions = (value: ExecutionOption) => {
+    onChange({ ...target, executionOptions: value })
   }
 
-  const handleFuncParamsChange = (funcParams: FuncParams) => {
-    setFuncParams({ targetId: target.id, funcParams })
+  const handleFuncParamsChange = (conditions: TargetConditions) => {
+    setTargetConditions({ targetId: target.id, conditions })
   }
 
-  const allowAllFunc = areAllFunctionsAllowed(target.funcParams || {})
+  const allowAllFunctions = target.conditions.type === ConditionType.WILDCARDED
 
   const handleAllFuncChange = () => {
-    const newFuncParams = Object.fromEntries(
-      Object.entries(target.funcParams || {}).map(([func, params]) => {
-        return [func, params.map((_) => !allowAllFunc)]
-      }),
-    )
-    setFuncParams({ targetId: target.id, funcParams: newFuncParams })
+    const type = !allowAllFunctions ? ConditionType.WILDCARDED : getTargetConditionType(target.conditions.functions)
+    onChange({ ...target, conditions: { ...target.conditions, type } })
   }
 
   return (
@@ -154,7 +172,11 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       </Box>
       <Box sx={{ mt: 3 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select value={target.executionOptions} onChange={handleChangeTargetExecutionsOptions}>
+        <Select
+          disableUnderline
+          value={target.executionOptions}
+          onChange={(event) => handleChangeTargetExecutionsOptions(event.target.value as ExecutionOption)}
+        >
           {EXECUTION_OPTIONS.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
@@ -165,13 +187,13 @@ const TargetConfiguration = ({ target, onChangeTargetExecutionsOptions }: Props)
       <Box sx={{ mt: 2 }}>
         <FormControlLabel
           className={classes.allowAllLabel}
-          label="Allow all functions"
-          control={<Checkbox checked={allowAllFunc} onClick={handleAllFuncChange} />}
+          label="Allow all calls to target"
+          control={<Checkbox checked={allowAllFunctions} onClick={handleAllFuncChange} />}
         />
       </Box>
       <Box className={classes.container}>
         <Box className={classes.root}>
-          <TargetFunctionList items={functions} funcParams={target.funcParams} onChange={handleFuncParamsChange} />
+          <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
         </Box>
       </Box>
     </Box>

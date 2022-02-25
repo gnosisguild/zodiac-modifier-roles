@@ -1,6 +1,18 @@
 import { createClient, gql } from "urql"
 import { ethers } from "ethers"
-import { Member, Role, Target } from "../typings/role"
+import {
+  ConditionType,
+  ExecutionOption,
+  FunctionConditions,
+  Member,
+  ParamComparison,
+  ParamCondition,
+  ParameterType,
+  Role,
+  Target,
+  TargetConditions,
+} from "../typings/role"
+import { getFunctionConditionType, getTargetConditionType } from "../utils/conditions"
 
 // TODO: testing URLs
 const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-rinkeby"
@@ -25,6 +37,17 @@ const RolesQuery = gql`
           id
           address
           executionOptions
+          functions {
+            functionSig
+            executionOptions
+            wildcarded
+            parameters {
+              parameterIndex
+              parameterType
+              parameterComparison
+              parameterComparisonValue
+            }
+          }
         }
         members {
           id
@@ -46,7 +69,22 @@ interface RolesQueryResponse {
     roles: {
       id: string
       name: string
-      targets: Target[]
+      targets: {
+        id: string
+        address: string
+        executionOptions: ExecutionOption
+        functions: {
+          functionSig: string
+          executionOptions: ExecutionOption
+          wildcarded: boolean
+          parameters: {
+            parameterIndex: number
+            parameterType: ParameterType
+            parameterComparison: ParamComparison
+            parameterComparisonValue: string
+          }[]
+        }[]
+      }[]
       members: {
         id: string
         member: Member
@@ -59,15 +97,56 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
   if (rolesModifierAddress == null || !ethers.utils.isAddress(rolesModifierAddress)) {
     return []
   }
-  const roles = await client
-    .query<RolesQueryResponse>(RolesQuery, { id: rolesModifierAddress.toLowerCase() })
-    .toPromise()
-  if (roles.data && roles.data.rolesModifier) {
-    return roles.data.rolesModifier.roles.map((role) => ({
-      ...role,
-      members: role.members.map((roleMember) => roleMember.member),
-    }))
-  } else {
-    return []
+  try {
+    const roles = await client
+      .query<RolesQueryResponse>(RolesQuery, { id: rolesModifierAddress.toLowerCase() })
+      .toPromise()
+    if (roles.data && roles.data.rolesModifier) {
+      return roles.data.rolesModifier.roles.map((role) => ({
+        ...role,
+        members: role.members.map((roleMember) => roleMember.member),
+        targets: role.targets.map((target): Target => {
+          const functionConditions: TargetConditions["functions"] = Object.fromEntries(
+            target.functions.map((func) => {
+              const lastParamIndex = Math.max(0, ...func.parameters.map((param) => param.parameterIndex))
+              const paramConditions = new Array(lastParamIndex).fill(undefined).map((current, index) => {
+                const param = func.parameters.find((param) => param.parameterIndex === index)
+                if (param) {
+                  const paramCondition: ParamCondition = {
+                    condition: param.parameterComparison,
+                    value: param.parameterComparisonValue,
+                    type: param.parameterType,
+                  }
+                  return paramCondition
+                }
+                return current
+              })
+
+              const funcConditions: FunctionConditions = {
+                type: func.wildcarded ? ConditionType.WILDCARDED : getFunctionConditionType(paramConditions),
+                executionOption: func.executionOptions,
+                params: paramConditions,
+              }
+              return [func.functionSig, funcConditions]
+            }),
+          )
+          const conditions: TargetConditions = {
+            type: getTargetConditionType(functionConditions),
+            functions: functionConditions,
+          }
+          return {
+            id: target.id,
+            address: target.address,
+            executionOptions: target.executionOptions,
+            conditions,
+          }
+        }),
+      }))
+    } else {
+      return []
+    }
+  } catch (err) {
+    console.log("err", err)
+    throw err
   }
 }

@@ -1,5 +1,5 @@
 import React, { PropsWithChildren, Reducer, useEffect, useMemo, useReducer } from "react"
-import { FuncParams, Role, Target } from "../../../typings/role"
+import { Role, Target, TargetConditions } from "../../../typings/role"
 import { getRoleId } from "./RoleMenu"
 import { useRootSelector } from "../../../store"
 import { getRoles } from "../../../store/main/selectors"
@@ -28,7 +28,7 @@ enum RoleActionType {
   REMOVE_MEMBER,
   REMOVE_TARGET,
   SET_ACTIVE_TARGET,
-  SET_FUNC_PARAMS,
+  SET_TARGET_CONDITIONS,
   RESET_STATE,
 }
 
@@ -41,7 +41,7 @@ type RemoveTargetPayload = { target: Target; remove?: boolean }
 
 type RemoveMemberPayload = { member: string; remove?: boolean }
 
-type SetFuncParamsPayload = { targetId: string; funcParams: FuncParams }
+type SetTargetConditionsPayload = { targetId: string; conditions: TargetConditions }
 
 function handleRemoveTarget(state: RoleContextState, payload: RemoveTargetPayload): RoleContextState {
   const { target, remove = true } = payload
@@ -107,11 +107,13 @@ const handleRemoveMember = (state: RoleContextState, payload: RemoveMemberPayloa
   return { ...state, members: { ...state.members, remove: [...state.members.remove, member] } }
 }
 
-function handleFuncParams(state: RoleContextState, payload: SetFuncParamsPayload): RoleContextState {
+function handleTargetConditions(state: RoleContextState, payload: SetTargetConditionsPayload): RoleContextState {
   const replaceValue = (targets: Target[]) => {
-    return targets.map((target) => {
+    return targets.map((target): Target => {
       if (target.id === payload.targetId) {
-        return { ...target, funcParams: payload.funcParams }
+        console.log("replace", target)
+        console.log("for", { ...target, conditions: payload.conditions })
+        return { ...target, conditions: payload.conditions }
       }
       return target
     })
@@ -142,8 +144,8 @@ const roleReducer: Reducer<RoleContextState, RoleAction> = (state, action) => {
       return handleRemoveMember(state, action.payload)
     case RoleActionType.SET_ACTIVE_TARGET:
       return { ...state, activeTarget: action.payload }
-    case RoleActionType.SET_FUNC_PARAMS:
-      return handleFuncParams(state, action.payload)
+    case RoleActionType.SET_TARGET_CONDITIONS:
+      return handleTargetConditions(state, action.payload)
     case RoleActionType.RESET_STATE:
       return initReducerState(action.payload)
   }
@@ -167,7 +169,7 @@ interface RoleContextValue {
 
   removeTarget(payload: RemoveTargetPayload): void
 
-  setFuncParams(payload: SetFuncParamsPayload): void
+  setTargetConditions(payload: SetTargetConditionsPayload): void
 
   reset(payload: RoleContextWrapProps): void
 }
@@ -184,7 +186,7 @@ export const RoleContext = React.createContext<RoleContextValue>({
   removeTarget() {},
   addMember() {},
   setActiveTarget() {},
-  setFuncParams() {},
+  setTargetConditions() {},
   reset() {},
 })
 
@@ -240,8 +242,8 @@ export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleCo
       setActiveTarget(payload: string) {
         return dispatch({ type: RoleActionType.SET_ACTIVE_TARGET, payload })
       },
-      setFuncParams(payload: SetFuncParamsPayload) {
-        return dispatch({ type: RoleActionType.SET_FUNC_PARAMS, payload })
+      setTargetConditions(payload: SetTargetConditionsPayload) {
+        return dispatch({ type: RoleActionType.SET_TARGET_CONDITIONS, payload })
       },
       reset(payload: RoleContextWrapProps) {
         return dispatch({ type: RoleActionType.RESET_STATE, payload })

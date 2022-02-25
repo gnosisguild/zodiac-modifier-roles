@@ -12,8 +12,6 @@ try {
   }
 } catch (err) {}
 
-console.log("initialChainId", initialChainId)
-
 const web3InitialState: Web3State = {
   chainId: initialChainId || Network.MAINNET,
   connectedAddress: "",
