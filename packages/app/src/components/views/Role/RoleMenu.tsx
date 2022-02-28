@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Tooltip, Typography } from "@material-ui/core"
+import { Box, Button, CircularProgress, Link, Tooltip, Typography } from "@material-ui/core"
 import ButtonLink from "../../commons/input/ButtonLink"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import { useRootDispatch, useRootSelector } from "../../../store"
@@ -15,6 +15,7 @@ import { BigNumber } from "ethers"
 import { setTransactionPending } from "../../../store/main/rolesSlice"
 import { useFetchRoles } from "../../../hooks/useFetchRoles"
 import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
+import PendingChanges from "../../modals/PendingChanges"
 
 /**
  * Security concern: roleId crashes is possible. This uses the currently available information.
@@ -76,6 +77,7 @@ export const RoleMenu = () => {
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   const [indexing, setIndexing] = useState(false)
+  const [pendingChangesModalIsOpen, setPendingChangesModalIsOpen] = useState(false)
 
   const handleExecuteUpdate = async () => {
     if (!rolesModifierAddress) return
@@ -159,6 +161,11 @@ export const RoleMenu = () => {
         <RoleMembers />
         <RoleTargets />
       </Box>
+      <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column", mt: "auto", mb: 2 }}>
+        <Link onClick={() => setPendingChangesModalIsOpen(true)} underline="always">
+          <ButtonLink text={"View pending changes"} />
+        </Link>
+      </Box>
 
       {walletAddress ? (
         button
@@ -168,6 +175,7 @@ export const RoleMenu = () => {
           <div>{button}</div>
         </Tooltip>
       )}
+      <PendingChanges isOpen={pendingChangesModalIsOpen} onClose={() => setPendingChangesModalIsOpen(false)} />
     </Box>
   )
 }
