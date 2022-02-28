@@ -5,7 +5,7 @@ import { useAbi } from "../../hooks/useAbi"
 import AddCircleIcon from "@material-ui/icons/AddCircle"
 import HighlightOffIcon from "@material-ui/icons/HighlightOff"
 import { RoleContext } from "../views/Role/RoleContext"
-import { EntityStatus, Target } from "../../typings/role"
+import { Target } from "../../typings/role"
 import { truncateEthAddress } from "../../utils/address"
 
 const useStyles = makeStyles((theme) => ({
@@ -47,8 +47,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-type ABI = any
-type Address = string
 type Props = {
   isOpen: boolean
   onClose: () => void
@@ -128,9 +126,41 @@ type TargetsProps = {
 const Targets = ({ targets }: TargetsProps): React.ReactElement => {
   const classes = useStyles()
   // const { abi } = useAbi(target.address)
+
+  const targetSection = (change: "add" | "remove") => (target: string) => {
+    if (change === "add") {
+      return (
+        <Box className={classes.memberContainer}>
+          <Box className={classes.address}>
+            <Box className={classes.memberIconContainer}>
+              <AddCircleIcon color="action" className={classes.memberIcon} width={16} height={16} />
+            </Box>
+            {truncateEthAddress(target)}
+          </Box>
+        </Box>
+      )
+    }
+
+    if (change === "remove") {
+      return (
+        <Box className={classes.memberContainer}>
+          <Box className={classes.address}>
+            <Box className={classes.memberIconContainer}>
+              <HighlightOffIcon color="error" className={classes.memberIcon} width={16} height={16} />
+            </Box>
+            {truncateEthAddress(target)}
+          </Box>
+        </Box>
+      )
+    }
+  }
+
+  // ToDo: add changes and more
   return (
     <Box sx={{ mt: 2 }}>
       <Typography className={classes.label}>Targets</Typography>
+      {targets.add.map((target) => target.address).map(targetSection("add"))}
+      {targets.remove.map(targetSection("remove"))}
     </Box>
   )
 }
