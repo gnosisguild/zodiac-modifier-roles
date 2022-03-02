@@ -5,6 +5,7 @@ import { AddSharp } from "@material-ui/icons"
 
 type MenuEntityProps<T> = {
   name: { singular: string; plural: string }
+  tutorialLink: string
   list: T[]
 
   renderItem(entity: T, index: number): React.ReactElement
@@ -31,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export function MenuEntity<T>({ name, list, renderItem, onAdd }: MenuEntityProps<T>) {
+export function MenuEntity<T>({ name, tutorialLink, list, renderItem, onAdd }: MenuEntityProps<T>) {
   const classes = useStyles()
 
   return (
@@ -40,7 +41,7 @@ export function MenuEntity<T>({ name, list, renderItem, onAdd }: MenuEntityProps
         <Typography variant="body1" className={classes.label}>
           {name.plural}
         </Typography>
-        <Link href="#">
+        <Link href={tutorialLink} target="_blank" rel="noredirect">
           <Typography variant="body2" className={classes.labelLink}>
             What's a {name.singular.toLowerCase()}?
           </Typography>

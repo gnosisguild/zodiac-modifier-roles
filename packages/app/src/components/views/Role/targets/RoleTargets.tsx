@@ -28,6 +28,7 @@ export const RoleTargets = () => {
       <MenuEntity
         list={targets}
         name={{ singular: "Target", plural: "Targets" }}
+        tutorialLink="https://gnosis.github.io/zodiac/docs/tutorial-modifier-roles/add-role#targets"
         onAdd={handleOpenAddTargetModal}
         renderItem={(target) => (
           <RoleTarget

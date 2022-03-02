@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Box, Button, InputLabel, makeStyles, MenuItem, Select, Typography } from "@material-ui/core"
+import { Box, Button, InputLabel, Link, makeStyles, MenuItem, Select, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
 import { TextField } from "../commons/input/TextField"
@@ -10,6 +10,15 @@ const useStyles = makeStyles((theme) => ({
   label: {
     color: theme.palette.text.primary,
     marginBottom: theme.spacing(1),
+  },
+  link: {
+    color: theme.palette.text.primary,
+    cursor: "pointer",
+    fontSize: 16,
+    transition: "opacity 0.25s ease-in-out",
+    "&:hover": {
+      opacity: 0.8,
+    },
   },
 }))
 
@@ -50,8 +59,17 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
       <Typography variant="h4">Add a Target</Typography>
       <Box sx={{ mt: 1 }}>
         <Typography variant="body1">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.
+          Targets are the accounts that the members can interact with on behalf of the avatar.
         </Typography>
+        <Link
+          href="https://gnosis.github.io/zodiac/docs/tutorial-modifier-roles/add-role#targets"
+          target="_blank"
+          rel="noredirect"
+          underline="always"
+          className={classes.link}
+        >
+          Read more about targets.
+        </Link>
       </Box>
       <Box sx={{ mt: 2 }}>
         <TextField
