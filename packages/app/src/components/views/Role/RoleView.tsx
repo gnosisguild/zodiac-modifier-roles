@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom"
-import TargetParameters from "./targets/TargetConfiguration"
-import { Target } from "../../../typings/role"
+import { TargetConfiguration } from "./targets/TargetConfiguration"
 import { useRootSelector } from "../../../store"
 import { getRoleById } from "../../../store/main/selectors"
 import { Dashboard } from "../../commons/layout/Dashboard"
@@ -16,20 +15,12 @@ const RoleView = () => {
 
   useFetchRoles()
 
-  const handleTargetChange = (target: Target) => {
-    console.log("target", target) // TODO
-  }
-
   return (
     <RoleContextWrap role={role} id={roleId}>
       <Dashboard left={<RoleMenu />}>
         <RoleContext.Consumer>
           {({ state }) =>
-            state.activeTarget ? (
-              <TargetParameters target={state.getActiveRole()} onChange={handleTargetChange} />
-            ) : (
-              <RoleNoTarget />
-            )
+            state.activeTarget ? <TargetConfiguration target={state.getActiveRole()} /> : <RoleNoTarget />
           }
         </RoleContext.Consumer>
       </Dashboard>

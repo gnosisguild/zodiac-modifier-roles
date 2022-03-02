@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useMemo } from "react"
-import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem } from "@material-ui/core"
+import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
-import { TextField } from "../../../commons/input/TextField"
 import {
   ConditionType,
   EXECUTION_OPTIONS,
   ExecutionOption,
-  FunctionConditions,
+  FunctionCondition,
   Target,
   TargetConditions,
 } from "../../../../typings/role"
@@ -85,11 +84,18 @@ const useStyles = makeStyles((theme) => ({
       transform: "rotate(180deg)",
     },
   },
+  title: {
+    fontSize: 16,
+  },
+  subtitle: {
+    color: "rgb(178,178,178)",
+    fontFamily: "Roboto Mono",
+    fontSize: 12,
+  },
 }))
 
 type TargetConfigurationProps = {
   target: Target
-  onChange: (target: Target) => void
 }
 
 function isWriteFunction(method: FunctionFragment) {
@@ -98,8 +104,9 @@ function isWriteFunction(method: FunctionFragment) {
 }
 
 function getInitialTargetConditions(functions: FunctionFragment[]): TargetConditions {
-  const functionConditions = functions.reduce((obj, func): Record<string, FunctionConditions> => {
-    const funcCondition: FunctionConditions = {
+  return functions.reduce((obj, func): TargetConditions => {
+    const funcCondition: FunctionCondition = {
+      sighash: Interface.getSighash(func),
       type: ConditionType.WILDCARDED,
       executionOption: ExecutionOption.BOTH,
       params: func.inputs.map(() => undefined),
@@ -109,15 +116,11 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
       [getKeyFromFunction(func)]: funcCondition,
     }
   }, {})
-  return {
-    type: ConditionType.WILDCARDED,
-    functions: functionConditions,
-  }
 }
 
-const TargetConfiguration = ({ target, onChange }: TargetConfigurationProps) => {
+export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { setTargetConditions, removeTarget } = useContext(RoleContext)
+  const { setTargetConditions, setTargetClearance, setTargetExecutionOption, removeTarget } = useContext(RoleContext)
 
   const { abi } = useAbi(target.address)
   const functions = useMemo(() => {
@@ -135,35 +138,35 @@ const TargetConfiguration = ({ target, onChange }: TargetConfigurationProps) => 
   }, [functions, setTargetConditions, target.id])
 
   const handleChangeTargetExecutionsOptions = (value: ExecutionOption) => {
-    onChange({ ...target, executionOptions: value })
+    setTargetExecutionOption({ targetId: target.id, option: value })
   }
 
   const handleFuncParamsChange = (conditions: TargetConditions) => {
     setTargetConditions({ targetId: target.id, conditions })
   }
 
-  const allowAllFunctions = target.conditions.type === ConditionType.WILDCARDED
+  const allowAllFunctions = target.type === ConditionType.WILDCARDED
 
   const handleAllFuncChange = () => {
     const type = !allowAllFunctions ? ConditionType.WILDCARDED : getTargetConditionType(target.conditions.functions)
-    onChange({ ...target, conditions: { ...target.conditions, type } })
+    setTargetClearance({ targetId: target.id, option: type })
   }
 
   return (
     <Box>
       <Box alignItems="flex-end" display="flex" justifyContent="space-between">
-        <TextField
-          label="Target Address"
-          value={target.address}
-          InputProps={{
-            readOnly: true,
-          }}
-        />
+        <div>
+          <Typography variant="h5" className={classes.title}>
+            Target Address
+          </Typography>
+          <Typography variant="h5" className={classes.subtitle}>
+            {target.address}
+          </Typography>
+        </div>
         <Button
           color="secondary"
           variant="outlined"
           className={classes.removeButton}
-          size="large"
           onClick={() => removeTarget({ target })}
           startIcon={<DeleteOutlineSharp />}
         >
@@ -174,7 +177,7 @@ const TargetConfiguration = ({ target, onChange }: TargetConfigurationProps) => 
         <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select
           disableUnderline
-          value={target.executionOptions}
+          value={target.executionOption}
           onChange={(event) => handleChangeTargetExecutionsOptions(event.target.value as ExecutionOption)}
         >
           {EXECUTION_OPTIONS.map((option) => (
@@ -199,5 +202,3 @@ const TargetConfiguration = ({ target, onChange }: TargetConfigurationProps) => 
     </Box>
   )
 }
-
-export default TargetConfiguration

@@ -1,6 +1,6 @@
 import { FunctionFragment } from "@ethersproject/abi"
 import { TargetFunction } from "./TargetFunction"
-import { FunctionConditions, TargetConditions } from "../../../../typings/role"
+import { FunctionCondition, TargetConditions } from "../../../../typings/role"
 import { getKeyFromFunction } from "../../../../utils/conditions"
 
 interface TargetFunctionListProps {
@@ -15,25 +15,22 @@ export const TargetFunctionList = ({ items, conditions, onChange }: TargetFuncti
     return <>The target has 0 function</>
   }
 
-  const handleFunctionChange = (format: string) => (funcConditions: FunctionConditions) => {
+  const handleFunctionChange = (format: string) => (funcConditions: FunctionCondition) => {
     onChange({
       ...conditions,
-      functions: {
-        ...conditions.functions,
-        [format]: funcConditions,
-      },
+      [format]: funcConditions,
     })
   }
   return (
     <>
       {items.map((func) => {
         const format = getKeyFromFunction(func)
-        if (!conditions.functions[format]) return null
+        if (!conditions[format]) return null
         return (
           <TargetFunction
             key={format}
             func={func}
-            functionConditions={conditions.functions[format]}
+            functionConditions={conditions[format]}
             onChange={handleFunctionChange(format)}
           />
         )

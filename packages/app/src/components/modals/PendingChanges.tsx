@@ -1,7 +1,6 @@
-import React, { useContext, useState } from "react"
+import React, { useContext } from "react"
 import { Box, makeStyles, Typography } from "@material-ui/core"
 import Modal from "../commons/Modal"
-import { useAbi } from "../../hooks/useAbi"
 import AddCircleIcon from "@material-ui/icons/AddCircle"
 import HighlightOffIcon from "@material-ui/icons/HighlightOff"
 import { RoleContext } from "../views/Role/RoleContext"
@@ -77,7 +76,6 @@ type MembersProps = {
 }
 const Members = ({ members }: MembersProps): React.ReactElement => {
   const classes = useStyles()
-  console.log(members)
 
   const memberRow = (change: "add" | "remove") => (member: string) => {
     if (change === "add") {

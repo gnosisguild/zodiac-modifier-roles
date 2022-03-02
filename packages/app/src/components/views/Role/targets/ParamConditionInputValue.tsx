@@ -42,13 +42,23 @@ function getPlaceholderForType(param: ethers.utils.ParamType) {
   return PlaceholderPerType[nativeType]
 }
 
+function formatValue(param: ethers.utils.ParamType, value: string) {
+  if (getNativeType(param) === ParamNativeType.ARRAY) {
+    return JSON.parse(value)
+  }
+
+  return value
+}
+
 export const ParamConditionInputValue = ({ param, condition, onChange }: ParamConditionInputValueProps) => {
   const classes = useStyles()
-  const [valid, setValid] = useState<boolean>()
+  const [valid, setValid] = useState<boolean>(false)
+  const [dirty, setDirty] = useState(false)
 
   const handleChange = (value: string) => {
+    setDirty(true)
     try {
-      ethers.utils.defaultAbiCoder.encode([param], [value])
+      ethers.utils.defaultAbiCoder.encode([param], [formatValue(param, value)])
       setValid(true)
     } catch (err) {
       setValid(false)
@@ -58,9 +68,12 @@ export const ParamConditionInputValue = ({ param, condition, onChange }: ParamCo
 
   return (
     <TextField
-      error={!valid}
+      error={!valid && dirty}
       className={classes.root}
-      InputProps={{ disableUnderline: true, className: classNames(classes.input, { [classes.error]: !valid }) }}
+      InputProps={{
+        disableUnderline: true,
+        className: classNames(classes.input, { [classes.error]: !valid && dirty }),
+      }}
       value={condition.value}
       placeholder={getPlaceholderForType(param)}
       onChange={(evt) => handleChange(evt.target.value)}

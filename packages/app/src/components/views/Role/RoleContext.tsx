@@ -1,5 +1,13 @@
 import React, { PropsWithChildren, Reducer, useEffect, useMemo, useReducer } from "react"
-import { Role, Target, TargetConditions } from "../../../typings/role"
+import {
+  ConditionType,
+  ExecutionOption,
+  FunctionCondition,
+  ParamCondition,
+  Role,
+  Target,
+  TargetConditions,
+} from "../../../typings/role"
 import { getRoleId } from "./RoleMenu"
 import { useRootSelector } from "../../../store"
 import { getRoles } from "../../../store/main/selectors"
@@ -20,6 +28,8 @@ export interface RoleContextState {
   }
 
   getActiveRole(): Target
+
+  getTargetUpdate(targetId: string): UpdateEvent[]
 }
 
 enum RoleActionType {
@@ -28,7 +38,9 @@ enum RoleActionType {
   REMOVE_MEMBER,
   REMOVE_TARGET,
   SET_ACTIVE_TARGET,
+  SET_TARGET_EXECUTION_OPTION,
   SET_TARGET_CONDITIONS,
+  SET_TARGET_CLEARANCE,
   RESET_STATE,
 }
 
@@ -37,11 +49,28 @@ interface RoleAction {
   payload: any
 }
 
+enum Level {
+  SCOPE_TARGET, // Allowed, Scoped, Blocked
+  SCOPE_FUNCTION, // Allowed, Scoped, Blocked
+  SCOPE_PARAM,
+  UPDATE_FUNCTION_EXECUTION_OPTION,
+}
+
+interface UpdateEvent<T = Target | FunctionCondition | ParamCondition> {
+  level: Level
+  value: Partial<T>
+  old: T
+}
+
 type RemoveTargetPayload = { target: Target; remove?: boolean }
 
 type RemoveMemberPayload = { member: string; remove?: boolean }
 
+type SetTargetExecutionOptionPayload = { targetId: string; option: ExecutionOption }
+
 type SetTargetConditionsPayload = { targetId: string; conditions: TargetConditions }
+
+type SetTargetClearancePayload = { targetId: string; option: ConditionType }
 
 function handleRemoveTarget(state: RoleContextState, payload: RemoveTargetPayload): RoleContextState {
   const { target, remove = true } = payload
@@ -107,12 +136,29 @@ const handleRemoveMember = (state: RoleContextState, payload: RemoveMemberPayloa
   return { ...state, members: { ...state.members, remove: [...state.members.remove, member] } }
 }
 
+function handleTargetExecutionOption(
+  state: RoleContextState,
+  payload: SetTargetExecutionOptionPayload,
+): RoleContextState {
+  const replaceValue = (targets: Target[]) => {
+    return targets.map((target): Target => {
+      if (target.id === payload.targetId) {
+        return { ...target, executionOption: payload.option }
+      }
+      return target
+    })
+  }
+
+  if (state.targets.list.find((target) => target.id === payload.targetId)) {
+    return { ...state, targets: { ...state.targets, list: replaceValue(state.targets.list) } }
+  }
+  return { ...state, targets: { ...state.targets, add: replaceValue(state.targets.add) } }
+}
+
 function handleTargetConditions(state: RoleContextState, payload: SetTargetConditionsPayload): RoleContextState {
   const replaceValue = (targets: Target[]) => {
     return targets.map((target): Target => {
       if (target.id === payload.targetId) {
-        console.log("replace", target)
-        console.log("for", { ...target, conditions: payload.conditions })
         return { ...target, conditions: payload.conditions }
       }
       return target
@@ -132,6 +178,23 @@ function handleAddMember(state: RoleContextState, payload: string): RoleContextS
   return { ...state, members: { ...state.members, add: [...state.members.add, payload.toLowerCase()] } }
 }
 
+function handleSetTargetClearance(state: RoleContextState, payload: SetTargetClearancePayload): RoleContextState {
+  const replaceOption = (target: Target): Target => {
+    if (target.id !== payload.targetId) return target
+    console.log("change target clearance", target, payload.option)
+    return { ...target, type: payload.option }
+  }
+
+  return {
+    ...state,
+    targets: {
+      ...state.targets,
+      add: state.targets.add.map(replaceOption),
+      list: state.targets.list.map(replaceOption),
+    },
+  }
+}
+
 const roleReducer: Reducer<RoleContextState, RoleAction> = (state, action) => {
   switch (action.type) {
     case RoleActionType.ADD_MEMBER:
@@ -144,8 +207,12 @@ const roleReducer: Reducer<RoleContextState, RoleAction> = (state, action) => {
       return handleRemoveMember(state, action.payload)
     case RoleActionType.SET_ACTIVE_TARGET:
       return { ...state, activeTarget: action.payload }
+    case RoleActionType.SET_TARGET_EXECUTION_OPTION:
+      return handleTargetExecutionOption(state, action.payload)
     case RoleActionType.SET_TARGET_CONDITIONS:
       return handleTargetConditions(state, action.payload)
+    case RoleActionType.SET_TARGET_CLEARANCE:
+      return handleSetTargetClearance(state, action.payload)
     case RoleActionType.RESET_STATE:
       return initReducerState(action.payload)
   }
@@ -169,7 +236,11 @@ interface RoleContextValue {
 
   removeTarget(payload: RemoveTargetPayload): void
 
+  setTargetExecutionOption(payload: SetTargetExecutionOptionPayload): void
+
   setTargetConditions(payload: SetTargetConditionsPayload): void
+
+  setTargetClearance(payload: SetTargetClearancePayload): void
 
   reset(payload: RoleContextWrapProps): void
 }
@@ -180,6 +251,7 @@ export const RoleContext = React.createContext<RoleContextValue>({
     targets: { add: [], remove: [], list: [] },
     members: { add: [], remove: [], list: [] },
     getActiveRole: (): Target => ({} as Target),
+    getTargetUpdate: (): UpdateEvent[] => [],
   },
   addTarget() {},
   removeMember() {},
@@ -187,6 +259,8 @@ export const RoleContext = React.createContext<RoleContextValue>({
   addMember() {},
   setActiveTarget() {},
   setTargetConditions() {},
+  setTargetExecutionOption() {},
+  setTargetClearance() {},
   reset() {},
 })
 
@@ -201,13 +275,7 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
     },
     targets: {
       list: role?.targets || [],
-      add: [
-        // {
-        //   id: "0xd4A53dc48E991277fF15416ce3d702f02A6A8A8f",
-        //   address: "0xd4A53dc48E991277fF15416ce3d702f02A6A8A8f",
-        //   executionOptions: ExecutionOption.BOTH,
-        // },
-      ],
+      add: [],
       remove: [],
     },
     getActiveRole(): Target {
@@ -217,7 +285,103 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
       }
       return this.targets.add.find((target) => target.id === this.activeTarget) as Target
     },
+    getTargetUpdate(targetId: string): UpdateEvent[] {
+      const updatedTarget = this.targets.list.find((_target) => _target.id === targetId)
+      if (!updatedTarget) return []
+
+      const originalTarget = this.role?.targets.find((_target) => _target.id === targetId)
+      if (!originalTarget) {
+        // If original is not found, target will be created
+        const functionEvents = Object.values(updatedTarget.conditions)
+          .map((funcCondition) => getFunctionUpdate(funcCondition))
+          .flat()
+        const createEvent: UpdateEvent = {
+          level: Level.SCOPE_TARGET,
+          value: updatedTarget,
+          old: updatedTarget,
+        }
+        return [createEvent, ...functionEvents]
+      }
+
+      const isClearanceUpdated = originalTarget.type !== updatedTarget.type
+
+      if (updatedTarget.type !== ConditionType.SCOPED) {
+        /**
+         * If Clearance if WILDCARDED or BLOCKED, only update clearance and execution option (if needed).
+         */
+        const isExecutionOptionUpdated = originalTarget.executionOption !== updatedTarget.executionOption
+
+        if (!isClearanceUpdated && isExecutionOptionUpdated)
+          return [{ level: Level.UPDATE_FUNCTION_EXECUTION_OPTION, value: updatedTarget, old: originalTarget }]
+
+        if (!isClearanceUpdated && (updatedTarget.type === ConditionType.BLOCKED || !isExecutionOptionUpdated))
+          return []
+
+        return [{ level: Level.SCOPE_TARGET, value: updatedTarget, old: originalTarget }]
+      }
+
+      const events: UpdateEvent[] = []
+
+      if (isClearanceUpdated) {
+        events.push({ level: Level.SCOPE_TARGET, value: updatedTarget, old: originalTarget })
+      }
+
+      const functionEvents = Object.values(updatedTarget.conditions)
+        .map((funcCondition) => getFunctionUpdate(funcCondition))
+        .flat()
+
+      events.push(...functionEvents)
+
+      return events
+    },
   }
+}
+
+function getParamUpdate(funcCondition: FunctionCondition, original?: FunctionCondition): UpdateEvent[] {
+  return funcCondition.params
+    .map((param): UpdateEvent[] => {
+      if (!param) return []
+      const originalParam = original?.params.find((_param) => param.index === _param?.index)
+
+      if (
+        originalParam &&
+        param.value === originalParam.value &&
+        param.type === originalParam.type &&
+        param.condition === originalParam.condition
+      ) {
+        return []
+      }
+
+      return [{ level: Level.SCOPE_PARAM, value: param, old: param }]
+    })
+    .flat()
+}
+
+function getFunctionUpdate(funcCondition: FunctionCondition, original?: FunctionCondition): UpdateEvent[] {
+  const isClearanceUpdated = original?.type !== funcCondition.type
+
+  if (funcCondition.type !== ConditionType.SCOPED) {
+    /**
+     * If Clearance if WILDCARDED or BLOCKED, only update clearance and execution option (if needed).
+     */
+    const isExecutionOptionUpdated = original?.executionOption !== funcCondition.executionOption
+
+    if (!isClearanceUpdated && (funcCondition.type === ConditionType.BLOCKED || !isExecutionOptionUpdated)) return []
+
+    return [{ level: Level.SCOPE_FUNCTION, value: funcCondition, old: original || funcCondition }]
+  }
+
+  const events: UpdateEvent[] = []
+
+  if (isClearanceUpdated) {
+    events.push({ level: Level.SCOPE_FUNCTION, value: funcCondition, old: original || funcCondition })
+  }
+
+  // Function is SCOPED
+  const paramsEvents = getParamUpdate(funcCondition, original)
+  events.push(...paramsEvents)
+
+  return events
 }
 
 export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleContextWrapProps>) => {
@@ -242,8 +406,14 @@ export const RoleContextWrap = ({ id, role, children }: PropsWithChildren<RoleCo
       setActiveTarget(payload: string) {
         return dispatch({ type: RoleActionType.SET_ACTIVE_TARGET, payload })
       },
+      setTargetExecutionOption(payload: SetTargetExecutionOptionPayload) {
+        return dispatch({ type: RoleActionType.SET_TARGET_EXECUTION_OPTION, payload })
+      },
       setTargetConditions(payload: SetTargetConditionsPayload) {
         return dispatch({ type: RoleActionType.SET_TARGET_CONDITIONS, payload })
+      },
+      setTargetClearance(payload: SetTargetClearancePayload) {
+        return dispatch({ type: RoleActionType.SET_TARGET_CLEARANCE, payload })
       },
       reset(payload: RoleContextWrapProps) {
         return dispatch({ type: RoleActionType.RESET_STATE, payload })

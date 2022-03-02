@@ -12,10 +12,9 @@ export type Role = {
   members: Member[]
 }
 
-export type Target = {
+export interface Target extends ConditionalEntity {
   id: string
   address: string
-  executionOptions: ExecutionOption
   conditions: TargetConditions
 }
 
@@ -40,6 +39,7 @@ export const EXECUTION_OPTIONS: ExecutionOption[] = [
 export type FuncParams = Record<string, boolean[]>
 
 export interface ParamCondition {
+  index: number
   type: ParameterType
   condition: ParamComparison
   value?: string
@@ -71,18 +71,19 @@ export enum ParamNativeType {
 }
 
 export enum ConditionType {
-  BLOCKED,
-  WILDCARDED,
-  SCOPED,
+  BLOCKED = "None",
+  WILDCARDED = "Target",
+  SCOPED = "Function",
 }
 
-export interface FunctionConditions {
-  type: ConditionType
-  executionOption: ExecutionOption
+export interface FunctionCondition extends ConditionalEntity {
+  sighash: string
   params: (ParamCondition | undefined)[]
 }
 
-export type TargetConditions = {
+export interface ConditionalEntity {
   type: ConditionType
-  functions: Record<string, FunctionConditions>
+  executionOption: ExecutionOption
 }
+
+export type TargetConditions = Record<string, FunctionCondition>

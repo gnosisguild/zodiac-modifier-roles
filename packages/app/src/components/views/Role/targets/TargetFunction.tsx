@@ -1,10 +1,10 @@
-import { FunctionFragment } from "@ethersproject/abi"
+import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { Box, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { KeyboardArrowDownSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import React, { useMemo, useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
-import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, FunctionConditions } from "../../../../typings/role"
+import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, FunctionCondition } from "../../../../typings/role"
 import { Select } from "../../../commons/input/Select"
 import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
@@ -67,9 +67,9 @@ const useStyles = makeStyles((theme) => ({
 
 interface TargetFunctionProps {
   func: FunctionFragment
-  functionConditions?: FunctionConditions
+  functionConditions?: FunctionCondition
 
-  onChange(value: FunctionConditions): void
+  onChange(value: FunctionCondition): void
 }
 
 function getParamsTypesTitle(func: FunctionFragment): string {
@@ -77,7 +77,8 @@ function getParamsTypesTitle(func: FunctionFragment): string {
   return "(" + func.inputs.map((input) => input.format("full")).join(", ") + ")"
 }
 
-const defaultFunctionCondition: FunctionConditions = {
+const defaultFunctionCondition: FunctionCondition = {
+  sighash: "",
   type: ConditionType.WILDCARDED,
   executionOption: ExecutionOption.BOTH,
   params: [],
@@ -89,28 +90,21 @@ export const TargetFunction = ({
   onChange,
 }: TargetFunctionProps) => {
   const classes = useStyles()
-  const isSimple = func.inputs.length === 0
 
   const [open, setOpen] = useState(false)
 
   const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
 
   const handleExecutionOption = (option: ExecutionOption) => {
-    onChange({ ...functionConditions, executionOption: option })
+    onChange({ ...functionConditions, sighash: Interface.getSighash(func), executionOption: option })
   }
 
   const handleFunctionCheck = (checked: boolean) => {
     const type = checked ? ConditionType.WILDCARDED : getFunctionConditionType(functionConditions.params)
-    onChange({ ...functionConditions, type })
+    onChange({ ...functionConditions, sighash: Interface.getSighash(func), type })
   }
 
-  const handleOpen = () => {
-    if (isSimple) {
-      handleFunctionCheck(functionConditions.type !== ConditionType.WILDCARDED)
-      return
-    }
-    setOpen(!open)
-  }
+  const handleOpen = () => setOpen(!open)
 
   return (
     <div className={classes.wrapper}>
@@ -127,12 +121,8 @@ export const TargetFunction = ({
         <Typography variant="body2" className={classes.type}>
           {paramsText}
         </Typography>
-        {!isSimple ? (
-          <>
-            <Box sx={{ flexGrow: 1 }} />
-            <KeyboardArrowDownSharp className={classNames(classes.arrow, { [classes.rotate]: open })} />
-          </>
-        ) : null}
+        <Box sx={{ flexGrow: 1 }} />
+        <KeyboardArrowDownSharp className={classNames(classes.arrow, { [classes.rotate]: open })} />
       </div>
 
       <div className={classNames(classes.content, { [classes.hidden]: !open })}>
@@ -150,9 +140,7 @@ export const TargetFunction = ({
           </Select>
         </div>
 
-        {!isSimple ? (
-          <TargetFunctionParams func={func} funcConditions={functionConditions} onChange={onChange} />
-        ) : null}
+        <TargetFunctionParams func={func} funcConditions={functionConditions} onChange={onChange} />
       </div>
     </div>
   )

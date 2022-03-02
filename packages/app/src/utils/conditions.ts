@@ -1,6 +1,6 @@
 import {
   ConditionType,
-  FunctionConditions,
+  FunctionCondition,
   ParamComparison,
   ParameterType,
   ParamNativeType,
@@ -9,7 +9,7 @@ import {
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { ethers } from "ethers"
 
-export function getFunctionConditionType(paramConditions: FunctionConditions["params"]) {
+export function getFunctionConditionType(paramConditions: FunctionCondition["params"]) {
   return paramConditions.some((x) => x) ? ConditionType.SCOPED : ConditionType.BLOCKED
 }
 

@@ -3,7 +3,7 @@ import { ethers } from "ethers"
 import {
   ConditionType,
   ExecutionOption,
-  FunctionConditions,
+  FunctionCondition,
   Member,
   ParamComparison,
   ParamCondition,
@@ -12,7 +12,7 @@ import {
   Target,
   TargetConditions,
 } from "../typings/role"
-import { getFunctionConditionType, getTargetConditionType } from "../utils/conditions"
+import { getFunctionConditionType } from "../utils/conditions"
 
 // TODO: testing URLs
 const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-rinkeby"
@@ -37,6 +37,7 @@ const RolesQuery = gql`
           id
           address
           executionOptions
+          clearance
           functions {
             functionSig
             executionOptions
@@ -73,6 +74,7 @@ interface RolesQueryResponse {
         id: string
         address: string
         executionOptions: ExecutionOption
+        clearance: ConditionType
         functions: {
           functionSig: string
           executionOptions: ExecutionOption
@@ -106,13 +108,14 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
         ...role,
         members: role.members.map((roleMember) => roleMember.member),
         targets: role.targets.map((target): Target => {
-          const functionConditions: TargetConditions["functions"] = Object.fromEntries(
+          const conditions: TargetConditions = Object.fromEntries(
             target.functions.map((func) => {
               const lastParamIndex = Math.max(0, ...func.parameters.map((param) => param.parameterIndex))
               const paramConditions = new Array(lastParamIndex).fill(undefined).map((current, index) => {
                 const param = func.parameters.find((param) => param.parameterIndex === index)
                 if (param) {
                   const paramCondition: ParamCondition = {
+                    index: param.parameterIndex,
                     condition: param.parameterComparison,
                     value: param.parameterComparisonValue,
                     type: param.parameterType,
@@ -122,7 +125,8 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
                 return current
               })
 
-              const funcConditions: FunctionConditions = {
+              const funcConditions: FunctionCondition = {
+                sighash: func.functionSig,
                 type: func.wildcarded ? ConditionType.WILDCARDED : getFunctionConditionType(paramConditions),
                 executionOption: func.executionOptions,
                 params: paramConditions,
@@ -130,14 +134,11 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
               return [func.functionSig, funcConditions]
             }),
           )
-          const conditions: TargetConditions = {
-            type: getTargetConditionType(functionConditions),
-            functions: functionConditions,
-          }
           return {
             id: target.id,
             address: target.address,
-            executionOptions: target.executionOptions,
+            type: target.clearance,
+            executionOption: target.executionOptions,
             conditions,
           }
         }),

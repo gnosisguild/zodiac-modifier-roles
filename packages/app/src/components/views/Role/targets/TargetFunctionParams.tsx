@@ -1,15 +1,15 @@
 import React from "react"
 import { makeStyles, Typography } from "@material-ui/core"
 import { ParamConditionInput } from "./ParamConditionInput"
-import { FunctionConditions, ParamCondition } from "../../../../typings/role"
+import { FunctionCondition, ParamCondition } from "../../../../typings/role"
 import { FunctionFragment } from "@ethersproject/abi"
 import { ArrowRight } from "@material-ui/icons"
 
 interface TargetFunctionParamsProps {
   func: FunctionFragment
-  funcConditions: FunctionConditions
+  funcConditions: FunctionCondition
 
-  onChange(value: FunctionConditions): void
+  onChange(value: FunctionCondition): void
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -37,10 +37,8 @@ export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetF
   const classes = useStyles()
 
   const handleConditionChange = (index: number, value?: ParamCondition) => {
-    const newConditions = funcConditions.params.map((condition, _index) => {
-      if (index !== _index) return condition
-      return value
-    })
+    const newConditions = [...funcConditions.params]
+    newConditions[index] = value
     onChange({ ...funcConditions, params: newConditions })
   }
 
@@ -55,6 +53,7 @@ export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetF
           </Typography>
           <ParamConditionInput
             param={param}
+            index={index}
             condition={funcConditions.params[index]}
             onChange={(condition) => handleConditionChange(index, condition)}
           />

@@ -50,19 +50,20 @@ export const ConditionLabel: Record<ParamComparison, string> = {
 }
 
 interface ParamConditionInputProps {
+  index: number
   param: ethers.utils.ParamType
   condition?: ParamCondition
 
   onChange(value?: ParamCondition): void
 }
 
-export const ParamConditionInput = ({ param, condition, onChange }: ParamConditionInputProps) => {
+export const ParamConditionInput = ({ index, param, condition, onChange }: ParamConditionInputProps) => {
   const classes = useStyles()
   const nativeType = getNativeType(param)
   const type = getConditionType(nativeType)
   const options = getConditionsPerType(nativeType)
 
-  const handleChange = (condition: ParamComparison) => onChange({ type, condition })
+  const handleChange = (condition: ParamComparison) => onChange({ index, type, condition })
   const handleRemove = () => onChange(undefined)
 
   if (nativeType === ParamNativeType.UNSUPPORTED) return null
@@ -70,7 +71,7 @@ export const ParamConditionInput = ({ param, condition, onChange }: ParamConditi
   if (!condition) {
     const handleClick = () => {
       if (nativeType === ParamNativeType.BOOLEAN) {
-        onChange({ type, condition: ParamComparison.EQUAL_TO, value: BooleanValue.FALSE })
+        onChange({ index, type, condition: ParamComparison.EQUAL_TO, value: BooleanValue.FALSE })
         return
       }
       handleChange(options[0])
@@ -90,7 +91,7 @@ export const ParamConditionInput = ({ param, condition, onChange }: ParamConditi
   )
 
   if (nativeType === ParamNativeType.BOOLEAN) {
-    const handleBooleanChange = (value: string) => onChange({ type, condition: ParamComparison.EQUAL_TO, value })
+    const handleBooleanChange = (value: string) => onChange({ index, type, condition: ParamComparison.EQUAL_TO, value })
     return (
       <>
         <Select
@@ -122,8 +123,6 @@ export const ParamConditionInput = ({ param, condition, onChange }: ParamConditi
       {menuItems}
     </Select>
   )
-
-  console.log("condition", condition)
 
   if (!condition)
     return (

@@ -38,8 +38,9 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
     onAddTarget({
       id: `${address}_${Date.now()}`,
       address,
-      executionOptions: executionOptions,
-      conditions: { type: ConditionType.BLOCKED, functions: {} },
+      type: ConditionType.WILDCARDED,
+      executionOption: executionOptions,
+      conditions: {},
     })
     onClose()
   }

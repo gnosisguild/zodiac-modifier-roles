@@ -76,9 +76,9 @@ async function getTargetScopeTx(
   target: Target,
 ): Promise<ethers.PopulatedTransaction[]> {
   if (!target.conditions) return []
-  if (target.conditions.type === ConditionType.WILDCARDED) {
+  if (target.type === ConditionType.WILDCARDED) {
     return Promise.all([
-      contract.populateTransaction.allowTarget(roleId, target.address, executionOptionsToInt(target.executionOptions)),
+      contract.populateTransaction.allowTarget(roleId, target.address, executionOptionsToInt(target.executionOption)),
     ])
   }
 
@@ -92,7 +92,7 @@ async function getTargetScopeTx(
           roleId,
           target.address,
           ethers.utils.Interface.getSighash(func),
-          executionOptionsToInt(target.executionOptions),
+          executionOptionsToInt(target.executionOption),
         )
       }),
   ])
