@@ -49,7 +49,7 @@ interface RoleAction {
   payload: any
 }
 
-enum Level {
+export enum Level {
   SCOPE_TARGET, // Allowed, Scoped, Blocked
   SCOPE_FUNCTION, // Allowed, Scoped, Blocked
   SCOPE_PARAM,

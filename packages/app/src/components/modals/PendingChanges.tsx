@@ -1,11 +1,14 @@
 import React, { useContext } from "react"
-import { Box, makeStyles, Typography } from "@material-ui/core"
+import { Box, Divider, makeStyles, Typography } from "@material-ui/core"
 import Modal from "../commons/Modal"
-import AddCircleIcon from "@material-ui/icons/AddCircle"
+import AddCircleOutlineIcon from "@material-ui/icons/AddCircleOutline"
 import HighlightOffIcon from "@material-ui/icons/HighlightOff"
-import { RoleContext } from "../views/Role/RoleContext"
+import RemoveCircleOutlineIcon from "@material-ui/icons/RemoveCircleOutline"
+import { Level, RoleContext } from "../views/Role/RoleContext"
 import { Target } from "../../typings/role"
 import { truncateEthAddress } from "../../utils/address"
+import classNames from "classnames"
+import { isEqual } from "lodash"
 
 const useStyles = makeStyles((theme) => ({
   memberContainer: {
@@ -34,6 +37,16 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "center",
     marginRight: theme.spacing(1),
     minWidth: 20,
+  },
+  add: {
+    "&::before": {
+      backgroundColor: "rgba(104, 195, 163, 0.1)",
+    },
+  },
+  remove: {
+    "&::before": {
+      backgroundColor: "rgba(254, 121, 104, 0.1)",
+    },
   },
   memberIcon: {},
   label: {
@@ -80,10 +93,10 @@ const Members = ({ members }: MembersProps): React.ReactElement => {
   const memberRow = (change: "add" | "remove") => (member: string) => {
     if (change === "add") {
       return (
-        <Box className={classes.memberContainer}>
+        <Box className={classNames(classes.memberContainer, classes.add)}>
           <Box className={classes.address}>
             <Box className={classes.memberIconContainer}>
-              <AddCircleIcon color="action" className={classes.memberIcon} width={16} height={16} />
+              <AddCircleOutlineIcon htmlColor="green" className={classes.memberIcon} width={16} height={16} />
             </Box>
             {truncateEthAddress(member)}
           </Box>
@@ -93,10 +106,10 @@ const Members = ({ members }: MembersProps): React.ReactElement => {
 
     if (change === "remove") {
       return (
-        <Box className={classes.memberContainer}>
+        <Box className={classNames(classes.memberContainer, classes.remove)}>
           <Box className={classes.address}>
             <Box className={classes.memberIconContainer}>
-              <HighlightOffIcon color="error" className={classes.memberIcon} width={16} height={16} />
+              <RemoveCircleOutlineIcon color="error" className={classes.memberIcon} width={16} height={16} />
             </Box>
             {truncateEthAddress(member)}
           </Box>
@@ -123,42 +136,56 @@ type TargetsProps = {
 }
 const Targets = ({ targets }: TargetsProps): React.ReactElement => {
   const classes = useStyles()
-  // const { abi } = useAbi(target.address)
+  const { state } = useContext(RoleContext)
+  /*
+	- add new target
+		- allow all calls
+		- with detailed function and parameter configs
 
-  const targetSection = (change: "add" | "remove") => (target: string) => {
-    if (change === "add") {
-      return (
-        <Box className={classes.memberContainer}>
-          <Box className={classes.address}>
-            <Box className={classes.memberIconContainer}>
-              <AddCircleIcon color="action" className={classes.memberIcon} width={16} height={16} />
-            </Box>
-            {truncateEthAddress(target)}
-          </Box>
-        </Box>
-      )
-    }
+		- remove target
+		- update target with changed function and parameter configs
+	*/
+  console.log(targets)
 
-    if (change === "remove") {
-      return (
-        <Box className={classes.memberContainer}>
-          <Box className={classes.address}>
-            <Box className={classes.memberIconContainer}>
-              <HighlightOffIcon color="error" className={classes.memberIcon} width={16} height={16} />
-            </Box>
-            {truncateEthAddress(target)}
-          </Box>
+  const removedTarget = (targetAddress: string) => (
+    <Box className={classNames(classes.memberContainer, classes.remove)}>
+      <Box className={classes.address}>
+        <Box className={classes.memberIconContainer}>
+          <RemoveCircleOutlineIcon color="error" className={classes.memberIcon} width={16} height={16} />
         </Box>
-      )
-    }
+        {truncateEthAddress(targetAddress)}
+      </Box>
+    </Box>
+  )
+
+  const targetSection = (changeType: "add" | "update") => (target: Target) => {
+    const changes = state.getTargetUpdate(target.id)
+    if (changeType === "update" && !changes?.length) return // there are no changes to the target
+    console.log(changes)
+    const updatingExecutionOptions =
+      changes.filter(
+        ({ value, old }: any) => old.type === "Target" && value?.executionOption !== old?.executionOption, // TODO: dirty, must be fixed once the types is set
+      ).length !== 0
+    return (
+      <Box className={classNames(classes.memberContainer, { [classes.add]: changeType === "add" })}>
+        <Box className={classes.address}>
+          <Box className={classes.memberIconContainer}>
+            <AddCircleOutlineIcon htmlColor="green" className={classes.memberIcon} width={16} height={16} />
+          </Box>
+          {truncateEthAddress(target.address)}
+        </Box>
+        {!updatingExecutionOptions && <Box>{"Execution Options: " + target.executionOption}</Box>}
+        {/* {changes.map(change => ())} */}
+      </Box>
+    )
   }
 
-  // ToDo: add changes and more
   return (
     <Box sx={{ mt: 2 }}>
       <Typography className={classes.label}>Targets</Typography>
-      {targets.add.map((target) => target.address).map(targetSection("add"))}
-      {targets.remove.map(targetSection("remove"))}
+      {targets.add.map(targetSection("add"))}
+      {targets.list.filter((target) => !targets.remove.includes(target.address)).map(targetSection("update"))}
+      {targets.remove.map(removedTarget)}
     </Box>
   )
 }
