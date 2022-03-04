@@ -111,7 +111,7 @@ export const TargetFunction = ({
       <div className={classes.trigger} onClick={handleOpen}>
         <Checkbox
           checked={functionConditions?.type === ConditionType.WILDCARDED}
-          indeterminateIcon={functionConditions?.type === ConditionType.SCOPED}
+          indeterminate={functionConditions?.type === ConditionType.SCOPED}
           onChange={(evt) => handleFunctionCheck(evt.target.checked)}
           onClick={(evt) => evt.stopPropagation()}
         />
@@ -129,12 +129,13 @@ export const TargetFunction = ({
         <div className={classes.select}>
           <InputLabel className={classes.label}>Execution Type</InputLabel>
           <Select
+            disabled={functionConditions.type === ConditionType.BLOCKED}
             value={functionConditions.executionOption}
-            onChange={(evt) => handleExecutionOption(evt.target.value as ExecutionOption)}
+            onChange={(evt) => handleExecutionOption(parseInt(evt.target.value as string) as ExecutionOption)}
           >
-            {EXECUTION_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+            {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
               </MenuItem>
             ))}
           </Select>

@@ -1,22 +1,9 @@
-import {
-  ConditionType,
-  FunctionCondition,
-  ParamComparison,
-  ParameterType,
-  ParamNativeType,
-  TargetConditions,
-} from "../typings/role"
+import { ConditionType, FunctionCondition, ParamComparison, ParameterType, ParamNativeType } from "../typings/role"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { ethers } from "ethers"
 
 export function getFunctionConditionType(paramConditions: FunctionCondition["params"]) {
   return paramConditions.some((x) => x) ? ConditionType.SCOPED : ConditionType.BLOCKED
-}
-
-export function getTargetConditionType(functionConditions: TargetConditions["functions"]) {
-  return Object.values(functionConditions).some((funcCondition) => funcCondition.type !== ConditionType.BLOCKED)
-    ? ConditionType.SCOPED
-    : ConditionType.BLOCKED
 }
 
 export function getKeyFromFunction(func: FunctionFragment) {
@@ -58,4 +45,14 @@ export function getConditionType(nativeType: ParamNativeType): ParameterType {
   if (nativeType === ParamNativeType.ARRAY) return ParameterType.DYNAMIC32
   if (nativeType === ParamNativeType.BYTES || nativeType === ParamNativeType.STRING) return ParameterType.DYNAMIC
   return ParameterType.STATIC
+}
+
+export function isWriteFunction(method: FunctionFragment) {
+  if (!method.stateMutability) return true
+  return !["view", "pure"].includes(method.stateMutability)
+}
+
+export function formatParamValue(param: ethers.utils.ParamType, value: string) {
+  if (getNativeType(param) === ParamNativeType.ARRAY) return JSON.parse(value)
+  return value
 }

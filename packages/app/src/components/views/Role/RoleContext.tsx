@@ -27,7 +27,7 @@ export interface RoleContextState {
     remove: string[]
   }
 
-  getActiveRole(): Target
+  getActiveRole(): Target | undefined
 
   getTargetUpdate(targetId: string): UpdateEvent[]
 }
@@ -56,11 +56,25 @@ export enum Level {
   UPDATE_FUNCTION_EXECUTION_OPTION,
 }
 
-interface UpdateEvent<T = Target | FunctionCondition | ParamCondition> {
-  level: Level
-  value: Partial<T>
-  old: T
-}
+export type UpdateEvent =
+  | {
+      level: Level.SCOPE_TARGET
+      value: Target
+      old: Target
+    }
+  | {
+      level: Level.SCOPE_FUNCTION | Level.UPDATE_FUNCTION_EXECUTION_OPTION
+      value: FunctionCondition
+      old: FunctionCondition
+      targetAddress: string
+    }
+  | {
+      level: Level.SCOPE_PARAM
+      funcSighash: string
+      targetAddress: string
+      value: ParamCondition
+      old: ParamCondition
+    }
 
 type RemoveTargetPayload = { target: Target; remove?: boolean }
 
@@ -278,12 +292,12 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
       add: [],
       remove: [],
     },
-    getActiveRole(): Target {
+    getActiveRole(): Target | undefined {
       const inList = this.targets.list.find((target) => target.id === this.activeTarget)
       if (inList) {
         return inList
       }
-      return this.targets.add.find((target) => target.id === this.activeTarget) as Target
+      return this.targets.add.find((target) => target.id === this.activeTarget)
     },
     getTargetUpdate(targetId: string): UpdateEvent[] {
       const updatedTarget = this.targets.list.find((_target) => _target.id === targetId)
@@ -291,9 +305,12 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
 
       const originalTarget = this.role?.targets.find((_target) => _target.id === targetId)
       if (!originalTarget) {
+        // Avoid creating block conditions as that's the default value
+        if (updatedTarget.type === ConditionType.BLOCKED) return []
+
         // If original is not found, target will be created
         const functionEvents = Object.values(updatedTarget.conditions)
-          .map((funcCondition) => getFunctionUpdate(funcCondition))
+          .map((funcCondition) => getFunctionUpdate(updatedTarget, funcCondition))
           .flat()
         const createEvent: UpdateEvent = {
           level: Level.SCOPE_TARGET,
@@ -311,9 +328,6 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
          */
         const isExecutionOptionUpdated = originalTarget.executionOption !== updatedTarget.executionOption
 
-        if (!isClearanceUpdated && isExecutionOptionUpdated)
-          return [{ level: Level.UPDATE_FUNCTION_EXECUTION_OPTION, value: updatedTarget, old: originalTarget }]
-
         if (!isClearanceUpdated && (updatedTarget.type === ConditionType.BLOCKED || !isExecutionOptionUpdated))
           return []
 
@@ -327,7 +341,10 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
       }
 
       const functionEvents = Object.values(updatedTarget.conditions)
-        .map((funcCondition) => getFunctionUpdate(funcCondition))
+        .map((funcCondition) => {
+          const originalFuncCondition = originalTarget.conditions[funcCondition.sighash]
+          return getFunctionUpdate(updatedTarget, funcCondition, originalFuncCondition)
+        })
         .flat()
 
       events.push(...functionEvents)
@@ -337,11 +354,17 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
   }
 }
 
-function getParamUpdate(funcCondition: FunctionCondition, original?: FunctionCondition): UpdateEvent[] {
+function getParamUpdate(
+  targetAddress: string,
+  funcCondition: FunctionCondition,
+  original?: FunctionCondition,
+): UpdateEvent[] {
   return funcCondition.params
     .map((param): UpdateEvent[] => {
       if (!param) return []
       const originalParam = original?.params.find((_param) => param.index === _param?.index)
+
+      // TODO: Get unscope param UpdateEvent
 
       if (
         originalParam &&
@@ -352,33 +375,68 @@ function getParamUpdate(funcCondition: FunctionCondition, original?: FunctionCon
         return []
       }
 
-      return [{ level: Level.SCOPE_PARAM, value: param, old: param }]
+      return [{ level: Level.SCOPE_PARAM, value: param, old: param, targetAddress, funcSighash: funcCondition.sighash }]
     })
     .flat()
 }
 
-function getFunctionUpdate(funcCondition: FunctionCondition, original?: FunctionCondition): UpdateEvent[] {
+function getFunctionUpdate(
+  target: Target,
+  funcCondition: FunctionCondition,
+  original?: FunctionCondition,
+): UpdateEvent[] {
+  if (!original && funcCondition.type === ConditionType.BLOCKED) return []
+
   const isClearanceUpdated = original?.type !== funcCondition.type
+  const isExecutionOptionUpdated = original?.executionOption !== funcCondition.executionOption
 
   if (funcCondition.type !== ConditionType.SCOPED) {
     /**
      * If Clearance if WILDCARDED or BLOCKED, only update clearance and execution option (if needed).
      */
-    const isExecutionOptionUpdated = original?.executionOption !== funcCondition.executionOption
+
+    if (!isClearanceUpdated && isExecutionOptionUpdated)
+      return [
+        {
+          level: Level.UPDATE_FUNCTION_EXECUTION_OPTION,
+          value: funcCondition,
+          old: original,
+          targetAddress: target.address,
+        },
+      ]
 
     if (!isClearanceUpdated && (funcCondition.type === ConditionType.BLOCKED || !isExecutionOptionUpdated)) return []
 
-    return [{ level: Level.SCOPE_FUNCTION, value: funcCondition, old: original || funcCondition }]
+    return [
+      {
+        level: Level.SCOPE_FUNCTION,
+        value: funcCondition,
+        old: original || funcCondition,
+        targetAddress: target.address,
+      },
+    ]
   }
 
   const events: UpdateEvent[] = []
 
   if (isClearanceUpdated) {
-    events.push({ level: Level.SCOPE_FUNCTION, value: funcCondition, old: original || funcCondition })
+    events.push({
+      level: Level.SCOPE_FUNCTION,
+      value: funcCondition,
+      old: original || funcCondition,
+      targetAddress: target.address,
+    })
+  } else if (isExecutionOptionUpdated) {
+    events.push({
+      level: Level.UPDATE_FUNCTION_EXECUTION_OPTION,
+      value: funcCondition,
+      old: original,
+      targetAddress: target.address,
+    })
   }
 
   // Function is SCOPED
-  const paramsEvents = getParamUpdate(funcCondition, original)
+  const paramsEvents = getParamUpdate(target.address, funcCondition, original)
   events.push(...paramsEvents)
 
   return events

@@ -19,9 +19,10 @@ const RoleView = () => {
     <RoleContextWrap role={role} id={roleId}>
       <Dashboard left={<RoleMenu />}>
         <RoleContext.Consumer>
-          {({ state }) =>
-            state.activeTarget ? <TargetConfiguration target={state.getActiveRole()} /> : <RoleNoTarget />
-          }
+          {({ state }) => {
+            const target = state.activeTarget && state.getActiveRole()
+            return target ? <TargetConfiguration target={target} /> : <RoleNoTarget />
+          }}
         </RoleContext.Consumer>
       </Dashboard>
     </RoleContextWrap>

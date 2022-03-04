@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { FunctionFragment } from "@ethersproject/abi"
+import { JsonFragment } from "@ethersproject/abi"
 import { getExplorer } from "../utils/explorer"
 import { useRootSelector } from "../store"
 import { getChainId } from "../store/main/selectors"
@@ -9,7 +9,7 @@ export const useAbi = (address: string) => {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
-  const [abi, setAbi] = useState<FunctionFragment[]>()
+  const [abi, setAbi] = useState<JsonFragment[]>()
 
   useEffect(() => {
     const explorer = getExplorer(network)

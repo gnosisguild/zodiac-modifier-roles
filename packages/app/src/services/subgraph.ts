@@ -73,11 +73,11 @@ interface RolesQueryResponse {
       targets: {
         id: string
         address: string
-        executionOptions: ExecutionOption
+        executionOptions: string
         clearance: ConditionType
         functions: {
           functionSig: string
-          executionOptions: ExecutionOption
+          executionOptions: string
           wildcarded: boolean
           parameters: {
             parameterIndex: number
@@ -110,25 +110,20 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
         targets: role.targets.map((target): Target => {
           const conditions: TargetConditions = Object.fromEntries(
             target.functions.map((func) => {
-              const lastParamIndex = Math.max(0, ...func.parameters.map((param) => param.parameterIndex))
-              const paramConditions = new Array(lastParamIndex).fill(undefined).map((current, index) => {
-                const param = func.parameters.find((param) => param.parameterIndex === index)
-                if (param) {
-                  const paramCondition: ParamCondition = {
-                    index: param.parameterIndex,
-                    condition: param.parameterComparison,
-                    value: param.parameterComparisonValue,
-                    type: param.parameterType,
-                  }
-                  return paramCondition
+              const paramConditions = func.parameters.map((param) => {
+                const paramCondition: ParamCondition = {
+                  index: param.parameterIndex,
+                  condition: param.parameterComparison,
+                  value: param.parameterComparisonValue,
+                  type: param.parameterType,
                 }
-                return current
+                return paramCondition
               })
 
               const funcConditions: FunctionCondition = {
                 sighash: func.functionSig,
                 type: func.wildcarded ? ConditionType.WILDCARDED : getFunctionConditionType(paramConditions),
-                executionOption: func.executionOptions,
+                executionOption: getExecutionOptionFromLabel(func.executionOptions),
                 params: paramConditions,
               }
               return [func.functionSig, funcConditions]
@@ -138,7 +133,7 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
             id: target.id,
             address: target.address,
             type: target.clearance,
-            executionOption: target.executionOptions,
+            executionOption: getExecutionOptionFromLabel(target.executionOptions),
             conditions,
           }
         }),
@@ -150,4 +145,16 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
     console.log("err", err)
     throw err
   }
+}
+
+function getExecutionOptionFromLabel(label: string): ExecutionOption {
+  switch (label) {
+    case "Both":
+      return ExecutionOption.BOTH
+    case "Send":
+      return ExecutionOption.SEND
+    case "DelegateCall":
+      return ExecutionOption.DELEGATE_CALL
+  }
+  return ExecutionOption.NONE
 }

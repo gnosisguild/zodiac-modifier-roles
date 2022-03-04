@@ -4,7 +4,7 @@ import { ethers } from "ethers"
 import Modal from "../commons/Modal"
 import { TextField } from "../commons/input/TextField"
 import AddIcon from "@material-ui/icons/Add"
-import { ConditionType, ExecutionOption, Target } from "../../typings/role"
+import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, Target } from "../../typings/role"
 
 const useStyles = makeStyles((theme) => ({
   label: {
@@ -40,7 +40,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
   }
 
   const handleChangeExecutionsOptions = (value: string) => {
-    setExecutionOptions(value as ExecutionOption)
+    setExecutionOptions(parseInt(value) as ExecutionOption)
   }
 
   const handleAdd = () => {
@@ -81,9 +81,9 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
       <Box sx={{ mt: 2 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
         <Select value={executionOptions} onChange={(e) => handleChangeExecutionsOptions(e.target.value as string)}>
-          {Object.values(ExecutionOption).map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
+          {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
+            <MenuItem key={value} value={value}>
+              {label}
             </MenuItem>
           ))}
         </Select>

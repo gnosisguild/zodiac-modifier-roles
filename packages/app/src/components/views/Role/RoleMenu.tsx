@@ -2,7 +2,12 @@ import { Box, Button, CircularProgress, Link, Tooltip, Typography } from "@mater
 import ButtonLink from "../../commons/input/ButtonLink"
 import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
 import { useRootDispatch, useRootSelector } from "../../../store"
-import { getConnectedAddress, getRolesModifierAddress, getTransactionPending } from "../../../store/main/selectors"
+import {
+  getChainId,
+  getConnectedAddress,
+  getRolesModifierAddress,
+  getTransactionPending,
+} from "../../../store/main/selectors"
 import { Role } from "../../../typings/role"
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom"
 import { RoleMembers } from "./members/RoleMembers"
@@ -73,6 +78,7 @@ export const RoleMenu = () => {
   const { fetch: fetchRoles } = useFetchRoles({ lazy: true })
 
   const isWaiting = useRootSelector(getTransactionPending)
+  const network = useRootSelector(getChainId)
   const walletAddress = useRootSelector(getConnectedAddress)
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
@@ -84,7 +90,7 @@ export const RoleMenu = () => {
 
     dispatch(setTransactionPending(true))
     try {
-      const txs = await updateRole(rolesModifierAddress, state)
+      const txs = await updateRole(rolesModifierAddress, network, state)
       const tx = await executeTransactions(walletType, txs)
 
       if (walletType === WalletType.GNOSIS_SAFE) {

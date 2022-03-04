@@ -1,7 +1,7 @@
-import React from "react"
+import React, { useState } from "react"
 import { makeStyles, Typography } from "@material-ui/core"
 import { ParamConditionInput } from "./ParamConditionInput"
-import { FunctionCondition, ParamCondition } from "../../../../typings/role"
+import { ConditionType, FunctionCondition, ParamCondition } from "../../../../typings/role"
 import { FunctionFragment } from "@ethersproject/abi"
 import { ArrowRight } from "@material-ui/icons"
 
@@ -36,10 +36,18 @@ const useStyles = makeStyles((theme) => ({
 export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetFunctionParamsProps) => {
   const classes = useStyles()
 
+  const [originalType] = useState(funcConditions.type)
+
   const handleConditionChange = (index: number, value?: ParamCondition) => {
-    const newConditions = [...funcConditions.params]
-    newConditions[index] = value
-    onChange({ ...funcConditions, params: newConditions })
+    let newConditions
+    if (value) {
+      newConditions = [...funcConditions.params]
+      newConditions[index] = value
+    } else {
+      newConditions = funcConditions.params.filter((param) => param.index !== index)
+    }
+    const type: ConditionType = newConditions.length ? ConditionType.SCOPED : originalType
+    onChange({ ...funcConditions, type, params: newConditions })
   }
 
   return (
@@ -54,7 +62,7 @@ export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetF
           <ParamConditionInput
             param={param}
             index={index}
-            condition={funcConditions.params[index]}
+            condition={funcConditions.params.find((param) => param.index === index)}
             onChange={(condition) => handleConditionChange(index, condition)}
           />
         </div>

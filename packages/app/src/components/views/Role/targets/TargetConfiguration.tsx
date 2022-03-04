@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
 import {
@@ -15,7 +15,8 @@ import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { Select } from "../../../commons/input/Select"
-import { getKeyFromFunction, getTargetConditionType } from "../../../../utils/conditions"
+import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
+import classNames from "classnames"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -92,24 +93,31 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: "Roboto Mono",
     fontSize: 12,
   },
+  disabledArea: {
+    opacity: 0.5,
+    "&::after": {
+      content: "''",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.12)",
+    },
+  },
 }))
 
 type TargetConfigurationProps = {
   target: Target
 }
 
-function isWriteFunction(method: FunctionFragment) {
-  if (!method.stateMutability) return true
-  return !["view", "pure"].includes(method.stateMutability)
-}
-
 function getInitialTargetConditions(functions: FunctionFragment[]): TargetConditions {
   return functions.reduce((obj, func): TargetConditions => {
     const funcCondition: FunctionCondition = {
       sighash: Interface.getSighash(func),
-      type: ConditionType.WILDCARDED,
-      executionOption: ExecutionOption.BOTH,
-      params: func.inputs.map(() => undefined),
+      type: ConditionType.BLOCKED,
+      executionOption: ExecutionOption.NONE,
+      params: [],
     }
     return {
       ...obj,
@@ -120,22 +128,27 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
 
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { setTargetConditions, setTargetClearance, setTargetExecutionOption, removeTarget } = useContext(RoleContext)
-
   const { abi } = useAbi(target.address)
-  const functions = useMemo(() => {
-    if (!abi) return []
-    return new Interface(abi).fragments.filter(FunctionFragment.isFunctionFragment).filter(isWriteFunction)
+  const { setTargetConditions, setTargetClearance, setTargetExecutionOption, removeTarget, state } =
+    useContext(RoleContext)
+
+  console.log("update events", state.getTargetUpdate(target.id))
+  const [refresh, setRefresh] = useState(true)
+  const [functions, setFunctions] = useState<FunctionFragment[]>([])
+
+  useEffect(() => {
+    const funcs = !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
+    setFunctions(funcs)
+    setRefresh(true)
   }, [abi])
 
   useEffect(() => {
+    if (!refresh) return
+    setRefresh(false)
     const initial = getInitialTargetConditions(functions)
-    const conditions: TargetConditions = {
-      ...initial,
-      functions: { ...initial.functions, ...target.conditions.functions },
-    }
+    const conditions: TargetConditions = { ...initial, ...target.conditions }
     setTargetConditions({ targetId: target.id, conditions })
-  }, [functions, setTargetConditions, target.id])
+  }, [functions, refresh, setTargetConditions, target.conditions, target.id])
 
   const handleChangeTargetExecutionsOptions = (value: ExecutionOption) => {
     setTargetExecutionOption({ targetId: target.id, option: value })
@@ -148,7 +161,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const allowAllFunctions = target.type === ConditionType.WILDCARDED
 
   const handleAllFuncChange = () => {
-    const type = !allowAllFunctions ? ConditionType.WILDCARDED : getTargetConditionType(target.conditions.functions)
+    const type = !allowAllFunctions ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
   }
 
@@ -174,27 +187,33 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         </Button>
       </Box>
       <Box sx={{ mt: 3 }}>
-        <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select
-          disableUnderline
-          value={target.executionOption}
-          onChange={(event) => handleChangeTargetExecutionsOptions(event.target.value as ExecutionOption)}
-        >
-          {EXECUTION_OPTIONS.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </Select>
-      </Box>
-      <Box sx={{ mt: 2 }}>
         <FormControlLabel
           className={classes.allowAllLabel}
           label="Allow all calls to target"
           control={<Checkbox checked={allowAllFunctions} onClick={handleAllFuncChange} />}
         />
       </Box>
-      <Box className={classes.container}>
+      {target.type === ConditionType.WILDCARDED ? (
+        <Box sx={{ mt: 2 }}>
+          <InputLabel className={classes.label}>Execution Type</InputLabel>
+          <Select
+            disableUnderline
+            value={target.executionOption}
+            onChange={(event) =>
+              handleChangeTargetExecutionsOptions(parseInt(event.target.value as string) as ExecutionOption)
+            }
+          >
+            {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+      ) : null}
+      <Box
+        className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
+      >
         <Box className={classes.root}>
           <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
         </Box>

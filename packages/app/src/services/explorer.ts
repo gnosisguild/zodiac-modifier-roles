@@ -1,5 +1,6 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios"
 import { configure } from "../utils/http"
+import { JsonFragment } from "@ethersproject/abi";
 
 export interface ExplorerConfig {
   apiUrl: string
@@ -17,7 +18,7 @@ export class Explorer {
     this.apiKey = config.apiKey
   }
 
-  async abi(address: string) {
+  async abi(address: string):Promise<JsonFragment[]> {
     const client = await this.getHttpClient()
     const response = await client.get<{ status: string; result: string }>(this.apiUrl, {
       params: {

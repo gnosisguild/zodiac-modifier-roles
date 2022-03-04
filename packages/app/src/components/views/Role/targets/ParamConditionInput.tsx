@@ -63,7 +63,7 @@ export const ParamConditionInput = ({ index, param, condition, onChange }: Param
   const type = getConditionType(nativeType)
   const options = getConditionsPerType(nativeType)
 
-  const handleChange = (condition: ParamComparison) => onChange({ index, type, condition })
+  const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: "" })
   const handleRemove = () => onChange(undefined)
 
   if (nativeType === ParamNativeType.UNSUPPORTED) return null

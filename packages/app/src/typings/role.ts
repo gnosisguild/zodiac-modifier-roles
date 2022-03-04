@@ -1,8 +1,8 @@
 export enum ExecutionOption {
-  NONE = "None",
-  SEND = "Send",
-  DELEGATE_CALL = "DelegateCall",
-  BOTH = "Both",
+  NONE,
+  SEND,
+  DELEGATE_CALL,
+  BOTH,
 }
 
 export type Role = {
@@ -29,12 +29,12 @@ export enum EntityStatus {
   NONE,
 }
 
-export const EXECUTION_OPTIONS: ExecutionOption[] = [
-  ExecutionOption.NONE,
-  ExecutionOption.SEND,
-  ExecutionOption.DELEGATE_CALL,
-  ExecutionOption.BOTH,
-]
+export const EXECUTION_OPTIONS: Record<ExecutionOption, string> = {
+  [ExecutionOption.NONE]: "None",
+  [ExecutionOption.SEND]: "Send",
+  [ExecutionOption.DELEGATE_CALL]: "DelegateCall",
+  [ExecutionOption.BOTH]: "Both",
+}
 
 export type FuncParams = Record<string, boolean[]>
 
@@ -42,7 +42,8 @@ export interface ParamCondition {
   index: number
   type: ParameterType
   condition: ParamComparison
-  value?: string
+  value: string
+  values?: string[]
 }
 
 export enum ParamComparison {
@@ -78,7 +79,7 @@ export enum ConditionType {
 
 export interface FunctionCondition extends ConditionalEntity {
   sighash: string
-  params: (ParamCondition | undefined)[]
+  params: ParamCondition[]
 }
 
 export interface ConditionalEntity {

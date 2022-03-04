@@ -1,9 +1,9 @@
-import { ethers } from "ethers"
-import { ParamCondition, ParamNativeType } from "../../../../typings/role"
-import { makeStyles, TextField } from "@material-ui/core"
-import { useState } from "react"
-import { getNativeType } from "../../../../utils/conditions"
-import classNames from "classnames"
+import { ethers } from 'ethers'
+import { ParamCondition, ParamNativeType } from '../../../../typings/role'
+import { makeStyles, TextField } from '@material-ui/core'
+import { useState } from 'react'
+import { formatParamValue, getNativeType } from '../../../../utils/conditions'
+import classNames from 'classnames'
 
 interface ParamConditionInputValueProps {
   param: ethers.utils.ParamType
@@ -42,14 +42,6 @@ function getPlaceholderForType(param: ethers.utils.ParamType) {
   return PlaceholderPerType[nativeType]
 }
 
-function formatValue(param: ethers.utils.ParamType, value: string) {
-  if (getNativeType(param) === ParamNativeType.ARRAY) {
-    return JSON.parse(value)
-  }
-
-  return value
-}
-
 export const ParamConditionInputValue = ({ param, condition, onChange }: ParamConditionInputValueProps) => {
   const classes = useStyles()
   const [valid, setValid] = useState<boolean>(false)
@@ -58,7 +50,7 @@ export const ParamConditionInputValue = ({ param, condition, onChange }: ParamCo
   const handleChange = (value: string) => {
     setDirty(true)
     try {
-      ethers.utils.defaultAbiCoder.encode([param], [formatValue(param, value)])
+      ethers.utils.defaultAbiCoder.encode([param], [formatParamValue(param, value)])
       setValid(true)
     } catch (err) {
       setValid(false)
