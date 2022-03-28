@@ -1,5 +1,7 @@
-import "@nomiclabs/hardhat-etherscan";
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-etherscan";
 import "solidity-coverage";
 import "hardhat-deploy";
 import "hardhat-gas-reporter";
@@ -8,6 +10,7 @@ import dotenv from "dotenv";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
 import "./src/tasks/setup";
+import "./src/tasks/manageRoles";
 
 const argv = yargs
   .option("network", {
@@ -26,7 +29,6 @@ const DEFAULT_MNEMONIC =
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
 if (PK) {
-  console.log("yah");
   sharedNetworkConfig.accounts = [PK];
 } else {
   sharedNetworkConfig.accounts = {

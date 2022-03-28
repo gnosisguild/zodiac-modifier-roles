@@ -7,3 +7,4 @@ env/
 .history
 coverage*
 deployments
+typechain-types
