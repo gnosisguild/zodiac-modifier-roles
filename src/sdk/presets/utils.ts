@@ -1,5 +1,6 @@
-import { keccak256 } from "ethers/lib/utils";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import {
   Comparison,
   ExecutionOptions,
@@ -9,7 +10,7 @@ import {
 } from "../types";
 
 export const functionSighash = (signature: string) =>
-  keccak256(signature).substring(0, 10);
+  keccak256(toUtf8Bytes(signature)).substring(0, 10);
 
 export const allowErc20Approve = (
   tokens: string[],
@@ -27,7 +28,9 @@ export const allowErc20Approve = (
   executionOption: ExecutionOptions.None,
 });
 
-export const staticEqual = (value: string): ScopeParam => ({
+export const staticEqual = (
+  value: string | typeof AVATAR_ADDRESS_PLACEHOLDER
+): ScopeParam => ({
   comparison: Comparison.EqualTo,
   type: ParameterType.Static,
   value,

@@ -24,6 +24,7 @@
   "author": "jan-felix.schwarz@gnosis.io",
   "license": "LGPL-3.0+",
   "devDependencies": {
+    "@gnosis.pm/safe-service-client": "^1.1.1",
     "@gnosis.pm/zodiac": "1.0.1",
     "@nomiclabs/hardhat-ethers": "2.0.0",
     "@nomiclabs/hardhat-etherscan": "2.1.0",
