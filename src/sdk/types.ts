@@ -13,14 +13,14 @@ export enum ExecutionOptions {
 
 export interface AllowTarget {
   targetAddress: string;
-  executionOption?: ExecutionOptions;
+  options?: ExecutionOptions;
 }
 
 export interface AllowFunction {
-  targetAddresses: string[];
+  targetAddress: string;
   functionSig: string;
   params?: (ScopeParam | undefined)[];
-  executionOption?: ExecutionOptions;
+  options?: ExecutionOptions;
 }
 
 export enum ParameterType {
