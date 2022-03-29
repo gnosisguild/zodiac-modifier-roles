@@ -5,6 +5,7 @@ import {
   ExecutionOptions,
   ParameterType,
   AllowFunction,
+  ScopeParam,
 } from "../types";
 
 export const functionSighash = (signature: string) =>
@@ -24,4 +25,10 @@ export const allowErc20Approve = (
     },
   ],
   executionOption: ExecutionOptions.None,
+});
+
+export const staticEqual = (value: string): ScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Static,
+  value,
 });
