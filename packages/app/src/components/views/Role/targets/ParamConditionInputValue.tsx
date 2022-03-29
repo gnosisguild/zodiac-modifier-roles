@@ -1,9 +1,9 @@
-import { ethers } from 'ethers'
-import { ParamCondition, ParamNativeType } from '../../../../typings/role'
-import { makeStyles, TextField } from '@material-ui/core'
-import { useState } from 'react'
-import { formatParamValue, getNativeType } from '../../../../utils/conditions'
-import classNames from 'classnames'
+import { ethers } from "ethers"
+import { ParamCondition, ParamNativeType } from "../../../../typings/role"
+import { makeStyles, TextField } from "@material-ui/core"
+import { useState } from "react"
+import { formatParamValue, getNativeType } from "../../../../utils/conditions"
+import classNames from "classnames"
 
 interface ParamConditionInputValueProps {
   param: ethers.utils.ParamType
