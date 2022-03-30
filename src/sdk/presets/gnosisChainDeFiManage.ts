@@ -81,7 +81,7 @@ const preset: RolePreset = {
         undefined,
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
       ],
-      executionOption: ExecutionOptions.Send,
+      options: ExecutionOptions.Send,
     },
     {
       functionSig: functionSighash(

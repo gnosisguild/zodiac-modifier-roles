@@ -51,8 +51,6 @@ const applyPreset = async (
 
   await makeScopeSignatureCalls(roleId, filledPreset, contract);
 
-  await makeScopeParameterCalls(roleId, filledPreset, contract);
-
   await makeScopeParameterAsOneOfCalls(roleId, filledPreset, contract);
 };
 
@@ -223,63 +221,6 @@ async function makeScopeSignatureCalls(
     });
 }
 
-async function makeScopeParameterCalls(
-  roleId: number,
-  preset: RolesPresetFilled,
-  contract: Roles
-) {
-  await Promise.all(
-    preset.allowFunctions
-      .filter(needsScopeParameterCall)
-      .map(async (allowFunction) => {
-        const {
-          targetAddresses,
-          functionSig,
-          params,
-          options = ExecutionOptions.None,
-        } = allowFunction;
-
-        // Note we exclude oneOf parameters. These will be set independently later
-        const paramIndex = params.findIndex(
-          (param) => param && param.comparison !== Comparison.OneOf
-        );
-        const param = params[paramIndex];
-        if (!param) throw new Error("invariant violation");
-
-        await Promise.all(
-          targetAddresses.map(async (targetAddress) => {
-            if (options != ExecutionOptions.None) {
-              await contract.scopeFunctionExecutionOptions(
-                roleId,
-                targetAddress,
-                functionSig,
-                options
-              );
-            }
-
-            await contract.scopeParameter(
-              roleId,
-              targetAddress,
-              functionSig,
-              paramIndex,
-              param.type,
-              param.comparison,
-              param.value as string
-            );
-          })
-        );
-
-        console.log(
-          `✔️ Allow ${
-            ExecutionOptionLabel[options || ExecutionOptions.None]
-          } to ${functionSig} function with params (${logParams(
-            params
-          )}) of:\n${logList(targetAddresses)}`
-        );
-      })
-  );
-}
-
 async function makeScopeParameterAsOneOfCalls(
   roleId: number,
   preset: RolesPresetFilled,
@@ -294,9 +235,11 @@ async function makeScopeParameterAsOneOfCalls(
         params,
       } = allowFunction;
 
+      // If there are other scoped params, we've already set the ExecutionOptions in makeScopeSignatureCalls
+      const hasPerformedScopeSignatureCalls =
+        countParams(allowFunction).scopedCount > 0;
       const needsScopeFunctionExecutionOptions =
-        options != ExecutionOptions.None &&
-        !params.some((param) => param && param.comparison !== Comparison.OneOf);
+        options != ExecutionOptions.None && !hasPerformedScopeSignatureCalls;
 
       await Promise.all(
         params.map(async (param, paramIndex) => {
@@ -324,6 +267,24 @@ async function makeScopeParameterAsOneOfCalls(
               );
             })
           );
+
+          if (hasPerformedScopeSignatureCalls) {
+            console.log(
+              `✔️ Narrow earlier allowance of ${
+                ExecutionOptionLabel[options]
+              } to ${functionSig} function: must now use params (${logParams(
+                params
+              )}) of:\n${logList(targetAddresses)}`
+            );
+          } else {
+            console.log(
+              `✔️ Allow ${
+                ExecutionOptionLabel[options]
+              } to ${functionSig} function with params (${logParams(
+                params
+              )}) of:\n${logList(targetAddresses)}`
+            );
+          }
         })
       );
     })
@@ -337,12 +298,7 @@ function needsScopeAllowFunctionCall(allowFunction: AllowFunction): boolean {
 
 function needsScopeSignatureCall(allowFunction: AllowFunction): boolean {
   const { scopedCount } = countParams(allowFunction);
-  return scopedCount > 1;
-}
-
-function needsScopeParameterCall(allowFunction: AllowFunction): boolean {
-  const { scopedCount } = countParams(allowFunction);
-  return scopedCount === 1;
+  return scopedCount > 0;
 }
 
 function countParams({ params = [] }: AllowFunction) {

@@ -25,7 +25,7 @@ export const allowErc20Approve = (
       value: spenders,
     },
   ],
-  executionOption: ExecutionOptions.None,
+  options: ExecutionOptions.None,
 });
 
 export const staticEqual = (

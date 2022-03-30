@@ -18,7 +18,7 @@ export interface AllowTarget {
 }
 
 export interface AllowFunction {
-  targetAddress: string;
+  targetAddresses: string[];
   functionSig: string;
   params?: (ScopeParam | undefined)[];
   options?: ExecutionOptions;
