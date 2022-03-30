@@ -1,0 +1,14 @@
+{
+  "site": {
+    "id": "85d9c128-e118-4bbd-8c99-38bb97087770",
+    "team": "ae342e76-2b64-47fd-80f2-cf0274e932f7",
+    "platform": "ipfs",
+    "source": "ipfs",
+    "name": "roles-app-prod"
+  },
+  "build": {
+    "baseDir": "",
+    "publicDir": "build",
+    "rootDir": ""
+  }
+}
