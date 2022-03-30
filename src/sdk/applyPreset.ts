@@ -1,6 +1,6 @@
 import { Contract, Signer } from "ethers";
 
-import ROLES_ABI from "../../build//artifacts/contracts/Roles.sol/Roles.json";
+import ROLES_ABI from "../../build/artifacts/contracts/Roles.sol/Roles.json";
 import { Roles } from "../../typechain-types";
 
 import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders";
@@ -32,16 +32,6 @@ const applyPreset = async (
   const avatarAddress = await contract.avatar();
   const filledPreset = fillPlaceholders(preset, avatarAddress);
   console.log(`Using ${avatarAddress} for avatar address placeholders.`);
-
-  await Promise.all(
-    filledPreset.allowTargets.map(async (allowTarget) => {
-      contract.allowTarget(
-        roleId,
-        allowTarget.targetAddress,
-        allowTarget.options?.toString() || 0
-      );
-    })
-  );
 
   await makeAllowTargetCalls(roleId, filledPreset, contract);
 

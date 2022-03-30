@@ -9,7 +9,7 @@ import {
   ScopeParam,
 } from "../types";
 
-export const functionSighash = (signature: string) =>
+export const functionSighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10);
 
 export const allowErc20Approve = (
