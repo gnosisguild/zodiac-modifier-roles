@@ -1,0 +1,42 @@
+name: Prod Release Deployment
+
+on:
+  release:
+    types: created
+    
+env:
+  REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
+  REACT_APP_POLYGONSCAN_KEY: ${{ secrets.REACT_APP_POLYGONSCAN_KEY }}
+  REACT_APP_ARBISCAN_KEY: ${{ secrets.REACT_APP_ARBISCAN_KEY }}
+  REACT_APP_BSCSCAN_KEY: ${{ secrets.REACT_APP_BSCSCAN_KEY }}
+  REACT_APP_OPTIMISTICSCAN_KEY: ${{ secrets.REACT_APP_OPTIMISTICSCAN_KEY }}
+  REACT_APP_SNOWTRACE_KEY: $${{ secrets.REACT_APP_SNOWTRACE_KEY }}
+  REACT_APP_INFURA_ID: ${{ secrets.REACT_APP_INFURA_ID }}
+  REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Prod
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm install -g yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - run: yarn install --frozen-lockfile
+        working-directory: packages/app
+      - run: yarn build
+        working-directory: packages/app
+      - name: Setup fleek config file
+        run: cp ./.fleek.prod.json ./.fleek.json
+        working-directory: packages/app
+      - name: Deploy site
+        working-directory: packages/app
+        id: deploy
+        uses: fleekhq/action-deploy@v1
+        with:
+          apiKey: ${{ secrets.FLEEK_API_KEY }}
+      - name: Get the output url
+        run: echo "Deploy url is ${{ steps.deploy.outputs.deployUrl }}"
