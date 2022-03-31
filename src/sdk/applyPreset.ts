@@ -1,4 +1,5 @@
 import { Contract, Signer } from "ethers";
+import { defaultAbiCoder, solidityPack } from "ethers/lib/utils";
 
 import ROLES_ABI from "../../build/artifacts/contracts/Roles.sol/Roles.json";
 import { Roles } from "../../typechain-types";
@@ -12,6 +13,8 @@ import {
   RolePreset,
   ScopeParam,
 } from "./types";
+
+let nonce: number;
 
 /**
  * Updates a role, setting all permissions of the given preset
@@ -32,6 +35,8 @@ const applyPreset = async (
   const avatarAddress = await contract.avatar();
   const filledPreset = fillPlaceholders(preset, avatarAddress);
   console.log(`Using ${avatarAddress} for avatar address placeholders.`);
+
+  nonce = await signer.getTransactionCount();
 
   await makeAllowTargetCalls(roleId, filledPreset, contract);
 
@@ -54,8 +59,7 @@ const fillPlaceholders = (preset: RolePreset, avatarAddress: string) => ({
       (param) =>
         param && {
           ...param,
-          value:
-            param.value && fillPlaceholdersValue(param.value, avatarAddress),
+          value: fillPlaceholdersValue(param.value, avatarAddress),
         }
     ),
   })),
@@ -96,9 +100,11 @@ async function makeAllowTargetCalls(
   await Promise.all(
     preset.allowTargets.map(
       async ({ targetAddress, options = ExecutionOptions.None }) => {
-        await contract.allowTarget(roleId, targetAddress, options);
+        await contract.allowTarget(roleId, targetAddress, options, {
+          nonce: nonce++,
+        });
         console.log(
-          `✔️ Allow ${ExecutionOptionLabel[options]} to any function of ${targetAddress}.`
+          `✔️ Allow ${ExecutionOptionLabel[options]} to any function of ${targetAddress}`
         );
       }
     )
@@ -116,8 +122,10 @@ async function makeScopeTargetCalls(
     preset.allowFunctions
       .flatMap((af) => af.targetAddresses)
       .map(async (targetAddress) => {
-        await contract.scopeTarget(roleId, targetAddress);
-        console.log(`✔️ Allow calls to select functions of ${targetAddress}.`);
+        await contract.scopeTarget(roleId, targetAddress, {
+          nonce: nonce++,
+        });
+        console.log(`✔️ Allow calls to select functions of ${targetAddress}`);
       })
   );
 }
@@ -135,16 +143,21 @@ async function makeScopeAllowFunctionCalls(
           functionSig,
           options = ExecutionOptions.None,
         } = allowFunction;
+
         await Promise.all(
           targetAddresses.map((targetAddress) =>
             contract.scopeAllowFunction(
               roleId,
               targetAddress,
               functionSig,
-              options
+              options,
+              {
+                nonce: nonce++,
+              }
             )
           )
         );
+
         console.log(
           `✔️ Allow ${
             ExecutionOptionLabel[options]
@@ -162,7 +175,7 @@ async function makeScopeSignatureCalls(
 ) {
   preset.allowFunctions
     .filter(needsScopeSignatureCall)
-    .map(async (allowFunction) => {
+    .map(async (allowFunction, i) => {
       const {
         targetAddresses,
         functionSig,
@@ -183,9 +196,22 @@ async function makeScopeSignatureCalls(
       const paramComp = paramsWithoutOneOf.map(
         (entry) => entry?.comparison || Comparison.EqualTo
       );
-      const compValue = paramsWithoutOneOf.map(
-        (entry) => (entry?.value || "0x00") as string
+      const compValue = paramsWithoutOneOf.map((entry) =>
+        entry?.value
+          ? defaultAbiCoder.encode(["address"], [entry?.value as string])
+          : "0x"
       );
+
+      if (i > 0) return;
+
+      console.log({
+        roleId,
+        functionSig,
+        isParamScoped,
+        paramType,
+        paramComp,
+        compValue,
+      });
 
       await Promise.all(
         targetAddresses.map((targetAddress) =>
@@ -197,7 +223,10 @@ async function makeScopeSignatureCalls(
             paramType,
             paramComp,
             compValue,
-            options
+            options,
+            {
+              nonce: nonce++,
+            }
           )
         )
       );
@@ -243,7 +272,10 @@ async function makeScopeParameterAsOneOfCalls(
                   roleId,
                   targetAddress,
                   functionSig,
-                  options
+                  options,
+                  {
+                    nonce: nonce++,
+                  }
                 );
               }
 
@@ -253,7 +285,10 @@ async function makeScopeParameterAsOneOfCalls(
                 functionSig,
                 paramIndex,
                 param.type,
-                param.value as string[]
+                param.value as string[],
+                {
+                  nonce: nonce++,
+                }
               );
             })
           );
