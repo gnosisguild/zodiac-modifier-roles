@@ -1,4 +1,4 @@
-import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils";
 
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import {
@@ -22,7 +22,9 @@ export const allowErc20Approve = (
     {
       type: ParameterType.Static,
       comparison: Comparison.OneOf,
-      value: spenders,
+      value: spenders.map((spender) =>
+        defaultAbiCoder.encode(["address"], [spender])
+      ),
     },
   ],
   options: ExecutionOptions.None,

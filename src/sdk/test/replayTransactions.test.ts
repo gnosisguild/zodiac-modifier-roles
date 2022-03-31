@@ -59,31 +59,31 @@ describe("Replay Transactions Test", async () => {
       //     "0x10E4597fF93cbee194F4879f8f1d54a370DB6969".toLowerCase()
       //   )
       // ).results;
-      const multisigTransactions = (
-        await safeService.getMultisigTransactions(
-          "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
-        )
-      ).results;
+      // const multisigTransactions = (
+      //   await safeService.getMultisigTransactions(
+      //     "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
+      //   )
+      // ).results;
 
-      multisigTransactions.forEach(async (tx) => {
-        try {
-          await modifier.execTransactionWithRole(
-            tx.to,
-            tx.value,
-            tx.data || "0x00",
-            tx.operation,
-            1,
-            false
-          );
-        } catch (e) {
-          const message = typeof e === "object" && "message" in e && e.message;
-          if (message === "The expected error") return;
+      // multisigTransactions.forEach(async (tx) => {
+      //   try {
+      //     await modifier.execTransactionWithRole(
+      //       tx.to,
+      //       tx.value,
+      //       tx.data || "0x00",
+      //       tx.operation,
+      //       1,
+      //       false
+      //     );
+      //   } catch (e) {
+      //     const message = typeof e === "object" && "message" in e && e.message;
+      //     if (message === "The expected error") return;
 
-          console.log(tx);
-          console.log(e);
-          throw new Error("Unexpected revert");
-        }
-      });
+      //     console.log(tx);
+      //     console.log(e);
+      //     throw new Error("Unexpected revert");
+      //   }
+      // });
     });
   });
 });

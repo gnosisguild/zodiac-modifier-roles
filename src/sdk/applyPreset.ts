@@ -69,11 +69,17 @@ const fillPlaceholdersValue = (
   value: ScopeParam["value"],
   avatarAddress: string
 ) => {
-  if (value === AVATAR_ADDRESS_PLACEHOLDER) return avatarAddress;
-  if (Array.isArray(value))
-    return value.map((element) =>
-      element === AVATAR_ADDRESS_PLACEHOLDER ? avatarAddress : element
+  const actualValue = defaultAbiCoder.encode(["address"], [avatarAddress]);
+
+  if (value === AVATAR_ADDRESS_PLACEHOLDER) {
+    return actualValue;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) =>
+      entry === AVATAR_ADDRESS_PLACEHOLDER ? actualValue : entry
     );
+  }
+
   return value;
 };
 
@@ -196,10 +202,8 @@ async function makeScopeSignatureCalls(
       const paramComp = paramsWithoutOneOf.map(
         (entry) => entry?.comparison || Comparison.EqualTo
       );
-      const compValue = paramsWithoutOneOf.map((entry) =>
-        entry?.value
-          ? defaultAbiCoder.encode(["address"], [entry?.value as string])
-          : "0x"
+      const compValue = paramsWithoutOneOf.map(
+        (entry) => (entry?.value as string) || "0x"
       );
 
       if (i > 0) return;
