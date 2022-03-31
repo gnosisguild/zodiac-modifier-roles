@@ -28,11 +28,12 @@ const applyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
-  signer: Signer
+  signer: Signer,
+  avatar?: string
 ): Promise<void> => {
   const contract = new Contract(address, ROLES_ABI.abi, signer) as Roles;
 
-  const avatarAddress = await contract.avatar();
+  const avatarAddress = avatar || (await contract.avatar());
   const filledPreset = fillPlaceholders(preset, avatarAddress);
   console.log(`Using ${avatarAddress} for avatar address placeholders.`);
 
@@ -69,14 +70,14 @@ const fillPlaceholdersValue = (
   value: ScopeParam["value"],
   avatarAddress: string
 ) => {
-  const actualValue = defaultAbiCoder.encode(["address"], [avatarAddress]);
+  const encodedAddress = defaultAbiCoder.encode(["address"], [avatarAddress]);
 
   if (value === AVATAR_ADDRESS_PLACEHOLDER) {
-    return actualValue;
+    return encodedAddress;
   }
   if (Array.isArray(value)) {
     return value.map((entry) =>
-      entry === AVATAR_ADDRESS_PLACEHOLDER ? actualValue : entry
+      entry === AVATAR_ADDRESS_PLACEHOLDER ? encodedAddress : entry
     );
   }
 
@@ -93,7 +94,7 @@ const ExecutionOptionLabel = {
 };
 
 const ComparisonLabel = {
-  [Comparison.EqualTo]: "=",
+  [Comparison.EqualTo]: "",
   [Comparison.GreaterThan]: ">",
   [Comparison.LessThan]: "<",
 };
@@ -205,17 +206,6 @@ async function makeScopeSignatureCalls(
       const compValue = paramsWithoutOneOf.map(
         (entry) => (entry?.value as string) || "0x"
       );
-
-      if (i > 0) return;
-
-      console.log({
-        roleId,
-        functionSig,
-        isParamScoped,
-        paramType,
-        paramComp,
-        compValue,
-      });
 
       await Promise.all(
         targetAddresses.map((targetAddress) =>

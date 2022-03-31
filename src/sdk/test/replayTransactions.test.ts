@@ -1,4 +1,6 @@
-import SafeServiceClient from "@gnosis.pm/safe-service-client";
+import SafeServiceClient, {
+  SafeMultisigTransactionResponse,
+} from "@gnosis.pm/safe-service-client";
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
@@ -50,8 +52,10 @@ describe("Replay Transactions Test", async () => {
         modifier.address,
         1,
         gnosisChainDeFiManagePreset,
-        owner
+        owner,
+        "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
       );
+      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n");
 
       // TODO currently broken in safe-service-client
       // const moduleTransactions = (
@@ -59,31 +63,47 @@ describe("Replay Transactions Test", async () => {
       //     "0x10E4597fF93cbee194F4879f8f1d54a370DB6969".toLowerCase()
       //   )
       // ).results;
-      // const multisigTransactions = (
-      //   await safeService.getMultisigTransactions(
-      //     "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
-      //   )
-      // ).results;
+      const multisigTransactions = (
+        await safeService.getMultisigTransactions(
+          "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
+        )
+      ).results;
 
-      // multisigTransactions.forEach(async (tx) => {
-      //   try {
-      //     await modifier.execTransactionWithRole(
-      //       tx.to,
-      //       tx.value,
-      //       tx.data || "0x00",
-      //       tx.operation,
-      //       1,
-      //       false
-      //     );
-      //   } catch (e) {
-      //     const message = typeof e === "object" && "message" in e && e.message;
-      //     if (message === "The expected error") return;
+      for (let i = 0; i < multisigTransactions.length; i++) {
+        const tx = multisigTransactions[i];
 
-      //     console.log(tx);
-      //     console.log(e);
-      //     throw new Error("Unexpected revert");
-      //   }
-      // });
+        console.log(`Simulating ${printCallData(tx)}...`);
+        try {
+          await modifier.execTransactionWithRole(
+            tx.to,
+            tx.value,
+            tx.data || "0x00",
+            tx.operation,
+            1,
+            false
+          );
+        } catch (e) {
+          const message = typeof e === "object" && "message" in e && e.message;
+          if (message === "The expected error") return;
+
+          console.log(tx);
+          console.log(e);
+          throw new Error("Unexpected revert");
+        }
+      }
     });
   });
 });
+
+const printCallData = (tx: SafeMultisigTransactionResponse) => {
+  if (!tx.data) return `call to ${tx.to}`;
+
+  if (!tx.dataDecoded) {
+    return `call with data ${tx.data} to ${tx.to}`;
+  }
+
+  const decoded = tx.dataDecoded as any;
+  const params = decoded.params?.map((p: any) => p.value).join(", ") || "";
+  console.log(decoded, params);
+  return `call to ${decoded.method}(${params}) of ${tx.to}`;
+};

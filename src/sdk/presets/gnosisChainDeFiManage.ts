@@ -46,7 +46,7 @@ const preset: RolePreset = {
     /// Uniswap V2 -->
     {
       functionSig: functionSighash(
-        "addLiquidity(address,uint256,uint256,uint256,address,uint256)"
+        "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)"
       ),
       targetAddresses: [
         DEFI_PROTOCOLS["SushiSwap UniswapV2Router02"],
@@ -55,6 +55,8 @@ const preset: RolePreset = {
         DEFI_PROTOCOLS.ElkRouter,
       ],
       params: [
+        undefined,
+        undefined,
         undefined,
         undefined,
         undefined,
