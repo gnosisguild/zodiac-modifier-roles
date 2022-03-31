@@ -25,13 +25,37 @@ export const allowErc20Approve = (
   targetAddresses: tokens,
   functionSig: functionSighash("approve(address,uint256)"),
   params: [
-    {
-      type: ParameterType.Static,
-      comparison: Comparison.OneOf,
-      value: spenders.map((spender) =>
-        defaultAbiCoder.encode(["address"], [spender])
-      ),
-    },
+    spenders.length === 1
+      ? staticEqual(spenders[0], "address")
+      : {
+          type: ParameterType.Static,
+          comparison: Comparison.OneOf,
+          value: spenders.map((spender) =>
+            defaultAbiCoder.encode(["address"], [spender])
+          ),
+        },
+    undefined,
+  ],
+  options: ExecutionOptions.None,
+});
+
+export const allowErc20Transfer = (
+  tokens: string[],
+  recipients: string[]
+): AllowFunction => ({
+  targetAddresses: tokens,
+  functionSig: functionSighash("transfer(address,uint256)"),
+  params: [
+    recipients.length === 1
+      ? staticEqual(recipients[0], "address")
+      : {
+          type: ParameterType.Static,
+          comparison: Comparison.OneOf,
+          value: recipients.map((recipient) =>
+            defaultAbiCoder.encode(["address"], [recipient])
+          ),
+        },
+    undefined,
   ],
   options: ExecutionOptions.None,
 });

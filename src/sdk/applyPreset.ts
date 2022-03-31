@@ -31,6 +31,8 @@ const applyPreset = async (
   signer: Signer,
   avatar?: string
 ): Promise<void> => {
+  sanityCheck(preset);
+
   const contract = new Contract(address, ROLES_ABI.abi, signer) as Roles;
 
   const avatarAddress = avatar || (await contract.avatar());
@@ -344,3 +346,47 @@ const logParams = (params: (ScopeParam | undefined)[]) =>
       return `${ComparisonLabel[param.comparison]}${param.value as string}`;
     })
     .join(", ");
+
+const sanityCheck = (preset: RolePreset) => {
+  assertNoWildcardScopedIntersection(preset);
+  assertNoDuplicateAllowFunction(preset);
+};
+
+const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
+  const wildcardTargets = preset.allowTargets.map((f) => f.targetAddress);
+  const scopedTargets = new Set(
+    preset.allowFunctions.flatMap((af) => af.targetAddresses)
+  );
+
+  const intersection = [
+    ...new Set(wildcardTargets.filter((x) => scopedTargets.has(x))),
+  ];
+  if (intersection.length > 0) {
+    throw new Error(
+      `The following addresses appear under allowTargets and allowFunctions: ${intersection.join(
+        ", "
+      )}`
+    );
+  }
+};
+
+const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
+  const allowFunctions = preset.allowFunctions.flatMap((af) =>
+    af.targetAddresses.map((ta) => `${ta}.${af.functionSig}`)
+  );
+  const counts = allowFunctions.reduce(
+    (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
+    {} as Record<string, number>
+  );
+  const duplicates = [
+    ...new Set(allowFunctions.filter((item) => counts[item] > 1)),
+  ];
+
+  if (duplicates.length > 0) {
+    throw new Error(
+      `The following functions appear multiple times under allowFunctions: ${duplicates.join(
+        ", "
+      )}`
+    );
+  }
+};

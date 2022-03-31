@@ -1,12 +1,18 @@
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import { ExecutionOptions, RolePreset } from "../types";
 
-import { allowErc20Approve, functionSighash, staticEqual } from "./utils";
+import {
+  allowErc20Approve,
+  allowErc20Transfer,
+  functionSighash,
+  staticEqual,
+} from "./utils";
 
 const ERC20_TOKENS = {
   GNO: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
   "Wrapped XDAI": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
   "USD//C on xDai": "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83",
+  COW: "0x177127622c4A00F3d409B75571e12cB3c8973d3c",
   "Tether USD on xDai": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
   "Flex Ungovernance Token from Mainnet":
     "0xD87eaA26dCfB0C0A6160cCf8c8a01BEB1C15fB00",
@@ -32,6 +38,15 @@ const DEFI_PROTOCOLS = {
     "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
 };
 
+const CURVE = {
+  "GNO/CRV RewardGauge Deposit": "0x78CF256256C8089d68Cde634Cf7cDEFb39286470",
+  "GNO/CRV ChildChainStreamer": "0x6C09F6727113543Fd061a721da512B7eFCDD0267",
+};
+
+const SYNTHETIX = {
+  "GNO StakingRewards": "0x2C2Ab81Cf235e86374468b387e241DF22459A265",
+};
+
 const preset: RolePreset = {
   network: 100,
   allowTargets: [
@@ -42,8 +57,12 @@ const preset: RolePreset = {
       Object.values(ERC20_TOKENS),
       Object.values(DEFI_PROTOCOLS)
     ),
-
-    /// Uniswap V2 -->
+    {
+      targetAddresses: ["0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d"],
+      functionSig: functionSighash("deposit()"),
+      options: ExecutionOptions.Send,
+    },
+    // Uniswap V2 -->
     {
       functionSig: functionSighash(
         "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)"
@@ -62,6 +81,7 @@ const preset: RolePreset = {
         undefined,
         undefined,
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+        undefined,
       ],
     },
     {
@@ -82,6 +102,7 @@ const preset: RolePreset = {
         undefined,
         undefined,
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+        undefined,
       ],
       options: ExecutionOptions.Send,
     },
@@ -102,6 +123,7 @@ const preset: RolePreset = {
         undefined,
         undefined,
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        undefined,
       ],
     },
     {
@@ -120,9 +142,26 @@ const preset: RolePreset = {
         undefined,
         undefined,
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        undefined,
       ],
     },
     // <-- Uniswap V2
+
+    allowErc20Transfer(
+      [ERC20_TOKENS.GNO],
+      [CURVE["GNO/CRV ChildChainStreamer"], SYNTHETIX["GNO StakingRewards"]]
+    ),
+
+    // Curve -->
+    {
+      functionSig: functionSighash("deposit(uint256)"),
+      targetAddresses: [CURVE["GNO/CRV RewardGauge Deposit"]],
+    },
+    {
+      functionSig: functionSighash("notify_reward_amount(address)"),
+      targetAddresses: [CURVE["GNO/CRV ChildChainStreamer"]],
+    },
+    // <-- Curve
   ],
 };
 export default preset;

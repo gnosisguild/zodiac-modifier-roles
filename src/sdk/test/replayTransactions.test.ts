@@ -69,10 +69,16 @@ describe("Replay Transactions Test", async () => {
         )
       ).results;
 
+      const SKIP_TRANSACTIONS = [
+        "0xc80c51da7771331388b44eceaae7c4a46dee118943b63c4c1959c180803d0f39",
+        "0xdc191fec6b1d9dc2c534b28da06822440c2fe06533f0043a7def01a7b2d13567",
+      ];
+
       for (let i = 0; i < multisigTransactions.length; i++) {
         const tx = multisigTransactions[i];
+        if (SKIP_TRANSACTIONS.includes(tx.transactionHash)) continue;
 
-        console.log(`Simulating ${printCallData(tx)}...`);
+        console.log(`Simulating ${printCallData(tx)} ...`);
         try {
           await modifier.execTransactionWithRole(
             tx.to,
@@ -83,12 +89,8 @@ describe("Replay Transactions Test", async () => {
             false
           );
         } catch (e) {
-          const message = typeof e === "object" && "message" in e && e.message;
-          if (message === "The expected error") return;
-
-          console.log(tx);
-          console.log(e);
-          throw new Error("Unexpected revert");
+          console.log("Reverting transaction:", tx);
+          throw new Error(e);
         }
       }
     });
@@ -99,11 +101,10 @@ const printCallData = (tx: SafeMultisigTransactionResponse) => {
   if (!tx.data) return `call to ${tx.to}`;
 
   if (!tx.dataDecoded) {
-    return `call with data ${tx.data} to ${tx.to}`;
+    return `call ${tx.data} to ${tx.to}`;
   }
 
   const decoded = tx.dataDecoded as any;
-  const params = decoded.params?.map((p: any) => p.value).join(", ") || "";
-  console.log(decoded, params);
-  return `call to ${decoded.method}(${params}) of ${tx.to}`;
+  const params = decoded.parameters?.map((p: any) => p.value).join(", ") || "";
+  return `call ${decoded.method}(${params}) to ${tx.to}`;
 };
