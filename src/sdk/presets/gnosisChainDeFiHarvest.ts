@@ -1,20 +1,15 @@
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import { RolePreset } from "../types";
 
+import { CURVE_x3CRV_REWARD_GAUGE, SUSHISWAP_MINI_CHEF } from "./addresses";
 import { functionSighash, staticEqual } from "./utils";
-
-const DEFI_PROTOCOLS = {
-  "Sushiswap MiniChefV2": "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3",
-  "Curve.fi x3CRV RewardGauge Deposit":
-    "0x78CF256256C8089d68Cde634Cf7cDEFb39286470",
-};
 
 const preset: RolePreset = {
   network: 100,
   allowTargets: [],
   allowFunctions: [
     {
-      targetAddresses: [DEFI_PROTOCOLS["Sushiswap MiniChefV2"]],
+      targetAddresses: [SUSHISWAP_MINI_CHEF],
       functionSig: functionSighash("harvest(uint256,address)"),
       params: [
         undefined, // unrestricted value
@@ -22,7 +17,7 @@ const preset: RolePreset = {
       ],
     },
     {
-      targetAddresses: [DEFI_PROTOCOLS["Curve.fi x3CRV RewardGauge Deposit"]],
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
       functionSig: functionSighash("claim_rewards(address)"),
       params: [
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar

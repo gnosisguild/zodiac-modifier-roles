@@ -134,7 +134,7 @@ async function makeScopeTargetCalls(
         await contract.scopeTarget(roleId, targetAddress, {
           nonce: nonce++,
         });
-        console.log(`✔️ Allow calls to select functions of ${targetAddress}`);
+        // console.log(`✔️ Allow calls to select functions of ${targetAddress}`);
       })
   );
 }
