@@ -25,10 +25,6 @@ jobs:
       - run: npm install -g yarn
       - run: yarn install --frozen-lockfile
       - run: yarn build
-      - run: yarn install --frozen-lockfile
-        working-directory: packages/app
-      - run: yarn build
-        working-directory: packages/app
       - name: Setup fleek config file
         run: cp ./.fleek.dev.json ./.fleek.json
         working-directory: packages/app
@@ -40,3 +36,26 @@ jobs:
           apiKey: ${{ secrets.FLEEK_API_KEY }}
       - name: Get the output url
         run: echo "Deploy url is ${{ steps.deploy.outputs.deployUrl }}"
+      - name: Prep graph cli for deployment
+        working-directory: packages/subgraph
+        run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
+      - name: Deploy subgraphs
+        working-directory: packages/subgraph
+        env:
+          HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
+          HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
+          HOSTED_SERVICE_SUBGRAPH__RINKEBY: samepant/zodiac-roles-mod-rinkeby
+          HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
+          HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
+          HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
+          HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
+          HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
+        run: | 
+            yarn deploy:arbitrum-one
+            yarn deploy:gnosis-chain
+            yarn deploy:rinkeby
+            yarn deploy:avalanche
+            yarn deploy:bsc
+            yarn deploy:mainnet
+            yarn deploy:optimism
+            yarn deploy:polygon
