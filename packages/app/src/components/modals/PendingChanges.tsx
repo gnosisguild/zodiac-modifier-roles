@@ -1,15 +1,13 @@
 import React, { useContext } from "react"
-import { Accordion, AccordionDetails, AccordionSummary, Box, Divider, makeStyles, Typography } from "@material-ui/core"
+import { Accordion, AccordionDetails, AccordionSummary, Box, makeStyles, Typography } from "@material-ui/core"
 import Modal from "../commons/Modal"
 import AddCircleOutlineIcon from "@material-ui/icons/AddCircleOutline"
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore"
-import HighlightOffIcon from "@material-ui/icons/HighlightOff"
 import RemoveCircleOutlineIcon from "@material-ui/icons/RemoveCircleOutline"
-import { Level, RoleContext } from "../views/Role/RoleContext"
+import { RoleContext } from "../views/Role/RoleContext"
 import { Target } from "../../typings/role"
 import { truncateEthAddress } from "../../utils/address"
 import classNames from "classnames"
-import { isEqual } from "lodash"
 
 const useStyles = makeStyles((theme) => ({
   memberContainer: {
