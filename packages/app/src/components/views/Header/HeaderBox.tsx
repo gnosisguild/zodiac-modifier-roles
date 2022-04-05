@@ -1,15 +1,12 @@
 import { makeStyles } from "@material-ui/core"
 import classNames from "classnames"
 import React, { PropsWithChildren } from "react"
+import { colors, doubleBorder, ZodiacPaper } from "zodiac-ui-components"
 
 const useStyles = makeStyles((theme) => ({
   banner: {
     display: "flex",
     alignItems: "center",
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderColor: "rgba(217, 212, 173, 0.3)",
-    background: "rgba(217, 212, 173, 0.1)",
     padding: theme.spacing(0.5),
     position: "relative",
     transition: "background 0.25s ease-in-out",
@@ -20,15 +17,8 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: theme.spacing(2),
     },
     "&::before": {
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      top: "-5px",
-      left: "-5px",
-      right: "-5px",
-      bottom: "-5px",
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      pointerEvents: "none",
+      ...doubleBorder(-5),
+      borderColor: colors.tan[300],
     },
   },
   icon: {
@@ -45,10 +35,6 @@ const useStyles = makeStyles((theme) => ({
   },
   leftIcon: {
     paddingRight: 16,
-    borderRadius: "60px 0 0 60px",
-    "&:before": {
-      borderRadius: "60px 0 0 60px",
-    },
   },
 }))
 
@@ -63,16 +49,21 @@ export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChild
 
   if (icon !== undefined) {
     return (
-      <div onClick={onClick} className={classNames(classes.banner, classes.leftIcon, className)}>
+      <ZodiacPaper
+        rounded="left"
+        elevation={0}
+        onClick={onClick}
+        className={classNames(classes.banner, classes.leftIcon, className)}
+      >
         <div className={classes.icon}>{icon}</div>
         {children}
-      </div>
+      </ZodiacPaper>
     )
   }
 
   return (
-    <div onClick={onClick} className={classNames(classes.banner, className)}>
+    <ZodiacPaper elevation={0} onClick={onClick} className={classNames(classes.banner, className)}>
       {children}
-    </div>
+    </ZodiacPaper>
   )
 }
