@@ -1,8 +1,10 @@
 import { createGlobalStyle } from "styled-components"
 
 export const RolesGlobalStyles = createGlobalStyle`
+  :root {
+    --scrollbarWidth: 6px;
+  }
   a {
-    cursor: pointer;
     text-decoration: none;
   }
 `

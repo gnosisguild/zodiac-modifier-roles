@@ -9,16 +9,18 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     padding: theme.spacing(0.5),
     position: "relative",
-    transition: "background 0.25s ease-in-out",
-    "&:hover::before": {
-      background: "rgba(217, 212, 173, 0.3)",
-    },
     "&:not(:first-child)": {
       marginLeft: theme.spacing(2),
     },
     "&::before": {
       ...doubleBorder(-5),
       borderColor: colors.tan[300],
+    },
+  },
+  clickable: {
+    transition: "background 0.25s ease-in-out",
+    "&:hover::before": {
+      background: "rgba(217, 212, 173, 0.3)",
     },
   },
   icon: {
@@ -41,11 +43,14 @@ const useStyles = makeStyles((theme) => ({
 interface HeaderBoxProps {
   className?: string
   icon?: React.ReactElement | null
+  badgeIcon?: boolean
+  clickable?: boolean
   onClick?(): void
 }
 
-export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
+export const HeaderBox = ({ className, badgeIcon, clickable, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
+  console.log(className)
 
   if (icon !== undefined) {
     return (
@@ -53,9 +58,9 @@ export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChild
         rounded="left"
         elevation={0}
         onClick={onClick}
-        className={classNames(classes.banner, classes.leftIcon, className)}
+        className={classNames(classes.banner, classes.leftIcon, {[classes.clickable]: clickable}, className)}
       >
-        <div className={classes.icon}>{icon}</div>
+        <div className={classNames(!badgeIcon && classes.icon)}>{icon}</div>
         {children}
       </ZodiacPaper>
     )

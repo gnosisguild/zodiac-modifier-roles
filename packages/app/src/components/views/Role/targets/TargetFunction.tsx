@@ -8,6 +8,7 @@ import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, FunctionCondition } 
 import { Select } from "../../../commons/input/Select"
 import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
+import { ZodiacPaper } from "zodiac-ui-components"
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -16,8 +17,6 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1, 0, 1, 3),
   },
   wrapper: {
-    backgroundColor: "rgba(217, 212, 173, 0.1)",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
     marginTop: theme.spacing(1),
     padding: theme.spacing(0, 1),
   },
@@ -107,7 +106,7 @@ export const TargetFunction = ({
   const handleOpen = () => setOpen(!open)
 
   return (
-    <div className={classes.wrapper}>
+    <ZodiacPaper borderStyle="single" elevation={0} className={classes.wrapper}>
       <div className={classes.trigger} onClick={handleOpen}>
         <Checkbox
           checked={functionConditions?.type === ConditionType.WILDCARDED}
@@ -143,6 +142,6 @@ export const TargetFunction = ({
 
         <TargetFunctionParams func={func} funcConditions={functionConditions} onChange={onChange} />
       </div>
-    </div>
+    </ZodiacPaper>
   )
 }

@@ -7,18 +7,17 @@ import { getNetwork, NETWORKS } from "../../../utils/networks"
 
 const useStyles = makeStyles((theme) => ({
   networkPickerContainer: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    flexGrow: 1,
-    maxWidth: 180,
+    "&.MuiPaper-root": {
+      flexDirection: "column",
+      alignItems: "flex-start",
+      flexGrow: 1,
+      maxWidth: 180,
+    }
   },
   networkPicker: {
     marginTop: theme.spacing(0.5),
     padding: theme.spacing(0.5),
     fontSize: 12,
-    "&:after": {
-      display: "none",
-    },
   },
 }))
 

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
+import { doubleBorder, ZodiacPaper } from "zodiac-ui-components"
 import {
   ConditionType,
   EXECUTION_OPTIONS,
@@ -21,16 +22,6 @@ import classNames from "classnames"
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: theme.spacing(3),
-    position: "relative",
-    "&::before": {
-      backgroundColor: "rgba(217, 212, 173, 0.1)",
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      inset: -3,
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      pointerEvents: "none",
-    },
   },
   label: {
     color: theme.palette.text.primary,
@@ -214,9 +205,9 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
       <Box
         className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
       >
-        <Box className={classes.root}>
+        <ZodiacPaper borderStyle="single" className={classes.root}>
           <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
-        </Box>
+        </ZodiacPaper>
       </Box>
     </Box>
   )
