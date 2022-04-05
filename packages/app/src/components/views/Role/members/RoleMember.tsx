@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     marginBottom: 10,
     padding: theme.spacing(1),
-    "&::before": doubleBorder(-4, colors.tan[300])
+    "&::before": doubleBorder(-4, colors.tan[300]),
   },
   address: {
     alignItems: "center",
@@ -74,12 +74,7 @@ const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
   return (
     <ZodiacPaper className={classNames(classes.container, { [classes.pending]: status === EntityStatus.PENDING })}>
       <Box className={classes.address}>
-        <ZodiacPaper
-          variant="outlined"
-          borderStyle="single"
-          rounded="full"
-          className={classes.blockieContainer}
-        >
+        <ZodiacPaper variant="outlined" borderStyle="single" rounded="full" className={classes.blockieContainer}>
           <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
         </ZodiacPaper>
         {truncateEthAddress(member)}

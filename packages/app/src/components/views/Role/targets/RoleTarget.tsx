@@ -106,12 +106,7 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
       })}
       onClick={() => onClickTarget(target)}
     >
-      <ZodiacPaper 
-        borderStyle="single"
-        variant="outlined"
-        rounded="full"
-        className={classes.targetIconContainer}
-      >
+      <ZodiacPaper borderStyle="single" variant="outlined" rounded="full" className={classes.targetIconContainer}>
         <Box className={classes.targetIcon} width={16} height={16} />
       </ZodiacPaper>
       {truncateEthAddress(address)}

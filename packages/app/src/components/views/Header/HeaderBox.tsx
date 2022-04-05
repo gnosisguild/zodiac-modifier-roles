@@ -48,7 +48,14 @@ interface HeaderBoxProps {
   onClick?(): void
 }
 
-export const HeaderBox = ({ className, badgeIcon, clickable, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
+export const HeaderBox = ({
+  className,
+  badgeIcon,
+  clickable,
+  icon,
+  children,
+  onClick,
+}: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
   console.log(className)
 
@@ -58,7 +65,7 @@ export const HeaderBox = ({ className, badgeIcon, clickable, icon, children, onC
         rounded="left"
         elevation={0}
         onClick={onClick}
-        className={classNames(classes.banner, classes.leftIcon, {[classes.clickable]: clickable}, className)}
+        className={classNames(classes.banner, classes.leftIcon, { [classes.clickable]: clickable }, className)}
       >
         <div className={classNames(!badgeIcon && classes.icon)}>{icon}</div>
         {children}

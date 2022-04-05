@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
       alignItems: "flex-start",
       flexGrow: 1,
       maxWidth: 180,
-    }
+    },
   },
   networkPicker: {
     marginTop: theme.spacing(0.5),
