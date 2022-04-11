@@ -2,7 +2,7 @@ name: Dev Continuous Deployment
 
 on:
   push:
-    branches: master
+    branches: main
 
 env:
   REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
@@ -25,20 +25,39 @@ jobs:
       - run: npm install -g yarn
       - run: yarn install --frozen-lockfile
       - run: yarn build
-      - name: Setup fleek config file
-        run: cp ./.fleek.dev.json ./.fleek.json
-        working-directory: packages/app
-      - name: Deploy site
-        working-directory: packages/app
-        id: deploy
-        uses: fleekhq/action-deploy@v1
+
+      - name: Pin to IPFS
+        id: upload
+        uses: anantaramdas/ipfs-pinata-deploy-action@39bbda1ce1fe24c69c6f57861b8038278d53688d
         with:
-          apiKey: ${{ secrets.FLEEK_API_KEY }}
-      - name: Get the output url
-        run: echo "Deploy url is ${{ steps.deploy.outputs.deployUrl }}"
+          pin-name: Zodiac Roles App - Latest — ${ GITHUB_SHA }
+          path: "./packages/app/build"
+          pinata-api-key: ${{ secrets.PINATA_API_KEY }}
+          pinata-secret-api-key: ${{ secrets.PINATA_API_SECRET_KEY }}
+
+      - name: Convert CIDv0 to CIDv1
+        id: convert_cidv0
+        uses: uniswap/convert-cidv0-cidv1@v1.0.0
+        with:
+          cidv0: ${{ steps.upload.outputs.hash }}
+
+      - name: Update DNS with new IPFS hash
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          RECORD_DOMAIN: "gnosisguild.org"
+          RECORD_NAME: "_dnslink.roles.dev"
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
+        with:
+          cid: ${{ steps.upload.outputs.hash }}
+
+      - name: Get IPFS url
+        run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"
+
       - name: Prep graph cli for deployment
         working-directory: packages/subgraph
         run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
+
       - name: Deploy subgraphs
         working-directory: packages/subgraph
         env:
@@ -50,12 +69,12 @@ jobs:
           HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
           HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
           HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
-        run: | 
-            yarn deploy:arbitrum-one
-            yarn deploy:gnosis-chain
-            yarn deploy:rinkeby
-            yarn deploy:avalanche
-            yarn deploy:bsc
-            yarn deploy:mainnet
-            yarn deploy:optimism
-            yarn deploy:polygon
+        run: |
+          yarn deploy:arbitrum-one
+          yarn deploy:gnosis-chain
+          yarn deploy:rinkeby
+          yarn deploy:avalanche
+          yarn deploy:bsc
+          yarn deploy:mainnet
+          yarn deploy:optimism
+          yarn deploy:polygon
