@@ -16753,10 +16753,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zodiac-ui-components@^0.0.25:
-  version "0.0.25"
-  resolved "https://registry.yarnpkg.com/zodiac-ui-components/-/zodiac-ui-components-0.0.25.tgz#44862770671dda62e62561fb10612e626b937016"
-  integrity sha512-Jv5Y9x9RBd/2tzpRxNRrGnZBu5o0fLKDN+8LGyHkBmIlz83HXIoZ7aXQia7s05J1YAYUZnqzYQTt9P0cM4QQkw==
+zodiac-ui-components@^0.0.27:
+  version "0.0.27"
+  resolved "https://registry.yarnpkg.com/zodiac-ui-components/-/zodiac-ui-components-0.0.27.tgz#a5660a647a4bf262ce335ad5e5a86ffad2936c1e"
+  integrity sha512-mclSOdjqo5Wq/iFTmfjnd4PAZ4d7/+ztDo+Ujybbr7gzxjSyAjmN/NNY3HrexCcH1TZnylJeITp9iA/nDlLFWw==
   dependencies:
     "@material-ui/icons" "^4.11.2"
     "@material-ui/lab" "^4.0.0-alpha.60"
