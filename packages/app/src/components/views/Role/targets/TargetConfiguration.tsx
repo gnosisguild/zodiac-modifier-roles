@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react"
 import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
-import { doubleBorder, ZodiacPaper } from "zodiac-ui-components"
+import { ZodiacPaper } from "zodiac-ui-components"
 import {
   ConditionType,
   EXECUTION_OPTIONS,
