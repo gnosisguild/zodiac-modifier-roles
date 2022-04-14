@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Box, Button, InputLabel, Link, makeStyles, MenuItem, Select, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
-import { TextField } from "../commons/input/TextField"
+import { colors, ZodiacTextField } from "zodiac-ui-components"
 import AddIcon from "@material-ui/icons/Add"
 import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, Target } from "../../typings/role"
 
@@ -18,6 +18,11 @@ const useStyles = makeStyles((theme) => ({
     transition: "opacity 0.25s ease-in-out",
     "&:hover": {
       opacity: 0.8,
+    },
+  },
+  textField: {
+    "& .MuiInputBase-root": {
+      borderColor: colors.tan[300],
     },
   },
 }))
@@ -71,8 +76,8 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
           Read more about targets.
         </Link>
       </Box>
-      <Box sx={{ mt: 2 }}>
-        <TextField
+      <Box sx={{ mt: 2 }} className={classes.textField}>
+        <ZodiacTextField
           onChange={(e) => onAddressChange(e.target.value)}
           label={`target address`}
           placeholder={`Add a new target address`}
@@ -80,7 +85,11 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
       </Box>
       <Box sx={{ mt: 2 }}>
         <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select value={executionOptions} onChange={(e) => handleChangeExecutionsOptions(e.target.value as string)}>
+        <Select
+          className={classes.textField}
+          value={executionOptions}
+          onChange={(e) => handleChangeExecutionsOptions(e.target.value as string)}
+        >
           {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
             <MenuItem key={value} value={value}>
               {label}

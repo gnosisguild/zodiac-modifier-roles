@@ -57,7 +57,6 @@ export const HeaderBox = ({
   onClick,
 }: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
-  console.log(className)
 
   if (icon !== undefined) {
     return (
