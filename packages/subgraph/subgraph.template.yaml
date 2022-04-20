@@ -1,0 +1,98 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Roles
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: Roles
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - AssignRoles
+        - AvatarSet
+        - ChangedGuard
+        - DisabledModule
+        - EnabledModule
+        - OwnershipTransferred
+        - RolesModSetup
+        - SetDefaultRole
+        - SetMultisendAddress
+        - TargetSet
+      abis:
+        - name: Roles
+          file: ./abis/Roles.json
+      eventHandlers:
+        - event: AssignRoles(address,uint16[],bool[])
+          handler: handleAssignRoles
+        - event: AvatarSet(indexed address,indexed address)
+          handler: handleAvatarSet
+        - event: ChangedGuard(address)
+          handler: handleChangedGuard
+        - event: DisabledModule(address)
+          handler: handleDisabledModule
+        - event: EnabledModule(address)
+          handler: handleEnabledModule
+        - event: RolesModSetup(indexed address,indexed address,indexed address,address)
+          handler: handleRolesModSetup
+        - event: SetDefaultRole(address,uint16)
+          handler: handleSetDefaultRole
+        - event: SetMultisendAddress(address)
+          handler: handleSetMultisendAddress
+        - event: TargetSet(indexed address,indexed address)
+          handler: handleTargetSet
+      file: ./src/roles.mapping.ts
+  - kind: ethereum
+    name: Permissions
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: Permissions
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - AllowTarget
+        - ScopeTarget
+        - RevokeTarget
+        - ScopeAllowFunction
+        - ScopeFunction
+        - ScopeFunctionExecutionOptions
+        - ScopeParameter
+        - ScopeParameterAsOneOf
+        - ScopeRevokeFunction
+        - UnscopeParameter
+      abis:
+        - name: Permissions
+          file: ./abis/Permissions.json
+      eventHandlers:
+        - event: AllowTarget(uint16,address,uint8)
+          handler: handleAllowTarget
+        - event: ScopeTarget(uint16,address)
+          handler: handleScopeTarget
+        - event: RevokeTarget(uint16,address)
+          handler: handleRevokeTarget
+        - event: ScopeAllowFunction(uint16,address,bytes4,uint8,uint256)
+          handler: handleScopeAllowFunction
+        - event: ScopeFunction(uint16,address,bytes4,bool[],uint8[],uint8[],bytes[],uint8,uint256)
+          handler: handleScopeFunction
+        - event: ScopeFunctionExecutionOptions(uint16,address,bytes4,uint8,uint256)
+          handler: handleScopeFunctionExecutionOptions
+        - event: ScopeParameter(uint16,address,bytes4,uint256,uint8,uint8,bytes,uint256)
+          handler: handleScopeParameter
+        - event: ScopeParameterAsOneOf(uint16,address,bytes4,uint256,uint8,bytes[],uint256)
+          handler: handleScopeParameterAsOneOf
+        - event: ScopeRevokeFunction(uint16,address,bytes4,uint256)
+          handler: handleScopeRevokeFunction
+        - event: UnscopeParameter(uint16,address,bytes4,uint256,uint256)
+          handler: handleUnscopeParameter
+      file: ./src/permissions.mapping.ts
