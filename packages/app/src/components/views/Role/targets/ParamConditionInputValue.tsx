@@ -8,6 +8,7 @@ import classNames from "classnames"
 interface ParamConditionInputValueProps {
   param: ethers.utils.ParamType
   condition: ParamCondition
+  disabled?: boolean
 
   onChange(condition: ParamCondition): void
 }
@@ -42,7 +43,7 @@ function getPlaceholderForType(param: ethers.utils.ParamType) {
   return PlaceholderPerType[nativeType]
 }
 
-export const ParamConditionInputValue = ({ param, condition, onChange }: ParamConditionInputValueProps) => {
+export const ParamConditionInputValue = ({ param, condition, disabled, onChange }: ParamConditionInputValueProps) => {
   const classes = useStyles()
   const [valid, setValid] = useState<boolean>(false)
   const [dirty, setDirty] = useState(false)
@@ -61,6 +62,7 @@ export const ParamConditionInputValue = ({ param, condition, onChange }: ParamCo
   return (
     <TextField
       error={!valid && dirty}
+      disabled={disabled}
       className={classes.root}
       InputProps={{
         disableUnderline: true,

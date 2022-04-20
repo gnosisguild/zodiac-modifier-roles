@@ -150,18 +150,21 @@ const handleRemoveMember = (state: RoleContextState, payload: RemoveMemberPayloa
   return { ...state, members: { ...state.members, remove: [...state.members.remove, member] } }
 }
 
+function replaceTargetValue(targets: Target[], id: string, value: Partial<Target>): Target[] {
+  return targets.map((target): Target => {
+    if (target.id === id) {
+      return { ...target, ...value }
+    }
+    return target
+  })
+}
+
 function handleTargetExecutionOption(
   state: RoleContextState,
   payload: SetTargetExecutionOptionPayload,
 ): RoleContextState {
-  const replaceValue = (targets: Target[]) => {
-    return targets.map((target): Target => {
-      if (target.id === payload.targetId) {
-        return { ...target, executionOption: payload.option }
-      }
-      return target
-    })
-  }
+  const replaceValue = (targets: Target[]) =>
+    replaceTargetValue(targets, payload.targetId, { executionOption: payload.option })
 
   if (state.targets.list.find((target) => target.id === payload.targetId)) {
     return { ...state, targets: { ...state.targets, list: replaceValue(state.targets.list) } }
@@ -171,12 +174,20 @@ function handleTargetExecutionOption(
 
 function handleTargetConditions(state: RoleContextState, payload: SetTargetConditionsPayload): RoleContextState {
   const replaceValue = (targets: Target[]) => {
-    return targets.map((target): Target => {
-      if (target.id === payload.targetId) {
-        return { ...target, conditions: payload.conditions }
-      }
-      return target
-    })
+    const conditionTypes = Object.values(payload.conditions).map((condition) => condition.type)
+
+    const hasWildcardedFunction = conditionTypes.some((condition) => condition === ConditionType.WILDCARDED)
+    const hasScopedFunction = conditionTypes.some((condition) => condition === ConditionType.SCOPED)
+    const hasBlockedFunction = conditionTypes.some((condition) => condition === ConditionType.BLOCKED)
+
+    let type: ConditionType = ConditionType.SCOPED
+    if (hasBlockedFunction && !hasScopedFunction && !hasWildcardedFunction) {
+      type = ConditionType.BLOCKED
+    } else if (!hasBlockedFunction && !hasScopedFunction && hasWildcardedFunction) {
+      type = ConditionType.WILDCARDED
+    }
+
+    return replaceTargetValue(targets, payload.targetId, { type, conditions: payload.conditions })
   }
 
   if (state.targets.list.find((target) => target.id === payload.targetId)) {
@@ -195,8 +206,9 @@ function handleAddMember(state: RoleContextState, payload: string): RoleContextS
 function handleSetTargetClearance(state: RoleContextState, payload: SetTargetClearancePayload): RoleContextState {
   const replaceOption = (target: Target): Target => {
     if (target.id !== payload.targetId) return target
-    console.log("change target clearance", target, payload.option)
-    return { ...target, type: payload.option }
+    const executionOption =
+      target.executionOption === ExecutionOption.NONE ? ExecutionOption.SEND : target.executionOption
+    return { ...target, executionOption, type: payload.option }
   }
 
   return {
