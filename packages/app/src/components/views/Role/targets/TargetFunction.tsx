@@ -1,14 +1,14 @@
 import { FunctionFragment, Interface } from "@ethersproject/abi"
-import { Box, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
+import { Box, makeStyles, Typography } from "@material-ui/core"
 import { KeyboardArrowDownSharp } from "@material-ui/icons"
 import classNames from "classnames"
 import React, { useMemo, useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
-import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, FunctionCondition } from "../../../../typings/role"
-import { Select } from "../../../commons/input/Select"
+import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
 import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { ZodiacPaper } from "zodiac-ui-components"
+import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -55,10 +55,6 @@ const useStyles = makeStyles((theme) => ({
   hidden: {
     display: "none",
   },
-  label: {
-    color: theme.palette.text.primary,
-    marginBottom: theme.spacing(0.5),
-  },
   select: {
     margin: theme.spacing(0, 0, 1, 0),
   },
@@ -66,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
 
 interface TargetFunctionProps {
   func: FunctionFragment
-  functionConditions?: FunctionCondition
+  functionConditions: FunctionCondition
 
   onChange(value: FunctionCondition): void
 }
@@ -76,18 +72,7 @@ function getParamsTypesTitle(func: FunctionFragment): string {
   return "(" + func.inputs.map((input) => input.format("full")).join(", ") + ")"
 }
 
-const defaultFunctionCondition: FunctionCondition = {
-  sighash: "",
-  type: ConditionType.WILDCARDED,
-  executionOption: ExecutionOption.BOTH,
-  params: [],
-}
-
-export const TargetFunction = ({
-  func,
-  functionConditions = defaultFunctionCondition,
-  onChange,
-}: TargetFunctionProps) => {
+export const TargetFunction = ({ func, functionConditions, onChange }: TargetFunctionProps) => {
   const classes = useStyles()
 
   const [open, setOpen] = useState(false)
@@ -126,21 +111,19 @@ export const TargetFunction = ({
 
       <div className={classNames(classes.content, { [classes.hidden]: !open })}>
         <div className={classes.select}>
-          <InputLabel className={classes.label}>Execution Type</InputLabel>
-          <Select
-            disabled={functionConditions.type === ConditionType.BLOCKED}
+          <ExecutionTypeSelect
             value={functionConditions.executionOption}
-            onChange={(evt) => handleExecutionOption(parseInt(evt.target.value as string) as ExecutionOption)}
-          >
-            {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
-              <MenuItem key={value} value={value}>
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
+            onChange={handleExecutionOption}
+            SelectProps={{ disabled: functionConditions.type === ConditionType.BLOCKED }}
+          />
         </div>
 
-        <TargetFunctionParams func={func} funcConditions={functionConditions} onChange={onChange} />
+        <TargetFunctionParams
+          disabled={functionConditions?.type === ConditionType.WILDCARDED}
+          func={func}
+          funcConditions={functionConditions}
+          onChange={onChange}
+        />
       </div>
     </ZodiacPaper>
   )

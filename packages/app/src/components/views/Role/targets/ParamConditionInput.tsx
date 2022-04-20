@@ -53,11 +53,12 @@ interface ParamConditionInputProps {
   index: number
   param: ethers.utils.ParamType
   condition?: ParamCondition
+  disabled?: boolean
 
   onChange(value?: ParamCondition): void
 }
 
-export const ParamConditionInput = ({ index, param, condition, onChange }: ParamConditionInputProps) => {
+export const ParamConditionInput = ({ index, param, condition, disabled, onChange }: ParamConditionInputProps) => {
   const classes = useStyles()
   const nativeType = getNativeType(param)
   const type = getConditionType(nativeType)
@@ -85,7 +86,7 @@ export const ParamConditionInput = ({ index, param, condition, onChange }: Param
   }
 
   const removeButton = (
-    <IconButton disableRipple className={classes.btnRemove} size="small" onClick={handleRemove}>
+    <IconButton disableRipple className={classes.btnRemove} size="small" disabled={disabled} onClick={handleRemove}>
       <DeleteIcon fontSize="inherit" />
     </IconButton>
   )
@@ -97,6 +98,7 @@ export const ParamConditionInput = ({ index, param, condition, onChange }: Param
         <Select
           classes={{ icon: classes.selectIcon }}
           className={classes.select}
+          disabled={disabled}
           value={condition.value}
           onChange={(evt) => handleBooleanChange(evt.target.value as string)}
         >
@@ -117,6 +119,7 @@ export const ParamConditionInput = ({ index, param, condition, onChange }: Param
     <Select
       classes={{ icon: classes.selectIcon }}
       className={classes.select}
+      disabled={disabled}
       value={condition.condition}
       onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
     >
@@ -135,7 +138,7 @@ export const ParamConditionInput = ({ index, param, condition, onChange }: Param
   return (
     <>
       {select}
-      <ParamConditionInputValue param={param} condition={condition} onChange={onChange} />
+      <ParamConditionInputValue param={param} condition={condition} disabled={disabled} onChange={onChange} />
       {removeButton}
     </>
   )

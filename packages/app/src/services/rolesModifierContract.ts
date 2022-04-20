@@ -114,7 +114,11 @@ function getFunctionTransaction(
  * @param role
  * @returns
  */
-export const updateRole = async (modifierAddress: string, network: Network, role: RoleContextState) => {
+export const updateRole = async (
+  modifierAddress: string,
+  network: Network,
+  role: RoleContextState,
+): Promise<ethers.PopulatedTransaction[]> => {
   console.log("roleId: ", role.id)
   console.log("members to add: ", role.members.add)
   console.log("members to remove: ", role.members.remove)
@@ -123,7 +127,13 @@ export const updateRole = async (modifierAddress: string, network: Network, role
 
   const rolesModifierContract = Roles__factory.connect(modifierAddress, _signer)
 
-  const txs = role.targets.list.map(async (target) => {
+  const addMemberTxs = role.members.add.map((member) =>
+    rolesModifierContract.populateTransaction.assignRoles(member, [role.id], [true]),
+  )
+  const removeMemberTxs = role.members.remove.map((member) =>
+    rolesModifierContract.populateTransaction.assignRoles(member, [role.id], [false]),
+  )
+  const txs = [...role.targets.list, ...role.targets.add].map(async (target) => {
     const updateEvents = role.getTargetUpdate(target.id)
 
     const explorer = getExplorer(network)
@@ -252,7 +262,12 @@ export const updateRole = async (modifierAddress: string, network: Network, role
     return Promise.all([...targetLevelTxs, ...functionLevelTxs, ...updateFunctionOptionTxs, ...paramLevelTxs])
   })
 
-  return (await Promise.all(txs)).flat()
+  const targetTxs = (await Promise.all([...txs])).flat()
+  const memberTxs = await Promise.all([...addMemberTxs, ...removeMemberTxs])
+
+  console.log('txs', [...memberTxs, ...targetTxs])
+
+  return [...memberTxs, ...targetTxs]
 }
 
 export async function executeTransactions(walletType: WalletType, txs: PopulatedTransaction[]) {

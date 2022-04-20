@@ -1,16 +1,13 @@
 import React, { useState } from "react"
-import { Box, Button, InputLabel, Link, makeStyles, MenuItem, Select, Typography } from "@material-ui/core"
+import { Box, Button, Link, makeStyles, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
 import { colors, ZodiacTextField } from "zodiac-ui-components"
 import AddIcon from "@material-ui/icons/Add"
-import { ConditionType, EXECUTION_OPTIONS, ExecutionOption, Target } from "../../typings/role"
+import { ConditionType, ExecutionOption, Target } from "../../typings/role"
+import { ExecutionTypeSelect } from "../views/Role/targets/ExecutionTypeSelect"
 
 const useStyles = makeStyles((theme) => ({
-  label: {
-    color: theme.palette.text.primary,
-    marginBottom: theme.spacing(1),
-  },
   link: {
     color: theme.palette.text.primary,
     cursor: "pointer",
@@ -36,16 +33,12 @@ type Props = {
 const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [address, setAddress] = useState("")
-  const [executionOptions, setExecutionOptions] = useState(ExecutionOption.NONE)
+  const [executionOptions, setExecutionOptions] = useState(ExecutionOption.SEND)
   const [isValidAddress, setIsValidAddress] = useState(false)
 
   const onAddressChange = (address: string) => {
     setIsValidAddress(ethers.utils.isAddress(address))
     setAddress(address)
-  }
-
-  const handleChangeExecutionsOptions = (value: string) => {
-    setExecutionOptions(parseInt(value) as ExecutionOption)
   }
 
   const handleAdd = () => {
@@ -84,18 +77,7 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
         />
       </Box>
       <Box sx={{ mt: 2 }}>
-        <InputLabel className={classes.label}>Execution Type</InputLabel>
-        <Select
-          className={classes.textField}
-          value={executionOptions}
-          onChange={(e) => handleChangeExecutionsOptions(e.target.value as string)}
-        >
-          {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
-            <MenuItem key={value} value={value}>
-              {label}
-            </MenuItem>
-          ))}
-        </Select>
+        <ExecutionTypeSelect value={executionOptions} onChange={setExecutionOptions} />
       </Box>
 
       <Box sx={{ mt: 2 }}>

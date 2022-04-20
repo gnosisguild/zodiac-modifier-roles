@@ -1,31 +1,19 @@
 import React, { useContext, useEffect, useState } from "react"
-import { Box, Button, FormControlLabel, InputLabel, makeStyles, MenuItem, Typography } from "@material-ui/core"
-import { DeleteOutlineSharp } from "@material-ui/icons"
-import { ZodiacPaper } from "zodiac-ui-components"
-import {
-  ConditionType,
-  EXECUTION_OPTIONS,
-  ExecutionOption,
-  FunctionCondition,
-  Target,
-  TargetConditions,
-} from "../../../../typings/role"
+import { Box, FormControlLabel, makeStyles, Typography } from "@material-ui/core"
+import { ConditionType, ExecutionOption, FunctionCondition, Target, TargetConditions } from "../../../../typings/role"
 import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
+import { ZodiacPaper } from "zodiac-ui-components"
 import { Checkbox } from "../../../commons/input/Checkbox"
-import { Select } from "../../../commons/input/Select"
 import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
 import classNames from "classnames"
+import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
 
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: theme.spacing(3),
-  },
-  label: {
-    color: theme.palette.text.primary,
-    marginBottom: theme.spacing(1),
   },
   allowAllLabel: {
     "& .MuiTypography-body1": {
@@ -107,7 +95,7 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
     const funcCondition: FunctionCondition = {
       sighash: Interface.getSighash(func),
       type: ConditionType.BLOCKED,
-      executionOption: ExecutionOption.NONE,
+      executionOption: ExecutionOption.SEND,
       params: [],
     }
     return {
@@ -120,8 +108,7 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
   const { abi } = useAbi(target.address)
-  const { setTargetConditions, setTargetClearance, setTargetExecutionOption, removeTarget, state } =
-    useContext(RoleContext)
+  const { setTargetConditions, setTargetClearance, setTargetExecutionOption, state } = useContext(RoleContext)
 
   console.log("update events", state.getTargetUpdate(target.id))
   const [refresh, setRefresh] = useState(true)
@@ -167,15 +154,16 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
             {target.address}
           </Typography>
         </div>
-        <Button
-          color="secondary"
-          variant="outlined"
-          className={classes.removeButton}
-          onClick={() => removeTarget({ target })}
-          startIcon={<DeleteOutlineSharp />}
-        >
-          Remove Target
-        </Button>
+        {/*// TODO: A target can't be remove from a role, it's set to 'None' which is same as disabling all functions */}
+        {/*<Button*/}
+        {/*  color="secondary"*/}
+        {/*  variant="outlined"*/}
+        {/*  className={classes.removeButton}*/}
+        {/*  onClick={() => removeTarget({ target })}*/}
+        {/*  startIcon={<DeleteOutlineSharp />}*/}
+        {/*>*/}
+        {/*  Remove Target*/}
+        {/*</Button>*/}
       </Box>
       <Box sx={{ mt: 3 }}>
         <FormControlLabel
@@ -186,20 +174,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
       </Box>
       {target.type === ConditionType.WILDCARDED ? (
         <Box sx={{ mt: 2 }}>
-          <InputLabel className={classes.label}>Execution Type</InputLabel>
-          <Select
-            disableUnderline
-            value={target.executionOption}
-            onChange={(event) =>
-              handleChangeTargetExecutionsOptions(parseInt(event.target.value as string) as ExecutionOption)
-            }
-          >
-            {Object.entries(EXECUTION_OPTIONS).map(([value, label]) => (
-              <MenuItem key={value} value={value}>
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
+          <ExecutionTypeSelect value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
         </Box>
       ) : null}
       <Box
