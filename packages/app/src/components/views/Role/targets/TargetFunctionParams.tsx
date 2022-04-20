@@ -8,6 +8,7 @@ import { ArrowRight } from "@material-ui/icons"
 interface TargetFunctionParamsProps {
   func: FunctionFragment
   funcConditions: FunctionCondition
+  disabled: boolean
 
   onChange(value: FunctionCondition): void
 }
@@ -33,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetFunctionParamsProps) => {
+export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange }: TargetFunctionParamsProps) => {
   const classes = useStyles()
 
   const [originalType] = useState(funcConditions.type)
@@ -60,6 +61,7 @@ export const TargetFunctionParams = ({ func, funcConditions, onChange }: TargetF
             ({param.type})
           </Typography>
           <ParamConditionInput
+            disabled={disabled}
             param={param}
             index={index}
             condition={funcConditions.params.find((param) => param.index === index)}

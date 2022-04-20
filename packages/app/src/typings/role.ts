@@ -29,13 +29,6 @@ export enum EntityStatus {
   NONE,
 }
 
-export const EXECUTION_OPTIONS: Record<ExecutionOption, string> = {
-  [ExecutionOption.NONE]: "None",
-  [ExecutionOption.SEND]: "Send",
-  [ExecutionOption.DELEGATE_CALL]: "DelegateCall",
-  [ExecutionOption.BOTH]: "Both",
-}
-
 export type FuncParams = Record<string, boolean[]>
 
 export interface ParamCondition {
