@@ -13,7 +13,7 @@ const preset: RolePreset = {
       functionSig: functionSighash("harvest(uint256,address)"),
       params: [
         undefined, // unrestricted value
-        staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
       ],
     },
     {
@@ -22,6 +22,10 @@ const preset: RolePreset = {
       params: [
         staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
       ],
+    },
+    {
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+      functionSig: functionSighash("withdraw(uint256)"),
     },
   ],
 };

@@ -11,9 +11,11 @@ import {
 
 const ERC20_TOKENS = {
   GNO: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+  sGNO: "0xA4eF9Da5BA71Cc0D2e5E877a910A37eC43420445",
   "Wrapped XDAI": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
   "USD//C on xDai": "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83",
   COW: "0x177127622c4A00F3d409B75571e12cB3c8973d3c",
+  "RAI from Mainnet": "0xd7a28Aa9c470e7e9D8c676BCd5dd2f40c5683afa",
   "Tether USD on xDai": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
   "Flex Ungovernance Token from Mainnet":
     "0xD87eaA26dCfB0C0A6160cCf8c8a01BEB1C15fB00",
@@ -37,9 +39,18 @@ const DEFI_PROTOCOLS = {
   "SushiSwap UniswapV2Router02": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
   "Honeyswap UniswapV2Router02": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
   "Swapr DXswapRouter": "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0",
+  "Swapr StakingRewardsDistribution 0":
+    "0x89a9a96E29b0c6A08c83F9e76D6553601f215775",
+  "Swapr StakingRewardsDistribution 1":
+    "0x42430C8517C3c3E8754F1D6c23AF538037452bd7",
+  "Swapr StakingRewardsDistribution 2":
+    "0xD2430dCF3a4344a6E97216d0A037438Ea958410a",
   ElkRouter: "0xe5759714998e8B50A33c7333C04C2d02e5dcE77f",
   "Curve.fi wxDAI/USDC/USDT StableSwap":
     "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
+  "Curve.fi RAIx3CRV": "0x85bA9Dfb4a3E4541420Fc75Be02E2B42042D7e46",
+  "Curve.fi sGNO/GNO": "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
+  "1Inch AggregationRouter": "0x1111111254fb6c44bAC0beD2854e76F90643097d",
 };
 
 const CURVE = {
@@ -186,6 +197,13 @@ const preset: RolePreset = {
       functionSig: functionSighash("notify_reward_amount(address)"),
       targetAddresses: [CURVE["GNO/CRV ChildChainStreamer"]],
     },
+    {
+      functionSig: functionSighash("add_liquidity(uint256[2],uint256)"),
+      targetAddresses: [
+        DEFI_PROTOCOLS["Curve.fi RAIx3CRV"],
+        DEFI_PROTOCOLS["Curve.fi sGNO/GNO"],
+      ],
+    },
     // <-- Curve
 
     // Symmetric -->
@@ -194,6 +212,26 @@ const preset: RolePreset = {
       targetAddresses: [SYMMETRIC["ProxyRegistry"]],
     },
     // <-- Symmetric
+
+    // 1inch --> TODO do we want to allow swaps for this role?
+    {
+      functionSig: functionSighash(
+        "swap(address,(address,address,address,address,uint256,uint256,uint256,bytes),bytes)"
+      ),
+      targetAddresses: [DEFI_PROTOCOLS["1Inch AggregationRouter"]],
+    },
+    // <-- 1inch
+
+    // Swapr -->
+    {
+      functionSig: functionSighash("stake(uint256)"),
+      targetAddresses: [
+        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 0"],
+        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 1"],
+        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 2"],
+      ],
+    },
+    // <-- Swapr
   ],
 };
 export default preset;
