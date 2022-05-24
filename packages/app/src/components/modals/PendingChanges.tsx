@@ -1,8 +1,7 @@
 import React, { useContext } from "react"
-import { Accordion, AccordionDetails, AccordionSummary, Box, makeStyles, Typography } from "@material-ui/core"
+import { Box, makeStyles, Typography } from "@material-ui/core"
 import Modal from "../commons/Modal"
 import AddCircleOutlineIcon from "@material-ui/icons/AddCircleOutline"
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore"
 import RemoveCircleOutlineIcon from "@material-ui/icons/RemoveCircleOutline"
 import { RoleContext } from "../views/Role/RoleContext"
 import { Target } from "../../typings/role"
@@ -10,7 +9,7 @@ import { truncateEthAddress } from "../../utils/address"
 import classNames from "classnames"
 
 const useStyles = makeStyles((theme) => ({
-  memberContainer: {
+  rowItemContainer: {
     alignItems: "center",
     display: "flex",
     fontFamily: "Roboto Mono, monospace",
@@ -27,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
       zIndex: 1,
     },
   },
-  memberIconContainer: {
+  rowIconContainer: {
     alignItems: "center",
     background: "rgba(217, 212, 173, 0.1)",
     borderRadius: 999,
@@ -92,9 +91,9 @@ const Members = ({ members }: MembersProps): React.ReactElement => {
   const memberRow = (change: "add" | "remove") => (member: string) => {
     if (change === "add") {
       return (
-        <Box className={classNames(classes.memberContainer, classes.add)}>
+        <Box className={classNames(classes.rowItemContainer, classes.add)} key={`add-${member}`}>
           <Box className={classes.address}>
-            <Box className={classes.memberIconContainer}>
+            <Box className={classes.rowIconContainer}>
               <AddCircleOutlineIcon htmlColor="green" className={classes.memberIcon} width={16} height={16} />
             </Box>
             {truncateEthAddress(member)}
@@ -105,9 +104,9 @@ const Members = ({ members }: MembersProps): React.ReactElement => {
 
     if (change === "remove") {
       return (
-        <Box className={classNames(classes.memberContainer, classes.remove)}>
+        <Box className={classNames(classes.rowItemContainer, classes.remove)} key={`remove-${member}`}>
           <Box className={classes.address}>
-            <Box className={classes.memberIconContainer}>
+            <Box className={classes.rowIconContainer}>
               <RemoveCircleOutlineIcon color="error" className={classes.memberIcon} width={16} height={16} />
             </Box>
             {truncateEthAddress(member)}
@@ -120,6 +119,7 @@ const Members = ({ members }: MembersProps): React.ReactElement => {
   return (
     <Box sx={{ mt: 2 }}>
       <Typography className={classes.label}>Members</Typography>
+      {!members.add.length && !members.remove.length && <p>No member changes</p>}
       {members.add.map(memberRow("add"))}
       {members.remove.map(memberRow("remove"))}
     </Box>
@@ -137,69 +137,53 @@ const Targets = ({ targets }: TargetsProps): React.ReactElement => {
   const classes = useStyles()
   const { state } = useContext(RoleContext)
 
-  const removedTarget = (targetAddress: string) => (
-    <Accordion className={classes.remove} key={targetAddress}>
-      <AccordionSummary disabled={true} expandIcon={null} aria-controls="panel1a-content" id="panel1a-header">
-        <Box className={classes.address}>
-          <Box className={classes.memberIconContainer}>
-            <RemoveCircleOutlineIcon color="error" className={classes.memberIcon} width={16} height={16} />
-          </Box>
-          {truncateEthAddress(targetAddress)}
+  const targetRemoveByAddress = (targetAddress: string) => (
+    <Box className={classNames(classes.rowItemContainer, classes.remove)} key={`remove${targetAddress}`}>
+      <Box className={classes.address}>
+        <Box className={classes.rowIconContainer}>
+          <RemoveCircleOutlineIcon color="error" className={classes.memberIcon} width={16} height={16} />
         </Box>
-      </AccordionSummary>
-    </Accordion>
+        {truncateEthAddress(targetAddress)}
+      </Box>
+    </Box>
   )
 
-  const targetSection = (changeType: "add" | "update") => (target: Target) => {
+  const targetAddOrUpdate = (changeType: "add" | "update") => (target: Target) => {
     const changes = state.getTargetUpdate(target.id)
-    if (changeType === "update" && !changes?.length) return // there are no changes to the target
-
+    console.log("changes:")
     console.log(changes)
 
-    // Please FIXME:
-    const oldExecutionOptions = (changes[0]?.old as any)?.executionOption
-    const newExecutionOptions = (changes[0]?.value as any)?.executionOption
-    console.log(oldExecutionOptions)
-    const updatingExecutionOptions =
-      changes.filter(
-        ({ value, old }: any) => old.type === "Target" && value?.executionOption !== old?.executionOption, // TODO: dirty, must be fixed once the types is set
-      ).length !== 0
-
     return (
-      <Accordion className={classNames({ [classes.add]: changeType === "add" })} key={target.id}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-          <Box className={classes.address}>
-            {changeType === "add" && (
-              <Box className={classes.memberIconContainer}>
-                <AddCircleOutlineIcon htmlColor="green" className={classes.memberIcon} width={16} height={16} />
-              </Box>
-            )}
-            {truncateEthAddress(target.address)}
-          </Box>
-          {!updatingExecutionOptions && (
-            <Box className={classes.targetNumberOfChanges}>{`${changes.length} ${
-              changeType === "add" ? "details" : "changes"
-            }`}</Box>
+      <Box
+        className={classNames(classes.rowItemContainer, { [classes.add]: changeType === "add" })}
+        key={`${changeType}-${target.address}`}
+      >
+        <Box className={classes.address}>
+          {changeType === "add" && (
+            <Box className={classes.rowIconContainer}>
+              <AddCircleOutlineIcon htmlColor="green" className={classes.memberIcon} width={16} height={16} />
+            </Box>
           )}
-        </AccordionSummary>
-        <AccordionDetails>
-          {updatingExecutionOptions && (
-            <ul>
-              <li>Old: {oldExecutionOptions}</li>
-              <li>New: {newExecutionOptions}</li>
-            </ul>
-          )}
-        </AccordionDetails>
-      </Accordion>
+          {truncateEthAddress(target.address)}
+        </Box>
+        <Box className={classes.targetNumberOfChanges}>{`${changes.length} ${
+          changeType === "add" ? "details" : "updates"
+        }`}</Box>
+      </Box>
     )
   }
+
+  const targetsToUpdate = targets.list
+    .filter(({ address }) => !targets.remove.includes(address))
+    .filter(({ id }) => state.getTargetUpdate(id)?.length)
 
   return (
     <Box sx={{ mt: 2 }}>
       <Typography className={classes.label}>Targets</Typography>
-      {targets.add.map(targetSection("add"))}
-      {targets.list.filter((target) => !targets.remove.includes(target.address)).map(targetSection("update"))}
-      {targets.remove.map(removedTarget)}
+      {!targets.add.length && !targetsToUpdate.length && !targets.remove.length && <p>No target changes</p>}
+      {targets.add.map(targetAddOrUpdate("add"))}
+      {targetsToUpdate.map(targetAddOrUpdate("update"))}
+      {targets.remove.map(targetRemoveByAddress)}
     </Box>
   )
 }
