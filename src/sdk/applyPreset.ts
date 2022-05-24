@@ -41,9 +41,13 @@ const applyPreset = async (
     const multiTx = encodeMulti(txs.map(asMetaTransaction));
     await signer.sendTransaction({ ...multiTx, nonce: nonce++ });
   } else {
-    await Promise.all(
-      txs.map((tx) => signer.sendTransaction({ ...tx, nonce: nonce++ }))
-    );
+    for (let i = 0; i < txs.length; i++) {
+      const tx = await signer.sendTransaction({
+        ...txs[i],
+        nonce: nonce++,
+      });
+      console.log(`tx #${i}`, tx.hash);
+    }
   }
 };
 

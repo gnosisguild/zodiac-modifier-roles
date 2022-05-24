@@ -72,7 +72,7 @@ export default {
     },
     xdai: {
       ...sharedNetworkConfig,
-      url: "https://xdai.poanetwork.dev",
+      url: "https://rpc.gnosischain.com/",
     },
     matic: {
       ...sharedNetworkConfig,

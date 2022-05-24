@@ -56,10 +56,10 @@ export const encodeApplyPresetMultisend = async (
   avatar?: string,
   multiSendAddress?: string,
   chunkSize = 75
-): Promise<MetaTransaction[]> => {
+): Promise<MetaTransaction[][]> => {
   const txs = await encodeApplyPreset(address, roleId, preset, avatar);
   return chunkArray(txs, chunkSize).map((chunk) =>
-    encodeMulti(chunk.map(asMetaTransaction), multiSendAddress)
+    chunk.map(asMetaTransaction)
   );
 };
 

@@ -222,7 +222,6 @@ describe("Replay Transactions Test", async () => {
 
       const HARVEST_TRANSACTIONS = [
         // transactions that shall be performed by harvesting role
-        // TODO: add these to test of the harvest role
         "0x1a5eacb22c7f9f3a0650c00a8eda60e4e59fb268bb56f87fa1640e2bb079a165",
         "0x3627b6009d3bc12688c286818e9d42b69e3d01b57faaa8e9d0217246d429689b",
         "0xeb5ff6c7b1ca7ae47e7c5e516b4567e5ead2f563c93ec2769720bd292cdd8448",
