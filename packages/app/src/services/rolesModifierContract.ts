@@ -265,7 +265,7 @@ export const updateRole = async (
   const targetTxs = (await Promise.all([...txs])).flat()
   const memberTxs = await Promise.all([...addMemberTxs, ...removeMemberTxs])
 
-  console.log('txs', [...memberTxs, ...targetTxs])
+  console.log("txs", [...memberTxs, ...targetTxs])
 
   return [...memberTxs, ...targetTxs]
 }
