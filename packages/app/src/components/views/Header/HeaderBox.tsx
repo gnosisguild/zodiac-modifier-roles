@@ -13,9 +13,6 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(0.5),
     position: "relative",
     transition: "background 0.25s ease-in-out",
-    "&:hover::before": {
-      background: "rgba(217, 212, 173, 0.3)",
-    },
     "&:not(:first-child)": {
       marginLeft: theme.spacing(2),
     },
@@ -50,6 +47,12 @@ const useStyles = makeStyles((theme) => ({
       borderRadius: "60px 0 0 60px",
     },
   },
+  clickable: {
+    cursor: "pointer",
+    "&:hover::before": {
+      background: "rgba(217, 212, 173, 0.3)",
+    },
+  },
 }))
 
 interface HeaderBoxProps {
@@ -63,7 +66,10 @@ export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChild
 
   if (icon !== undefined) {
     return (
-      <div onClick={onClick} className={classNames(classes.banner, classes.leftIcon, className)}>
+      <div
+        onClick={onClick}
+        className={classNames(classes.banner, classes.leftIcon, className, { [classes.clickable]: onClick != null })}
+      >
         <div className={classes.icon}>{icon}</div>
         {children}
       </div>
@@ -71,7 +77,7 @@ export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChild
   }
 
   return (
-    <div onClick={onClick} className={classNames(classes.banner, className)}>
+    <div onClick={onClick} className={classNames(classes.banner, className, { [classes.clickable]: onClick != null })}>
       {children}
     </div>
   )
