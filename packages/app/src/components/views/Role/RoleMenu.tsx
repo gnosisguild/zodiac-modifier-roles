@@ -1,6 +1,6 @@
 import { Box, Button, CircularProgress, Link, Tooltip, Typography } from "@material-ui/core"
 import ButtonLink from "../../commons/input/ButtonLink"
-import { AddSharp, ArrowBackSharp } from "@material-ui/icons"
+import { AddSharp, ArrowBackSharp, CheckSharp } from "@material-ui/icons"
 import { useRootDispatch, useRootSelector } from "../../../store"
 import {
   getChainId,
@@ -14,12 +14,17 @@ import { RoleMembers } from "./members/RoleMembers"
 import { RoleTargets } from "./targets/RoleTargets"
 import { useContext, useState } from "react"
 import { RoleContext } from "./RoleContext"
-import { executeTransactions, getChainTx, updateRole, WalletType } from "../../../services/rolesModifierContract"
+import {
+  executeTxsGnosisSafe,
+  executeTxsInjectedProvider,
+  getSafeTx,
+  updateRole,
+  WalletType,
+} from "../../../services/rolesModifierContract"
 import { useWallet } from "../../../hooks/useWallet"
 import { BigNumber } from "ethers"
 import { setTransactionPending } from "../../../store/main/rolesSlice"
 import { useFetchRoles } from "../../../hooks/useFetchRoles"
-import SafeAppsSDK from "@gnosis.pm/safe-apps-sdk"
 import PendingChanges from "../../modals/PendingChanges"
 
 /**
@@ -59,12 +64,19 @@ const RoleMenuTitle = ({ role, id }: { id: string; role?: Role }) => {
   )
 }
 
-function getButtonText(role: Role | undefined, isWaiting: boolean, indexing: boolean): string {
+function getButtonText(
+  role: Role | undefined,
+  isWaiting: boolean,
+  indexing: boolean,
+  txProposedInSafe: boolean,
+): string {
   if (indexing) return "Indexing..."
 
   if (role) {
+    if (txProposedInSafe) return "Update transaction proposed to the Safe"
     return !isWaiting ? "Update role" : "Updating role..."
   }
+  if (txProposedInSafe) return "Role creation transaction proposed to the Safe"
   return !isWaiting ? "Create role" : "Creating role..."
 }
 
@@ -83,6 +95,7 @@ export const RoleMenu = () => {
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
   const [indexing, setIndexing] = useState(false)
+  const [txProposedInSafe, setTxProposedInSafe] = useState(false)
   const [pendingChangesModalIsOpen, setPendingChangesModalIsOpen] = useState(false)
 
   const handleExecuteUpdate = async () => {
@@ -91,36 +104,58 @@ export const RoleMenu = () => {
     dispatch(setTransactionPending(true))
     try {
       const txs = await updateRole(rolesModifierAddress, network, state)
-      const tx = await executeTransactions(walletType, txs)
 
-      if (walletType === WalletType.GNOSIS_SAFE) {
-        const safeSDK = new SafeAppsSDK()
-        const info = await safeSDK.safe.getInfo()
-        if (info.threshold > 1) {
-          // Transaction are not executed immediately
-          return
-        }
+      switch (walletType) {
+        case WalletType.GNOSIS_SAFE: {
+          let txHash = await executeTxsGnosisSafe(txs)
+          let tx = await getSafeTx(txHash)
+          // Possible statuses: 'AWAITING_CONFIRMATIONS' | 'AWAITING_EXECUTION' | 'CANCELLED' | 'FAILED' | 'SUCCESS' | 'PENDING' | 'PENDING_FAILED' | 'WILL_BE_REPLACED';
 
-        const txHash = await getChainTx(tx?.safeTxHash || "")
-        setIndexing(true)
-        if (provider) {
-          // Wait for 3 confirmations
-          await provider.waitForTransaction(txHash, 3)
-        } else {
-          // Wait 10s to wait for a few confirmations
-          await new Promise((resolve) => setTimeout(resolve, 10000))
+          // wait while tx status is PENDING
+          while (tx.txStatus === "PENDING") {
+            await new Promise((resolve) => setTimeout(resolve, 5000))
+            tx = await getSafeTx(txHash)
+          }
+
+          // if the transaction is submitted to the safe but not executed
+          if (["AWAITING_CONFIRMATIONS", "AWAITING_EXECUTION"].includes(tx.txStatus)) {
+            console.log("transaction proposed but not executed")
+            setTxProposedInSafe(true)
+          }
+          // if transaction is executed immediately with success
+          else if (tx.txStatus === "SUCCESS" && tx.txHash) {
+            setIndexing(true)
+            if (provider) {
+              // Wait for 3 confirmations
+              await provider.waitForTransaction(tx.txHash, 3)
+            } else {
+              // Wait 10s to wait for a few confirmations
+              await new Promise((resolve) => setTimeout(resolve, 10000))
+            }
+          } else {
+            throw Error(`Unknown status of transaction: ${tx.txStatus}`)
+          }
+          break
         }
-      } else {
-        setIndexing(true)
-        // Wait 5s to wait to the subgraph to index new txs
-        await new Promise((resolve) => setTimeout(resolve, 5000))
+        case WalletType.INJECTED: {
+          await executeTxsInjectedProvider(txs)
+          setIndexing(true)
+          // Wait 5s to wait to the subgraph to index new txs
+          await new Promise((resolve) => setTimeout(resolve, 5000))
+          break
+        }
+        case WalletType.ZODIAC_PILOT: {
+          throw Error("Sending transactions via the zodiac pilot in not yet supported")
+        }
       }
 
-      if (!state.role) {
-        // If role === undefined, it's created
-        navigate(`/${module}/roles/${state.id}`)
-      } else {
-        fetchRoles()
+      if (!txProposedInSafe) {
+        if (!state.role) {
+          // If role === undefined, it's created
+          navigate(`/${module}/roles/${state.id}`)
+        } else {
+          fetchRoles()
+        }
       }
     } catch (error: any) {
       console.error(error)
@@ -137,10 +172,12 @@ export const RoleMenu = () => {
       size="large"
       variant="contained"
       onClick={handleExecuteUpdate}
-      disabled={isWaiting || !walletAddress}
-      startIcon={isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />}
+      disabled={isWaiting || !walletAddress || txProposedInSafe}
+      startIcon={
+        txProposedInSafe ? <CheckSharp /> : isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />
+      }
     >
-      {getButtonText(state.role, isWaiting, indexing)}
+      {getButtonText(state.role, isWaiting, indexing, txProposedInSafe)}
     </Button>
   )
 
@@ -164,14 +201,35 @@ export const RoleMenu = () => {
             width: "100%",
           }}
         />
-        <RoleMembers />
-        <RoleTargets />
+        {txProposedInSafe ? (
+          <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
+            <Typography variant="body1" align="center">
+              Your transaction is proposed to the Gnosis Safe
+              <br />
+              it can be executed in the Safe when its signed by
+              <br />
+              the required amounts of owners.
+              <br />
+              <br />
+              You can safely leave this page.
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <RouterLink to={`/${module}`}>
+                <ButtonLink icon={<ArrowBackSharp fontSize="small" />} text="Go back to Roles" />
+              </RouterLink>
+            </Box>
+          </Box>
+        ) : (
+          [<RoleMembers />, <RoleTargets />]
+        )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column", mt: "auto", mb: 2 }}>
-        <Link onClick={() => setPendingChangesModalIsOpen(true)} underline="always">
-          <ButtonLink text={"View pending changes"} />
-        </Link>
-      </Box>
+      {!txProposedInSafe && (
+        <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column", mt: "auto", mb: 2 }}>
+          <Link onClick={() => setPendingChangesModalIsOpen(true)} underline="always">
+            <ButtonLink text={"View pending changes"} />
+          </Link>
+        </Box>
+      )}
 
       {walletAddress ? (
         button
