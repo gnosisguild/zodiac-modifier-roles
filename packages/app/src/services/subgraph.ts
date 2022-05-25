@@ -22,6 +22,7 @@ const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodi
 
 const client = createClient({
   url: API_URL_RINKEBY,
+  requestPolicy: "cache-and-network",
 })
 
 const RolesQuery = gql`

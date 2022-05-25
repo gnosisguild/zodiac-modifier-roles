@@ -129,8 +129,8 @@ export const RoleMenu = () => {
               // Wait for 3 confirmations
               await provider.waitForTransaction(tx.txHash, 3)
             } else {
-              // Wait 10s to wait for a few confirmations
-              await new Promise((resolve) => setTimeout(resolve, 10000))
+              // Wait 15s to wait for a few confirmations
+              await new Promise((resolve) => setTimeout(resolve, 15000))
             }
           } else {
             throw Error(`Unknown status of transaction: ${tx.txStatus}`)
@@ -151,7 +151,7 @@ export const RoleMenu = () => {
 
       if (!txProposedInSafe) {
         if (!state.role) {
-          // If role === undefined, it's created
+          // If role === undefined, it's created a new role
           navigate(`/${module}/roles/${state.id}`)
         } else {
           fetchRoles()
