@@ -112,13 +112,13 @@ export const RoleMenu = () => {
           // Possible statuses: 'AWAITING_CONFIRMATIONS' | 'AWAITING_EXECUTION' | 'CANCELLED' | 'FAILED' | 'SUCCESS' | 'PENDING' | 'PENDING_FAILED' | 'WILL_BE_REPLACED';
 
           // wait while tx status is PENDING
-          while (tx.txStatus === "PENDING") {
+          while (["PENDING", "AWAITING_CONFIRMATIONS"].includes(tx.txStatus)) {
             await new Promise((resolve) => setTimeout(resolve, 5000))
             tx = await getSafeTx(txHash)
           }
 
           // if the transaction is submitted to the safe but not executed
-          if (["AWAITING_CONFIRMATIONS", "AWAITING_EXECUTION"].includes(tx.txStatus)) {
+          if (["AWAITING_EXECUTION"].includes(tx.txStatus)) {
             console.log("transaction proposed but not executed")
             setTxProposedInSafe(true)
           }
