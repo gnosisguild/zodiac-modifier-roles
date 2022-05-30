@@ -1,6 +1,7 @@
 import React from "react"
 import { Box, ButtonBaseProps, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
+import { CopyToClipboardBtn } from "@gnosis.pm/safe-react-components"
 import classNames from "classnames"
 import { truncateEthAddress } from "../../../../utils/address"
 import { EntityStatus, Target } from "../../../../typings/role"
@@ -50,10 +51,19 @@ const useStyles = makeStyles((theme) => ({
     width: 24,
     height: 24,
   },
-  deleteButton: {
+  filledButton: {
     backgroundColor: colors.tan[100],
     border: `1px solid ${colors.tan[300]}`,
+    cursor: "pointer",
     "&:hover": {
+      backgroundColor: colors.tan[300],
+      opacity: 0.8,
+    },
+  },
+  copyButton: {
+    marginLeft: theme.spacing(1),
+    "&:hover": {
+      backgroundColor: `${colors.tan[100]} !important`,
       opacity: 0.8,
     },
   },
@@ -110,13 +120,14 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
         <Box className={classes.targetIcon} width={16} height={16} />
       </ZodiacPaper>
       {truncateEthAddress(address)}
+      <CopyToClipboardBtn textToCopy={address} className={classNames(classes.copyButton, "btn")} />
 
       <Box sx={{ flexGrow: 1 }} />
 
       <IconButton
         size="small"
         aria-label="Remove target"
-        className={classNames(classes.iconButton, classes.deleteButton)}
+        className={classNames(classes.iconButton, classes.filledButton)}
         onClick={handleRemove}
       >
         <DeleteOutlineSharp className={classes.deleteIcon} />

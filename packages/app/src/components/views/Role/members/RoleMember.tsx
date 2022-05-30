@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
+import { CopyToClipboardBtn } from "@gnosis.pm/safe-react-components"
 import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
 import { truncateEthAddress } from "../../../../utils/address"
@@ -38,6 +39,13 @@ const useStyles = makeStyles((theme) => ({
     color: colors.tan[1000],
     width: 24,
     height: 24,
+  },
+  copyButton: {
+    marginLeft: theme.spacing(1),
+    "&:hover": {
+      backgroundColor: `${colors.tan[100]} !important`,
+      opacity: 0.8,
+    },
   },
   deleteButton: {
     backgroundColor: colors.tan[100],
@@ -78,6 +86,7 @@ const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
           <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
         </ZodiacPaper>
         {truncateEthAddress(member)}
+        <CopyToClipboardBtn textToCopy={member} className={classNames(classes.copyButton, "btn")} />
       </Box>
       <IconButton
         size="small"
