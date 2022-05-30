@@ -40,6 +40,12 @@ const useStyles = makeStyles((theme) => ({
   leftIcon: {
     paddingRight: 16,
   },
+  clickable: {
+    cursor: "pointer",
+    "&:hover::before": {
+      background: "rgba(217, 212, 173, 0.3)",
+    },
+  },
 }))
 
 interface HeaderBoxProps {
