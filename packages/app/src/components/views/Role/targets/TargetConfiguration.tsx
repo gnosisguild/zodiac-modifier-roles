@@ -22,10 +22,13 @@ const useStyles = makeStyles((theme) => ({
   },
   root: {
     padding: theme.spacing(2),
-    paddingRight: `calc(${theme.spacing(2)}px - var(--scrollbarWidth))`,
-    maxHeight: "calc(100vh - 400px)",
+    paddingRight: `calc(${theme.spacing(2)}px - 6px)`,
+    maxHeight: "calc(100vh - 275px)",
     overflowY: "auto",
     scrollbarGutter: "stable",
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
   },
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",

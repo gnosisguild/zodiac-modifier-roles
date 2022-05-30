@@ -2,9 +2,12 @@ import { createGlobalStyle } from "styled-components"
 
 export const RolesGlobalStyles = createGlobalStyle`
   :root {
-    --scrollbarWidth: 6px;
+    --scrollbarWidth: 0;
   }
   a {
     text-decoration: none;
+  }
+  body:before {
+    position: fixed;
   }
 `

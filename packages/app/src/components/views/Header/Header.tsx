@@ -6,6 +6,7 @@ import { useRootSelector } from "../../../store"
 import { getRolesModifierAddress } from "../../../store/main/selectors"
 import { ConnectWalletBox } from "./ConnectWalletBox"
 import { BadgeIcon } from "zodiac-ui-components"
+import { useNavigate } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,12 +29,13 @@ const useStyles = makeStyles((theme) => ({
 
 export const Header = () => {
   const classes = useStyles()
+  const navigate = useNavigate()
 
   const module = useRootSelector(getRolesModifierAddress)
 
   return (
     <Box className={classes.root}>
-      <HeaderBox badgeIcon icon={<BadgeIcon icon="roles" />}>
+      <HeaderBox badgeIcon icon={<BadgeIcon icon="roles" />} onClick={() => navigate(`/${module}`)}>
         <Typography variant="h5" className={classes.title}>
           Roles
         </Typography>

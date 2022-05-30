@@ -9,6 +9,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     padding: theme.spacing(0.5),
     position: "relative",
+    transition: "background 0.25s ease-in-out",
     "&:not(:first-child)": {
       marginLeft: theme.spacing(2),
     },
@@ -18,9 +19,10 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   clickable: {
+    cursor: "pointer",
     transition: "background 0.25s ease-in-out",
     "&:hover::before": {
-      background: "rgba(217, 212, 173, 0.3)",
+      background: colors.tan[300],
     },
   },
   icon: {
@@ -30,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: 60,
     borderWidth: 1,
     borderStyle: "solid",
-    borderColor: "rgba(217, 212, 173, 0.3)",
+    borderColor: colors.tan[300],
     padding: theme.spacing(0.5),
     width: 46,
     height: 46,
@@ -48,14 +50,7 @@ interface HeaderBoxProps {
   onClick?(): void
 }
 
-export const HeaderBox = ({
-  className,
-  badgeIcon,
-  clickable,
-  icon,
-  children,
-  onClick,
-}: PropsWithChildren<HeaderBoxProps>) => {
+export const HeaderBox = ({ className, badgeIcon, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
 
   if (icon !== undefined) {
@@ -64,7 +59,7 @@ export const HeaderBox = ({
         rounded="left"
         elevation={0}
         onClick={onClick}
-        className={classNames(classes.banner, classes.leftIcon, { [classes.clickable]: clickable }, className)}
+        className={classNames(classes.banner, classes.leftIcon, className, { [classes.clickable]: onClick != null })}
       >
         <div className={classNames(!badgeIcon && classes.icon)}>{icon}</div>
         {children}
@@ -73,7 +68,11 @@ export const HeaderBox = ({
   }
 
   return (
-    <ZodiacPaper elevation={0} onClick={onClick} className={classNames(classes.banner, className)}>
+    <ZodiacPaper
+      elevation={0}
+      onClick={onClick}
+      className={classNames(classes.banner, className, { [classes.clickable]: onClick != null })}
+    >
       {children}
     </ZodiacPaper>
   )

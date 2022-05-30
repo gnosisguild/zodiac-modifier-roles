@@ -11,7 +11,7 @@ env:
   REACT_APP_BSCSCAN_KEY: ${{ secrets.REACT_APP_BSCSCAN_KEY }}
   REACT_APP_OPTIMISTICSCAN_KEY: ${{ secrets.REACT_APP_OPTIMISTICSCAN_KEY }}
   REACT_APP_SNOWTRACE_KEY: $${{ secrets.REACT_APP_SNOWTRACE_KEY }}
-  REACT_APP_INFURA_ID: ${{ secrets.REACT_APP_INFURA_ID }}
+  REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
   REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
 jobs:
   deploy:
@@ -35,6 +35,14 @@ jobs:
           pinata-api-key: ${{ secrets.PINATA_API_KEY }}
           pinata-secret-api-key: ${{ secrets.PINATA_API_SECRET_KEY }}
 
+      - name: Pin to Crust
+        uses: crustio/ipfs-crust-action@v2.0.3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          cid: ${{ steps.upload.outputs.hash }}
+          seeds: ${{ secrets.CRUST_SEEDS }}
+
       - name: Convert CIDv0 to CIDv1
         id: convert_cidv0
         uses: uniswap/convert-cidv0-cidv1@v1.0.0
@@ -53,6 +61,12 @@ jobs:
 
       - name: Get IPFS url
         run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"
+
+      - name: Deploy to Github Pages
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: ./packages/app/build
 
       - name: Prep graph cli for deployment
         working-directory: packages/subgraph

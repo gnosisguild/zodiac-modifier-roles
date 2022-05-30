@@ -1,6 +1,6 @@
 import { BigNumberish, BytesLike, ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
-import SafeAppsSDK, { BaseTransaction } from "@gnosis.pm/safe-apps-sdk"
+import SafeAppsSDK, { BaseTransaction, GatewayTransactionDetails } from "@gnosis.pm/safe-apps-sdk"
 import { ConditionType, FuncParams, FunctionCondition, ParamComparison, ParamCondition, Target } from "../typings/role"
 import { Level, RoleContextState } from "../components/views/Role/RoleContext"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
@@ -193,7 +193,7 @@ export const updateRole = async (
 
         /*
          Param conditions are configure while scoping a function or can be updated independently.
-         If it was configure in scoping the function, it doesn't need to be update. Unless it's a 
+         If it was configure in scoping the function, it doesn't need to be update. Unless it's a
          `ONE_OF` param condition.
          */
         if (event.value.condition !== ParamComparison.ONE_OF && scopedFunctions.includes(event.funcSighash)) return obj
@@ -265,32 +265,25 @@ export const updateRole = async (
   const targetTxs = (await Promise.all([...txs])).flat()
   const memberTxs = await Promise.all([...addMemberTxs, ...removeMemberTxs])
 
-  console.log('txs', [...memberTxs, ...targetTxs])
+  console.log("txs", [...memberTxs, ...targetTxs])
 
   return [...memberTxs, ...targetTxs]
 }
 
-export async function executeTransactions(walletType: WalletType, txs: PopulatedTransaction[]) {
-  switch (walletType) {
-    case WalletType.GNOSIS_SAFE: {
-      const safeSDK = new SafeAppsSDK()
-      return await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
-    }
-    case WalletType.INJECTED: {
-      await Promise.all(
-        txs.map(async (tx) => {
-          const recept = await _signer.sendTransaction(tx)
-          await recept.wait()
-        }),
-      )
-      break
-    }
-    case WalletType.ZODIAC_PILOT: {
-      console.warn("Sending transactions via the zodiac pilot in not yet supported")
-      break
-    }
-  }
+export const executeTxsGnosisSafe = async (txs: PopulatedTransaction[]) => {
+  const safeSDK = new SafeAppsSDK()
+  const { safeTxHash } = await safeSDK.txs.send({ txs: txs.map(convertTxToSafeTx) })
+  return safeTxHash
 }
+
+export const executeTxsInjectedProvider = async (txs: PopulatedTransaction[]) =>
+  await Promise.all(
+    txs.map(async (tx) => {
+      const recept = await _signer.sendTransaction(tx)
+      await recept.wait()
+      return recept.hash
+    }),
+  )
 
 function convertTxToSafeTx(tx: PopulatedTransaction): BaseTransaction {
   return {
@@ -300,19 +293,11 @@ function convertTxToSafeTx(tx: PopulatedTransaction): BaseTransaction {
   }
 }
 
-export async function getChainTx(safeTxHash: string, cycles = 20): Promise<string> {
-  try {
-    const safeSDK = new SafeAppsSDK()
-    const safeTx = await safeSDK.txs.getBySafeTxHash(safeTxHash)
-    if (safeTx.txHash) return safeTx.txHash
-  } catch (err) {
-    console.log("failed safeTx ", `cycle ${cycles}`, err)
-  }
-
-  if (cycles < 1) throw new Error("failed to fetch chain transaction")
-
-  await new Promise((resolve) => setTimeout(resolve, 12000))
-  return getChainTx(safeTxHash, cycles - 1)
+export const getSafeTx = async (safeTxHash: string): Promise<GatewayTransactionDetails> => {
+  const safeSDK = new SafeAppsSDK()
+  const safeTx = await safeSDK.txs.getBySafeTxHash(safeTxHash)
+  console.log(safeTx)
+  return safeTx
 }
 
 export function areAllFunctionsAllowed(funcParams: FuncParams): boolean {
