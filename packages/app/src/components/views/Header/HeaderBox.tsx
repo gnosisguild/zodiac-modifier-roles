@@ -44,13 +44,11 @@ const useStyles = makeStyles((theme) => ({
 
 interface HeaderBoxProps {
   className?: string
-  icon?: React.ReactElement | null
-  badgeIcon?: boolean
-  clickable?: boolean
+  icon?: React.ReactElement
   onClick?(): void
 }
 
-export const HeaderBox = ({ className, badgeIcon, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
+export const HeaderBox = ({ className, icon, children, onClick }: PropsWithChildren<HeaderBoxProps>) => {
   const classes = useStyles()
 
   if (icon !== undefined) {
@@ -61,7 +59,7 @@ export const HeaderBox = ({ className, badgeIcon, icon, children, onClick }: Pro
         onClick={onClick}
         className={classNames(classes.banner, classes.leftIcon, className, { [classes.clickable]: onClick != null })}
       >
-        <div className={classNames(!badgeIcon && classes.icon)}>{icon}</div>
+        {icon != null && <div className={classes.icon}>{icon}</div>}
         {children}
       </ZodiacPaper>
     )

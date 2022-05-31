@@ -35,7 +35,7 @@ export const Header = () => {
 
   return (
     <Box className={classes.root}>
-      <HeaderBox badgeIcon icon={<BadgeIcon icon="roles" />} onClick={() => navigate(`/${module}`)}>
+      <HeaderBox icon={<BadgeIcon icon="roles" />} onClick={() => navigate(`/${module}`)}>
         <Typography variant="h5" className={classes.title}>
           Roles
         </Typography>

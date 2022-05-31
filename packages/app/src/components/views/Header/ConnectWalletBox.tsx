@@ -27,7 +27,7 @@ export const ConnectWalletBox = () => {
 
   if (!address) {
     return (
-      <HeaderBox clickable onClick={startOnboard} icon={<AddIcon className={classes.icon} />} className={classes.root}>
+      <HeaderBox onClick={startOnboard} icon={<AddIcon className={classes.icon} />} className={classes.root}>
         <Typography variant="body1" className={classes.title}>
           Connect Wallet
         </Typography>
