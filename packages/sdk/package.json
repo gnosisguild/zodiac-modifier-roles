@@ -1,7 +1,9 @@
 {
   "name": "zodiac-roles-sdk",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/cjs/sdk/index.js",
+  "typings": "build/cjs/sdk/index.d.ts",
+  "module": "build/esm/sdk/index.js",
   "license": "LGPL-3.0+",
   "scripts": {
     "prepare": "yarn build",
@@ -15,11 +17,10 @@
     "fix": "yarn fix:prettier && yarn fix:lint",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
-    "test": "hardhat test",
-    "test:watch": "mocha -w"
+    "test": "hardhat test"
   },
   "dependencies": {
-    "ethers": "^5.6.8",
+    "ethers": "5.4.6",
     "ethers-multisend": "^2.1.1"
   },
   "devDependencies": {
@@ -42,9 +43,10 @@
     "dotenv": "^16.0.1",
     "eslint": "^8.16.0",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "3.1.4",
     "ethereum-waffle": "3.2.0",
     "hardhat": "^2.9.7",
-    "hardhat-dependency-compiler": "^1.1.2",
     "hardhat-deploy": "0.7.0-beta.38",
     "prettier": "^2.6.2",
     "rimraf": "^3.0.2",

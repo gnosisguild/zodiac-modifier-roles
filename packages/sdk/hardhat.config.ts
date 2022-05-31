@@ -80,11 +80,6 @@ const config: HardhatUserConfig = {
   mocha: {
     timeout: 2000000,
   },
-  // dependencyCompiler: {
-  //   paths: [
-  //     '@openzeppelin/contracts/token/ERC20/IERC20.sol',
-  //   ],
-  // }
 };
 
 export default config;
