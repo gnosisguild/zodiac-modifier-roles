@@ -5,6 +5,7 @@ import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
+import { ZodiacPaper } from "zodiac-ui-components"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
 import classNames from "classnames"
@@ -13,16 +14,6 @@ import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: theme.spacing(3),
-    position: "relative",
-    "&::before": {
-      backgroundColor: "rgba(217, 212, 173, 0.1)",
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      inset: -3,
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      pointerEvents: "none",
-    },
   },
   allowAllLabel: {
     "& .MuiTypography-body1": {
@@ -31,10 +22,13 @@ const useStyles = makeStyles((theme) => ({
   },
   root: {
     padding: theme.spacing(2),
-    paddingRight: `calc(${theme.spacing(2)}px - var(--scrollbarWidth))`,
-    maxHeight: "calc(100vh - 400px)",
+    paddingRight: `calc(${theme.spacing(2)}px - 6px)`,
+    maxHeight: "calc(100vh - 275px)",
     overflowY: "auto",
     scrollbarGutter: "stable",
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
   },
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
@@ -189,9 +183,9 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
       <Box
         className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
       >
-        <Box className={classes.root}>
+        <ZodiacPaper borderStyle="single" className={classes.root}>
           <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
-        </Box>
+        </ZodiacPaper>
       </Box>
     </Box>
   )

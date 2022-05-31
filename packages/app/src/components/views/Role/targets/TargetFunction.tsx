@@ -7,6 +7,7 @@ import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
 import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
+import { ZodiacPaper } from "zodiac-ui-components"
 import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
 
 const useStyles = makeStyles((theme) => ({
@@ -16,8 +17,6 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1, 0, 1, 3),
   },
   wrapper: {
-    backgroundColor: "rgba(217, 212, 173, 0.1)",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
     marginTop: theme.spacing(1),
     padding: theme.spacing(0, 1),
   },
@@ -92,7 +91,7 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
   const handleOpen = () => setOpen(!open)
 
   return (
-    <div className={classes.wrapper}>
+    <ZodiacPaper borderStyle="single" elevation={0} className={classes.wrapper}>
       <div className={classes.trigger} onClick={handleOpen}>
         <Checkbox
           checked={functionConditions?.type === ConditionType.WILDCARDED}
@@ -126,6 +125,6 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
           onChange={onChange}
         />
       </div>
-    </div>
+    </ZodiacPaper>
   )
 }

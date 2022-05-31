@@ -1,11 +1,11 @@
 import { Box, makeStyles, Typography } from "@material-ui/core"
-import RolesModuleLogo from "../../../assets/images/roles-module-logo.png"
 import { ChainPicker } from "./ChainPicker"
 import { HeaderBox } from "./HeaderBox"
 import { HeaderAddressBox } from "./HeaderAddressBox"
 import { useRootSelector } from "../../../store"
 import { getRolesModifierAddress } from "../../../store/main/selectors"
 import { ConnectWalletBox } from "./ConnectWalletBox"
+import { BadgeIcon } from "zodiac-ui-components"
 import { useNavigate } from "react-router-dom"
 
 const useStyles = makeStyles((theme) => ({
@@ -35,10 +35,7 @@ export const Header = () => {
 
   return (
     <Box className={classes.root}>
-      <HeaderBox
-        icon={<img src={RolesModuleLogo} alt="Roles App Logo" className={classes.img} />}
-        onClick={() => navigate(`/${module}`)}
-      >
+      <HeaderBox icon={<BadgeIcon icon="roles" />} onClick={() => navigate(`/${module}`)}>
         <Typography variant="h5" className={classes.title}>
           Roles
         </Typography>

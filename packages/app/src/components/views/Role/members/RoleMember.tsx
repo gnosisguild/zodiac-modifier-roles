@@ -1,31 +1,23 @@
 import { useMemo } from "react"
 import { Box, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp } from "@material-ui/icons"
+import { CopyToClipboardBtn } from "@gnosis.pm/safe-react-components"
 import classNames from "classnames"
 import makeBlockie from "ethereum-blockies-base64"
 import { truncateEthAddress } from "../../../../utils/address"
 import RemovedAddress from "../RemovedAddress"
 import { EntityStatus } from "../../../../typings/role"
+import { colors, doubleBorder, ZodiacPaper } from "zodiac-ui-components"
 
 const useStyles = makeStyles((theme) => ({
   container: {
     alignItems: "center",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
     display: "flex",
     fontFamily: "Roboto Mono, monospace",
     justifyContent: "space-between",
     marginBottom: 10,
     padding: theme.spacing(1),
-    position: "relative",
-    "&::before": {
-      content: '" "',
-      backgroundColor: "rgba(217, 212, 173, 0.1)",
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      inset: -4,
-      pointerEvents: "none",
-      position: "absolute",
-      zIndex: 1,
-    },
+    "&::before": doubleBorder(-4, colors.tan[300]),
   },
   address: {
     alignItems: "center",
@@ -33,9 +25,6 @@ const useStyles = makeStyles((theme) => ({
   },
   blockieContainer: {
     alignItems: "center",
-    background: "rgba(217, 212, 173, 0.1)",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
-    borderRadius: 999,
     display: "flex",
     height: 20,
     justifyContent: "center",
@@ -47,13 +36,20 @@ const useStyles = makeStyles((theme) => ({
   },
   iconButton: {
     borderRadius: 4,
-    color: "rgba(217, 212, 173, 1)",
+    color: colors.tan[1000],
     width: 24,
     height: 24,
   },
+  copyButton: {
+    marginLeft: theme.spacing(1),
+    "&:hover": {
+      backgroundColor: `${colors.tan[100]} !important`,
+      opacity: 0.8,
+    },
+  },
   deleteButton: {
-    backgroundColor: "rgba(217, 212, 173, 0.1)",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
+    backgroundColor: colors.tan[100],
+    border: `1px solid ${colors.tan[300]}`,
     "&:hover": {
       opacity: 0.8,
     },
@@ -84,12 +80,13 @@ const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
   }
 
   return (
-    <Box className={classNames(classes.container, { [classes.pending]: status === EntityStatus.PENDING })}>
+    <ZodiacPaper className={classNames(classes.container, { [classes.pending]: status === EntityStatus.PENDING })}>
       <Box className={classes.address}>
-        <Box className={classes.blockieContainer}>
+        <ZodiacPaper variant="outlined" borderStyle="single" rounded="full" className={classes.blockieContainer}>
           <img className={classes.blockie} src={blockie} alt={member} width={16} height={16} />
-        </Box>
+        </ZodiacPaper>
         {truncateEthAddress(member)}
+        <CopyToClipboardBtn textToCopy={member} className={classNames(classes.copyButton, "btn")} />
       </Box>
       <IconButton
         size="small"
@@ -99,7 +96,7 @@ const RoleMember = ({ member, status, onRemoveMember }: RoleMemberProps) => {
       >
         <DeleteOutlineSharp className={classes.deleteIcon} />
       </IconButton>
-    </Box>
+    </ZodiacPaper>
   )
 }
 

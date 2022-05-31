@@ -2,19 +2,19 @@ import React from "react"
 import ReactDOM from "react-dom"
 import { ThemeProvider } from "styled-components"
 import { CssBaseline, ThemeProvider as MUIThemeProvider } from "@material-ui/core"
-import { theme as gnosisTheme } from "@gnosis.pm/safe-react-components"
+import { zodiacMuiTheme } from "zodiac-ui-components"
+import { theme as gnosisStyledComponentsTheme } from "@gnosis.pm/safe-react-components"
 import App from "./components/App"
-import { ZodiacStyle } from "./theme/ZodiacStyle"
-import { ZODIAC_THEME } from "./theme/ZodiacTheme"
+import { RolesGlobalStyles } from "./theme/RolesGlobalStyles"
 import { Provider as ReduxProvider } from "react-redux"
 import { REDUX_STORE } from "./store"
 
 const Main = () => {
   return (
-    <MUIThemeProvider theme={ZODIAC_THEME}>
-      <ThemeProvider theme={gnosisTheme}>
+    <MUIThemeProvider theme={zodiacMuiTheme}>
+      <ThemeProvider theme={gnosisStyledComponentsTheme}>
         <CssBaseline />
-        <ZodiacStyle />
+        <RolesGlobalStyles />
         <ReduxProvider store={REDUX_STORE}>
           <App />
         </ReduxProvider>

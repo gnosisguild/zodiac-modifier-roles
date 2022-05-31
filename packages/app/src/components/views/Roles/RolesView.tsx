@@ -1,11 +1,12 @@
 import React from "react"
-import { makeStyles, Paper } from "@material-ui/core"
+import { makeStyles } from "@material-ui/core"
 import { RolesList } from "./RolesList"
 import { useRootSelector } from "../../../store"
 import { getRoles } from "../../../store/main/selectors"
 import { RolesEmpty } from "./RolesEmpty"
 import { useFetchRoles } from "../../../hooks/useFetchRoles"
 import classNames from "classnames"
+import { ZodiacPaper } from "zodiac-ui-components"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -29,15 +30,15 @@ export const RolesView = (): React.ReactElement => {
 
   if (roles.length) {
     return (
-      <Paper className={classes.container}>
+      <ZodiacPaper className={classes.container}>
         <RolesList />
-      </Paper>
+      </ZodiacPaper>
     )
   }
   return (
-    <Paper className={classNames(classes.container, classes.center)}>
+    <ZodiacPaper className={classNames(classes.container, classes.center)}>
       <RolesEmpty />
-    </Paper>
+    </ZodiacPaper>
   )
 }
 

@@ -49,7 +49,7 @@ export const HeaderAddressBox = ({ address, emptyText }: HeaderAddressBoxProps) 
             showHash={false}
             avatarSize="md"
           />
-        ) : null
+        ) : undefined
       }
     >
       <Typography

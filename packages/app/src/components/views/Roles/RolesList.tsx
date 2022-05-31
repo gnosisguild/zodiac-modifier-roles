@@ -2,7 +2,7 @@ import React from "react"
 import { Box, Button, InputAdornment, makeStyles } from "@material-ui/core"
 import { Link, useParams } from "react-router-dom"
 import RoleTable from "../Role/RoleTable"
-import { TextField } from "../../commons/input/TextField"
+import { colors, doubleBorder, ZodiacTextField } from "zodiac-ui-components"
 
 import AddIcon from "@material-ui/icons/Add"
 import SearchIcon from "@material-ui/icons/Search"
@@ -10,6 +10,10 @@ import SearchIcon from "@material-ui/icons/Search"
 const useStyles = makeStyles(() => ({
   search: {
     maxWidth: 300,
+    "&.border--double .MuiInputBase-root": {
+      borderColor: colors.tan[300],
+      "&::before": doubleBorder(-4, colors.tan[300]),
+    },
   },
   grow: {
     flexGrow: 1,
@@ -22,8 +26,9 @@ export const RolesList = () => {
   return (
     <>
       <Box display="flex">
-        <TextField
+        <ZodiacTextField
           placeholder="Filter by Members or Targets"
+          borderStyle="double"
           className={classes.search}
           InputProps={{
             startAdornment: (
