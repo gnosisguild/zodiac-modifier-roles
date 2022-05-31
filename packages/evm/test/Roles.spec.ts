@@ -3,6 +3,8 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
+import { Roles, TestAvatar } from "../typechain-types";
+
 import { buildContractCall, buildMultiSendSafeTx } from "./utils";
 
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
@@ -12,7 +14,7 @@ describe("RolesModifier", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
+    const avatar = (await Avatar.deploy()) as TestAvatar;
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     return { Avatar, avatar, testContract };
@@ -28,11 +30,11 @@ describe("RolesModifier", async () => {
       },
     });
 
-    const modifier = await Modifier.deploy(
+    const modifier = (await Modifier.deploy(
       base.avatar.address,
       base.avatar.address,
       base.avatar.address
-    );
+    )) as Roles;
     return { ...base, Modifier, modifier };
   });
 
@@ -187,7 +189,7 @@ describe("RolesModifier", async () => {
         FirstAddress
       );
       await expect(
-        avatar.exec(modifier.address, 0, disable.data)
+        avatar.exec(modifier.address, 0, disable.data || "", 0)
       ).to.be.revertedWith("Invalid module");
     });
 
@@ -198,7 +200,7 @@ describe("RolesModifier", async () => {
         user1.address
       );
       await expect(
-        avatar.exec(modifier.address, 0, disable.data)
+        avatar.exec(modifier.address, 0, disable.data || "", 0)
       ).to.be.revertedWith("Module already disabled");
     });
 
@@ -212,11 +214,11 @@ describe("RolesModifier", async () => {
         user1.address
       );
 
-      await avatar.exec(modifier.address, 0, enable.data);
+      await avatar.exec(modifier.address, 0, enable.data || "", 0);
       await expect(await modifier.isModuleEnabled(user1.address)).to.be.equals(
         true
       );
-      await avatar.exec(modifier.address, 0, disable.data);
+      await avatar.exec(modifier.address, 0, disable.data || "", 0);
       await expect(await modifier.isModuleEnabled(user1.address)).to.be.equals(
         false
       );
@@ -237,9 +239,9 @@ describe("RolesModifier", async () => {
         user1.address
       );
 
-      await avatar.exec(modifier.address, 0, enable.data);
+      await avatar.exec(modifier.address, 0, enable.data || "", 0);
       await expect(
-        avatar.exec(modifier.address, 0, enable.data)
+        avatar.exec(modifier.address, 0, enable.data || "", 0)
       ).to.be.revertedWith("Module already enabled");
     });
 
@@ -250,7 +252,7 @@ describe("RolesModifier", async () => {
       );
 
       await expect(
-        avatar.exec(modifier.address, 0, enable.data)
+        avatar.exec(modifier.address, 0, enable.data || "", 0)
       ).to.be.revertedWith("Invalid module");
     });
 
@@ -260,7 +262,7 @@ describe("RolesModifier", async () => {
         user1.address
       );
 
-      await avatar.exec(modifier.address, 0, enable.data);
+      await avatar.exec(modifier.address, 0, enable.data || "", 0);
       await expect(await modifier.isModuleEnabled(user1.address)).to.be.equals(
         true
       );
@@ -377,7 +379,7 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       await expect(await modifier.isModuleEnabled(user1.address)).to.equal(
         true
@@ -389,8 +391,8 @@ describe("RolesModifier", async () => {
         [1, 2],
         [true, true]
       );
-      await expect(avatar.exec(modifier.address, 0, assignSecond.data)).to.not
-        .be.reverted;
+      await expect(avatar.exec(modifier.address, 0, assignSecond.data || "", 0))
+        .to.not.be.reverted;
     });
 
     it("emits the AssignRoles event", async () => {
@@ -401,7 +403,7 @@ describe("RolesModifier", async () => {
         [true]
       );
 
-      await expect(avatar.exec(modifier.address, 0, assign.data))
+      await expect(avatar.exec(modifier.address, 0, assign.data || "", 0))
         .to.emit(modifier, "AssignRoles")
         .withArgs(user1.address, [1], [true]);
     });
@@ -454,20 +456,20 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -476,7 +478,12 @@ describe("RolesModifier", async () => {
 
       const someOtherAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
       await expect(
-        modifier.execTransactionFromModule(someOtherAddress, 0, mint.data, 0)
+        modifier.execTransactionFromModule(
+          someOtherAddress,
+          0,
+          mint.data || "",
+          0
+        )
       ).to.be.revertedWith("TargetAddressNotAllowed()");
     });
 
@@ -487,21 +494,21 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
 
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -512,7 +519,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.emit(testContract, "Mint");
@@ -526,19 +533,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -550,7 +557,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -561,7 +568,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.be.revertedWith("ParameterNotAllowed()");
@@ -577,19 +584,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -601,7 +608,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -612,7 +619,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.emit(testContract, "Mint");
@@ -637,19 +644,19 @@ describe("RolesModifier", async () => {
         [true]
       );
 
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -677,7 +684,7 @@ describe("RolesModifier", async () => {
         ],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
         "This is a dynamic array that is not allowed",
@@ -693,7 +700,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          dynamic.data,
+          dynamic.data || "",
           0
         )
       ).to.be.revertedWith("ParameterNotAllowed()");
@@ -718,19 +725,19 @@ describe("RolesModifier", async () => {
         [true]
       );
 
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -758,7 +765,7 @@ describe("RolesModifier", async () => {
         ],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
         "This is a dynamic array",
@@ -774,7 +781,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          dynamic.data,
+          dynamic.data || "",
           0
         )
       ).to.emit(testContract, "TestDynamic");
@@ -806,24 +813,24 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const multiSendTarget = await modifier.populateTransaction.setMultisend(
         multisend.address
       );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data);
+      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -835,7 +842,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
         1,
@@ -863,7 +870,7 @@ describe("RolesModifier", async () => {
         ],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped_2.data);
+      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
       const tx_bad = buildContractCall(
         testContract,
@@ -905,24 +912,24 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const multiSendTarget = await modifier.populateTransaction.setMultisend(
         multisend.address
       );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -934,7 +941,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
 
@@ -977,24 +984,24 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const multiSendTarget = await modifier.populateTransaction.setMultisend(
         multisend.address
       );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data);
+      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1006,7 +1013,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
         1,
@@ -1034,7 +1041,7 @@ describe("RolesModifier", async () => {
         ],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped_2.data);
+      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
       const multiTx = buildMultiSendSafeTx(
         multisend,
@@ -1060,19 +1067,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data);
+      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1089,7 +1096,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2], // set param 2 to greater than
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1100,7 +1107,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.be.revertedWith("ParameterLessThanAllowed");
@@ -1114,19 +1121,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1143,7 +1150,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2], // set param 2 to greater than
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1154,7 +1161,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.emit(testContract, "Mint");
@@ -1168,19 +1175,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1197,7 +1204,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2], // set param 2 to less than
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1208,7 +1215,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.be.revertedWith("ParameterGreaterThanAllowed");
@@ -1222,19 +1229,19 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const functionScoped = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data);
+      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
       const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
         ["uint256"],
@@ -1251,7 +1258,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2], // set param 2 to less than
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1262,7 +1269,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.emit(testContract, "Mint");
@@ -1278,7 +1285,7 @@ describe("RolesModifier", async () => {
         testContract.address,
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1289,7 +1296,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModuleReturnData(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           ROLE_ID
         )
       ).to.be.revertedWith("Module not authorized");
@@ -1302,20 +1309,20 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1327,7 +1334,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModuleReturnData(
           someOtherAddress,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.be.revertedWith("TargetAddressNotAllowed()");
@@ -1340,21 +1347,21 @@ describe("RolesModifier", async () => {
         [1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         1,
         testContract.address,
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data);
+      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
         1
       );
 
-      await avatar.exec(modifier.address, 0, defaultRole.data);
+      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
 
       const mint = await testContract.populateTransaction.mint(
         user1.address,
@@ -1365,7 +1372,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data || "",
           0
         )
       ).to.emit(testContract, "Mint");
@@ -1555,18 +1562,18 @@ describe("RolesModifier", async () => {
         [ROLE_ID],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data);
+      await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
       const multiSendTarget = await modifier.populateTransaction.setMultisend(
         multisend.address
       );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data);
+      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
         1,
         testContract.address
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data);
+      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_ID,
@@ -1578,7 +1585,7 @@ describe("RolesModifier", async () => {
         [encodedParam_1, encodedParam_2],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data);
+      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
         ROLE_ID,
@@ -1606,7 +1613,7 @@ describe("RolesModifier", async () => {
         ],
         OPTIONS_NONE
       );
-      await avatar.exec(modifier.address, 0, paramScoped_2.data);
+      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
       const multiTx = buildMultiSendSafeTx(
         multisend,
@@ -1637,14 +1644,14 @@ describe("RolesModifier", async () => {
     it("sets multisend address to true", async () => {
       const { avatar, modifier } = await txSetup();
       const tx = await modifier.populateTransaction.setMultisend(AddressOne);
-      await avatar.exec(modifier.address, 0, tx.data);
+      await avatar.exec(modifier.address, 0, tx.data || "", 0);
       expect(await modifier.multisend()).to.be.equals(AddressOne);
     });
 
     it("emits event with correct params", async () => {
       const { avatar, modifier } = await txSetup();
       const tx = await modifier.populateTransaction.setMultisend(AddressOne);
-      await expect(avatar.exec(modifier.address, 0, tx.data))
+      await expect(avatar.exec(modifier.address, 0, tx.data || "", 0))
         .to.emit(modifier, "SetMultisendAddress")
         .withArgs(AddressOne);
     });
