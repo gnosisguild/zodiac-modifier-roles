@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "target": "es2017",
+    "outDir": "build/cjs",
+    "module": "commonjs"
+  },
+  "include": ["src/**/*.ts"],
+  "files": []
+}

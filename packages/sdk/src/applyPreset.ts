@@ -1,20 +1,8 @@
-import { Contract, PopulatedTransaction, Signer } from "ethers";
+import { PopulatedTransaction, Signer } from "ethers";
 import { encodeMulti, MetaTransaction, OperationType } from "ethers-multisend";
-import { defaultAbiCoder, solidityPack } from "ethers/lib/utils";
-
-import ROLES_ABI from "../../build/artifacts/contracts/Roles.sol/Roles.json";
-import { Roles } from "../../typechain-types";
 
 import encodeApplyPreset from "./encodeApplyPreset";
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders";
-import {
-  AllowFunction,
-  Comparison,
-  ExecutionOptions,
-  ParameterType,
-  RolePreset,
-  ScopeParam,
-} from "./types";
+import { RolePreset } from "./types";
 
 let nonce: number;
 

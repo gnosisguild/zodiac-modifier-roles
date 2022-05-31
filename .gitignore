@@ -1,13 +1,14 @@
 **/node_modules
 **/build
 **/.DS_Store
-**/artifacts/
+**/artifacts
 **/env/
 **/.env
 **/.history
 **/coverage*
 **/deployments
 .devcontainer
+packages/evm/typechain-types
 packages/subgraph/generated
 
 # To always keep the app, contracts and subgraph in sync on the repo

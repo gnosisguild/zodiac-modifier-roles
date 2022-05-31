@@ -1,4 +1,3 @@
-import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { writeFileSync } from "fs";
 
@@ -7,15 +6,14 @@ import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types";
 import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
 import SafeServiceClient from "@gnosis.pm/safe-service-client";
 import { ethers } from "ethers";
-import { Interface } from "ethers/lib/utils";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { Roles } from "../../typechain-types";
-import applyPreset from "../sdk/applyPreset";
-import { encodeApplyPresetMultisend } from "../sdk/encodeApplyPreset";
-import gnosisChainDeFiHarvestPreset from "../sdk/presets/gnosisChainDeFiHarvest";
-import gnosisChainDeFiManagePreset from "../sdk/presets/gnosisChainDeFiManage";
+import { Roles } from "../../evm/typechain-types";
+import applyPreset from "../src/applyPreset";
+import { encodeApplyPresetMultisend } from "../src/encodeApplyPreset";
+import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest";
+import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage";
 
 const MGMT_SAFE = "0xDA5A5816c54C436c69535Ca3172826de61546f6e";
 

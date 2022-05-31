@@ -4,11 +4,14 @@ import SafeServiceClient, {
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
+import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib";
 
-import { Roles } from "../../../typechain-types";
-import applyPreset from "../applyPreset";
-import gnosisChainDeFiHarvestPreset from "../presets/gnosisChainDeFiHarvest";
-import gnosisChainDeFiManagePreset from "../presets/gnosisChainDeFiManage";
+import { Roles } from "../../evm/typechain-types";
+import applyPreset from "../src/applyPreset";
+import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest";
+import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage";
+import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types";
+import { Signer } from "ethers";
 
 describe("Replay Transactions Test", async () => {
   const setup = deployments.createFixture(async () => {
@@ -43,16 +46,30 @@ describe("Replay Transactions Test", async () => {
     const defaultSigner = (await hre.ethers.getSigners())[0];
     await modifier.assignRoles(defaultSigner.address, [1], [true]);
 
-    return { owner, Avatar, avatar, Modifier, modifier, multiSend };
+    const ethAdapter = new EthersAdapter({
+      ethers: ethers as unknown as EthersAdapterConfig["ethers"],
+      signer: defaultSigner,
+    });
+    const txServiceUrl = "https://safe-transaction.xdai.gnosis.io";
+    const safeService = new SafeServiceClient({
+      txServiceUrl,
+      ethAdapter: ethAdapter as EthAdapter,
+    });
+
+    return {
+      owner,
+      Avatar,
+      avatar,
+      Modifier,
+      modifier,
+      multiSend,
+      safeService,
+    };
   });
 
   describe("Gnosis Chain DeFi Manage preset", () => {
-    const safeService = new SafeServiceClient(
-      "https://safe-transaction.xdai.gnosis.io"
-    );
-
     it.skip("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
-      const { owner, modifier } = await setup();
+      const { owner, modifier, safeService } = await setup();
       await applyPreset(
         modifier.address,
         1,
@@ -96,13 +113,13 @@ describe("Replay Transactions Test", async () => {
           );
         } catch (e) {
           console.log("Reverting transaction:", tx);
-          throw new Error(e);
+          throw e;
         }
       }
     });
 
     it("allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
-      const { owner, modifier } = await setup();
+      const { owner, modifier, safeService } = await setup();
       await applyPreset(
         modifier.address,
         1,
@@ -192,19 +209,15 @@ describe("Replay Transactions Test", async () => {
           );
         } catch (e) {
           console.log("Reverting transaction:", tx);
-          throw new Error(e);
+          throw e;
         }
       }
     });
   });
 
   describe("Gnosis Chain DeFi Harvest preset", () => {
-    const safeService = new SafeServiceClient(
-      "https://safe-transaction.xdai.gnosis.io"
-    );
-
     it("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
-      const { owner, modifier } = await setup();
+      const { owner, modifier, safeService } = await setup();
       await applyPreset(
         modifier.address,
         1,
@@ -251,7 +264,7 @@ describe("Replay Transactions Test", async () => {
           );
         } catch (e) {
           console.log("Reverting transaction:", tx);
-          throw new Error(e);
+          throw e;
         }
       }
     });

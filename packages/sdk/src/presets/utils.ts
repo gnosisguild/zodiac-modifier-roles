@@ -1,10 +1,4 @@
-import {
-  defaultAbiCoder,
-  keccak256,
-  ParamType,
-  solidityPack,
-  toUtf8Bytes,
-} from "ethers/lib/utils";
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils";
 
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import {

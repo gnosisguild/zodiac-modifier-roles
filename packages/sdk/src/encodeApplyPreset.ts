@@ -2,8 +2,8 @@ import { Contract, PopulatedTransaction } from "ethers";
 import { encodeMulti, MetaTransaction, OperationType } from "ethers-multisend";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import ROLES_ABI from "../../build/artifacts/contracts/Roles.sol/Roles.json";
-import { Roles } from "../../typechain-types";
+import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json";
+import { Roles } from "../../evm/typechain-types";
 
 import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders";
 import {
