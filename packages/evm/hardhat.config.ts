@@ -7,10 +7,10 @@ import "hardhat-deploy";
 import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
 import dotenv from "dotenv";
+import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
 import "./src/tasks/setup";
-import "./src/tasks/manageRoles";
 
 const argv = yargs
   .option("network", {
@@ -42,7 +42,7 @@ if (["rinkeby", "mainnet"].includes(argv.network) && INFURA_KEY === undefined) {
   );
 }
 
-export default {
+const config: HardhatUserConfig = {
   paths: {
     artifacts: "build/artifacts",
     cache: "build/cache",
@@ -89,3 +89,5 @@ export default {
     apiKey: ETHERSCAN_API_KEY,
   },
 };
+
+export default config;

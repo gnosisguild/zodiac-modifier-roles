@@ -1,0 +1,39 @@
+{
+  "name": "zodiac-modifier-roles",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "do": "ts-node script/deploy.ts",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gnosis/zodiac-modifier-roles",
+    "getabi:permissions": "cp ../evm/build/artifacts/contracts/Permissions.sol/Permissions.json ./abis/Permissions.json",
+    "getabi:roles": "cp ../evm/build/artifacts/contracts/Roles.sol/Roles.json ./abis/Roles.json",
+    "prebuild": "yarn prepare:gnosis-chain && yarn getabi:permissions && yarn getabi:roles && yarn codegen",
+    "fmt": "prettier '(test|src)/**/*.ts' -w",
+    "pre-commit": "yarn fmt",
+    "deploy:arbitrum-one": "yarn prepare:arbitrum-one && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE'",
+    "deploy:gnosis-chain": "yarn prepare:gnosis-chain && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN'",
+    "deploy:rinkeby": "yarn prepare:rinkeby && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__RINKEBY'",
+    "deploy:avalanche": "yarn prepare:avalanche && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__AVALANCHE'",
+    "deploy:bsc": "yarn prepare:bsc && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__BSC'",
+    "deploy:mainnet": "yarn prepare:mainnet && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__MAINNET'",
+    "deploy:optimism": "yarn prepare:optimism && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__OPTIMISM'",
+    "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $HOSTED_SERVICE_SUBGRAPH__POLYGON'",
+    "prepare:rinkeby": "mustache network_configs/rinkeby.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:avalanche": "mustache network_configs/avalanche.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:bsc": "mustache network_configs/bsc.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:mainnet": "mustache network_configs/mainnet.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:optimism": "mustache network_configs/optimism.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:polygon": "mustache network_configs/polygon.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:arbitrum-one": "mustache network_configs/arbitrum-one.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:gnosis-chain": "mustache network_configs/gnosis-chain.json subgraph.template.yaml > subgraph.yaml"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.26.0",
+    "@graphprotocol/graph-ts": "0.24.1"
+  },
+  "devDependencies": {
+    "mustache": "^4.2.0",
+    "prettier": "^2.5.1"
+  }
+}
