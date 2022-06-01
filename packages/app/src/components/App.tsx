@@ -1,5 +1,5 @@
 import React from "react"
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
 import RolesView from "./views/Roles/RolesView"
 import AttachRolesModifierView from "./views/AttachRolesModifier/AttachRolesModifierView"
 import RoleView from "./views/Role/RoleView"
@@ -13,7 +13,6 @@ export const App = (): React.ReactElement => {
           <Route index element={<AttachRolesModifierView />} />
           <Route path=":module" element={<RolesView />} />
           <Route path=":module/roles/:roleId" element={<RoleView />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
