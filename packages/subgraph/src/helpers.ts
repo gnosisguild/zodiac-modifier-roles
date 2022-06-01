@@ -29,7 +29,7 @@ export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
 export const getFunctionId = (targetId: string, functionSig: Bytes): string =>
   targetId + "-FUNCTION-" + functionSig.toHex()
-export const getMemberRoleId = (memberId: string, roleId: string): string => memberId + "-" + roleId
+export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
 export const getParameterId = (functionId: string, parameterIndex: number): string =>
   functionId + "-PARAMETER-" + parameterIndex.toString()
 

@@ -144,11 +144,11 @@ export function handleScopeFunction(event: ScopeFunction): void {
 
     const parameterId = getParameterId(functionId, i)
     const parameter = new Parameter(parameterId)
-    parameter.theFunction = functionId
-    parameter.parameterIndex = i
-    parameter.parameterType = paramType
-    parameter.parameterComparison = paramComp
-    parameter.parameterComparisonValue = [compValue]
+    parameter.owningFunction = functionId
+    parameter.index = i
+    parameter.type = paramType
+    parameter.comparison = paramComp
+    parameter.comparisonValue = [compValue]
     parameter.save()
   }
 }
@@ -195,11 +195,11 @@ export function handleScopeParameter(event: ScopeParameter): void {
   const paramType = PARAMETER_TYPE[event.params.paramType]
   const paramComp = PARAMETER_COMPARISON[event.params.paramComp]
   const compValue = event.params.compValue
-  parameter.theFunction = functionId
-  parameter.parameterIndex = event.params.index.toI32()
-  parameter.parameterType = paramType
-  parameter.parameterComparison = paramComp
-  parameter.parameterComparisonValue = [compValue]
+  parameter.owningFunction = functionId
+  parameter.index = event.params.index.toI32()
+  parameter.type = paramType
+  parameter.comparison = paramComp
+  parameter.comparisonValue = [compValue]
   parameter.save()
 }
 
@@ -226,11 +226,11 @@ export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void 
   const paramComp = PARAMETER_COMPARISON[PARAMETER_COMPARISON__ONE_OF]
   const compValues = event.params.compValues
 
-  parameter.theFunction = functionId
-  parameter.parameterIndex = event.params.index.toI32()
-  parameter.parameterType = paramType
-  parameter.parameterComparison = paramComp
-  parameter.parameterComparisonValue = compValues
+  parameter.owningFunction = functionId
+  parameter.index = event.params.index.toI32()
+  parameter.type = paramType
+  parameter.comparison = paramComp
+  parameter.comparisonValue = compValues
   parameter.save()
 }
 
