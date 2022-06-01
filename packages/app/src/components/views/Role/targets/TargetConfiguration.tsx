@@ -110,7 +110,7 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
 
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { abi } = useAbi(target.address)
+  const { abi, setAbi } = useAbi(target.address)
   const { setTargetConditions, setTargetClearance, setTargetExecutionOption, state } = useContext(RoleContext)
 
   console.log("update events", state.getTargetUpdate(target.id))
@@ -184,7 +184,12 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
       >
         <ZodiacPaper borderStyle="single" className={classes.root}>
-          <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
+          <TargetFunctionList
+            items={functions}
+            conditions={target.conditions}
+            onChange={handleFuncParamsChange}
+            onSubmit={(customABI) => setAbi(customABI)}
+          />
         </ZodiacPaper>
       </Box>
     </Box>
