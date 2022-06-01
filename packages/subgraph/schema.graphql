@@ -45,7 +45,7 @@ type Target @entity {
 type Function @entity {
   id: ID!
   target: Target
-  functionSig: Bytes!
+  sighash: Bytes!
   executionOptions: ExecutionOptions!
   wildcarded: Boolean!
   parameters: [Parameter!] @derivedFrom(field: "owningFunction")

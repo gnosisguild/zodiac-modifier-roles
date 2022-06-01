@@ -40,7 +40,7 @@ const RolesQuery = gql`
           executionOptions
           clearance
           functions {
-            functionSig
+            sighash
             executionOptions
             wildcarded
             parameters {
@@ -77,7 +77,7 @@ interface RolesQueryResponse {
         executionOptions: string
         clearance: ConditionType
         functions: {
-          functionSig: string
+          sighash: string
           executionOptions: string
           wildcarded: boolean
           parameters: {
@@ -122,12 +122,12 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
               })
 
               const funcConditions: FunctionCondition = {
-                sighash: func.functionSig,
+                sighash: func.sighash,
                 type: func.wildcarded ? ConditionType.WILDCARDED : getFunctionConditionType(paramConditions),
                 executionOption: getExecutionOptionFromLabel(func.executionOptions),
                 params: paramConditions,
               }
-              return [func.functionSig, funcConditions]
+              return [func.sighash, funcConditions]
             }),
           )
           return {
