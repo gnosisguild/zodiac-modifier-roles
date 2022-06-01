@@ -1,16 +1,13 @@
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-etherscan";
-import "solidity-coverage";
 import "hardhat-deploy";
-import "hardhat-gas-reporter";
-import "hardhat-contract-sizer";
 import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
-import "./src/tasks/setup";
+
+import "./tasks/manageRoles";
 
 const argv = yargs
   .option("network", {
@@ -22,7 +19,7 @@ const argv = yargs
 
 // Load environment variables.
 dotenv.config();
-const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
+const { INFURA_KEY, MNEMONIC, PK } = process.env;
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
@@ -44,10 +41,11 @@ if (["rinkeby", "mainnet"].includes(argv.network) && INFURA_KEY === undefined) {
 
 const config: HardhatUserConfig = {
   paths: {
+    root: "../evm",
     artifacts: "build/artifacts",
     cache: "build/cache",
-    deploy: "src/deploy",
     sources: "contracts",
+    tests: "../sdk/test",
   },
   solidity: {
     compilers: [{ version: "0.8.6" }, { version: "0.6.12" }],
@@ -79,14 +77,8 @@ const config: HardhatUserConfig = {
       url: "https://rpc-mainnet.maticvigil.com",
     },
   },
-  namedAccounts: {
-    deployer: 0,
-  },
   mocha: {
     timeout: 2000000,
-  },
-  etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
   },
 };
 

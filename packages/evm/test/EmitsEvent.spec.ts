@@ -3,6 +3,8 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
+import { Roles as RolesT } from "../typechain-types";
+
 const ROLE_ID = 123;
 
 const COMP_EQUAL = 0;
