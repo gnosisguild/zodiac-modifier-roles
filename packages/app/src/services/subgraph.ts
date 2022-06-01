@@ -44,10 +44,10 @@ const RolesQuery = gql`
             executionOptions
             wildcarded
             parameters {
-              parameterIndex
-              parameterType
-              parameterComparison
-              parameterComparisonValue
+              index
+              type
+              comparison
+              comparisonValue
             }
           }
         }
@@ -81,10 +81,10 @@ interface RolesQueryResponse {
           executionOptions: string
           wildcarded: boolean
           parameters: {
-            parameterIndex: number
-            parameterType: ParameterType
-            parameterComparison: ParamComparison
-            parameterComparisonValue: string
+            index: number
+            type: ParameterType
+            comparison: ParamComparison
+            comparisonValue: string
           }[]
         }[]
       }[]
@@ -113,10 +113,10 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
             target.functions.map((func) => {
               const paramConditions = func.parameters.map((param) => {
                 const paramCondition: ParamCondition = {
-                  index: param.parameterIndex,
-                  condition: param.parameterComparison,
-                  value: param.parameterComparisonValue,
-                  type: param.parameterType,
+                  index: param.index,
+                  condition: param.comparison,
+                  value: param.comparisonValue,
+                  type: param.type,
                 }
                 return paramCondition
               })

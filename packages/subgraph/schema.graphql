@@ -30,7 +30,7 @@ type Role @entity {
   rolesModifier: RolesModifier!
   roleIdInContract: Int! # The role id used to represent this role in context of the role's rolesModifier
   targets: [Target!] @derivedFrom(field: "role")
-  members: [MemberRole!] @derivedFrom(field: "role")
+  members: [RoleAssignment!] @derivedFrom(field: "role")
 }
 
 type Target @entity {
@@ -48,26 +48,26 @@ type Function @entity {
   functionSig: Bytes!
   executionOptions: ExecutionOptions!
   wildcarded: Boolean!
-  parameters: [Parameter!] @derivedFrom(field: "theFunction")
+  parameters: [Parameter!] @derivedFrom(field: "owningFunction")
 }
 
 type Parameter @entity {
   id: ID!
-  theFunction: Function!
-  parameterIndex: Int!
-  parameterType: ParameterType!
-  parameterComparison: ParameterComparison!
-  parameterComparisonValue: [Bytes!]! # Will contain only one value except for onOf the all values it can be will be in the array
+  owningFunction: Function!
+  index: Int!
+  type: ParameterType!
+  comparison: ParameterComparison!
+  comparisonValue: [Bytes!]! # Will contain only one value except for oneOf where is an array
 }
 
 type Member @entity {
   id: ID!
   address: Bytes!
   enabledAsModule: Boolean!
-  roles: [MemberRole!] @derivedFrom(field: "member")
+  roles: [RoleAssignment!] @derivedFrom(field: "member")
 }
 
-type MemberRole @entity {
+type RoleAssignment @entity {
   id: ID!
   member: Member!
   role: Role!
@@ -78,6 +78,6 @@ type RolesModifier @entity {
   address: Bytes!
   owner: Bytes!
   avatar: Bytes!
-  exec_target: Bytes!
+  target: Bytes!
   roles: [Role!] @derivedFrom(field: "rolesModifier")
 }
