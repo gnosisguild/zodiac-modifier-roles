@@ -320,7 +320,7 @@ function initReducerState({ id, role }: RoleContextWrapProps): RoleContextState 
       return this.targets.add.find((target) => target.id === this.activeTarget)
     },
     getTargetUpdate(targetId: string): UpdateEvent[] {
-      const updatedTarget = this.targets.list.find((_target) => _target.id === targetId)
+      const updatedTarget = [...this.targets.list, ...this.targets.add].find((_target) => _target.id === targetId)
       if (!updatedTarget) return []
 
       const originalTarget = this.role?.targets.find((_target) => _target.id === targetId)
