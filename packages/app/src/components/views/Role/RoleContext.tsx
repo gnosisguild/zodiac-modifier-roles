@@ -175,16 +175,24 @@ function handleTargetExecutionOption(
 function handleTargetConditions(state: RoleContextState, payload: SetTargetConditionsPayload): RoleContextState {
   const replaceValue = (targets: Target[]) => {
     const conditionTypes = Object.values(payload.conditions).map((condition) => condition.type)
+    const targetInState = targets.find((target) => target.id === payload.targetId)
 
-    const hasWildcardedFunction = conditionTypes.some((condition) => condition === ConditionType.WILDCARDED)
-    const hasScopedFunction = conditionTypes.some((condition) => condition === ConditionType.SCOPED)
-    const hasBlockedFunction = conditionTypes.some((condition) => condition === ConditionType.BLOCKED)
+    if (!targetInState) {
+      throw Error("Target not found in state")
+    }
 
-    let type: ConditionType = ConditionType.SCOPED
-    if (hasBlockedFunction && !hasScopedFunction && !hasWildcardedFunction) {
-      type = ConditionType.BLOCKED
-    } else if (!hasBlockedFunction && !hasScopedFunction && hasWildcardedFunction) {
-      type = ConditionType.WILDCARDED
+    let type: ConditionType = targetInState.type
+    if (type !== ConditionType.WILDCARDED) {
+      const hasWildcardedFunction = conditionTypes.some((condition) => condition === ConditionType.WILDCARDED)
+      const hasScopedFunction = conditionTypes.some((condition) => condition === ConditionType.SCOPED)
+      const hasBlockedFunction = conditionTypes.some((condition) => condition === ConditionType.BLOCKED)
+
+      type = ConditionType.SCOPED
+      if (hasBlockedFunction && !hasScopedFunction && !hasWildcardedFunction) {
+        type = ConditionType.BLOCKED
+      } else if (!hasBlockedFunction && !hasScopedFunction && hasWildcardedFunction) {
+        type = ConditionType.WILDCARDED
+      }
     }
 
     return replaceTargetValue(targets, payload.targetId, { type, conditions: payload.conditions })
