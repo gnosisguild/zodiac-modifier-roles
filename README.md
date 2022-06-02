@@ -29,6 +29,14 @@ The interface mirrors the relevant parts of the Gnosis Safe's interface, so this
 - Assign the role to an address with `assignRoles()`
 - Address can now trigger the safe to call those targets, functions, and parameters via `executeTransactionFromModule()`
 
+### Development environment setup
+
+1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
+2. From the repo root run `yarn`
+3. From the repo root run `yarn build`
+
+After that, you can start working on the different packages.
+
 ### Solidity Compiler
 
 The contracts have been developed with [Solidity 0.8.6](https://github.com/ethereum/solidity/releases/tag/v0.8.6). This version of Solidity made all arithmetic checked by default, therefore eliminating the need for explicit overflow or underflow (or other arithmetic) checks. This version of solidity was chosen as it allows to easily cast bytes to bytes4 and bytes32.

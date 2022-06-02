@@ -1,7 +1,8 @@
 {
-  "name": "@gnosis.pm/zodiac-roles-modifier",
+  "name": "zodiac-roles-monorepo",
+  "private": true,
   "version": "1.0.0",
-  "description": "A Zodiac modifier that allows avatars to enforce granular, role-based, permissions for attached modules.",
+  "description": "Zodiac Roles monorepo",
   "scripts": {
     "build": "yarn contracts:build && yarn app:build && yarn subgraph:build",
     "coverage": "yarn contracts:coverage",
@@ -16,9 +17,14 @@
     "subgraph:build": "cd packages/subgraph && yarn build",
     "subgraph:pre-commit": "cd packages/subgraph && yarn pre-commit",
     "subgraph:install": "cd packages/subgraph && yarn install",
-    "preinstall": "yarn contracts:install && yarn app:install && yarn subgraph:install",
+    "sdk:build": "cd packages/sdk && yarn build",
+    "sdk:test": "cd packages/sdk && yarn test",
+    "sdk:pre-commit": "cd packages/sdk && yarn pre-commit",
+    "sdk:install": "cd packages/sdk && yarn install",
+    "preinstall": "yarn contracts:install && yarn app:install && yarn subgraph:install && yarn sdk:install",
     "prepare": "husky install",
-    "pre-commit": "yarn app:pre-commit && yarn subgraph:pre-commit"
+    "pre-commit": "yarn app:pre-commit && yarn subgraph:pre-commit && yarn contracts:pre-commit && yarn sdk:pre-commit",
+    "test": "yarn contracts:test"
   },
   "repository": {
     "type": "git",

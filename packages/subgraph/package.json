@@ -1,6 +1,6 @@
 {
-  "name": "zodiac-modifier-roles",
-  "license": "UNLICENSED",
+  "name": "zodiac-roles-subgraph",
+  "license": "LGPL-3.0+",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
