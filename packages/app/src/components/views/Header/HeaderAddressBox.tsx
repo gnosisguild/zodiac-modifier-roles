@@ -33,9 +33,10 @@ const useStyles = makeStyles((theme) => ({
 interface HeaderAddressBoxProps {
   address?: string
   emptyText: string
+  onClick?: () => void
 }
 
-export const HeaderAddressBox = ({ address, emptyText }: HeaderAddressBoxProps) => {
+export const HeaderAddressBox = ({ address, emptyText, onClick }: HeaderAddressBoxProps) => {
   const classes = useStyles()
   return (
     <HeaderBox
@@ -51,6 +52,7 @@ export const HeaderAddressBox = ({ address, emptyText }: HeaderAddressBoxProps) 
           />
         ) : undefined
       }
+      onClick={onClick}
     >
       <Typography
         variant="body1"
