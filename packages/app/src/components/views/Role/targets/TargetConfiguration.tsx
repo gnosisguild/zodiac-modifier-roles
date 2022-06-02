@@ -139,9 +139,8 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
     setTargetConditions({ targetId: target.id, conditions })
   }
 
-  const allowAllFunctions = target.type === ConditionType.WILDCARDED
-
   const handleAllFuncChange = () => {
+    const allowAllFunctions = target.type === ConditionType.WILDCARDED
     const type = !allowAllFunctions ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
   }
@@ -172,7 +171,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         <FormControlLabel
           className={classes.allowAllLabel}
           label="Allow all calls to target"
-          control={<Checkbox checked={allowAllFunctions} onClick={handleAllFuncChange} />}
+          control={<Checkbox checked={target.type === ConditionType.WILDCARDED} onClick={handleAllFuncChange} />}
         />
       </Box>
       {target.type === ConditionType.WILDCARDED ? (
@@ -180,10 +179,11 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
           <ExecutionTypeSelect value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
         </Box>
       ) : null}
-      <Box
-        className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
-      >
-        <ZodiacPaper borderStyle="single" className={classes.root}>
+      <Box className={classNames(classes.container)}>
+        <ZodiacPaper
+          borderStyle="single"
+          className={classNames(classes.root, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
+        >
           <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
         </ZodiacPaper>
       </Box>
