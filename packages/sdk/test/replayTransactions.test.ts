@@ -1,60 +1,60 @@
 import SafeServiceClient, {
   SafeMultisigTransactionResponse,
-} from "@gnosis.pm/safe-service-client";
-import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
-import "@nomiclabs/hardhat-ethers";
-import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib";
+} from "@gnosis.pm/safe-service-client"
+import { expect } from "chai"
+import hre, { deployments, waffle, ethers } from "hardhat"
+import "@nomiclabs/hardhat-ethers"
+import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
 
-import { Roles } from "../../evm/typechain-types";
-import applyPreset from "../src/applyPreset";
-import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest";
-import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage";
-import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types";
-import { Signer } from "ethers";
+import { Roles } from "../../evm/typechain-types"
+import applyPreset from "../src/applyPreset"
+import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
+import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
+import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
+import { Signer } from "ethers"
 
-describe("Replay Transactions Test", async () => {
+describe.skip("Replay Transactions Test", async () => {
   const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-    const [owner] = waffle.provider.getWallets();
+    await deployments.fixture()
+    const [owner] = waffle.provider.getWallets()
 
-    const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-    const multiSend = await MultiSend.deploy();
+    const MultiSend = await hre.ethers.getContractFactory("MultiSend")
+    const multiSend = await MultiSend.deploy()
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
+    const Avatar = await hre.ethers.getContractFactory("TestAvatar")
+    const avatar = await Avatar.deploy()
 
-    const Permissions = await hre.ethers.getContractFactory("Permissions");
-    const permissions = await Permissions.deploy();
+    const Permissions = await hre.ethers.getContractFactory("Permissions")
+    const permissions = await Permissions.deploy()
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
         Permissions: permissions.address,
       },
-    });
+    })
 
     const modifier = (await Modifier.deploy(
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles;
+    )) as Roles
 
-    modifier.connect(owner);
+    modifier.connect(owner)
 
-    await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D");
+    await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
     // add ethers default signer to role 1
-    const defaultSigner = (await hre.ethers.getSigners())[0];
-    await modifier.assignRoles(defaultSigner.address, [1], [true]);
+    const defaultSigner = (await hre.ethers.getSigners())[0]
+    await modifier.assignRoles(defaultSigner.address, [1], [true])
 
     const ethAdapter = new EthersAdapter({
       ethers: ethers as unknown as EthersAdapterConfig["ethers"],
       signer: defaultSigner,
-    });
-    const txServiceUrl = "https://safe-transaction.xdai.gnosis.io";
+    })
+    const txServiceUrl = "https://safe-transaction.xdai.gnosis.io"
     const safeService = new SafeServiceClient({
       txServiceUrl,
       ethAdapter: ethAdapter as EthAdapter,
-    });
+    })
 
     return {
       owner,
@@ -64,44 +64,38 @@ describe("Replay Transactions Test", async () => {
       modifier,
       multiSend,
       safeService,
-    };
-  });
+    }
+  })
 
   describe("Gnosis Chain DeFi Manage preset", () => {
-    it.skip("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
-      const { owner, modifier, safeService } = await setup();
+    it("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
+      const { owner, modifier, safeService } = await setup()
       await applyPreset(
         modifier.address,
         1,
         gnosisChainDeFiManagePreset,
         owner,
         "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
-      );
-      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n");
+      )
+      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n")
 
-      // TODO currently broken in safe-service-client
-      // const moduleTransactions = (
-      //   await safeService.getModuleTransactions(
-      //     "0x10E4597fF93cbee194F4879f8f1d54a370DB6969".toLowerCase()
-      //   )
-      // ).results;
       const multisigTransactions = (
         await safeService.getMultisigTransactions(
           "0x10E4597fF93cbee194F4879f8f1d54a370DB6969"
         )
-      ).results;
+      ).results
 
       const SKIP_TRANSACTIONS = [
         // GNO transfers to some EOAs
         "0x5beb987553ce2d8cd2d033f82a46b3bc5f76552f51e942446ff080c65533469e",
         "0xdc191fec6b1d9dc2c534b28da06822440c2fe06533f0043a7def01a7b2d13567",
-      ];
+      ]
 
       for (let i = 0; i < multisigTransactions.length; i++) {
-        const tx = multisigTransactions[i];
-        if (SKIP_TRANSACTIONS.includes(tx.transactionHash)) continue;
+        const tx = multisigTransactions[i]
+        if (SKIP_TRANSACTIONS.includes(tx.transactionHash)) continue
 
-        console.log(`Simulating ${printCallData(tx)} ...`);
+        console.log(`Simulating ${printCallData(tx)} ...`)
         try {
           await modifier.execTransactionWithRole(
             tx.to,
@@ -110,30 +104,30 @@ describe("Replay Transactions Test", async () => {
             tx.operation,
             1,
             false
-          );
+          )
         } catch (e) {
-          console.log("Reverting transaction:", tx);
-          throw e;
+          console.log("Reverting transaction:", tx)
+          throw e
         }
       }
-    });
+    })
 
     it("allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
-      const { owner, modifier, safeService } = await setup();
+      const { owner, modifier, safeService } = await setup()
       await applyPreset(
         modifier.address,
         1,
         gnosisChainDeFiManagePreset,
         owner,
         "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f"
-      );
-      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n");
+      )
+      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n")
 
       const multisigTransactions = (
         await safeService.getMultisigTransactions(
           "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f"
         )
-      ).results;
+      ).results
 
       const SKIP_TRANSACTIONS = [
         // transactions that shall be performed by harvesting role
@@ -187,17 +181,17 @@ describe("Replay Transactions Test", async () => {
         "0x3e33770b924cfb9ccbe1b611677c19047b20bc34b67b22460f4e4947e7cb6e08", // GNO approve for tx above
         "0xaaee77e8ede7f848c29e7cd6cdd6970305cb9ad51ae4093c5b12813c3199fc49",
         "0xbf17111bcbbc2dea5fc5f4a7c67e30b23b811f5c84d3bde3c27cb9239b674a60",
-      ];
+      ]
 
       for (let i = 0; i < multisigTransactions.length; i++) {
-        const tx = multisigTransactions[i];
+        const tx = multisigTransactions[i]
         if (
           !tx.transactionHash || // skip unconfirmed txs
           SKIP_TRANSACTIONS.includes(tx.transactionHash)
         )
-          continue;
+          continue
 
-        console.log(`Simulating ${printCallData(tx)} ...`);
+        console.log(`Simulating ${printCallData(tx)} ...`)
         try {
           await modifier.execTransactionWithRole(
             tx.to,
@@ -206,32 +200,32 @@ describe("Replay Transactions Test", async () => {
             tx.operation,
             1,
             false
-          );
+          )
         } catch (e) {
-          console.log("Reverting transaction:", tx);
-          throw e;
+          console.log("Reverting transaction:", tx)
+          throw e
         }
       }
-    });
-  });
+    })
+  })
 
   describe("Gnosis Chain DeFi Harvest preset", () => {
     it("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
-      const { owner, modifier, safeService } = await setup();
+      const { owner, modifier, safeService } = await setup()
       await applyPreset(
         modifier.address,
         1,
         gnosisChainDeFiHarvestPreset,
         owner,
         "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f"
-      );
-      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n");
+      )
+      console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n")
 
       const multisigTransactions = (
         await safeService.getMultisigTransactions(
           "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f"
         )
-      ).results;
+      ).results
 
       const HARVEST_TRANSACTIONS = [
         // transactions that shall be performed by harvesting role
@@ -246,13 +240,13 @@ describe("Replay Transactions Test", async () => {
         "0x1e89a616c54cbc318689f47d6471c6e36630437fbecdb23b7a1be2f24e37eb5e",
         "0x2b18e34f395acf8d08f90f004a8a4f5206e70f9568c61d5ae0d9918a01855609",
         "0xfdc02d50a4b1cefb685d83a7c46fad155a8a93c1d90c2f4c842162b15a308fdb",
-      ];
+      ]
 
       for (let i = 0; i < multisigTransactions.length; i++) {
-        const tx = multisigTransactions[i];
-        if (!HARVEST_TRANSACTIONS.includes(tx.transactionHash)) continue;
+        const tx = multisigTransactions[i]
+        if (!HARVEST_TRANSACTIONS.includes(tx.transactionHash)) continue
 
-        console.log(`Simulating ${printCallData(tx)} ...`);
+        console.log(`Simulating ${printCallData(tx)} ...`)
         try {
           await modifier.execTransactionWithRole(
             tx.to,
@@ -261,24 +255,24 @@ describe("Replay Transactions Test", async () => {
             tx.operation,
             1,
             false
-          );
+          )
         } catch (e) {
-          console.log("Reverting transaction:", tx);
-          throw e;
+          console.log("Reverting transaction:", tx)
+          throw e
         }
       }
-    });
-  });
-});
+    })
+  })
+})
 
 const printCallData = (tx: SafeMultisigTransactionResponse) => {
-  if (!tx.data) return `call to ${tx.to}`;
+  if (!tx.data) return `call to ${tx.to}`
 
   if (!tx.dataDecoded) {
-    return `call ${tx.data} to ${tx.to}`;
+    return `call ${tx.data} to ${tx.to}`
   }
 
-  const decoded = tx.dataDecoded as any;
-  const params = decoded.parameters?.map((p: any) => p.value).join(", ") || "";
-  return `call ${decoded.method}(${params}) to ${tx.to}`;
-};
+  const decoded = tx.dataDecoded as any
+  const params = decoded.parameters?.map((p: any) => p.value).join(", ") || ""
+  return `call ${decoded.method}(${params}) to ${tx.to}`
+}
