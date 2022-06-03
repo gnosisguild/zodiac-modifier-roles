@@ -12,7 +12,7 @@ import {
   SetMultisendAddress,
   TargetSet,
 } from "../generated/Roles/Roles"
-import { RolesModifier, Role, Member, MemberRole } from "../generated/schema"
+import { RolesModifier, Role, Member, RoleAssignment } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
 import {
   CLEARANCE,
@@ -23,7 +23,7 @@ import {
   EXECUTION_OPTIONS__NONE,
   getFunctionId,
   getMemberId,
-  getMemberRoleId,
+  getAssignmentId,
   getOrCreateMember,
   getOrCreateRole,
   getRoleId,
@@ -54,15 +54,15 @@ export function handleAssignRoles(event: AssignRoles): void {
   for (let i = 0; i < rolesArray.length; i++) {
     const roleId = getRoleId(rolesModifierId, rolesArray[i])
     const role = getOrCreateRole(roleId, rolesModifierId, rolesArray[i])
-    const memberRoleId = getMemberRoleId(memberId, roleId)
-    let memberRole = MemberRole.load(memberRoleId)
-    if (!memberRole) {
+    const assignmentId = getAssignmentId(memberId, roleId)
+    let assignment = RoleAssignment.load(assignmentId)
+    if (!assignment) {
       if (memberOfArray[i]) {
         // adding a member
-        memberRole = new MemberRole(memberRoleId)
-        memberRole.member = memberId
-        memberRole.role = roleId
-        memberRole.save()
+        assignment = new RoleAssignment(assignmentId)
+        assignment.member = memberId
+        assignment.role = roleId
+        assignment.save()
       } else {
         // nothing to do the member - role relationship does not exist
         log.info("trying to remove a member from a role it is not a member of", [memberId, roleId])
@@ -73,7 +73,7 @@ export function handleAssignRoles(event: AssignRoles): void {
         log.info("trying to add a member to a role it is already a member of", [memberId, roleId])
       } else {
         // removing a member-role relationship
-        store.remove("MemberRole", memberRoleId)
+        store.remove("RoleAssignment", assignmentId)
       }
     }
   }
@@ -131,7 +131,7 @@ export function handleRolesModSetup(event: RolesModSetup): void {
     rolesModifier.address = rolesModifierAddress
     rolesModifier.owner = event.params.owner
     rolesModifier.avatar = event.params.avatar
-    rolesModifier.exec_target = event.params.target
+    rolesModifier.target = event.params.target
     rolesModifier.save()
   } else {
     log.error("RolesModifier already exists", [rolesModifierId])

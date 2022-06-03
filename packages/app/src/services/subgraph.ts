@@ -40,14 +40,14 @@ const RolesQuery = gql`
           executionOptions
           clearance
           functions {
-            functionSig
+            sighash
             executionOptions
             wildcarded
             parameters {
-              parameterIndex
-              parameterType
-              parameterComparison
-              parameterComparisonValue
+              index
+              type
+              comparison
+              comparisonValue
             }
           }
         }
@@ -77,14 +77,14 @@ interface RolesQueryResponse {
         executionOptions: string
         clearance: ConditionType
         functions: {
-          functionSig: string
+          sighash: string
           executionOptions: string
           wildcarded: boolean
           parameters: {
-            parameterIndex: number
-            parameterType: ParameterType
-            parameterComparison: ParamComparison
-            parameterComparisonValue: string
+            index: number
+            type: ParameterType
+            comparison: ParamComparison
+            comparisonValue: string
           }[]
         }[]
       }[]
@@ -113,21 +113,21 @@ export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> 
             target.functions.map((func) => {
               const paramConditions = func.parameters.map((param) => {
                 const paramCondition: ParamCondition = {
-                  index: param.parameterIndex,
-                  condition: param.parameterComparison,
-                  value: param.parameterComparisonValue,
-                  type: param.parameterType,
+                  index: param.index,
+                  condition: param.comparison,
+                  value: param.comparisonValue,
+                  type: param.type,
                 }
                 return paramCondition
               })
 
               const funcConditions: FunctionCondition = {
-                sighash: func.functionSig,
+                sighash: func.sighash,
                 type: func.wildcarded ? ConditionType.WILDCARDED : getFunctionConditionType(paramConditions),
                 executionOption: getExecutionOptionFromLabel(func.executionOptions),
                 params: paramConditions,
               }
-              return [func.functionSig, funcConditions]
+              return [func.sighash, funcConditions]
             }),
           )
           return {
