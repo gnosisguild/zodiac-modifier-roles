@@ -6,6 +6,7 @@ import { Box, Button, makeStyles, Typography } from "@material-ui/core"
 import AddIcon from "@material-ui/icons/Add"
 import { useWallet } from "../../../hooks/useWallet"
 import { useState } from "react"
+import { WalletType } from "../../../services/rolesModifierContract"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -21,6 +22,7 @@ const useStyles = makeStyles((theme) => ({
   connectWalletBoxContainer: {
     position: "relative",
     marginLeft: 16,
+    zIndex: 1,
   },
   connectWalletBoxMenu: {
     position: "absolute",
@@ -32,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 export const ConnectWalletBox = () => {
   const classes = useStyles()
   const address = useRootSelector(getConnectedAddress)
-  const { startOnboard, onboard } = useWallet()
+  const { startOnboard, onboard, walletType } = useWallet()
   const [showWalletOption, setShowWalletOption] = useState<boolean>(false)
   if (!address) {
     return (
@@ -49,7 +51,7 @@ export const ConnectWalletBox = () => {
       <HeaderAddressBox
         address={address}
         emptyText="No Wallet Connected"
-        onClick={() => setShowWalletOption(!showWalletOption)}
+        onClick={walletType !== WalletType.GNOSIS_SAFE ? () => setShowWalletOption(!showWalletOption) : undefined}
       />
       {showWalletOption && (
         <Box className={classes.connectWalletBoxMenu}>
