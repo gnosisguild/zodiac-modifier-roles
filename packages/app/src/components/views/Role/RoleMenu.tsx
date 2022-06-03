@@ -196,6 +196,22 @@ export const RoleMenu = () => {
     }
   }
 
+  const handleIsDisabled = (): boolean => {
+    if (!memberChanges && !targetChanges) {
+      return true
+    }
+    if (!memberChanges && targetChanges) {
+      return false
+    }
+    if (memberChanges && !targetChanges) {
+      return false
+    }
+    if (memberChanges && targetChanges) {
+      return false
+    }
+    return false
+  }
+
   const button = (
     <Button
       fullWidth
@@ -203,7 +219,7 @@ export const RoleMenu = () => {
       size="large"
       variant="contained"
       onClick={handleExecuteUpdate}
-      disabled={isWaiting || !walletAddress || txProposedInSafe}
+      disabled={isWaiting || !walletAddress || txProposedInSafe || handleIsDisabled()}
       startIcon={
         txProposedInSafe ? <CheckSharp /> : isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />
       }
