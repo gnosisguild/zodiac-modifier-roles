@@ -134,6 +134,7 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const functionId = getFunctionId(targetId, sighash)
   const theFunction = getOrCreateFunction(functionId, targetId, sighash)
   theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.wildcarded = false
   theFunction.save()
 
   // create new parameter or override old one
