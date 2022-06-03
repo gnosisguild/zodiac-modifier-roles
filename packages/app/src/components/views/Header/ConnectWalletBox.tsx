@@ -2,9 +2,11 @@ import { HeaderAddressBox } from "./HeaderAddressBox"
 import { useRootSelector } from "../../../store"
 import { getConnectedAddress } from "../../../store/main/selectors"
 import { HeaderBox } from "./HeaderBox"
-import { makeStyles, Typography } from "@material-ui/core"
+import { Box, Button, makeStyles, Typography } from "@material-ui/core"
 import AddIcon from "@material-ui/icons/Add"
 import { useWallet } from "../../../hooks/useWallet"
+import { useState } from "react"
+import { WalletType } from "../../../services/rolesModifierContract"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -17,14 +19,23 @@ const useStyles = makeStyles((theme) => ({
   icon: {
     color: "#D9D4AD",
   },
+  connectWalletBoxContainer: {
+    position: "relative",
+    marginLeft: 16,
+    zIndex: 1,
+  },
+  connectWalletBoxMenu: {
+    position: "absolute",
+    bottom: -50,
+    width: "100%",
+  },
 }))
 
 export const ConnectWalletBox = () => {
   const classes = useStyles()
   const address = useRootSelector(getConnectedAddress)
-
-  const { startOnboard } = useWallet()
-
+  const { startOnboard, onboard, walletType } = useWallet()
+  const [showWalletOption, setShowWalletOption] = useState<boolean>(false)
   if (!address) {
     return (
       <HeaderBox onClick={startOnboard} icon={<AddIcon className={classes.icon} />} className={classes.root}>
@@ -35,5 +46,29 @@ export const ConnectWalletBox = () => {
     )
   }
 
-  return <HeaderAddressBox address={address} emptyText="No Wallet Connected" />
+  return (
+    <Box className={classes.connectWalletBoxContainer}>
+      <HeaderAddressBox
+        address={address}
+        emptyText="No Wallet Connected"
+        onClick={walletType !== WalletType.GNOSIS_SAFE ? () => setShowWalletOption(!showWalletOption) : undefined}
+      />
+      {showWalletOption && (
+        <Box className={classes.connectWalletBoxMenu}>
+          <Button
+            size="large"
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={() => {
+              onboard.walletReset()
+              setShowWalletOption(false)
+            }}
+          >
+            Disconnect Wallet
+          </Button>
+        </Box>
+      )}
+    </Box>
+  )
 }
