@@ -40,6 +40,7 @@ const useStyles = makeStyles((theme) => ({
   },
   content: {
     gridColumnStart: 3,
+    overflow: "auto",
   },
 }))
 
