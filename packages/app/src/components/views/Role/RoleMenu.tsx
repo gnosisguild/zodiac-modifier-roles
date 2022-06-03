@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Button, CircularProgress, Link, Tooltip, Typography } from "@material-ui/core"
 import ButtonLink from "../../commons/input/ButtonLink"
 import { AddSharp, ArrowBackSharp, CheckSharp } from "@material-ui/icons"
@@ -8,11 +9,11 @@ import {
   getRolesModifierAddress,
   getTransactionPending,
 } from "../../../store/main/selectors"
-import { Role } from "../../../typings/role"
+import { Role, Target } from "../../../typings/role"
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom"
 import { RoleMembers } from "./members/RoleMembers"
 import { RoleTargets } from "./targets/RoleTargets"
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { RoleContext } from "./RoleContext"
 import {
   executeTxsGnosisSafe,
@@ -97,6 +98,36 @@ export const RoleMenu = () => {
   const [indexing, setIndexing] = useState(false)
   const [txProposedInSafe, setTxProposedInSafe] = useState(false)
   const [pendingChangesModalIsOpen, setPendingChangesModalIsOpen] = useState(false)
+  const [memberChanges, setMemberChanges] = useState<boolean>(false)
+  const [targetChanges, setTargetChanges] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (state) {
+      const { members, targets } = state
+      handleMemberChanges(members)
+      handleTargetChanges(targets)
+    }
+  }, [state])
+
+  const handleMemberChanges = (members: { list: string[]; add: string[]; remove: string[] }) => {
+    if (!members.add.length && !members.remove.length) {
+      setMemberChanges(false)
+      return
+    }
+    setMemberChanges(true)
+  }
+
+  const handleTargetChanges = (targets: { list: Target[]; add: Target[]; remove: string[] }) => {
+    const targetsToUpdate = targets.list
+      .filter(({ address }) => !targets.remove.includes(address))
+      .filter(({ id }) => state.getTargetUpdate(id)?.length)
+
+    if (!targets.add.length && !targetsToUpdate.length && !targets.remove.length) {
+      setTargetChanges(false)
+      return
+    }
+    setTargetChanges(true)
+  }
 
   const handleExecuteUpdate = async () => {
     if (!rolesModifierAddress) return
@@ -223,7 +254,7 @@ export const RoleMenu = () => {
           [<RoleMembers />, <RoleTargets />]
         )}
       </Box>
-      {!txProposedInSafe && (
+      {(memberChanges || targetChanges) && !txProposedInSafe && (
         <Box sx={{ display: "flex", alignItems: "center", flexDirection: "column", mt: "auto", mb: 2 }}>
           <Link onClick={() => setPendingChangesModalIsOpen(true)} underline="always">
             <ButtonLink text={"View pending changes"} />
