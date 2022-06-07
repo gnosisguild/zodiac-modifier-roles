@@ -196,22 +196,7 @@ export const RoleMenu = () => {
     }
   }
 
-  const handleIsDisabled = (): boolean => {
-    if (!memberChanges && !targetChanges) {
-      return true
-    }
-    if (!memberChanges && targetChanges) {
-      return false
-    }
-    if (memberChanges && !targetChanges) {
-      return false
-    }
-    if (memberChanges && targetChanges) {
-      return false
-    }
-    return false
-  }
-
+  const handleIsDisabled = (): boolean => !memberChanges && !targetChanges
   const button = (
     <Button
       fullWidth
