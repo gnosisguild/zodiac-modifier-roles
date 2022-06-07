@@ -196,6 +196,7 @@ export const RoleMenu = () => {
     }
   }
 
+  const handleIsDisabled = (): boolean => !memberChanges && !targetChanges
   const button = (
     <Button
       fullWidth
@@ -203,7 +204,7 @@ export const RoleMenu = () => {
       size="large"
       variant="contained"
       onClick={handleExecuteUpdate}
-      disabled={isWaiting || !walletAddress || txProposedInSafe}
+      disabled={isWaiting || !walletAddress || txProposedInSafe || handleIsDisabled()}
       startIcon={
         txProposedInSafe ? <CheckSharp /> : isWaiting ? <CircularProgress size={18} color="primary" /> : <AddSharp />
       }
