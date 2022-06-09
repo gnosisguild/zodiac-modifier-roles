@@ -7,6 +7,7 @@ import {
   MetaTransactionData,
   OperationType,
 } from "@gnosis.pm/safe-core-sdk-types"
+import { encodeMulti } from "ethers-multisend"
 
 import { Roles } from "../../evm/typechain-types"
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
@@ -22,6 +23,8 @@ import encodeCalls from "./encodeCalls"
 
 let nonce: number
 
+const DEFAULT_BATCH_SIZE = 75
+
 /**
  * Updates a role, setting all permissions of the given preset
  *
@@ -34,7 +37,7 @@ let nonce: number
  * @param [options.avatar] The avatar address of the roles modifier
  *
  */
-const applyPreset = async (
+export const applyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
@@ -51,25 +54,20 @@ const applyPreset = async (
     signer,
     ethers = defaultEthers,
     network,
-    multiSendBatchSize = 75,
+    multiSendBatchSize = DEFAULT_BATCH_SIZE,
   } = options
   const contract = new Contract(address, ROLES_ABI.abi, signer) as Roles
   const avatar = options.avatar || (await contract.avatar())
   const safeAddress = options.safeAddress || avatar
 
-  const currentPermissions = await fetchPermissions({
+  const batches = await prepareTransactions({
+    network,
     address,
     roleId,
-    network,
+    preset,
+    avatar,
+    multiSendBatchSize,
   })
-  const nextPermissions = fillAndUnfoldPreset(preset, avatar)
-  const calls = patchPermissions(currentPermissions, nextPermissions)
-  const callBatches = batchArray(calls, multiSendBatchSize)
-
-  calls.forEach((call) => logCall(call, console.debug))
-  console.debug(
-    `For a total of ${calls.length} calls, that will be executed in ${callBatches.length} multi-send batches of ${multiSendBatchSize})}`
-  )
 
   const ethAdapter = new EthersAdapter({
     ethers,
@@ -85,16 +83,11 @@ const applyPreset = async (
     safeAddress,
   })
 
-  nonce = await signer.getTransactionCount()
-
-  for (let i = 0; i < callBatches.length; i++) {
-    const batch = await encodeCalls(address, roleId, callBatches[i])
-    const safeTransaction = await safeSdk.createTransaction(
-      batch.map(asMetaTransaction),
-      {
-        nonce: nonce++,
-      }
-    )
+  nonce = await safeSdk.getNonce()
+  for (let i = 0; i < batches.length; i++) {
+    const safeTransaction = await safeSdk.createTransaction(batches[i], {
+      nonce: nonce++,
+    })
     await safeSdk.signTransaction(safeTransaction)
     const safeTxHash = await safeSdk.getTransactionHash(safeTransaction)
     await safeService.proposeTransaction({
@@ -107,7 +100,73 @@ const applyPreset = async (
   }
 }
 
-export default applyPreset
+const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
+
+export const encodeApplyPreset = async (
+  address: string,
+  roleId: number,
+  preset: RolePreset,
+  options: {
+    avatar: string
+    network: NetworkId
+    multiSendAddress?: string
+    multiSendBatchSize?: number
+  }
+): Promise<MetaTransactionData[]> => {
+  const {
+    avatar,
+    network,
+    multiSendAddress = MULTI_SEND_CALL_ONLY,
+    multiSendBatchSize = DEFAULT_BATCH_SIZE,
+  } = options
+  const batches = await prepareTransactions({
+    network,
+    address,
+    roleId,
+    preset,
+    avatar,
+    multiSendBatchSize,
+  })
+  return batches.map((transactions) =>
+    encodeMulti(transactions, multiSendAddress)
+  )
+}
+
+const prepareTransactions = async ({
+  address,
+  roleId,
+  network,
+  avatar,
+  preset,
+  multiSendBatchSize,
+}: {
+  address: string
+  roleId: number
+  network: NetworkId
+  avatar: string
+  preset: RolePreset
+  multiSendBatchSize: number
+}) => {
+  const currentPermissions = await fetchPermissions({
+    address,
+    roleId,
+    network,
+  })
+  const nextPermissions = fillAndUnfoldPreset(preset, avatar)
+  const calls = patchPermissions(currentPermissions, nextPermissions)
+  const transactions = await encodeCalls(address, roleId, calls)
+  const txBatches = batchArray(
+    transactions.map(asMetaTransaction),
+    multiSendBatchSize
+  )
+
+  calls.forEach((call) => logCall(call, console.debug))
+  console.debug(
+    `For a total of ${calls.length} calls, that will be executed in ${txBatches.length} multi-send batches of ${multiSendBatchSize})}`
+  )
+
+  return txBatches
+}
 
 const asMetaTransaction = (
   populatedTransaction: PopulatedTransaction
