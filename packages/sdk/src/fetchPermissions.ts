@@ -1,5 +1,5 @@
-import SUBGRAPHS, { NetworkId } from "./subgraphs"
-import { RolePermissions } from "./types"
+import SUBGRAPH from "./subgraph"
+import { RolePermissions, NetworkId } from "./types"
 
 interface Props {
   address: string
@@ -38,7 +38,7 @@ const fetchPermissions = async ({
   network,
 }: Props): Promise<RolePermissions> => {
   const globalRoleId = `${address.toLowerCase()}-ROLE-${roleId}`
-  const res = await fetch(SUBGRAPHS[network], {
+  const res = await fetch(SUBGRAPH[network], {
     body: JSON.stringify({
       query: QUERY,
       variables: { id: globalRoleId },

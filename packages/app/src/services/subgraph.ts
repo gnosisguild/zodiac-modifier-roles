@@ -84,7 +84,7 @@ interface RolesQueryResponse {
             index: number
             type: ParameterType
             comparison: ParamComparison
-            comparisonValue: string
+            comparisonValue: string[]
           }[]
         }[]
       }[]

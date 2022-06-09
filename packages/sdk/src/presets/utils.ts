@@ -1,23 +1,20 @@
-import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils";
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
 import {
   Comparison,
   ExecutionOptions,
   ParameterType,
-  AllowFunction,
-  ScopeParam,
-} from "../types";
-
-export const functionSighash = (signature: string): string =>
-  keccak256(toUtf8Bytes(signature)).substring(0, 10);
+  PresetFunction,
+  PresetScopeParam,
+} from "../types"
 
 export const allowErc20Approve = (
   tokens: string[],
   spenders: string[]
-): AllowFunction => ({
+): PresetFunction => ({
   targetAddresses: tokens,
-  functionSig: functionSighash("approve(address,uint256)"),
+  signature: "approve(address,uint256)",
   params: [
     spenders.length === 1
       ? staticEqual(spenders[0], "address")
@@ -31,14 +28,14 @@ export const allowErc20Approve = (
     undefined,
   ],
   options: ExecutionOptions.None,
-});
+})
 
 export const allowErc20Transfer = (
   tokens: string[],
   recipients: string[]
-): AllowFunction => ({
+): PresetFunction => ({
   targetAddresses: tokens,
-  functionSig: functionSighash("transfer(address,uint256)"),
+  signature: "transfer(address,uint256)",
   params: [
     recipients.length === 1
       ? staticEqual(recipients[0], "address")
@@ -52,14 +49,14 @@ export const allowErc20Transfer = (
     undefined,
   ],
   options: ExecutionOptions.None,
-});
+})
 
 export const staticEqual = (
   value: string | typeof AVATAR_ADDRESS_PLACEHOLDER,
   type?: string
-): ScopeParam => {
-  if (value === AVATAR_ADDRESS_PLACEHOLDER) type = "address";
-  if (!type) throw new Error("the value type must be specified");
+): PresetScopeParam => {
+  if (value === AVATAR_ADDRESS_PLACEHOLDER) type = "address"
+  if (!type) throw new Error("the value type must be specified")
 
   return {
     comparison: Comparison.EqualTo,
@@ -68,8 +65,8 @@ export const staticEqual = (
       value === AVATAR_ADDRESS_PLACEHOLDER
         ? value
         : defaultAbiCoder.encode([type], [value]),
-  };
-};
+  }
+}
 
 // export const greaterThanUint = (
 //   value: number | string | BigInt
