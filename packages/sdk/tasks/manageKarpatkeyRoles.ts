@@ -20,17 +20,27 @@ interface Config {
 
 const ADDRESSES: Record<string, Config> = {
   DAO_GNO: {
-    AVATAR: "0x0Df1f08f765238dc0b8beAAdDd6681F62e54beC6",
-    MODULE: "",
-    MANAGEMENT: "",
-    HARVESTERS: [],
+    AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
+    MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
+    MANAGEMENT: "0xe4387D4e45F65240Daaf5e046d5AE592566a5076",
+    HARVESTERS: [
+      "0x5eD64f02588C8B75582f2f8eFd7A5521e3F897CC", // Alex
+      "0x06DAeB1A97972B9A12e171ed1FC86b392Fa3f89A", // Joaco
+      "0xe9eB7DA58f6B5CE5b0a6cFD778A2fa726203AAD5", // Isabel
+      "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
+    ],
     NETWORK: 100,
   },
   LTD_GNO: {
-    AVATAR: "0x0Df1f08f765238dc0b8beAAdDd6681F62e54beC6",
-    MODULE: "",
-    MANAGEMENT: "",
-    HARVESTERS: [],
+    AVATAR: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
+    MODULE: "0x494ec5194123487E8A6ba0b6bc96D57e340025e7",
+    MANAGEMENT: "0x9d3660d8304B063964A45766bbeD41F4883eBbA8",
+    HARVESTERS: [
+      "0xf00b8484c9B78136c6AE8773223CFF9bE7a3Af45", // Alex
+      "0x2EDD4cF73B94a0507441A2C477e9Dc5C92f5Db1a", // Joaco
+      "0x0af878166427cA6075979ADe8377f9a5C23bed05", // Isabel
+      "0xe8aA9122832AA971c4802C69D5141Ff4EEB95ec5", // Ale
+    ],
     NETWORK: 100,
   },
 }
@@ -139,7 +149,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     console.log(`TX hash: ${tx.hash}`)
     console.log("Waiting for confirmation...")
     await tx.wait()
-    console.log(`Done ${i}/${txBatches.length}.`)
+    console.log(`Done ${i + 1}/${txBatches.length}.`)
   }
 })
 
@@ -166,6 +176,6 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     console.log(`TX hash: ${tx.hash}`)
     console.log("Waiting for confirmation...")
     await tx.wait()
-    console.log(`Done ${i}/${txBatches.length}.`)
+    console.log(`Done ${i + 1}/${txBatches.length}.`)
   }
 })

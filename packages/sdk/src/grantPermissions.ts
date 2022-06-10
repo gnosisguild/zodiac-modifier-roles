@@ -85,7 +85,7 @@ const scopeFunction = (func: Function, targetAddress: string): Call => {
   )
   const params: (Parameter | undefined)[] = new Array(
     Math.max(...paramsSkippingOneOf.map((param) => param?.index || 0))
-  )
+  ).fill(undefined)
   paramsSkippingOneOf.forEach((param) => {
     if (param) {
       params[param.index] = param

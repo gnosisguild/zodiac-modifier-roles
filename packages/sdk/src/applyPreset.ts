@@ -12,7 +12,7 @@ import { encodeMulti } from "ethers-multisend"
 import { Roles } from "../../evm/typechain-types"
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
 
-import { RolePreset } from "./types"
+import { RolePermissions, RolePreset } from "./types"
 import fetchPermissions from "./fetchPermissions"
 import { NetworkId } from "./types"
 import SAFE_TX_SERVICE from "./safeTxService"
@@ -20,6 +20,7 @@ import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
 import patchPermissions from "./patchPermissions"
 import logCall from "./logCall"
 import encodeCalls from "./encodeCalls"
+import { ethers, network } from "hardhat"
 
 let nonce: number
 
@@ -45,9 +46,10 @@ export const applyPreset = async (
     signer: Signer
     network: NetworkId
     ethers?: typeof defaultEthers
-    avatar?: string
+    avatar: string
     safeAddress?: string
     multiSendBatchSize?: number
+    currentPermissions?: RolePermissions
   }
 ): Promise<void> => {
   const {
@@ -55,19 +57,22 @@ export const applyPreset = async (
     ethers = defaultEthers,
     network,
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
+    currentPermissions,
   } = options
-  const contract = new Contract(address, ROLES_ABI.abi, signer) as Roles
+  const contract = new Contract(
+    address,
+    ROLES_ABI.abi,
+    ethers.getDefaultProvider(`${network}`)
+  ) as Roles
   const avatar = options.avatar || (await contract.avatar())
   const safeAddress = options.safeAddress || avatar
 
-  const batches = await prepareTransactions({
+  const transactions = await encodeApplyPreset(address, roleId, preset, {
     network,
-    address,
-    roleId,
-    preset,
     avatar,
-    multiSendBatchSize,
+    currentPermissions,
   })
+  const batches = batchArray(transactions, multiSendBatchSize)
 
   const ethAdapter = new EthersAdapter({
     ethers,
@@ -98,11 +103,41 @@ export const applyPreset = async (
       origin: "Zodiac Roles SDK",
     })
   }
+
+  console.debug(
+    `Executed a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
+  )
+}
+
+export const encodeApplyPreset = async (
+  address: string,
+  roleId: number,
+  preset: RolePreset,
+  options: {
+    network: NetworkId
+    avatar?: string
+    currentPermissions?: RolePermissions
+  }
+) => {
+  const { network } = options
+  const avatar = options.avatar || (await readAvatar(address, network))
+  const currentPermissions =
+    options.currentPermissions ||
+    (await fetchPermissions({
+      address,
+      roleId,
+      network,
+    }))
+  const nextPermissions = fillAndUnfoldPreset(preset, avatar)
+  const calls = patchPermissions(currentPermissions, nextPermissions)
+  calls.forEach((call) => logCall(call, console.debug))
+  const transactions = await encodeCalls(address, roleId, calls)
+  return transactions.map(asMetaTransaction)
 }
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
 
-export const encodeApplyPreset = async (
+export const encodeApplyPresetMultisend = async (
   address: string,
   roleId: number,
   preset: RolePreset,
@@ -111,6 +146,7 @@ export const encodeApplyPreset = async (
     network: NetworkId
     multiSendAddress?: string
     multiSendBatchSize?: number
+    currentPermissions?: RolePermissions
   }
 ): Promise<MetaTransactionData[]> => {
   const {
@@ -118,54 +154,29 @@ export const encodeApplyPreset = async (
     network,
     multiSendAddress = MULTI_SEND_CALL_ONLY,
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
+    currentPermissions,
   } = options
-  const batches = await prepareTransactions({
+  const transactions = await encodeApplyPreset(address, roleId, preset, {
     network,
-    address,
-    roleId,
-    preset,
     avatar,
-    multiSendBatchSize,
+    currentPermissions,
   })
+  const batches = batchArray(transactions, multiSendBatchSize)
+  console.debug(
+    `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
+  )
   return batches.map((transactions) =>
     encodeMulti(transactions, multiSendAddress)
   )
 }
 
-const prepareTransactions = async ({
-  address,
-  roleId,
-  network,
-  avatar,
-  preset,
-  multiSendBatchSize,
-}: {
-  address: string
-  roleId: number
-  network: NetworkId
-  avatar: string
-  preset: RolePreset
-  multiSendBatchSize: number
-}) => {
-  const currentPermissions = await fetchPermissions({
+const readAvatar = async (address: string, network: NetworkId) => {
+  const contract = new Contract(
     address,
-    roleId,
-    network,
-  })
-  const nextPermissions = fillAndUnfoldPreset(preset, avatar)
-  const calls = patchPermissions(currentPermissions, nextPermissions)
-  const transactions = await encodeCalls(address, roleId, calls)
-  const txBatches = batchArray(
-    transactions.map(asMetaTransaction),
-    multiSendBatchSize
-  )
-
-  calls.forEach((call) => logCall(call, console.debug))
-  console.debug(
-    `For a total of ${calls.length} calls, that will be executed in ${txBatches.length} multi-send batches of ${multiSendBatchSize})}`
-  )
-
-  return txBatches
+    ROLES_ABI.abi,
+    ethers.getDefaultProvider(`${network}`)
+  ) as Roles
+  return await contract.avatar()
 }
 
 const asMetaTransaction = (

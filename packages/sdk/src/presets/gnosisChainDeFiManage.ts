@@ -67,7 +67,7 @@ const SYMMETRIC = {
 const preset: RolePreset = {
   network: 100,
   allowTargets: [
-    { targetAddress: DEFI_PROTOCOLS["Curve.fi wxDAI/USDC/USDT StableSwap"] },
+    { targetAddress: DEFI_PROTOCOLS["Curve.fi wxDAI/USDC/USDT StableSwap"] }, // TODO: needs more fine-grained access control
   ],
   allowFunctions: [
     allowErc20Approve(

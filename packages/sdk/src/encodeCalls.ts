@@ -10,90 +10,97 @@ const encodeCalls = async (
 ): Promise<PopulatedTransaction[]> => {
   const contract = new Contract(rolesContractAddress, ROLES_ABI.abi) as Roles
   return Promise.all(
-    calls.map((call) => {
-      switch (call.call) {
-        case "allowTarget": {
-          return contract.populateTransaction.allowTarget(
-            roleId,
-            call.targetAddress,
-            call.options
-          )
-        }
+    calls
+      .map((call) => {
+        switch (call.call) {
+          case "allowTarget": {
+            return contract.populateTransaction.allowTarget(
+              roleId,
+              call.targetAddress,
+              call.options
+            )
+          }
 
-        case "scopeTarget": {
-          return contract.populateTransaction.scopeTarget(
-            roleId,
-            call.targetAddress
-          )
-        }
+          case "scopeTarget": {
+            return contract.populateTransaction.scopeTarget(
+              roleId,
+              call.targetAddress
+            )
+          }
 
-        case "scopeAllowFunction": {
-          return contract.populateTransaction.scopeAllowFunction(
-            roleId,
-            call.targetAddress,
-            call.functionSig,
-            call.options
-          )
-        }
+          case "scopeAllowFunction": {
+            return contract.populateTransaction.scopeAllowFunction(
+              roleId,
+              call.targetAddress,
+              call.functionSig,
+              call.options
+            )
+          }
 
-        case "scopeFunction": {
-          return contract.populateTransaction.scopeFunction(
-            roleId,
-            call.targetAddress,
-            call.functionSig,
-            call.isParamScoped,
-            call.paramType,
-            call.paramComp,
-            call.compValue,
-            call.options
-          )
-        }
+          case "scopeFunction": {
+            return contract.populateTransaction.scopeFunction(
+              roleId,
+              call.targetAddress,
+              call.functionSig,
+              call.isParamScoped,
+              call.paramType,
+              call.paramComp,
+              call.compValue,
+              call.options
+            )
+          }
 
-        case "scopeFunctionExecutionOptions": {
-          return contract.populateTransaction.scopeFunctionExecutionOptions(
-            roleId,
-            call.targetAddress,
-            call.functionSig,
-            call.options
-          )
-        }
+          case "scopeFunctionExecutionOptions": {
+            return contract.populateTransaction.scopeFunctionExecutionOptions(
+              roleId,
+              call.targetAddress,
+              call.functionSig,
+              call.options
+            )
+          }
 
-        case "scopeParameterAsOneOf": {
-          return contract.populateTransaction.scopeParameterAsOneOf(
-            roleId,
-            call.targetAddress,
-            call.functionSig,
-            call.paramIndex,
-            call.type,
-            call.value
-          )
-        }
+          case "scopeParameterAsOneOf": {
+            return contract.populateTransaction.scopeParameterAsOneOf(
+              roleId,
+              call.targetAddress,
+              call.functionSig,
+              call.paramIndex,
+              call.type,
+              call.value
+            )
+          }
 
-        case "revokeTarget": {
-          return contract.populateTransaction.revokeTarget(
-            roleId,
-            call.targetAddress
-          )
-        }
+          case "revokeTarget": {
+            return contract.populateTransaction.revokeTarget(
+              roleId,
+              call.targetAddress
+            )
+          }
 
-        case "scopeRevokeFunction": {
-          return contract.populateTransaction.scopeRevokeFunction(
-            roleId,
-            call.targetAddress,
-            call.functionSig
-          )
-        }
+          case "scopeRevokeFunction": {
+            return contract.populateTransaction.scopeRevokeFunction(
+              roleId,
+              call.targetAddress,
+              call.functionSig
+            )
+          }
 
-        case "unscopeParameter": {
-          return contract.populateTransaction.unscopeParameter(
-            roleId,
-            call.targetAddress,
-            call.functionSig,
-            call.paramIndex
-          )
+          case "unscopeParameter": {
+            return contract.populateTransaction.unscopeParameter(
+              roleId,
+              call.targetAddress,
+              call.functionSig,
+              call.paramIndex
+            )
+          }
         }
-      }
-    })
+      })
+      .map((promise, i) =>
+        promise.catch((e) => {
+          console.error(`Encoding call #${i} failed: ${e.message}`, calls[i])
+          throw e
+        })
+      )
   )
 }
 
