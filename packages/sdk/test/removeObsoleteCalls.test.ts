@@ -3,7 +3,7 @@ import removeObsoleteCalls from "../src/removeObsoleteCalls"
 import { Call, ExecutionOptions } from "../src/types"
 
 describe("removeObsoleteCalls", () => {
-  it("should remove function permission updated if later on the entire target is cleared", () => {
+  it("should remove function permission updates if later on the entire target is cleared", () => {
     const calls: Call[] = [
       {
         call: "scopeAllowFunction",

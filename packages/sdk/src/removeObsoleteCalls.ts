@@ -27,6 +27,7 @@ const isOverriddenBy = (obsolete: Call, override: Call) => {
       obsolete.call === "revokeTarget" ||
       obsolete.call === "scopeTarget" ||
       obsolete.call === "scopeFunction" ||
+      obsolete.call === "scopeAllowFunction" ||
       obsolete.call === "scopeFunctionExecutionOptions" ||
       obsolete.call === "scopeParameterAsOneOf" ||
       obsolete.call === "scopeRevokeFunction" ||
@@ -47,15 +48,41 @@ const isOverriddenBy = (obsolete: Call, override: Call) => {
   }
 
   if (
-    override.call === "scopeFunction" ||
+    override.call === "scopeAllowFunction" ||
     override.call === "scopeRevokeFunction"
   ) {
     if (
+      obsolete.call === "scopeAllowFunction" ||
+      obsolete.call === "scopeRevokeFunction" ||
       obsolete.call === "scopeFunction" ||
       obsolete.call === "scopeFunctionExecutionOptions" ||
       obsolete.call === "scopeParameterAsOneOf" ||
-      obsolete.call === "scopeRevokeFunction" ||
       obsolete.call === "unscopeParameter"
+    ) {
+      return obsolete.functionSig === override.functionSig
+    }
+  }
+
+  if (
+    override.call === "scopeFunction" ||
+    override.call === "scopeFunctionExecutionOptions" ||
+    override.call === "scopeParameterAsOneOf" ||
+    override.call === "unscopeParameter"
+  ) {
+    if (
+      obsolete.call === "scopeAllowFunction" ||
+      obsolete.call === "scopeRevokeFunction"
+    ) {
+      return obsolete.functionSig === override.functionSig
+    }
+  }
+
+  if (override.call === "scopeFunction") {
+    if (
+      obsolete.call === "scopeFunction" ||
+      obsolete.call === "scopeParameterAsOneOf" ||
+      obsolete.call === "unscopeParameter" ||
+      obsolete.call === "scopeFunctionExecutionOptions"
     ) {
       return obsolete.functionSig === override.functionSig
     }
