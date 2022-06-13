@@ -160,14 +160,8 @@ describe("Karpatkey: Replay Transactions Test", async () => {
           roleId,
           false
         )
-
-        if (transactionsJson.fail.includes(tx.transactionHash)) {
-          console.error("Transaction succeeded that should be failing:", tx)
-          throw new Error("Transaction unexpectedly succeeded")
-        } else if (!transactionsJson.success.includes(tx.transactionHash)) {
-          newSucceedingTransactions.push(tx)
-        }
       } catch (e) {
+        // tx failed
         console.log((e as Error).message + "\n")
         if (transactionsJson.success.includes(tx.transactionHash)) {
           console.error("Transaction failed that should succeed:", tx)
@@ -175,6 +169,15 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         } else if (!transactionsJson.fail.includes(tx.transactionHash)) {
           newFailingTransactions.push(tx)
         }
+        continue
+      }
+
+      // tx succeeded
+      if (transactionsJson.fail.includes(tx.transactionHash)) {
+        console.error("Transaction succeeded that should be failing:", tx)
+        throw new Error("Transaction unexpectedly succeeded")
+      } else if (!transactionsJson.success.includes(tx.transactionHash)) {
+        newSucceedingTransactions.push(tx)
       }
     }
 
