@@ -45,7 +45,6 @@ const DEFI_PROTOCOLS = {
     "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
   "Curve.fi RAIx3CRV": "0x85bA9Dfb4a3E4541420Fc75Be02E2B42042D7e46",
   "Curve.fi sGNO/GNO": "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
-  "1Inch AggregationRouter": "0x1111111254fb6c44bAC0beD2854e76F90643097d",
 }
 
 const CURVE = {
@@ -67,7 +66,7 @@ const SYMMETRIC = {
 const preset: RolePreset = {
   network: 100,
   allowTargets: [
-    { targetAddress: DEFI_PROTOCOLS["Curve.fi wxDAI/USDC/USDT StableSwap"] }, // TODO: needs more fine-grained access control
+    { targetAddress: DEFI_PROTOCOLS["Curve.fi wxDAI/USDC/USDT StableSwap"] },
   ],
   allowFunctions: [
     allowErc20Approve(
@@ -79,6 +78,7 @@ const preset: RolePreset = {
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },
+
     // Uniswap V2 -->
     {
       signature:
@@ -150,7 +150,7 @@ const preset: RolePreset = {
     {
       signature: "deposit(uint256,uint256,address)",
       targetAddresses: [SUSHISWAP_MINI_CHEF],
-      params: [undefined, undefined, staticEqual(AVATAR_ADDRESS_PLACEHOLDER)],
+      params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
     // <-- SushiSwap
 
@@ -178,14 +178,6 @@ const preset: RolePreset = {
       targetAddresses: [SYMMETRIC["ProxyRegistry"]],
     },
     // <-- Symmetric
-
-    // 1inch --> TODO do we want to allow swaps for this role?
-    {
-      signature:
-        "swap(address,(address,address,address,address,uint256,uint256,uint256,bytes),bytes)",
-      targetAddresses: [DEFI_PROTOCOLS["1Inch AggregationRouter"]],
-    },
-    // <-- 1inch
 
     // Swapr -->
     {
