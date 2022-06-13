@@ -119,7 +119,7 @@ describe("Replay Transactions Test", async () => {
       }
     })
 
-    it.only("allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
+    it("allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       const { owner, modifier, avatar, safeService } = await setup()
       const transactions = await encodeApplyPreset(
         modifier.address,
@@ -172,7 +172,7 @@ describe("Replay Transactions Test", async () => {
             newSucceedingTransactions.push(tx)
           }
         } catch (e) {
-          console.log((e as Error).message)
+          console.log((e as Error).message + "\n")
           if (daoGnosisChain.success.includes(tx.transactionHash)) {
             console.error("Transaction failed that should succeed:", tx)
             throw new Error("Transaction unexpectedly failed")

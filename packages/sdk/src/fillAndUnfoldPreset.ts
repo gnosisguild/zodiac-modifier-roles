@@ -76,7 +76,7 @@ const processParams = (preset: RolePreset, avatar: string) => ({
             index: parseInt(key),
             type: param.type,
             comparison: param.comparison,
-            comparisonValue: encodeComparisonValue(
+            comparisonValue: asArray(
               fillPlaceholdersValue(param.value, avatar)
             ),
           }
@@ -103,9 +103,8 @@ const fillPlaceholdersValue = (
   return value
 }
 
-const encodeComparisonValue = (value: PresetScopeParam["value"]): string[] => {
-  return []
-}
+const asArray = (value: string | string[]): string[] =>
+  typeof value === "string" ? [value] : value
 
 const sanityCheck = (preset: RolePreset) => {
   assertNoWildcardScopedIntersection(preset)

@@ -71,11 +71,7 @@ export type PresetFunction = ({ sighash: string } | { signature: string }) & {
   options?: ExecutionOptions
 }
 
-type ComparisonValue =
-  | string
-  | BigNumberish
-  | boolean
-  | typeof AVATAR_ADDRESS_PLACEHOLDER
+type ComparisonValue = string | typeof AVATAR_ADDRESS_PLACEHOLDER
 export interface PresetScopeParam {
   type: ParameterType
   comparison: Comparison

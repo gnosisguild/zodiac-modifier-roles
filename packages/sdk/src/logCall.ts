@@ -42,15 +42,15 @@ const logCall = (call: Call, log = console.log) => {
     case "scopeFunctionExecutionOptions": {
       const { targetAddress, functionSig, options } = call
       log(
-        `⚙️ Set allowed execution options of ${targetAddress}.${functionSig} to ${ExecutionOptionLabel[options]}`
+        `✅ Allow ${ExecutionOptionLabel[options]} to ${targetAddress}.${functionSig}`
       )
       break
     }
 
     case "scopeParameterAsOneOf": {
-      const { targetAddress, functionSig, paramIndex, type, value } = call
+      const { targetAddress, functionSig, paramIndex, value } = call
       log(
-        `⛔ Restrict allowed value for parameter #${paramIndex} of ${targetAddress}.${functionSig} to one of: ${value.join(
+        `🔘 Set allowed values for parameter #${paramIndex} of ${targetAddress}.${functionSig} to: ${value.join(
           " | "
         )}`
       )

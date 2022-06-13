@@ -20,7 +20,6 @@ import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
 import patchPermissions from "./patchPermissions"
 import logCall from "./logCall"
 import encodeCalls from "./encodeCalls"
-import { ethers, network } from "hardhat"
 
 let nonce: number
 
@@ -59,12 +58,7 @@ export const applyPreset = async (
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
     currentPermissions,
   } = options
-  const contract = new Contract(
-    address,
-    ROLES_ABI.abi,
-    ethers.getDefaultProvider(`${network}`)
-  ) as Roles
-  const avatar = options.avatar || (await contract.avatar())
+  const avatar = options.avatar || (await readAvatar(address, network))
   const safeAddress = options.safeAddress || avatar
 
   const transactions = await encodeApplyPreset(address, roleId, preset, {
@@ -72,7 +66,10 @@ export const applyPreset = async (
     avatar,
     currentPermissions,
   })
-  const batches = batchArray(transactions, multiSendBatchSize)
+  const batches = batchArray(
+    transactions.map(asMetaTransaction),
+    multiSendBatchSize
+  )
 
   const ethAdapter = new EthersAdapter({
     ethers,
@@ -131,8 +128,7 @@ export const encodeApplyPreset = async (
   const nextPermissions = fillAndUnfoldPreset(preset, avatar)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
-  const transactions = await encodeCalls(address, roleId, calls)
-  return transactions.map(asMetaTransaction)
+  return await encodeCalls(address, roleId, calls)
 }
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
@@ -166,7 +162,7 @@ export const encodeApplyPresetMultisend = async (
     `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
   )
   return batches.map((transactions) =>
-    encodeMulti(transactions, multiSendAddress)
+    encodeMulti(transactions.map(asMetaTransaction), multiSendAddress)
   )
 }
 
@@ -174,7 +170,7 @@ const readAvatar = async (address: string, network: NetworkId) => {
   const contract = new Contract(
     address,
     ROLES_ABI.abi,
-    ethers.getDefaultProvider(`${network}`)
+    defaultEthers.getDefaultProvider(`${network}`)
   ) as Roles
   return await contract.avatar()
 }

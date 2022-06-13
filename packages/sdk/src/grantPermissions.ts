@@ -22,6 +22,7 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
     }
 
     if (target.clearance === Clearance.Function) {
+      // Every single function scoping requires a preceding scopeTarget
       calls.push({
         call: "scopeTarget",
         targetAddress: target.address,
