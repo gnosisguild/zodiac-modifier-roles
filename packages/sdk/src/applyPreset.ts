@@ -66,6 +66,8 @@ export const applyPreset = async (
     avatar,
     currentPermissions,
   })
+
+  // batch into multi-send transactions of 75 calls each, to avoid gas limits
   const batches = batchArray(
     transactions.map(asMetaTransaction),
     multiSendBatchSize

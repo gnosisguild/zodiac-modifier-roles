@@ -18,7 +18,7 @@ interface Config {
   NETWORK: NetworkId
 }
 
-const ADDRESSES: Record<string, Config> = {
+export const KARPATKEY_ADDRESSES = {
   DAO_GNO: {
     AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
     MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
@@ -62,15 +62,18 @@ const task = (name: string) =>
 
 const processArgs = async (taskArgs: any, hre: HardhatRuntimeEnvironment) => {
   const { dryRun, safe } = taskArgs
-  if (!(safe in ADDRESSES)) {
+  if (!(safe in KARPATKEY_ADDRESSES)) {
     throw new Error(`safe param value '${safe}' not supported`)
   }
-  if (hre.ethers.provider.network.chainId !== ADDRESSES[safe].NETWORK) {
+  const safeKey = safe as keyof typeof KARPATKEY_ADDRESSES
+  if (
+    hre.ethers.provider.network.chainId !== KARPATKEY_ADDRESSES[safeKey].NETWORK
+  ) {
     throw new Error(`using wrong network!`)
   }
   const roles = await getContract(safe, hre)
 
-  return { dryRun, safe, roles, config: ADDRESSES[safe] }
+  return { dryRun, safe, roles, config: KARPATKEY_ADDRESSES[safeKey] }
 }
 
 const getContract = async (safe: string, hre: HardhatRuntimeEnvironment) => {
@@ -134,7 +137,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     1,
     gnosisChainDeFiManagePreset,
     {
-      network: config.NETWORK,
+      network: config.NETWORK as NetworkId,
       avatar: config.AVATAR,
     }
   )
@@ -161,7 +164,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     2,
     gnosisChainDeFiHarvestPreset,
     {
-      network: config.NETWORK,
+      network: config.NETWORK as NetworkId,
       avatar: config.AVATAR,
     }
   )
