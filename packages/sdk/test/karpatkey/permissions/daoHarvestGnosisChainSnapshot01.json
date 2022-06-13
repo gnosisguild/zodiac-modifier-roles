@@ -1,0 +1,54 @@
+{
+  "targets": [
+    {
+      "address": "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3",
+      "clearance": 2,
+      "executionOptions": 0,
+      "functions": [
+        {
+          "sighash": "0x18fccc76",
+          "executionOptions": 0,
+          "wildcarded": false,
+          "parameters": [
+            {
+              "index": 1,
+              "type": 0,
+              "comparison": 0,
+              "comparisonValue": [
+                "0x000000000000000000000000458cd345b4c05e8df39d0a07220feb4ec19f5e6f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "address": "0x78CF256256C8089d68Cde634Cf7cDEFb39286470",
+      "clearance": 2,
+      "executionOptions": 0,
+      "functions": [
+        {
+          "sighash": "0x84e9bd7e",
+          "executionOptions": 0,
+          "wildcarded": false,
+          "parameters": [
+            {
+              "index": 0,
+              "type": 0,
+              "comparison": 0,
+              "comparisonValue": [
+                "0x000000000000000000000000458cd345b4c05e8df39d0a07220feb4ec19f5e6f"
+              ]
+            }
+          ]
+        },
+        {
+          "sighash": "0x2e1a7d4d",
+          "executionOptions": 0,
+          "wildcarded": true,
+          "parameters": []
+        }
+      ]
+    }
+  ]
+}

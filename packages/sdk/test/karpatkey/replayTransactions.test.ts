@@ -12,11 +12,11 @@ import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChainDeFiManage
 import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
 import { RolePermissions, RolePreset } from "../../src/types"
 import daoManageGnosisChain from "./transactions/daoManageGnosisChain.json"
-import daoManageGnosisChainPatch from "./transactions/daoManageGnosisChainPatch.json"
 import ltdManageGnosisChain from "./transactions/ltdManageGnosisChain.json"
 import daoHarvestGnosisChain from "./transactions/daoHarvestGnosisChain.json"
-import daoHarvestGnosisChainPatch from "./transactions/daoHarvestGnosisChainPatch.json"
 import ltdHarvestGnosisChain from "./transactions/ltdHarvestGnosisChain.json"
+import daoManageGnosisChainSnapshot01 from "./permissions/daoManageGnosisChainSnapshot01.json"
+import daoHarvestGnosisChainSnapshot01 from "./permissions/daoHarvestGnosisChainSnapshot01.json"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 import { writeFileSync } from "fs"
 import path from "path"
@@ -77,27 +77,30 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     }
   })
 
+  const EMPTY_PERMISSIONS = { targets: [] }
+
   const runTransactionSimulation = async ({
     roleId,
     preset,
     safeAddress,
     transactionsJson,
-    newTransactionsFileName,
+    basePermissions = EMPTY_PERMISSIONS,
+    resultsFileName,
   }: {
     roleId: number
     preset: RolePreset
     safeAddress: string
     transactionsJson: {
-      permissions: RolePermissions
       success: string[]
       fail: string[]
     }
-    newTransactionsFileName: string
+    basePermissions?: RolePermissions
+    resultsFileName: string
   }) => {
     const { owner, modifier, safeService } = await setup()
 
     // setup base permissions
-    const basePermissionsCalls = grantPermissions(transactionsJson.permissions)
+    const basePermissionsCalls = grantPermissions(basePermissions)
     basePermissionsCalls.forEach((call) => logCall(call, console.debug))
     const basePermissionsSetupTransactions = await encodeCalls(
       modifier.address,
@@ -122,7 +125,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       preset,
       {
         avatar: safeAddress,
-        currentPermissions: transactionsJson.permissions,
+        currentPermissions: basePermissions,
         network: 100, // this value won't be used
       }
     )
@@ -186,7 +189,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     console.log(newFailingTransactions.map((tx) => tx.transactionHash))
 
     writeFileSync(
-      path.join(__dirname, "transactions", `${newTransactionsFileName}.json`),
+      path.join(__dirname, "results", `${resultsFileName}.json`),
       JSON.stringify(
         {
           permissions: fillAndUnfoldPreset(preset, safeAddress),
@@ -206,7 +209,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         preset: gnosisChainDeFiManagePreset,
         safeAddress: KARPATKEY_ADDRESSES.LTD_GNO.AVATAR,
         transactionsJson: ltdManageGnosisChain,
-        newTransactionsFileName: "ltdManageGnosisChainNew",
+        resultsFileName: "ltdManageGnosisChain",
       })
     })
 
@@ -216,7 +219,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         preset: gnosisChainDeFiManagePreset,
         safeAddress: KARPATKEY_ADDRESSES.DAO_GNO.AVATAR,
         transactionsJson: daoManageGnosisChain,
-        newTransactionsFileName: "daoManageGnosisChainNew",
+        resultsFileName: "daoManageGnosisChain",
       })
     })
 
@@ -225,8 +228,9 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         roleId: 1,
         preset: gnosisChainDeFiManagePreset,
         safeAddress: KARPATKEY_ADDRESSES.DAO_GNO.AVATAR,
-        transactionsJson: daoManageGnosisChainPatch,
-        newTransactionsFileName: "daoManageGnosisChainPatchNew",
+        transactionsJson: daoManageGnosisChain,
+        basePermissions: daoManageGnosisChainSnapshot01,
+        resultsFileName: "daoManageGnosisChainPatch",
       })
     })
   })
@@ -238,7 +242,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         preset: gnosisChainDeFiHarvestPreset,
         safeAddress: KARPATKEY_ADDRESSES.LTD_GNO.AVATAR,
         transactionsJson: ltdHarvestGnosisChain,
-        newTransactionsFileName: "ltdHarvestGnosisChainNew",
+        resultsFileName: "ltdHarvestGnosisChain",
       })
     })
 
@@ -248,7 +252,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         preset: gnosisChainDeFiHarvestPreset,
         safeAddress: KARPATKEY_ADDRESSES.DAO_GNO.AVATAR,
         transactionsJson: daoHarvestGnosisChain,
-        newTransactionsFileName: "daoHarvestGnosisChainNew",
+        resultsFileName: "daoHarvestGnosisChain",
       })
     })
 
@@ -257,8 +261,9 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         roleId: 2,
         preset: gnosisChainDeFiHarvestPreset,
         safeAddress: KARPATKEY_ADDRESSES.DAO_GNO.AVATAR,
-        transactionsJson: daoHarvestGnosisChainPatch,
-        newTransactionsFileName: "daoHarvestGnosisChainPatchNew",
+        transactionsJson: daoHarvestGnosisChain,
+        basePermissions: daoHarvestGnosisChainSnapshot01,
+        resultsFileName: "daoHarvestGnosisChainPatch",
       })
     })
   })

@@ -1,5 +1,4 @@
 {
-  "permissions": { "targets": [] },
   "success": [""],
   "fail": [
     "0x5beb987553ce2d8cd2d033f82a46b3bc5f76552f51e942446ff080c65533469e",
