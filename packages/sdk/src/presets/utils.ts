@@ -68,6 +68,24 @@ export const staticEqual = (
   }
 }
 
+export const oneOf = (
+  value: (string | typeof AVATAR_ADDRESS_PLACEHOLDER)[],
+  type?: string
+): PresetScopeParam => {
+  if (value.includes(AVATAR_ADDRESS_PLACEHOLDER)) type = "address"
+  if (!type) throw new Error("the value type must be specified")
+
+  return {
+    comparison: Comparison.OneOf,
+    type: ParameterType.Static,
+    value: value.map((v) =>
+      v === AVATAR_ADDRESS_PLACEHOLDER
+        ? v
+        : defaultAbiCoder.encode([type as string], [v])
+    ),
+  }
+}
+
 // export const greaterThanUint = (
 //   value: number | string | BigInt
 // ): ScopeParam => ({
