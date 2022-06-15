@@ -137,6 +137,5 @@ export type Call =
   | ScopeAllowFunctionCall
   | ScopeFunctionCall
   | ScopeParameterAsOneOfCall
-  | UnscopeParameterCall
   | ScopeRevokeFunctionCall
   | RevokeTargetCall

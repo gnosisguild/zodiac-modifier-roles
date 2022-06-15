@@ -61,13 +61,6 @@ const logCall = (call: Call, log = console.log) => {
       log(`⛔ Revoke permissions to execute ${targetAddress}.${functionSig}`)
       break
     }
-
-    case "unscopeParameter": {
-      log(
-        `✅ Allow any value for parameter #${call.paramIndex} of ${call.targetAddress}.${call.functionSig}`
-      )
-      break
-    }
   }
 }
 

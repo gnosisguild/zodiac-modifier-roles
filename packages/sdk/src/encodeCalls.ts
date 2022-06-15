@@ -75,15 +75,6 @@ const encodeCalls = async (
               call.functionSig
             )
           }
-
-          case "unscopeParameter": {
-            return contract.populateTransaction.unscopeParameter(
-              roleId,
-              call.targetAddress,
-              call.functionSig,
-              call.paramIndex
-            )
-          }
         }
       })
       .map((promise, i) =>
