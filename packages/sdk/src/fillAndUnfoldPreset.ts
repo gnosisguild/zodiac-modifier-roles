@@ -1,5 +1,4 @@
-import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 import {
   Clearance,
   ExecutionOptions,
@@ -13,12 +12,15 @@ import {
 // Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
 const fillAndUnfoldPreset = (
   preset: RolePreset,
-  avatar: string
+  placeholderValues: Record<symbol, string>
 ): RolePermissions => {
   sanityCheck(preset)
 
   // fill in avatar placeholders and encode comparison values
-  const { allowFunctions, allowTargets } = processParams(preset, avatar)
+  const { allowFunctions, allowTargets } = processParams(
+    preset,
+    placeholderValues
+  )
 
   const fullyClearedTargets = allowTargets.map((target) => ({
     address: target.targetAddress,
@@ -64,8 +66,11 @@ export default fillAndUnfoldPreset
 const functionSighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
-// Process the params, filling in the avatar placeholder and encoding the values
-const processParams = (preset: RolePreset, avatar: string) => ({
+// Process the params, filling in the placeholder values and encoding the values
+const processParams = (
+  preset: RolePreset,
+  placeholderValues: Record<symbol, string>
+) => ({
   ...preset,
   allowFunctions: preset.allowFunctions.map((allowFunction) => ({
     ...allowFunction,
@@ -76,8 +81,9 @@ const processParams = (preset: RolePreset, avatar: string) => ({
             index: parseInt(key),
             type: param.type,
             comparison: param.comparison,
-            comparisonValue: asArray(
-              fillPlaceholdersValue(param.value, avatar)
+            comparisonValue: fillPlaceholderValues(
+              param.value,
+              placeholderValues
             ),
           }
       )
@@ -85,26 +91,23 @@ const processParams = (preset: RolePreset, avatar: string) => ({
   })),
 })
 
-const fillPlaceholdersValue = (
+const fillPlaceholderValues = (
   value: PresetScopeParam["value"],
-  avatarAddress: string
+  placeholderValues: Record<symbol, string>
 ) => {
-  const encodedAddress = defaultAbiCoder.encode(["address"], [avatarAddress])
-
-  if (value === AVATAR_ADDRESS_PLACEHOLDER) {
-    return encodedAddress
+  const mapValue = (value: PresetScopeParam["value"]) => {
+    if (typeof value === "symbol") {
+      if (!placeholderValues[value]) {
+        throw new Error(`Missing placeholder value for ${String(value)}`)
+      }
+      return placeholderValues[value]
+    } else {
+      return value as string
+    }
   }
-  if (Array.isArray(value)) {
-    return value.map((entry) =>
-      entry === AVATAR_ADDRESS_PLACEHOLDER ? encodedAddress : entry
-    )
-  }
 
-  return value
+  return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
 }
-
-const asArray = (value: string | string[]): string[] =>
-  typeof value === "string" ? [value] : value
 
 const sanityCheck = (preset: RolePreset) => {
   assertNoWildcardScopedIntersection(preset)

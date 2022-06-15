@@ -1,8 +1,20 @@
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  OMNI_BRIDGE_DATA_PLACEHOLDER,
+} from "./placeholders"
 import { ExecutionOptions, RolePreset } from "../types"
 
-import { SUSHISWAP_MINI_CHEF } from "./addresses"
-import { allowErc20Approve, allowErc20Transfer, staticEqual } from "./utils"
+import {
+  CURVE_x3CRV_REWARD_GAUGE,
+  OMNI_BRIDGE,
+  SUSHISWAP_MINI_CHEF,
+} from "./addresses"
+import {
+  allowErc20Approve,
+  allowErc20Transfer,
+  dynamicEqual,
+  staticEqual,
+} from "./utils"
 
 const ERC20_TOKENS = {
   GNO: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -48,7 +60,6 @@ const DEFI_PROTOCOLS = {
 }
 
 const CURVE = {
-  "GNO/CRV RewardGauge Deposit": "0x78CF256256C8089d68Cde634Cf7cDEFb39286470",
   "GNO/CRV ChildChainStreamer": "0x6C09F6727113543Fd061a721da512B7eFCDD0267",
 }
 
@@ -78,6 +89,17 @@ const preset: RolePreset = {
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },
+
+    // OmniBridge -->
+    {
+      signature: "transferAndCall(address,uint256,bytes)",
+      targetAddresses: [OMNI_BRIDGE],
+      params: {
+        [2]: dynamicEqual(OMNI_BRIDGE_DATA_PLACEHOLDER),
+      },
+    },
+
+    // <-- OmniBridge
 
     // Uniswap V2 -->
     {
@@ -152,12 +174,22 @@ const preset: RolePreset = {
       targetAddresses: [SUSHISWAP_MINI_CHEF],
       params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
+
+    {
+      targetAddresses: [SUSHISWAP_MINI_CHEF],
+      signature: "withdrawAndHarvest(uint256,uint256,address)",
+      params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+    },
     // <-- SushiSwap
 
     // Curve -->
     {
       signature: "deposit(uint256)",
-      targetAddresses: [CURVE["GNO/CRV RewardGauge Deposit"]],
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+    },
+    {
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+      signature: "withdraw(uint256)",
     },
     {
       signature: "notify_reward_amount(address)",

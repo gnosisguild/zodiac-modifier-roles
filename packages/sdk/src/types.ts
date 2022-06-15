@@ -1,5 +1,5 @@
 import { BigNumberish } from "ethers"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "./presets/placeholders"
 import SUBGRAPH from "./subgraph"
 
 export type NetworkId = keyof typeof SUBGRAPH
@@ -71,7 +71,7 @@ export type PresetFunction = ({ sighash: string } | { signature: string }) & {
   options?: ExecutionOptions
 }
 
-type ComparisonValue = string | typeof AVATAR_ADDRESS_PLACEHOLDER
+type ComparisonValue = string | symbol
 export interface PresetScopeParam {
   type: ParameterType
   comparison: Comparison

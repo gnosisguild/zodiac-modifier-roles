@@ -26,46 +26,53 @@ let nonce: number
 const DEFAULT_BATCH_SIZE = 75
 
 /**
- * Updates a role, setting all permissions of the given preset
+ * Updates a role, setting all permissions of the given preset via the Safe SDK
  *
  * @param address The address of the roles modifier
  * @param roleId ID of the role to update
  * @param preset Permissions preset to apply
+ * @param placeholderValues Values to fill in for placeholders in the preset
+ * @param options.safeAddress The address of the Safe owning the roles modifier
  * @param options.signer The signer to use for executing the transactions
  * @param options.network The network ID where the roles modifier is deployed
  * @param [options.ethers] The ethers instance to use for executing the transactions
- * @param [options.avatar] The avatar address of the roles modifier
+ * @param [options.multiSendBatchSize] The maximum batch size to use for executing the transactions (defaults to 75), should be low enough to not exceed the block gas limit
+ * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
  *
  */
 export const applyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
+  placeholderValues: Record<symbol, string>,
   options: {
+    safeAddress: string
     signer: Signer
     network: NetworkId
     ethers?: typeof defaultEthers
-    avatar: string
-    safeAddress?: string
     multiSendBatchSize?: number
     currentPermissions?: RolePermissions
   }
 ): Promise<void> => {
   const {
+    safeAddress,
     signer,
     ethers = defaultEthers,
     network,
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
     currentPermissions,
   } = options
-  const avatar = options.avatar || (await readAvatar(address, network))
-  const safeAddress = options.safeAddress || avatar
 
-  const transactions = await encodeApplyPreset(address, roleId, preset, {
-    network,
-    avatar,
-    currentPermissions,
-  })
+  const transactions = await encodeApplyPreset(
+    address,
+    roleId,
+    preset,
+    placeholderValues,
+    {
+      network,
+      currentPermissions,
+    }
+  )
 
   // batch into multi-send transactions of 75 calls each, to avoid gas limits
   const batches = batchArray(
@@ -108,18 +115,28 @@ export const applyPreset = async (
   )
 }
 
+/**
+ * Returns a set of populated transactions objects for updating the permissions of the given role.
+ *
+ * @param address The address of the roles modifier
+ * @param roleId ID of the role to update
+ * @param preset Permissions preset to apply
+ * @param placeholderValues Values to fill in for placeholders in the preset
+ * @param options.network The network ID where the roles modifier is deployed
+ * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
+ *
+ */
 export const encodeApplyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
+  placeholderValues: Record<symbol, string>,
   options: {
     network: NetworkId
-    avatar?: string
     currentPermissions?: RolePermissions
   }
 ) => {
   const { network } = options
-  const avatar = options.avatar || (await readAvatar(address, network))
   const currentPermissions =
     options.currentPermissions ||
     (await fetchPermissions({
@@ -127,7 +144,7 @@ export const encodeApplyPreset = async (
       roleId,
       network,
     }))
-  const nextPermissions = fillAndUnfoldPreset(preset, avatar)
+  const nextPermissions = fillAndUnfoldPreset(preset, placeholderValues)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
   return await encodeCalls(address, roleId, calls)
@@ -135,12 +152,25 @@ export const encodeApplyPreset = async (
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
 
+/**
+ * Returns the transactions for updating the permissions of the given role, batching them into multi-send calls.
+ *
+ * @param address The address of the roles modifier
+ * @param roleId ID of the role to update
+ * @param preset Permissions preset to apply
+ * @param placeholderValues Values to fill in for placeholders in the preset
+ * @param options.network The network ID where the roles modifier is deployed
+ * @param [options.multiSendAddress] The address of the MultiSend contract to use for executing the transactions
+ * @param [options.multiSendBatchSize] The maximum batch size to use for executing the transactions (defaults to 75), should be low enough to not exceed the block gas limit
+ * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
+ *
+ */
 export const encodeApplyPresetMultisend = async (
   address: string,
   roleId: number,
   preset: RolePreset,
+  placeholderValues: Record<symbol, string>,
   options: {
-    avatar: string
     network: NetworkId
     multiSendAddress?: string
     multiSendBatchSize?: number
@@ -148,17 +178,21 @@ export const encodeApplyPresetMultisend = async (
   }
 ): Promise<MetaTransactionData[]> => {
   const {
-    avatar,
     network,
     multiSendAddress = MULTI_SEND_CALL_ONLY,
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
     currentPermissions,
   } = options
-  const transactions = await encodeApplyPreset(address, roleId, preset, {
-    network,
-    avatar,
-    currentPermissions,
-  })
+  const transactions = await encodeApplyPreset(
+    address,
+    roleId,
+    preset,
+    placeholderValues,
+    {
+      network,
+      currentPermissions,
+    }
+  )
   const batches = batchArray(transactions, multiSendBatchSize)
   console.debug(
     `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`

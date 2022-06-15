@@ -9,6 +9,11 @@ import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
 import addMembers from "../src/addMembers"
 import { NetworkId } from "../src/types"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  OMNI_BRIDGE_DATA_PLACEHOLDER,
+} from "../src/presets/placeholders"
+import { defaultAbiCoder } from "ethers/lib/utils"
 
 interface Config {
   AVATAR: string
@@ -30,6 +35,7 @@ export const KARPATKEY_ADDRESSES = {
       "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
     ],
     NETWORK: 100,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
   LTD_GNO: {
     AVATAR: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
@@ -42,6 +48,7 @@ export const KARPATKEY_ADDRESSES = {
       "0xe8aA9122832AA971c4802C69D5141Ff4EEB95ec5", // Ale
     ],
     NETWORK: 100,
+    BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
   },
 }
 
@@ -137,8 +144,17 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     1,
     gnosisChainDeFiManagePreset,
     {
+      [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+        ["address"],
+        [config.AVATAR]
+      ),
+      [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+        ["bytes"],
+        [config.BRIDGED_SAFE.slice(2)]
+      ),
+    },
+    {
       network: config.NETWORK as NetworkId,
-      avatar: config.AVATAR,
     }
   )
 
@@ -164,8 +180,13 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     2,
     gnosisChainDeFiHarvestPreset,
     {
+      [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+        ["address"],
+        [config.AVATAR]
+      ),
+    },
+    {
       network: config.NETWORK as NetworkId,
-      avatar: config.AVATAR,
     }
   )
 

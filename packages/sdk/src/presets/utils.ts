@@ -1,6 +1,6 @@
 import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
 import {
   Comparison,
   ExecutionOptions,
@@ -8,6 +8,7 @@ import {
   PresetFunction,
   PresetScopeParam,
 } from "../types"
+import { BigNumberish } from "ethers"
 
 export const allowErc20Approve = (
   tokens: string[],
@@ -51,40 +52,38 @@ export const allowErc20Transfer = (
   options: ExecutionOptions.None,
 })
 
-export const staticEqual = (
-  value: string | typeof AVATAR_ADDRESS_PLACEHOLDER,
+const encodeValue = (
+  value: string | symbol,
   type?: string
-): PresetScopeParam => {
-  if (value === AVATAR_ADDRESS_PLACEHOLDER) type = "address"
-  if (!type) throw new Error("the value type must be specified")
-
-  return {
-    comparison: Comparison.EqualTo,
-    type: ParameterType.Static,
-    value:
-      value === AVATAR_ADDRESS_PLACEHOLDER
-        ? value
-        : defaultAbiCoder.encode([type], [value]),
+): string | symbol => {
+  let encodedValue = value
+  if (typeof value !== "symbol") {
+    if (!type) {
+      throw new Error("the value type must be specified")
+    } else {
+      encodedValue = defaultAbiCoder.encode([type], [value])
+    }
   }
+  return encodedValue
 }
 
-export const oneOf = (
-  value: (string | typeof AVATAR_ADDRESS_PLACEHOLDER)[],
-  type?: string
-): PresetScopeParam => {
-  if (value.includes(AVATAR_ADDRESS_PLACEHOLDER)) type = "address"
-  if (!type) throw new Error("the value type must be specified")
+export const staticEqual = (value: any, type?: string): PresetScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Static,
+  value: encodeValue(value, type),
+})
 
-  return {
-    comparison: Comparison.OneOf,
-    type: ParameterType.Static,
-    value: value.map((v) =>
-      v === AVATAR_ADDRESS_PLACEHOLDER
-        ? v
-        : defaultAbiCoder.encode([type as string], [v])
-    ),
-  }
-}
+export const dynamicEqual = (value: any, type?: string): PresetScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Dynamic,
+  value: encodeValue(value, type),
+})
+
+export const oneOf = (value: any[], type?: string): PresetScopeParam => ({
+  comparison: Comparison.OneOf,
+  type: ParameterType.Static,
+  value: value.map((v) => encodeValue(v, type)),
+})
 
 // export const greaterThanUint = (
 //   value: number | string | BigInt
