@@ -107,12 +107,6 @@ interface ScopeFunctionCall {
   compValue: string[]
   options: ExecutionOptions
 }
-interface ScopeFunctionExecutionOptionsCall {
-  call: "scopeFunctionExecutionOptions"
-  targetAddress: string
-  functionSig: string
-  options: ExecutionOptions
-}
 interface ScopeParameterAsOneOfCall {
   call: "scopeParameterAsOneOf"
   targetAddress: string
@@ -142,7 +136,6 @@ export type Call =
   | ScopeTargetCall
   | ScopeAllowFunctionCall
   | ScopeFunctionCall
-  | ScopeFunctionExecutionOptionsCall
   | ScopeParameterAsOneOfCall
   | UnscopeParameterCall
   | ScopeRevokeFunctionCall

@@ -222,7 +222,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
   }
 
   describe("Gnosis Chain DeFi Manage preset", () => {
-    it.only("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
+    it("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
         preset: gnosisChainDeFiManagePreset,
         config: KARPATKEY_ADDRESSES.LTD_GNO,

@@ -2,7 +2,6 @@ import {
   Call,
   Clearance,
   Comparison,
-  ExecutionOptions,
   Function,
   Parameter,
   ParameterType,
@@ -22,7 +21,7 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
     }
 
     if (target.clearance === Clearance.Function) {
-      // Every single function scoping requires a preceding scopeTarget
+      // function scoping requires setting the target to function clearance
       calls.push({
         call: "scopeTarget",
         targetAddress: target.address,
@@ -41,20 +40,7 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
             throw new Error("Non-wildcarded function must have parameters")
           }
 
-          if (
-            func.parameters.some(
-              (param) => param.comparison !== Comparison.OneOf
-            )
-          ) {
-            calls.push(scopeFunction(func, target.address))
-          } else if (func.executionOptions !== ExecutionOptions.None) {
-            calls.push({
-              call: "scopeFunctionExecutionOptions",
-              targetAddress: target.address,
-              functionSig: func.sighash,
-              options: func.executionOptions,
-            })
-          }
+          calls.push(scopeFunction(func, target.address))
 
           func.parameters
             .filter((param) => param.comparison === Comparison.OneOf)

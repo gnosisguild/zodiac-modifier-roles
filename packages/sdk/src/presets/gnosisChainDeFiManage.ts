@@ -16,7 +16,7 @@ import {
   staticEqual,
 } from "./utils"
 
-const ERC20_TOKENS = {
+const TOKENS = {
   GNO: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
   sGNO: "0xA4eF9Da5BA71Cc0D2e5E877a910A37eC43420445",
   "Wrapped XDAI": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
@@ -26,13 +26,16 @@ const ERC20_TOKENS = {
   "Tether USD on xDai": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
   "Flex Ungovernance Token from Mainnet":
     "0xD87eaA26dCfB0C0A6160cCf8c8a01BEB1C15fB00",
+  "SushiToken from Ethereum": "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE",
   "Curve DAO Token on xDai": "0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd",
+}
+
+const LP_TOKENS = {
   "SushiSwap LP Token 0": "0x8C0C36c85192204c8d782F763fF5a30f5bA0192F",
   "SushiSwap LP Token 1": "0x6685C047EAB042297e659bFAa7423E94b4A14b9E",
   "SushiSwap LP Token 2": "0xA227c72a4055A9DC949cAE24f54535fe890d3663",
   "SushiSwap LP Token 3": "0x15f9EEdeEBD121FBb238a8A0caE38f4b4A07A585",
   "SushiSwap LP Token 4": "0xF38c5b39F29600765849cA38712F302b1522C9B8",
-  "SushiToken from Ethereum": "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE",
   "Symmetric on xDai": "0xC45b3C1c24d5F54E7a2cF288ac668c74Dd507a84",
   "DXswap 0": "0xD7b118271B1B7d26C9e044Fc927CA31DccB22a5a",
   "DXswap 1": "0x5fCA4cBdC182e40aeFBCb91AFBDE7AD8d3Dc18a8",
@@ -41,22 +44,27 @@ const ERC20_TOKENS = {
   "Uniswap V2 GNO/WXDAI": "0x321704900D52F44180068cAA73778d5cD60695A6",
 }
 
-const DEFI_PROTOCOLS = {
-  SUSHISWAP_MINI_CHEF,
+const UNI_V2_ROUTERS = {
   "SushiSwap UniswapV2Router02": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
   "Honeyswap UniswapV2Router02": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
   "Swapr DXswapRouter": "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0",
-  "Swapr StakingRewardsDistribution 0":
-    "0x89a9a96E29b0c6A08c83F9e76D6553601f215775",
-  "Swapr StakingRewardsDistribution 1":
-    "0x42430C8517C3c3E8754F1D6c23AF538037452bd7",
-  "Swapr StakingRewardsDistribution 2":
-    "0xD2430dCF3a4344a6E97216d0A037438Ea958410a",
-  ElkRouter: "0xe5759714998e8B50A33c7333C04C2d02e5dcE77f",
-  "Curve.fi wxDAI/USDC/USDT StableSwap":
-    "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
-  "Curve.fi RAIx3CRV": "0x85bA9Dfb4a3E4541420Fc75Be02E2B42042D7e46",
-  "Curve.fi sGNO/GNO": "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
+  "Elk Router": "0xe5759714998e8B50A33c7333C04C2d02e5dcE77f",
+}
+
+const DEFI_PROTOCOLS = {
+  SUSHISWAP_MINI_CHEF,
+}
+
+const CURVE_POOLS = {
+  "wxDAI/USDC/USDT StableSwap": "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
+  RAIx3CRV: "0x85bA9Dfb4a3E4541420Fc75Be02E2B42042D7e46",
+  "sGNO/GNO": "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
+}
+
+const SWAPR = {
+  StakingRewardsDistribution0: "0x89a9a96E29b0c6A08c83F9e76D6553601f215775",
+  StakingRewardsDistribution1: "0x42430C8517C3c3E8754F1D6c23AF538037452bd7",
+  StakingRewardsDistribution2: "0xD2430dCF3a4344a6E97216d0A037438Ea958410a",
 }
 
 const CURVE = {
@@ -76,16 +84,35 @@ const SYMMETRIC = {
 
 const preset: RolePreset = {
   network: 100,
-  allowTargets: [
-    { targetAddress: DEFI_PROTOCOLS["Curve.fi wxDAI/USDC/USDT StableSwap"] },
-  ],
+  allowTargets: [{ targetAddress: CURVE_POOLS["wxDAI/USDC/USDT StableSwap"] }],
   allowFunctions: [
-    allowErc20Approve(
-      Object.values(ERC20_TOKENS),
-      Object.values(DEFI_PROTOCOLS)
-    ),
+    ...allowErc20Approve([
+      {
+        tokens: Object.values(TOKENS),
+        spenders: Object.values([...Object.values(UNI_V2_ROUTERS)]),
+      },
+      { tokens: [TOKENS.GNO], spenders: [OMNI_BRIDGE] },
+      {
+        tokens: [TOKENS.GNO, TOKENS.sGNO],
+        spenders: [CURVE_POOLS["sGNO/GNO"]],
+      },
+      {
+        tokens: [
+          LP_TOKENS["SushiSwap LP Token 0"],
+          LP_TOKENS["SushiSwap LP Token 1"],
+          LP_TOKENS["SushiSwap LP Token 2"],
+          LP_TOKENS["SushiSwap LP Token 3"],
+          LP_TOKENS["SushiSwap LP Token 4"],
+        ],
+        spenders: [
+          SUSHISWAP_MINI_CHEF,
+          UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"],
+        ],
+      },
+    ]),
+
     {
-      targetAddresses: [ERC20_TOKENS["Wrapped XDAI"]],
+      targetAddresses: [TOKENS["Wrapped XDAI"]],
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },
@@ -105,12 +132,7 @@ const preset: RolePreset = {
     {
       signature:
         "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [
-        DEFI_PROTOCOLS["SushiSwap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Honeyswap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Swapr DXswapRouter"],
-        DEFI_PROTOCOLS.ElkRouter,
-      ],
+      targetAddresses: Object.values(UNI_V2_ROUTERS),
       params: {
         [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
       },
@@ -118,12 +140,7 @@ const preset: RolePreset = {
     {
       signature:
         "addLiquidityETH(address,address,uint256,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [
-        DEFI_PROTOCOLS["SushiSwap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Honeyswap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Swapr DXswapRouter"],
-        DEFI_PROTOCOLS.ElkRouter,
-      ],
+      targetAddresses: Object.values(UNI_V2_ROUTERS),
       params: {
         [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
       },
@@ -132,12 +149,7 @@ const preset: RolePreset = {
     {
       signature:
         "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [
-        DEFI_PROTOCOLS["SushiSwap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Honeyswap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Swapr DXswapRouter"],
-        DEFI_PROTOCOLS.ElkRouter,
-      ],
+      targetAddresses: Object.values(UNI_V2_ROUTERS),
       params: {
         [5]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
       },
@@ -145,12 +157,7 @@ const preset: RolePreset = {
     {
       signature:
         "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [
-        DEFI_PROTOCOLS["SushiSwap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Honeyswap UniswapV2Router02"],
-        DEFI_PROTOCOLS["Swapr DXswapRouter"],
-        DEFI_PROTOCOLS.ElkRouter,
-      ],
+      targetAddresses: Object.values(UNI_V2_ROUTERS),
       params: {
         [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
       },
@@ -158,7 +165,7 @@ const preset: RolePreset = {
     // <-- Uniswap V2
 
     allowErc20Transfer(
-      [ERC20_TOKENS.GNO],
+      [TOKENS.GNO],
       [
         CURVE["GNO/CRV ChildChainStreamer"],
         SYNTHETIX["GNO StakingRewards 0"],
@@ -197,10 +204,7 @@ const preset: RolePreset = {
     },
     {
       signature: "add_liquidity(uint256[2],uint256)",
-      targetAddresses: [
-        DEFI_PROTOCOLS["Curve.fi RAIx3CRV"],
-        DEFI_PROTOCOLS["Curve.fi sGNO/GNO"],
-      ],
+      targetAddresses: [CURVE_POOLS["RAIx3CRV"], CURVE_POOLS["sGNO/GNO"]],
     },
     // <-- Curve
 
@@ -215,9 +219,9 @@ const preset: RolePreset = {
     {
       signature: "stake(uint256)",
       targetAddresses: [
-        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 0"],
-        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 1"],
-        DEFI_PROTOCOLS["Swapr StakingRewardsDistribution 2"],
+        SWAPR["StakingRewardsDistribution0"],
+        SWAPR["StakingRewardsDistribution1"],
+        SWAPR["StakingRewardsDistribution2"],
       ],
     },
     // <-- Swapr

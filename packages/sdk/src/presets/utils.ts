@@ -1,6 +1,5 @@
 import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
 import {
   Comparison,
   ExecutionOptions,
@@ -8,28 +7,44 @@ import {
   PresetFunction,
   PresetScopeParam,
 } from "../types"
-import { BigNumberish } from "ethers"
+
+interface ApprovePairing {
+  tokens: string[]
+  spenders: string[]
+}
 
 export const allowErc20Approve = (
-  tokens: string[],
-  spenders: string[]
-): PresetFunction => ({
-  targetAddresses: tokens,
-  signature: "approve(address,uint256)",
-  params: [
-    spenders.length === 1
-      ? staticEqual(spenders[0], "address")
-      : {
-          type: ParameterType.Static,
-          comparison: Comparison.OneOf,
-          value: spenders.map((spender) =>
-            defaultAbiCoder.encode(["address"], [spender])
-          ),
-        },
-    undefined,
-  ],
-  options: ExecutionOptions.None,
-})
+  pairings: ApprovePairing[]
+): PresetFunction[] => {
+  const spendersForToken = pairings.reduce((spendersForToken, pairing) => {
+    pairing.tokens.forEach((token) => {
+      if (!spendersForToken[token]) spendersForToken[token] = new Set()
+      spendersForToken[token] = new Set([
+        ...spendersForToken[token],
+        ...pairing.spenders,
+      ])
+    })
+    return spendersForToken
+  }, {} as Record<string, Set<string>>)
+
+  return Object.entries(spendersForToken).map(([token, spenders]) => ({
+    targetAddresses: [token],
+    signature: "approve(address,uint256)",
+    params: [
+      spenders.size === 1
+        ? staticEqual([...spenders][0], "address")
+        : {
+            type: ParameterType.Static,
+            comparison: Comparison.OneOf,
+            value: [...spenders].map((spender) =>
+              defaultAbiCoder.encode(["address"], [spender])
+            ),
+          },
+      undefined,
+    ],
+    options: ExecutionOptions.None,
+  }))
+}
 
 export const allowErc20Transfer = (
   tokens: string[],

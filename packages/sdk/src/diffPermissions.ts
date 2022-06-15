@@ -12,7 +12,7 @@ const diffPermissions = (
   b: RolePermissions
 ): RolePermissions => {
   // targets in a that are not in b
-  const targetDiff = a.targets.filter(
+  const targetsDiff = a.targets.filter(
     (targetA) => !b.targets.some((targetB) => targetsEqual(targetA, targetB))
   )
 
@@ -35,7 +35,7 @@ const diffPermissions = (
     .filter(isTruthy)
 
   return {
-    targets: [...targetDiff, ...functionClearedOverlapDiff],
+    targets: [...targetsDiff, ...functionClearedOverlapDiff],
   }
 }
 
@@ -51,41 +51,19 @@ const diffFunctionClearedTargets = (
     return targetA
   }
 
-  const functionDiff = targetA.functions.filter(
+  const functionsDiff = targetA.functions.filter(
     (functionA) =>
       !targetB.functions.some((functionB) =>
         functionsEqual(functionA, functionB)
       )
   )
 
-  // functions that are scoped in targetA and targetB
-  const scopedFunctionOverlap = targetA.functions.filter(
-    (functionA) =>
-      !functionA.wildcarded &&
-      targetB.functions.some((functionB) =>
-        functionsEqual(functionA, functionB)
-      )
-  )
-
-  // diff the parameters of functions in the overlap
-  const scopedFunctionOverlapDiff = scopedFunctionOverlap
-    .map((functionA) => {
-      const functionB = targetB.functions.find((functionB) =>
-        functionsEqual(functionA, functionB)
-      )
-      if (!functionB) throw new Error("invariant violation")
-      return diffScopedFunctions(functionA, functionB)
-    })
-    .filter(isTruthy)
-
-  const functions = [...functionDiff, ...scopedFunctionOverlapDiff]
-
-  // if the function diff is empty, we treat the targets as equal
-  if (functions.length === 0) return undefined
+  // if the functions diff is empty, we treat the targets as equal
+  if (functionsDiff.length === 0) return undefined
 
   return {
     ...targetA,
-    functions,
+    functions: functionsDiff,
   }
 }
 
@@ -121,7 +99,13 @@ const targetsEqual = (targetA: Target, targetB: Target) =>
 const functionsEqual = (functionA: Function, functionB: Function) =>
   functionA.sighash === functionB.sighash &&
   functionA.wildcarded === functionB.wildcarded &&
-  functionA.executionOptions === functionB.executionOptions
+  functionA.executionOptions === functionB.executionOptions &&
+  functionA.parameters.every((paramA) =>
+    functionB.parameters.some((paramB) => paramsEqual(paramA, paramB))
+  ) &&
+  functionB.parameters.every((paramB) =>
+    functionA.parameters.some((paramA) => paramsEqual(paramA, paramB))
+  )
 
 const paramsEqual = (paramA: Parameter, paramB: Parameter) =>
   paramA.index === paramB.index &&

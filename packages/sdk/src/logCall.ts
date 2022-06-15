@@ -39,14 +39,6 @@ const logCall = (call: Call, log = console.log) => {
       break
     }
 
-    case "scopeFunctionExecutionOptions": {
-      const { targetAddress, functionSig, options } = call
-      log(
-        `✅ Allow ${ExecutionOptionLabel[options]} to ${targetAddress}.${functionSig}`
-      )
-      break
-    }
-
     case "scopeParameterAsOneOf": {
       const { targetAddress, functionSig, paramIndex, value } = call
       log(
@@ -71,7 +63,9 @@ const logCall = (call: Call, log = console.log) => {
     }
 
     case "unscopeParameter": {
-      log(`✅ Allow any value for parameter #${call.paramIndex}`)
+      log(
+        `✅ Allow any value for parameter #${call.paramIndex} of ${call.targetAddress}.${call.functionSig}`
+      )
       break
     }
   }

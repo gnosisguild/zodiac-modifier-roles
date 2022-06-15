@@ -18,7 +18,7 @@ describe("removeObsoleteCalls", () => {
       },
     ]
 
-    const result = removeObsoleteCalls(calls)
+    const result = removeObsoleteCalls(calls, [])
     expect(result).to.deep.equal([
       {
         call: "allowTarget",
@@ -47,7 +47,7 @@ describe("removeObsoleteCalls", () => {
       },
     ]
 
-    const result = removeObsoleteCalls(calls)
+    const result = removeObsoleteCalls(calls, [])
     expect(result).to.deep.equal([
       {
         call: "scopeAllowFunction",

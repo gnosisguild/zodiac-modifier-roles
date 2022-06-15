@@ -50,15 +50,6 @@ const encodeCalls = async (
             )
           }
 
-          case "scopeFunctionExecutionOptions": {
-            return contract.populateTransaction.scopeFunctionExecutionOptions(
-              roleId,
-              call.targetAddress,
-              call.functionSig,
-              call.options
-            )
-          }
-
           case "scopeParameterAsOneOf": {
             return contract.populateTransaction.scopeParameterAsOneOf(
               roleId,
