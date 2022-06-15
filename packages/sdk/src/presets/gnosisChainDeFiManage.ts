@@ -5,6 +5,7 @@ import {
 import { ExecutionOptions, RolePreset } from "../types"
 
 import {
+  CURVE_x3CRV_GAUGE,
   CURVE_x3CRV_REWARD_GAUGE,
   OMNI_BRIDGE,
   SUSHISWAP_MINI_CHEF,
@@ -109,6 +110,10 @@ const preset: RolePreset = {
           UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"],
         ],
       },
+      {
+        tokens: [LP_TOKENS["Curve.fi wxDAI/USDC/USDT"]],
+        spenders: [CURVE_x3CRV_GAUGE],
+      },
     ]),
 
     {
@@ -192,10 +197,10 @@ const preset: RolePreset = {
     // Curve -->
     {
       signature: "deposit(uint256)",
-      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
     },
     {
-      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
       signature: "withdraw(uint256)",
     },
     {
