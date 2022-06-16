@@ -51,12 +51,13 @@ const RoleTableRow = ({ role }: Props): React.ReactElement => {
   const { module } = useParams()
   const navigate = useNavigate()
   const handleNavigation = () => navigate(`/${module}/roles/${role.name}`)
+  const targets = role.targets.filter((target) => target.type !== "None")
 
   return (
     <TableRow key={role.id} className={classes.tableRow} onClick={handleNavigation}>
       <TableCell className={classes.tableCell}>{`Role #${role.name}`}</TableCell>
       <TableCell className={classes.tableCell}>{`${role.members.length} Members`}</TableCell>
-      <TableCell className={classes.tableCell}>{`${role.targets.length} Targets`}</TableCell>
+      <TableCell className={classes.tableCell}>{`${targets.length} Targets`}</TableCell>
       <TableCell className={classes.tableCell}>
         <Box display="flex" justifyContent="flex-end">
           <Box sx={{ mr: 1 }}>

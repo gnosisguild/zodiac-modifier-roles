@@ -12,6 +12,7 @@ export const RoleTargets = () => {
   const handleOpenAddTargetModal = () => setAddTargetModalIsOpen(true)
 
   const targets = [...state.targets.list, ...state.targets.add]
+  const renderTarget = targets.filter((target) => target.type !== "None")
 
   const getStatus = (target: Target) => {
     if (state.targets.remove.includes(target.address)) return EntityStatus.REMOVE
@@ -26,7 +27,7 @@ export const RoleTargets = () => {
   return (
     <>
       <MenuEntity
-        list={targets}
+        list={renderTarget}
         name={{ singular: "Target", plural: "Targets" }}
         tutorialLink="https://gnosis.github.io/zodiac/docs/tutorial-modifier-roles/add-role#targets"
         onAdd={handleOpenAddTargetModal}

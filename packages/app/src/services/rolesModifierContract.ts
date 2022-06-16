@@ -133,9 +133,11 @@ export const updateRole = async (
   const removeMemberTxs = role.members.remove.map((member) =>
     rolesModifierContract.populateTransaction.assignRoles(member, [role.id], [false]),
   )
-  const removeTargetTxs = role.targets.remove.map((target) =>
-    rolesModifierContract.populateTransaction.revokeTarget(role.id, target),
-  )
+  const removeTargetTxs = role.targets.remove.map((target) => {
+    console.log("[removeTargetTxs] revoke target", [role.id, target])
+    return rolesModifierContract.populateTransaction.revokeTarget(role.id, target)
+  })
+
   const txs = [...role.targets.list, ...role.targets.add].map(async (target) => {
     const updateEvents = role.getTargetUpdate(target.id)
 
@@ -267,11 +269,11 @@ export const updateRole = async (
 
   const targetTxs = (await Promise.all([...txs])).flat()
   const targetActionsTxs = await Promise.all([...removeTargetTxs])
-  const memberTxs = await Promise.all([...addMemberTxs, ...removeMemberTxs])
+  const memberTxs = await Promise.all([...addMemberTxs, ...removeMemberTxs, ...targetActionsTxs])
 
-  console.log("txs", [...memberTxs, ...targetTxs, ...targetActionsTxs])
+  console.log("txs", [...memberTxs, ...targetTxs])
 
-  return [...memberTxs, ...targetTxs, ...targetActionsTxs]
+  return [...memberTxs, ...targetTxs]
 }
 
 export const executeTxsGnosisSafe = async (txs: PopulatedTransaction[]) => {
