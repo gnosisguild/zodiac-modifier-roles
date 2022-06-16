@@ -6,7 +6,6 @@
   "module": "build/esm/sdk/index.js",
   "license": "LGPL-3.0+",
   "scripts": {
-    "prepare": "yarn build",
     "prebuild": "rimraf build",
     "build": "yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
@@ -17,7 +16,8 @@
     "fix": "yarn fix:prettier && yarn fix:lint",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "pre-commit": "yarn fix"
   },
   "dependencies": {
     "ethers": "5.4.6",

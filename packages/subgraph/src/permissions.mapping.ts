@@ -104,9 +104,9 @@ export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
 
-  const functionSig = event.params.selector
-  const functionId = getFunctionId(targetId, functionSig)
-  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  const sighash = event.params.selector
+  const functionId = getFunctionId(targetId, sighash)
+  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
   theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
   theFunction.wildcarded = true
   theFunction.save()
@@ -130,10 +130,11 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
 
   // if function does not exist? create it with the info from the event
-  const functionSig = event.params.functionSig
-  const functionId = getFunctionId(targetId, functionSig)
-  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  const sighash = event.params.functionSig
+  const functionId = getFunctionId(targetId, sighash)
+  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
   theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
+  theFunction.wildcarded = false
   theFunction.save()
 
   // create new parameter or override old one
@@ -166,9 +167,9 @@ export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutio
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   getOrCreateTarget(targetId, targetAddress, roleId)
-  const functionSig = event.params.functionSig
-  const functionId = getFunctionId(targetId, functionSig)
-  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  const sighash = event.params.functionSig
+  const functionId = getFunctionId(targetId, sighash)
+  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
   theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
   theFunction.save()
 }
@@ -186,9 +187,9 @@ export function handleScopeParameter(event: ScopeParameter): void {
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   getOrCreateTarget(targetId, targetAddress, roleId)
-  const functionSig = event.params.functionSig
-  const functionId = getFunctionId(targetId, functionSig)
-  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  const sighash = event.params.functionSig
+  const functionId = getFunctionId(targetId, sighash)
+  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
 
   const parameterId = getParameterId(functionId, event.params.index.toI32())
   const parameter = new Parameter(parameterId) // will always overwrite the parameter
@@ -216,9 +217,9 @@ export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   getOrCreateTarget(targetId, targetAddress, roleId)
-  const functionSig = event.params.functionSig
-  const functionId = getFunctionId(targetId, functionSig)
-  const theFunction = getOrCreateFunction(functionId, targetId, functionSig)
+  const sighash = event.params.functionSig
+  const functionId = getFunctionId(targetId, sighash)
+  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
 
   const parameterId = getParameterId(functionId, event.params.index.toI32())
   const parameter = new Parameter(parameterId) // will always overwrite the parameter
@@ -241,8 +242,8 @@ export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {
   const targetAddress = event.params.targetAddress
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const targetId = getTargetId(roleId, targetAddress)
-  const functionSig = event.params.selector
-  const functionId = getFunctionId(targetId, functionSig)
+  const sighash = event.params.selector
+  const functionId = getFunctionId(targetId, sighash)
 
   store.remove("Function", functionId)
 }
@@ -258,8 +259,8 @@ export function handleUnscopeParameter(event: UnscopeParameter): void {
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
-  const functionSig = event.params.functionSig
-  const functionId = getFunctionId(targetId, functionSig)
+  const sighash = event.params.functionSig
+  const functionId = getFunctionId(targetId, sighash)
   const parameterId = getParameterId(functionId, event.params.index.toI32())
 
   store.remove("Parameter", parameterId)

@@ -27,5 +27,5 @@ export const useAbi = (address: string) => {
       .finally(() => setLoading(false))
   }, [network, address])
 
-  return { abi, error, loading }
+  return { abi, setAbi, error, loading }
 }

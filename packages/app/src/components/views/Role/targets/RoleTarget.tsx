@@ -1,33 +1,25 @@
 import React from "react"
 import { Box, ButtonBaseProps, IconButton, makeStyles } from "@material-ui/core"
 import { DeleteOutlineSharp, KeyboardArrowRightSharp } from "@material-ui/icons"
+import { CopyToClipboardBtn } from "@gnosis.pm/safe-react-components"
 import classNames from "classnames"
 import { truncateEthAddress } from "../../../../utils/address"
 import { EntityStatus, Target } from "../../../../typings/role"
 import RemovedAddress from "../RemovedAddress"
+import { colors, doubleBorder, ZodiacPaper } from "zodiac-ui-components"
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    display: "flex",
     alignItems: "center",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
     cursor: "pointer",
+    display: "flex",
     fontFamily: "Roboto Mono, monospace",
     justifyContent: "space-between",
     marginBottom: 10,
     padding: theme.spacing(1),
-    position: "relative",
-    "&::before": {
-      content: '" "',
-      backgroundColor: "rgba(217, 212, 173, 0.1)",
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      inset: -4,
-      pointerEvents: "none",
-      position: "absolute",
-      zIndex: 1,
-    },
+    "&::before": doubleBorder(-4, colors.tan[300]),
     "&:hover::before": {
-      backgroundColor: "rgba(217, 212, 173, 0.3)",
+      backgroundColor: colors.tan[300],
     },
   },
   active: {
@@ -40,9 +32,7 @@ const useStyles = makeStyles((theme) => ({
   },
   targetIconContainer: {
     alignItems: "center",
-    background: "rgba(217, 212, 173, 0.1)",
-    border: "2px solid rgba(217, 212, 173, 0.3)",
-    borderRadius: 999,
+    borderWidth: 2,
     display: "flex",
     height: 18,
     justifyContent: "center",
@@ -50,21 +40,30 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 18,
   },
   targetIcon: {
-    background: "rgba(217, 212, 173, 1)",
+    background: colors.tan[1000],
     borderRadius: 999,
     height: 6,
     width: 6,
   },
   iconButton: {
     borderRadius: 4,
-    color: "rgba(217, 212, 173, 1)",
+    color: colors.tan[1000],
     width: 24,
     height: 24,
   },
-  deleteButton: {
-    backgroundColor: "rgba(217, 212, 173, 0.1)",
-    border: "1px solid rgba(217, 212, 173, 0.3)",
+  filledButton: {
+    backgroundColor: colors.tan[100],
+    border: `1px solid ${colors.tan[300]}`,
+    cursor: "pointer",
     "&:hover": {
+      backgroundColor: colors.tan[300],
+      opacity: 0.8,
+    },
+  },
+  copyButton: {
+    marginLeft: theme.spacing(1),
+    "&:hover": {
+      backgroundColor: `${colors.tan[100]} !important`,
       opacity: 0.8,
     },
   },
@@ -72,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
     width: 12,
   },
   arrowIcon: {
-    fill: "rgba(217, 212, 173, 1)",
+    fill: colors.tan[1000],
     "&:hover": {
       opacity: 0.8,
     },
@@ -110,24 +109,25 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
   }
 
   return (
-    <Box
+    <ZodiacPaper
       className={classNames(classes.container, {
         [classes.active]: activeTarget,
         [classes.pending]: status === EntityStatus.PENDING,
       })}
       onClick={() => onClickTarget(target)}
     >
-      <Box className={classes.targetIconContainer}>
+      <ZodiacPaper borderStyle="single" variant="outlined" rounded="full" className={classes.targetIconContainer}>
         <Box className={classes.targetIcon} width={16} height={16} />
-      </Box>
+      </ZodiacPaper>
       {truncateEthAddress(address)}
+      <CopyToClipboardBtn textToCopy={address} className={classNames(classes.copyButton, "btn")} />
 
       <Box sx={{ flexGrow: 1 }} />
 
       <IconButton
         size="small"
         aria-label="Remove target"
-        className={classNames(classes.iconButton, classes.deleteButton)}
+        className={classNames(classes.iconButton, classes.filledButton)}
         onClick={handleRemove}
       >
         <DeleteOutlineSharp className={classes.deleteIcon} />
@@ -137,7 +137,7 @@ const RoleTarget = ({ target, onClickTarget, activeTarget, onRemoveTarget, statu
           <KeyboardArrowRightSharp className={classes.arrowIcon} />
         </IconButton>
       </Box>
-    </Box>
+    </ZodiacPaper>
   )
 }
 

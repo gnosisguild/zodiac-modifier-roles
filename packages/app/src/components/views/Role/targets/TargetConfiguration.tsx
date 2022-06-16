@@ -5,6 +5,7 @@ import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
+import { ZodiacPaper } from "zodiac-ui-components"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
 import classNames from "classnames"
@@ -13,16 +14,6 @@ import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: theme.spacing(3),
-    position: "relative",
-    "&::before": {
-      backgroundColor: "rgba(217, 212, 173, 0.1)",
-      content: '" "',
-      position: "absolute",
-      zIndex: 1,
-      inset: -3,
-      border: "1px solid rgba(217, 212, 173, 0.3)",
-      pointerEvents: "none",
-    },
   },
   allowAllLabel: {
     "& .MuiTypography-body1": {
@@ -31,10 +22,13 @@ const useStyles = makeStyles((theme) => ({
   },
   root: {
     padding: theme.spacing(2),
-    paddingRight: `calc(${theme.spacing(2)}px - var(--scrollbarWidth))`,
-    maxHeight: "calc(100vh - 400px)",
+    paddingRight: `calc(${theme.spacing(2)}px - 6px)`,
+    maxHeight: "calc(100vh - 275px)",
     overflowY: "auto",
     scrollbarGutter: "stable",
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
   },
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
@@ -116,12 +110,13 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
 
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { abi } = useAbi(target.address)
+  const { abi, setAbi } = useAbi(target.address)
   const { setTargetConditions, setTargetClearance, setTargetExecutionOption, state } = useContext(RoleContext)
 
   console.log("update events", state.getTargetUpdate(target.id))
   const [refresh, setRefresh] = useState(true)
   const [functions, setFunctions] = useState<FunctionFragment[]>([])
+  const [allowTarget, setAllowTarget] = useState(target.type === ConditionType.WILDCARDED)
 
   useEffect(() => {
     const funcs = !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
@@ -135,7 +130,8 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
     const initial = getInitialTargetConditions(functions)
     const conditions: TargetConditions = { ...initial, ...target.conditions }
     setTargetConditions({ targetId: target.id, conditions })
-  }, [functions, refresh, setTargetConditions, target.conditions, target.id])
+    setTargetClearance({ targetId: target.id, option: target.type })
+  }, [functions, refresh, setTargetConditions, setTargetClearance, target.conditions, target.id, target.type])
 
   const handleChangeTargetExecutionsOptions = (value: ExecutionOption) => {
     setTargetExecutionOption({ targetId: target.id, option: value })
@@ -145,11 +141,10 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
     setTargetConditions({ targetId: target.id, conditions })
   }
 
-  const allowAllFunctions = target.type === ConditionType.WILDCARDED
-
   const handleAllFuncChange = () => {
-    const type = !allowAllFunctions ? ConditionType.WILDCARDED : ConditionType.SCOPED
+    const type = !allowTarget ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
+    setAllowTarget((current) => !current)
   }
 
   return (
@@ -164,6 +159,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
           </Typography>
         </div>
         {/*// TODO: A target can't be remove from a role, it's set to 'None' which is same as disabling all functions */}
+        {/*// from the users perspective it will be "removed", so I still think we should do it*/}
         {/*<Button*/}
         {/*  color="secondary"*/}
         {/*  variant="outlined"*/}
@@ -178,20 +174,23 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         <FormControlLabel
           className={classes.allowAllLabel}
           label="Allow all calls to target"
-          control={<Checkbox checked={allowAllFunctions} onClick={handleAllFuncChange} />}
+          control={<Checkbox checked={allowTarget} onClick={handleAllFuncChange} />}
         />
       </Box>
-      {target.type === ConditionType.WILDCARDED ? (
+      {allowTarget ? (
         <Box sx={{ mt: 2 }}>
           <ExecutionTypeSelect value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
         </Box>
       ) : null}
-      <Box
-        className={classNames(classes.container, { [classes.disabledArea]: target.type === ConditionType.WILDCARDED })}
-      >
-        <Box className={classes.root}>
-          <TargetFunctionList items={functions} conditions={target.conditions} onChange={handleFuncParamsChange} />
-        </Box>
+      <Box className={classNames(classes.container)}>
+        <ZodiacPaper borderStyle="single" className={classNames(classes.root, { [classes.disabledArea]: allowTarget })}>
+          <TargetFunctionList
+            items={functions}
+            conditions={target.conditions}
+            onChange={handleFuncParamsChange}
+            onSubmit={(customABI) => setAbi(customABI)}
+          />
+        </ZodiacPaper>
       </Box>
     </Box>
   )

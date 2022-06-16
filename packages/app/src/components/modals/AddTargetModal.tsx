@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Box, Button, Link, makeStyles, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
-import { TextField } from "../commons/input/TextField"
+import { colors, ZodiacTextField } from "zodiac-ui-components"
 import AddIcon from "@material-ui/icons/Add"
 import { ConditionType, ExecutionOption, Target } from "../../typings/role"
 import { ExecutionTypeSelect } from "../views/Role/targets/ExecutionTypeSelect"
@@ -15,6 +15,11 @@ const useStyles = makeStyles((theme) => ({
     transition: "opacity 0.25s ease-in-out",
     "&:hover": {
       opacity: 0.8,
+    },
+  },
+  textField: {
+    "& .MuiInputBase-root": {
+      borderColor: colors.tan[300],
     },
   },
 }))
@@ -64,8 +69,8 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
           Read more about targets.
         </Link>
       </Box>
-      <Box sx={{ mt: 2 }}>
-        <TextField
+      <Box sx={{ mt: 2 }} className={classes.textField}>
+        <ZodiacTextField
           onChange={(e) => onAddressChange(e.target.value)}
           label={`target address`}
           placeholder={`Add a new target address`}

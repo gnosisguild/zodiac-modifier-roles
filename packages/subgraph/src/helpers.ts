@@ -27,8 +27,7 @@ export const getRoleId = (roleModifierId: string, role: number): string => roleM
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
-export const getFunctionId = (targetId: string, functionSig: Bytes): string =>
-  targetId + "-FUNCTION-" + functionSig.toHex()
+export const getFunctionId = (targetId: string, sighash: Bytes): string => targetId + "-FUNCTION-" + sighash.toHex()
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
 export const getParameterId = (functionId: string, parameterIndex: number): string =>
   functionId + "-PARAMETER-" + parameterIndex.toString()
@@ -77,13 +76,13 @@ For created Functions:
  - execution options options is None.
  - wildcarded is false.
 */
-export const getOrCreateFunction = (functionId: string, targetId: string, functionSig: Bytes): Function => {
+export const getOrCreateFunction = (functionId: string, targetId: string, sighash: Bytes): Function => {
   let theFunction = Function.load(functionId)
 
   if (!theFunction) {
     theFunction = new Function(functionId)
     theFunction.target = targetId
-    theFunction.functionSig = functionSig
+    theFunction.sighash = sighash
     theFunction.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
     theFunction.wildcarded = false
     theFunction.save()

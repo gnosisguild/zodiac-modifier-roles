@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Box, Button, Link, makeStyles, Typography } from "@material-ui/core"
 import { ethers } from "ethers"
 import Modal from "../commons/Modal"
-import { TextField } from "../commons/input/TextField"
+import { colors, ZodiacTextField } from "zodiac-ui-components"
 import AddIcon from "@material-ui/icons/Add"
 
 const useStyles = makeStyles((theme) => ({
@@ -13,6 +13,11 @@ const useStyles = makeStyles((theme) => ({
     transition: "opacity 0.25s ease-in-out",
     "&:hover": {
       opacity: 0.8,
+    },
+  },
+  textField: {
+    "& .MuiInputBase-root": {
+      borderColor: colors.tan[300],
     },
   },
 }))
@@ -55,7 +60,8 @@ const AddAddressModal = ({ type, onAddAddress, onClose, isOpen }: Props): React.
         </Link>
       </Box>
       <Box sx={{ mt: 2 }}>
-        <TextField
+        <ZodiacTextField
+          className={classes.textField}
           onChange={(e) => onAddressChange(e.target.value)}
           label={`${type} address`}
           placeholder={`Add a new ${type} address`}

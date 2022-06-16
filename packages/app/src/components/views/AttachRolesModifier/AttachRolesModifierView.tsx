@@ -1,5 +1,5 @@
 import { Box, Button, makeStyles, Paper, Typography } from "@material-ui/core"
-import { TextField } from "../../commons/input/TextField"
+import { ZodiacTextField } from "zodiac-ui-components"
 import { ReactComponent as ArrowUp } from "../../../assets/icons/arrow-up.svg"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -55,7 +55,7 @@ export const AttachRolesModifierView = () => {
           Once a Role Modifier is connected you can manage roles and permissions.
         </Typography>
 
-        <TextField
+        <ZodiacTextField
           className={classes.spacing}
           onChange={(evt: any) => setAddress(evt.target.value)}
           label="Role Modifier Address"
