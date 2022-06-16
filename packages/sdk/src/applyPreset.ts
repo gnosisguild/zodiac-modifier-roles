@@ -183,6 +183,7 @@ export const encodeApplyPresetMultisend = async (
     multiSendBatchSize = DEFAULT_BATCH_SIZE,
     currentPermissions,
   } = options
+
   const transactions = await encodeApplyPreset(
     address,
     roleId,

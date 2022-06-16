@@ -62,6 +62,7 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       ...sharedNetworkConfig,
+      chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
     rinkeby: {
@@ -70,6 +71,7 @@ const config: HardhatUserConfig = {
     },
     xdai: {
       ...sharedNetworkConfig,
+      chainId: 100,
       url: "https://rpc.gnosischain.com/",
     },
     matic: {

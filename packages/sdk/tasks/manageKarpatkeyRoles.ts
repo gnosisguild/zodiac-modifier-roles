@@ -2,9 +2,13 @@ import "@nomiclabs/hardhat-ethers"
 
 import { task as baseTask, types } from "hardhat/config"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { defaultAbiCoder } from "ethers/lib/utils"
 
 import { Roles } from "../../evm/typechain-types"
-import { encodeApplyPreset } from "../src/applyPreset"
+import {
+  encodeApplyPreset,
+  encodeApplyPresetMultisend,
+} from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
 import addMembers from "../src/addMembers"
@@ -13,15 +17,10 @@ import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../src/presets/placeholders"
-import { defaultAbiCoder } from "ethers/lib/utils"
-
-interface Config {
-  AVATAR: string
-  MODULE: string
-  MANAGEMENT: string
-  HARVESTERS: string[]
-  NETWORK: NetworkId
-}
+import daoManageSnapshot01 from "../test/karpatkey/permissions/daoManageGnosisChainSnapshot01.json"
+import ltdManageSnapshot01 from "../test/karpatkey/permissions/ltdManageGnosisChainSnapshot01.json"
+import { writeFileSync } from "fs"
+import path from "path"
 
 export const KARPATKEY_ADDRESSES = {
   DAO_GNO: {
@@ -35,7 +34,7 @@ export const KARPATKEY_ADDRESSES = {
       "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
     ],
     NETWORK: 100,
-    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
   LTD_GNO: {
     AVATAR: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
@@ -73,9 +72,7 @@ const processArgs = async (taskArgs: any, hre: HardhatRuntimeEnvironment) => {
     throw new Error(`safe param value '${safe}' not supported`)
   }
   const safeKey = safe as keyof typeof KARPATKEY_ADDRESSES
-  if (
-    hre.ethers.provider.network.chainId !== KARPATKEY_ADDRESSES[safeKey].NETWORK
-  ) {
+  if (hre.network.config.chainId !== KARPATKEY_ADDRESSES[safeKey].NETWORK) {
     throw new Error(`using wrong network!`)
   }
   const roles = await getContract(safe, hre)
@@ -138,8 +135,7 @@ task("assignHarvestRole").setAction(async (taskArgs, hre) => {
 
 task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
-
-  const txBatches = await encodeApplyPreset(
+  const txBatches = await encodeApplyPresetMultisend(
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset,
@@ -150,26 +146,25 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
       ),
       [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
         ["bytes"],
-        [config.BRIDGED_SAFE.slice(2)]
+        [config.BRIDGED_SAFE]
       ),
     },
     {
       network: config.NETWORK as NetworkId,
+      multiSendAddress: "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+      multiSendBatchSize: 90,
+      currentPermissions:
+        config === KARPATKEY_ADDRESSES.DAO_GNO
+          ? daoManageSnapshot01
+          : ltdManageSnapshot01, // TODO this needs to be adjusted once the permissions get updated
     }
   )
 
-  for (let i = 0; i < txBatches.length; i++) {
-    console.log(
-      JSON.stringify({ to: txBatches[i].to, data: txBatches[i].data }, null, 2)
-    )
-    if (dryRun) continue
-
-    const tx = await roles.signer.sendTransaction(txBatches[i])
-    console.log(`TX hash: ${tx.hash}`)
-    console.log("Waiting for confirmation...")
-    await tx.wait()
-    console.log(`Done ${i + 1}/${txBatches.length}.`)
-  }
+  writeFileSync(
+    path.join(__dirname, "..", "txData.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(`Multi-send transaction data written to packages/sdk/txData.json`)
 })
 
 task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
