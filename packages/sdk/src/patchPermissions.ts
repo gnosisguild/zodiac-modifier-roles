@@ -8,19 +8,10 @@ const patchPermissions = (
   currentPermissions: RolePermissions,
   nextPermissions: RolePermissions
 ): Call[] => {
-  const functionScopedTargets = currentPermissions.targets
-    .filter((target) => target.clearance === Clearance.Function)
-    .map((target) => target.address)
-
-  return removeObsoleteCalls(
-    [
-      ...revokePermissions(
-        diffPermissions(currentPermissions, nextPermissions)
-      ),
-      ...grantPermissions(diffPermissions(nextPermissions, currentPermissions)),
-    ],
-    functionScopedTargets
-  )
+  return removeObsoleteCalls([
+    ...revokePermissions(diffPermissions(currentPermissions, nextPermissions)),
+    ...grantPermissions(diffPermissions(nextPermissions, currentPermissions)),
+  ])
 }
 
 export default patchPermissions

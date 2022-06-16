@@ -1,10 +1,7 @@
 import { Call } from "./types"
 
 // Remove all permission adjustment calls that are obsolete, because there are subsequent calls overriding their effects.
-const removeObsoleteCalls = (
-  calls: Call[],
-  functionScopedTargets: string[] = []
-): Call[] => {
+const removeObsoleteCalls = (calls: Call[]): Call[] => {
   if (calls.length <= 1) return calls
 
   // We start filtering from the end, and keep filtering against filtered interim result.
@@ -16,12 +13,7 @@ const removeObsoleteCalls = (
     }
   }
 
-  // As a second step we remove all unnecessary scopeTarget calls.
-  return result.filter(
-    (call) =>
-      call.call !== "scopeTarget" ||
-      !functionScopedTargets.includes(call.targetAddress)
-  )
+  return result
 }
 
 export default removeObsoleteCalls

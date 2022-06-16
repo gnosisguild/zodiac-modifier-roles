@@ -29,6 +29,7 @@ const TOKENS = {
     "0xD87eaA26dCfB0C0A6160cCf8c8a01BEB1C15fB00",
   "SushiToken from Ethereum": "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE",
   "Curve DAO Token on xDai": "0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd",
+  MAI: "0x3F56e0c36d275367b8C502090EDF38289b3dEa0d",
 }
 
 const LP_TOKENS = {
@@ -45,15 +46,15 @@ const LP_TOKENS = {
   "Uniswap V2 GNO/WXDAI": "0x321704900D52F44180068cAA73778d5cD60695A6",
 }
 
+const ELK_FARMING_REWARDS = "0x5942A302f2bdceb43C2934B42c584f4ee5f7B027"
+
+const GNO_MAI_VAULT = "0x014A177E9642d1b4E970418f894985dC1b85657f"
+
 const UNI_V2_ROUTERS = {
   "SushiSwap UniswapV2Router02": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
   "Honeyswap UniswapV2Router02": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
   "Swapr DXswapRouter": "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0",
   "Elk Router": "0xe5759714998e8B50A33c7333C04C2d02e5dcE77f",
-}
-
-const DEFI_PROTOCOLS = {
-  SUSHISWAP_MINI_CHEF,
 }
 
 const CURVE_POOLS = {
@@ -62,14 +63,16 @@ const CURVE_POOLS = {
   "sGNO/GNO": "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
 }
 
-const SWAPR = {
-  StakingRewardsDistribution0: "0x89a9a96E29b0c6A08c83F9e76D6553601f215775",
-  StakingRewardsDistribution1: "0x42430C8517C3c3E8754F1D6c23AF538037452bd7",
-  StakingRewardsDistribution2: "0xD2430dCF3a4344a6E97216d0A037438Ea958410a",
-}
+const SWAPR_REWARDS_DISTRIBUTION = [
+  "0x89a9a96E29b0c6A08c83F9e76D6553601f215775",
+  "0x42430C8517C3c3E8754F1D6c23AF538037452bd7",
+  "0xD2430dCF3a4344a6E97216d0A037438Ea958410a",
+  "0x46E314266D607f2e09b05F5b37D43A397226b2Fa",
+]
 
 const CURVE = {
   "GNO/CRV ChildChainStreamer": "0x6C09F6727113543Fd061a721da512B7eFCDD0267",
+  DepositContract: "0x87C067fAc25f123554a0E76596BF28cFa37fD5E9", // https://curve.readthedocs.io/factory-deposits.html
 }
 
 const SYNTHETIX = {
@@ -90,7 +93,10 @@ const preset: RolePreset = {
     ...allowErc20Approve([
       {
         tokens: Object.values(TOKENS),
-        spenders: Object.values([...Object.values(UNI_V2_ROUTERS)]),
+        spenders: Object.values([
+          ...Object.values(UNI_V2_ROUTERS),
+          CURVE.DepositContract,
+        ]),
       },
       { tokens: [TOKENS.GNO], spenders: [OMNI_BRIDGE] },
       {
@@ -169,6 +175,23 @@ const preset: RolePreset = {
     },
     // <-- Uniswap V2
 
+    // Elk -->
+    {
+      signature:
+        "addLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
+      targetAddresses: [UNI_V2_ROUTERS["Elk Router"]],
+    },
+    {
+      signature:
+        "removeLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
+      targetAddresses: [UNI_V2_ROUTERS["Elk Router"]],
+      params: {
+        [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+      },
+    },
+    { signature: "stake(uint256)", targetAddresses: [ELK_FARMING_REWARDS] },
+    // <-- Elk
+
     allowErc20Transfer(
       [TOKENS.GNO],
       [
@@ -211,6 +234,25 @@ const preset: RolePreset = {
       signature: "add_liquidity(uint256[2],uint256)",
       targetAddresses: [CURVE_POOLS["RAIx3CRV"], CURVE_POOLS["sGNO/GNO"]],
     },
+
+    {
+      signature: "add_liquidity(address,uint256[4],uint256)",
+      targetAddresses: [CURVE.DepositContract],
+    },
+    {
+      signature: "remove_liquidity(address,uint256,uint256[4],address)",
+      targetAddresses: [CURVE.DepositContract],
+      params: {
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+    {
+      signature: "remove_liquidity_one_coin(address,uint256,int128,uint256)",
+      targetAddresses: [CURVE.DepositContract],
+      params: {
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
     // <-- Curve
 
     // Symmetric -->
@@ -223,13 +265,21 @@ const preset: RolePreset = {
     // Swapr -->
     {
       signature: "stake(uint256)",
-      targetAddresses: [
-        SWAPR["StakingRewardsDistribution0"],
-        SWAPR["StakingRewardsDistribution1"],
-        SWAPR["StakingRewardsDistribution2"],
-      ],
+      targetAddresses: SWAPR_REWARDS_DISTRIBUTION,
+    },
+    {
+      signature: "exit(address)",
+      targetAddresses: SWAPR_REWARDS_DISTRIBUTION,
+      params: [staticEqual(AVATAR_ADDRESS_PLACEHOLDER)],
     },
     // <-- Swapr
+
+    // Mai.finance -->
+    {
+      signature: "depositCollateral(uint256,uint256)",
+      targetAddresses: [GNO_MAI_VAULT],
+    },
+    // <-- Mai.finance
   ],
 }
 export default preset

@@ -5,7 +5,7 @@ import hre, { deployments, waffle, ethers } from "hardhat"
 import "@nomiclabs/hardhat-ethers"
 import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
 
-import { Roles, TestAvatar } from "../../../evm/typechain-types"
+import { Roles, Roles__factory, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChainDeFiHarvest"
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChainDeFiManage"
@@ -28,7 +28,7 @@ import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../../src/presets/placeholders"
-import { defaultAbiCoder } from "ethers/lib/utils"
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
 describe("Karpatkey: Replay Transactions Test", async () => {
   const ROLE_ID = 1
@@ -160,6 +160,8 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     const newFailingTransactions = []
     const newSucceedingTransactions = []
+    const wronglySucceedingTransactions = []
+    const wronglyFailingTransactions = []
 
     for (let i = 0; i < multisigTransactions.length; i++) {
       const tx = multisigTransactions[i]
@@ -181,7 +183,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         console.log((e as Error).message + "\n")
         if (transactionsJson.success.includes(tx.transactionHash)) {
           console.error("Transaction failed that should succeed:", tx)
-          throw new Error("Transaction unexpectedly failed")
+          wronglyFailingTransactions.push(tx)
         } else if (!transactionsJson.fail.includes(tx.transactionHash)) {
           newFailingTransactions.push(tx)
         }
@@ -191,7 +193,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       // tx succeeded
       if (transactionsJson.fail.includes(tx.transactionHash)) {
         console.error("Transaction succeeded that should be failing:", tx)
-        throw new Error("Transaction unexpectedly succeeded")
+        wronglySucceedingTransactions.push(tx)
       } else if (!transactionsJson.success.includes(tx.transactionHash)) {
         newSucceedingTransactions.push(tx)
       }
@@ -207,18 +209,41 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     console.log(`\n${newFailingTransactions.length} new failing transactions:`)
     console.log(newFailingTransactions.map((tx) => tx.transactionHash))
 
+    console.error(
+      `\n${wronglySucceedingTransactions.length} wrongly succeeding transactions:`
+    )
+    console.log(wronglySucceedingTransactions.map((tx) => tx.transactionHash))
+
+    console.error(
+      `\n${wronglyFailingTransactions.length} wrongly failing transactions:`
+    )
+    console.log(wronglyFailingTransactions.map((tx) => tx.transactionHash))
+
     writeFileSync(
       path.join(__dirname, "results", `${resultsFileName}.json`),
       JSON.stringify(
         {
+          wronglySucceedingTransactions,
+          wronglyFailingTransactions,
+          newSucceedingTransactions,
+          newFailingTransactions,
           permissions: fillAndUnfoldPreset(preset, placeholderValues),
-          success: newSucceedingTransactions,
-          fail: newFailingTransactions,
         },
         null,
         2
       )
     )
+
+    if (wronglySucceedingTransactions.length > 0) {
+      throw new Error(
+        `${wronglySucceedingTransactions.length} transactions succeeded wrongly!`
+      )
+    }
+    if (wronglyFailingTransactions.length > 0) {
+      throw new Error(
+        `${wronglyFailingTransactions.length} transactions failed wrongly!`
+      )
+    }
   }
 
   describe("Gnosis Chain DeFi Manage preset", () => {
