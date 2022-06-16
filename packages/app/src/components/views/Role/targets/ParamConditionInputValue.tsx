@@ -56,7 +56,7 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
     } catch (err) {
       setValid(false)
     }
-    onChange({ ...condition, value })
+    onChange({ ...condition, value: [value] })
   }
 
   return (
@@ -68,7 +68,7 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
         disableUnderline: true,
         className: classNames(classes.input, { [classes.error]: !valid && dirty }),
       }}
-      value={condition.value}
+      value={condition.value[0]}
       placeholder={getPlaceholderForType(param)}
       onChange={(evt) => handleChange(evt.target.value)}
     />
