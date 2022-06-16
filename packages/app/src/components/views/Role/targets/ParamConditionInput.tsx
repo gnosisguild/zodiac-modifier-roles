@@ -64,7 +64,7 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
   const type = getConditionType(nativeType)
   const options = getConditionsPerType(nativeType)
 
-  const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: "" })
+  const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: [""] })
   const handleRemove = () => onChange(undefined)
 
   if (nativeType === ParamNativeType.UNSUPPORTED) return null
@@ -72,7 +72,7 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
   if (!condition) {
     const handleClick = () => {
       if (nativeType === ParamNativeType.BOOLEAN) {
-        onChange({ index, type, condition: ParamComparison.EQUAL_TO, value: BooleanValue.FALSE })
+        onChange({ index, type, condition: ParamComparison.EQUAL_TO, value: [BooleanValue.FALSE] })
         return
       }
       handleChange(options[0])
@@ -92,14 +92,15 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
   )
 
   if (nativeType === ParamNativeType.BOOLEAN) {
-    const handleBooleanChange = (value: string) => onChange({ index, type, condition: ParamComparison.EQUAL_TO, value })
+    const handleBooleanChange = (value: string) =>
+      onChange({ index, type, condition: ParamComparison.EQUAL_TO, value: [value] })
     return (
       <>
         <Select
           classes={{ icon: classes.selectIcon }}
           className={classes.select}
           disabled={disabled}
-          value={condition.value}
+          value={condition.value[0]}
           onChange={(evt) => handleBooleanChange(evt.target.value as string)}
         >
           <MenuItem value={BooleanValue.FALSE}>is false</MenuItem>

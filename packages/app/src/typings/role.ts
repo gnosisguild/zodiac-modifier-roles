@@ -35,8 +35,7 @@ export interface ParamCondition {
   index: number
   type: ParameterType
   condition: ParamComparison
-  value: string
-  values?: string[]
+  value: string[]
 }
 
 export enum ParamComparison {

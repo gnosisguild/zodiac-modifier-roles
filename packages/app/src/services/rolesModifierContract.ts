@@ -213,7 +213,7 @@ export const updateRole = async (
           const param = functions[sighash].inputs[paramCondition.index]
 
           if (paramCondition.condition !== ParamComparison.ONE_OF) {
-            const value = formatParamValue(param, paramCondition.value)
+            const value = formatParamValue(param, paramCondition.value[0])
             const encodedValue = ethers.utils.defaultAbiCoder.encode([param], [value])
             console.log("[updateRole] scope parameter", [
               role.id,
@@ -233,28 +233,28 @@ export const updateRole = async (
               paramCondition.condition,
               encodedValue,
             )
+          } else {
+            const encodedValues = paramCondition.value.map((value) => {
+              return ethers.utils.defaultAbiCoder.encode([param], [formatParamValue(param, value)])
+            })
+
+            console.log("[updateRole] scope parameter as OneOf", [
+              role.id,
+              target.address,
+              sighash,
+              paramCondition.index,
+              paramCondition.type,
+              encodedValues || [],
+            ])
+            return rolesModifierContract.populateTransaction.scopeParameterAsOneOf(
+              role.id,
+              target.address,
+              sighash,
+              paramCondition.index,
+              paramCondition.type,
+              encodedValues || [],
+            )
           }
-
-          const encodedValues = paramCondition.values?.map((value) => {
-            return ethers.utils.defaultAbiCoder.encode([param], [formatParamValue(param, paramCondition.value)])
-          })
-
-          console.log("[updateRole] scope parameter as OneOf", [
-            role.id,
-            target.address,
-            sighash,
-            paramCondition.index,
-            paramCondition.type,
-            encodedValues || [],
-          ])
-          return rolesModifierContract.populateTransaction.scopeParameterAsOneOf(
-            role.id,
-            target.address,
-            sighash,
-            paramCondition.index,
-            paramCondition.type,
-            encodedValues || [],
-          )
         })
       })
       .flat()
