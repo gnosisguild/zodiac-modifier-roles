@@ -1,7 +1,3 @@
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-} from "./placeholders"
 import { ExecutionOptions, RolePreset } from "../types"
 
 import {
@@ -10,6 +6,10 @@ import {
   OMNI_BRIDGE,
   SUSHISWAP_MINI_CHEF,
 } from "./addresses"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  OMNI_BRIDGE_DATA_PLACEHOLDER,
+} from "./placeholders"
 import {
   allowErc20Approve,
   allowErc20Transfer,

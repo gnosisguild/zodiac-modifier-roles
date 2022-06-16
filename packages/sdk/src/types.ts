@@ -1,4 +1,5 @@
 import { BigNumberish } from "ethers"
+
 import { AVATAR_ADDRESS_PLACEHOLDER } from "./presets/placeholders"
 import SUBGRAPH from "./subgraph"
 

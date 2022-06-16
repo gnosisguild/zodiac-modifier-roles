@@ -1,25 +1,24 @@
-import EthersAdapter from "@gnosis.pm/safe-ethers-lib"
-import defaultEthers, { Contract, PopulatedTransaction, Signer } from "ethers"
-import SafeServiceClient from "@gnosis.pm/safe-service-client"
 import Safe from "@gnosis.pm/safe-core-sdk"
 import {
   EthAdapter,
   MetaTransactionData,
   OperationType,
 } from "@gnosis.pm/safe-core-sdk-types"
+import EthersAdapter from "@gnosis.pm/safe-ethers-lib"
+import SafeServiceClient from "@gnosis.pm/safe-service-client"
+import defaultEthers, { Contract, PopulatedTransaction, Signer } from "ethers"
 import { encodeMulti } from "ethers-multisend"
 
-import { Roles } from "../../evm/typechain-types"
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
+import { Roles } from "../../evm/typechain-types"
 
-import { RolePermissions, RolePreset } from "./types"
-import fetchPermissions from "./fetchPermissions"
-import { NetworkId } from "./types"
-import SAFE_TX_SERVICE from "./safeTxService"
-import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
-import patchPermissions from "./patchPermissions"
-import logCall from "./logCall"
 import encodeCalls from "./encodeCalls"
+import fetchPermissions from "./fetchPermissions"
+import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
+import logCall from "./logCall"
+import patchPermissions from "./patchPermissions"
+import SAFE_TX_SERVICE from "./safeTxService"
+import { RolePermissions, RolePreset, NetworkId } from "./types"
 
 let nonce: number
 
@@ -223,9 +222,9 @@ const asMetaTransaction = (
   }
 }
 
-const batchArray = <T extends any>(array: T[], batchSize: number): T[][] => {
+const batchArray = <T>(array: T[], batchSize: number): T[][] => {
   const result = []
-  for (var i = 0; i < array.length; i += batchSize) {
+  for (let i = 0; i < array.length; i += batchSize) {
     result.push(array.slice(i, i + batchSize))
   }
   return result

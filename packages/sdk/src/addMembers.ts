@@ -1,7 +1,8 @@
 import { Contract, PopulatedTransaction } from "ethers"
 import { encodeMulti, MetaTransaction, OperationType } from "ethers-multisend"
-import { Roles } from "../../evm/typechain-types"
+
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
+import { Roles } from "../../evm/typechain-types"
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
 

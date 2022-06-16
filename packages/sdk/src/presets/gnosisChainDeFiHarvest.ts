@@ -1,7 +1,7 @@
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
 import { RolePreset } from "../types"
 
 import { CURVE_x3CRV_REWARD_GAUGE, SUSHISWAP_MINI_CHEF } from "./addresses"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
 import { staticEqual } from "./utils"
 
 const preset: RolePreset = {

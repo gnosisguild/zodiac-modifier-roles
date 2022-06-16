@@ -1,6 +1,8 @@
 import { Contract, PopulatedTransaction } from "ethers"
-import { Roles } from "../../evm/typechain-types"
+
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
+import { Roles } from "../../evm/typechain-types"
+
 import { Call } from "./types"
 
 const encodeCalls = async (
