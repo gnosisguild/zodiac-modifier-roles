@@ -1,26 +1,27 @@
 import "@nomiclabs/hardhat-ethers"
 
+import { writeFileSync } from "fs"
+import path from "path"
+
+import { defaultAbiCoder } from "ethers/lib/utils"
 import { task as baseTask, types } from "hardhat/config"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import { defaultAbiCoder } from "ethers/lib/utils"
 
 import { Roles } from "../../evm/typechain-types"
+import addMembers from "../src/addMembers"
 import {
   encodeApplyPreset,
   encodeApplyPresetMultisend,
 } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
-import addMembers from "../src/addMembers"
-import { NetworkId } from "../src/types"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../src/presets/placeholders"
+import { NetworkId } from "../src/types"
 import daoManageSnapshot01 from "../test/karpatkey/permissions/daoManageGnosisChainSnapshot01.json"
 import ltdManageSnapshot01 from "../test/karpatkey/permissions/ltdManageGnosisChainSnapshot01.json"
-import { writeFileSync } from "fs"
-import path from "path"
 
 export const KARPATKEY_ADDRESSES = {
   DAO_GNO: {
@@ -32,6 +33,7 @@ export const KARPATKEY_ADDRESSES = {
       "0x06DAeB1A97972B9A12e171ed1FC86b392Fa3f89A", // Joaco
       "0xe9eB7DA58f6B5CE5b0a6cFD778A2fa726203AAD5", // Isabel
       "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
+      "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
     ],
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
@@ -45,6 +47,7 @@ export const KARPATKEY_ADDRESSES = {
       "0x2EDD4cF73B94a0507441A2C477e9Dc5C92f5Db1a", // Joaco
       "0x0af878166427cA6075979ADe8377f9a5C23bed05", // Isabel
       "0xe8aA9122832AA971c4802C69D5141Ff4EEB95ec5", // Ale
+      "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
     ],
     NETWORK: 100,
     BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
