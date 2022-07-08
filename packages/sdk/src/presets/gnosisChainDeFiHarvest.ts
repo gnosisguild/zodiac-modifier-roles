@@ -1,6 +1,10 @@
 import { RolePreset } from "../types"
 
-import { CURVE_x3CRV_REWARD_GAUGE, SUSHISWAP_MINI_CHEF } from "./addresses"
+import {
+  CURVE_x3CRV_GAUGE,
+  CURVE_x3CRV_REWARD_GAUGE,
+  SUSHISWAP_MINI_CHEF,
+} from "./addresses"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
 import { staticEqual } from "./utils"
 
@@ -16,7 +20,7 @@ const preset: RolePreset = {
       },
     },
     {
-      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE],
+      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
       signature: "claim_rewards(address)",
       params: {
         [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
