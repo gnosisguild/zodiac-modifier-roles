@@ -2,6 +2,7 @@
 
 [![Build Status](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-modifier-roles/badge.svg?branch=main)](https://coveralls.io/github/gnosis/zodiac-modifier-roles)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/gnosis/CODE_OF_CONDUCT)
 
 The Roles Modifier belongs to the [Zodiac](https://github.com/gnosis/zodiac) collection of tools, which can be accessed through the Zodiac App available on [Gnosis Safe](https://gnosis-safe.io/), as well as in this repository.
 
@@ -11,7 +12,7 @@ If you have any questions about Zodiac, join the [Gnosis Guild Discord](https://
 
 This modifier allows avatars to enforce granular, role-based, permissions for attached modules.
 
-Modules that have been granted a role are able unilaterally to make calls to approved addresses, approved functions, and approved variables the role has access to.
+Modules that have been granted a role are able to unilaterally make calls to any approved addresses, approved functions, and approved variables the role has access to.
 
 The interface mirrors the relevant parts of the Gnosis Safe's interface, so this contract can be placed between Gnosis Safe modules and a Gnosis Safe to enforce role-based permissions.
 
