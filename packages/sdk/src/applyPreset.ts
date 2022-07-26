@@ -197,9 +197,7 @@ export const encodeApplyPresetMultisend = async (
   console.debug(
     `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
   )
-  return batches.map((transactions) =>
-    encodeMulti(transactions.map(asMetaTransaction), multiSendAddress)
-  )
+  return batches[0].map(asMetaTransaction)
 }
 
 const readAvatar = async (address: string, network: NetworkId) => {
