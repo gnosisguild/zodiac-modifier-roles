@@ -1,44 +1,57 @@
-import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils";
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders";
 import {
   Comparison,
   ExecutionOptions,
   ParameterType,
-  AllowFunction,
-  ScopeParam,
-} from "../types";
+  PresetFunction,
+  PresetScopeParam,
+} from "../types"
 
-export const functionSighash = (signature: string): string =>
-  keccak256(toUtf8Bytes(signature)).substring(0, 10);
+interface ApprovePairing {
+  tokens: string[]
+  spenders: string[]
+}
 
 export const allowErc20Approve = (
-  tokens: string[],
-  spenders: string[]
-): AllowFunction => ({
-  targetAddresses: tokens,
-  functionSig: functionSighash("approve(address,uint256)"),
-  params: [
-    spenders.length === 1
-      ? staticEqual(spenders[0], "address")
-      : {
-          type: ParameterType.Static,
-          comparison: Comparison.OneOf,
-          value: spenders.map((spender) =>
-            defaultAbiCoder.encode(["address"], [spender])
-          ),
-        },
-    undefined,
-  ],
-  options: ExecutionOptions.None,
-});
+  pairings: ApprovePairing[]
+): PresetFunction[] => {
+  const spendersForToken = pairings.reduce((spendersForToken, pairing) => {
+    pairing.tokens.forEach((token) => {
+      if (!spendersForToken[token]) spendersForToken[token] = new Set()
+      spendersForToken[token] = new Set([
+        ...spendersForToken[token],
+        ...pairing.spenders,
+      ])
+    })
+    return spendersForToken
+  }, {} as Record<string, Set<string>>)
+
+  return Object.entries(spendersForToken).map(([token, spenders]) => ({
+    targetAddresses: [token],
+    signature: "approve(address,uint256)",
+    params: [
+      spenders.size === 1
+        ? staticEqual([...spenders][0], "address")
+        : {
+            type: ParameterType.Static,
+            comparison: Comparison.OneOf,
+            value: [...spenders].map((spender) =>
+              defaultAbiCoder.encode(["address"], [spender])
+            ),
+          },
+      undefined,
+    ],
+    options: ExecutionOptions.None,
+  }))
+}
 
 export const allowErc20Transfer = (
   tokens: string[],
   recipients: string[]
-): AllowFunction => ({
+): PresetFunction => ({
   targetAddresses: tokens,
-  functionSig: functionSighash("transfer(address,uint256)"),
+  signature: "transfer(address,uint256)",
   params: [
     recipients.length === 1
       ? staticEqual(recipients[0], "address")
@@ -52,24 +65,40 @@ export const allowErc20Transfer = (
     undefined,
   ],
   options: ExecutionOptions.None,
-});
+})
 
-export const staticEqual = (
-  value: string | typeof AVATAR_ADDRESS_PLACEHOLDER,
+const encodeValue = (
+  value: string | symbol,
   type?: string
-): ScopeParam => {
-  if (value === AVATAR_ADDRESS_PLACEHOLDER) type = "address";
-  if (!type) throw new Error("the value type must be specified");
+): string | symbol => {
+  let encodedValue = value
+  if (typeof value !== "symbol") {
+    if (!type) {
+      throw new Error("the value type must be specified")
+    } else {
+      encodedValue = defaultAbiCoder.encode([type], [value])
+    }
+  }
+  return encodedValue
+}
 
-  return {
-    comparison: Comparison.EqualTo,
-    type: ParameterType.Static,
-    value:
-      value === AVATAR_ADDRESS_PLACEHOLDER
-        ? value
-        : defaultAbiCoder.encode([type], [value]),
-  };
-};
+export const staticEqual = (value: any, type?: string): PresetScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Static,
+  value: encodeValue(value, type),
+})
+
+export const dynamicEqual = (value: any, type?: string): PresetScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Dynamic,
+  value: encodeValue(value, type),
+})
+
+export const oneOf = (value: any[], type?: string): PresetScopeParam => ({
+  comparison: Comparison.OneOf,
+  type: ParameterType.Static,
+  value: value.map((v) => encodeValue(v, type)),
+})
 
 // export const greaterThanUint = (
 //   value: number | string | BigInt
