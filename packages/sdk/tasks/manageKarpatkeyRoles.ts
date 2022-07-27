@@ -12,6 +12,7 @@ import addMembers from "../src/addMembers"
 import {
   encodeApplyPreset,
   encodeApplyPresetMultisend,
+  encodeApplyPresetTxBuilder,
 } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
@@ -171,8 +172,8 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
 })
 
 task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
-  const { dryRun, roles, config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetMultisend(
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset,
@@ -188,8 +189,6 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     },
     {
       network: config.NETWORK as NetworkId,
-      multiSendAddress: "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-      multiSendBatchSize: 90,
     }
   )
 
@@ -197,5 +196,5 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     path.join(__dirname, "..", "txData.json"),
     JSON.stringify(txBatches, undefined, 2)
   )
-  console.log(`Multi-send transaction data written to packages/sdk/txData.json`)
+  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
 })
