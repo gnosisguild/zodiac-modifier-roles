@@ -172,8 +172,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
 
 task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
-
-  const txBatches = await encodeApplyPreset(
+  const txBatches = await encodeApplyPresetMultisend(
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset,
@@ -182,22 +181,21 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
         ["address"],
         [config.AVATAR]
       ),
+      [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+        ["bytes"],
+        [config.BRIDGED_SAFE]
+      ),
     },
     {
       network: config.NETWORK as NetworkId,
+      multiSendAddress: "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+      multiSendBatchSize: 90,
     }
   )
 
-  for (let i = 0; i < txBatches.length; i++) {
-    console.log(
-      JSON.stringify({ to: txBatches[i].to, data: txBatches[i].data }, null, 2)
-    )
-    if (dryRun) continue
-
-    const tx = await roles.signer.sendTransaction(txBatches[i])
-    console.log(`TX hash: ${tx.hash}`)
-    console.log("Waiting for confirmation...")
-    await tx.wait()
-    console.log(`Done ${i + 1}/${txBatches.length}.`)
-  }
+  writeFileSync(
+    path.join(__dirname, "..", "txData.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(`Multi-send transaction data written to packages/sdk/txData.json`)
 })
