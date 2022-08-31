@@ -1,4 +1,5 @@
 import { expect } from "chai"
+
 import diffPermissions from "../src/diffPermissions"
 import { Clearance, ExecutionOptions, RolePermissions } from "../src/types"
 

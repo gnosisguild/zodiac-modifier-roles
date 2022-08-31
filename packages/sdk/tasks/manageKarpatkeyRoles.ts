@@ -14,8 +14,8 @@ import {
   encodeApplyPresetMultisend,
   encodeApplyPresetTxBuilder,
 } from "../src/applyPreset"
-import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChainDeFiHarvest"
-import gnosisChainDeFiManagePreset from "../src/presets/gnosisChainDeFiManage"
+import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
+import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -52,6 +52,22 @@ export const KARPATKEY_ADDRESSES = {
     ],
     NETWORK: 100,
     BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
+  },
+  DAO_ETH: {
+    AVATAR: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+    MODULE: "",
+    MANAGEMENT: "",
+    HARVESTERS: [],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
+  },
+  LTD_ETH: {
+    AVATAR: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
+    MODULE: "",
+    MANAGEMENT: "",
+    HARVESTERS: [],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
   },
 }
 
@@ -139,7 +155,7 @@ task("assignHarvestRole").setAction(async (taskArgs, hre) => {
 
 task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetMultisend(
+  const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset,
@@ -155,12 +171,6 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     },
     {
       network: config.NETWORK as NetworkId,
-      multiSendAddress: "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-      multiSendBatchSize: 90,
-      currentPermissions:
-        config === KARPATKEY_ADDRESSES.DAO_GNO
-          ? daoManageSnapshot01
-          : ltdManageSnapshot01, // TODO this needs to be adjusted once the permissions get updated
     }
   )
 
@@ -168,7 +178,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     path.join(__dirname, "..", "txData.json"),
     JSON.stringify(txBatches, undefined, 2)
   )
-  console.log(`Multi-send transaction data written to packages/sdk/txData.json`)
+  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
 })
 
 task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {

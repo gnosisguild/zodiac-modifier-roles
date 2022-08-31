@@ -6,7 +6,7 @@ import { encodeApplyPreset } from "../../src/applyPreset"
 import encodeCalls from "../../src/encodeCalls"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
-import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChainDeFiHarvest"
+import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -58,7 +58,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     }
   })
 
-  describe.only("Gnosis Chain DeFi Harvest preset", () => {
+  describe("Gnosis Chain DeFi Harvest preset", () => {
     it("allows executing all listed harvesting transactions", async () => {
       const { owner, avatar, multiSend, modifier } = await setup()
       const transactions = await encodeApplyPreset(

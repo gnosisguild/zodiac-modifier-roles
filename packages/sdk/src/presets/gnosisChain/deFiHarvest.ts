@@ -1,4 +1,6 @@
-import { RolePreset } from "../types"
+import { RolePreset } from "../../types"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { staticEqual } from "../utils"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,
@@ -9,8 +11,6 @@ import {
   SUSHISWAP_MINI_CHEF,
   SYMMETRIC_MINI_CHEF,
 } from "./addresses"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./placeholders"
-import { staticEqual } from "./utils"
 
 const preset: RolePreset = {
   network: 100,
