@@ -170,8 +170,6 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       await safeService.getMultisigTransactions(safeAddress)
     ).results
 
-    console.log({ multisigTransactions })
-
     const newFailingTransactions = []
     const newSucceedingTransactions = []
     const wronglySucceedingTransactions = []
