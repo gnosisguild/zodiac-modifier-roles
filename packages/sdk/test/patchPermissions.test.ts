@@ -45,7 +45,7 @@ describe("patchPermissions", () => {
     ])
   })
 
-  it.only("should patch params scoping", () => {
+  it("should patch params scoping", () => {
     const before: RolePermissions = {
       targets: [
         {
