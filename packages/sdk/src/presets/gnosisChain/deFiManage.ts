@@ -1,4 +1,14 @@
-import { ExecutionOptions, RolePreset } from "../types"
+import { ExecutionOptions, RolePreset } from "../../types"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  OMNI_BRIDGE_DATA_PLACEHOLDER,
+} from "../placeholders"
+import {
+  allowErc20Approve,
+  allowErc20Transfer,
+  dynamicEqual,
+  staticEqual,
+} from "../utils"
 
 import {
   CURVE_x3CRV_GAUGE,
@@ -6,16 +16,6 @@ import {
   OMNI_BRIDGE,
   SUSHISWAP_MINI_CHEF,
 } from "./addresses"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-} from "./placeholders"
-import {
-  allowErc20Approve,
-  allowErc20Transfer,
-  dynamicEqual,
-  staticEqual,
-} from "./utils"
 
 const TOKENS = {
   GNO: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",

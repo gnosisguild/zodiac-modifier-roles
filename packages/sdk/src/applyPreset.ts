@@ -200,6 +200,57 @@ export const encodeApplyPresetMultisend = async (
   return batches[0].map(asMetaTransaction)
 }
 
+/**
+ * Returns the transactions for updating the permissions of the given role as JSON file that can be uploaded to the Safe Transaction Builder app.
+ *
+ * @param address The address of the roles modifier
+ * @param roleId ID of the role to update
+ * @param preset Permissions preset to apply
+ * @param placeholderValues Values to fill in for placeholders in the preset
+ * @param options.network The network ID where the roles modifier is deployed
+ * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
+ *
+ */
+export const encodeApplyPresetTxBuilder = async (
+  address: string,
+  roleId: number,
+  preset: RolePreset,
+  placeholderValues: Record<symbol, string>,
+  options: {
+    network: NetworkId
+    currentPermissions?: RolePermissions
+  }
+) => {
+  const { network, currentPermissions } = options
+
+  const transactions = await encodeApplyPreset(
+    address,
+    roleId,
+    preset,
+    placeholderValues,
+    {
+      network,
+      currentPermissions,
+    }
+  )
+  console.debug(`Encoded a total of ${transactions.length} calls`)
+  return {
+    version: "1.0",
+    chainId: network.toString(10),
+    meta: {
+      name: null,
+      description: "",
+      txBuilderVersion: "1.8.0",
+    },
+    createdAt: Date.now(),
+    transactions: transactions.map((tx) => ({
+      to: tx.to || "",
+      data: tx.data || "",
+      value: tx.value?.toHexString() || "0",
+    })),
+  }
+}
+
 const readAvatar = async (address: string, network: NetworkId) => {
   const contract = new Contract(
     address,

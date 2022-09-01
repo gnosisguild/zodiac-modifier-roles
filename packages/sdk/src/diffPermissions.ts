@@ -67,30 +67,6 @@ const diffFunctionClearedTargets = (
   }
 }
 
-// Returns a diff of function, and undefined if the functions are equal
-const diffScopedFunctions = (
-  functionA: Function,
-  functionB: Function
-): Function | undefined => {
-  // need to return early if parameters are empty, so we don't handle this as an empty diff
-  if (functionA.parameters.length === 0 && functionB.parameters.length > 0) {
-    return functionA
-  }
-
-  const parameterDiff = functionA.parameters.filter(
-    (paramA) =>
-      !functionB.parameters.some((paramB) => paramsEqual(paramA, paramB))
-  )
-
-  // parameter diff is empty, so the functions are equal
-  if (parameterDiff.length === 0) return undefined
-
-  return {
-    ...functionA,
-    parameters: parameterDiff,
-  }
-}
-
 const targetsEqual = (targetA: Target, targetB: Target) =>
   targetA.address === targetB.address &&
   targetA.clearance === targetB.clearance &&

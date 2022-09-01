@@ -1,34 +1,42 @@
+import { writeFileSync } from "fs"
+import path from "path"
+
+import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
+import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
 import SafeServiceClient, {
   SafeMultisigTransactionResponse,
 } from "@gnosis.pm/safe-service-client"
+import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle, ethers } from "hardhat"
 import "@nomiclabs/hardhat-ethers"
-import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
 
-import { Roles, Roles__factory, TestAvatar } from "../../../evm/typechain-types"
+import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChainDeFiHarvest"
-import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChainDeFiManage"
-import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
-import { RolePermissions, RolePreset } from "../../src/types"
-import daoManageGnosisChain from "./transactions/daoManageGnosisChain.json"
-import ltdManageGnosisChain from "./transactions/ltdManageGnosisChain.json"
-import daoHarvestGnosisChain from "./transactions/daoHarvestGnosisChain.json"
-import ltdHarvestGnosisChain from "./transactions/ltdHarvestGnosisChain.json"
-import daoManageGnosisChainSnapshot01 from "./permissions/daoManageGnosisChainSnapshot01.json"
-import daoHarvestGnosisChainSnapshot01 from "./permissions/daoHarvestGnosisChainSnapshot01.json"
-import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
-import { writeFileSync } from "fs"
-import path from "path"
+import encodeCalls from "../../src/encodeCalls"
 import fillAndUnfoldPreset from "../../src/fillAndUnfoldPreset"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
-import encodeCalls from "../../src/encodeCalls"
+import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
+import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
+import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
+import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../../src/presets/placeholders"
-import { defaultAbiCoder, keccak256, toUtf8Bytes } from "ethers/lib/utils"
+import { RolePermissions, RolePreset } from "../../src/types"
+import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
+
+import daoHarvestGnosisChainSnapshot01 from "./permissions/daoHarvestGnosisChainSnapshot01.json"
+import daoManageGnosisChainSnapshot01 from "./permissions/daoManageGnosisChainSnapshot01.json"
+import daoHarvestGnosisChain from "./transactions/daoHarvestGnosisChain.json"
+import daoHarvestMainnet from "./transactions/daoHarvestMainnet.json"
+import daoManageGnosisChain from "./transactions/daoManageGnosisChain.json"
+import daoManageMainnet from "./transactions/daoManageMainnet.json"
+import ltdHarvestGnosisChain from "./transactions/ltdHarvestGnosisChain.json"
+import ltdHarvestMainnet from "./transactions/ltdHarvestMainnet.json"
+import ltdManageGnosisChain from "./transactions/ltdManageGnosisChain.json"
+import ltdManageMainnet from "./transactions/ltdManageMainnet.json"
 
 describe("Karpatkey: Replay Transactions Test", async () => {
   const ROLE_ID = 1
@@ -63,16 +71,6 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     const defaultSigner = (await hre.ethers.getSigners())[0]
     await modifier.assignRoles(defaultSigner.address, [ROLE_ID], [true])
 
-    const ethAdapter = new EthersAdapter({
-      ethers: ethers as unknown as EthersAdapterConfig["ethers"],
-      signer: defaultSigner,
-    })
-    const txServiceUrl = "https://safe-transaction.xdai.gnosis.io"
-    const safeService = new SafeServiceClient({
-      txServiceUrl,
-      ethAdapter: ethAdapter as EthAdapter,
-    })
-
     return {
       owner,
       Avatar,
@@ -80,7 +78,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       Modifier,
       modifier,
       multiSend,
-      safeService,
+      defaultSigner,
     }
   })
 
@@ -92,6 +90,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     transactionsJson,
     basePermissions = EMPTY_PERMISSIONS,
     resultsFileName,
+    network,
   }: {
     preset: RolePreset
     config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
@@ -101,8 +100,21 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     }
     basePermissions?: RolePermissions
     resultsFileName: string
+    network: 1 | 100
   }) => {
-    const { owner, modifier, safeService } = await setup()
+    const { owner, modifier, defaultSigner } = await setup()
+
+    const ethAdapter = new EthersAdapter({
+      ethers: ethers as unknown as EthersAdapterConfig["ethers"],
+      signer: defaultSigner,
+    })
+    const safeService = new SafeServiceClient({
+      txServiceUrl:
+        network === 100
+          ? "https://safe-transaction.xdai.gnosis.io"
+          : "https://safe-transaction.mainnet.gnosis.io/",
+      ethAdapter: ethAdapter as EthAdapter,
+    })
 
     // setup base permissions
     const basePermissionsCalls = grantPermissions(basePermissions)
@@ -141,7 +153,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       placeholderValues,
       {
         currentPermissions: basePermissions,
-        network: 100, // this value won't be used
+        network, // this value won't be used when passing currentPermissions
       }
     )
     for (let i = 0; i < transactions.length; i++) {
@@ -249,6 +261,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
   describe("Gnosis Chain DeFi Manage preset", () => {
     it("allows executing all transactions from the history of the Limited Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiManagePreset,
         config: KARPATKEY_ADDRESSES.LTD_GNO,
         transactionsJson: ltdManageGnosisChain,
@@ -258,6 +271,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     it("allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiManagePreset,
         config: KARPATKEY_ADDRESSES.DAO_GNO,
         transactionsJson: daoManageGnosisChain,
@@ -267,6 +281,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     it("permissions patch: allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiManagePreset,
         config: KARPATKEY_ADDRESSES.DAO_GNO,
         transactionsJson: daoManageGnosisChain,
@@ -279,6 +294,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
   describe("Gnosis Chain DeFi Harvest preset", () => {
     it("allows executing all harvesting transactions from the history of the Limited Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiHarvestPreset,
         config: KARPATKEY_ADDRESSES.LTD_GNO,
         transactionsJson: ltdHarvestGnosisChain,
@@ -288,6 +304,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     it("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiHarvestPreset,
         config: KARPATKEY_ADDRESSES.DAO_GNO,
         transactionsJson: daoHarvestGnosisChain,
@@ -297,11 +314,56 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     it("permissions patch: allows executing all transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
+        network: 100,
         preset: gnosisChainDeFiHarvestPreset,
         config: KARPATKEY_ADDRESSES.DAO_GNO,
         transactionsJson: daoHarvestGnosisChain,
         basePermissions: daoHarvestGnosisChainSnapshot01,
         resultsFileName: "daoHarvestGnosisChainPatch",
+      })
+    })
+  })
+
+  describe("Mainnet DeFi Manage preset", () => {
+    it("allows executing all transactions from the history of the Limited Safe on Mainnet", async () => {
+      await runTransactionSimulation({
+        network: 1,
+        preset: mainnetDeFiManagePreset,
+        config: KARPATKEY_ADDRESSES.LTD_ETH,
+        transactionsJson: ltdManageMainnet,
+        resultsFileName: "ltdManageMainnet",
+      })
+    })
+
+    it.only("allows executing all transactions from the history of the DAO Safe on Mainnet", async () => {
+      await runTransactionSimulation({
+        network: 1,
+        preset: mainnetDeFiManagePreset,
+        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        transactionsJson: daoManageMainnet,
+        resultsFileName: "daoManageMainnet",
+      })
+    })
+  })
+
+  describe("Mainnet Harvest preset", () => {
+    it("allows executing all harvesting transactions from the history of the Limited Safe on Gnosis Chain", async () => {
+      await runTransactionSimulation({
+        network: 1,
+        preset: mainnetDeFiHarvestPreset,
+        config: KARPATKEY_ADDRESSES.LTD_ETH,
+        transactionsJson: ltdHarvestMainnet,
+        resultsFileName: "ltdHarvestMainnet",
+      })
+    })
+
+    it("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
+      await runTransactionSimulation({
+        network: 1,
+        preset: mainnetDeFiHarvestPreset,
+        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        transactionsJson: daoHarvestMainnet,
+        resultsFileName: "daoHarvestMainnet",
       })
     })
   })

@@ -1,3 +1,5 @@
+import fetch from "node-fetch"
+
 import SUBGRAPH from "./subgraph"
 import { RolePermissions, NetworkId } from "./types"
 
@@ -37,8 +39,9 @@ const fetchPermissions = async ({
   roleId,
   network,
 }: Props): Promise<RolePermissions> => {
-  const globalRoleId = `${address.toLowerCase()}-ROLE-${roleId}`
+  const globalRoleId = `${address.toLowerCase()}-ROLE-${roleId}.0`
   const res = await fetch(SUBGRAPH[network], {
+    method: "POST",
     body: JSON.stringify({
       query: QUERY,
       variables: { id: globalRoleId },
