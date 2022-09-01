@@ -6,8 +6,12 @@ import {
 } from "@gnosis.pm/safe-core-sdk-types"
 import EthersAdapter from "@gnosis.pm/safe-ethers-lib"
 import SafeServiceClient from "@gnosis.pm/safe-service-client"
-import defaultEthers, { Contract, PopulatedTransaction, Signer } from "ethers"
-import { encodeMulti } from "ethers-multisend"
+import {
+  ethers as defaultEthers,
+  Contract,
+  PopulatedTransaction,
+  Signer,
+} from "ethers"
 
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
 import { Roles } from "../../evm/typechain-types"

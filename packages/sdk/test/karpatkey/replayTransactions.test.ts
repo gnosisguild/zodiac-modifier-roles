@@ -23,6 +23,7 @@ import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
+  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../../src/presets/placeholders"
 import { RolePermissions, RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
@@ -143,6 +144,10 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       ),
       [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
         ["bytes"],
+        [config.BRIDGED_SAFE]
+      ),
+      [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+        ["address"],
         [config.BRIDGED_SAFE]
       ),
     }
@@ -359,7 +364,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       })
     })
 
-    it("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
+    it.only("allows executing all harvesting transactions from the history of the DAO Safe on Gnosis Chain", async () => {
       await runTransactionSimulation({
         network: 1,
         preset: mainnetDeFiHarvestPreset,

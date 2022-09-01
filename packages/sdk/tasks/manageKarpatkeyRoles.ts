@@ -19,6 +19,7 @@ import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
+  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../src/presets/placeholders"
 import { NetworkId } from "../src/types"
 import daoManageSnapshot01 from "../test/karpatkey/permissions/daoManageGnosisChainSnapshot01.json"
@@ -159,16 +160,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset,
-    {
-      [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["address"],
-        [config.AVATAR]
-      ),
-      [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["bytes"],
-        [config.BRIDGED_SAFE]
-      ),
-    },
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
@@ -187,16 +179,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset,
-    {
-      [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["address"],
-        [config.AVATAR]
-      ),
-      [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["bytes"],
-        [config.BRIDGED_SAFE]
-      ),
-    },
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
@@ -207,4 +190,19 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     JSON.stringify(txBatches, undefined, 2)
   )
   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+})
+
+const fillPlaceholders = (config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]) => ({
+  [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["address"],
+    [config.AVATAR]
+  ),
+  [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["bytes"],
+    [config.BRIDGED_SAFE]
+  ),
+  [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["address"],
+    [config.BRIDGED_SAFE]
+  ),
 })

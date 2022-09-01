@@ -10,6 +10,7 @@ import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarv
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
+  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../../src/presets/placeholders"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
@@ -72,6 +73,10 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
           ),
           [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
             ["bytes"],
+            [KARPATKEY_ADDRESSES.DAO_GNO.BRIDGED_SAFE]
+          ),
+          [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+            ["address"],
             [KARPATKEY_ADDRESSES.DAO_GNO.BRIDGED_SAFE]
           ),
         },
