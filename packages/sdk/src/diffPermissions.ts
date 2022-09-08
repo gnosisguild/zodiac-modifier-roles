@@ -68,7 +68,7 @@ const diffFunctionClearedTargets = (
 }
 
 const targetsEqual = (targetA: Target, targetB: Target) =>
-  targetA.address === targetB.address &&
+  targetA.address.toLowerCase() === targetB.address.toLowerCase() &&
   targetA.clearance === targetB.clearance &&
   targetA.executionOptions === targetB.executionOptions
 
