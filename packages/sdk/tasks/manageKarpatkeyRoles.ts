@@ -9,11 +9,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
-import {
-  encodeApplyPreset,
-  encodeApplyPresetMultisend,
-  encodeApplyPresetTxBuilder,
-} from "../src/applyPreset"
+import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import {
@@ -22,8 +18,6 @@ import {
   OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../src/presets/placeholders"
 import { NetworkId } from "../src/types"
-import daoManageSnapshot01 from "../test/karpatkey/permissions/daoManageGnosisChainSnapshot01.json"
-import ltdManageSnapshot01 from "../test/karpatkey/permissions/ltdManageGnosisChainSnapshot01.json"
 
 export const KARPATKEY_ADDRESSES = {
   DAO_GNO: {
@@ -155,7 +149,7 @@ task("assignHarvestRole").setAction(async (taskArgs, hre) => {
 })
 
 task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
-  const { dryRun, roles, config } = await processArgs(taskArgs, hre)
+  const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     1,

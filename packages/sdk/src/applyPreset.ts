@@ -12,6 +12,7 @@ import {
   PopulatedTransaction,
   Signer,
 } from "ethers"
+import { encodeMulti } from "ethers-multisend"
 
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
 import { Roles } from "../../evm/typechain-types"
@@ -139,13 +140,12 @@ export const encodeApplyPreset = async (
     currentPermissions?: RolePermissions
   }
 ) => {
-  const { network } = options
   const currentPermissions =
     options.currentPermissions ||
     (await fetchPermissions({
       address,
       roleId,
-      network,
+      network: options.network,
     }))
   const nextPermissions = fillAndUnfoldPreset(preset, placeholderValues)
   const calls = patchPermissions(currentPermissions, nextPermissions)
@@ -197,11 +197,14 @@ export const encodeApplyPresetMultisend = async (
       currentPermissions,
     }
   )
-  const batches = batchArray(transactions, multiSendBatchSize)
+  const batches = batchArray(
+    transactions.map(asMetaTransaction),
+    multiSendBatchSize
+  )
   console.debug(
     `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
   )
-  return batches[0].map(asMetaTransaction)
+  return batches.map((batch) => encodeMulti(batch, multiSendAddress))
 }
 
 /**

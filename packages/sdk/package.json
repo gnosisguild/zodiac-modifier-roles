@@ -17,6 +17,7 @@
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
     "test": "hardhat test",
+    "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
     "pre-commit": "yarn fix"
   },
   "dependencies": {
