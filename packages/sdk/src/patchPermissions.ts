@@ -2,7 +2,7 @@ import diffPermissions from "./diffPermissions"
 import grantPermissions from "./grantPermissions"
 import removeObsoleteCalls from "./removeObsoleteCalls"
 import revokePermissions from "./revokePermissions"
-import { Call, Clearance, RolePermissions } from "./types"
+import { Call, RolePermissions } from "./types"
 
 const patchPermissions = (
   currentPermissions: RolePermissions,

@@ -50,6 +50,17 @@ const fillAndUnfoldPreset = (
           executionOptions: allowFunction.options || ExecutionOptions.None,
           functions: [],
         }
+
+        if (
+          targets[targetAddress].functions.some(
+            (f) => f.sighash === functionItem.sighash
+          )
+        ) {
+          throw new Error(
+            `Duplicate function ${functionItem.sighash} for target ${targetAddress}`
+          )
+        }
+
         targets[targetAddress].functions.push(functionItem)
       })
 

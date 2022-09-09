@@ -17,6 +17,15 @@
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
     "test": "hardhat test",
+    "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
+    "apply:dao:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe DAO_GNO",
+    "apply:dao:gno:harvest": "hardhat encodeApplyPresetHarvest --network xdai --safe DAO_GNO",
+    "apply:ltd:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe LTD_GNO",
+    "apply:ltd:gno:harvest": "hardhat encodeApplyPresetHarvest --network xdai --safe LTD_GNO",
+    "apply:dao:eth:manage": "hardhat encodeApplyPresetManage --safe DAO_ETH",
+    "apply:dao:eth:harvest": "hardhat encodeApplyPresetHarvest --safe DAO_ETH",
+    "apply:ltd:eth:manage": "hardhat encodeApplyPresetManage --safe LTD_ETH",
+    "apply:ltd:eth:harvest": "hardhat encodeApplyPresetHarvest --safe LTD_ETH",
     "pre-commit": "yarn fix"
   },
   "dependencies": {
