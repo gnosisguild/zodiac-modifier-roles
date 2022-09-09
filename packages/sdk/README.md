@@ -13,21 +13,21 @@ These calls can finally be executed to apply the role permissions update.
 
 We currently maintain four different preset:
 
-- [Gnosis Chain DeFi Manage: [./src/presets/gnosisChain/deFiManage.ts] Manage positions in DeFi protocols on Gnosis Chain
+- [Gnosis Chain DeFi Manage](./src/presets/gnosisChain/deFiManage.ts) Manage positions in DeFi protocols on Gnosis Chain
 - [Gnosis Chain DeFi Harvest](./src/presets/gnosisChain/deFiHarvest.ts) Harvest rewards from DeFi protocols on Gnosis Chain
 - [Mainnet DeFi Manage](./src/presets/mainnet/deFiManage.ts) Manage positions in DeFi protocols on Mainnet
 - [Mainnet DeFi Harvest](./src/presets/mainnet/deFiHarvest.ts) Harvest rewards from DeFi protocols on Mainnet
 
 ## Playbook: Allow a Karpatkey role to call a new target
 
-#### Add transaction data to test
+### Add transaction data to test
 
 Copy the transaction data and paste it into the test transaction file for the respective preset:
 
-- Gnosis Chain DeFi Manage: [./test/karpatkey/testTransactions/gnoManage.ts]
-- Gnosis Chain DeFi Harvest: [./test/karpatkey/testTransactions/gnoHarvest.ts]
-- Mainnet DeFi Manage: [./test/karpatkey/testTransactions/ethManage.ts]
-- Mainnet DeFi Harvest: [./test/karpatkey/testTransactions/ethHarvest.t]
+- Gnosis Chain DeFi Manage: [./test/karpatkey/testTransactions/gnoManage.ts](./test/karpatkey/testTransactions/gnoManage.ts)
+- Gnosis Chain DeFi Harvest: [./test/karpatkey/testTransactions/gnoHarvest.ts](./test/karpatkey/testTransactions/gnoHarvest.ts)
+- Mainnet DeFi Manage: [./test/karpatkey/testTransactions/ethManage.ts](./test/karpatkey/testTransactions/ethManage.ts)
+- Mainnet DeFi Harvest: [./test/karpatkey/testTransactions/ethHarvest.ts](./test/karpatkey/testTransactions/ethHarvest.ts)
 
 Run the transaction simulation test with the following command:
 
@@ -39,14 +39,14 @@ For `<PRESET_ID>` insert respective value from: `gno:manage`, `gno:harvest`, `et
 
 ❌ The test is expected to fail, since the preset does not yet allow the newly added test transaction.
 
-#### Update preset
+### Update preset
 
 Go to the file for the preset and add a new target entry (or adjust one of the existing targets) to allow the new call.
 
-- Gnosis Chain DeFi Manage: [./src/presets/gnosisChain/deFiManage.ts]
-- Gnosis Chain DeFi Harvest: [./src/presets/gnosisChain/deFiHarvest.ts]
-- Mainnet DeFi Manage: [./src/presets/mainnet/deFiManage.ts]
-- Mainnet DeFi Harvest: [./src/presets/mainnet/deFiHarvest.ts]
+- Gnosis Chain DeFi Manage: [./src/presets/gnosisChain/deFiManage.ts](./src/presets/gnosisChain/deFiManage.ts)
+- Gnosis Chain DeFi Harvest: [./src/presets/gnosisChain/deFiHarvest.ts](./src/presets/gnosisChain/deFiHarvest.ts)
+- Mainnet DeFi Manage: [./src/presets/mainnet/deFiManage.ts](./src/presets/mainnet/deFiManage.ts)
+- Mainnet DeFi Harvest: [./src/presets/mainnet/deFiHarvest.ts](./src/presets/mainnet/deFiHarvest.ts)
 
 Now run the test again, to confirm that the transaction is allowed:
 
@@ -58,7 +58,7 @@ For `<PRESET_ID>` insert the respective value from: `gno:manage`, `gno:harvest`,
 
 ✅ The test should now succeed.
 
-#### Patch role permissions
+### Patch role permissions
 
 Now it's time to apply the updated preset to the Karpatkey role.
 This happens via the following command:
