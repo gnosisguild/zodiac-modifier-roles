@@ -77,6 +77,7 @@ jobs:
           HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
           HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
           HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
+          # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
         run: |
           yarn deploy:arbitrum-one
           yarn deploy:gnosis-chain
@@ -86,3 +87,4 @@ jobs:
           yarn deploy:mainnet
           yarn deploy:optimism
           yarn deploy:polygon
+          # yarn deploy:optimism-on-gnosis-chain
