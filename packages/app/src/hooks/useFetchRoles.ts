@@ -15,7 +15,7 @@ export const useFetchRoles = ({ lazy = false }: FetchRolesOptions = {}) => {
   const navigate = useNavigate()
   const { module } = useParams()
 
-  const chainId = useRootSelector(getChainId)
+  const network = useRootSelector(getChainId)
   const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
   const roles = useRootSelector(getRoles)
 
@@ -25,8 +25,9 @@ export const useFetchRoles = ({ lazy = false }: FetchRolesOptions = {}) => {
       navigate("/")
       return
     }
-    dispatch(fetchRoles(addressData.address))
-  }, [dispatch, module, navigate])
+    const address = addressData.address
+    dispatch(fetchRoles({ network, address }))
+  }, [dispatch, module, navigate, network])
 
   useEffect(() => {
     const addressData = module && getAddress(module)
@@ -35,10 +36,10 @@ export const useFetchRoles = ({ lazy = false }: FetchRolesOptions = {}) => {
     if (rolesModifierAddress !== addressData.address) {
       dispatch(setRolesModifierAddress(addressData.address))
     }
-    if (addressData.chainId && chainId !== addressData.chainId) {
+    if (addressData.chainId && network !== addressData.chainId) {
       dispatch(setChainId(addressData.chainId))
     }
-  }, [dispatch, module, chainId, rolesModifierAddress])
+  }, [dispatch, module, network, rolesModifierAddress])
 
   useEffect(() => {
     if (!lazy) fetch()

@@ -8,6 +8,7 @@ export enum Network {
   RINKEBY = 4,
   GOERLI = 5,
   OPTIMISM = 10,
+  OPTIMISM_ON_GNOSIS = 300,
   BINANCE = 56,
   GNOSIS = 100,
   POLYGON = 137,
