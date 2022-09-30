@@ -64,6 +64,14 @@ export const KARPATKEY_ADDRESSES = {
     NETWORK: 1,
     BRIDGED_SAFE: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
   },
+  SANTI_TEST_GNO: {
+    AVATAR: "0x3AD295402978659427C179Fb30f319bF6a2c8678",
+    MODULE: "0x8422d860d48Bc2aFeA8037d3954db31d5d3b4924",
+    MANAGEMENT: "0xa928b0F1582126db08f902066403a3C69D2E7814",
+    HARVESTERS: [],
+    NETWORK: 100,
+    BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+  },
 }
 
 const task = (name: string) =>
@@ -153,7 +161,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     1,
-    gnosisChainDeFiManagePreset,
+    gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
     fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
@@ -172,7 +180,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     2,
-    gnosisChainDeFiHarvestPreset,
+    gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
     fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
