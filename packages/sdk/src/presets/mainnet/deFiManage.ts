@@ -19,6 +19,7 @@ const CONVEX_REWARDS = "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332"
 
 const CURVE_SUSD_SWAP = "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD"
 const CURVE_USDP_METAPOOL = "0x42d7025938bEc20B69cBae5A77421082407f053A"
+const CURVE_ETH_STETH = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"
 
 const UNIT_CDP_MANAGER = "0x3b088b680ff7253E662bc29E5a7B696BA0100869"
 
@@ -57,7 +58,7 @@ const preset: RolePreset = {
         tokens: [WSTETH, AURA_BAL, BALANCER_80BAL_20WETH, BALANCER],
         spenders: [BALANCER_VAULT],
       },
-      { tokens: [STETH], spenders: [WSTETH] },
+      { tokens: [STETH], spenders: [WSTETH, CURVE_ETH_STETH] },
       { tokens: [CURVE_DAI_USDC_USDT_SUSD], spenders: [CONVEX_BOOSTER] },
       { tokens: [TETHER_USD, USDC, DAI], spenders: [CURVE_SUSD_SWAP] },
       { tokens: [DAI], spenders: [CURVE_USDP_METAPOOL] },
@@ -130,6 +131,10 @@ const preset: RolePreset = {
     {
       targetAddresses: [CURVE_USDP_METAPOOL],
       signature: "exchange_underlying(int128,int128,uint256,uint256)",
+    },
+    {
+      targetAddresses: [CURVE_ETH_STETH],
+      signature: "exchange(int128,int128,uint256,uint256)",
     },
 
     // UNIT
