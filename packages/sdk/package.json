@@ -26,6 +26,7 @@
     "apply:dao:eth:harvest": "hardhat encodeApplyPresetHarvest --safe DAO_ETH",
     "apply:ltd:eth:manage": "hardhat encodeApplyPresetManage --safe LTD_ETH",
     "apply:ltd:eth:harvest": "hardhat encodeApplyPresetHarvest --safe LTD_ETH",
+    "apply:santi:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe SANTI_TEST_GNO",
     "pre-commit": "yarn fix"
   },
   "dependencies": {
