@@ -11,8 +11,7 @@ const REFLEXER_REWARDS = "0x69c6C08B91010c88c95775B6FD768E5b04EFc106"
 
 const preset: RolePreset = {
   network: 1,
-  allowTargets: [],
-  allowFunctions: [
+  allow: [
     {
       targetAddresses: [AURA_CLAIM_ZAP],
       signature:

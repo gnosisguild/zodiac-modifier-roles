@@ -1,5 +1,6 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
+import translateErc20Approvals from "./translateErc20Approvals"
 import {
   Clearance,
   ExecutionOptions,
@@ -8,6 +9,9 @@ import {
   PresetScopeParam,
   Function,
   Target,
+  CoercedRolePreset,
+  CoercedPresetAllowEntry,
+  PresetFunction,
 } from "./types"
 
 // Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
@@ -15,29 +19,36 @@ const fillAndUnfoldPreset = (
   preset: RolePreset,
   placeholderValues: Record<symbol, string>
 ): RolePermissions => {
-  sanityCheck(preset)
+  const coercedPreset = translateErc20Approvals(preset)
+
+  sanityCheck(coercedPreset)
 
   // fill in avatar placeholders and encode comparison values
-  const { allowFunctions, allowTargets } = processParams(
-    preset,
-    placeholderValues
-  )
+  const { allow } = processParams(coercedPreset, placeholderValues)
 
-  const fullyClearedTargets = allowTargets.map((target) => ({
-    address: target.targetAddress,
-    clearance: Clearance.Target,
-    executionOptions: target.options || ExecutionOptions.None,
-    functions: [],
-  }))
+  const fullyClearedTargets = allow
+    .filter((entry) => !isScoped(entry))
+    .flatMap((entry) =>
+      entry.targetAddresses.map((targetAddress) => ({
+        address: targetAddress,
+        clearance: Clearance.Target,
+        executionOptions: entry.options || ExecutionOptions.None,
+        functions: [],
+      }))
+    )
 
   // our preset structures allows to specify multiple targets per function, so we need to unfold them
   const unfoldedFunctionTargets = Object.values(
-    allowFunctions.reduce((targets, allowFunction) => {
+    allow.filter(isScoped).reduce((targets, allowFunction) => {
+      let sighash = "sighash" in allowFunction && allowFunction.sighash
+      if (!sighash)
+        sighash =
+          "signature" in allowFunction &&
+          functionSighash(allowFunction.signature)
+      if (!sighash) throw new Error("invariant violation")
+
       const functionItem: Function = {
-        sighash:
-          "sighash" in allowFunction
-            ? allowFunction.sighash
-            : functionSighash(allowFunction.signature),
+        sighash,
         executionOptions: allowFunction.options || ExecutionOptions.None,
         wildcarded: allowFunction.params.length === 0,
         parameters: allowFunction.params,
@@ -80,26 +91,29 @@ const functionSighash = (signature: string): string =>
 
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
-  preset: RolePreset,
+  preset: CoercedRolePreset,
   placeholderValues: Record<symbol, string>
 ) => ({
   ...preset,
-  allowFunctions: preset.allowFunctions.map((allowFunction) => ({
-    ...allowFunction,
-    params: Object.entries(allowFunction.params || {})
-      .map(
-        ([key, param]) =>
-          param && {
-            index: parseInt(key),
-            type: param.type,
-            comparison: param.comparison,
-            comparisonValue: fillPlaceholderValues(
-              param.value,
-              placeholderValues
-            ),
-          }
-      )
-      .filter(Boolean as any as <T>(x: T | undefined) => x is T),
+  allow: preset.allow.map((entry) => ({
+    ...entry,
+    params:
+      "params" in entry
+        ? Object.entries(entry.params || {})
+            .map(
+              ([key, param]) =>
+                param && {
+                  index: parseInt(key),
+                  type: param.type,
+                  comparison: param.comparison,
+                  comparisonValue: fillPlaceholderValues(
+                    param.value,
+                    placeholderValues
+                  ),
+                }
+            )
+            .filter(Boolean as any as <T>(x: T | undefined) => x is T)
+        : [],
   })),
 })
 
@@ -121,15 +135,17 @@ const fillPlaceholderValues = (
   return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
 }
 
-const sanityCheck = (preset: RolePreset) => {
+const sanityCheck = (preset: CoercedRolePreset) => {
   assertNoWildcardScopedIntersection(preset)
   assertNoDuplicateAllowFunction(preset)
 }
 
-const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
-  const wildcardTargets = preset.allowTargets.map((f) => f.targetAddress)
+const assertNoWildcardScopedIntersection = (preset: CoercedRolePreset) => {
+  const wildcardTargets = preset.allow.flatMap((entry) =>
+    !isScoped(entry) ? entry.targetAddresses : []
+  )
   const scopedTargets = new Set(
-    preset.allowFunctions.flatMap((af) => af.targetAddresses)
+    preset.allow.filter(isScoped).flatMap((af) => af.targetAddresses)
   )
 
   const intersection = [
@@ -144,13 +160,20 @@ const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
   }
 }
 
-const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
-  const allowFunctions = preset.allowFunctions.flatMap((af) =>
-    af.targetAddresses.map(
-      (ta) =>
-        `${ta}.${"sighash" in af ? af.sighash : functionSighash(af.signature)}`
+const isScoped = (entry: CoercedPresetAllowEntry): entry is PresetFunction =>
+  "sighash" in entry || "signature" in entry
+
+const assertNoDuplicateAllowFunction = (preset: CoercedRolePreset) => {
+  const allowFunctions = preset.allow
+    .filter(isScoped)
+    .flatMap((af) =>
+      af.targetAddresses.map(
+        (ta) =>
+          `${ta}.${
+            "sighash" in af ? af.sighash : functionSighash(af.signature)
+          }`
+      )
     )
-  )
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
     {} as Record<string, number>
