@@ -3,7 +3,7 @@ import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../placeholders"
-import { allowErc20Approve, staticEqual } from "../utils"
+import { staticEqual } from "../utils"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
@@ -48,25 +48,11 @@ const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 
 const preset: RolePreset = {
   network: 1,
-  allowTargets: [],
-  allowFunctions: [
-    ...allowErc20Approve([
-      { tokens: [AURA_TOKEN], spenders: [AURA_LOCKER] },
-      { tokens: [BALANCER_STETH, BALANCER_AURA_BAL], spenders: [AURA_BOOSTER] },
-      { tokens: [AURA_BAL], spenders: [AURA_BAL_REWARDS] },
-      {
-        tokens: [WSTETH, AURA_BAL, BALANCER_80BAL_20WETH, BALANCER],
-        spenders: [BALANCER_VAULT],
-      },
-      { tokens: [STETH], spenders: [WSTETH, CURVE_ETH_STETH] },
-      { tokens: [CURVE_DAI_USDC_USDT_SUSD], spenders: [CONVEX_BOOSTER] },
-      { tokens: [TETHER_USD, USDC, DAI], spenders: [CURVE_SUSD_SWAP] },
-      { tokens: [DAI], spenders: [CURVE_USDP_METAPOOL] },
-      { tokens: [CONVEX], spenders: [CONVEX_LOCKER, CONVEX_REWARDS] },
-      { tokens: [WETH, COW], spenders: [OMNI_BRIDGE] },
-    ]),
-
+  allow: [
     // AURA
+    { tokens: [AURA_TOKEN], spenders: [AURA_LOCKER] },
+    { tokens: [BALANCER_STETH, BALANCER_AURA_BAL], spenders: [AURA_BOOSTER] },
+    { tokens: [AURA_BAL], spenders: [AURA_BAL_REWARDS] },
     {
       targetAddresses: [AURA_LOCKER],
       signature: "lock(address,uint256)",
@@ -87,6 +73,10 @@ const preset: RolePreset = {
 
     // BALANCER
     {
+      tokens: [WSTETH, AURA_BAL, BALANCER_80BAL_20WETH, BALANCER],
+      spenders: [BALANCER_VAULT],
+    },
+    {
       targetAddresses: [BALANCER_VAULT],
       signature:
         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
@@ -99,8 +89,11 @@ const preset: RolePreset = {
 
     // LIDO
     { targetAddresses: [WSTETH], signature: "wrap(uint256)" },
+    { tokens: [STETH], spenders: [WSTETH] },
 
     // CONVEX
+    { tokens: [CONVEX], spenders: [CONVEX_LOCKER, CONVEX_REWARDS] },
+    { tokens: [CURVE_DAI_USDC_USDT_SUSD], spenders: [CONVEX_BOOSTER] },
     {
       targetAddresses: [CONVEX_BOOSTER],
       signature: "depositAll(uint256,bool)",
@@ -124,6 +117,9 @@ const preset: RolePreset = {
     },
 
     // CURVE
+    { tokens: [STETH], spenders: [CURVE_ETH_STETH] },
+    { tokens: [TETHER_USD, USDC, DAI], spenders: [CURVE_SUSD_SWAP] },
+    { tokens: [DAI], spenders: [CURVE_USDP_METAPOOL] },
     {
       targetAddresses: [CURVE_SUSD_SWAP],
       signature: "add_liquidity(uint256[4],uint256)",
@@ -151,6 +147,7 @@ const preset: RolePreset = {
     },
 
     // OMNI BRIDGE
+    { tokens: [WETH, COW], spenders: [OMNI_BRIDGE] },
     {
       targetAddresses: [OMNI_BRIDGE],
       signature: "relayTokens(address,address,uint256)",

@@ -58,19 +58,39 @@ export interface Parameter {
 
 export interface RolePreset {
   network: number
-  allowTargets: PresetTarget[] // allows all calls to targets
-  allowFunctions: PresetFunction[] // allows calls to specific functions, optionally with parameter scoping
+  allow: PresetAllowEntry[]
 }
-export interface PresetTarget {
-  targetAddress: string
+
+export interface CoercedRolePreset {
+  network: number
+  allow: CoercedPresetAllowEntry[]
+}
+
+// allows call to any function on the target addresses
+export interface PresetFullyClearedTarget {
+  targetAddresses: string[]
   options?: ExecutionOptions
 }
 
+// allows calls to specific functions, optionally with parameter scoping
 export type PresetFunction = ({ sighash: string } | { signature: string }) & {
   targetAddresses: string[]
   params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
   options?: ExecutionOptions
 }
+
+// allows ERC20 approvals for specified spender addresses
+export type PresetErc20Approval = {
+  tokens: string[]
+  spenders: string[]
+}
+
+export type PresetAllowEntry =
+  | PresetFullyClearedTarget
+  | PresetFunction
+  | PresetErc20Approval
+
+export type CoercedPresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
 type ComparisonValue = string | symbol
 export interface PresetScopeParam {

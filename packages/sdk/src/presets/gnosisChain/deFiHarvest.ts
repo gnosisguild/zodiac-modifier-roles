@@ -14,8 +14,7 @@ import {
 
 const preset: RolePreset = {
   network: 100,
-  allowTargets: [],
-  allowFunctions: [
+  allow: [
     {
       targetAddresses: [SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF],
       signature: "harvest(uint256,address)",
