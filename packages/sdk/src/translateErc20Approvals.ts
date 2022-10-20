@@ -1,6 +1,6 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { staticEqual } from "./presets/utils"
+import { staticEqual } from "./presets/helpers/utils"
 import {
   CoercedPresetAllowEntry,
   CoercedRolePreset,
