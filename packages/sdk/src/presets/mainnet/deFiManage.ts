@@ -1,9 +1,10 @@
 import { ExecutionOptions, RolePreset } from "../../types"
+import allowCurvePool from "../helpers/curve"
+import { staticEqual } from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
 } from "../placeholders"
-import { staticEqual } from "../utils"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
@@ -17,7 +18,6 @@ const CONVEX_BOOSTER = "0xF403C135812408BFbE8713b5A23a04b3D48AAE31"
 const CONVEX_LOCKER = "0x72a19342e8F1838460eBFCCEf09F6585e32db86E"
 const CONVEX_REWARDS = "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332"
 
-const CURVE_SUSD_SWAP = "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD"
 const CURVE_USDP_METAPOOL = "0x42d7025938bEc20B69cBae5A77421082407f053A"
 const CURVE_ETH_STETH = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"
 
@@ -117,13 +117,9 @@ const preset: RolePreset = {
     },
 
     // CURVE
+    ...allowCurvePool("Curve DAI/USDC/USDT/sUSD"),
     { tokens: [STETH], spenders: [CURVE_ETH_STETH] },
-    { tokens: [TETHER_USD, USDC, DAI], spenders: [CURVE_SUSD_SWAP] },
     { tokens: [DAI], spenders: [CURVE_USDP_METAPOOL] },
-    {
-      targetAddresses: [CURVE_SUSD_SWAP],
-      signature: "add_liquidity(uint256[4],uint256)",
-    },
     {
       targetAddresses: [CURVE_USDP_METAPOOL],
       signature: "exchange_underlying(int128,int128,uint256,uint256)",

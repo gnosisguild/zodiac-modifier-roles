@@ -1,6 +1,6 @@
 import { RolePreset } from "../../types"
+import { staticEqual } from "../helpers/utils"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
-import { staticEqual } from "../utils"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,

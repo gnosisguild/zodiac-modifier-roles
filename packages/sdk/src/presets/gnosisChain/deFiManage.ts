@@ -1,9 +1,10 @@
 import { ExecutionOptions, RolePreset } from "../../types"
+import { allowErc20Transfer } from "../helpers/erc20"
+import { dynamicEqual, staticEqual } from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../placeholders"
-import { allowErc20Transfer, dynamicEqual, staticEqual } from "../utils"
 
 import {
   CURVE_x3CRV_GAUGE,
