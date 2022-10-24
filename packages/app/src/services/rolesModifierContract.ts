@@ -57,7 +57,7 @@ function getFunctionTransaction(
 
   if (!func) throw new Error("ABI is needed to scope targets")
 
-  const paramIndexes = funcCondition.params.map((param) => param.index)
+  const paramIndexes = funcCondition.params.map((param) => param?.index)
   const paramsLength = Math.max(-1, ...paramIndexes) + 1
 
   const isParamScoped: boolean[] = []
