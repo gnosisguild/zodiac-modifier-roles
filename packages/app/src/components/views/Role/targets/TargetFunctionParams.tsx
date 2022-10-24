@@ -64,7 +64,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
             disabled={disabled}
             param={param}
             index={index}
-            condition={funcConditions.params.find((param) => param.index === index)}
+            condition={funcConditions.params.find((param) => param?.index === index)}
             onChange={(condition) => handleConditionChange(index, condition)}
           />
         </div>
