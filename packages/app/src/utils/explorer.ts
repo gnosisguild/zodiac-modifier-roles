@@ -21,10 +21,6 @@ const explorerConfig: Record<Network, ExplorerConfig> = {
     apiUrl: "https://api.etherscan.io/api",
     apiKey: ETHERSCAN_KEY,
   },
-  [Network.RINKEBY]: {
-    apiUrl: "https://api-rinkeby.etherscan.io/api",
-    apiKey: ETHERSCAN_KEY,
-  },
   [Network.GOERLI]: {
     apiUrl: "https://api-goerli.etherscan.io/api",
     apiKey: ETHERSCAN_KEY,

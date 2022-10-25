@@ -23,25 +23,6 @@
     ],
     "infoURL": "https://ethereum.org"
   },
-  "4": {
-    "name": "Rinkeby",
-    "chainId": 4,
-    "shortName": "rin",
-    "nativeCurrency": {
-      "name": "Rinkeby Ether",
-      "symbol": "RIN",
-      "decimals": 18
-    },
-    "rpc": ["https://rinkeby.infura.io/v3/${INFURA_API_KEY}", "wss://rinkeby.infura.io/ws/v3/${INFURA_API_KEY}"],
-    "explorers": [
-      {
-        "name": "etherscan-rinkeby",
-        "url": "https://rinkeby.etherscan.io/",
-        "standard": "EIP3091"
-      }
-    ],
-    "infoURL": "https://www.rinkeby.io"
-  },
   "5": {
     "name": "Görli",
     "chainId": 5,
