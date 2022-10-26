@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { run } = hre;
-  if (!["rinkeby", "mainnet"].includes(hre.network.name)) {
+  if (!["goerli", "mainnet"].includes(hre.network.name)) {
     return;
   }
 

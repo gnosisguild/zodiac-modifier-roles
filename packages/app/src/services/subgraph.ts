@@ -23,9 +23,6 @@ if (!process.env.REACT_APP_SUBGRAPH_BASE_URL) {
 if (!process.env.REACT_APP_SUBGRAPH_GNOSIS_CHAIN) {
   throw new Error("REACT_APP_SUBGRAPH_GNOSIS_CHAIN is not set")
 }
-if (!process.env.REACT_APP_SUBGRAPH_RINKEBY) {
-  throw new Error("REACT_APP_SUBGRAPH_RINKEBY is not set")
-}
 if (!process.env.REACT_APP_SUBGRAPH_MAINNET) {
   throw new Error("REACT_APP_SUBGRAPH_MAINNET is not set")
 }
@@ -47,7 +44,7 @@ if (!process.env.REACT_APP_SUBGRAPH_OPTIMISM) {
 
 const BASE_SUBGRAPH_URL = process.env.REACT_APP_SUBGRAPH_BASE_URL
 const SUBGRAPH_GNOSIS_CHAIN = process.env.REACT_APP_SUBGRAPH_GNOSIS_CHAIN
-const SUBGRAPH_RINKEBY = process.env.REACT_APP_SUBGRAPH_RINKEBY
+const SUBGRAPH_GOERLI = process.env.REACT_APP_SUBGRAPH_GOERLI
 const SUBGRAPH_MAINNET = process.env.REACT_APP_SUBGRAPH_MAINNET
 const SUBGRAPH_POLYGON = process.env.REACT_APP_SUBGRAPH_POLYGON
 const SUBGRAPH_ARBITRUM = process.env.REACT_APP_SUBGRAPH_ARBITRUM
@@ -60,8 +57,8 @@ const getUrl = (network?: Network) => {
       return BASE_SUBGRAPH_URL + SUBGRAPH_MAINNET
     case Network.GNOSIS:
       return BASE_SUBGRAPH_URL + SUBGRAPH_GNOSIS_CHAIN
-    case Network.RINKEBY:
-      return BASE_SUBGRAPH_URL + SUBGRAPH_RINKEBY
+    case Network.GOERLI:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_GOERLI
     case Network.POLYGON:
       return BASE_SUBGRAPH_URL + SUBGRAPH_POLYGON
     case Network.OPTIMISM:
@@ -71,7 +68,7 @@ const getUrl = (network?: Network) => {
     // case Network.OPTIMISM_ON_GNOSIS:
     //   return BASE_SUBGRAPH_URL + SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN
     default:
-      return BASE_SUBGRAPH_URL + SUBGRAPH_RINKEBY
+      return BASE_SUBGRAPH_URL + SUBGRAPH_GOERLI
   }
 }
 
