@@ -1,6 +1,9 @@
-import { PresetAllowEntry } from "../../../types"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
-import { staticEqual } from "../utils"
+import { PresetAllowEntry, PresetAllowEntry } from "../../../types"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  AVATAR_ADDRESS_PLACEHOLDER,
+} from "../../placeholders"
+import { staticEqual, staticEqual } from "../utils"
 
 import { Pool } from "./types"
 
@@ -59,6 +62,7 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
         targetAddresses: [pool.gauge.address],
         signature: "withdraw(uint256)",
       },
+      //Define minter address as constant
       {
         targetAddresses: [CRV_MINTER_ADDRESS],
         signature: "mint(address)",
@@ -79,12 +83,12 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
 
   if ("zap" in pool) {
     const zapFunctions = [
+      //Ask Nico about the approvals which are missing in Python
       { tokens: [...pool.zap.basePool.tokens], spenders: [pool.zap.address] },
       {
         targetAddresses: [pool.zap.address],
-        signature: `add_liquidity(uint256[${
-          pool.tokens.length + pool.zap.basePool.tokens.length - 1
-        }],uint256)`,
+        signature:
+          "add_liquidity(uint256[${pool.tokens.length+pool.zap.basePool.tokens.length-1}],uint256)",
       },
       {
         targetAddresses: [pool.zap.address],
@@ -97,9 +101,8 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
       },
       {
         targetAddresses: [pool.zap.address],
-        signature: `remove_liquidity_imbalance(uint256[${
-          pool.tokens.length + pool.zap.basePool.tokens.length - 1
-        }],uint256)`,
+        signature:
+          "signature': 'remove_liquidity_imbalance(uint256[${pool.tokens.length+pool.zap.basePool.tokens.length-1}],uint256)",
       },
     ]
 
