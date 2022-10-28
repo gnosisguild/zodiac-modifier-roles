@@ -10,7 +10,7 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
   const poolFunctions: PresetAllowEntry[] = [
     //Gotta make sure the token address is not "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     {
-      tokens: pool.tokens.filter(
+      tokens: (pool.tokens as readonly string[]).filter(
         (token) =>
           token.toLowerCase() !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       ),
@@ -59,6 +59,7 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
         targetAddresses: [pool.gauge.address],
         signature: "withdraw(uint256)",
       },
+      //Define minter address as constant
       {
         targetAddresses: [CRV_MINTER_ADDRESS],
         signature: "mint(address)",
@@ -78,13 +79,18 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
   }
 
   if ("zap" in pool) {
+    if ("basePool" in pool.zap) {
+      //Ask Nico about the approvals which are missing in Python
+      result.push({
+        tokens: [...pool.zap.basePool.tokens],
+        spenders: [pool.zap.address],
+      })
+    }
     const zapFunctions = [
-      { tokens: [...pool.zap.basePool.tokens], spenders: [pool.zap.address] },
       {
         targetAddresses: [pool.zap.address],
-        signature: `add_liquidity(uint256[${
-          pool.tokens.length + pool.zap.basePool.tokens.length - 1
-        }],uint256)`,
+        signature:
+          "add_liquidity(uint256[${pool.tokens.length+pool.zap.basePool.tokens.length-1}],uint256)",
       },
       {
         targetAddresses: [pool.zap.address],
@@ -97,9 +103,8 @@ export const allowRegularPool = (pool: Pool): PresetAllowEntry[] => {
       },
       {
         targetAddresses: [pool.zap.address],
-        signature: `remove_liquidity_imbalance(uint256[${
-          pool.tokens.length + pool.zap.basePool.tokens.length - 1
-        }],uint256)`,
+        signature:
+          "signature': 'remove_liquidity_imbalance(uint256[${pool.tokens.length+pool.zap.basePool.tokens.length-1}],uint256)",
       },
     ]
 
