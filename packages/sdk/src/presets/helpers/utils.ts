@@ -1,6 +1,12 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { Comparison, ParameterType, PresetScopeParam } from "../../types"
+import {
+  Comparison,
+  ExecutionOptions,
+  ParameterType,
+  PresetAllowEntry,
+  PresetScopeParam,
+} from "../../types"
 
 const encodeValue = (
   value: string | symbol,
@@ -34,6 +40,19 @@ export const oneOf = (value: any[], type?: string): PresetScopeParam => ({
   type: ParameterType.Static,
   value: value.map((v) => encodeValue(v, type)),
 })
+
+interface PresetFullyClearedTarget {
+  options?: ExecutionOptions
+}
+type PresetFunction = ({ sighash: string } | { signature: string }) & {
+  params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
+  options?: ExecutionOptions
+}
+export const forAllTargetAddresses = (
+  targetAddresses: string[],
+  allow: PresetFullyClearedTarget | PresetFunction
+): PresetAllowEntry[] =>
+  targetAddresses.map((targetAddress) => ({ targetAddress, ...allow }))
 
 // export const greaterThanUint = (
 //   value: number | string | BigInt
