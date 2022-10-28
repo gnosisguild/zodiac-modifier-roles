@@ -1,39 +1,25 @@
 import pools from "./pools"
 import { allowRegularPool } from "./regular"
-import { Pool } from "./types"
 
-const findPool = (
-  pools: Record<string, Pool>,
-  poolNameOrTokenAddress: string
-) =>
-  pools[poolNameOrTokenAddress] ||
-  Object.values(pools).find((pool) => pool.name === poolNameOrTokenAddress)
+const findPool = (poolNameOrAddress: string) =>
+  pools.find(
+    (pool) =>
+      pool.name === poolNameOrAddress || pool.address === poolNameOrAddress
+  )
 
 const allowCurvePool = (poolNameOrTokenAddress: string) => {
-  const regularPool = findPool(pools.regular, poolNameOrTokenAddress)
-  const factoryPool = findPool(pools.factory, poolNameOrTokenAddress)
-  const cryptoV2Pool = findPool(pools.cryptoV2, poolNameOrTokenAddress)
-  const cryptoFactoryPool = findPool(
-    pools.cryptoFactory,
-    poolNameOrTokenAddress
-  )
+  const pool = findPool(poolNameOrTokenAddress)
 
-  if (regularPool) {
-    return allowRegularPool(regularPool)
-  }
-  if (factoryPool) {
-    // return allowFactoryPool(regularPool)
-  }
-  if (cryptoV2Pool) {
-    // return allowCryptoV2Pool(regularPool)
-  }
-  if (cryptoFactoryPool) {
-    // return allowCryptoFactoryPool(regularPool)
+  if (!pool) {
+    throw new Error(`Pool not found: ${poolNameOrTokenAddress}`)
   }
 
-  throw new Error(
-    `No pool found with token address or name ${poolNameOrTokenAddress}`
-  )
+  switch (pool.type) {
+    case "regular":
+      return allowRegularPool(pool)
+    default:
+      throw new Error(`Not yet implemented: ${pool.type}`)
+  }
 }
 
 export default allowCurvePool
