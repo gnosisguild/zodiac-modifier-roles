@@ -50,9 +50,16 @@ type PresetFunction = ({ sighash: string } | { signature: string }) & {
 }
 export const forAllTargetAddresses = (
   targetAddresses: string[],
-  allow: PresetFullyClearedTarget | PresetFunction
-): PresetAllowEntry[] =>
-  targetAddresses.map((targetAddress) => ({ targetAddress, ...allow }))
+  allow:
+    | PresetFullyClearedTarget
+    | PresetFunction
+    | (PresetFullyClearedTarget | PresetFunction)[]
+): PresetAllowEntry[] => {
+  const allowArray = Array.isArray(allow) ? allow : [allow]
+  return targetAddresses.flatMap((targetAddress) =>
+    allowArray.map((allow) => ({ targetAddress, ...allow }))
+  )
+}
 
 // export const greaterThanUint = (
 //   value: number | string | BigInt

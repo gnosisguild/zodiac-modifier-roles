@@ -1,5 +1,5 @@
 import { RolePreset } from "../../types"
-import { staticEqual } from "../helpers/utils"
+import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
@@ -13,24 +13,26 @@ const preset: RolePreset = {
   network: 1,
   allow: [
     {
-      targetAddresses: [AURA_CLAIM_ZAP],
+      targetAddress: AURA_CLAIM_ZAP,
       signature:
         "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
     },
     {
-      targetAddresses: [CONVEX_CLAIM_ZAP],
+      targetAddress: CONVEX_CLAIM_ZAP,
       signature:
         "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256,uint256)",
     },
+    ...forAllTargetAddresses(
+      [CURVE_STETHETH_GAUGE_DEPOSIT, AA_WSTETH_GAUGE_DEPOSIT],
+      {
+        signature: "claim_rewards(address)",
+        params: {
+          [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        },
+      }
+    ),
     {
-      targetAddresses: [CURVE_STETHETH_GAUGE_DEPOSIT, AA_WSTETH_GAUGE_DEPOSIT],
-      signature: "claim_rewards(address)",
-      params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-    {
-      targetAddresses: [REFLEXER_REWARDS],
+      targetAddress: REFLEXER_REWARDS,
       signature: "getRewards()",
     },
   ],

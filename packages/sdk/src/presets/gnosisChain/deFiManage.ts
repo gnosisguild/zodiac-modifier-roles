@@ -1,6 +1,10 @@
 import { ExecutionOptions, RolePreset } from "../../types"
-import { allowErc20Transfer } from "../helpers/erc20"
-import { dynamicEqual, staticEqual } from "../helpers/utils"
+import { allowErc20Approve, allowErc20Transfer } from "../helpers/erc20"
+import {
+  dynamicEqual,
+  forAllTargetAddresses,
+  staticEqual,
+} from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -87,16 +91,16 @@ const preset: RolePreset = {
   allow: [
     // Wrapped XDAI
     {
-      targetAddresses: [TOKENS["Wrapped XDAI"]],
+      targetAddress: TOKENS["Wrapped XDAI"],
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },
 
     // OmniBridge -->
-    { tokens: [TOKENS.GNO], spenders: [OMNI_BRIDGE] },
+    ...allowErc20Approve([TOKENS.GNO], [OMNI_BRIDGE]),
     {
+      targetAddress: OMNI_BRIDGE,
       signature: "transferAndCall(address,uint256,bytes)",
-      targetAddresses: [OMNI_BRIDGE],
       params: {
         [2]: dynamicEqual(OMNI_BRIDGE_DATA_PLACEHOLDER),
       },
@@ -104,63 +108,59 @@ const preset: RolePreset = {
     // <-- OmniBridge
 
     // Uniswap V2 -->
-    {
-      tokens: Object.values(TOKENS),
-      spenders: Object.values([...Object.values(UNI_V2_ROUTERS)]),
-    },
-    {
-      signature:
-        "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: Object.values(UNI_V2_ROUTERS),
-      params: {
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+    ...allowErc20Approve(Object.values(TOKENS), Object.values(UNI_V2_ROUTERS)),
+    ...forAllTargetAddresses(Object.values(UNI_V2_ROUTERS), [
+      {
+        signature:
+          "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
+        params: {
+          [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+        },
       },
-    },
-    {
-      signature:
-        "addLiquidityETH(address,address,uint256,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: Object.values(UNI_V2_ROUTERS),
-      params: {
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+      {
+        signature:
+          "addLiquidityETH(address,address,uint256,uint256,uint256,uint256,address,uint256)",
+        params: {
+          [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+        },
+        options: ExecutionOptions.Send,
       },
-      options: ExecutionOptions.Send,
-    },
-    {
-      signature:
-        "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: Object.values(UNI_V2_ROUTERS),
-      params: {
-        [5]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+      {
+        signature:
+          "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
+        params: {
+          [5]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        },
       },
-    },
-    {
-      signature:
-        "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: Object.values(UNI_V2_ROUTERS),
-      params: {
-        [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+      {
+        signature:
+          "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
+        params: {
+          [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        },
       },
-    },
+    ]),
+
     // <-- Uniswap V2
 
     // Elk -->
     {
       signature:
         "addLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [UNI_V2_ROUTERS["Elk Router"]],
+      targetAddress: UNI_V2_ROUTERS["Elk Router"],
     },
     {
       signature:
         "removeLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
-      targetAddresses: [UNI_V2_ROUTERS["Elk Router"]],
+      targetAddress: UNI_V2_ROUTERS["Elk Router"],
       params: {
         [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
       },
     },
-    { signature: "stake(uint256)", targetAddresses: [ELK_FARMING_REWARDS] },
+    { signature: "stake(uint256)", targetAddress: ELK_FARMING_REWARDS },
     // <-- Elk
 
-    allowErc20Transfer(
+    ...allowErc20Transfer(
       [TOKENS.GNO],
       [
         CURVE["GNO/CRV ChildChainStreamer"],
@@ -172,80 +172,77 @@ const preset: RolePreset = {
     ),
 
     // SushiSwap -->
-    {
-      tokens: [
+    ...allowErc20Approve(
+      [
         LP_TOKENS["SushiSwap LP Token 0"],
         LP_TOKENS["SushiSwap LP Token 1"],
         LP_TOKENS["SushiSwap LP Token 2"],
         LP_TOKENS["SushiSwap LP Token 3"],
         LP_TOKENS["SushiSwap LP Token 4"],
       ],
-      spenders: [
-        SUSHISWAP_MINI_CHEF,
-        UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"],
-      ],
-    },
+      [SUSHISWAP_MINI_CHEF, UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"]]
+    ),
     {
       signature: "deposit(uint256,uint256,address)",
-      targetAddresses: [SUSHISWAP_MINI_CHEF],
+      targetAddress: SUSHISWAP_MINI_CHEF,
       params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
 
     {
-      targetAddresses: [SUSHISWAP_MINI_CHEF],
+      targetAddress: SUSHISWAP_MINI_CHEF,
       signature: "withdrawAndHarvest(uint256,uint256,address)",
       params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
     // <-- SushiSwap
 
     // Curve -->
-    {
-      tokens: Object.values(TOKENS),
-      spenders: Object.values([CURVE.DepositContract]),
-    },
-    {
-      tokens: [TOKENS.GNO, TOKENS.sGNO],
-      spenders: [CURVE_POOLS["sGNO/GNO"]],
-    },
-    {
-      tokens: [LP_TOKENS["Curve.fi wxDAI/USDC/USDT"]],
-      spenders: [CURVE_x3CRV_GAUGE],
-    },
+    ...allowErc20Approve(Object.values(TOKENS), [CURVE.DepositContract]),
+    ...allowErc20Approve([TOKENS.GNO, TOKENS.sGNO], [CURVE_POOLS["sGNO/GNO"]]),
+    ...allowErc20Approve(
+      [LP_TOKENS["Curve.fi wxDAI/USDC/USDT"]],
+      [CURVE_x3CRV_GAUGE]
+    ),
     {
       // allow calling all function of the stable swap pool
-      targetAddresses: [CURVE_POOLS["wxDAI/USDC/USDT StableSwap"]],
+      targetAddress: CURVE_POOLS["wxDAI/USDC/USDT StableSwap"],
     },
-    {
-      signature: "deposit(uint256)",
-      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
-    },
-    {
-      targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
-      signature: "withdraw(uint256)",
-    },
+    ...forAllTargetAddresses(
+      [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
+      [
+        {
+          signature: "deposit(uint256)",
+        },
+        {
+          signature: "withdraw(uint256)",
+        },
+      ]
+    ),
+
     {
       signature: "notify_reward_amount(address)",
-      targetAddresses: [CURVE["GNO/CRV ChildChainStreamer"]],
+      targetAddress: CURVE["GNO/CRV ChildChainStreamer"],
     },
-    {
-      signature: "add_liquidity(uint256[2],uint256)",
-      targetAddresses: [CURVE_POOLS["RAIx3CRV"], CURVE_POOLS["sGNO/GNO"]],
-    },
+    ...forAllTargetAddresses(
+      [CURVE_POOLS["RAIx3CRV"], CURVE_POOLS["sGNO/GNO"]],
+      {
+        signature: "add_liquidity(uint256[2],uint256)",
+      }
+    ),
 
     {
       signature: "add_liquidity(address,uint256[4],uint256)",
-      targetAddresses: [CURVE.DepositContract],
+      targetAddress: CURVE.DepositContract,
     },
     {
       signature: "remove_liquidity(address,uint256,uint256[4],address)",
-      targetAddresses: [CURVE.DepositContract],
+      targetAddress: CURVE.DepositContract,
       params: {
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
     {
       signature: "remove_liquidity_one_coin(address,uint256,int128,uint256)",
-      targetAddresses: [CURVE.DepositContract],
+      targetAddress: CURVE.DepositContract,
       params: {
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
@@ -255,26 +252,27 @@ const preset: RolePreset = {
     // Symmetric -->
     {
       signature: "build()",
-      targetAddresses: [SYMMETRIC["ProxyRegistry"]],
+      targetAddress: SYMMETRIC["ProxyRegistry"],
     },
     // <-- Symmetric
 
     // Swapr -->
-    {
-      signature: "stake(uint256)",
-      targetAddresses: SWAPR_REWARDS_DISTRIBUTION,
-    },
-    {
-      signature: "exit(address)",
-      targetAddresses: SWAPR_REWARDS_DISTRIBUTION,
-      params: [staticEqual(AVATAR_ADDRESS_PLACEHOLDER)],
-    },
+    ...forAllTargetAddresses(SWAPR_REWARDS_DISTRIBUTION, [
+      {
+        signature: "stake(uint256)",
+      },
+      {
+        signature: "exit(address)",
+        params: [staticEqual(AVATAR_ADDRESS_PLACEHOLDER)],
+      },
+    ]),
+
     // <-- Swapr
 
     // Mai.finance -->
     {
       signature: "depositCollateral(uint256,uint256)",
-      targetAddresses: [GNO_MAI_VAULT],
+      targetAddress: GNO_MAI_VAULT,
     },
     // <-- Mai.finance
   ],
