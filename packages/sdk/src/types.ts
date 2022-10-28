@@ -61,36 +61,26 @@ export interface RolePreset {
   allow: PresetAllowEntry[]
 }
 
-export interface CoercedRolePreset {
-  network: number
-  allow: CoercedPresetAllowEntry[]
-}
-
 // allows call to any function on the target addresses
 export interface PresetFullyClearedTarget {
-  targetAddresses: string[]
+  targetAddress: string
   options?: ExecutionOptions
 }
 
 // allows calls to specific functions, optionally with parameter scoping
 export type PresetFunction = ({ sighash: string } | { signature: string }) & {
-  targetAddresses: string[]
+  targetAddress: string
   params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
   options?: ExecutionOptions
 }
 
 // allows ERC20 approvals for specified spender addresses
-export type PresetErc20Approval = {
-  tokens: string[]
-  spenders: string[]
-}
+// export type PresetErc20Approval = {
+//   tokens: string[]
+//   spenders: string[]
+// }
 
-export type PresetAllowEntry =
-  | PresetFullyClearedTarget
-  | PresetFunction
-  | PresetErc20Approval
-
-export type CoercedPresetAllowEntry = PresetFullyClearedTarget | PresetFunction
+export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
 type ComparisonValue = string | symbol
 export interface PresetScopeParam {
