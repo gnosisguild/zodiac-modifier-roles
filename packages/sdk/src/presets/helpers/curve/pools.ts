@@ -1,5 +1,3 @@
-import { allowRegularPool } from "./regular"
-
 export default [
   {
     name: "Curve DAI/USDC/USDT",

@@ -1,9 +1,6 @@
-import { PresetAllowEntry, PresetAllowEntry } from "../../../types"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  AVATAR_ADDRESS_PLACEHOLDER,
-} from "../../placeholders"
-import { staticEqual, staticEqual } from "../utils"
+import { PresetAllowEntry } from "../../../types"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
+import { staticEqual } from "../utils"
 
 import { Pool } from "./types"
 
