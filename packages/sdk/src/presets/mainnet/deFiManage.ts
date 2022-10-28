@@ -1,5 +1,6 @@
 import { ExecutionOptions, RolePreset } from "../../types"
 import allowCurvePool from "../helpers/curve"
+import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
@@ -50,34 +51,34 @@ const preset: RolePreset = {
   network: 1,
   allow: [
     // AURA
-    { tokens: [AURA_TOKEN], spenders: [AURA_LOCKER] },
-    { tokens: [BALANCER_STETH, BALANCER_AURA_BAL], spenders: [AURA_BOOSTER] },
-    { tokens: [AURA_BAL], spenders: [AURA_BAL_REWARDS] },
+    ...allowErc20Approve([AURA_TOKEN], [AURA_LOCKER]),
+    ...allowErc20Approve([BALANCER_STETH, BALANCER_AURA_BAL], [AURA_BOOSTER]),
+    ...allowErc20Approve([AURA_BAL], [AURA_BAL_REWARDS]),
     {
-      targetAddresses: [AURA_LOCKER],
+      targetAddress: AURA_LOCKER,
       signature: "lock(address,uint256)",
       params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
     {
-      targetAddresses: [AURA_BOOSTER],
+      targetAddress: AURA_BOOSTER,
       signature: "deposit(uint256,uint256,bool)",
     },
     {
-      targetAddresses: [AURA_BAL_REWARDS],
+      targetAddress: AURA_BAL_REWARDS,
       signature: "stake(uint256)",
     },
     {
-      targetAddresses: [AURA_BASE_REWARD_POOL],
+      targetAddress: AURA_BASE_REWARD_POOL,
       signature: "withdrawAndUnwrap(uint256,bool)",
     },
 
     // BALANCER
+    ...allowErc20Approve(
+      [WSTETH, AURA_BAL, BALANCER_80BAL_20WETH, BALANCER],
+      [BALANCER_VAULT]
+    ),
     {
-      tokens: [WSTETH, AURA_BAL, BALANCER_80BAL_20WETH, BALANCER],
-      spenders: [BALANCER_VAULT],
-    },
-    {
-      targetAddresses: [BALANCER_VAULT],
+      targetAddress: BALANCER_VAULT,
       signature:
         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -88,64 +89,64 @@ const preset: RolePreset = {
     },
 
     // LIDO
-    { targetAddresses: [WSTETH], signature: "wrap(uint256)" },
-    { tokens: [STETH], spenders: [WSTETH] },
+    ...allowErc20Approve([STETH], [WSTETH]),
+    { targetAddress: WSTETH, signature: "wrap(uint256)" },
 
     // CONVEX
-    { tokens: [CONVEX], spenders: [CONVEX_LOCKER, CONVEX_REWARDS] },
-    { tokens: [CURVE_DAI_USDC_USDT_SUSD], spenders: [CONVEX_BOOSTER] },
+    ...allowErc20Approve([CONVEX], [CONVEX_LOCKER, CONVEX_REWARDS]),
+    ...allowErc20Approve([CURVE_DAI_USDC_USDT_SUSD], [CONVEX_BOOSTER]),
     {
-      targetAddresses: [CONVEX_BOOSTER],
+      targetAddress: CONVEX_BOOSTER,
       signature: "depositAll(uint256,bool)",
     },
     {
-      targetAddresses: [CONVEX_LOCKER],
+      targetAddress: CONVEX_LOCKER,
       signature: "lock(address,uint256,uint256)",
       params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
     },
     {
-      targetAddresses: [CONVEX_LOCKER],
+      targetAddress: CONVEX_LOCKER,
       signature: "processExpiredLocks(bool)",
     },
     {
-      targetAddresses: [CONVEX_REWARDS],
+      targetAddress: CONVEX_REWARDS,
       signature: "stake(uint256)",
     },
     {
-      targetAddresses: [CONVEX_REWARDS],
+      targetAddress: CONVEX_REWARDS,
       signature: "withdraw(uint256,bool)",
     },
 
     // CURVE
     ...allowCurvePool("Curve DAI/USDC/USDT/sUSD"),
-    { tokens: [STETH], spenders: [CURVE_ETH_STETH] },
-    { tokens: [DAI], spenders: [CURVE_USDP_METAPOOL] },
+    ...allowErc20Approve([STETH], [CURVE_ETH_STETH]),
+    ...allowErc20Approve([DAI], [CURVE_USDP_METAPOOL]),
     {
-      targetAddresses: [CURVE_USDP_METAPOOL],
+      targetAddress: CURVE_USDP_METAPOOL,
       signature: "exchange_underlying(int128,int128,uint256,uint256)",
     },
     {
-      targetAddresses: [CURVE_ETH_STETH],
+      targetAddress: CURVE_ETH_STETH,
       signature: "exchange(int128,int128,uint256,uint256)",
     },
 
     // UNIT
     {
-      targetAddresses: [UNIT_CDP_MANAGER],
+      targetAddress: UNIT_CDP_MANAGER,
       signature: "exit(address,uint256,uint256)",
     },
 
     // WETH
     {
-      targetAddresses: [WETH],
+      targetAddress: WETH,
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },
 
     // OMNI BRIDGE
-    { tokens: [WETH, COW], spenders: [OMNI_BRIDGE] },
+    ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),
     {
-      targetAddresses: [OMNI_BRIDGE],
+      targetAddress: OMNI_BRIDGE,
       signature: "relayTokens(address,address,uint256)",
       params: {
         [1]: staticEqual(OMNI_BRIDGE_RECEIVER_PLACEHOLDER),

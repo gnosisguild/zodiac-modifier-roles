@@ -74,12 +74,6 @@ export type PresetFunction = ({ sighash: string } | { signature: string }) & {
   options?: ExecutionOptions
 }
 
-// allows ERC20 approvals for specified spender addresses
-// export type PresetErc20Approval = {
-//   tokens: string[]
-//   spenders: string[]
-// }
-
 export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
 type ComparisonValue = string | symbol
