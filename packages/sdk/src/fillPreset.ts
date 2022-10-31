@@ -1,45 +1,42 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import translateErc20Approvals from "./translateErc20Approvals"
 import {
   Clearance,
   ExecutionOptions,
   RolePermissions,
   RolePreset,
   PresetScopeParam,
-  Function,
-  Target,
-  CoercedRolePreset,
-  CoercedPresetAllowEntry,
   PresetFunction,
+  PresetAllowEntry,
 } from "./types"
 
 // Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
-const fillAndUnfoldPreset = (
+const fillPreset = (
   preset: RolePreset,
   placeholderValues: Record<symbol, string>
 ): RolePermissions => {
-  const coercedPreset = translateErc20Approvals(preset)
-
-  sanityCheck(coercedPreset)
+  // TODO merge oneOf params in duplicate function entries
+  sanityCheck(preset)
 
   // fill in avatar placeholders and encode comparison values
-  const { allow } = processParams(coercedPreset, placeholderValues)
+  const { allow } = processParams(preset, placeholderValues)
 
   const fullyClearedTargets = allow
     .filter((entry) => !isScoped(entry))
-    .flatMap((entry) =>
-      entry.targetAddresses.map((targetAddress) => ({
-        address: targetAddress,
-        clearance: Clearance.Target,
-        executionOptions: entry.options || ExecutionOptions.None,
-        functions: [],
-      }))
-    )
+    .map((entry) => ({
+      address: entry.targetAddress,
+      clearance: Clearance.Target,
+      executionOptions: entry.options || ExecutionOptions.None,
+      functions: [],
+    }))
 
-  // our preset structures allows to specify multiple targets per function, so we need to unfold them
-  const unfoldedFunctionTargets = Object.values(
-    allow.filter(isScoped).reduce((targets, allowFunction) => {
+  const functionTargets = Object.entries(
+    groupBy(allow.filter(isScoped), (entry) => entry.targetAddress)
+  ).map(([targetAddress, allowFunctions]) => ({
+    address: targetAddress,
+    clearance: Clearance.Function,
+    executionOptions: ExecutionOptions.None,
+    functions: allowFunctions.map((allowFunction) => {
       let sighash = "sighash" in allowFunction && allowFunction.sighash
       if (!sighash)
         sighash =
@@ -47,51 +44,28 @@ const fillAndUnfoldPreset = (
           functionSighash(allowFunction.signature)
       if (!sighash) throw new Error("invariant violation")
 
-      const functionItem: Function = {
+      return {
         sighash,
         executionOptions: allowFunction.options || ExecutionOptions.None,
         wildcarded: allowFunction.params.length === 0,
         parameters: allowFunction.params,
       }
-
-      allowFunction.targetAddresses.forEach((targetAddress) => {
-        targets[targetAddress] = targets[targetAddress] || {
-          address: targetAddress,
-          clearance: Clearance.Function,
-          executionOptions: allowFunction.options || ExecutionOptions.None,
-          functions: [],
-        }
-
-        if (
-          targets[targetAddress].functions.some(
-            (f) => f.sighash === functionItem.sighash
-          )
-        ) {
-          throw new Error(
-            `Duplicate function ${functionItem.sighash} for target ${targetAddress}`
-          )
-        }
-
-        targets[targetAddress].functions.push(functionItem)
-      })
-
-      return targets
-    }, {} as Record<string, Target>)
-  )
+    }),
+  }))
 
   return {
-    targets: [...fullyClearedTargets, ...unfoldedFunctionTargets],
+    targets: [...fullyClearedTargets, ...functionTargets],
   }
 }
 
-export default fillAndUnfoldPreset
+export default fillPreset
 
 const functionSighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
-  preset: CoercedRolePreset,
+  preset: RolePreset,
   placeholderValues: Record<symbol, string>
 ) => ({
   ...preset,
@@ -135,17 +109,18 @@ const fillPlaceholderValues = (
   return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
 }
 
-const sanityCheck = (preset: CoercedRolePreset) => {
+const sanityCheck = (preset: RolePreset) => {
   assertNoWildcardScopedIntersection(preset)
   assertNoDuplicateAllowFunction(preset)
 }
 
-const assertNoWildcardScopedIntersection = (preset: CoercedRolePreset) => {
-  const wildcardTargets = preset.allow.flatMap((entry) =>
-    !isScoped(entry) ? entry.targetAddresses : []
-  )
+const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
+  const wildcardTargets = preset.allow
+    .filter((entry) => !isScoped(entry))
+    .map((entry) => entry.targetAddress)
+
   const scopedTargets = new Set(
-    preset.allow.filter(isScoped).flatMap((af) => af.targetAddresses)
+    preset.allow.filter(isScoped).map((entry) => entry.targetAddress)
   )
 
   const intersection = [
@@ -160,20 +135,19 @@ const assertNoWildcardScopedIntersection = (preset: CoercedRolePreset) => {
   }
 }
 
-const isScoped = (entry: CoercedPresetAllowEntry): entry is PresetFunction =>
+const isScoped = (entry: PresetAllowEntry): entry is PresetFunction =>
   "sighash" in entry || "signature" in entry
 
-const assertNoDuplicateAllowFunction = (preset: CoercedRolePreset) => {
+const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
   const allowFunctions = preset.allow
     .filter(isScoped)
-    .flatMap((af) =>
-      af.targetAddresses.map(
-        (ta) =>
-          `${ta}.${
-            "sighash" in af ? af.sighash : functionSighash(af.signature)
-          }`
-      )
+    .map(
+      (af) =>
+        `${af.targetAddress}.${
+          "sighash" in af ? af.sighash : functionSighash(af.signature)
+        }`
     )
+
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
     {} as Record<string, number>
@@ -190,3 +164,9 @@ const assertNoDuplicateAllowFunction = (preset: CoercedRolePreset) => {
     )
   }
 }
+
+const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
+  arr.reduce((groups, item) => {
+    ;(groups[key(item)] ||= []).push(item)
+    return groups
+  }, {} as Record<K, T[]>)

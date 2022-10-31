@@ -19,7 +19,7 @@ import { Roles } from "../../evm/typechain-types"
 
 import encodeCalls from "./encodeCalls"
 import fetchPermissions from "./fetchPermissions"
-import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
+import fillPreset from "./fillPreset"
 import logCall from "./logCall"
 import patchPermissions from "./patchPermissions"
 import SAFE_TX_SERVICE from "./safeTxService"
@@ -147,7 +147,7 @@ export const encodeApplyPreset = async (
       roleId,
       network: options.network,
     }))
-  const nextPermissions = fillAndUnfoldPreset(preset, placeholderValues)
+  const nextPermissions = fillPreset(preset, placeholderValues)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
   return await encodeCalls(address, roleId, calls)
