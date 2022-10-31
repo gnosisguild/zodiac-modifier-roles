@@ -13,7 +13,7 @@ import "@nomiclabs/hardhat-ethers"
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import encodeCalls from "../../src/encodeCalls"
-import fillAndUnfoldPreset from "../../src/fillAndUnfoldPreset"
+import fillPreset from "../../src/fillPreset"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
@@ -244,7 +244,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
           wronglyFailingTransactions,
           newSucceedingTransactions,
           newFailingTransactions,
-          permissions: fillAndUnfoldPreset(preset, placeholderValues),
+          permissions: fillPreset(preset, placeholderValues),
         },
         null,
         2
