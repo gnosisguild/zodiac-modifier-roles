@@ -1,6 +1,6 @@
 import { RolePreset } from "../../types"
+import { staticEqual } from "../helpers/utils"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
-import { staticEqual } from "../utils"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,
@@ -14,8 +14,7 @@ import {
 
 const preset: RolePreset = {
   network: 100,
-  allowTargets: [],
-  allowFunctions: [
+  allow: [
     {
       targetAddresses: [SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF],
       signature: "harvest(uint256,address)",

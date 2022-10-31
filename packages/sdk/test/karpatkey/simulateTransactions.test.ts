@@ -1,3 +1,4 @@
+import { BigNumber } from "ethers"
 import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
@@ -97,7 +98,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       }
     )
 
+    let totalGas = BigNumber.from(0)
     for (let i = 0; i < permissionUpdateTransactions.length; i++) {
+      totalGas = totalGas.add(
+        await owner.estimateGas(permissionUpdateTransactions[i])
+      )
       await owner.sendTransaction(permissionUpdateTransactions[i])
 
       console.log(
@@ -107,7 +112,9 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       )
     }
 
-    console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n")
+    console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------")
+    console.log("Total gas used for permissions update:", totalGas.toString())
+    console.log("\n\n")
 
     for (let i = 0; i < transactions.length; i++) {
       const tx = transactions[i]

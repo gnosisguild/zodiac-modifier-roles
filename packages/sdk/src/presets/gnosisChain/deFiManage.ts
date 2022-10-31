@@ -1,14 +1,10 @@
 import { ExecutionOptions, RolePreset } from "../../types"
+import { allowErc20Transfer } from "../helpers/erc20"
+import { dynamicEqual, staticEqual } from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
 } from "../placeholders"
-import {
-  allowErc20Approve,
-  allowErc20Transfer,
-  dynamicEqual,
-  staticEqual,
-} from "../utils"
 
 import {
   CURVE_x3CRV_GAUGE,
@@ -88,40 +84,8 @@ const SYMMETRIC = {
 
 const preset: RolePreset = {
   network: 100,
-  allowTargets: [{ targetAddress: CURVE_POOLS["wxDAI/USDC/USDT StableSwap"] }],
-  allowFunctions: [
-    ...allowErc20Approve([
-      {
-        tokens: Object.values(TOKENS),
-        spenders: Object.values([
-          ...Object.values(UNI_V2_ROUTERS),
-          CURVE.DepositContract,
-        ]),
-      },
-      { tokens: [TOKENS.GNO], spenders: [OMNI_BRIDGE] },
-      {
-        tokens: [TOKENS.GNO, TOKENS.sGNO],
-        spenders: [CURVE_POOLS["sGNO/GNO"]],
-      },
-      {
-        tokens: [
-          LP_TOKENS["SushiSwap LP Token 0"],
-          LP_TOKENS["SushiSwap LP Token 1"],
-          LP_TOKENS["SushiSwap LP Token 2"],
-          LP_TOKENS["SushiSwap LP Token 3"],
-          LP_TOKENS["SushiSwap LP Token 4"],
-        ],
-        spenders: [
-          SUSHISWAP_MINI_CHEF,
-          UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"],
-        ],
-      },
-      {
-        tokens: [LP_TOKENS["Curve.fi wxDAI/USDC/USDT"]],
-        spenders: [CURVE_x3CRV_GAUGE],
-      },
-    ]),
-
+  allow: [
+    // Wrapped XDAI
     {
       targetAddresses: [TOKENS["Wrapped XDAI"]],
       signature: "deposit()",
@@ -129,6 +93,7 @@ const preset: RolePreset = {
     },
 
     // OmniBridge -->
+    { tokens: [TOKENS.GNO], spenders: [OMNI_BRIDGE] },
     {
       signature: "transferAndCall(address,uint256,bytes)",
       targetAddresses: [OMNI_BRIDGE],
@@ -136,10 +101,13 @@ const preset: RolePreset = {
         [2]: dynamicEqual(OMNI_BRIDGE_DATA_PLACEHOLDER),
       },
     },
-
     // <-- OmniBridge
 
     // Uniswap V2 -->
+    {
+      tokens: Object.values(TOKENS),
+      spenders: Object.values([...Object.values(UNI_V2_ROUTERS)]),
+    },
     {
       signature:
         "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
@@ -205,6 +173,19 @@ const preset: RolePreset = {
 
     // SushiSwap -->
     {
+      tokens: [
+        LP_TOKENS["SushiSwap LP Token 0"],
+        LP_TOKENS["SushiSwap LP Token 1"],
+        LP_TOKENS["SushiSwap LP Token 2"],
+        LP_TOKENS["SushiSwap LP Token 3"],
+        LP_TOKENS["SushiSwap LP Token 4"],
+      ],
+      spenders: [
+        SUSHISWAP_MINI_CHEF,
+        UNI_V2_ROUTERS["SushiSwap UniswapV2Router02"],
+      ],
+    },
+    {
       signature: "deposit(uint256,uint256,address)",
       targetAddresses: [SUSHISWAP_MINI_CHEF],
       params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
@@ -218,6 +199,22 @@ const preset: RolePreset = {
     // <-- SushiSwap
 
     // Curve -->
+    {
+      tokens: Object.values(TOKENS),
+      spenders: Object.values([CURVE.DepositContract]),
+    },
+    {
+      tokens: [TOKENS.GNO, TOKENS.sGNO],
+      spenders: [CURVE_POOLS["sGNO/GNO"]],
+    },
+    {
+      tokens: [LP_TOKENS["Curve.fi wxDAI/USDC/USDT"]],
+      spenders: [CURVE_x3CRV_GAUGE],
+    },
+    {
+      // allow calling all function of the stable swap pool
+      targetAddresses: [CURVE_POOLS["wxDAI/USDC/USDT StableSwap"]],
+    },
     {
       signature: "deposit(uint256)",
       targetAddresses: [CURVE_x3CRV_REWARD_GAUGE, CURVE_x3CRV_GAUGE],
