@@ -8,6 +8,7 @@ import {
   PresetScopeParam,
   PresetFunction,
   PresetAllowEntry,
+  Comparison,
 } from "./types"
 
 // Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
@@ -15,7 +16,8 @@ const fillPreset = (
   preset: RolePreset,
   placeholderValues: Record<symbol, string>
 ): RolePermissions => {
-  // TODO merge oneOf params in duplicate function entries
+  preset = mergeFunctionEntries(preset)
+
   sanityCheck(preset)
 
   // fill in avatar placeholders and encode comparison values
@@ -139,14 +141,7 @@ const isScoped = (entry: PresetAllowEntry): entry is PresetFunction =>
   "sighash" in entry || "signature" in entry
 
 const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
-  const allowFunctions = preset.allow
-    .filter(isScoped)
-    .map(
-      (af) =>
-        `${af.targetAddress}.${
-          "sighash" in af ? af.sighash : functionSighash(af.signature)
-        }`
-    )
+  const allowFunctions = preset.allow.filter(isScoped).map(functionId)
 
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
@@ -170,3 +165,105 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
     ;(groups[key(item)] ||= []).push(item)
     return groups
   }, {} as Record<K, T[]>)
+
+const functionId = (entry: PresetFunction) =>
+  `${entry.targetAddress}.${
+    "sighash" in entry ? entry.sighash : functionSighash(entry.signature)
+  }`
+
+const mergeFunctionEntries = (preset: RolePreset) => ({
+  ...preset,
+  allow: preset.allow.reduce((result, entry) => {
+    if (!isScoped(entry)) {
+      result.push(entry)
+      return result
+    }
+
+    const matchingEntry = result
+      .filter(isScoped)
+      .find((existingEntry) => functionId(existingEntry) === functionId(entry))
+    if (!matchingEntry) {
+      result.push(entry)
+      return result
+    }
+
+    if (
+      (matchingEntry.options || ExecutionOptions.None) !==
+      (entry.options || ExecutionOptions.None)
+    ) {
+      // we don't merge if execution options are different
+      result.push(entry)
+      return result
+    }
+
+    const matchingEntryParams = Object.entries(
+      matchingEntry.params || {}
+    ).filter(([, param]) => param !== undefined)
+    const params = Object.entries(entry.params || {}).filter(
+      ([, param]) => param !== undefined
+    )
+
+    if (
+      !arraysEqual(
+        matchingEntryParams.map(([key]) => key),
+        params.map(([key]) => key)
+      )
+    ) {
+      // we don't merge if the entries set constraints on different parameters
+      result.push(entry)
+      return result
+    }
+
+    const mergedParams: Record<number, PresetScopeParam> = {}
+    for (const [key, param] of params) {
+      const [, matchingEntryParam] =
+        matchingEntryParams.find(([matchingKey]) => matchingKey === key) || []
+      if (!matchingEntryParam || !param) throw new Error("invariant violation")
+
+      let mergedParam: PresetScopeParam
+      try {
+        mergedParam = mergeFunctionParam(matchingEntryParam, param)
+      } catch (e) {
+        // we don't merge entries if the params cannot be merged
+        result.push(entry)
+        return result
+      }
+
+      mergedParams[parseInt(key)] = mergedParam
+    }
+
+    // update existing entry to the set of merged params
+    matchingEntry.params = mergedParams
+    return result
+  }, [] as PresetAllowEntry[]),
+})
+
+const mergeFunctionParam = (a: PresetScopeParam, b: PresetScopeParam) => {
+  if (a.type !== b.type) {
+    throw new Error(
+      `Cannot merge parameters of different types: ${a.type} and ${b.type}`
+    )
+  }
+
+  const MERGEABLE_COMPARISONS = [Comparison.EqualTo, Comparison.OneOf]
+  if (!MERGEABLE_COMPARISONS.includes(a.comparison)) {
+    throw new Error(`Cannot merge parameters with comparison ${a.comparison}`)
+  }
+  if (!MERGEABLE_COMPARISONS.includes(b.comparison)) {
+    throw new Error(`Cannot merge parameters with comparison ${b.comparison}`)
+  }
+
+  const aValues = Array.isArray(a.value) ? a.value : [a.value]
+  const bValues = Array.isArray(b.value) ? b.value : [b.value]
+  const mergedValues = [...new Set([...aValues, ...bValues])]
+
+  return {
+    type: a.type,
+    comparison:
+      mergedValues.length === 1 ? Comparison.EqualTo : Comparison.OneOf,
+    value: mergedValues.length === 1 ? mergedValues[0] : mergedValues,
+  }
+}
+
+const arraysEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((aEntry) => b.includes(aEntry))
