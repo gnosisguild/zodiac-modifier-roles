@@ -80,7 +80,7 @@ export const KARPATKEY_ADDRESSES = {
     HARVESTERS: [],
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
-  }
+  },
 }
 
 const task = (name: string) =>
