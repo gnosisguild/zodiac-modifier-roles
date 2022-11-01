@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { RolesAppState } from "./models"
 import * as subgraph from "../../services/subgraph"
+import { Network } from "../../utils/networks"
 
 const rolesAppInitialState: RolesAppState = {
   roles: [],
@@ -33,6 +34,9 @@ export const rolesAppSlice = createSlice({
 
 export const { setRolesModifierAddress, setTransactionPending, resetTransactionError } = rolesAppSlice.actions
 
-export const fetchRoles = createAsyncThunk("roles/fetchRoles", (address: string) => {
-  return subgraph.fetchRoles(address)
-})
+export const fetchRoles = createAsyncThunk(
+  "roles/fetchRoles",
+  ({ network, address }: { network: Network; address: string }) => {
+    return subgraph.fetchRoles(network, address)
+  },
+)

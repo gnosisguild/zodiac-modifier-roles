@@ -42,6 +42,14 @@ After that, you can start working on the different packages.
 
 The contracts have been developed with [Solidity 0.8.6](https://github.com/ethereum/solidity/releases/tag/v0.8.6). This version of Solidity made all arithmetic checked by default, therefore eliminating the need for explicit overflow or underflow (or other arithmetic) checks. This version of solidity was chosen as it allows to easily cast bytes to bytes4 and bytes32.
 
+### Audits
+
+An audit has been performed by the [G0 group](https://github.com/g0-group).
+
+All identified issues have been resolved as of commit [454be9d3c26f90221ca717518df002d1eca1845f](https://github.com/gnosis/zodiac-modifier-roles/tree/454be9d3c26f90221ca717518df002d1eca1845f/contracts)
+
+The audit results are available as a pdf in [this repo](packages/evm/docs/ZodiacRolesModifierJan2022.pdf).
+
 ### Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

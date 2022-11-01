@@ -21,13 +21,12 @@ const explorerConfig: Record<Network, ExplorerConfig> = {
     apiUrl: "https://api.etherscan.io/api",
     apiKey: ETHERSCAN_KEY,
   },
-  [Network.RINKEBY]: {
-    apiUrl: "https://api-rinkeby.etherscan.io/api",
-    apiKey: ETHERSCAN_KEY,
-  },
   [Network.GOERLI]: {
     apiUrl: "https://api-goerli.etherscan.io/api",
     apiKey: ETHERSCAN_KEY,
+  },
+  [Network.OPTIMISM_ON_GNOSIS]: {
+    apiUrl: "https://blockscout.com/xdai/optimism/",
   },
   [Network.POLYGON]: {
     apiUrl: "https://api.polygonscan.com/api",

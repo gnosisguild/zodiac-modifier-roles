@@ -13,6 +13,16 @@ env:
   REACT_APP_SNOWTRACE_KEY: $${{ secrets.REACT_APP_SNOWTRACE_KEY }}
   REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
   REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
+  REACT_APP_SUBGRAPH_BASE_URL: ${{ secrets.REACT_APP_SUBGRAPH_BASE_URL }}
+  REACT_APP_SUBGRAPH_GOERLI: ${{ secrets.REACT_APP_SUBGRAPH_GOERLI }}
+  REACT_APP_SUBGRAPH_GNOSIS_CHAIN: ${{ secrets.REACT_APP_SUBGRAPH_GNOSIS_CHAIN }}
+  REACT_APP_SUBGRAPH_MAINNET: ${{ secrets.REACT_APP_SUBGRAPH_MAINNET }}
+  REACT_APP_SUBGRAPH_POLYGON: ${{ secrets.REACT_APP_SUBGRAPH_POLYGON }}
+  REACT_APP_SUBGRAPH_ARBITRUM: ${{ secrets.REACT_APP_SUBGRAPH_ARBITRUM }}
+  REACT_APP_SUBGRAPH_OPTIMISM: ${{ secrets.REACT_APP_SUBGRAPH_OPTIMISM }}
+  REACT_APP_SUBGRAPH_AVALANCHE: ${{ secrets.REACT_APP_SUBGRAPH_AVALANCHE }}
+  REACT_APP_SUBGRAPH_BSC: ${{ secrets.REACT_APP_SUBGRAPH_BSC }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -71,18 +81,20 @@ jobs:
         env:
           HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
           HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
-          HOSTED_SERVICE_SUBGRAPH__RINKEBY: samepant/zodiac-roles-mod-rinkeby
+          HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
           HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
           HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
           HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
           HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
           HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
+          # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
         run: |
           yarn deploy:arbitrum-one
           yarn deploy:gnosis-chain
-          yarn deploy:rinkeby
+          yarn deploy:goerli
           yarn deploy:avalanche
           yarn deploy:bsc
           yarn deploy:mainnet
           yarn deploy:optimism
           yarn deploy:polygon
+          # yarn deploy:optimism-on-gnosis-chain

@@ -1,4 +1,4 @@
-import { createClient, gql } from "urql"
+import { createClient, gql, defaultExchanges } from "urql"
 import { ethers } from "ethers"
 import {
   ConditionType,
@@ -13,17 +13,73 @@ import {
   TargetConditions,
 } from "../typings/role"
 import { getFunctionConditionType } from "../utils/conditions"
+import { Network } from "../utils/networks"
 
-// TODO: testing URLs
-const API_URL_RINKEBY = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-rinkeby"
-// const API_URL_GNOSIS_CHAIN = "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-gnosis-chain" // TODO: Use this when on Gnosis Chain
+let client
 
-// Using Module = 0xbdfdf9b21e18883a107d185ec80733c402357fdc
+if (!process.env.REACT_APP_SUBGRAPH_BASE_URL) {
+  throw new Error("REACT_APP_SUBGRAPH_BASE_URL is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_GNOSIS_CHAIN) {
+  throw new Error("REACT_APP_SUBGRAPH_GNOSIS_CHAIN is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_MAINNET) {
+  throw new Error("REACT_APP_SUBGRAPH_MAINNET is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_GOERLI) {
+  throw new Error("REACT_APP_SUBGRAPH_GOERLI is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_POLYGON) {
+  throw new Error("REACT_APP_SUBGRAPH_POLYGON is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_ARBITRUM) {
+  throw new Error("REACT_APP_SUBGRAPH_ARBITRUM is not set")
+}
+if (!process.env.REACT_APP_SUBGRAPH_OPTIMISM) {
+  throw new Error("REACT_APP_SUBGRAPH_OPTIMISM is not set")
+}
+// if (!process.env.REACT_APP_SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN) {
+//   throw new Error("REACT_APP_SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN is not set")
+// }
 
-const client = createClient({
-  url: API_URL_RINKEBY,
-  requestPolicy: "cache-and-network",
-})
+const BASE_SUBGRAPH_URL = process.env.REACT_APP_SUBGRAPH_BASE_URL
+const SUBGRAPH_GNOSIS_CHAIN = process.env.REACT_APP_SUBGRAPH_GNOSIS_CHAIN
+const SUBGRAPH_GOERLI = process.env.REACT_APP_SUBGRAPH_GOERLI
+const SUBGRAPH_MAINNET = process.env.REACT_APP_SUBGRAPH_MAINNET
+const SUBGRAPH_POLYGON = process.env.REACT_APP_SUBGRAPH_POLYGON
+const SUBGRAPH_ARBITRUM = process.env.REACT_APP_SUBGRAPH_ARBITRUM
+const SUBGRAPH_OPTIMISM = process.env.REACT_APP_SUBGRAPH_OPTIMISM
+// const SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN = process.env.REACT_APP_SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN
+
+const getUrl = (network?: Network) => {
+  switch (network) {
+    case Network.MAINNET:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_MAINNET
+    case Network.GNOSIS:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_GNOSIS_CHAIN
+    case Network.GOERLI:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_GOERLI
+    case Network.POLYGON:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_POLYGON
+    case Network.OPTIMISM:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_OPTIMISM
+    case Network.ARBITRUM:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_ARBITRUM
+    // case Network.OPTIMISM_ON_GNOSIS:
+    //   return BASE_SUBGRAPH_URL + SUBGRAPH_OPTIMISM_ON_GNOSIS_CHAIN
+    default:
+      return BASE_SUBGRAPH_URL + SUBGRAPH_GOERLI
+  }
+}
+
+const getSubgraphClient = (network?: Network) =>
+  createClient({
+    url: getUrl(network),
+    exchanges: [...defaultExchanges],
+    fetchOptions: {
+      cache: "no-cache",
+    },
+  })
 
 const RolesQuery = gql`
   query ($id: ID!) {
@@ -96,7 +152,8 @@ interface RolesQueryResponse {
   }
 }
 
-export const fetchRoles = async (rolesModifierAddress: string): Promise<Role[]> => {
+export const fetchRoles = async (network: Network, rolesModifierAddress: string): Promise<Role[]> => {
+  client = getSubgraphClient(network)
   if (rolesModifierAddress == null || !ethers.utils.isAddress(rolesModifierAddress)) {
     return []
   }
