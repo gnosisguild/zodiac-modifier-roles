@@ -1,11 +1,7 @@
 import { PresetAllowEntry } from "../../../types"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
 import { allowErc20Approve } from "../erc20"
-import { staticEqual } from "../utils"
 
 import { Pool } from "./types"
-
-const CRV_MINTER_ADDRESS = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
 
 export const allowFactoryPool = (pool: Pool): PresetAllowEntry[] => {
   const result: PresetAllowEntry[] = [
@@ -19,7 +15,7 @@ export const allowFactoryPool = (pool: Pool): PresetAllowEntry[] => {
     ),
     {
       targetAddress: pool.address,
-      signature: "add_liquidity(uint256[${pool.tokens.length}],uint256)",
+      signature: `add_liquidity(uint256[${pool.tokens.length}],uint256)`,
     },
     {
       targetAddress: pool.address,
@@ -27,12 +23,11 @@ export const allowFactoryPool = (pool: Pool): PresetAllowEntry[] => {
     },
     {
       targetAddress: pool.address,
-      signature: "remove_liquidity(uint256,uint256[${pool.tokens.length}])",
+      signature: `remove_liquidity(uint256,uint256[${pool.tokens.length}])`,
     },
     {
       targetAddress: pool.address,
-      signature:
-        "remove_liquidity_imbalance(uint256[${pool.tokens.length}],uint256)",
+      signature: `remove_liquidity_imbalance(uint256[${pool.tokens.length}],uint256)`,
     },
     {
       targetAddress: pool.address,
@@ -45,71 +40,6 @@ export const allowFactoryPool = (pool: Pool): PresetAllowEntry[] => {
       targetAddress: pool.address,
       signature: "exchange_underlying(int128,int128,uint256,uint256)",
     })
-  }
-
-  if ("gauge" in pool) {
-    const gaugeFunctions: PresetAllowEntry[] = [
-      ...allowErc20Approve([pool.token], [pool.gauge.address]),
-      {
-        targetAddress: pool.gauge.address,
-        signature: "deposit(uint256)",
-      },
-      {
-        targetAddress: pool.gauge.address,
-        signature: "withdraw(uint256)",
-      },
-      {
-        targetAddress: CRV_MINTER_ADDRESS,
-        signature: "mint(address)",
-        params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
-      },
-    ]
-
-    if (pool.gauge.type !== "LiquidityGauge") {
-      gaugeFunctions.push({
-        targetAddress: pool.gauge.address,
-        signature: "claim_rewards(address)",
-        params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
-      })
-    }
-
-    result.push(...gaugeFunctions)
-  }
-
-  if ("zap" in pool) {
-    const zapFunctions: PresetAllowEntry[] = [
-      {
-        targetAddress: pool.zap.address,
-        signature: "remove_liquidity_one_coin(uint256,int128,uint256)",
-      },
-    ]
-    result.push(...zapFunctions)
-
-    if ("basePool" in pool.zap) {
-      const basePoolFunctions: PresetAllowEntry[] = [
-        //Ask Nico about the approvals which are missing in Python
-        ...allowErc20Approve([...pool.zap.basePool.tokens], [pool.zap.address]),
-        {
-          targetAddress: pool.zap.address,
-          signature: `add_liquidity(uint256[${
-            pool.tokens.length + pool.zap.basePool.tokens.length - 1
-          }],uint256)`,
-        },
-        {
-          targetAddress: pool.zap.address,
-          signature: `remove_liquidity(uint256,uint256[${
-            pool.tokens.length + pool.zap.basePool.tokens.length - 1
-          }])`,
-        },
-        {
-          targetAddress: pool.zap.address,
-          signature: `remove_liquidity_imbalance(uint256[${
-            pool.tokens.length + pool.zap.basePool.tokens.length - 1
-          }],uint256)`,
-        },
-      ]
-      result.push(...basePoolFunctions)
-    }
   }
 
   return result
