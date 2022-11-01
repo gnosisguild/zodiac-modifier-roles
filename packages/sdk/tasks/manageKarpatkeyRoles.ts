@@ -12,6 +12,7 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
+import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -72,6 +73,14 @@ export const KARPATKEY_ADDRESSES = {
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
+  SANTI_TEST_ETH: {
+    AVATAR: "0xcfBE92a0482e0d7D1e6501Ecf56d532B2853014F",
+    MODULE: "0x8c858908D5f4cEF92f2B2277CB38248D39513f45",
+    MANAGEMENT: "0x521041D907AB69Cb95FC0f923Fe5a68541429A2C",
+    HARVESTERS: [],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+  }
 }
 
 const task = (name: string) =>
@@ -162,6 +171,25 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txData.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+})
+
+task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    1,
+    mainnetDeFiManageTestPreset,
     fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,

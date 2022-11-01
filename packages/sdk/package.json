@@ -27,6 +27,7 @@
     "apply:ltd:eth:manage": "hardhat encodeApplyPresetManage --safe LTD_ETH",
     "apply:ltd:eth:harvest": "hardhat encodeApplyPresetHarvest --safe LTD_ETH",
     "apply:santi:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe SANTI_TEST_GNO",
+    "apply:santi:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe SANTI_TEST_ETH",
     "pre-commit": "yarn fix"
   },
   "dependencies": {
