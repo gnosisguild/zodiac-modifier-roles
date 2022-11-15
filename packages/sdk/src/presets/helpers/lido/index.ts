@@ -8,7 +8,11 @@ export const allowLido = (): PresetAllowEntry[] => {
   return [
     { targetAddress: WSTETH, signature: "wrap(uint256)" },
     { targetAddress: WSTETH, signature: "unwrap(uint256)" },
-    { targetAddress: STETH, signature: "submit(address)", options: ExecutionOptions.Send },
+    {
+      targetAddress: STETH,
+      signature: "submit(address)",
+      options: ExecutionOptions.Send,
+    },
     ...allowErc20Approve([STETH, WSTETH], [WSTETH]),
   ]
 }
