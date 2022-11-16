@@ -1,5 +1,6 @@
 import { ExecutionOptions, RolePreset } from "../../types"
-import allowCurvePool from "../helpers/curve"
+import { allowAuraPool } from "../helpers/aura"
+import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
 import {
@@ -51,6 +52,7 @@ const preset: RolePreset = {
   network: 1,
   allow: [
     // AURA
+    ...allowAuraPool("Aura 50COW-50GNO"),
     ...allowErc20Approve([AURA_TOKEN], [AURA_LOCKER]),
     ...allowErc20Approve([BALANCER_STETH, BALANCER_AURA_BAL], [AURA_BOOSTER]),
     ...allowErc20Approve([AURA_BAL], [AURA_BAL_REWARDS]),

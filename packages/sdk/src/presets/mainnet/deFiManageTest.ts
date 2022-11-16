@@ -1,5 +1,5 @@
 import { ExecutionOptions, RolePreset } from "../../types"
-import allowCurvePool from "../helpers/curve"
+import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { staticEqual } from "../helpers/utils"

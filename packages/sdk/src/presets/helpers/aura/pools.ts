@@ -361,4 +361,4 @@ export default [
     ],
     rewarder: "0x987c70086239E1A1e9F242ca19fb5a270D4E72B2",
   },
-]
+] as const
