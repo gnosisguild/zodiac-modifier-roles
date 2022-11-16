@@ -3,20 +3,19 @@ import { PresetAllowEntry } from "../../../types"
 import { allowGauge } from "./gauge"
 import pools from "./pools"
 import { allowRegularPool } from "./regular"
+import { Pool } from "./types"
 import { allowZap } from "./zap"
 
-const findPool = (poolNameOrAddress: string) =>
-  pools.find(
-    (pool) =>
-      pool.name === poolNameOrAddress || pool.address === poolNameOrAddress
-  )
-
-const allowCurvePool = (poolNameOrTokenAddress: string) => {
-  const pool = findPool(poolNameOrTokenAddress)
-
+const findPool = (name: Pool["name"]) => {
+  const pool = pools.find((pool) => pool.name === name)
   if (!pool) {
-    throw new Error(`Pool not found: ${poolNameOrTokenAddress}`)
+    throw new Error(`Pool not found: ${pool}`)
   }
+  return pool
+}
+
+export const allowCurvePool = (name: Pool["name"]) => {
+  const pool = findPool(name)
 
   const result: PresetAllowEntry[] = []
   switch (pool.type) {
@@ -37,5 +36,3 @@ const allowCurvePool = (poolNameOrTokenAddress: string) => {
 
   return result
 }
-
-export default allowCurvePool

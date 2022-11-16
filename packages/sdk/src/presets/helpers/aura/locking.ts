@@ -1,7 +1,7 @@
 import { PresetAllowEntry } from "../../../types"
-import { allowErc20Approve } from "../erc20"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
 import { staticEqual } from "../../helpers/utils"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
+import { allowErc20Approve } from "../erc20"
 
 //Tokens
 const BAL_ADDRESS = "0xba100000625a3754423978a60c9317c58a424e3D"
