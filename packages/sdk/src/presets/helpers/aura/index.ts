@@ -44,7 +44,8 @@ export const allowAuraPool = (name: Pool["name"]): PresetAllowEntry[] => {
       ),
       {
         targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-        signature: "depositSingle(address,address,uint256,bytes32,tuple)",
+        signature:
+          "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       }
     )
   }
