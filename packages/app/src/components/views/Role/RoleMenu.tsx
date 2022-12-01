@@ -252,7 +252,10 @@ export const RoleMenu = () => {
             </Box>
           </Box>
         ) : (
-          [<RoleMembers />, <RoleTargets />]
+          <>
+            <RoleMembers />
+            <RoleTargets />
+          </>
         )}
       </Box>
       {(memberChanges || targetChanges) && !txProposedInSafe && (
