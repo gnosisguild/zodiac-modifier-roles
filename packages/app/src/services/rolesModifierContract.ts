@@ -69,7 +69,7 @@ function getFunctionTransaction(
     const param = funcCondition.params.find((param) => param.index === i)
     if (param) {
       const type = func.inputs[param.index]
-      const value = ethers.utils.defaultAbiCoder.encode([type], [param.value])
+      const value = ethers.utils.defaultAbiCoder.encode([type], param.value)
       isParamScoped.push(true)
       paramType.push(param.type)
       paramComp.push(getParamComparisonInt(param.condition))
