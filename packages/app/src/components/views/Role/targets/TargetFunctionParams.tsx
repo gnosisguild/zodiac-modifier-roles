@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import { makeStyles, Typography } from "@material-ui/core"
 import { ParamConditionInput } from "./ParamConditionInput"
 import { ConditionType, FunctionCondition, ParamCondition } from "../../../../typings/role"
@@ -37,8 +37,6 @@ const useStyles = makeStyles((theme) => ({
 export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange }: TargetFunctionParamsProps) => {
   const classes = useStyles()
 
-  const [originalType] = useState(funcConditions.type)
-
   const handleConditionChange = (index: number, value?: ParamCondition) => {
     let newConditions
     if (value) {
@@ -47,10 +45,11 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
     } else {
       newConditions = funcConditions.params.filter((param) => param.index !== index)
     }
-    const type: ConditionType = newConditions.length ? ConditionType.SCOPED : originalType
+    const type: ConditionType = newConditions.length ? ConditionType.SCOPED : ConditionType.WILDCARDED
     onChange({ ...funcConditions, type, params: newConditions })
   }
 
+  // TODO: we need to prefill the current values (without it being added to the changes, since it's not a change)
   return (
     <>
       {func.inputs.map((param, index) => (
