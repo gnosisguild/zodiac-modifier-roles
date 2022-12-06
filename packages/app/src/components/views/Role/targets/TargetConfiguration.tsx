@@ -145,6 +145,19 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
     const type = !allowTarget ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
     setAllowTarget((current) => !current)
+
+    const conditions = Object.keys(target.conditions).reduce(
+      (map, key) => ({
+        ...map,
+        [key]: { ...target.conditions[key], params: [], type: ConditionType.BLOCKED },
+      }),
+      {},
+    )
+
+    setTargetConditions({
+      targetId: target.id,
+      conditions,
+    })
   }
 
   return (

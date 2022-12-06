@@ -5,7 +5,6 @@ import classNames from "classnames"
 import React, { useMemo, useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
-import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { ZodiacPaper } from "zodiac-ui-components"
 import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
@@ -84,8 +83,15 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
   }
 
   const handleFunctionCheck = (checked: boolean) => {
-    const type = checked ? ConditionType.WILDCARDED : getFunctionConditionType(functionConditions.params)
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), type })
+    const type =
+      checked && functionConditions?.type !== ConditionType.SCOPED ? ConditionType.WILDCARDED : ConditionType.BLOCKED
+
+    return onChange({
+      ...functionConditions,
+      params: [],
+      sighash: Interface.getSighash(func),
+      type,
+    })
   }
 
   const handleOpen = () => setOpen(!open)
