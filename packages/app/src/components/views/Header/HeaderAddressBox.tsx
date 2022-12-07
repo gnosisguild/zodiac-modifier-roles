@@ -86,7 +86,7 @@ export const HeaderAddressBox = ({ address, emptyText, onClick, linkToZodiac }: 
             className={classes.zodiacLink}
             underline="always"
           >
-            View in Zodiac
+            Open Zodiac
             <ArrowForward className={classes.zodiacArrow} />
           </Link>
         )}
