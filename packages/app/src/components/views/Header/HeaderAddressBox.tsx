@@ -4,9 +4,6 @@ import { ArrowForward } from "@material-ui/icons"
 import { EthHashInfo } from "@gnosis.pm/safe-react-components"
 import { truncateEthAddress } from "../../../utils/address"
 import classNames from "classnames"
-import { useRootSelector } from "../../../store"
-import { getChainId, getRolesModifierAddress } from "../../../store/main/selectors"
-import { getNetwork, NETWORKS } from "../../../utils/networks"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -51,16 +48,12 @@ interface HeaderAddressBoxProps {
   address?: string
   emptyText: string
   onClick?: () => void
+  linkToZodiac?: boolean
 }
 
-const networkConfigs = NETWORKS.map(getNetwork)
-
-export const HeaderAddressBox = ({ address, emptyText, onClick }: HeaderAddressBoxProps) => {
+export const HeaderAddressBox = ({ address, emptyText, onClick, linkToZodiac }: HeaderAddressBoxProps) => {
   const classes = useStyles()
-  const network = useRootSelector(getChainId)
-  const rolesModifierAddress = useRootSelector(getRolesModifierAddress)
 
-  const networkShortname = networkConfigs.find((chain) => chain.chainId === network)?.shortName
   return (
     <HeaderBox
       icon={
@@ -84,11 +77,12 @@ export const HeaderAddressBox = ({ address, emptyText, onClick }: HeaderAddressB
         >
           {address ? truncateEthAddress(address) : emptyText}
         </Typography>
-        {address && (
+        {address && linkToZodiac && (
           <Link
-            target="_blank"
             rel="noredirect"
-            href={`https://app.safe.global/${networkShortname}:${rolesModifierAddress}/apps?appUrl=https%3A%2F%2Fzodiac.gnosisguild.org%2F`}
+            onClick={() => {
+              window.location.href = `https://zodiac.gnosisguild.org/`
+            }}
             className={classes.zodiacLink}
             underline="always"
           >
