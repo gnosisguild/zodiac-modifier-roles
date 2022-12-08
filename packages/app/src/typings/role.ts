@@ -49,6 +49,7 @@ export enum ParameterType {
   STATIC = "Static",
   DYNAMIC = "Dynamic",
   DYNAMIC32 = "Dynamic32",
+  NO_RESTRICTION = "NoRestriction",
 }
 
 export enum ParamNativeType {
