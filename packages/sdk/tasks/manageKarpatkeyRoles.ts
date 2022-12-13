@@ -13,6 +13,8 @@ import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
+import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
+
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -77,6 +79,14 @@ export const KARPATKEY_ADDRESSES = {
     AVATAR: "0xcfBE92a0482e0d7D1e6501Ecf56d532B2853014F",
     MODULE: "0x8c858908D5f4cEF92f2B2277CB38248D39513f45",
     MANAGEMENT: "0x521041D907AB69Cb95FC0f923Fe5a68541429A2C",
+    HARVESTERS: [],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+  },
+  BALANCER_TEST_ETH: {
+    AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
+    MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86",
+    MANAGEMENT: "0x216071B1B5681D67A75f7eEAF92CEC8262bE29f7",
     HARVESTERS: [],
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
@@ -190,6 +200,25 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageTestPreset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txData.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+})
+
+task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    1,
+    mainnetDeFiManageBalancerPreset,
     fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
