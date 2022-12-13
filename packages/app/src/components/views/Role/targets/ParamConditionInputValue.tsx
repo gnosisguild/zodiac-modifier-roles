@@ -58,7 +58,10 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
     }
     onChange({ ...condition, value: [value] })
   }
-
+  const humanReadableValue =
+    dirty || condition.value[0] == null || condition.value[0] === ""
+      ? condition.value[0]
+      : ethers.utils.defaultAbiCoder.decode([param], condition.value[0])
   return (
     <TextField
       error={!valid && dirty}
@@ -68,7 +71,7 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
         disableUnderline: true,
         className: classNames(classes.input, { [classes.error]: !valid && dirty }),
       }}
-      value={condition.value[0]}
+      value={humanReadableValue}
       placeholder={getPlaceholderForType(param)}
       onChange={(evt) => handleChange(evt.target.value)}
     />
