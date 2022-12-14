@@ -12,9 +12,8 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
-
+import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,

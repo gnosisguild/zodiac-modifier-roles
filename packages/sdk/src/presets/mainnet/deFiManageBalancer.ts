@@ -2,8 +2,7 @@ import { ExecutionOptions, RolePreset } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
-import { allowStakewise } from "../helpers/stakewise/stakewise"
-import { staticEqual } from "../helpers/utils"
+import { dynamic32Equal, staticEqual, subsetOf } from "../helpers/utils"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
@@ -105,16 +104,6 @@ const preset: RolePreset = {
       targetAddress: cUSDC,
       signature: "redeemUnderlying(uint256)",
     },
-    //Claiming of rewards
-    {
-      targetAddress: COMPTROLLER,
-      signature: "claimComp(address,address[])",
-      params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [1]: staticEqual(cUSDC, "address"),
-      },
-    },
-
     //We are not allowing to include it as collateral
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -135,15 +124,6 @@ const preset: RolePreset = {
     {
       targetAddress: cDAI,
       signature: "redeemUnderlying(uint256)",
-    },
-    //Claiming of rewards UNCOMMENT LATER!
-    {
-      targetAddress: COMPTROLLER,
-      signature: "claimComp(address,address[])",
-      params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [1]: staticEqual(cDAI, "address"),
-      },
     },
     //We are not allowing to include it as collateral
 
@@ -167,15 +147,26 @@ const preset: RolePreset = {
       signature: "redeemUnderlying(uint256)",
     },
     //Claiming of rewards
+
+    //We are not allowing to include it as collateral
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    //Compound V2 - Claiming of rewards
+    //---------------------------------------------------------------------------------------------------------------------------------
     {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
         [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [1]: staticEqual(cAAVE, "address"),
+        [1]: subsetOf(
+          [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+          "address[]",
+          {
+            restrictOrder: true,
+          }
+        ),
       },
     },
-    //We are not allowing to include it as collateral
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Idle - Deposit stETH and stake it on "Lido - stETH - Senior Tranche"
