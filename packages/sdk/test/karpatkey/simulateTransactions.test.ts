@@ -8,6 +8,7 @@ import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarv
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
+import balancerManagePreset from "../../src/presets/mainnet/deFiManageBalancer"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -16,6 +17,7 @@ import {
 import { RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
+import balancerManageTransactions from "./testTransactions/balancerManage"
 import harvestMainnetTransactions from "./testTransactions/ethHarvest"
 import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
@@ -187,6 +189,16 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
         config: KARPATKEY_ADDRESSES.DAO_ETH,
         preset: mainnetDeFiHarvestPreset,
         transactions: harvestMainnetTransactions,
+      })
+    })
+  })
+
+  describe("Balancer Manage preset [balancer:manage]", () => {
+    it("allows executing all listed management transactions from the DAO Safe", async () => {
+      await simulateTransactions({
+        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        preset: balancerManagePreset,
+        transactions: balancerManageTransactions,
       })
     })
   })
