@@ -8,10 +8,7 @@ import {
   PresetScopeParam,
 } from "../../types"
 
-const encodeValue = (
-  value: string | symbol,
-  type?: string
-): string | symbol => {
+const encodeValue = (value: any, type?: string): string | symbol => {
   let encodedValue = value
   if (typeof value !== "symbol") {
     if (!type) {
@@ -23,23 +20,104 @@ const encodeValue = (
   return encodedValue
 }
 
+// for any fixed length types
 export const staticEqual = (value: any, type?: string): PresetScopeParam => ({
   comparison: Comparison.EqualTo,
   type: ParameterType.Static,
   value: encodeValue(value, type),
 })
 
+// for string & bytes
 export const dynamicEqual = (value: any, type?: string): PresetScopeParam => ({
   comparison: Comparison.EqualTo,
   type: ParameterType.Dynamic,
   value: encodeValue(value, type),
 })
 
-export const oneOf = (value: any[], type?: string): PresetScopeParam => ({
+// for any array types
+export const dynamic32Equal = (
+  value: any[],
+  type: string
+): PresetScopeParam => ({
+  comparison: Comparison.EqualTo,
+  type: ParameterType.Dynamic32,
+  value: encodeValue(value, type),
+})
+
+// for any fixed length types
+export const staticOneOf = (value: any[], type?: string): PresetScopeParam => ({
   comparison: Comparison.OneOf,
   type: ParameterType.Static,
   value: value.map((v) => encodeValue(v, type)),
 })
+
+// for string & bytes
+export const dynamicOneOf = (
+  value: any[],
+  type?: string
+): PresetScopeParam => ({
+  comparison: Comparison.OneOf,
+  type: ParameterType.Dynamic,
+  value: value.map((v) => encodeValue(v, type)),
+})
+
+// for any array types
+export const dynamic32OneOf = (
+  value: any[][],
+  type: string
+): PresetScopeParam => ({
+  comparison: Comparison.OneOf,
+  type: ParameterType.Dynamic32,
+  value: value.map((v) => encodeValue(v, type)),
+})
+
+const getAllSubsets = (array: any[], includeEmpty = false) =>
+  array
+    .reduce(
+      (subsets, value) =>
+        subsets.concat(subsets.map((set: any[]) => [...set, value])),
+      [[]]
+    )
+    .slice(includeEmpty ? 0 : 1)
+
+const getAllPermutations = (array: any[]) => {
+  const result: any[][] = []
+
+  const permute = (arr: any[], m: any[] = []) => {
+    if (arr.length === 0) {
+      result.push(m)
+    } else {
+      for (let i = 0; i < arr.length; i++) {
+        const curr = arr.slice()
+        const next = curr.splice(i, 1)
+        permute(curr.slice(), m.concat(next))
+      }
+    }
+  }
+
+  permute(array)
+
+  return result
+}
+
+interface Options {
+  includeEmpty?: boolean
+  restrictOrder?: boolean
+}
+export const subsetOf = (
+  values: any[],
+  type: string,
+  options: Options = {}
+): PresetScopeParam => {
+  if (!type.endsWith("[]")) {
+    throw new Error("type must be an array type")
+  }
+  const subsets = getAllSubsets(values, options.includeEmpty)
+  const allowedValues = options.restrictOrder
+    ? subsets
+    : subsets.flatMap(getAllPermutations)
+  return dynamic32OneOf(allowedValues, type)
+}
 
 interface PresetFullyClearedTarget {
   options?: ExecutionOptions
@@ -75,11 +153,3 @@ export const forAllTargetAddresses = (
 //   type: ParameterType.Static,
 //   value: defaultAbiCoder.encode(["int256"], [value]),
 // });
-
-// function encodeDynamic(types: any[], values: any[]) {
-//   return solidityPack(types, values);
-// }
-
-// function encodeDynamic32(types: any[], values: any[]) {
-//   return solidityPack(types, values);
-// }
