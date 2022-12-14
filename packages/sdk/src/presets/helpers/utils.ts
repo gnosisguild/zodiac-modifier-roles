@@ -1,4 +1,4 @@
-import { defaultAbiCoder } from "ethers/lib/utils"
+import { solidityPack } from "ethers/lib/utils"
 
 import {
   Comparison,
@@ -8,13 +8,19 @@ import {
   PresetScopeParam,
 } from "../../types"
 
+const solidityPackPadded = (type: string, value: any): string => {
+  const packed = solidityPack([type], [value]).slice(2)
+  const padded = packed.padStart(64, "0")
+  return "0x" + padded
+}
+
 const encodeValue = (value: any, type?: string): string | symbol => {
   let encodedValue = value
   if (typeof value !== "symbol") {
     if (!type) {
       throw new Error("the value type must be specified")
     } else {
-      encodedValue = defaultAbiCoder.encode([type], [value])
+      encodedValue = solidityPackPadded(type, value)
     }
   }
   return encodedValue
