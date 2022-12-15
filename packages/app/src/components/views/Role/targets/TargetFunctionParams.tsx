@@ -38,12 +38,9 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
   const classes = useStyles()
 
   const handleConditionChange = (index: number, value?: ParamCondition) => {
-    let newConditions
-    if (value) {
-      newConditions = [...funcConditions.params]
-      newConditions[index] = value
-    } else {
-      newConditions = funcConditions.params.filter((param) => param.index !== index)
+    const newConditions = funcConditions.params.filter((param) => param.index !== index)
+    if (value != null) {
+      newConditions.push(value)
     }
     const type: ConditionType = newConditions.length ? ConditionType.SCOPED : ConditionType.WILDCARDED
     onChange({ ...funcConditions, type, params: newConditions })

@@ -218,14 +218,21 @@ export const updateRole = async (
         }
       }, {} as Record<string, ParamCondition[]>)
 
-    // TODO: implement unscope param UpdateEvent
-
     const paramLevelTxs: Promise<PopulatedTransaction>[] = Object.entries(paramEventsPerFunction)
       .map(([sighash, params]) => {
         return params.map((paramCondition) => {
           const param = functions[sighash].inputs[paramCondition.index]
 
-          if (paramCondition.condition !== ParamComparison.ONE_OF) {
+          if (paramCondition.type === ParameterType.NO_RESTRICTION) {
+            // unscopeParameter
+            console.log("[updateRole] unscope parameter", [role.id, target.address, sighash, paramCondition.index])
+            return rolesModifierContract.populateTransaction.unscopeParameter(
+              role.id,
+              target.address,
+              sighash,
+              paramCondition.index,
+            )
+          } else if (paramCondition.condition !== ParamComparison.ONE_OF) {
             const value = formatParamValue(param, paramCondition.value[0])
             const encodedValue = ethers.utils.defaultAbiCoder.encode([param], [value])
             console.log("[updateRole] scope parameter", [
@@ -341,5 +348,7 @@ function getParameterTypeInt(parameterType: ParameterType): number {
       return 1
     case ParameterType.DYNAMIC32:
       return 2
+    case ParameterType.NO_RESTRICTION:
+      throw new Error("No restriction should not go on chain. This should be unscoped via unscopeParameter")
   }
 }

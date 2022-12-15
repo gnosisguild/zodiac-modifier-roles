@@ -4,6 +4,7 @@ import {
   ExecutionOption,
   FunctionCondition,
   ParamCondition,
+  ParameterType,
   Role,
   Target,
   TargetConditions,
@@ -379,25 +380,59 @@ function getParamUpdate(
   funcCondition: FunctionCondition,
   original?: FunctionCondition,
 ): UpdateEvent[] {
-  return funcCondition.params
-    .map((param): UpdateEvent[] => {
-      if (!param) return []
-      const originalParam = original?.params.find((_param) => param.index === _param?.index)
+  const updates = funcCondition.params.reduce((toUpdate, newParamConfig) => {
+    console.log("getParamUpdate - param:", newParamConfig)
+    if (!newParamConfig) return toUpdate
+    const originalParamConfig = original?.params.find((_param) => newParamConfig.index === _param?.index)
+    console.log("getParamUpdate - originalParam:", originalParamConfig)
 
-      // TODO: Get unscope param UpdateEvent
+    if (
+      originalParamConfig &&
+      newParamConfig.value === originalParamConfig.value &&
+      newParamConfig.type === originalParamConfig.type &&
+      newParamConfig.condition === originalParamConfig.condition
+    ) {
+      return toUpdate
+    }
 
-      if (
-        originalParam &&
-        param.value === originalParam.value &&
-        param.type === originalParam.type &&
-        param.condition === originalParam.condition
-      ) {
-        return []
-      }
+    return [
+      ...toUpdate,
+      {
+        level: Level.SCOPE_PARAM,
+        value: newParamConfig,
+        old: newParamConfig,
+        targetAddress,
+        funcSighash: funcCondition.sighash,
+      } as UpdateEvent,
+    ]
+  }, [] as UpdateEvent[])
 
-      return [{ level: Level.SCOPE_PARAM, value: param, old: param, targetAddress, funcSighash: funcCondition.sighash }]
-    })
-    .flat()
+  const removals = (original?.params ?? []).reduce((toRemove, originalParamConfig) => {
+    const newParamConfig = funcCondition.params.find((_param) => originalParamConfig.index === _param?.index)
+
+    if (
+      newParamConfig == null &&
+      updates.find((update: any) => update.value.index === originalParamConfig.index) == null // check if param was updated
+    ) {
+      // param was removed
+      return [
+        ...toRemove,
+        {
+          level: Level.SCOPE_PARAM,
+          value: {
+            ...originalParamConfig,
+            type: ParameterType.NO_RESTRICTION, // remove restriction
+          },
+          old: originalParamConfig,
+          targetAddress,
+          funcSighash: funcCondition.sighash,
+        },
+      ] as UpdateEvent[]
+    }
+    return toRemove
+  }, [] as UpdateEvent[])
+
+  return [...updates, ...removals]
 }
 
 function getFunctionUpdate(
