@@ -44,6 +44,9 @@ contract Roles is Modifier {
         setUp(initParams);
     }
 
+    /// @dev There is no zero address check as solidty will check for
+    /// missing arguments and the space of invalid addresses is too large
+    /// to check. Invalid avatar or target address can be reset by owner.
     function setUp(bytes memory initParams) public override {
         (address _owner, address _avatar, address _target) = abi.decode(
             initParams,
