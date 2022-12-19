@@ -195,7 +195,7 @@ export function handleScopeParameter(event: ScopeParameter): void {
   const parameter = new Parameter(parameterId) // will always overwrite the parameter
   const paramType = PARAMETER_TYPE[event.params.paramType]
   const paramComp = PARAMETER_COMPARISON[event.params.paramComp]
-  const compValue = event.params.compValue
+  const compValue = event.params.compValue // Can't be decode here, we do not have the required info (target ABI), must be done in frontend.
   parameter.owningFunction = functionId
   parameter.index = event.params.index.toI32()
   parameter.type = paramType

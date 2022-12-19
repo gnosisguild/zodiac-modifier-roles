@@ -46,7 +46,6 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
     onChange({ ...funcConditions, type, params: newConditions })
   }
 
-  // TODO: we need to prefill the current values (without it being added to the changes, since it's not a change)
   return (
     <>
       {func.inputs.map((param, index) => (
