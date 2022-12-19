@@ -280,7 +280,7 @@ library Permissions {
 
             checkExecutionOptions(value, operation, options);
 
-            if (isWildcarded == false) {
+            if (!isWildcarded) {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
             return;
@@ -1015,7 +1015,6 @@ library Permissions {
 
         return scopeConfig;
     }
-
 
     function unpackFunction(uint256 scopeConfig)
         internal
