@@ -538,7 +538,7 @@ library Permissions {
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    false       -> mark the function as not wildcarded
-         *    0           -> length
+         *    length      -> length
          * )
          */
         uint256 scopeConfig = packLeft(0, options, false, length);
