@@ -32,6 +32,7 @@ enum Clearance {
 struct TargetAddress {
     Clearance clearance;
     ExecutionOptions options;
+    uint32 epoch;
 }
 
 struct Role {
@@ -267,7 +268,7 @@ library Permissions {
 
         if (target.clearance == Clearance.Function) {
             uint256 scopeConfig = role.functions[
-                keyForFunctions(targetAddress, bytes4(data))
+                keyForFunctions(targetAddress, target.epoch, bytes4(data))
             ];
 
             if (scopeConfig == 0) {
@@ -406,7 +407,11 @@ library Permissions {
         address targetAddress,
         ExecutionOptions options
     ) external {
-        role.targets[targetAddress] = TargetAddress(Clearance.Target, options);
+        role.targets[targetAddress] = TargetAddress(
+            Clearance.Target,
+            options,
+            role.targets[targetAddress].epoch + 1
+        );
         emit AllowTarget(roleId, targetAddress, options);
     }
 
@@ -421,7 +426,8 @@ library Permissions {
     ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.None,
-            ExecutionOptions.None
+            ExecutionOptions.None,
+            role.targets[targetAddress].epoch + 1
         );
         emit RevokeTarget(roleId, targetAddress);
     }
@@ -437,7 +443,8 @@ library Permissions {
     ) external {
         role.targets[targetAddress] = TargetAddress(
             Clearance.Function,
-            ExecutionOptions.None
+            ExecutionOptions.None,
+            role.targets[targetAddress].epoch + 1
         );
         emit ScopeTarget(roleId, targetAddress);
     }
@@ -465,7 +472,7 @@ library Permissions {
          */
         uint256 scopeConfig = packLeft(0, options, true, 0);
         role.functions[
-            keyForFunctions(targetAddress, functionSig)
+            keyForFunctions(role, targetAddress, functionSig)
         ] = scopeConfig;
         emit ScopeAllowFunction(
             roleId,
@@ -487,7 +494,7 @@ library Permissions {
         address targetAddress,
         bytes4 functionSig
     ) external {
-        role.functions[keyForFunctions(targetAddress, functionSig)] = 0;
+        role.functions[keyForFunctions(role, targetAddress, functionSig)] = 0;
         emit ScopeRevokeFunction(roleId, targetAddress, functionSig, 0);
     }
 
@@ -554,7 +561,7 @@ library Permissions {
 
         //set scopeConfig
         role.functions[
-            keyForFunctions(targetAddress, functionSig)
+            keyForFunctions(role, targetAddress, functionSig)
         ] = scopeConfig;
 
         //set compValues
@@ -589,14 +596,11 @@ library Permissions {
         bytes4 functionSig,
         ExecutionOptions options
     ) external {
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        bytes32 key = keyForFunctions(role, targetAddress, functionSig);
 
-        //set scopeConfig
         uint256 scopeConfig = packOptions(role.functions[key], options);
 
-        role.functions[
-            keyForFunctions(targetAddress, functionSig)
-        ] = scopeConfig;
+        role.functions[key] = scopeConfig;
 
         emit ScopeFunctionExecutionOptions(
             roleId,
@@ -634,7 +638,7 @@ library Permissions {
         enforceCompValue(paramType, compValue);
 
         // set scopeConfig
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        bytes32 key = keyForFunctions(role, targetAddress, functionSig);
         uint256 scopeConfig = packParameter(
             role.functions[key],
             index,
@@ -691,7 +695,7 @@ library Permissions {
         }
 
         // set scopeConfig
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        bytes32 key = keyForFunctions(role, targetAddress, functionSig);
         uint256 scopeConfig = packParameter(
             role.functions[key],
             index,
@@ -740,7 +744,7 @@ library Permissions {
         }
 
         // set scopeConfig
-        bytes32 key = keyForFunctions(targetAddress, functionSig);
+        bytes32 key = keyForFunctions(role, targetAddress, functionSig);
         uint256 scopeConfig = packParameter(
             role.functions[key],
             index,
@@ -1052,12 +1056,25 @@ library Permissions {
         paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 2));
     }
 
-    function keyForFunctions(address targetAddress, bytes4 functionSig)
-        public
-        pure
-        returns (bytes32)
-    {
-        return bytes32(abi.encodePacked(targetAddress, functionSig));
+    function keyForFunctions(
+        address targetAddress,
+        uint32 epoch,
+        bytes4 functionSig
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(targetAddress, epoch, functionSig));
+    }
+
+    function keyForFunctions(
+        Role storage role,
+        address targetAddress,
+        bytes4 functionSig
+    ) public view returns (bytes32) {
+        return
+            keyForFunctions(
+                targetAddress,
+                role.targets[targetAddress].epoch,
+                functionSig
+            );
     }
 
     function keyForCompValues(
