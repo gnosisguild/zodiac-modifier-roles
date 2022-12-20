@@ -28,13 +28,16 @@
     "apply:ltd:eth:harvest": "hardhat encodeApplyPresetHarvest --safe LTD_ETH",
     "apply:santi:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe SANTI_TEST_GNO",
     "apply:santi:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe SANTI_TEST_ETH",
-    "pre-commit": "yarn fix"
+    "pre-commit": "yarn fix",
+    "prepare": "yarn eth-sdk"
   },
   "dependencies": {
     "ethers": "5.4.6",
     "ethers-multisend": "^2.1.1"
   },
   "devDependencies": {
+    "@dethcrypto/eth-sdk": "^0.3.3",
+    "@dethcrypto/eth-sdk-client": "^0.1.6",
     "@gnosis.pm/safe-core-sdk": "^2.1.0",
     "@gnosis.pm/safe-core-sdk-types": "^1.1.0",
     "@gnosis.pm/safe-ethers-lib": "^1.1.0",
