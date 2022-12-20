@@ -12,5 +12,5 @@
     "typeRoots": ["node_modules/@types"]
   },
   "include": ["./src", "./test"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts", "./src/presets/TupleScopings.ts"]
 }

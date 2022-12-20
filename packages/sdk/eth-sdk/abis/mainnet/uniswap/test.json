@@ -1,0 +1,162 @@
+[
+  {
+    "type": "function",
+    "name": "test1",
+    "constant": false,
+    "payable": false,
+    "inputs": [
+      {
+        "type": "tuple",
+        "name": "params",
+        "components": [
+          {
+            "type": "uint8[]",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint8",
+            "name": "deadline"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "amount0"
+      },
+      {
+        "type": "uint256",
+        "name": "amount1"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "test2",
+    "constant": false,
+    "payable": false,
+    "inputs": [
+      {
+        "type": "uint8[]",
+        "name": "tokenId"
+      },
+      {
+        "type": "tuple",
+        "name": "params",
+        "components": [
+          {
+            "type": "uint8",
+            "name": "deadline"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "amount0"
+      },
+      {
+        "type": "uint256",
+        "name": "amount1"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "test3",
+    "constant": false,
+    "payable": false,
+    "inputs": [
+      {
+        "type": "uint8[2]",
+        "name": "tokenId"
+      },
+      {
+        "type": "tuple",
+        "name": "params",
+        "components": [
+          {
+            "type": "uint8",
+            "name": "deadline"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "amount0"
+      },
+      {
+        "type": "uint256",
+        "name": "amount1"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "test4",
+    "constant": false,
+    "payable": false,
+    "inputs": [
+      {
+        "type": "tuple[]",
+        "name": "params",
+        "components": [
+          {
+            "type": "uint8",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint8",
+            "name": "deadline"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "amount0"
+      },
+      {
+        "type": "uint256",
+        "name": "amount1"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "test5",
+    "constant": false,
+    "payable": false,
+    "inputs": [
+      {
+        "type": "tuple[2]",
+        "name": "params",
+        "components": [
+          {
+            "type": "uint8",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint8",
+            "name": "deadline"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "amount0"
+      },
+      {
+        "type": "uint256",
+        "name": "amount1"
+      }
+    ]
+  }
+]
