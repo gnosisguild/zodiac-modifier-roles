@@ -1,27 +1,19 @@
 import { getMainnetSdk } from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
-import {
-  ExecutionOptions,
-  PresetFullyClearedTarget,
-  PresetFunction,
-} from "../types"
+import { PresetFullyClearedTarget, PresetFunction } from "../types"
 
+import { execOptions } from "./execOptions"
 import { scopeParam } from "./scopeParam"
-import { TupleScopings } from "./types"
+import { ExecutionOptions, TupleScopings } from "./types"
 
 const mainnetProvider = ethers.getDefaultProvider("mainnet")
 const defaultSigner = ethers.Wallet.createRandom().connect(mainnetProvider)
 
-interface CallOptions {
-  send?: boolean
-  delegatecall?: boolean
-}
-
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
 ) => void
-  ? [...params: TupleScopings<I>, options?: CallOptions]
+  ? [...params: TupleScopings<I>, options?: ExecutionOptions]
   : []
 
 const makeAllowFunction = <
@@ -38,7 +30,7 @@ const makeAllowFunction = <
   ): PresetFunction => {
     // last param is call options, everything before are param scopings
     const paramScopings = args.slice(0, functionInputs.length - 1) as any[]
-    const options = args[functionInputs.length] as CallOptions | undefined
+    const options = args[functionInputs.length] as ExecutionOptions | undefined
 
     return {
       targetAddress: contract.address,
@@ -56,7 +48,9 @@ const makeAllowFunction = <
 type AllowFunctions<C extends BaseContract, F extends C["functions"]> = {
   [key in keyof F]: (...args: MapParams<Parameters<F[key]>>) => PresetFunction
 }
-type AllowEntireContract = (options?: CallOptions) => PresetFullyClearedTarget
+type AllowEntireContract = (
+  options?: ExecutionOptions
+) => PresetFullyClearedTarget
 type AllowContract<C extends BaseContract> = AllowEntireContract &
   AllowFunctions<C, C["functions"]>
 
@@ -64,7 +58,7 @@ const makeAllowContract = <C extends BaseContract>(
   contract: C
 ): AllowContract<C> => {
   const allowEntireContract = (
-    options?: CallOptions
+    options?: ExecutionOptions
   ): PresetFullyClearedTarget => {
     return {
       targetAddress: contract.address,
@@ -108,10 +102,3 @@ export const allow = {
 }
 
 allow.mainnet.uniswap.nftPositions.mint({ amount0Desired: { oneOf: [1, 2] } })
-
-const execOptions = (options: CallOptions = {}): ExecutionOptions => {
-  if (options.send && options.delegatecall) return ExecutionOptions.Both
-  if (options.delegatecall) return ExecutionOptions.DelegateCall
-  if (options.send) return ExecutionOptions.Send
-  return ExecutionOptions.None
-}
