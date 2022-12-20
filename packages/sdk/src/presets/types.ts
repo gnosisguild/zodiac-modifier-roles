@@ -1,6 +1,11 @@
 import { BigNumberish } from "ethers"
 import { BytesLike } from "ethers/lib/utils"
 
+export interface ExecutionOptions {
+  send?: boolean
+  delegatecall?: boolean
+}
+
 export type ParamScoping<T> = T | { oneOf: T[] }
 
 export type ArrayParamScoping<T> =
