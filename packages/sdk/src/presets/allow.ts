@@ -1,4 +1,4 @@
-import { getMainnetSdk } from "@dethcrypto/eth-sdk-client"
+import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
 import { PresetFullyClearedTarget, PresetFunction } from "../types"
@@ -6,9 +6,6 @@ import { PresetFullyClearedTarget, PresetFunction } from "../types"
 import { execOptions } from "./execOptions"
 import { scopeParam } from "./scopeParam"
 import { ExecutionOptions, TupleScopings } from "./types"
-
-const mainnetProvider = ethers.getDefaultProvider("mainnet")
-const defaultSigner = ethers.Wallet.createRandom().connect(mainnetProvider)
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
@@ -86,19 +83,56 @@ type AllowKit<S extends EthSdk> = {
     : never
 }
 
-const mapSdkRecursive = <S extends EthSdk>(sdk: S): AllowKit<S> => {
+const mapSdk = <S extends EthSdk>(sdk: S): AllowKit<S> => {
   return Object.keys(sdk).reduce((acc, key) => {
+    // for this check to work reliably, make sure ethers node_modules is not duplicated
     if (sdk[key] instanceof BaseContract) {
       acc[key] = makeAllowContract(sdk[key] as BaseContract)
     } else {
-      acc[key] = mapSdkRecursive(sdk[key] as EthSdk)
+      acc[key] = mapSdk(sdk[key] as EthSdk)
     }
     return acc
   }, {} as any)
 }
 
-export const allow = {
-  mainnet: mapSdkRecursive(getMainnetSdk(defaultSigner)),
+const { getContract, ...sdkGetters } = ethSdk
+type SdkGetterName = keyof typeof sdkGetters
+type NetworkName<S extends SdkGetterName> = S extends `get${infer N}Sdk`
+  ? Uncapitalize<N>
+  : never
+
+type AllowKitMap = {
+  [Key in NetworkName<SdkGetterName>]: AllowKit<
+    ReturnType<typeof ethSdk[`get${Capitalize<Key>}Sdk`]>
+  >
 }
 
-allow.mainnet.uniswap.nftPositions.mint({ amount0Desired: { oneOf: [1, 2] } })
+const uncapitalize = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
+
+export const allow: AllowKitMap = Object.keys(sdkGetters).reduce(
+  (acc, sdkGetterName) => {
+    const network = uncapitalize(sdkGetterName.slice(3, -3))
+    acc[network] = mapSdk(
+      ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider(network))
+    )
+    return acc
+  },
+  {} as any
+)
+
+type ContractMap = {
+  [Key in NetworkName<SdkGetterName>]: ReturnType<
+    typeof ethSdk[`get${Capitalize<Key>}Sdk`]
+  >
+}
+
+export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
+  (acc, sdkGetterName) => {
+    const network = uncapitalize(sdkGetterName.slice(3, -3))
+    acc[network] = ethSdk[sdkGetterName as SdkGetterName](
+      ethers.getDefaultProvider(network)
+    )
+    return acc
+  },
+  {} as any
+)
