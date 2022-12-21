@@ -6,10 +6,18 @@ export interface ExecutionOptions {
   delegatecall?: boolean
 }
 
-type PrimitiveValue = BigNumberish | BytesLike | string | Boolean
-export type Placeholder<_T> = symbol
+type PrimitiveValue = BigNumberish | BytesLike | string | boolean
+export type Placeholder<T extends PrimitiveValue> = BigNumberish extends T
+  ? { bignumberish: symbol }
+  : BytesLike extends T
+  ? { byteslike: symbol }
+  : string extends T
+  ? { string: symbol }
+  : boolean extends T
+  ? { boolean: symbol }
+  : never
 
-type PrimitiveParamScoping<T> =
+type PrimitiveParamScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>
   | { oneOf: (T | Placeholder<T>)[] }
@@ -17,7 +25,7 @@ type PrimitiveParamScoping<T> =
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
-type ArrayParamScoping<T extends unknown[]> =
+type ArrayParamScoping<T extends PrimitiveValue[]> =
   | (ArrayElement<T> | Placeholder<ArrayElement<T>>)[]
   | { oneOf: (ArrayElement<T> | Placeholder<ArrayElement<T>>)[][] }
   | {
@@ -29,7 +37,7 @@ type ArrayParamScoping<T extends unknown[]> =
 export type TupleScopings<Params extends [...any[]]> = {
   [Index in keyof Params]?: Params[Index] extends PrimitiveValue
     ? PrimitiveParamScoping<Params[Index]>
-    : Params[Index] extends Array<any>
+    : Params[Index] extends PrimitiveValue[]
     ? ArrayParamScoping<Params[Index]>
     : StructScopings<Params[Index]>
 } // TODO what about fixed-length arrays/tuple params? What scoping options shall be available for them?
@@ -37,7 +45,7 @@ export type TupleScopings<Params extends [...any[]]> = {
 export type StructScopings<Struct extends { [key: string]: any }> = {
   [Key in keyof Struct]?: Struct[Key] extends PrimitiveValue
     ? PrimitiveParamScoping<Struct[Key]>
-    : Struct[Key] extends Array<any>
+    : Struct[Key] extends PrimitiveValue[]
     ? ArrayParamScoping<Struct[Key]>
     : StructScopings<Struct[Key]>
 }
@@ -46,6 +54,8 @@ export type ParamScoping<T> = T extends [...any[]]
   ? TupleScopings<any>
   : T extends { [key: string]: any }
   ? StructScopings<T>
-  : T extends unknown[]
+  : T extends PrimitiveValue[]
   ? ArrayParamScoping<T>
-  : PrimitiveParamScoping<T>
+  : T extends PrimitiveValue
+  ? PrimitiveParamScoping<T>
+  : never
