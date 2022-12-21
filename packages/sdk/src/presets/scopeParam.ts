@@ -7,20 +7,10 @@ import {
 } from "../types"
 
 import { subsetOf } from "./helpers/utils"
-import {
-  ArrayParamScoping,
-  ParamScoping,
-  StructScopings,
-  TupleScopings,
-} from "./types"
+import { ParamScoping, StructScopings, TupleScopings } from "./types"
 
 export const scopeParam = <T>(
-  paramScoping:
-    | ParamScoping<T>
-    | ArrayParamScoping<T>
-    | StructScopings<any>
-    | TupleScopings<any>
-    | undefined,
+  paramScoping: ParamScoping<T> | undefined,
   paramType: ParamType
 ): PresetScopeParam | undefined | (PresetScopeParam | undefined)[] => {
   if (!paramScoping) return undefined
@@ -64,22 +54,26 @@ export const scopeParam = <T>(
 
   console.log("paramType.format()", paramType.format())
 
-  if ("oneOf" in paramScoping) {
+  if (typeof paramScoping === "object" && "oneOf" in paramScoping) {
     return {
       comparison: Comparison.OneOf,
       type,
-      value: paramScoping.oneOf.map((v: any) =>
+      value: (paramScoping as any).oneOf.map((v: any) =>
         encodeValue(v, paramType.format())
       ),
     }
   }
 
-  if ("subsetOf" in paramScoping) {
+  if (typeof paramScoping === "object" && "subsetOf" in paramScoping) {
     if (type !== PresetScopeParamType.Dynamic32) {
       throw new Error("subsetOf only works for arrays")
     }
 
-    return subsetOf(paramScoping.subsetOf, paramType.format(), paramScoping)
+    return subsetOf(
+      (paramScoping as any).subsetOf,
+      paramType.format(),
+      paramScoping
+    )
   }
 
   return {
