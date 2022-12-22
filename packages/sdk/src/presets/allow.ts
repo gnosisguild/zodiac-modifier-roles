@@ -44,21 +44,20 @@ const makeAllowFunction = <
   }
 }
 
+export const EVERYTHING = Symbol("EVERYTHING")
 type AllowFunctions<C extends BaseContract> = {
   [key in keyof C["functions"]]: (
     ...args: MapParams<Parameters<C["functions"][key]>>
   ) => PresetFunction
 }
-type AllowEntireContract = (
-  options?: ExecutionOptions
-) => PresetFullyClearedTarget
-type AllowContract<C extends BaseContract> = AllowEntireContract &
-  AllowFunctions<C>
+type AllowContract<C extends BaseContract> = {
+  [EVERYTHING]: (options?: ExecutionOptions) => PresetFullyClearedTarget
+} & AllowFunctions<C>
 
 const makeAllowContract = <C extends BaseContract>(
   contract: C
 ): AllowContract<C> => {
-  const allowEntireContract = (
+  const allowEverything = (
     options?: ExecutionOptions
   ): PresetFullyClearedTarget => {
     return {
@@ -72,7 +71,7 @@ const makeAllowContract = <C extends BaseContract>(
     return acc
   }, {} as AllowFunctions<C>)
 
-  return Object.assign(allowEntireContract, allowFunctions)
+  return Object.assign(allowFunctions, { [EVERYTHING]: allowEverything })
 }
 
 type EthSdk = {
