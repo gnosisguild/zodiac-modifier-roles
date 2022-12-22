@@ -1053,7 +1053,7 @@ library Permissions {
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
-        public
+        internal
         pure
         returns (bytes32)
     {
@@ -1064,7 +1064,8 @@ library Permissions {
         address targetAddress,
         bytes4 functionSig,
         uint256 index
-    ) public pure returns (bytes32) {
+    ) internal pure returns (bytes32) {
+        assert(index <= type(uint8).max);
         return
             bytes32(abi.encodePacked(targetAddress, functionSig, uint8(index)));
     }
