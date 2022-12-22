@@ -20,9 +20,6 @@ contract Roles is Modifier {
     );
     event SetDefaultRole(address module, uint16 defaultRole);
 
-    /// `setUpModules` has already been called
-    error SetUpModulesAlreadyCalled();
-
     /// Arrays must be the same length
     error ArraysDifferentLength();
 
@@ -61,9 +58,7 @@ contract Roles is Modifier {
     }
 
     function setupModules() internal {
-        if (modules[SENTINEL_MODULES] != address(0)) {
-            revert SetUpModulesAlreadyCalled();
-        }
+        assert(modules[SENTINEL_MODULES] == address(0));
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
