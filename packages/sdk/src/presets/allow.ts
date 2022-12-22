@@ -27,10 +27,16 @@ const makeAllowFunction = <
   return (
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
-    // last param is call options, everything before are param scopings
-    const paramScopings = args.slice(0, functionInputs.length - 1) as any[]
+    const paramScopings = args.slice(0, functionInputs.length) as any[]
     const options = args[functionInputs.length] as ExecutionOptions | undefined
-
+    console.log(
+      functionFragment.format("sighash"),
+      paramScopings,
+      paramScopings.some(Boolean),
+      paramScopings.flatMap((ps, index) =>
+        scopeParam(ps, functionInputs[index])
+      )
+    )
     return {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
