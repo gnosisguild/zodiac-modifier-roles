@@ -20,10 +20,12 @@ const makeAllowFunction = <
   contract: C,
   name: N
 ) => {
-  const functionInputs = contract.interface.functions[name as string].inputs
-  const etherFunction = (contract.functions as C["functions"])[name]
+  const functionFragment = contract.interface.getFunction(name as string)
+  const functionInputs = functionFragment.inputs
+  const ethersFunction = contract.functions[name as string]
+
   return (
-    ...args: MapParams<Parameters<typeof etherFunction>>
+    ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
     // last param is call options, everything before are param scopings
     const paramScopings = args.slice(0, functionInputs.length - 1) as any[]
@@ -31,7 +33,7 @@ const makeAllowFunction = <
 
     return {
       targetAddress: contract.address,
-      signature: contract.interface.functions[name as string].format("sighash"),
+      signature: functionFragment.format("sighash"),
       options: execOptions(options),
       params: paramScopings.some(Boolean)
         ? paramScopings.flatMap((ps, index) =>
@@ -42,14 +44,16 @@ const makeAllowFunction = <
   }
 }
 
-type AllowFunctions<C extends BaseContract, F extends C["functions"]> = {
-  [key in keyof F]: (...args: MapParams<Parameters<F[key]>>) => PresetFunction
+type AllowFunctions<C extends BaseContract> = {
+  [key in keyof C["functions"]]: (
+    ...args: MapParams<Parameters<C["functions"][key]>>
+  ) => PresetFunction
 }
 type AllowEntireContract = (
   options?: ExecutionOptions
 ) => PresetFullyClearedTarget
 type AllowContract<C extends BaseContract> = AllowEntireContract &
-  AllowFunctions<C, C["functions"]>
+  AllowFunctions<C>
 
 const makeAllowContract = <C extends BaseContract>(
   contract: C
@@ -66,7 +70,7 @@ const makeAllowContract = <C extends BaseContract>(
   const allowFunctions = Object.keys(contract.functions).reduce((acc, key) => {
     acc[key as keyof C["functions"]] = makeAllowFunction(contract, key)
     return acc
-  }, {} as AllowFunctions<C, C["functions"]>)
+  }, {} as AllowFunctions<C>)
 
   return Object.assign(allowEntireContract, allowFunctions)
 }
@@ -96,6 +100,7 @@ const mapSdk = <S extends EthSdk>(sdk: S): AllowKit<S> => {
 }
 
 const { getContract, ...sdkGetters } = ethSdk
+export { sdkGetters as ethSdk }
 type SdkGetterName = keyof typeof sdkGetters
 type NetworkName<S extends SdkGetterName> = S extends `get${infer N}Sdk`
   ? Uncapitalize<N>
