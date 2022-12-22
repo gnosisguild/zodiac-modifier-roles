@@ -6,7 +6,7 @@ const ROCKET_DEPOSIT_POOL = "0x2cac916b2A963Bf162f076C0a8a4a8200BCFBfb4"
 export const allowRocketPool = (): PresetAllowEntry[] => {
   return [
     {
-      targetAddress: ROCKETDEPOSITPOOL,
+      targetAddress: ROCKET_DEPOSIT_POOL,
       signature: "deposit()",
       options: ExecutionOptions.Send,
     },

@@ -7,6 +7,7 @@ import {
 } from "../types"
 
 import { subsetOf } from "./helpers/utils"
+import { isPlaceholder } from "./placeholders"
 import { ParamScoping, StructScopings, TupleScopings } from "./types"
 
 export const scopeParam = <T>(
@@ -52,8 +53,6 @@ export const scopeParam = <T>(
       type = PresetScopeParamType.Static
   }
 
-  console.log("paramType.format()", paramType.format())
-
   if (typeof paramScoping === "object" && "oneOf" in paramScoping) {
     return {
       comparison: Comparison.OneOf,
@@ -84,6 +83,7 @@ export const scopeParam = <T>(
 }
 
 const solidityPackPadded = (type: string, value: any): string => {
+  console.log([type], [value])
   const packed = solidityPack([type], [value]).slice(2)
   const padded = packed.padStart(64, "0")
   return "0x" + padded
@@ -91,7 +91,7 @@ const solidityPackPadded = (type: string, value: any): string => {
 
 const encodeValue = (value: any, type: string): string | symbol => {
   let encodedValue = value
-  if (typeof value !== "symbol") {
+  if (!isPlaceholder(value)) {
     encodedValue = solidityPackPadded(type, value)
   }
   return encodedValue
