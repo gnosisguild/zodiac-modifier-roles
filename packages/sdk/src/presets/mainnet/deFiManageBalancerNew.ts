@@ -1,5 +1,5 @@
 import { RolePreset } from "../../types"
-import { allow, contracts } from "../allow"
+import { allow as allowMap, contracts } from "../allow"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { AVATAR_ADDRESS } from "../placeholders"
@@ -20,6 +20,8 @@ const IDLE_wstETH_AA_TRANCHE = "0x2688FC68c4eac90d9E5e1B94776cF14eADe8D877"
 const WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
 const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
+const allow = allowMap.mainnet
+
 const preset: RolePreset = {
   network: 1,
   allow: [
@@ -30,14 +32,14 @@ const preset: RolePreset = {
     //Staking of AAVE in Safety Module
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([AAVE], [stkAAVE]),
-    allow.mainnet.aave.stkAave.stake(AVATAR_ADDRESS),
-    allow.mainnet.aave.stkAave.claimRewards(AVATAR_ADDRESS),
+    allow.aave.stkAave.stake(AVATAR_ADDRESS),
+    allow.aave.stkAave.claimRewards(AVATAR_ADDRESS),
 
     //Initiates 10 days cooldown, till the 2 days unstaking window opens
-    allow.mainnet.aave.stkAave.cooldown(),
+    allow.aave.stkAave.cooldown(),
 
     //Unstakes, can only be called during the 2 days window after the 10 days cooldown
-    allow.mainnet.aave.stkAave.redeem(AVATAR_ADDRESS),
+    allow.aave.stkAave.redeem(AVATAR_ADDRESS),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - USDC
@@ -107,15 +109,12 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - Claiming of rewards
     //---------------------------------------------------------------------------------------------------------------------------------
-    allow.mainnet.compound.comptroller["claimComp(address,address[])"](
-      AVATAR_ADDRESS,
-      {
-        subsetOf: [cAAVE, cDAI, cUSDC]
-          .map((address) => address.toLowerCase())
-          .sort(), // compound app will always pass tokens in ascending order
-        restrictOrder: true,
-      }
-    ),
+    allow.compound.comptroller["claimComp(address,address[])"](AVATAR_ADDRESS, {
+      subsetOf: [cAAVE, cDAI, cUSDC]
+        .map((address) => address.toLowerCase())
+        .sort(), // compound app will always pass tokens in ascending order
+      restrictOrder: true,
+    }),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Idle - Deposit stETH and stake it on "Lido - stETH - Senior Tranche"
@@ -125,10 +124,10 @@ const preset: RolePreset = {
     ...allowErc20Approve([stETH], [contracts.mainnet.idle.stEthCdo.address]),
 
     //Deposit in AA tranche
-    allow.mainnet.idle.stEthCdo.depositAA(),
+    allow.idle.stEthCdo.depositAA(),
 
     //Withdraw from AA tranche
-    allow.mainnet.idle.stEthCdo.withdrawAA(),
+    allow.idle.stEthCdo.withdrawAA(),
 
     //Staking
     ...allowErc20Approve(
@@ -136,17 +135,17 @@ const preset: RolePreset = {
       [contracts.mainnet.idle.wstEthAaGauge.address]
     ),
     //Stake in AA gauge
-    allow.mainnet.idle.wstEthAaGauge["deposit(uint256)"](),
+    allow.idle.wstEthAaGauge["deposit(uint256)"](),
 
     //Withdraw from AA gauge
-    allow.mainnet.idle.wstEthAaGauge["withdraw(uint256)"](),
+    allow.idle.wstEthAaGauge["withdraw(uint256)"](),
 
     //Claiming of rewards
     //Claim LIDO
-    allow.mainnet.idle.wstEthAaGauge["claim_rewards()"](),
+    allow.idle.wstEthAaGauge["claim_rewards()"](),
 
     //Claim IDLE
-    allow.mainnet.idle.distributorProxy.distribute(
+    allow.idle.distributorProxy.distribute(
       contracts.mainnet.idle.wstEthAaGauge.address
     ),
 
@@ -160,25 +159,25 @@ const preset: RolePreset = {
     ),
 
     //Add liquidity
-    allow.mainnet.uniswap.nftPositions.mint({
+    allow.uniswap.nftPositions.mint({
       token0: WBTC,
       token1: WETH,
       fee: 3000,
       recipient: AVATAR_ADDRESS,
     }),
-    allow.mainnet.uniswap.nftPositions.refundETH({ send: true }),
+    allow.uniswap.nftPositions.refundETH({ send: true }),
 
     //Increase liquidity
-    allow.mainnet.uniswap.nftPositions.increaseLiquidity(undefined, {
+    allow.uniswap.nftPositions.increaseLiquidity(undefined, {
       send: true,
     }),
     //refundETH() is already whitelisted
 
     //Remove liquidity
-    allow.mainnet.uniswap.nftPositions.decreaseLiquidity(),
-    allow.mainnet.uniswap.nftPositions.collect({ recipient: ZERO }),
-    allow.mainnet.uniswap.nftPositions.unwrapWETH9(undefined, AVATAR_ADDRESS),
-    allow.mainnet.uniswap.nftPositions.sweepToken(WBTC),
+    allow.uniswap.nftPositions.decreaseLiquidity(),
+    allow.uniswap.nftPositions.collect({ recipient: ZERO }),
+    allow.uniswap.nftPositions.unwrapWETH9(undefined, AVATAR_ADDRESS),
+    allow.uniswap.nftPositions.sweepToken(WBTC),
 
     //Unwrapping of WETH
     {
@@ -187,4 +186,7 @@ const preset: RolePreset = {
     },
   ],
 }
+
+console.log("new", JSON.stringify(preset))
+
 export default preset
