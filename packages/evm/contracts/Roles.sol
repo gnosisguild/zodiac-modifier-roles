@@ -26,9 +26,6 @@ contract Roles is Modifier {
     /// Arrays must be the same length
     error ArraysDifferentLength();
 
-    /// Sender is not a member of the role
-    error NoMembership();
-
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
 
