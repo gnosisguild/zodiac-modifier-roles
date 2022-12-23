@@ -1,5 +1,7 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
+import { resolvePlaceholderValue } from "./presets/placeholders"
+import { PlaceholderValues } from "./presets/types"
 import {
   Clearance,
   ExecutionOptions,
@@ -14,7 +16,7 @@ import {
 // Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
 const fillPreset = (
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>
+  placeholderValues: PlaceholderValues
 ): RolePermissions => {
   preset = mergeFunctionEntries(preset)
 
@@ -68,7 +70,7 @@ const functionSighash = (signature: string): string =>
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>
+  placeholderValues: PlaceholderValues
 ) => ({
   ...preset,
   allow: preset.allow.map((entry) => ({
@@ -95,18 +97,10 @@ const processParams = (
 
 const fillPlaceholderValues = (
   value: PresetScopeParam["value"],
-  placeholderValues: Record<symbol, string>
+  placeholderValues: PlaceholderValues
 ) => {
-  const mapValue = (value: PresetScopeParam["value"]) => {
-    if (typeof value === "symbol") {
-      if (!placeholderValues[value]) {
-        throw new Error(`Missing placeholder value for ${String(value)}`)
-      }
-      return placeholderValues[value]
-    } else {
-      return value as string
-    }
-  }
+  const mapValue = (valueOrPlaceholder: PresetScopeParam["value"]) =>
+    resolvePlaceholderValue(valueOrPlaceholder, placeholderValues)
 
   return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
 }

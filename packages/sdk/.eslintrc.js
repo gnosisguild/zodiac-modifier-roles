@@ -31,7 +31,7 @@ module.exports = {
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/no-unused-vars": [
-      "error",
+      "warn",
       {
         vars: "all",
         args: "after-used",

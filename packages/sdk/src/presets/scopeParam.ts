@@ -8,7 +8,12 @@ import {
 
 import { subsetOf } from "./helpers/utils"
 import { isPlaceholder } from "./placeholders"
-import { ParamScoping, StructScopings, TupleScopings } from "./types"
+import {
+  ParamScoping,
+  Placeholder,
+  StructScopings,
+  TupleScopings,
+} from "./types"
 
 export const scopeParam = <T>(
   paramScoping: ParamScoping<T> | undefined,
@@ -83,13 +88,12 @@ export const scopeParam = <T>(
 }
 
 const solidityPackPadded = (type: string, value: any): string => {
-  console.log([type], [value])
   const packed = solidityPack([type], [value]).slice(2)
   const padded = packed.padStart(64, "0")
   return "0x" + padded
 }
 
-const encodeValue = (value: any, type: string): string | symbol => {
+const encodeValue = (value: any, type: string): string | Placeholder<any> => {
   let encodedValue = value
   if (!isPlaceholder(value)) {
     encodedValue = solidityPackPadded(type, value)

@@ -1,19 +1,7 @@
 import { BigNumberish, BytesLike } from "ethers/lib/ethers"
 
-import { Placeholder } from "./types"
+import { Placeholder, PlaceholderValues } from "./types"
 
-// legacy placeholder format
-export const AVATAR_ADDRESS_PLACEHOLDER = Symbol("AVATAR_ADDRESS_PLACEHOLDER")
-
-export const OMNI_BRIDGE_DATA_PLACEHOLDER = Symbol(
-  "OMNI_BRIDGE_DATA_PLACEHOLDER"
-)
-
-export const OMNI_BRIDGE_RECEIVER_PLACEHOLDER = Symbol(
-  "OMNI_BRIDGE_RECEIVER_PLACEHOLDER"
-)
-
-// new placeholder format
 export const AVATAR_ADDRESS = {
   string: Symbol("AVATAR_ADDRESS"),
 }
@@ -45,6 +33,28 @@ export const isPlaceholder = (
   isStringPlaceholder(value) ||
   isBooleanPlaceholder(value)
 
-// | BytesLike | string | boolean =>
-//   typeof value === "object" &&
-//   (value.string || value.byteslike || value.bignumberis)
+export const resolvePlaceholderValue = (
+  value: any,
+  placeholderValues: PlaceholderValues
+): string => {
+  let key: symbol
+  if (isBigNumberishPlaceholder(value)) {
+    key = value.bignumberish
+  } else if (isBytesLikePlaceholder(value)) {
+    key = value.byteslike
+  } else if (isStringPlaceholder(value)) {
+    key = value.string
+  } else if (isBooleanPlaceholder(value)) {
+    key = value.boolean
+  } else {
+    // not a placeholder bit a regular value, just return it
+    return value
+  }
+
+  const result = placeholderValues[key]
+  if (!result) {
+    throw new Error(`Placeholder value for ${String(key)} not found`)
+  }
+
+  return result
+}

@@ -14,11 +14,7 @@ import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../src/presets/placeholders"
+import * as placeholders from "../src/presets/placeholders"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
@@ -251,15 +247,15 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
 })
 
 const fillPlaceholders = (config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]) => ({
-  [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+  [placeholders.AVATAR_ADDRESS.string]: defaultAbiCoder.encode(
     ["address"],
     [config.AVATAR]
   ),
-  [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+  [placeholders.OMNI_BRIDGE_DATA.byteslike]: defaultAbiCoder.encode(
     ["bytes"],
     [config.BRIDGED_SAFE]
   ),
-  [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+  [placeholders.OMNI_BRIDGE_RECEIVER.string]: defaultAbiCoder.encode(
     ["address"],
     [config.BRIDGED_SAFE]
   ),

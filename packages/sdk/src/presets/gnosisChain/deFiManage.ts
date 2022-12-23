@@ -5,10 +5,7 @@ import {
   forAllTargetAddresses,
   staticEqual,
 } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR_ADDRESS, OMNI_BRIDGE_DATA } from "../placeholders"
 
 import {
   CURVE_x3CRV_GAUGE,
@@ -102,7 +99,7 @@ const preset: RolePreset = {
       targetAddress: OMNI_BRIDGE,
       signature: "transferAndCall(address,uint256,bytes)",
       params: {
-        [2]: dynamicEqual(OMNI_BRIDGE_DATA_PLACEHOLDER),
+        [2]: dynamicEqual(OMNI_BRIDGE_DATA),
       },
     },
     // <-- OmniBridge
@@ -114,14 +111,14 @@ const preset: RolePreset = {
         signature:
           "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
         params: {
-          [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+          [6]: staticEqual(AVATAR_ADDRESS), // ensure LP tokens are sent to Avatar
         },
       },
       {
         signature:
           "addLiquidityETH(address,address,uint256,uint256,uint256,uint256,address,uint256)",
         params: {
-          [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure LP tokens are sent to Avatar
+          [6]: staticEqual(AVATAR_ADDRESS), // ensure LP tokens are sent to Avatar
         },
         options: ExecutionOptions.Send,
       },
@@ -129,14 +126,14 @@ const preset: RolePreset = {
         signature:
           "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
         params: {
-          [5]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+          [5]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
         },
       },
       {
         signature:
           "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
         params: {
-          [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+          [4]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
         },
       },
     ]),
@@ -154,7 +151,7 @@ const preset: RolePreset = {
         "removeLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
       targetAddress: UNI_V2_ROUTERS["Elk Router"],
       params: {
-        [4]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure tokens are sent to Avatar
+        [4]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
       },
     },
     { signature: "stake(uint256)", targetAddress: ELK_FARMING_REWARDS },
@@ -185,13 +182,13 @@ const preset: RolePreset = {
     {
       signature: "deposit(uint256,uint256,address)",
       targetAddress: SUSHISWAP_MINI_CHEF,
-      params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [2]: staticEqual(AVATAR_ADDRESS) },
     },
 
     {
       targetAddress: SUSHISWAP_MINI_CHEF,
       signature: "withdrawAndHarvest(uint256,uint256,address)",
-      params: { [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [2]: staticEqual(AVATAR_ADDRESS) },
     },
     // <-- SushiSwap
 
@@ -237,14 +234,14 @@ const preset: RolePreset = {
       signature: "remove_liquidity(address,uint256,uint256[4],address)",
       targetAddress: CURVE.DepositContract,
       params: {
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR_ADDRESS),
       },
     },
     {
       signature: "remove_liquidity_one_coin(address,uint256,int128,uint256)",
       targetAddress: CURVE.DepositContract,
       params: {
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR_ADDRESS),
       },
     },
     // <-- Curve
@@ -263,7 +260,7 @@ const preset: RolePreset = {
       },
       {
         signature: "exit(address)",
-        params: [staticEqual(AVATAR_ADDRESS_PLACEHOLDER)],
+        params: [staticEqual(AVATAR_ADDRESS)],
       },
     ]),
 
