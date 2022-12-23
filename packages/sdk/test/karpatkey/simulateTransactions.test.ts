@@ -8,12 +8,8 @@ import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarv
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import balancerManagePreset from "../../src/presets/mainnet/deFiManageBalancer"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
+import balancerManagePreset from "../../src/presets/mainnet/deFiManageBalancerNew"
+import * as placeholders from "../../src/presets/placeholders"
 import { RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
@@ -81,15 +77,15 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       ROLE_ID,
       preset,
       {
-        [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+        [placeholders.AVATAR_ADDRESS.string]: defaultAbiCoder.encode(
           ["address"],
           [config.AVATAR]
         ),
-        [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+        [placeholders.OMNI_BRIDGE_DATA.byteslike]: defaultAbiCoder.encode(
           ["bytes"],
           [config.BRIDGED_SAFE]
         ),
-        [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+        [placeholders.OMNI_BRIDGE_RECEIVER.string]: defaultAbiCoder.encode(
           ["address"],
           [config.BRIDGED_SAFE]
         ),

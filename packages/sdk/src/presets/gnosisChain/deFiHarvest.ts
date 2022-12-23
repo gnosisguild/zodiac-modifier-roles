@@ -1,6 +1,6 @@
 import { RolePreset } from "../../types"
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { AVATAR_ADDRESS } from "../placeholders"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,
@@ -18,7 +18,7 @@ const preset: RolePreset = {
     ...forAllTargetAddresses([SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF], {
       signature: "harvest(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
+        [1]: staticEqual(AVATAR_ADDRESS), // ensure rewards are sent to Avatar
       },
     }),
 
@@ -27,7 +27,7 @@ const preset: RolePreset = {
       {
         signature: "claim_rewards(address)",
         params: {
-          [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
+          [0]: staticEqual(AVATAR_ADDRESS), // ensure rewards are sent to Avatar
         },
       }
     ),

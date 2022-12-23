@@ -1,6 +1,4 @@
-import { BigNumberish } from "ethers"
-
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./presets/placeholders"
+import { Placeholder } from "./presets/types"
 import SUBGRAPH from "./subgraph"
 
 export type NetworkId = keyof typeof SUBGRAPH
@@ -76,7 +74,7 @@ export type PresetFunction = ({ sighash: string } | { signature: string }) & {
 
 export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
-type ComparisonValue = string | symbol
+type ComparisonValue = string | Placeholder<any>
 export interface PresetScopeParam {
   type: ParameterType
   comparison: Comparison

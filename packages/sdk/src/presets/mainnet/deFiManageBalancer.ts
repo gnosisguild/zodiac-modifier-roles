@@ -3,10 +3,7 @@ import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { dynamic32Equal, staticEqual, subsetOf } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 //Tokens
@@ -59,14 +56,14 @@ const preset: RolePreset = {
       targetAddress: stkAAVE,
       signature: "stake(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR_ADDRESS),
       },
     },
     {
       targetAddress: stkAAVE,
       signature: "claimRewards(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR_ADDRESS),
       },
     },
 
@@ -81,7 +78,7 @@ const preset: RolePreset = {
       targetAddress: stkAAVE,
       signature: "redeem(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR_ADDRESS),
       },
     },
 
@@ -157,7 +154,7 @@ const preset: RolePreset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR_ADDRESS),
         [1]: subsetOf(
           [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -229,7 +226,7 @@ const preset: RolePreset = {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(AVATAR_ADDRESS),
       },
     },
     {
@@ -268,7 +265,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "unwrapWETH9(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR_ADDRESS),
       },
     },
     {
@@ -286,4 +283,7 @@ const preset: RolePreset = {
     },
   ],
 }
+
+console.log("old", JSON.stringify(preset))
+
 export default preset

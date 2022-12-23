@@ -3,10 +3,7 @@ import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { staticEqual } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
 
 const preset: RolePreset = {
   network: 1,

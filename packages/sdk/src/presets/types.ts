@@ -17,6 +17,10 @@ export type Placeholder<T extends PrimitiveValue> = BigNumberish extends T
   ? { boolean: symbol }
   : never
 
+export type PlaceholderValues = {
+  [key: symbol]: string
+}
+
 type PrimitiveParamScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>

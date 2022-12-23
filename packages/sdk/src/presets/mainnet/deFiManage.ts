@@ -3,10 +3,7 @@ import { allowAuraPool } from "../helpers/aura"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
@@ -59,7 +56,7 @@ const preset: RolePreset = {
     {
       targetAddress: AURA_LOCKER,
       signature: "lock(address,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR_ADDRESS) },
     },
     {
       targetAddress: AURA_BOOSTER,
@@ -84,8 +81,8 @@ const preset: RolePreset = {
       signature:
         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR_ADDRESS),
+        [2]: staticEqual(AVATAR_ADDRESS),
       },
       options: ExecutionOptions.Send,
     },
@@ -104,7 +101,7 @@ const preset: RolePreset = {
     {
       targetAddress: CONVEX_LOCKER,
       signature: "lock(address,uint256,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR_ADDRESS) },
     },
     {
       targetAddress: CONVEX_LOCKER,
@@ -151,7 +148,7 @@ const preset: RolePreset = {
       targetAddress: OMNI_BRIDGE,
       signature: "relayTokens(address,address,uint256)",
       params: {
-        [1]: staticEqual(OMNI_BRIDGE_RECEIVER_PLACEHOLDER),
+        [1]: staticEqual(OMNI_BRIDGE_RECEIVER),
       },
     },
   ],

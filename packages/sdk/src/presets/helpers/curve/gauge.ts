@@ -1,5 +1,5 @@
 import { PresetAllowEntry } from "../../../types"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
+import { AVATAR_ADDRESS } from "../../placeholders"
 import { allowErc20Approve } from "../erc20"
 import { staticEqual } from "../utils"
 
@@ -23,7 +23,7 @@ export const allowGauge = (pool: Pool) => {
     {
       targetAddress: CRV_MINTER_ADDRESS,
       signature: "mint(address)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR_ADDRESS) },
     },
   ]
 
@@ -31,7 +31,7 @@ export const allowGauge = (pool: Pool) => {
     result.push({
       targetAddress: pool.gauge.address,
       signature: "claim_rewards(address)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR_ADDRESS) },
     })
   }
 

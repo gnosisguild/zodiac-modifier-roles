@@ -22,6 +22,7 @@ import fetchPermissions from "./fetchPermissions"
 import fillPreset from "./fillPreset"
 import logCall from "./logCall"
 import patchPermissions from "./patchPermissions"
+import { PlaceholderValues } from "./presets/types"
 import SAFE_TX_SERVICE from "./safeTxService"
 import { RolePermissions, RolePreset, NetworkId } from "./types"
 
@@ -48,7 +49,7 @@ export const applyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  placeholderValues: PlaceholderValues,
   options: {
     safeAddress: string
     signer: Signer
@@ -134,7 +135,7 @@ export const encodeApplyPreset = async (
   address: string,
   roleId: number,
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  placeholderValues: PlaceholderValues,
   options: {
     network: NetworkId
     currentPermissions?: RolePermissions
@@ -172,7 +173,7 @@ export const encodeApplyPresetMultisend = async (
   address: string,
   roleId: number,
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  placeholderValues: PlaceholderValues,
   options: {
     network: NetworkId
     multiSendAddress?: string
@@ -222,7 +223,7 @@ export const encodeApplyPresetTxBuilder = async (
   address: string,
   roleId: number,
   preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  placeholderValues: PlaceholderValues,
   options: {
     network: NetworkId
     currentPermissions?: RolePermissions
