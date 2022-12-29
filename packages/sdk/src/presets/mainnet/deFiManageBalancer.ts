@@ -185,7 +185,6 @@ const preset: RolePreset = {
       targetAddress: cAAVE,
       signature: "redeemUnderlying(uint256)",
     },
-    //Claiming of rewards
 
     //We are not allowing to include it as collateral
 
@@ -462,7 +461,6 @@ const preset: RolePreset = {
       options: ExecutionOptions.Send,
     },
 
-    //CHECK WITH JAN: address[] should be [rETH2,SWISE], is dynamic32Equal OK?
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
