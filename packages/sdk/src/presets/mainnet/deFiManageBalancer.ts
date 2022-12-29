@@ -262,7 +262,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
-        "mint(address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256)",
+        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
       options: ExecutionOptions.Send,
       params: {
         [0]: staticEqual(WBTC, "address"),
@@ -282,7 +282,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
-        "increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+        "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
       options: ExecutionOptions.Send,
     },
     */
@@ -299,11 +299,11 @@ const preset: RolePreset = {
     //Remove liquidity
     {
       targetAddress: UV3_NFT_POSITIONS,
-      signature: "decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+      signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
     },
     {
       targetAddress: UV3_NFT_POSITIONS,
-      signature: "collect(uint256,address,uint128,uint128)",
+      signature: "collect((uint256,address,uint128,uint128))",
       params: {
         [1]: staticEqual(ZERO, "address"),
       },
@@ -459,6 +459,7 @@ const preset: RolePreset = {
     {
       targetAddress: STAKEWISE_ETH2_STAKING,
       signature: "stake()",
+      options: ExecutionOptions.Send,
     },
 
     //CHECK WITH JAN: address[] should be [rETH2,SWISE], is dynamic32Equal OK?
@@ -476,7 +477,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_ROUTER,
       signature:
-        "exactInputSingle(address,address,uint24,address,uint256,uint256,uint256,uint160)",
+        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(rETH2, "address"),
         [1]: staticEqual(sETH2, "address"),
@@ -495,7 +496,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
-        "mint(address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256)",
+        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
       options: ExecutionOptions.Send,
       params: {
         [0]: staticEqual(WETH, "address"),
@@ -515,7 +516,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
-        "increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+        "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
       options: ExecutionOptions.Send,
     },
     */
@@ -535,11 +536,11 @@ const preset: RolePreset = {
     /*
     {
       targetAddress: UV3_NFT_POSITIONS,
-      signature: "decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+      signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
     },
     {
       targetAddress: UV3_NFT_POSITIONS,
-      signature: "collect(uint256,address,uint128,uint128)",
+      signature: "collect((uint256,address,uint128,uint128))",
       params: {
         [1]: staticEqual(ZERO, "address"),
       },
@@ -670,6 +671,8 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Swapping of rewards COMP, AAVE, rETH2, SWISE and sETH2 in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
+
+    ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
 
     //Swapping of COMP for USDC
     {
