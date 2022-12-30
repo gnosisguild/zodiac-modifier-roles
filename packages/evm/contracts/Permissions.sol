@@ -195,10 +195,10 @@ library Permissions {
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
     /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
     /// @param role Role to check for.
-    function checkMultisendTransaction(Role storage role, bytes memory data)
-        internal
-        view
-    {
+    function checkMultisendTransaction(
+        Role storage role,
+        bytes memory data
+    ) internal view {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -379,10 +379,10 @@ library Permissions {
     /// @dev Will revert if a transaction has a parameter value that is not allowed in an allowlist.
     /// @param compValue array of allowed params.
     /// @param value the param to be compared against the allowlist.
-    function compareOneOf(bytes32[] storage compValue, bytes32 value)
-        internal
-        view
-    {
+    function compareOneOf(
+        bytes32[] storage compValue,
+        bytes32 value
+    ) internal view {
         for (uint256 i = 0; i < compValue.length; i++) {
             if (value == compValue[i]) return;
         }
@@ -762,10 +762,10 @@ library Permissions {
     /// @dev Internal function that enforces a comparison type is valid.
     /// @param paramType provides information about the type of parameter.
     /// @param paramComp the type of comparison for each parameter.
-    function enforceComp(ParameterType paramType, Comparison paramComp)
-        internal
-        pure
-    {
+    function enforceComp(
+        ParameterType paramType,
+        Comparison paramComp
+    ) internal pure {
         if (paramComp == Comparison.OneOf) {
             revert UnsuitableOneOfComparison();
         }
@@ -781,10 +781,10 @@ library Permissions {
     /// @dev Internal function that enforces a param type is valid.
     /// @param paramType provides information about the type of parameter.
     /// @param compValue the value to compare a param against.
-    function enforceCompValue(ParameterType paramType, bytes calldata compValue)
-        internal
-        pure
-    {
+    function enforceCompValue(
+        ParameterType paramType,
+        bytes calldata compValue
+    ) internal pure {
         if (paramType == ParameterType.Static && compValue.length != 32) {
             revert UnsuitableStaticCompValueSize();
         }
@@ -880,11 +880,10 @@ library Permissions {
     /// @dev Helper function grab a specific static parameter from data blob.
     /// @param data the parameter data blob.
     /// @param index position of the parameter in the data.
-    function pluckStaticValue(bytes memory data, uint256 index)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function pluckStaticValue(
+        bytes memory data,
+        uint256 index
+    ) internal pure returns (bytes32) {
         // pre-check: is there a word available for the current parameter at argumentsBlock?
         if (data.length < 4 + index * 32 + 32) {
             revert CalldataOutOfBounds();
@@ -935,11 +934,10 @@ library Permissions {
             );
     }
 
-    function packOptions(uint256 scopeConfig, ExecutionOptions options)
-        internal
-        pure
-        returns (uint256)
-    {
+    function packOptions(
+        uint256 scopeConfig,
+        ExecutionOptions options
+    ) internal pure returns (uint256) {
         uint256 optionsMask = 3 << 254;
 
         scopeConfig &= ~optionsMask;
@@ -1016,14 +1014,12 @@ library Permissions {
         return scopeConfig;
     }
 
-    function unpackFunction(uint256 scopeConfig)
+    function unpackFunction(
+        uint256 scopeConfig
+    )
         internal
         pure
-        returns (
-            ExecutionOptions options,
-            bool isWildcarded,
-            uint256 length
-        )
+        returns (ExecutionOptions options, bool isWildcarded, uint256 length)
     {
         uint256 isWildcardedMask = 1 << 253;
 
@@ -1032,14 +1028,13 @@ library Permissions {
         length = (scopeConfig << 8) >> 248;
     }
 
-    function unpackParameter(uint256 scopeConfig, uint256 index)
+    function unpackParameter(
+        uint256 scopeConfig,
+        uint256 index
+    )
         internal
         pure
-        returns (
-            bool isScoped,
-            ParameterType paramType,
-            Comparison paramComp
-        )
+        returns (bool isScoped, ParameterType paramType, Comparison paramComp)
     {
         uint256 isScopedMask = 1 << (index + 96 + 96);
         uint256 paramTypeMask = 3 << (index * 2 + 96);
@@ -1052,11 +1047,10 @@ library Permissions {
         paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 2));
     }
 
-    function keyForFunctions(address targetAddress, bytes4 functionSig)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function keyForFunctions(
+        address targetAddress,
+        bytes4 functionSig
+    ) internal pure returns (bytes32) {
         return bytes32(abi.encodePacked(targetAddress, functionSig));
     }
 

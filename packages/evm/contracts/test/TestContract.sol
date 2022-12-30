@@ -76,11 +76,7 @@ contract TestContract {
         emit FnWithTwoMixedParams(a, s);
     }
 
-    function fnWithThreeParams(
-        uint256 a,
-        uint256 b,
-        uint256 c
-    ) public {
+    function fnWithThreeParams(uint256 a, uint256 b, uint256 c) public {
         emit FnWithThreeParams(a, b, c);
     }
 
@@ -92,9 +88,10 @@ contract TestContract {
         emit EmitTheSender(msg.sender);
     }
 
-    function dynamicDynamic32(string calldata first, bytes2[] calldata second)
-        public
-    {
+    function dynamicDynamic32(
+        string calldata first,
+        bytes2[] calldata second
+    ) public {
         emit DynamicDynamic32(first, second);
     }
 
