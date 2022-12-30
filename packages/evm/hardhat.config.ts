@@ -50,13 +50,26 @@ const config: HardhatUserConfig = {
     sources: "contracts",
   },
   solidity: {
-    compilers: [{ version: "0.8.6" }, { version: "0.6.12" }],
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 1,
+    compilers: [
+      {
+        version: "0.8.17",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
       },
-    },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
+      },
+    ],
   },
   networks: {
     hardhat: {
