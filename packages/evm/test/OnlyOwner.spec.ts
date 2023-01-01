@@ -232,57 +232,6 @@ describe("OnlyOwner", async () => {
     ).to.not.be.reverted;
   });
 
-  it("onlyOwner for scopeParameter, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .scopeParameter(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          0,
-          TYPE_DYNAMIC,
-          0,
-          "0x"
-        )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(janeDoe)
-        .scopeParameter(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          0,
-          TYPE_DYNAMIC,
-          0,
-          "0x"
-        )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeParameter(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          0,
-          TYPE_DYNAMIC,
-          0,
-          "0x"
-        )
-    ).to.not.be.reverted;
-  });
   it("onlyOwner for scopeParameterAsOneOf, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
@@ -329,33 +278,6 @@ describe("OnlyOwner", async () => {
           TYPE_DYNAMIC,
           ["0x12", "0x23"]
         )
-    ).to.not.be.reverted;
-  });
-  it("onlyOwner for unscopeParameter, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 0)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(janeDoe)
-        .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 0)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(owner)
-        .unscopeParameter(ROLE_ID, testContract.address, SELECTOR, 0)
     ).to.not.be.reverted;
   });
 });

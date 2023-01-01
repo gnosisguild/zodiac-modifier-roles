@@ -133,75 +133,6 @@ abstract contract ScopeSetBuilder is Modifier {
         }
     }
 
-    /// @dev Sets whether or not delegate calls and/or eth can be sent to a function on a scoped target.
-    /// @notice Only callable by owner.
-    /// @notice Only in play when target is scoped.
-    /// @param scopeSetId ScopeSet to augment.
-    /// @param selector Function signature on which the ExecutionOptions are to be set.
-    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
-    function scopeFunctionExecutionOptions_(
-        uint16 scopeSetId,
-        bytes4 selector,
-        ExecutionOptions options
-    ) public onlyOwner {
-        ScopeSet storage scopeSet = scopeSets[scopeSetId];
-        if (!scopeSet.created) {
-            scopeSet.created = true;
-        }
-
-        //set fnConfig
-        uint256 fnConfig = FunctionConfig.packOptions(
-            scopeSet.functions[selector],
-            options
-        );
-
-        scopeSet.functions[selector] = fnConfig;
-    }
-
-    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param scopeSetId ScopeSet to augment.
-    /// @param selector Function signature to be scoped.
-    /// @param index The index of the parameter to scope.
-    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan, depending on comparison type.
-    /// @param compValue The reference value used while comparing and authorizing.
-    function scopeParameter_(
-        uint16 scopeSetId,
-        bytes4 selector,
-        uint256 index,
-        ParameterType paramType,
-        Comparison paramComp,
-        bytes calldata compValue
-    ) public onlyOwner {
-        if (index >= SCOPE_MAX_PARAMS) {
-            revert ScopeMaxParametersExceeded();
-        }
-
-        enforceComp(paramType, paramComp);
-        enforceCompValue(paramType, compValue);
-
-        ScopeSet storage scopeSet = scopeSets[scopeSetId];
-        if (!scopeSet.created) {
-            scopeSet.created = true;
-        }
-
-        // set fnConfig
-        uint256 fnConfig = FunctionConfig.packParameter(
-            scopeSet.functions[selector],
-            index,
-            true, // isScoped
-            paramType,
-            paramComp
-        );
-        scopeSet.functions[selector] = fnConfig;
-
-        // set compValue
-        scopeSet.compValues[
-            keyForCompValues(selector, index)
-        ] = compressCompValue(paramType, compValue);
-    }
-
     /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
     /// @notice Only callable by owner.
     /// @notice Parameter will be scoped with comparison type OneOf.
@@ -253,36 +184,6 @@ abstract contract ScopeSetBuilder is Modifier {
                 compValues[i]
             );
         }
-    }
-
-    /// @dev Un-scopes a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param scopeSetId ScopeSet to augment.
-    /// @param selector Function signature to be scoped.
-    /// @param index The index of the parameter to un-scope.
-    function unscopeParameter_(
-        uint16 scopeSetId,
-        bytes4 selector,
-        uint8 index
-    ) public onlyOwner {
-        if (index >= SCOPE_MAX_PARAMS) {
-            revert ScopeMaxParametersExceeded();
-        }
-
-        ScopeSet storage scopeSet = scopeSets[scopeSetId];
-        if (!scopeSet.created) {
-            scopeSet.created = true;
-        }
-
-        // set scopeConfig
-        uint256 fnConfig = FunctionConfig.packParameter(
-            scopeSet.functions[selector],
-            index,
-            false, // isScoped
-            ParameterType(0),
-            Comparison(0)
-        );
-        scopeSet.functions[selector] = fnConfig;
     }
 
     /// @dev Internal function that enforces a comparison type is valid.
