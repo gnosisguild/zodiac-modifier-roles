@@ -35,14 +35,7 @@ describe("Scoping", async () => {
 
     const [owner, invoker] = waffle.provider.getWallets();
 
-    const Permissions = await hre.ethers.getContractFactory("Permissions");
-    const permissions = await Permissions.deploy();
-    const Modifier = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Permissions: permissions.address,
-      },
-    });
-
+    const Modifier = await hre.ethers.getContractFactory("Roles");
     const modifier = await Modifier.deploy(
       owner.address,
       base.avatar.address,
