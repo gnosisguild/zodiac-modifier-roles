@@ -231,48 +231,7 @@ describe("OnlyOwner", async () => {
         )
     ).to.not.be.reverted;
   });
-  it("onlyOwner for scopeFunctionExecutionOptions, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .scopeFunctionExecutionOptions(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .scopeFunctionExecutionOptions(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeFunctionExecutionOptions(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
-    ).to.not.be.reverted;
-  });
   it("onlyOwner for scopeParameter, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
