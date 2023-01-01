@@ -7,6 +7,13 @@ import "./ScopeSetBuilder.sol";
 import "./FunctionConfig.sol";
 import "./Types.sol";
 
+struct ParamConfig {
+    ParameterType _type;
+    Comparison comp;
+    bytes compValue;
+    bytes[] compValues;
+}
+
 abstract contract PermissionBuilder is ScopeSetBuilder {
     event AllowTarget(
         uint16 role,
@@ -202,29 +209,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
             paramType,
             paramComp,
             compValue,
-            options,
-            0 // TODO
-        );
-    }
-
-    /// @dev Sets the execution options for a given function.
-    /// @param roleId identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param options designates if a transaction can send ether and/or delegatecall to target.
-    function scopeFunctionExecutionOptions(
-        uint16 roleId,
-        address targetAddress,
-        bytes4 selector,
-        ExecutionOptions options
-    ) external onlyOwner {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-
-        scopeFunctionExecutionOptions_(scopeSetId, selector, options);
-        emit ScopeFunctionExecutionOptions(
-            roleId,
-            targetAddress,
-            selector,
             options,
             0 // TODO
         );
