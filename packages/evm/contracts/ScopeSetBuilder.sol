@@ -133,58 +133,58 @@ abstract contract ScopeSetBuilder is Modifier {
         }
     }
 
-    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @notice Parameter will be scoped with comparison type OneOf.
-    /// @param scopeSetId ScopeSet to augment.
-    /// @param selector Function signature to be scoped.
-    /// @param index The index of the parameter to scope.
-    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param compValues The reference values used while comparing and authorizing.
-    function scopeParameterAsOneOf_(
-        uint16 scopeSetId,
-        bytes4 selector,
-        uint256 index,
-        ParameterType paramType,
-        bytes[] calldata compValues
-    ) public onlyOwner {
-        if (index >= SCOPE_MAX_PARAMS) {
-            revert ScopeMaxParametersExceeded();
-        }
+    // /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
+    // /// @notice Only callable by owner.
+    // /// @notice Parameter will be scoped with comparison type OneOf.
+    // /// @param scopeSetId ScopeSet to augment.
+    // /// @param selector Function signature to be scoped.
+    // /// @param index The index of the parameter to scope.
+    // /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
+    // /// @param compValues The reference values used while comparing and authorizing.
+    // function scopeParameterAsOneOf_(
+    //     uint16 scopeSetId,
+    //     bytes4 selector,
+    //     uint256 index,
+    //     ParameterType paramType,
+    //     bytes[] calldata compValues
+    // ) public onlyOwner {
+    //     if (index >= SCOPE_MAX_PARAMS) {
+    //         revert ScopeMaxParametersExceeded();
+    //     }
 
-        if (compValues.length < 2) {
-            revert NotEnoughCompValuesForOneOf();
-        }
+    //     if (compValues.length < 2) {
+    //         revert NotEnoughCompValuesForOneOf();
+    //     }
 
-        for (uint256 i = 0; i < compValues.length; i++) {
-            enforceCompValue(paramType, compValues[i]);
-        }
+    //     for (uint256 i = 0; i < compValues.length; i++) {
+    //         enforceCompValue(paramType, compValues[i]);
+    //     }
 
-        ScopeSet storage scopeSet = scopeSets[scopeSetId];
-        if (!scopeSet.created) {
-            scopeSet.created = true;
-        }
+    //     ScopeSet storage scopeSet = scopeSets[scopeSetId];
+    //     if (!scopeSet.created) {
+    //         scopeSet.created = true;
+    //     }
 
-        // set fnConfig
-        uint256 fnConfig = FunctionConfig.packParameter(
-            scopeSet.functions[selector],
-            index,
-            true, // isScoped
-            paramType,
-            Comparison.OneOf
-        );
-        scopeSet.functions[selector] = fnConfig;
+    //     // set fnConfig
+    //     uint256 fnConfig = FunctionConfig.packParameter(
+    //         scopeSet.functions[selector],
+    //         index,
+    //         true, // isScoped
+    //         paramType,
+    //         Comparison.OneOf
+    //     );
+    //     scopeSet.functions[selector] = fnConfig;
 
-        // set compValue
-        bytes32 key = keyForCompValues(selector, index);
-        scopeSet.compValuesOneOf[key] = new bytes32[](compValues.length);
-        for (uint256 i = 0; i < compValues.length; i++) {
-            scopeSet.compValuesOneOf[key][i] = compressCompValue(
-                paramType,
-                compValues[i]
-            );
-        }
-    }
+    //     // set compValue
+    //     bytes32 key = keyForCompValues(selector, index);
+    //     scopeSet.compValuesOneOf[key] = new bytes32[](compValues.length);
+    //     for (uint256 i = 0; i < compValues.length; i++) {
+    //         scopeSet.compValuesOneOf[key][i] = compressCompValue(
+    //             paramType,
+    //             compValues[i]
+    //         );
+    //     }
+    // }
 
     /// @dev Internal function that enforces a comparison type is valid.
     /// @param paramType provides information about the type of parameter.
