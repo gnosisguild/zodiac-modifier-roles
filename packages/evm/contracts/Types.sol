@@ -30,13 +30,18 @@ enum Clearance {
 struct TargetAddress {
     Clearance clearance;
     ExecutionOptions options;
+    uint16 scopeSetId;
 }
 
 struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
-    mapping(bytes32 => uint256) functions;
+}
+
+struct ScopeSet {
+    bool created;
+    bool revoked;
+    mapping(bytes4 => uint256) functions;
     mapping(bytes32 => bytes32) compValues;
     mapping(bytes32 => bytes32[]) compValuesOneOf;
-    mapping(string => bytes32[]) aaaa;
 }
