@@ -46,25 +46,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         ExecutionOptions options,
         uint256 resultingScopeConfig
     );
-    event ScopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint256 index,
-        ParameterType paramType,
-        Comparison paramComp,
-        bytes compValue,
-        uint256 resultingScopeConfig
-    );
-    event ScopeParameterAsOneOf(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint256 index,
-        ParameterType paramType,
-        bytes[] compValues,
-        uint256 resultingScopeConfig
-    );
 
     mapping(uint16 => Role) internal roles;
 
@@ -196,41 +177,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
             paramComp,
             compValue,
             options,
-            0 // TODO
-        );
-    }
-
-    /// @dev Defines the values that can be called for a given function for single param.
-    /// @param roleId identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param index the index of the param to scope.
-    /// @param paramType provides information about the type of parameter.
-    /// @param compValues the values to compare a param against.
-    function scopeParameterAsOneOf(
-        uint16 roleId,
-        address targetAddress,
-        bytes4 selector,
-        uint256 index,
-        ParameterType paramType,
-        bytes[] calldata compValues
-    ) external onlyOwner {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        scopeParameterAsOneOf_(
-            scopeSetId,
-            selector,
-            index,
-            paramType,
-            compValues
-        );
-
-        emit ScopeParameterAsOneOf(
-            roleId,
-            targetAddress,
-            selector,
-            index,
-            paramType,
-            compValues,
             0 // TODO
         );
     }
