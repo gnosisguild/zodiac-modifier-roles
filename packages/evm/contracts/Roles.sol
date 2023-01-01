@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
-import "./Permissions.sol";
+import "./PermissionChecker.sol";
 
-contract Roles is Modifier {
+contract Roles is PermissionChecker {
     address public multisend;
 
     mapping(address => uint16) public defaultRoles;
-    mapping(uint16 => Role) internal roles;
 
     event AssignRoles(address module, uint16[] roles, bool[] memberOf);
     event SetMultisendAddress(address multisendAddress);
@@ -19,9 +17,6 @@ contract Roles is Modifier {
         address target
     );
     event SetDefaultRole(address module, uint16 defaultRole);
-
-    /// Arrays must be the same length
-    error ArraysDifferentLength();
 
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
@@ -66,214 +61,6 @@ contract Roles is Modifier {
         emit SetMultisendAddress(multisend);
     }
 
-    /// @dev Allows all calls made to an address.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be allowed
-    /// @param options defines whether or not delegate calls and/or eth can be sent to the target address.
-    function allowTarget(
-        uint16 role,
-        address targetAddress,
-        ExecutionOptions options
-    ) external onlyOwner {
-        Permissions.allowTarget(roles[role], role, targetAddress, options);
-    }
-
-    /// @dev Disallows all calls made to an address.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Address to be disallowed
-    function revokeTarget(
-        uint16 role,
-        address targetAddress
-    ) external onlyOwner {
-        Permissions.revokeTarget(roles[role], role, targetAddress);
-    }
-
-    /// @dev Scopes calls to an address, limited to specific function signatures, and per function scoping rules.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Address to be scoped.
-    function scopeTarget(
-        uint16 role,
-        address targetAddress
-    ) external onlyOwner {
-        Permissions.scopeTarget(roles[role], role, targetAddress);
-    }
-
-    /// @dev Allows a specific function signature on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Scoped address on which a function signature should be allowed.
-    /// @param functionSig Function signature to be allowed.
-    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
-    function scopeAllowFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        ExecutionOptions options
-    ) external onlyOwner {
-        Permissions.scopeAllowFunction(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            options
-        );
-    }
-
-    /// @dev Disallows a specific function signature on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for
-    /// @param targetAddress Scoped address on which a function signature should be disallowed.
-    /// @param functionSig Function signature to be disallowed.
-    function scopeRevokeFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig
-    ) external onlyOwner {
-        Permissions.scopeRevokeFunction(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig
-        );
-    }
-
-    /// @dev Sets scoping rules for a function, on a scoped address.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Scoped address on which scoping rules for a function are to be set.
-    /// @param functionSig Function signature to be scoped.
-    /// @param isParamScoped false for un-scoped, true for scoped.
-    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan, depending on comparison type.
-    /// @param compValue The reference value used while comparing and authorizing.
-    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
-    function scopeFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        bool[] calldata isParamScoped,
-        ParameterType[] calldata paramType,
-        Comparison[] calldata paramComp,
-        bytes[] memory compValue,
-        ExecutionOptions options
-    ) external onlyOwner {
-        Permissions.scopeFunction(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            isParamScoped,
-            paramType,
-            paramComp,
-            compValue,
-            options
-        );
-    }
-
-    /// @dev Sets whether or not delegate calls and/or eth can be sent to a function on a scoped target.
-    /// @notice Only callable by owner.
-    /// @notice Only in play when target is scoped.
-    /// @param role Role to set for.
-    /// @param targetAddress Scoped address on which the ExecutionOptions for a function are to be set.
-    /// @param functionSig Function signature on which the ExecutionOptions are to be set.
-    /// @param options Defines whether or not delegate calls and/or eth can be sent to the function.
-    function scopeFunctionExecutionOptions(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        ExecutionOptions options
-    ) external onlyOwner {
-        Permissions.scopeFunctionExecutionOptions(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            options
-        );
-    }
-
-    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Scoped address on which functionSig lives.
-    /// @param functionSig Function signature to be scoped.
-    /// @param paramIndex The index of the parameter to scope.
-    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param paramComp Any, or EqualTo, GreaterThan, or LessThan, depending on comparison type.
-    /// @param compValue The reference value used while comparing and authorizing.
-    function scopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint256 paramIndex,
-        ParameterType paramType,
-        Comparison paramComp,
-        bytes calldata compValue
-    ) external onlyOwner {
-        Permissions.scopeParameter(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            paramIndex,
-            paramType,
-            paramComp,
-            compValue
-        );
-    }
-
-    /// @dev Sets and enforces scoping rules, for a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @notice Parameter will be scoped with comparison type OneOf.
-    /// @param role Role to set for.
-    /// @param targetAddress Scoped address on which functionSig lives.
-    /// @param functionSig Function signature to be scoped.
-    /// @param paramIndex The index of the parameter to scope.
-    /// @param paramType Static, Dynamic or Dynamic32, depending on the parameter type.
-    /// @param compValues The reference values used while comparing and authorizing.
-    function scopeParameterAsOneOf(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint256 paramIndex,
-        ParameterType paramType,
-        bytes[] calldata compValues
-    ) external onlyOwner {
-        Permissions.scopeParameterAsOneOf(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            paramIndex,
-            paramType,
-            compValues
-        );
-    }
-
-    /// @dev Un-scopes a single parameter of a function, on a scoped target.
-    /// @notice Only callable by owner.
-    /// @param role Role to set for.
-    /// @param targetAddress Scoped address on which functionSig lives.
-    /// @param functionSig Function signature to be scoped.
-    /// @param paramIndex The index of the parameter to un-scope.
-    function unscopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint8 paramIndex
-    ) external onlyOwner {
-        Permissions.unscopeParameter(
-            roles[role],
-            role,
-            targetAddress,
-            functionSig,
-            paramIndex
-        );
-    }
-
     /// @dev Assigns and revokes roles to a given module.
     /// @param module Module on which to assign/revoke roles.
     /// @param _roles Roles to assign/revoke.
@@ -315,14 +102,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        Permissions.check(
-            roles[defaultRoles[msg.sender]],
-            multisend,
-            to,
-            value,
-            data,
-            operation
-        );
+        check(defaultRoles[msg.sender], multisend, to, value, data, operation);
         return exec(to, value, data, operation);
     }
 
@@ -338,14 +118,7 @@ contract Roles is Modifier {
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        Permissions.check(
-            roles[defaultRoles[msg.sender]],
-            multisend,
-            to,
-            value,
-            data,
-            operation
-        );
+        check(defaultRoles[msg.sender], multisend, to, value, data, operation);
         return execAndReturnData(to, value, data, operation);
     }
 
@@ -365,7 +138,7 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Permissions.check(roles[role], multisend, to, value, data, operation);
+        check(role, multisend, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -388,7 +161,7 @@ contract Roles is Modifier {
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Permissions.check(roles[role], multisend, to, value, data, operation);
+        check(role, multisend, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();

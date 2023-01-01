@@ -14,13 +14,9 @@ describe("Module works with factory", () => {
     await deployments.fixture();
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
-    const Permissions = await hre.ethers.getContractFactory("Permissions");
-    const permissions = await Permissions.deploy();
-    const Modifier = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Permissions: permissions.address,
-      },
-    });
+    // const Permissions = await hre.ethers.getContractFactory("Permissions");
+    // const permissions = await Permissions.deploy();
+    const Modifier = await hre.ethers.getContractFactory("Roles");
 
     const masterCopy = await Modifier.deploy(
       FirstAddress,
