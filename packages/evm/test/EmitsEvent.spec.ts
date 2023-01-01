@@ -157,30 +157,4 @@ describe.skip("EmitsEvent", async () => {
       .to.emit(modifier, "ScopeParameterAsOneOf")
       .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, TYPE_DYNAMIC, []);
   });
-  it("UnscopeParameter", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .unscopeParameter(ROLE_ID, AddressOne, "0x12345678", 0)
-    )
-      .to.emit(modifier, "UnscopeParameter")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0);
-  });
-
-  it("ScopeFunctionExecutionOptions", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeFunctionExecutionOptions(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          OPTIONS_SEND
-        )
-    )
-      .to.emit(modifier, "ScopeFunctionExecutionOptions")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND);
-  });
 });
