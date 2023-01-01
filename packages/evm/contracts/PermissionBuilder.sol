@@ -46,13 +46,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         ExecutionOptions options,
         uint256 resultingScopeConfig
     );
-    event ScopeFunctionExecutionOptions(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        ExecutionOptions options,
-        uint256 resultingScopeConfig
-    );
     event ScopeParameter(
         uint16 role,
         address targetAddress,
@@ -70,13 +63,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         uint256 index,
         ParameterType paramType,
         bytes[] compValues,
-        uint256 resultingScopeConfig
-    );
-    event UnscopeParameter(
-        uint16 role,
-        address targetAddress,
-        bytes4 functionSig,
-        uint256 index,
         uint256 resultingScopeConfig
     );
 
@@ -214,45 +200,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         );
     }
 
-    /// @dev Defines the value that can be called for a given function for single param.
-    /// @param roleId identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param index the index of the param to scope.
-    /// @param paramType provides information about the type of parameter.
-    /// @param paramComp the type of comparison for each parameter.
-    /// @param compValue the value to compare a param against.
-    function scopeParameter(
-        uint16 roleId,
-        address targetAddress,
-        bytes4 selector,
-        uint256 index,
-        ParameterType paramType,
-        Comparison paramComp,
-        bytes calldata compValue
-    ) external onlyOwner {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        scopeParameter_(
-            scopeSetId,
-            selector,
-            index,
-            paramType,
-            paramComp,
-            compValue
-        );
-
-        emit ScopeParameter(
-            roleId,
-            targetAddress,
-            selector,
-            index,
-            paramType,
-            paramComp,
-            compValue,
-            0 // TODO
-        );
-    }
-
     /// @dev Defines the values that can be called for a given function for single param.
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
@@ -284,29 +231,6 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
             index,
             paramType,
             compValues,
-            0 // TODO
-        );
-    }
-
-    /// @dev Removes the restrictions for a function param.
-    /// @param roleId identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param index the index of the param to scope.
-    function unscopeParameter(
-        uint16 roleId,
-        address targetAddress,
-        bytes4 selector,
-        uint8 index
-    ) external {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        unscopeParameter_(scopeSetId, selector, index);
-
-        emit UnscopeParameter(
-            roleId,
-            targetAddress,
-            selector,
-            index,
             0 // TODO
         );
     }
