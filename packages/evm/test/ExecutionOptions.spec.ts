@@ -13,10 +13,10 @@ enum Options {
 
 enum Operation {
   Call = 0,
-  DelegateCall = 1,
+  DelegateCall,
 }
 
-describe.only("ExecutionOptions", async () => {
+describe("ExecutionOptions", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");

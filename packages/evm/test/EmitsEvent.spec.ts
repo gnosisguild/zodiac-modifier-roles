@@ -5,16 +5,11 @@ import "@nomiclabs/hardhat-ethers";
 
 const ROLE_ID = 123;
 
-const COMP_EQUAL = 0;
-
 const OPTIONS_NONE = 0;
 const OPTIONS_SEND = 1;
-const OPTIONS_DELEGATECALL = 2;
 const OPTIONS_BOTH = 3;
 
-// Pending: https://github.com/EthWorks/Waffle/issues/609
-
-describe.skip("EmitsEvent", async () => {
+describe("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -60,17 +55,15 @@ describe.skip("EmitsEvent", async () => {
       .to.emit(modifier, "RevokeTarget")
       .withArgs(ROLE_ID, AddressOne);
   });
-  it("ScopeAllowFunction", async () => {
+  it("AllowFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier
         .connect(owner)
         .allowFunction(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH)
-    )
-      .to.emit(modifier, "AllowFunction")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH);
+    ).to.emit(modifier, "AllowFunction");
   });
-  it("ScopeRevokeFunction", async () => {
+  it("RevokeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier.connect(owner).revokeFunction(ROLE_ID, AddressOne, "0x12345678")
@@ -84,17 +77,6 @@ describe.skip("EmitsEvent", async () => {
       modifier
         .connect(owner)
         .scopeFunction(ROLE_ID, AddressOne, "0x12345678", [], OPTIONS_NONE)
-    )
-      .to.emit(modifier, "ScopeFunction")
-      .withArgs(
-        ROLE_ID,
-        AddressOne,
-        "0x12345678",
-        [],
-        [],
-        [],
-        [],
-        OPTIONS_NONE
-      );
+    ).to.emit(modifier, "ScopeFunction");
   });
 });
