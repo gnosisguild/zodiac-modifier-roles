@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
-import "./FunctionConfig.sol";
+import "./ScopeConfig.sol";
 import "./Types.sol";
 
 abstract contract PermissionBuilder is OwnableUpgradeable {
@@ -120,7 +120,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        uint256 scopeConfig = FunctionConfig.pack(0, options, true, 0);
+        uint256 scopeConfig = ScopeConfig.pack(0, options, true, 0);
 
         roles[roleId].functions[
             _keyForFunctions(targetAddress, selector)
@@ -183,7 +183,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
          *    length      -> parameter count
          * )
          */
-        uint256 scopeConfig = FunctionConfig.pack(
+        uint256 scopeConfig = ScopeConfig.pack(
             0,
             options,
             false,
@@ -194,7 +194,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             if (!parameter.isScoped) {
                 continue;
             }
-            scopeConfig = FunctionConfig.packParameter(
+            scopeConfig = ScopeConfig.packParameter(
                 scopeConfig,
                 i,
                 parameter.isScoped,
