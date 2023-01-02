@@ -12,9 +12,17 @@ const OPTIONS_SEND = 1;
 const OPTIONS_DELEGATECALL = 2;
 const OPTIONS_BOTH = 3;
 
-const TYPE_STATIC = 0;
-const TYPE_DYNAMIC = 1;
-const TYPE_DYNAMIC32 = 2;
+const TYPE_NONE = 0;
+const TYPE_STATIC = 1;
+const TYPE_DYNAMIC = 2;
+const TYPE_DYNAMIC32 = 3;
+
+const UNSCOPED_PARAM = {
+  isScoped: false,
+  _type: TYPE_NONE,
+  comp: COMP_EQUAL,
+  compValues: [],
+};
 
 describe("PluckParam - Decoding", async () => {
   const ROLE_ID = 0;
@@ -62,21 +70,26 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticDynamic")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true],
-        [TYPE_STATIC, TYPE_DYNAMIC],
-        [COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeStatic(["bytes4"], ["0x12345678"]),
-          encodeDynamic(["string"], ["Hello World!"]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.staticDynamic(
@@ -93,13 +106,23 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "StaticDynamic");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
@@ -110,22 +133,32 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticDynamicDynamic32")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_STATIC, TYPE_DYNAMIC, TYPE_DYNAMIC32],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeStatic(["address"], [AddressOne]),
-          encodeDynamic(["bytes"], ["0xabcd"]),
-          encodeDynamic32(["uint32[]"], [[1, 2, 3]]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["address"], [AddressOne])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["bytes"], ["0xabcd"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic32(["uint32[]"], [[1, 2, 3]])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.staticDynamicDynamic32(
@@ -144,15 +177,26 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "StaticDynamicDynamic32");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
+
   it("static, dynamic32, dynamic - (uint32,bytes4[],string)", async () => {
     const { modifier, testPluckParam, owner, invoker } = await setup();
 
@@ -160,22 +204,32 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticDynamic32Dynamic")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_STATIC, TYPE_DYNAMIC32, TYPE_DYNAMIC],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeStatic(["uint32"], [123]),
-          encodeDynamic32(["bytes4[]"], [["0xabcdef12"]]),
-          encodeDynamic(["string"], ["Hello World!"]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["uint32"], [123])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic32(["bytes4[]"], [["0xabcdef12"]])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.staticDynamic32Dynamic(
@@ -194,13 +248,23 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "StaticDynamic32Dynamic");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
@@ -211,22 +275,32 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("dynamicStaticDynamic32")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_DYNAMIC, TYPE_STATIC, TYPE_DYNAMIC32],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeDynamic(["bytes"], ["0x12ab45"]),
-          encodeStatic(["bool"], [false]),
-          encodeDynamic32(["bytes2[]"], [["0x1122", "0x3344"]]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["bytes"], ["0x12ab45"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bool"], [false])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic32(["bytes2[]"], [["0x1122", "0x3344"]])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.dynamicStaticDynamic32(
@@ -245,15 +319,26 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "DynamicStaticDynamic32");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
+
   it("dynamic, dynamic32, static - (string,uint32[],uint256)", async () => {
     const { modifier, testPluckParam, owner, invoker } = await setup();
 
@@ -261,22 +346,32 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("dynamicDynamic32Static")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_DYNAMIC, TYPE_DYNAMIC32, TYPE_STATIC],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeDynamic(["string"], ["Hello World!"]),
-          encodeDynamic32(["uint32[]"], [[1975, 2000, 2025]]),
-          encodeStatic(["uint256"], [123456789]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic32(["uint32[]"], [[1975, 2000, 2025]])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["uint256"], [123456789])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.dynamicDynamic32Static(
@@ -295,15 +390,26 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "DynamicDynamic32Static");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
+
   it("dynamic32, static, dynamic - (address[],bytes2,bytes)", async () => {
     const { modifier, testPluckParam, owner, invoker } = await setup();
 
@@ -311,22 +417,34 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("dynamic32StaticDynamic")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_DYNAMIC32, TYPE_STATIC, TYPE_DYNAMIC],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeDynamic32(["address[]"], [[AddressOne, AddressOne]]),
-          encodeStatic(["bytes2"], ["0xaabb"]),
-          encodeDynamic(["bytes"], ["0x0123456789abcdef"]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [
+            encodeDynamic32(["address[]"], [[AddressOne, AddressOne]]),
+          ],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes2"], ["0xaabb"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["bytes"], ["0x0123456789abcdef"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.dynamic32StaticDynamic(
@@ -345,15 +463,26 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "Dynamic32StaticDynamic");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
+
   it("dynamic32, dynamic, static - (bytes2[],string,uint32)", async () => {
     const { modifier, testPluckParam, owner, invoker } = await setup();
 
@@ -361,22 +490,34 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("dynamic32DynamicStatic")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_DYNAMIC32, TYPE_DYNAMIC, TYPE_STATIC],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeDynamic32(["bytes2[]"], [["0xaabb", "0xccdd", "0x1122"]]),
-          encodeDynamic(["string"], ["Hello World!"]),
-          encodeStatic(["uint32"], [8976]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: COMP_EQUAL,
+          compValues: [
+            encodeDynamic32(["bytes2[]"], [["0xaabb", "0xccdd", "0x1122"]]),
+          ],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["uint32"], [8976])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.dynamic32DynamicStatic(
@@ -395,13 +536,23 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "Dynamic32DynamicStatic");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
@@ -412,22 +563,32 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("unsupportedFixedSizeAndDynamic")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true, true, true],
-        [TYPE_STATIC, TYPE_STATIC, TYPE_DYNAMIC],
-        [COMP_EQUAL, COMP_EQUAL, COMP_EQUAL],
-        [
-          encodeStatic(["bool"], [false]),
-          encodeStatic(["bool"], [false]),
-          encodeDynamic(["string"], ["Hello World!"]),
-        ],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bool"], [false])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bool"], [false])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     const { data: dataGood } =
       await testPluckParam.populateTransaction.unsupportedFixedSizeAndDynamic(
@@ -444,13 +605,23 @@ describe("PluckParam - Decoding", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
     ).to.emit(testPluckParam, "UnsupportedFixedSizeAndDynamic");
 
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
     ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
@@ -461,18 +632,20 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticFn")
     );
 
-    await modifier
-      .connect(owner)
-      .scopeFunction(
-        ROLE_ID,
-        testPluckParam.address,
-        SELECTOR,
-        [true],
-        [TYPE_STATIC],
-        [COMP_EQUAL],
-        [encodeStatic(["bytes4"], ["0x12345678"])],
-        OPTIONS_NONE
-      );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
     await expect(
       modifier
@@ -499,47 +672,59 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticFn")
     );
 
-    // await modifier
-    //   .connect(owner)
-    //   .scopeParameter(
-    //     ROLE_ID,
-    //     testPluckParam.address,
-    //     SELECTOR,
-    //     0,
-    //     TYPE_STATIC,
-    //     COMP_EQUAL,
-    //     encodeStatic(["bytes4"], ["0x12345678"])
-    //   );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
-    // const { data } = await testPluckParam.populateTransaction.staticFn(
-    //   "0x12345678"
-    // );
+    const { data } = await testPluckParam.populateTransaction.staticFn(
+      "0x12345678"
+    );
 
-    // // ok
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, data, 0)
-    // ).to.emit(testPluckParam, "Static");
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, data as string, 0)
+    ).to.emit(testPluckParam, "Static");
 
-    // await modifier
-    //   .connect(owner)
-    //   .scopeParameter(
-    //     ROLE_ID,
-    //     testPluckParam.address,
-    //     SELECTOR,
-    //     1,
-    //     TYPE_STATIC,
-    //     COMP_EQUAL,
-    //     encodeStatic(["bytes4"], ["0x12345678"])
-    //   );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+        },
+        {
+          isScoped: true,
+          _type: TYPE_STATIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
-    // // ngmi
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, data, 0)
-    // ).to.be.revertedWith("CalldataOutOfBounds()");
+    // ngmi
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, data as string, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
   });
 
   it("dynamic - fails if calldata too short", async () => {
@@ -553,49 +738,58 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticFn")
     );
 
-    // await modifier
-    //   .connect(owner)
-    //   .scopeParameter(
-    //     ROLE_ID,
-    //     testPluckParam.address,
-    //     SELECTOR,
-    //     1,
-    //     TYPE_DYNAMIC,
-    //     COMP_EQUAL,
-    //     encodeDynamic(["string"], ["Hello World!"])
-    //   );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        UNSCOPED_PARAM,
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
-    // const { data: dataGood } =
-    //   await testPluckParam.populateTransaction.staticDynamic(
-    //     "0x12345678",
-    //     "Hello World!"
-    //   );
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
 
-    // const dataShort = (
-    //   (await testPluckParam.populateTransaction.staticFn("0x12345678"))
-    //     .data as string
-    // ).replace(SELECTOR_OTHER.slice(2), SELECTOR.slice(2));
+    const dataShort = (
+      (await testPluckParam.populateTransaction.staticFn("0x12345678"))
+        .data as string
+    ).replace(SELECTOR_OTHER.slice(2), SELECTOR.slice(2));
 
-    // // shortned call
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, dataShort, 0)
-    // ).to.be.revertedWith("CalldataOutOfBounds()");
+    // shortned call
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, dataShort, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
 
-    // // just the selector
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
-    // ).to.be.revertedWith("CalldataOutOfBounds()");
+    // just the selector
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
 
-    // // ok
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
-    // ).to.not.be.reverted;
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
+    ).to.not.be.reverted;
   });
 
   it("dynamic - fails if payload is missing", async () => {
@@ -605,87 +799,139 @@ describe("PluckParam - Decoding", async () => {
       testPluckParam.interface.getFunction("staticDynamic")
     );
 
-    //     await modifier
-    //       .connect(owner)
-    //       .scopeParameter(
-    //         ROLE_ID,
-    //         testPluckParam.address,
-    //         SELECTOR,
-    //         1,
-    //         TYPE_DYNAMIC,
-    //         COMP_EQUAL,
-    //         encodeDynamic(["string"], ["Hello World!"])
-    //       );
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        UNSCOPED_PARAM,
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
 
-    //     const { data: dataGood } =
-    //       await testPluckParam.populateTransaction.staticDynamic(
-    //         "0x12345678",
-    //         "Hello World!"
-    //       );
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
 
-    //     // 0x737c0619 -> staticDynamic selector
-    //     const dataBad = `\
-    // 0x737c0619\
-    // 0000000000000000000000000000000000000000000000000000000012345678\
-    // 0000000000000000000000000000000000000000000000000000000000300001`;
+    // 0x737c0619 -> staticDynamic selector
+    const dataBad = `0x737c061900000000000000000000000000000000000000000000000000000000123456780000000000000000000000000000000000000000000000000000000000300001`;
 
-    //     await expect(
-    //       modifier
-    //         .connect(invoker)
-    //         .execTransactionFromModule(testPluckParam.address, 0, dataBad, 0)
-    //     ).to.be.revertedWith("CalldataOutOfBounds()");
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataBad as string,
+          0
+        )
+    ).to.be.revertedWith("CalldataOutOfBounds()");
 
-    //     // ok
-    //     await expect(
-    //       modifier
-    //         .connect(invoker)
-    //         .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
-    //     ).to.not.be.reverted;
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
+    ).to.not.be.reverted;
   });
 
   it("dynamic - fails with parameter scoped out of bounds", async () => {
-    // const { modifier, testPluckParam, owner, invoker } = await setup();
-    // const SELECTOR = testPluckParam.interface.getSighash(
-    //   testPluckParam.interface.getFunction("staticDynamic")
-    // );
-    // await modifier
-    //   .connect(owner)
-    //   .scopeParameter(
-    //     ROLE_ID,
-    //     testPluckParam.address,
-    //     SELECTOR,
-    //     1,
-    //     TYPE_DYNAMIC,
-    //     COMP_EQUAL,
-    //     encodeDynamic(["string"], ["Hello World!"])
-    //   );
-    // const { data: dataGood } =
-    //   await testPluckParam.populateTransaction.staticDynamic(
-    //     "0x12345678",
-    //     "Hello World!"
-    //   );
-    // // ok
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
-    // ).to.not.be.reverted;
-    // await modifier
-    //   .connect(owner)
-    //   .scopeParameter(
-    //     ROLE_ID,
-    //     testPluckParam.address,
-    //     SELECTOR,
-    //     15,
-    //     TYPE_DYNAMIC,
-    //     COMP_EQUAL,
-    //     encodeDynamic(["string"], ["Hello World!"])
-    //   );
-    // await expect(
-    //   modifier
-    //     .connect(invoker)
-    //     .execTransactionFromModule(testPluckParam.address, 0, dataGood, 0)
-    // ).to.be.revertedWith("CalldataOutOfBounds()");
+    const { modifier, testPluckParam, owner, invoker } = await setup();
+    const SELECTOR = testPluckParam.interface.getSighash(
+      testPluckParam.interface.getFunction("staticDynamic")
+    );
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        UNSCOPED_PARAM,
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
+
+    const { data: dataGood } =
+      await testPluckParam.populateTransaction.staticDynamic(
+        "0x12345678",
+        "Hello World!"
+      );
+    // ok
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
+    ).to.not.be.reverted;
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testPluckParam.address,
+      SELECTOR,
+      [
+        UNSCOPED_PARAM,
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        UNSCOPED_PARAM,
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC,
+          comp: COMP_EQUAL,
+          compValues: [encodeDynamic(["string"], ["Hello World!"])],
+        },
+      ],
+      OPTIONS_NONE
+    );
+
+    await expect(
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testPluckParam.address,
+          0,
+          dataGood as string,
+          0
+        )
+    ).to.be.revertedWith("CalldataOutOfBounds()");
   });
 });
 
