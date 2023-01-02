@@ -10,6 +10,27 @@ import { buildContractCall, buildMultiSendSafeTx } from "./utils";
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
 const FirstAddress = "0x0000000000000000000000000000000000000001";
 
+const COMP_EQUAL = 0;
+const COMP_GREATER = 1;
+const COMP_LESS = 2;
+
+const OPTIONS_NONE = 0;
+const OPTIONS_SEND = 1;
+const OPTIONS_DELEGATECALL = 2;
+const OPTIONS_BOTH = 3;
+
+const TYPE_NONE = 0;
+const TYPE_STATIC = 1;
+const TYPE_DYNAMIC = 2;
+const TYPE_DYNAMIC32 = 3;
+
+const UNSCOPED_PARAM = {
+  isScoped: false,
+  _type: TYPE_NONE,
+  comp: COMP_EQUAL,
+  compValues: [],
+};
+
 describe("RolesModifier", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -55,9 +76,10 @@ describe("RolesModifier", async () => {
     };
   });
 
-  const TYPE_STATIC = 0;
-  const TYPE_DYNAMIC = 1;
-  const TYPE_DYNAMIC32 = 2;
+  const TYPE_NONE = 0;
+  const TYPE_STATIC = 1;
+  const TYPE_DYNAMIC = 2;
+  const TYPE_DYNAMIC32 = 3;
 
   const txSetup = deployments.createFixture(async () => {
     const baseAvatar = await setupTestWithTestAvatar();
@@ -284,7 +306,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.be.revertedWith("NoMembership()");
@@ -300,7 +322,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.emit(testContract, "DoNothing");
@@ -329,7 +351,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.emit(testContract, "DoNothing");
@@ -346,7 +368,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.be.revertedWith("NoMembership()");
@@ -423,7 +445,7 @@ describe("RolesModifier", async () => {
         modifier.execTransactionFromModule(
           testContract.address,
           0,
-          mint.data,
+          mint.data as string,
           0
         )
       ).to.be.revertedWith("Module not authorized");
@@ -531,10 +553,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -582,10 +614,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -642,25 +684,49 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [true, true, true, true, true, true, true],
         [
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_DYNAMIC,
-        ],
-        [0, 0, 0, 0, 0, 0, 0],
-        [
-          encodedParam_3,
-          encodedParam_4,
-          encodedParam_5,
-          encodedParam_6,
-          encodedParam_7,
-          encodedParam_8,
-          encodedParam_9,
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_3],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_4],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_5],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_6],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_7],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_8],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_9],
+          },
         ],
         OPTIONS_NONE
       );
@@ -723,28 +789,53 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [true, true, true, true, true, true, true],
         [
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_DYNAMIC,
-        ],
-        [0, 0, 0, 0, 0, 0, 0],
-        [
-          encodedParam_3,
-          encodedParam_4,
-          encodedParam_5,
-          encodedParam_6,
-          encodedParam_7,
-          encodedParam_8,
-          encodedParam_9,
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_3],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_4],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_5],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_6],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_7],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_8],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_9],
+          },
         ],
         OPTIONS_NONE
       );
+
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const dynamic = await testContract.populateTransaction.testDynamic(
@@ -816,10 +907,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -828,25 +929,49 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [true, true, true, true, true, true, true],
         [
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_DYNAMIC,
-        ],
-        [0, 0, 0, 0, 0, 0, 0],
-        [
-          encodedParam_3,
-          encodedParam_4,
-          encodedParam_5,
-          encodedParam_6,
-          encodedParam_7,
-          encodedParam_8,
-          encodedParam_9,
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_3],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_4],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_5],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_6],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_7],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_8],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_9],
+          },
         ],
         OPTIONS_NONE
       );
@@ -915,12 +1040,23 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
+
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
@@ -987,10 +1123,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -999,25 +1145,49 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [true, true, true, true, true, true, true],
         [
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_DYNAMIC,
-        ],
-        [0, 0, 0, 0, 0, 0, 0],
-        [
-          encodedParam_3,
-          encodedParam_4,
-          encodedParam_5,
-          encodedParam_6,
-          encodedParam_7,
-          encodedParam_8,
-          encodedParam_9,
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_3],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_4],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_5],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_6],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_7],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_8],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_9],
+          },
         ],
         OPTIONS_NONE
       );
@@ -1070,10 +1240,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 1],
-        [encodedParam_1, encodedParam_2], // set param 2 to greater than
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_GREATER,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -1124,10 +1304,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 1],
-        [encodedParam_1, encodedParam_2], // set param 2 to greater than
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_GREATER,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -1178,10 +1368,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 2],
-        [encodedParam_1, encodedParam_2], // set param 2 to less than
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_LESS,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -1232,10 +1432,20 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 2],
-        [encodedParam_1, encodedParam_2], // set param 2 to less than
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_LESS,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -1383,7 +1593,7 @@ describe("RolesModifier", async () => {
           .execTransactionWithRole(
             testContract.address,
             0,
-            fnThatReverts.data,
+            fnThatReverts.data as string,
             0,
             ROLE_ID,
             SHOULD_REVERT
@@ -1413,7 +1623,7 @@ describe("RolesModifier", async () => {
           .execTransactionWithRole(
             testContract.address,
             0,
-            fnThatReverts.data,
+            fnThatReverts.data as string,
             0,
             ROLE_ID,
             !SHOULD_REVERT
@@ -1441,7 +1651,7 @@ describe("RolesModifier", async () => {
           .execTransactionWithRoleReturnData(
             testContract.address,
             0,
-            mint.data,
+            mint.data as string,
             0,
             ROLE_ID,
             !SHOULD_REVERT
@@ -1472,7 +1682,7 @@ describe("RolesModifier", async () => {
           .execTransactionWithRoleReturnData(
             testContract.address,
             0,
-            fnThatReverts.data,
+            fnThatReverts.data as string,
             0,
             ROLE_ID,
             SHOULD_REVERT
@@ -1503,7 +1713,7 @@ describe("RolesModifier", async () => {
           .execTransactionWithRoleReturnData(
             testContract.address,
             0,
-            fnThatReverts.data,
+            fnThatReverts.data as string,
             0,
             ROLE_ID,
             !SHOULD_REVERT
@@ -1556,43 +1766,78 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
-        ROLE_ID,
+        1,
         testContract.address,
         "0x40c10f19",
-        [true, true],
-        [TYPE_STATIC, TYPE_STATIC],
-        [0, 0],
-        [encodedParam_1, encodedParam_2],
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_1],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_2],
+          },
+        ],
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
-        ROLE_ID,
+        1,
         testContract.address,
         "0x273454bf",
-        [true, true, true, true, true, true, true],
         [
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_STATIC,
-          TYPE_STATIC,
-          TYPE_DYNAMIC,
-          TYPE_DYNAMIC,
-        ],
-        [0, 0, 0, 0, 0, 0, 0],
-        [
-          encodedParam_3,
-          encodedParam_4,
-          encodedParam_5,
-          encodedParam_6,
-          encodedParam_7,
-          encodedParam_8,
-          encodedParam_9,
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_3],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_4],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_5],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_6],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_7],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_8],
+          },
+          {
+            isScoped: true,
+            _type: TYPE_DYNAMIC,
+            comp: COMP_EQUAL,
+            compValues: [encodedParam_9],
+          },
         ],
         OPTIONS_NONE
       );
+
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
       const multiTx = buildMultiSendSafeTx(
@@ -1652,13 +1897,6 @@ describe("RolesModifier", async () => {
       const SHOULD_REVERT = true;
       const ROLE_ID = 1;
 
-      const doNothingArgs = [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("doNothing()"),
-        0,
-      ];
-
       // assign a role to invoker
       await modifier
         .connect(owner)
@@ -1666,7 +1904,14 @@ describe("RolesModifier", async () => {
 
       // expect to fail due to no permissions
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...doNothingArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0
+          )
       ).to.be.revertedWith("NoMembership()");
 
       // allow testContract address for role
@@ -1678,7 +1923,14 @@ describe("RolesModifier", async () => {
 
       // expect to fail with default role
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...doNothingArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0
+          )
       ).to.be.revertedWith("NoMembership()");
 
       // should work with the configured role
@@ -1686,7 +1938,12 @@ describe("RolesModifier", async () => {
         modifier
           .connect(invoker)
           .execTransactionWithRole(
-            ...[...doNothingArgs, ROLE_ID, !SHOULD_REVERT]
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0,
+            ROLE_ID,
+            !SHOULD_REVERT
           )
       ).to.emit(testContract, "DoNothing");
     });
@@ -1697,15 +1954,6 @@ describe("RolesModifier", async () => {
 
       const SHOULD_REVERT = true;
       const ROLE_ID = 1;
-
-      const execWithRoleArgs = [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("doNothing()"),
-        0,
-        ROLE_ID,
-        !SHOULD_REVERT,
-      ];
 
       // assign a role to invoker
       await modifier
@@ -1721,7 +1969,16 @@ describe("RolesModifier", async () => {
 
       // this call should work
       await expect(
-        modifier.connect(invoker).execTransactionWithRole(...execWithRoleArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0,
+            ROLE_ID,
+            !SHOULD_REVERT
+          )
       ).to.emit(testContract, "DoNothing");
 
       // Revoke access
@@ -1731,7 +1988,16 @@ describe("RolesModifier", async () => {
 
       // fails after revoke
       await expect(
-        modifier.connect(invoker).execTransactionWithRole(...execWithRoleArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0,
+            ROLE_ID,
+            !SHOULD_REVERT
+          )
       ).to.be.revertedWith("TargetAddressNotAllowed()");
     });
   });
@@ -1753,13 +2019,6 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-      const execArgs = [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("doNothing()"),
-        1,
-      ];
-
       // allow calls (but not delegate)
       await modifier
         .connect(owner)
@@ -1767,7 +2026,14 @@ describe("RolesModifier", async () => {
 
       // still getting the delegateCallNotAllowed error
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...execArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            1
+          )
       ).to.be.revertedWith("DelegateCallNotAllowed()");
 
       // allow delegate calls to address
@@ -1782,7 +2048,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             1
           )
       ).to.not.be.reverted;
@@ -1797,13 +2063,6 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-      const execArgs = [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("doNothing()"),
-        1,
-      ];
-
       await modifier
         .connect(owner)
         .allowTarget(ROLE_ID, testContract.address, OPTIONS_DELEGATECALL);
@@ -1815,7 +2074,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             1
           )
       ).to.not.be.reverted;
@@ -1827,7 +2086,14 @@ describe("RolesModifier", async () => {
 
       // still getting the delegateCallNotAllowed error
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...execArgs)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            1
+          )
       ).to.be.revertedWith("DelegateCallNotAllowed()");
     });
   });
@@ -1840,10 +2106,21 @@ describe("RolesModifier", async () => {
           1,
           AddressOne,
           "0x12345678",
-          [true, true],
-          [TYPE_DYNAMIC, TYPE_DYNAMIC],
-          [1, 1],
-          ["0x", "0x"],
+          [
+            {
+              isScoped: true,
+              _type: TYPE_DYNAMIC,
+              comp: COMP_GREATER,
+              compValues: ["0x"],
+            },
+            {
+              isScoped: true,
+              _type: TYPE_DYNAMIC,
+              comp: COMP_GREATER,
+              compValues: ["0x"],
+            },
+          ],
+
           OPTIONS_NONE
         )
       ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -1854,17 +2131,13 @@ describe("RolesModifier", async () => {
         await setupRolesWithOwnerAndInvoker();
 
       const ROLE_ID = 0;
-      const COMP_TYPE_EQ = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
       );
       const EXEC_ARGS = (n: number) => [
         testContract.address,
         0,
-        testContract.interface.encodeFunctionData(
-          "fnWithSingleParam(uint256)",
-          [n]
-        ),
+        testContract.interface.encodeFunctionData("fnWithSingleParam", [n]),
         0,
       ];
 
@@ -1883,18 +2156,20 @@ describe("RolesModifier", async () => {
 
       await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
-      await modifier
-        .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [true],
-          [TYPE_STATIC],
-          [COMP_TYPE_EQ],
-          [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
-          OPTIONS_NONE
-        );
+      await modifier.connect(owner).scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        [
+          {
+            isScoped: true,
+            _type: TYPE_STATIC,
+            comp: COMP_EQUAL,
+            compValues: [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
+          },
+        ],
+        OPTIONS_NONE
+      );
 
       // ngmi
       await expect(
@@ -2007,13 +2282,6 @@ describe("RolesModifier", async () => {
         testContract.interface.getFunction("doNothing")
       );
 
-      const EXEC_ARGS = [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("doNothing()"),
-        0,
-      ];
-
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
@@ -2032,7 +2300,14 @@ describe("RolesModifier", async () => {
 
       // gmi
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0
+          )
       ).to.emit(testContract, "DoNothing");
 
       // revoke the function
@@ -2042,7 +2317,14 @@ describe("RolesModifier", async () => {
 
       // ngmi again
       await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS)
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("doNothing"),
+            0
+          )
       ).to.be.revertedWith("FunctionNotAllowed");
     });
   });
@@ -2082,7 +2364,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.be.reverted;
@@ -2097,7 +2379,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(
             testContract.address,
             0,
-            testContract.interface.encodeFunctionData("doNothing()"),
+            testContract.interface.encodeFunctionData("doNothing"),
             0
           )
       ).to.emit(testContract, "DoNothing");
