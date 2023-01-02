@@ -1,13 +1,32 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
-import "./ScopeSetBuilder.sol";
 import "./FunctionConfig.sol";
 import "./Types.sol";
 
-abstract contract PermissionBuilder is ScopeSetBuilder {
+abstract contract PermissionBuilder is OwnableUpgradeable {
+    uint256 internal constant SCOPE_MAX_PARAMS = 48;
+
+    /// Not possible to define gt/lt for Dynamic types
+    error UnsuitableRelativeComparison();
+
+    /// CompValue for static types should have a size of exactly 32 bytes
+    error UnsuitableStaticCompValueSize();
+
+    /// CompValue for Dynamic32 types should be a multiple of exactly 32 bytes
+    error UnsuitableDynamic32CompValueSize();
+
+    /// Exceeds the max number of params supported
+    error ScopeMaxParametersExceeded();
+
+    error NoCompValuesProvidedForScope();
+
+    error NotEnoughCompValuesForScope();
+
+    error TooManyCompValuesForScope();
+
     event AllowTarget(
         uint16 role,
         address targetAddress,
@@ -56,8 +75,7 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
     ) external onlyOwner {
         roles[roleId].targets[targetAddress] = TargetAddress(
             Clearance.Target,
-            options,
-            0
+            options
         );
         emit AllowTarget(roleId, targetAddress, options);
     }
@@ -71,8 +89,7 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
     ) external onlyOwner {
         roles[roleId].targets[targetAddress] = TargetAddress(
             Clearance.None,
-            ExecutionOptions.None,
-            0
+            ExecutionOptions.None
         );
         emit RevokeTarget(roleId, targetAddress);
     }
@@ -86,8 +103,7 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
     ) external onlyOwner {
         roles[roleId].targets[targetAddress] = TargetAddress(
             Clearance.Function,
-            ExecutionOptions.None,
-            roles[roleId].targets[targetAddress].scopeSetId
+            ExecutionOptions.None
         );
         emit ScopeTarget(roleId, targetAddress);
     }
@@ -102,15 +118,19 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options
-    ) external {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        allowFunction_(scopeSetId, selector, options);
+    ) external onlyOwner {
+        uint256 scopeConfig = FunctionConfig.pack(0, options, true, 0);
+
+        roles[roleId].functions[
+            _keyForFunctions(targetAddress, selector)
+        ] = scopeConfig;
+
         emit ScopeAllowFunction(
             roleId,
             targetAddress,
             selector,
             options,
-            0 // TODO
+            scopeConfig
         );
     }
 
@@ -122,9 +142,10 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         uint16 roleId,
         address targetAddress,
         bytes4 selector
-    ) external {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        revokeFunction_(scopeSetId, selector);
+    ) external onlyOwner {
+        delete roles[roleId].functions[
+            _keyForFunctions(targetAddress, selector)
+        ];
         emit ScopeRevokeFunction(roleId, targetAddress, selector, 0);
     }
 
@@ -140,8 +161,59 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         ParameterConfig[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
-        uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        scopeFunction_(scopeSetId, selector, parameters, options);
+        if (parameters.length > SCOPE_MAX_PARAMS) {
+            revert ScopeMaxParametersExceeded();
+        }
+
+        for (uint256 i = 0; i < parameters.length; i++) {
+            if (parameters[i].isScoped) {
+                _enforceComp(parameters[i]);
+                _enforceCompValue(parameters[i]);
+            }
+        }
+
+        Role storage role = roles[roleId];
+
+        /*
+         * pack(
+         *    0           -> start from a fresh scopeConfig
+         *    options     -> externally provided options
+         *    false       -> mark the function as not wildcarded
+         *    length      -> parameter count
+         * )
+         */
+        uint256 scopeConfig = FunctionConfig.pack(
+            0,
+            options,
+            false,
+            parameters.length
+        );
+        for (uint256 i = 0; i < parameters.length; i++) {
+            ParameterConfig calldata parameter = parameters[i];
+            if (!parameter.isScoped) {
+                continue;
+            }
+            scopeConfig = FunctionConfig.packParameter(
+                scopeConfig,
+                i,
+                parameter.isScoped,
+                parameter._type,
+                parameter.comp
+            );
+
+            bytes32 key = _keyForCompValues(targetAddress, selector, i);
+            bytes[] calldata compValues = parameter.compValues;
+            assert(compValues.length > 0);
+
+            role.compValues[key] = new bytes32[](compValues.length);
+            for (uint256 j = 0; j < compValues.length; j++) {
+                role.compValues[key][j] = _compressCompValue(
+                    parameter._type,
+                    parameter.compValues[j]
+                );
+            }
+        }
+        role.functions[_keyForFunctions(targetAddress, selector)] = scopeConfig;
 
         emit ScopeFunction(
             roleId,
@@ -149,28 +221,80 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
             selector,
             parameters,
             options,
-            0 // TODO
+            scopeConfig
         );
     }
 
-    function bindTargetToScopeSet(
-        uint16 roleId,
-        address targetAddress
-    ) private returns (uint16) {
-        TargetAddress storage target = roles[roleId].targets[targetAddress];
+    /// @dev Internal function that enforces a comparison type is valid.
+    /// @param config  provides information about the type of parameter and the type of comparison.
+    function _enforceComp(ParameterConfig calldata config) private pure {
+        bool isRelative = config.comp != Comparison.EqualTo &&
+            config.comp != Comparison.OneOf;
 
-        uint16 id = target.scopeSetId;
+        if ((config._type != ParameterType.Static) && isRelative) {
+            revert UnsuitableRelativeComparison();
+        }
+    }
 
-        if (scopeSets[id].created) {
-            return id;
+    /// @dev Internal function that enforces a param type is valid.
+    /// @param config  provides information about the type of parameter and the type of comparison.
+    function _enforceCompValue(ParameterConfig calldata config) private pure {
+        assert(config.isScoped);
+
+        if (config.compValues.length == 0) {
+            revert NoCompValuesProvidedForScope();
         }
 
-        for (; ; ++id) {
-            if (!scopeSets[id].created) {
-                target.scopeSetId = id;
-                return id;
+        if (config.comp == Comparison.OneOf) {
+            if (config.compValues.length < 2) {
+                revert NotEnoughCompValuesForScope();
+            }
+        } else {
+            if (config.compValues.length != 1) {
+                revert TooManyCompValuesForScope();
             }
         }
-        return 0;
+
+        for (uint256 i = 0; i < config.compValues.length; i++) {
+            if (
+                config._type == ParameterType.Static &&
+                config.compValues[i].length != 32
+            ) {
+                revert UnsuitableStaticCompValueSize();
+            }
+
+            if (
+                config._type == ParameterType.Dynamic32 &&
+                config.compValues[i].length % 32 != 0
+            ) {
+                revert UnsuitableDynamic32CompValueSize();
+            }
+        }
+    }
+
+    function _keyForFunctions(
+        address targetAddress,
+        bytes4 selector
+    ) internal pure returns (bytes32) {
+        return bytes32(abi.encodePacked(targetAddress, selector));
+    }
+
+    function _keyForCompValues(
+        address targetAddress,
+        bytes4 selector,
+        uint256 index
+    ) internal pure returns (bytes32) {
+        assert(index <= type(uint8).max);
+        return bytes32(abi.encodePacked(targetAddress, selector, uint8(index)));
+    }
+
+    function _compressCompValue(
+        ParameterType paramType,
+        bytes memory compValue
+    ) private pure returns (bytes32) {
+        return
+            paramType == ParameterType.Static
+                ? bytes32(compValue)
+                : keccak256(compValue);
     }
 }
