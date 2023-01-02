@@ -66,7 +66,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("SendNotAllowed()");
       });
 
@@ -101,7 +106,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         )
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
@@ -140,7 +150,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("SendNotAllowed()");
       });
       it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
@@ -173,7 +188,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         )
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
@@ -194,7 +214,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         )
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
@@ -220,17 +245,17 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
-            ROLE_ID,
-            testContract.address,
-            SELECTOR,
-            OPTIONS_NONE
-          );
+          .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("SendNotAllowed()");
       });
 
@@ -245,7 +270,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
+          .allowFunction(
             ROLE_ID,
             testContract.address,
             "0x00000000",
@@ -277,17 +302,17 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
-            ROLE_ID,
-            testContract.address,
-            SELECTOR,
-            OPTIONS_SEND
-          );
+          .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_SEND);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         )
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
@@ -303,7 +328,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
+          .allowFunction(
             ROLE_ID,
             testContract.address,
             "0x00000000",
@@ -334,17 +359,17 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
-            ROLE_ID,
-            testContract.address,
-            SELECTOR,
-            OPTIONS_SEND
-          );
+          .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_SEND);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("TargetAddressNotAllowed()");
       });
 
@@ -366,7 +391,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
+          .allowFunction(
             ROLE_ID,
             testContract.address,
             SELECTOR,
@@ -376,7 +401,12 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("SendNotAllowed()");
       });
       it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
@@ -390,7 +420,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
+          .allowFunction(
             ROLE_ID,
             testContract.address,
             "0x00000000",
@@ -422,17 +452,17 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
-            ROLE_ID,
-            testContract.address,
-            SELECTOR,
-            OPTIONS_BOTH
-          );
+          .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_BOTH);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         )
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
@@ -448,7 +478,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
+          .allowFunction(
             ROLE_ID,
             testContract.address,
             "0x00000000",
@@ -479,17 +509,17 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeAllowFunction(
-            ROLE_ID,
-            testContract.address,
-            SELECTOR,
-            OPTIONS_BOTH
-          );
+          .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_BOTH);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, data, 0)
+            .execTransactionFromModule(
+              testContract.address,
+              value,
+              data as string,
+              0
+            )
         ).to.be.revertedWith("TargetAddressNotAllowed()");
       });
     });
@@ -508,7 +538,7 @@ describe("ExecutionOptions", async () => {
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContract.address, 0, data, 1)
+          .execTransactionFromModule(testContract.address, 0, data as string, 1)
       ).to.not.be.reverted;
     });
     it("target allowed - cannot delegatecall", async () => {
@@ -523,7 +553,7 @@ describe("ExecutionOptions", async () => {
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContract.address, 0, data, 1)
+          .execTransactionFromModule(testContract.address, 0, data as string, 1)
       ).to.be.revertedWith("DelegateCallNotAllowed()");
     });
     it("target partially allowed - can delegatecall", async () => {
@@ -539,17 +569,12 @@ describe("ExecutionOptions", async () => {
 
       await modifier
         .connect(owner)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_BOTH
-        );
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_BOTH);
 
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContract.address, 0, data, 1)
+          .execTransactionFromModule(testContract.address, 0, data as string, 1)
       ).not.to.be.reverted;
     });
 
@@ -566,17 +591,12 @@ describe("ExecutionOptions", async () => {
 
       await modifier
         .connect(owner)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        );
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
 
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContract.address, 0, data, 1)
+          .execTransactionFromModule(testContract.address, 0, data as string, 1)
       ).to.be.revertedWith("DelegateCallNotAllowed()");
     });
   });

@@ -3,8 +3,6 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-import { Roles as RolesT } from "../typechain-types";
-
 const ROLE_ID = 123;
 
 const COMP_EQUAL = 0;
@@ -13,10 +11,6 @@ const OPTIONS_NONE = 0;
 const OPTIONS_SEND = 1;
 const OPTIONS_DELEGATECALL = 2;
 const OPTIONS_BOTH = 3;
-
-const TYPE_STATIC = 0;
-const TYPE_DYNAMIC = 1;
-const TYPE_DYNAMIC32 = 2;
 
 // Pending: https://github.com/EthWorks/Waffle/issues/609
 
@@ -71,19 +65,17 @@ describe.skip("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .scopeAllowFunction(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH)
+        .allowFunction(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH)
     )
-      .to.emit(modifier, "ScopeAllowFunction")
+      .to.emit(modifier, "AllowFunction")
       .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH);
   });
   it("ScopeRevokeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
-      modifier
-        .connect(owner)
-        .scopeRevokeFunction(ROLE_ID, AddressOne, "0x12345678")
+      modifier.connect(owner).revokeFunction(ROLE_ID, AddressOne, "0x12345678")
     )
-      .to.emit(modifier, "ScopeRevokeFunction")
+      .to.emit(modifier, "RevokeFunction")
       .withArgs(ROLE_ID, AddressOne, "0x12345678");
   });
   it("ScopeFunction", async () => {
@@ -91,16 +83,7 @@ describe.skip("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          [],
-          [],
-          [],
-          [],
-          OPTIONS_NONE
-        )
+        .scopeFunction(ROLE_ID, AddressOne, "0x12345678", [], OPTIONS_NONE)
     )
       .to.emit(modifier, "ScopeFunction")
       .withArgs(
@@ -113,48 +96,5 @@ describe.skip("EmitsEvent", async () => {
         [],
         OPTIONS_NONE
       );
-  });
-  it("ScopeParameter", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeParameter(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          0,
-          TYPE_DYNAMIC,
-          COMP_EQUAL,
-          "0x"
-        )
-    )
-      .to.emit(modifier, "ScopeParameter")
-      .withArgs(
-        ROLE_ID,
-        AddressOne,
-        "0x12345678",
-        0,
-        TYPE_DYNAMIC,
-        COMP_EQUAL,
-        "0x"
-      );
-  });
-  it("ScopeParameterAsOneOf", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeParameterAsOneOf(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          0,
-          TYPE_DYNAMIC,
-          []
-        )
-    )
-      .to.emit(modifier, "ScopeParameterAsOneOf")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, TYPE_DYNAMIC, []);
   });
 });
