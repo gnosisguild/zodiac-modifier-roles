@@ -39,15 +39,9 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         uint16 role,
         address targetAddress,
         bytes4 selector,
-        ExecutionOptions options,
-        uint256 resultingScopeConfig
+        ExecutionOptions options
     );
-    event RevokeFunction(
-        uint16 role,
-        address targetAddress,
-        bytes4 selector,
-        uint256 resultingScopeConfig
-    );
+    event RevokeFunction(uint16 role, address targetAddress, bytes4 selector);
     event ScopeFunction(
         uint16 role,
         address targetAddress,
@@ -120,19 +114,11 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        uint256 scopeConfig = ScopeConfig.pack(0, options, true, 0);
-
         roles[roleId].functions[
             _keyForFunctions(targetAddress, selector)
-        ] = scopeConfig;
+        ] = ScopeConfig.pack(0, options, true, 0);
 
-        emit AllowFunction(
-            roleId,
-            targetAddress,
-            selector,
-            options,
-            scopeConfig
-        );
+        emit AllowFunction(roleId, targetAddress, selector, options);
     }
 
     /// @dev Removes the functions that can be called.
@@ -147,7 +133,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         delete roles[roleId].functions[
             _keyForFunctions(targetAddress, selector)
         ];
-        emit RevokeFunction(roleId, targetAddress, selector, 0);
+        emit RevokeFunction(roleId, targetAddress, selector);
     }
 
     /// @dev Defines the values that can be called for a given function for each param.

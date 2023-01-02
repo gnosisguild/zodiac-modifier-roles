@@ -12,24 +12,7 @@ const FirstAddress = "0x0000000000000000000000000000000000000001";
 
 const COMP_EQUAL = 0;
 const COMP_GREATER = 1;
-const COMP_LESS = 2;
-
-const OPTIONS_NONE = 0;
-const OPTIONS_SEND = 1;
-const OPTIONS_DELEGATECALL = 2;
-const OPTIONS_BOTH = 3;
-
-const TYPE_NONE = 0;
-const TYPE_STATIC = 1;
-const TYPE_DYNAMIC = 2;
-const TYPE_DYNAMIC32 = 3;
-
-const UNSCOPED_PARAM = {
-  isScoped: false,
-  _type: TYPE_NONE,
-  comp: COMP_EQUAL,
-  compValues: [],
-};
+// const COMP_LESS = 2;
 
 describe("RolesModifier", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -294,12 +277,10 @@ describe("RolesModifier", async () => {
       const { modifier, testContract, owner, invoker } =
         await setupRolesWithOwnerAndInvoker();
 
-      // blank allow all calls to testContract from role 0
       await modifier
         .connect(owner)
         .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
-      // expect it to fail, before assigning role
       await expect(
         modifier
           .connect(invoker)
@@ -315,7 +296,6 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-      // expect it to succeed, after assigning role
       await expect(
         modifier
           .connect(invoker)
@@ -426,6 +406,7 @@ describe("RolesModifier", async () => {
           .execTransactionFromModule(testContract.address, 0, "0xab", 0)
       ).to.be.revertedWith("FunctionSignatureTooShort()");
     });
+
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
@@ -1207,262 +1188,6 @@ describe("RolesModifier", async () => {
           1
         )
       ).to.emit(testContract, "TestDynamic");
-    });
-
-    it("reverts if value parameter is less than allowed", async () => {
-      const { avatar, modifier, testContract, encodedParam_1 } =
-        await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
-        user1.address,
-        1
-      );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const scopeTarget = await modifier.populateTransaction.scopeTarget(
-        1,
-        testContract.address
-      );
-      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
-
-      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [99]
-      );
-
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_1],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_GREATER,
-            compValues: [encodedParam_2],
-          },
-        ],
-        OPTIONS_NONE
-      );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
-
-      const mint = await testContract.populateTransaction.mint(
-        user1.address,
-        98
-      );
-
-      await expect(
-        modifier.execTransactionFromModule(
-          testContract.address,
-          0,
-          mint.data || "",
-          0
-        )
-      ).to.be.revertedWith("ParameterLessThanAllowed");
-    });
-
-    it("executes if value parameter is greater than allowed", async () => {
-      const { avatar, modifier, testContract, encodedParam_1 } =
-        await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
-        user1.address,
-        1
-      );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        1,
-        testContract.address
-      );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
-
-      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [99]
-      );
-
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_1],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_GREATER,
-            compValues: [encodedParam_2],
-          },
-        ],
-        OPTIONS_NONE
-      );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
-
-      const mint = await testContract.populateTransaction.mint(
-        user1.address,
-        100
-      );
-
-      await expect(
-        modifier.execTransactionFromModule(
-          testContract.address,
-          0,
-          mint.data || "",
-          0
-        )
-      ).to.emit(testContract, "Mint");
-    });
-
-    it("reverts if value parameter is greater than allowed", async () => {
-      const { avatar, modifier, testContract, encodedParam_1 } =
-        await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
-        user1.address,
-        1
-      );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        1,
-        testContract.address
-      );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
-
-      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [99]
-      );
-
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_1],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_LESS,
-            compValues: [encodedParam_2],
-          },
-        ],
-        OPTIONS_NONE
-      );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
-
-      const mint = await testContract.populateTransaction.mint(
-        user1.address,
-        100
-      );
-
-      await expect(
-        modifier.execTransactionFromModule(
-          testContract.address,
-          0,
-          mint.data || "",
-          0
-        )
-      ).to.be.revertedWith("ParameterGreaterThanAllowed");
-    });
-
-    it("executes if value parameter is less than allowed", async () => {
-      const { avatar, modifier, testContract, encodedParam_1 } =
-        await txSetup();
-      const assign = await modifier.populateTransaction.assignRoles(
-        user1.address,
-        [1],
-        [true]
-      );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
-        user1.address,
-        1
-      );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        1,
-        testContract.address
-      );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
-
-      const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-        ["uint256"],
-        [99]
-      );
-
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
-        1,
-        testContract.address,
-        "0x40c10f19",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_1],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_LESS,
-            compValues: [encodedParam_2],
-          },
-        ],
-        OPTIONS_NONE
-      );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
-
-      const mint = await testContract.populateTransaction.mint(
-        user1.address,
-        98
-      );
-
-      await expect(
-        modifier.execTransactionFromModule(
-          testContract.address,
-          0,
-          mint.data || "",
-          0
-        )
-      ).to.emit(testContract, "Mint");
     });
   });
 
@@ -2265,7 +1990,7 @@ describe("RolesModifier", async () => {
     });
   });
 
-  describe("scopeAllowFunction()", () => {
+  describe("allowFunction()", () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
