@@ -2,15 +2,19 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-const COMP_EQUAL = 0;
-// const COMP_GREATER = 1;
-// const COMP_LESS = 2;
-const COMP_ONE_OF = 3;
+enum Comparison {
+  EQUAL = 0,
+  GREATER,
+  LESS,
+  ONE_OF,
+}
 
-const OPTIONS_NONE = 0;
-// const OPTIONS_SEND = 1;
-// const OPTIONS_DELEGATECALL = 2;
-// const OPTIONS_BOTH = 3;
+enum Options {
+  NONE = 0,
+  SEND,
+  DELEGATE_CALL,
+  BOTH,
+}
 
 const TYPE_NONE = 0;
 const TYPE_STATIC = 1;
@@ -73,10 +77,10 @@ describe("Scoping", async () => {
           new Array(49).fill(null).map(() => ({
             isScoped: false,
             _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
+            comp: Comparison.EQUAL,
             compValues: [],
           })),
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -88,10 +92,10 @@ describe("Scoping", async () => {
           new Array(48).fill(null).map(() => ({
             isScoped: false,
             _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
+            comp: Comparison.EQUAL,
             compValues: [],
           })),
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.not.be.reverted;
     });
@@ -110,7 +114,6 @@ describe("Scoping", async () => {
       );
 
       const ROLE_ID = 0;
-      const IS_SCOPED = true;
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -121,7 +124,7 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_STATIC,
-              comp: COMP_EQUAL,
+              comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -130,7 +133,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -143,13 +146,13 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_DYNAMIC32,
-              comp: COMP_EQUAL,
+              comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
               ],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
@@ -162,11 +165,11 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_DYNAMIC32,
-              comp: COMP_EQUAL,
+              comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.not.reverted;
 
@@ -180,13 +183,13 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_DYNAMIC32,
-              comp: COMP_EQUAL,
+              comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
             },
             {
               isScoped: false,
               _type: TYPE_NONE,
-              comp: COMP_EQUAL,
+              comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -195,7 +198,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.not.be.reverted;
     });
@@ -218,7 +221,7 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_STATIC,
-              comp: COMP_ONE_OF,
+              comp: Comparison.ONE_OF,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -231,7 +234,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -244,14 +247,14 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_DYNAMIC32,
-              comp: COMP_ONE_OF,
+              comp: Comparison.ONE_OF,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
               ],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
@@ -264,11 +267,11 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               _type: TYPE_STATIC,
-              comp: COMP_ONE_OF,
+              comp: Comparison.ONE_OF,
               compValues: [A_32_BYTES_VALUE, A_32_BYTES_VALUE],
             },
           ],
-          OPTIONS_NONE
+          Options.NONE
         )
       ).to.not.be.reverted;
     });
@@ -291,11 +294,11 @@ describe("Scoping", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_ONE_OF,
+            comp: Comparison.ONE_OF,
             compValues: [A_32_BYTES_VALUE],
           },
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.be.revertedWith("NotEnoughCompValuesForScope()");
 
@@ -308,14 +311,14 @@ describe("Scoping", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_ONE_OF,
+            comp: Comparison.ONE_OF,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
               ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
             ],
           },
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.not.be.reverted;
   });

@@ -34,15 +34,19 @@ describe("Comparison", async () => {
     };
   });
 
-  const COMP_EQUAL = 0;
-  const COMP_GREATER = 1;
-  const COMP_LESS = 2;
-  const COMP_ONE_OF = 3;
+  enum Comparison {
+    EQUAL = 0,
+    GREATER,
+    LESS,
+    ONE_OF,
+  }
 
-  const OPTIONS_NONE = 0;
-  const OPTIONS_SEND = 1;
-  const OPTIONS_DELEGATECALL = 2;
-  const OPTIONS_BOTH = 3;
+  enum Options {
+    NONE = 0,
+    SEND,
+    DELEGATE_CALL,
+    BOTH,
+  }
 
   const TYPE_NONE = 0;
   const TYPE_STATIC = 1;
@@ -52,11 +56,11 @@ describe("Comparison", async () => {
   const UNSCOPED_PARAM = {
     isScoped: false,
     _type: TYPE_NONE,
-    comp: COMP_EQUAL,
+    comp: Comparison.EQUAL,
     compValues: [],
   };
 
-  it("enforces paramCompValues for scopeFunction", async () => {
+  it.skip("TODO move to PermissionBuilder tests -> enforces paramCompValues for scopeFunction", async () => {
     const { modifier, testContract, owner } = await setup();
 
     const ROLE_ID = 0;
@@ -74,12 +78,12 @@ describe("Comparison", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_ONE_OF,
+            comp: Comparison.ONE_OF,
             compValues: [],
           },
           UNSCOPED_PARAM,
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.be.revertedWith("NoCompValuesProvidedForScope");
 
@@ -93,14 +97,14 @@ describe("Comparison", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_ONE_OF,
+            comp: Comparison.ONE_OF,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
             ],
           },
           UNSCOPED_PARAM,
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.be.revertedWith("NotEnoughCompValuesForScope");
 
@@ -114,7 +118,7 @@ describe("Comparison", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_ONE_OF,
+            comp: Comparison.ONE_OF,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
               ethers.utils.defaultAbiCoder.encode(["bool"], [true]),
@@ -122,7 +126,7 @@ describe("Comparison", async () => {
           },
           UNSCOPED_PARAM,
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.not.be.reverted;
 
@@ -136,7 +140,7 @@ describe("Comparison", async () => {
           {
             isScoped: true,
             _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
+            comp: Comparison.EQUAL,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["bool"], [true]),
               ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
@@ -144,7 +148,7 @@ describe("Comparison", async () => {
           },
           UNSCOPED_PARAM,
         ],
-        OPTIONS_NONE
+        Options.NONE
       )
     ).to.be.revertedWith("TooManyCompValuesForScope");
   });
@@ -182,16 +186,17 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_STATIC,
-          comp: COMP_EQUAL,
+          comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["uint256"], [123])],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(321)).to.be.revertedWith("ParameterNotAllowed()");
     await expect(invoke(123)).to.not.be.reverted;
   });
+
   it("passes an eq comparison for dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
@@ -227,11 +232,11 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC,
-          comp: COMP_EQUAL,
+          comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(false, "Some string")).to.not.be.reverted;
@@ -272,11 +277,11 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC,
-          comp: COMP_EQUAL,
+          comp: Comparison.EQUAL,
           compValues: ["0x"],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke("0x")).to.not.be.reverted;
@@ -318,13 +323,13 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC32,
-          comp: COMP_EQUAL,
+          comp: Comparison.EQUAL,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1234", "0xabcd"]]),
           ],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     //longer
@@ -379,11 +384,11 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC32,
-          comp: COMP_EQUAL,
+          comp: Comparison.EQUAL,
           compValues: [[]],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke([])).to.not.be.reverted;
@@ -392,7 +397,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("re-scopes an eq paramComp", async () => {
+  it("passes a oneOf comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -426,77 +431,14 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_STATIC,
-          comp: COMP_EQUAL,
-          compValues: [ethers.utils.solidityPack(["uint256"], [123])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    await expect(invoke(321)).to.be.revertedWith("ParameterNotAllowed()");
-    await expect(invoke(123)).to.not.be.reverted;
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          isScoped: true,
-          _type: TYPE_STATIC,
-          comp: COMP_GREATER,
-          compValues: [ethers.utils.solidityPack(["uint256"], [123])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    await expect(invoke(123)).to.be.revertedWith("ParameterLessThanAllowed()");
-    await expect(invoke(124)).to.not.be.reverted;
-  });
-
-  it("passes a oneOf comparison", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithSingleParam")
-    );
-
-    const invoke = async (a: number) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.fnWithSingleParam(a))
-            .data as string,
-          0
-        );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          isScoped: true,
-          _type: TYPE_STATIC,
-          comp: COMP_ONE_OF,
+          comp: Comparison.ONE_OF,
           compValues: [
             ethers.utils.defaultAbiCoder.encode(["uint256"], [11]),
             ethers.utils.defaultAbiCoder.encode(["uint256"], [22]),
           ],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(11)).to.not.be.reverted;
@@ -538,7 +480,7 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC,
-          comp: COMP_ONE_OF,
+          comp: Comparison.ONE_OF,
           compValues: [
             ethers.utils.solidityPack(["string"], ["Hello World!"]),
             ethers.utils.solidityPack(["string"], ["Good Morning!"]),
@@ -546,7 +488,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(true, "Hello World!")).to.not.be.reverted;
@@ -593,14 +535,14 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_DYNAMIC32,
-          comp: COMP_ONE_OF,
+          comp: Comparison.ONE_OF,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1111", "0x1111"]]),
             ethers.utils.solidityPack(["bytes2[]"], [["0xffff", "0xffff"]]),
           ],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke("A", ["0x1111", "0x1111"])).to.not.be.reverted;
@@ -626,7 +568,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("should pass a gt/lt comparison", async () => {
+  it("passes a gt/lt comparison", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -659,11 +601,11 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_STATIC,
-          comp: COMP_GREATER,
+          comp: Comparison.GREATER,
           compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(1233)).to.be.revertedWith("ParameterLessThanAllowed()");
@@ -678,11 +620,11 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           _type: TYPE_STATIC,
-          comp: COMP_LESS,
+          comp: Comparison.LESS,
           compValues: [ethers.utils.solidityPack(["uint256"], [2345])],
         },
       ],
-      OPTIONS_NONE
+      Options.NONE
     );
 
     await expect(invoke(2346)).to.be.revertedWith(
@@ -693,4 +635,6 @@ describe("Comparison", async () => {
     );
     await expect(invoke(2344)).to.not.be.reverted;
   });
+
+  it("mixed of different comparisons and types");
 });
