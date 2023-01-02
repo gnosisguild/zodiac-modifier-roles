@@ -5,7 +5,7 @@ import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "./Types.sol";
 
 import "./PermissionBuilder.sol";
-import "./FunctionConfig.sol";
+import "./ScopeConfig.sol";
 
 abstract contract PermissionChecker is PermissionBuilder {
     /// Sender is not a member of the role
@@ -145,7 +145,7 @@ abstract contract PermissionChecker is PermissionBuilder {
                 revert FunctionNotAllowed();
             }
 
-            (ExecutionOptions options, bool isWildcarded, ) = FunctionConfig
+            (ExecutionOptions options, bool isWildcarded, ) = ScopeConfig
                 .unpack(scopeConfig);
 
             checkExecutionOptions(value, operation, options);
@@ -197,14 +197,14 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes memory data
     ) internal view {
         bytes4 selector = bytes4(data);
-        (, , uint256 length) = FunctionConfig.unpack(scopeConfig);
+        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
 
         for (uint256 i = 0; i < length; i++) {
             (
                 bool isScoped,
                 ParameterType paramType,
                 Comparison paramComp
-            ) = FunctionConfig.unpackParameter(scopeConfig, i);
+            ) = ScopeConfig.unpackParameter(scopeConfig, i);
 
             if (!isScoped) {
                 continue;
