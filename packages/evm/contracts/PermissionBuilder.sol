@@ -34,14 +34,15 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     );
     event RevokeTarget(uint16 role, address targetAddress);
     event ScopeTarget(uint16 role, address targetAddress);
-    event ScopeAllowFunction(
+
+    event AllowFunction(
         uint16 role,
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options,
         uint256 resultingScopeConfig
     );
-    event ScopeRevokeFunction(
+    event RevokeFunction(
         uint16 role,
         address targetAddress,
         bytes4 selector,
@@ -113,7 +114,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
-    function scopeAllowFunction(
+    function allowFunction(
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
@@ -125,7 +126,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             _keyForFunctions(targetAddress, selector)
         ] = scopeConfig;
 
-        emit ScopeAllowFunction(
+        emit AllowFunction(
             roleId,
             targetAddress,
             selector,
@@ -138,7 +139,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    function scopeRevokeFunction(
+    function revokeFunction(
         uint16 roleId,
         address targetAddress,
         bytes4 selector
@@ -146,7 +147,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         delete roles[roleId].functions[
             _keyForFunctions(targetAddress, selector)
         ];
-        emit ScopeRevokeFunction(roleId, targetAddress, selector, 0);
+        emit RevokeFunction(roleId, targetAddress, selector, 0);
     }
 
     /// @dev Defines the values that can be called for a given function for each param.
