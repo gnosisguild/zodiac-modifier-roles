@@ -9,7 +9,6 @@ describe("Comparison", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    const testContractClone = await TestContract.deploy();
 
     const [owner, invoker] = waffle.provider.getWallets();
 
@@ -26,7 +25,6 @@ describe("Comparison", async () => {
       Avatar,
       avatar,
       testContract,
-      testContractClone,
       Modifier,
       modifier,
       owner,

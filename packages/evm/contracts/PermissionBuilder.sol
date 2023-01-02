@@ -53,12 +53,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     mapping(uint16 => Role) internal roles;
 
-    /*
-     *
-     * SETTERS
-     *
-     */
-
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
