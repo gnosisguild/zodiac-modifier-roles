@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-library FunctionConfig {
+library ScopeConfig {
     function pack(
         uint256 scopeConfig,
         ExecutionOptions options,
