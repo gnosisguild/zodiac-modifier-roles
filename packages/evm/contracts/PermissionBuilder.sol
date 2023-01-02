@@ -7,13 +7,6 @@ import "./ScopeSetBuilder.sol";
 import "./FunctionConfig.sol";
 import "./Types.sol";
 
-struct ParamConfig {
-    ParameterType _type;
-    Comparison comp;
-    bytes compValue;
-    bytes[] compValues;
-}
-
 abstract contract PermissionBuilder is ScopeSetBuilder {
     event AllowTarget(
         uint16 role,
@@ -39,10 +32,7 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        bool[] isParamScoped,
-        ParameterType[] paramType,
-        Comparison[] paramComp,
-        bytes[] compValue,
+        ParameterConfig[] parameters,
         ExecutionOptions options,
         uint256 resultingScopeConfig
     );
@@ -142,40 +132,22 @@ abstract contract PermissionBuilder is ScopeSetBuilder {
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    /// @param isScoped marks which parameters are value restricted.
-    /// @param paramType provides information about the type of parameter.
-    /// @param paramComp the type of comparison for each parameter
-    /// @param compValue the values to compare a param against.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunction(
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
-        bool[] memory isScoped,
-        ParameterType[] memory paramType,
-        Comparison[] memory paramComp,
-        bytes[] calldata compValue,
+        ParameterConfig[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
         uint16 scopeSetId = bindTargetToScopeSet(roleId, targetAddress);
-        scopeFunction_(
-            scopeSetId,
-            selector,
-            isScoped,
-            paramType,
-            paramComp,
-            compValue,
-            options
-        );
+        scopeFunction_(scopeSetId, selector, parameters, options);
 
         emit ScopeFunction(
             roleId,
             targetAddress,
             selector,
-            isScoped,
-            paramType,
-            paramComp,
-            compValue,
+            parameters,
             options,
             0 // TODO
         );

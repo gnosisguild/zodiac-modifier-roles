@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 enum ParameterType {
+    None,
     Static,
     Dynamic,
     Dynamic32
@@ -27,6 +28,13 @@ enum Clearance {
     Function
 }
 
+struct ParameterConfig {
+    bool isScoped;
+    ParameterType _type;
+    Comparison comp;
+    bytes[] compValues;
+}
+
 struct TargetAddress {
     Clearance clearance;
     ExecutionOptions options;
@@ -42,6 +50,5 @@ struct ScopeSet {
     bool created;
     bool revoked;
     mapping(bytes4 => uint256) functions;
-    mapping(bytes32 => bytes32) compValues;
-    mapping(bytes32 => bytes32[]) compValuesOneOf;
+    mapping(bytes32 => bytes32[]) compValues;
 }

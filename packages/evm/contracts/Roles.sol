@@ -18,6 +18,8 @@ contract Roles is PermissionChecker {
     );
     event SetDefaultRole(address module, uint16 defaultRole);
 
+    error ArraysDifferentLength();
+
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
 
