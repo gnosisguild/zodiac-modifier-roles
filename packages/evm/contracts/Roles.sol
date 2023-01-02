@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./PermissionChecker.sol";
 
-contract Roles is PermissionChecker {
+contract Roles is PermissionChecker, Modifier {
     address public multisend;
 
     mapping(address => uint16) public defaultRoles;

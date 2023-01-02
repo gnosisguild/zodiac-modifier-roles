@@ -38,17 +38,11 @@ struct ParameterConfig {
 struct TargetAddress {
     Clearance clearance;
     ExecutionOptions options;
-    uint16 scopeSetId;
 }
 
 struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
-}
-
-struct ScopeSet {
-    bool created;
-    bool revoked;
-    mapping(bytes4 => uint256) functions;
+    mapping(bytes32 => uint256) functions;
     mapping(bytes32 => bytes32[]) compValues;
 }

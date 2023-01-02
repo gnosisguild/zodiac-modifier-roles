@@ -132,36 +132,31 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
 
         TargetAddress storage target = roles[roleId].targets[targetAddress];
-        if (target.clearance == Clearance.None) {
-            revert TargetAddressNotAllowed();
-        }
 
         if (target.clearance == Clearance.Target) {
             checkExecutionOptions(value, operation, target.options);
-            return;
-        }
-
-        if (target.clearance == Clearance.Function) {
-            uint256 fnConfig = scopeSets[target.scopeSetId].functions[
-                bytes4(data)
+        } else if (target.clearance == Clearance.Function) {
+            Role storage role = roles[roleId];
+            uint256 scopeConfig = role.functions[
+                _keyForFunctions(targetAddress, bytes4(data))
             ];
 
-            if (fnConfig == 0) {
+            if (scopeConfig == 0) {
                 revert FunctionNotAllowed();
             }
 
             (ExecutionOptions options, bool isWildcarded, ) = FunctionConfig
-                .unpack(fnConfig);
+                .unpack(scopeConfig);
 
             checkExecutionOptions(value, operation, options);
 
             if (!isWildcarded) {
-                checkParameters(target.scopeSetId, fnConfig, data);
+                checkParameters(role, targetAddress, scopeConfig, data);
             }
-            return;
+        } else {
+            assert(target.clearance == Clearance.None);
+            revert TargetAddressNotAllowed();
         }
-
-        assert(false);
     }
 
     /// @dev Examines the ether value and operation for a given role target.
@@ -193,17 +188,16 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param scopeSetId reference to role storage.
     /// @param scopeConfig packed bytes representing the scope for a role.
     /// @param data the transaction data to check
     function checkParameters(
-        uint16 scopeSetId,
+        Role storage role,
+        address targetAddress,
         uint256 scopeConfig,
         bytes memory data
     ) internal view {
-        bytes4 functionSig = bytes4(data);
+        bytes4 selector = bytes4(data);
         (, , uint256 length) = FunctionConfig.unpack(scopeConfig);
-        ScopeSet storage scopeSet = scopeSets[scopeSetId];
 
         for (uint256 i = 0; i < length; i++) {
             (
@@ -223,11 +217,11 @@ abstract contract PermissionChecker is PermissionBuilder {
                 value = pluckStaticValue(data, i);
             }
 
-            bytes32 key = keyForCompValues(functionSig, i);
+            bytes32 key = _keyForCompValues(targetAddress, selector, i);
             if (paramComp != Comparison.OneOf) {
-                compare(paramComp, scopeSet.compValues[key][0], value);
+                compare(paramComp, role.compValues[key][0], value);
             } else {
-                compareOneOf(scopeSet.compValues[key], value);
+                compareOneOf(role.compValues[key], value);
             }
         }
     }
