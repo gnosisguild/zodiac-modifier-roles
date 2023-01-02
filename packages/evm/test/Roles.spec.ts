@@ -2269,7 +2269,7 @@ describe("RolesModifier", async () => {
     it("reverts if not authorized", async () => {
       const { modifier } = await txSetup();
       await expect(
-        modifier.scopeAllowFunction(1, AddressOne, "0x12345678", OPTIONS_NONE)
+        modifier.allowFunction(1, AddressOne, "0x12345678", OPTIONS_NONE)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -2291,12 +2291,7 @@ describe("RolesModifier", async () => {
       // allow the function
       await modifier
         .connect(owner)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        );
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
 
       // gmi
       await expect(
@@ -2313,7 +2308,7 @@ describe("RolesModifier", async () => {
       // revoke the function
       await modifier
         .connect(owner)
-        .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR);
+        .revokeFunction(ROLE_ID, testContract.address, SELECTOR);
 
       // ngmi again
       await expect(

@@ -3,18 +3,18 @@ import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
 const COMP_EQUAL = 0;
-const COMP_GREATER = 1;
-const COMP_LESS = 2;
+// const COMP_GREATER = 1;
+// const COMP_LESS = 2;
 const COMP_ONE_OF = 3;
 
 const OPTIONS_NONE = 0;
-const OPTIONS_SEND = 1;
-const OPTIONS_DELEGATECALL = 2;
-const OPTIONS_BOTH = 3;
+// const OPTIONS_SEND = 1;
+// const OPTIONS_DELEGATECALL = 2;
+// const OPTIONS_BOTH = 3;
 
 const TYPE_NONE = 0;
 const TYPE_STATIC = 1;
-const TYPE_DYNAMIC = 2;
+// const TYPE_DYNAMIC = 2;
 const TYPE_DYNAMIC32 = 3;
 
 const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(

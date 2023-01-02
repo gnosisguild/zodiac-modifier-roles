@@ -38,13 +38,6 @@ describe("OnlyOwner", async () => {
   });
 
   const OPTIONS_NONE = 0;
-  const OPTIONS_SEND = 1;
-  const OPTIONS_DELEGATECALL = 2;
-  const OPTIONS_BOTH = 3;
-
-  const TYPE_STATIC = 0;
-  const TYPE_DYNAMIC = 1;
-  const TYPE_DYNAMIC32 = 2;
 
   it("onlyOwner for allowTarget simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
@@ -120,37 +113,22 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeAllowFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          OPTIONS_NONE
-        )
+        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
     ).to.not.be.reverted;
   });
-  it("onlyOwner for scopeRevokeFunction, simple invoker fails", async () => {
+  it("onlyOwner for revokeFunction, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -162,19 +140,19 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR)
+        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(janeDoe)
-        .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR)
+        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .scopeRevokeFunction(ROLE_ID, testContract.address, SELECTOR)
+        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeFunction, simple invoker fails", async () => {

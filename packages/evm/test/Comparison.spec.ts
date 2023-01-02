@@ -207,7 +207,7 @@ describe("Comparison", async () => {
           testContract.address,
           0,
           (await testContract.populateTransaction.fnWithTwoMixedParams(a, b))
-            .data,
+            .data as string,
           0
         );
 
