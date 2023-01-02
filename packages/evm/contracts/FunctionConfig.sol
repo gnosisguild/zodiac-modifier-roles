@@ -44,32 +44,6 @@ library FunctionConfig {
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        (ExecutionOptions options, , uint256 prevLength) = unpack(scopeConfig);
-
-        uint256 nextLength = index + 1 > prevLength ? index + 1 : prevLength;
-
-        return
-            pack(
-                packParameterRaw(
-                    scopeConfig,
-                    index,
-                    isScoped,
-                    paramType,
-                    paramComp
-                ),
-                options,
-                false, // isWildcarded=false
-                nextLength
-            );
-    }
-
-    function packParameterRaw(
-        uint256 scopeConfig,
-        uint256 index,
-        bool isScoped,
-        ParameterType paramType,
-        Comparison paramComp
-    ) internal pure returns (uint256) {
         // LEFT SIDE
         // 2   bits -> options
         // 1   bits -> isWildcarded
@@ -94,18 +68,6 @@ library FunctionConfig {
 
         scopeConfig &= ~paramCompMask;
         scopeConfig |= uint256(paramComp) << (index * 2);
-
-        return scopeConfig;
-    }
-
-    function packOptions(
-        uint256 scopeConfig,
-        ExecutionOptions options
-    ) internal pure returns (uint256) {
-        uint256 optionsMask = 3 << 254;
-
-        scopeConfig &= ~optionsMask;
-        scopeConfig |= uint256(options) << 254;
 
         return scopeConfig;
     }
