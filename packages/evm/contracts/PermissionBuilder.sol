@@ -148,8 +148,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
         for (uint256 i = 0; i < parameters.length; i++) {
             if (parameters[i].isScoped) {
-                _enforceComp(parameters[i]);
-                _enforceCompValue(parameters[i]);
+                _enforceParameterConfig(parameters[i]);
             }
         }
 
@@ -169,7 +168,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             false,
             parameters.length
         );
-        for (uint256 i = 0; i < parameters.length; i++) {
+        for (uint256 i = 0; i < parameters.length; ++i) {
             ParameterConfig calldata parameter = parameters[i];
             if (!parameter.isScoped) {
                 continue;
@@ -183,14 +182,17 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             );
 
             bytes32 key = _keyForCompValues(targetAddress, selector, i);
-            bytes[] calldata compValues = parameter.compValues;
-            assert(compValues.length > 0);
-
-            role.compValues[key] = new bytes32[](compValues.length);
-            for (uint256 j = 0; j < compValues.length; j++) {
-                role.compValues[key][j] = _compressCompValue(
+            if (parameter.comp != Comparison.OneOf) {
+                assert(parameter.compValues.length == 1);
+                role.compValue[key] = _compressCompValue(
                     parameter._type,
-                    parameter.compValues[j]
+                    parameter.compValues[0]
+                );
+            } else {
+                assert(parameter.compValues.length > 1);
+                role.compValues[key] = _compressCompValues(
+                    parameter._type,
+                    parameter.compValues
                 );
             }
         }
@@ -206,20 +208,11 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         );
     }
 
-    /// @dev Internal function that enforces a comparison type is valid.
-    /// @param config  provides information about the type of parameter and the type of comparison.
-    function _enforceComp(ParameterConfig calldata config) private pure {
-        bool isRelative = config.comp != Comparison.EqualTo &&
-            config.comp != Comparison.OneOf;
-
-        if ((config._type != ParameterType.Static) && isRelative) {
-            revert UnsuitableRelativeComparison();
-        }
-    }
-
     /// @dev Internal function that enforces a param type is valid.
     /// @param config  provides information about the type of parameter and the type of comparison.
-    function _enforceCompValue(ParameterConfig calldata config) private pure {
+    function _enforceParameterConfig(
+        ParameterConfig calldata config
+    ) private pure {
         assert(config.isScoped);
 
         if (config.compValues.length == 0) {
@@ -234,6 +227,14 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             if (config.compValues.length != 1) {
                 revert TooManyCompValuesForScope();
             }
+        }
+
+        if (
+            (config._type != ParameterType.Static) &&
+            (config.comp == Comparison.GreaterThan ||
+                config.comp == Comparison.LessThan)
+        ) {
+            revert UnsuitableRelativeComparison();
         }
 
         for (uint256 i = 0; i < config.compValues.length; i++) {
@@ -277,5 +278,17 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             paramType == ParameterType.Static
                 ? bytes32(compValue)
                 : keccak256(compValue);
+    }
+
+    function _compressCompValues(
+        ParameterType paramType,
+        bytes[] memory compValues
+    ) private pure returns (bytes32[] memory) {
+        bytes32[] memory result = new bytes32[](compValues.length);
+        for (uint256 i = 0; i < compValues.length; i++) {
+            result[i] = _compressCompValue(paramType, compValues[i]);
+        }
+
+        return result;
     }
 }
