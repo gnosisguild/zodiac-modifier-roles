@@ -3,7 +3,7 @@ import { ExecutionOptions as ExecutionOptionsEnum } from "../types"
 import { ExecutionOptions } from "./types"
 
 export const execOptions = (
-  options: ExecutionOptions = {}
+  options: ExecutionOptions
 ): ExecutionOptionsEnum => {
   if (options.send && options.delegatecall) return ExecutionOptionsEnum.Both
   if (options.delegatecall) return ExecutionOptionsEnum.DelegateCall

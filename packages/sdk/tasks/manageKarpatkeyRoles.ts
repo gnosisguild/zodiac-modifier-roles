@@ -14,7 +14,7 @@ import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
-import * as placeholders from "../src/presets/placeholders"
+import * as placeholders from "../src/presets/placeholdersTodo"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
@@ -255,7 +255,7 @@ const fillPlaceholders = (config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]) => ({
     ["bytes"],
     [config.BRIDGED_SAFE]
   ),
-  [placeholders.OMNI_BRIDGE_RECEIVER.string]: defaultAbiCoder.encode(
+  [placeholders.OMNI_BRIDGE_RECIPIENT.string]: defaultAbiCoder.encode(
     ["address"],
     [config.BRIDGED_SAFE]
   ),

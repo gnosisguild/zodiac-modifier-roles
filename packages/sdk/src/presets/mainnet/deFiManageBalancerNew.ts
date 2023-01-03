@@ -1,8 +1,8 @@
-import { RolePreset } from "../../types"
 import { allow as allowMap, contracts } from "../allow"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { AVATAR_ADDRESS } from "../placeholders"
+import { RolePreset } from "../types"
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 
@@ -33,6 +33,7 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([AAVE], [stkAAVE]),
     allow.aave.stkAave.stake(AVATAR_ADDRESS),
+
     allow.aave.stkAave.claimRewards(AVATAR_ADDRESS),
 
     //Initiates 10 days cooldown, till the 2 days unstaking window opens
@@ -185,8 +186,7 @@ const preset: RolePreset = {
       signature: "withdraw(uint256)",
     },
   ],
+  placeholders: { AVATAR_ADDRESS },
 }
-
-console.log("new", JSON.stringify(preset))
 
 export default preset

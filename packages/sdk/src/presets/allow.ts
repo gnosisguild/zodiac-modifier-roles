@@ -1,11 +1,13 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
-import { PresetFullyClearedTarget, PresetFunction } from "../types"
-
-import { execOptions } from "./execOptions"
 import { scopeParam } from "./scopeParam"
-import { ExecutionOptions, TupleScopings } from "./types"
+import {
+  PresetFullyClearedTarget,
+  PresetFunction,
+  ExecutionOptions,
+  TupleScopings,
+} from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
@@ -28,24 +30,16 @@ const makeAllowFunction = <
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
     const paramScopings = args.slice(0, functionInputs.length) as any[]
-    const options = args[functionInputs.length] as ExecutionOptions | undefined
-    console.log(
-      functionFragment.format("sighash"),
-      paramScopings,
-      paramScopings.some(Boolean),
-      paramScopings.flatMap((ps, index) =>
-        scopeParam(ps, functionInputs[index])
-      )
-    )
+    const options = (args[functionInputs.length] || {}) as ExecutionOptions
     return {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
-      options: execOptions(options),
       params: paramScopings.some(Boolean)
         ? paramScopings.flatMap((ps, index) =>
             scopeParam(ps, functionInputs[index])
           )
         : undefined,
+      ...options,
     }
   }
 }
@@ -68,7 +62,7 @@ const makeAllowContract = <C extends BaseContract>(
   ): PresetFullyClearedTarget => {
     return {
       targetAddress: contract.address,
-      options: execOptions(options),
+      ...options,
     }
   }
 

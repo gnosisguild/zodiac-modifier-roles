@@ -1,6 +1,6 @@
-import { RolePreset } from "../../types"
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
 import { AVATAR_ADDRESS } from "../placeholders"
+import { RolePreset } from "../types"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,
@@ -45,5 +45,6 @@ const preset: RolePreset = {
       signature: "getBoosterReward()",
     }),
   ],
+  placeholders: { AVATAR_ADDRESS },
 }
 export default preset

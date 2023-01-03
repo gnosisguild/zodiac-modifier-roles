@@ -1,5 +1,7 @@
 import { BigNumberish } from "ethers"
-import { BytesLike } from "ethers/lib/utils"
+import { BytesLike, ParamType } from "ethers/lib/utils"
+
+import { Comparison, ParameterType } from "../types"
 
 export interface ExecutionOptions {
   send?: boolean
@@ -7,18 +9,46 @@ export interface ExecutionOptions {
 }
 
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
-export type Placeholder<T extends PrimitiveValue> = BigNumberish extends T
-  ? { bignumberish: symbol }
-  : BytesLike extends T
-  ? { byteslike: symbol }
-  : string extends T
-  ? { string: symbol }
-  : boolean extends T
-  ? { boolean: symbol }
-  : never
 
-export type PlaceholderValues = {
-  [key: symbol]: string
+export class Placeholder<T> {
+  readonly name: string
+  readonly type: string
+  readonly description?: string
+
+  private original?: Placeholder<T>
+  private _value: T | undefined
+
+  constructor(name: string, type: ParamType | string, description?: string) {
+    this.name = name
+    this.type = typeof type === "string" ? type : type.format("sighash")
+    this.description = description
+  }
+
+  as(newType: ParamType | string) {
+    const result = new Placeholder<T>(this.name, newType, this.description)
+    result.original = this.original || this
+    return result
+  }
+
+  set value(value: T | undefined) {
+    if (this.original) {
+      throw new Error("Cannot set value on a placeholder that has been cast")
+    }
+
+    this._value = value
+  }
+
+  get value() {
+    return this.original ? this.original._value : this._value
+  }
+}
+
+export type PlaceholderValues<P extends RolePreset> = {
+  [key in keyof P["placeholders"]]: P["placeholders"][key] extends Placeholder<
+    infer T
+  >
+    ? T
+    : never
 }
 
 type PrimitiveParamScoping<T extends PrimitiveValue> =
@@ -63,3 +93,29 @@ export type ParamScoping<T> = T extends [...any[]]
   : T extends PrimitiveValue
   ? PrimitiveParamScoping<T>
   : never
+
+export interface RolePreset {
+  network: number
+  allow: PresetAllowEntry[]
+  placeholders: { [key: string]: Placeholder<any> }
+}
+
+// allows call to any function on the target addresses
+export type PresetFullyClearedTarget = {
+  targetAddress: string
+} & ExecutionOptions
+
+// allows calls to specific functions, optionally with parameter scoping
+export type PresetFunction = ({ sighash: string } | { signature: string }) & {
+  targetAddress: string
+  params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
+} & ExecutionOptions
+
+export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
+
+type ComparisonValue = string | Placeholder<any>
+export interface PresetScopeParam {
+  type: ParameterType
+  comparison: Comparison
+  value: ComparisonValue | ComparisonValue[]
+}

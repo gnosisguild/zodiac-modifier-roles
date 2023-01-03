@@ -13,7 +13,7 @@ import "@nomiclabs/hardhat-ethers"
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import encodeCalls from "../../src/encodeCalls"
-import fillPreset from "../../src/fillPreset"
+import fillPreset from "../../src/presets/fillPreset"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
@@ -23,8 +23,8 @@ import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
+  OMNI_BRIDGE_RECIPIENT_PLACEHOLDER,
+} from "../../src/presets/placeholdersTodo"
 import { RolePermissions, RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
@@ -146,7 +146,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
         ["bytes"],
         [config.BRIDGED_SAFE]
       ),
-      [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+      [OMNI_BRIDGE_RECIPIENT_PLACEHOLDER]: defaultAbiCoder.encode(
         ["address"],
         [config.BRIDGED_SAFE]
       ),

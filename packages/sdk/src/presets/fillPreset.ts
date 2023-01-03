@@ -1,41 +1,46 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { resolvePlaceholderValue } from "./presets/placeholders"
-import { PlaceholderValues } from "./presets/types"
 import {
   Clearance,
   ExecutionOptions,
   RolePermissions,
+  Comparison,
+} from "../types"
+
+import { execOptions } from "./execOptions"
+import {
+  PlaceholderValues,
   RolePreset,
   PresetScopeParam,
   PresetFunction,
   PresetAllowEntry,
-  Comparison,
+  Placeholder,
 } from "./types"
 
-// Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
-const fillPreset = (
-  preset: RolePreset,
-  placeholderValues: PlaceholderValues
+// Takes a RolePreset, fills in the placeholders, and returns a RolePermissions object
+const fillPreset = <P extends RolePreset>(
+  preset: P,
+  placeholderValues: PlaceholderValues<P>
 ): RolePermissions => {
-  preset = mergeFunctionEntries(preset)
-
+  preset = mergeFunctionEntries(preset) as P
   sanityCheck(preset)
 
-  // fill in avatar placeholders and encode comparison values
-  const { allow } = processParams(preset, placeholderValues)
+  const placeholderLookupMap = makePlaceholderLookupMap(
+    preset,
+    placeholderValues
+  )
 
-  const fullyClearedTargets = allow
+  const fullyClearedTargets = preset.allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => ({
       address: entry.targetAddress,
       clearance: Clearance.Target,
-      executionOptions: entry.options || ExecutionOptions.None,
+      executionOptions: execOptions(entry),
       functions: [],
     }))
 
   const functionTargets = Object.entries(
-    groupBy(allow.filter(isScoped), (entry) => entry.targetAddress)
+    groupBy(preset.allow.filter(isScoped), (entry) => entry.targetAddress)
   ).map(([targetAddress, allowFunctions]) => ({
     address: targetAddress,
     clearance: Clearance.Function,
@@ -48,11 +53,16 @@ const fillPreset = (
           functionSighash(allowFunction.signature)
       if (!sighash) throw new Error("invariant violation")
 
+      const parameters = processParams(
+        allowFunction.params,
+        placeholderLookupMap
+      )
+
       return {
         sighash,
-        executionOptions: allowFunction.options || ExecutionOptions.None,
-        wildcarded: allowFunction.params.length === 0,
-        parameters: allowFunction.params,
+        executionOptions: execOptions(allowFunction),
+        wildcarded: parameters.length === 0,
+        parameters,
       }
     }),
   }))
@@ -67,40 +77,63 @@ export default fillPreset
 const functionSighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
+const makePlaceholderLookupMap = <P extends RolePreset>(
+  preset: P,
+  placeholderValues: PlaceholderValues<P>
+) => {
+  const map = new Map<Placeholder<any>, any>()
+  for (const [key, placeholder] of Object.entries(preset.placeholders)) {
+    const value = placeholderValues[key]
+    if (value === undefined)
+      throw new Error(`Missing placeholder value for ${key}`)
+    map.set(placeholder, value)
+  }
+  return map
+}
+
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
-  preset: RolePreset,
-  placeholderValues: PlaceholderValues
-) => ({
-  ...preset,
-  allow: preset.allow.map((entry) => ({
-    ...entry,
-    params:
-      "params" in entry
-        ? Object.entries(entry.params || {})
-            .map(
-              ([key, param]) =>
-                param && {
-                  index: parseInt(key),
-                  type: param.type,
-                  comparison: param.comparison,
-                  comparisonValue: fillPlaceholderValues(
-                    param.value,
-                    placeholderValues
-                  ),
-                }
-            )
-            .filter(Boolean as any as <T>(x: T | undefined) => x is T)
-        : [],
-  })),
-})
+  params:
+    | (PresetScopeParam | undefined)[]
+    | Record<number, PresetScopeParam>
+    | undefined,
+  placeholderLookupMap: Map<Placeholder<any>, any>
+) => {
+  if (!params) return []
+
+  return Object.entries(params || {})
+    .map(
+      ([key, param]) =>
+        param && {
+          index: parseInt(key),
+          type: param.type,
+          comparison: param.comparison,
+          comparisonValue: fillPlaceholderValues(
+            param.value,
+            placeholderLookupMap
+          ),
+        }
+    )
+    .filter(Boolean as any as <T>(x: T | undefined) => x is T)
+}
 
 const fillPlaceholderValues = (
   value: PresetScopeParam["value"],
-  placeholderValues: PlaceholderValues
+  placeholderLookupMap: Map<Placeholder<any>, any>
 ) => {
-  const mapValue = (valueOrPlaceholder: PresetScopeParam["value"]) =>
-    resolvePlaceholderValue(valueOrPlaceholder, placeholderValues)
+  const mapValue = (valueOrPlaceholder: PresetScopeParam["value"]) => {
+    if (valueOrPlaceholder instanceof Placeholder) {
+      const value = placeholderLookupMap.get(valueOrPlaceholder)
+      if (value === undefined) {
+        throw new Error(
+          `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
+        )
+      }
+      return value
+    }
+
+    return valueOrPlaceholder
+  }
 
   return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
 }
@@ -182,8 +215,8 @@ const mergeFunctionEntries = (preset: RolePreset) => ({
     }
 
     if (
-      (matchingEntry.options || ExecutionOptions.None) !==
-      (entry.options || ExecutionOptions.None)
+      !!matchingEntry.send !== !!entry.send ||
+      !!matchingEntry.delegatecall !== !!entry.delegatecall
     ) {
       // we don't merge if execution options are different
       result.push(entry)
