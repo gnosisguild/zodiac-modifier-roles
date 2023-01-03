@@ -83,7 +83,7 @@ const SYMMETRIC = {
   ProxyRegistry: "0x46AD1cB076f43126B9a89FdC06f3C8FdF3EEe6e5",
 }
 
-const preset: RolePreset = {
+const preset = {
   network: 100,
   allow: [
     // Wrapped XDAI
@@ -276,5 +276,6 @@ const preset: RolePreset = {
   placeholders: {
     OMNI_BRIDGE_RECIPIENT_MAINNET,
   },
-}
+} satisfies RolePreset
+
 export default preset
