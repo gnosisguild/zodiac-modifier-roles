@@ -3,7 +3,6 @@ import "@nomiclabs/hardhat-ethers"
 import { writeFileSync } from "fs"
 import path from "path"
 
-import { defaultAbiCoder } from "ethers/lib/utils"
 import { task as baseTask, types } from "hardhat/config"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 
@@ -14,7 +13,6 @@ import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
-import * as placeholders from "../src/presets/placeholdersTodo"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
@@ -126,7 +124,7 @@ const getContract = async (safe: string, hre: HardhatRuntimeEnvironment) => {
     "0x0Df1f08f765238dc0b8beAAdDd6681F62e54beC6",
     Roles.interface,
     signers[0]
-  ) as Roles
+  ) as unknown as Roles
 }
 
 task("setMultisend").setAction(async (taskArgs, hre) => {
@@ -176,7 +174,7 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
-    fillPlaceholders(config),
+    { OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE },
     {
       network: config.NETWORK as NetworkId,
     }
@@ -195,7 +193,7 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageTestPreset,
-    fillPlaceholders(config),
+    {},
     {
       network: config.NETWORK as NetworkId,
     }
@@ -214,7 +212,7 @@ task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageBalancerPreset,
-    fillPlaceholders(config),
+    { AVATAR_ADDRESS: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
     }
@@ -233,7 +231,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
-    fillPlaceholders(config),
+    { AVATAR_ADDRESS: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
     }
@@ -244,19 +242,4 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     JSON.stringify(txBatches, undefined, 2)
   )
   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
-})
-
-const fillPlaceholders = (config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]) => ({
-  [placeholders.AVATAR_ADDRESS.string]: defaultAbiCoder.encode(
-    ["address"],
-    [config.AVATAR]
-  ),
-  [placeholders.OMNI_BRIDGE_DATA.byteslike]: defaultAbiCoder.encode(
-    ["bytes"],
-    [config.BRIDGED_SAFE]
-  ),
-  [placeholders.OMNI_BRIDGE_RECIPIENT.string]: defaultAbiCoder.encode(
-    ["address"],
-    [config.BRIDGED_SAFE]
-  ),
 })
