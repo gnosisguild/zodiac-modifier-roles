@@ -7,7 +7,7 @@ import "./ScopeConfig.sol";
 import "./Types.sol";
 
 abstract contract PermissionBuilder is OwnableUpgradeable {
-    uint256 internal constant SCOPE_MAX_PARAMS = 48;
+    uint256 internal constant SCOPE_MAX_PARAMS = 38;
 
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();

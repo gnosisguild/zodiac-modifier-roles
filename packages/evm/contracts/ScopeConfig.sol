@@ -16,9 +16,9 @@ library ScopeConfig {
         // 5   bits -> unused
         // 8   bits -> length
         // RIGHT SIDE
-        // 48  bits -> isScoped
-        // 96  bits -> paramType (2 bits per entry 48*2)
-        // 96  bits -> paramComp (2 bits per entry 48*2)
+        // 38  bits -> isScoped
+        // 72  bits -> paramType (2 bits per entry 38*2)
+        // 114 bits -> paramComp (3 bits per entry 38*3)
 
         // Wipe the LEFT SIDE clean. Start from there
         scopeConfig = (scopeConfig << 16) >> 16;
@@ -50,12 +50,12 @@ library ScopeConfig {
         // 5   bits -> unused
         // 8   bits -> length
         // RIGHT SIDE
-        // 48  bits -> isScoped
-        // 96  bits -> paramType (2 bits per entry 48*2)
-        // 96  bits -> paramComp (2 bits per entry 48*2)
-        uint256 isScopedMask = 1 << (index + 96 + 96);
-        uint256 paramTypeMask = 3 << (index * 2 + 96);
-        uint256 paramCompMask = 3 << (index * 2);
+        // 38  bits -> isScoped
+        // 72  bits -> paramType (2 bits per entry 38*2)
+        // 114 bits -> paramComp (3 bits per entry 38*3)
+        uint256 isScopedMask = 1 << (index + 72 + 114);
+        uint256 paramTypeMask = 3 << (index * 2 + 114);
+        uint256 paramCompMask = 7 << (index * 3);
 
         if (isScoped) {
             scopeConfig |= isScopedMask;
@@ -64,10 +64,10 @@ library ScopeConfig {
         }
 
         scopeConfig &= ~paramTypeMask;
-        scopeConfig |= uint256(paramType) << (index * 2 + 96);
+        scopeConfig |= uint256(paramType) << (index * 2 + 114);
 
         scopeConfig &= ~paramCompMask;
-        scopeConfig |= uint256(paramComp) << (index * 2);
+        scopeConfig |= uint256(paramComp) << (index * 3);
 
         return scopeConfig;
     }
@@ -94,14 +94,14 @@ library ScopeConfig {
         pure
         returns (bool isScoped, ParameterType paramType, Comparison paramComp)
     {
-        uint256 isScopedMask = 1 << (index + 96 + 96);
-        uint256 paramTypeMask = 3 << (index * 2 + 96);
-        uint256 paramCompMask = 3 << (index * 2);
+        uint256 isScopedMask = 1 << (index + 72 + 114);
+        uint256 paramTypeMask = 3 << (index * 2 + 114);
+        uint256 paramCompMask = 7 << (index * 3);
 
         isScoped = (scopeConfig & isScopedMask) != 0;
         paramType = ParameterType(
-            (scopeConfig & paramTypeMask) >> (index * 2 + 96)
+            (scopeConfig & paramTypeMask) >> (index * 2 + 114)
         );
-        paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 2));
+        paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 3));
     }
 }

@@ -12,7 +12,8 @@ enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
-    OneOf
+    OneOf,
+    SubsetOf
 }
 
 enum ExecutionOptions {
