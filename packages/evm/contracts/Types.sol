@@ -44,5 +44,6 @@ struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => uint256) functions;
+    mapping(bytes32 => bytes32) compValue;
     mapping(bytes32 => bytes32[]) compValues;
 }

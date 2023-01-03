@@ -219,7 +219,7 @@ abstract contract PermissionChecker is PermissionBuilder {
 
             bytes32 key = _keyForCompValues(targetAddress, selector, i);
             if (paramComp != Comparison.OneOf) {
-                compare(paramComp, role.compValues[key][0], value);
+                compare(paramComp, role.compValue[key], value);
             } else {
                 compareOneOf(role.compValues[key], value);
             }
