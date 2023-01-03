@@ -9,7 +9,7 @@ const CURVE_STETHETH_GAUGE_DEPOSIT =
 const AA_WSTETH_GAUGE_DEPOSIT = "0x675eC042325535F6e176638Dd2d4994F645502B9"
 const REFLEXER_REWARDS = "0x69c6C08B91010c88c95775B6FD768E5b04EFc106"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     {
@@ -37,6 +37,6 @@ const preset: RolePreset = {
     },
   ],
   placeholders: { AVATAR_ADDRESS },
-}
+} satisfies RolePreset
 
 export default preset

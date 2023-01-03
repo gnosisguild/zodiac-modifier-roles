@@ -12,7 +12,7 @@ import {
   SYMMETRIC_MINI_CHEF,
 } from "./addresses"
 
-const preset: RolePreset = {
+const preset = {
   network: 100,
   allow: [
     ...forAllTargetAddresses([SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF], {
@@ -46,5 +46,6 @@ const preset: RolePreset = {
     }),
   ],
   placeholders: { AVATAR_ADDRESS },
-}
+} satisfies RolePreset
+
 export default preset

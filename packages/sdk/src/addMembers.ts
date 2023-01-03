@@ -11,7 +11,10 @@ const addMembers = async (
   roleId: number,
   members: string[]
 ) => {
-  const contract = new Contract(rolesContractAddress, ROLES_ABI.abi) as Roles
+  const contract = new Contract(
+    rolesContractAddress,
+    ROLES_ABI.abi
+  ) as unknown as Roles
   return encodeMulti(
     (
       await Promise.all(

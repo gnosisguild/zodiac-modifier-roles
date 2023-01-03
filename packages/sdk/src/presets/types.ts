@@ -51,6 +51,13 @@ export type PlaceholderValues<P extends RolePreset> = {
     : never
 }
 
+type PromiseOrValue<T> = T | Promise<T>
+type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
+  ? U[]
+  : T extends PromiseOrValue<infer V>
+  ? V
+  : T
+
 type PrimitiveParamScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>
@@ -69,19 +76,19 @@ type ArrayParamScoping<T extends PrimitiveValue[]> =
     }
 
 export type TupleScopings<Params extends [...any[]]> = {
-  [Index in keyof Params]?: Params[Index] extends PrimitiveValue
-    ? PrimitiveParamScoping<Params[Index]>
-    : Params[Index] extends PrimitiveValue[]
-    ? ArrayParamScoping<Params[Index]>
-    : StructScopings<Params[Index]>
+  [Index in keyof Params]?: UnwrapPromise<Params[Index]> extends PrimitiveValue
+    ? PrimitiveParamScoping<UnwrapPromise<Params[Index]>>
+    : UnwrapPromise<Params[Index]> extends PrimitiveValue[]
+    ? ArrayParamScoping<UnwrapPromise<Params[Index]>>
+    : StructScopings<UnwrapPromise<Params[Index]>>
 } // TODO what about fixed-length arrays/tuple params? What scoping options shall be available for them?
 
 export type StructScopings<Struct extends { [key: string]: any }> = {
-  [Key in keyof Struct]?: Struct[Key] extends PrimitiveValue
-    ? PrimitiveParamScoping<Struct[Key]>
-    : Struct[Key] extends PrimitiveValue[]
-    ? ArrayParamScoping<Struct[Key]>
-    : StructScopings<Struct[Key]>
+  [Key in keyof Struct]?: UnwrapPromise<Struct[Key]> extends PrimitiveValue
+    ? PrimitiveParamScoping<UnwrapPromise<Struct[Key]>>
+    : UnwrapPromise<Struct[Key]> extends PrimitiveValue[]
+    ? ArrayParamScoping<UnwrapPromise<Struct[Key]>>
+    : StructScopings<UnwrapPromise<Struct[Key]>>
 }
 
 export type ParamScoping<T> = T extends [...any[]]

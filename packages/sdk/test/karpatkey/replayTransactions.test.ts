@@ -1,11 +1,13 @@
 import { writeFileSync } from "fs"
 import path from "path"
 
-import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
-import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
+import { EthAdapter } from "@safe-global/safe-core-sdk-types"
+import EthersAdapter, {
+  EthersAdapterConfig,
+} from "@safe-global/safe-ethers-lib"
 import SafeServiceClient, {
   SafeMultisigTransactionResponse,
-} from "@gnosis.pm/safe-service-client"
+} from "@safe-global/safe-service-client"
 import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle, ethers } from "hardhat"
 import "@nomiclabs/hardhat-ethers"
@@ -13,9 +15,9 @@ import "@nomiclabs/hardhat-ethers"
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import encodeCalls from "../../src/encodeCalls"
-import fillPreset from "../../src/presets/fillPreset"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
+import fillPreset from "../../src/presets/fillPreset"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
@@ -24,7 +26,7 @@ import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
   OMNI_BRIDGE_RECIPIENT_PLACEHOLDER,
-} from "../../src/presets/placeholdersTodo"
+} from "../../src/presets/placeholders"
 import { RolePermissions, RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 

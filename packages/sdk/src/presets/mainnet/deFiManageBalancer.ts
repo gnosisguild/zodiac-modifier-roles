@@ -42,7 +42,7 @@ const IDLE_DISTRIBUTOR_PROXY = "0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6"
 //Uniswap V3 contracts
 const UV3_NFT_POSITIONS = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //LIDO
@@ -283,8 +283,6 @@ const preset: RolePreset = {
     },
   ],
   placeholders: { AVATAR_ADDRESS },
-}
-
-console.log("old", JSON.stringify(preset))
+} satisfies RolePreset
 
 export default preset

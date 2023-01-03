@@ -22,7 +22,7 @@ const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
 const allow = allowMap.mainnet
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //LIDO
@@ -187,6 +187,6 @@ const preset: RolePreset = {
     },
   ],
   placeholders: { AVATAR_ADDRESS },
-}
+} satisfies RolePreset
 
 export default preset

@@ -48,7 +48,7 @@ const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 
 // TODO continue with txs before AUG 16
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     // AURA
@@ -156,5 +156,6 @@ const preset: RolePreset = {
     },
   ],
   placeholders: { AVATAR_ADDRESS, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
-}
+} satisfies RolePreset
+
 export default preset
