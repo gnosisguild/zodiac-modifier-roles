@@ -1,16 +1,12 @@
 import { ParamType, solidityPack } from "ethers/lib/utils"
 
-import {
-  Comparison,
-  ParameterType as PresetScopeParamType,
-  PresetScopeParam,
-} from "../types"
+import { Comparison, ParameterType as PresetScopeParamType } from "../types"
 
 import { subsetOf } from "./helpers/utils"
-import { isPlaceholder } from "./placeholders"
 import {
   ParamScoping,
   Placeholder,
+  PresetScopeParam,
   StructScopings,
   TupleScopings,
 } from "./types"
@@ -87,7 +83,7 @@ export const scopeParam = <T>(
   }
 }
 
-const solidityPackPadded = (type: string, value: any): string => {
+export const solidityPackPadded = (type: string, value: any): string => {
   const packed = solidityPack([type], [value]).slice(2)
   const padded = packed.padStart(64, "0")
   return "0x" + padded
@@ -95,7 +91,7 @@ const solidityPackPadded = (type: string, value: any): string => {
 
 const encodeValue = (value: any, type: string): string | Placeholder<any> => {
   let encodedValue = value
-  if (!isPlaceholder(value)) {
+  if (!(value instanceof Placeholder)) {
     encodedValue = solidityPackPadded(type, value)
   }
   return encodedValue

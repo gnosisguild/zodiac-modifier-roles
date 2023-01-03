@@ -1,14 +1,12 @@
 import { solidityPack } from "ethers/lib/utils"
 
+import { Comparison, ParameterType } from "../../types"
 import {
-  Comparison,
   ExecutionOptions,
-  ParameterType,
+  Placeholder,
   PresetAllowEntry,
   PresetScopeParam,
-} from "../../types"
-import { isPlaceholder } from "../placeholders"
-import { Placeholder } from "../types"
+} from "../types"
 
 const solidityPackPadded = (type: string, value: any): string => {
   const packed = solidityPack([type], [value]).slice(2)
@@ -18,7 +16,7 @@ const solidityPackPadded = (type: string, value: any): string => {
 
 const encodeValue = (value: any, type?: string): string | Placeholder<any> => {
   let encodedValue = value
-  if (!isPlaceholder(value)) {
+  if (!(value instanceof Placeholder)) {
     if (!type) {
       throw new Error("the value type must be specified")
     } else {
@@ -127,19 +125,16 @@ export const subsetOf = (
   return dynamic32OneOf(allowedValues, type)
 }
 
-interface PresetFullyClearedTarget {
-  options?: ExecutionOptions
-}
-type PresetFunction = ({ sighash: string } | { signature: string }) & {
+type PartialPresetFullyClearedTarget = ExecutionOptions
+type PartialPresetFunction = ({ sighash: string } | { signature: string }) & {
   params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
-  options?: ExecutionOptions
-}
+} & ExecutionOptions
 export const forAllTargetAddresses = (
   targetAddresses: string[],
   allow:
-    | PresetFullyClearedTarget
-    | PresetFunction
-    | (PresetFullyClearedTarget | PresetFunction)[]
+    | PartialPresetFullyClearedTarget
+    | PartialPresetFunction
+    | (PartialPresetFullyClearedTarget | PartialPresetFunction)[]
 ): PresetAllowEntry[] => {
   const allowArray = Array.isArray(allow) ? allow : [allow]
   return targetAddresses.flatMap((targetAddress) =>

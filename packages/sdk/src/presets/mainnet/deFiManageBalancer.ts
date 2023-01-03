@@ -1,9 +1,9 @@
-import { ExecutionOptions, RolePreset } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { dynamic32Equal, staticEqual, subsetOf } from "../helpers/utils"
-import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
+import { AVATAR_ADDRESS } from "../placeholders"
+import { RolePreset } from "../types"
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 //Tokens
@@ -221,18 +221,18 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint(address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256)",
-      options: ExecutionOptions.Send,
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticEqual(3000, "uint24"),
         [9]: staticEqual(AVATAR_ADDRESS),
       },
+      send: true,
     },
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //Increase liquidity
@@ -240,13 +240,13 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     //refundETH() is already whitelisted
     //{
     //  targetAddress: UV3_NFT_POSITIONS,
     //  signature: "refundETH()",
-    //  options: ExecutionOptions.Send,
+    //  send: true,
     //},
 
     //Remove liquidity
@@ -282,6 +282,7 @@ const preset: RolePreset = {
       signature: "withdraw(uint256)",
     },
   ],
+  placeholders: { AVATAR_ADDRESS },
 }
 
 console.log("old", JSON.stringify(preset))

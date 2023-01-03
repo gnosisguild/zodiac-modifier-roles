@@ -1,12 +1,12 @@
-import { ExecutionOptions, RolePreset } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
 import { staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
+import { RolePreset } from "../types"
 
 const preset: RolePreset = {
   network: 1,
   allow: [...allowLido()],
+  placeholders: {},
 }
 export default preset

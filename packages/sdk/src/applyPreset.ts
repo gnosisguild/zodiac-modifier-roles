@@ -19,12 +19,12 @@ import { Roles } from "../../evm/typechain-types"
 
 import encodeCalls from "./encodeCalls"
 import fetchPermissions from "./fetchPermissions"
-import fillPreset from "./fillPreset"
 import logCall from "./logCall"
 import patchPermissions from "./patchPermissions"
-import { PlaceholderValues } from "./presets/types"
+import fillPreset from "./presets/fillPreset"
+import { PlaceholderValues, RolePreset } from "./presets/types"
 import SAFE_TX_SERVICE from "./safeTxService"
-import { RolePermissions, RolePreset, NetworkId } from "./types"
+import { RolePermissions, NetworkId } from "./types"
 
 let nonce: number
 

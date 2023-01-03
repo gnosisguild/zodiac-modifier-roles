@@ -1,4 +1,4 @@
-import { PresetAllowEntry } from "../../../types"
+import { PresetAllowEntry } from "../../types"
 
 import { allowGauge } from "./gauge"
 import pools from "./pools"

@@ -9,7 +9,7 @@ import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManag
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 import balancerManagePreset from "../../src/presets/mainnet/deFiManageBalancerNew"
-import * as placeholders from "../../src/presets/placeholders"
+import * as placeholders from "../../src/presets/placeholdersTodo"
 import { RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
@@ -85,7 +85,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
           ["bytes"],
           [config.BRIDGED_SAFE]
         ),
-        [placeholders.OMNI_BRIDGE_RECEIVER.string]: defaultAbiCoder.encode(
+        [placeholders.OMNI_BRIDGE_RECIPIENT.string]: defaultAbiCoder.encode(
           ["address"],
           [config.BRIDGED_SAFE]
         ),

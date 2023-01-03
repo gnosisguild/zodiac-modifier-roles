@@ -1,11 +1,11 @@
-import { ExecutionOptions, RolePreset } from "../../types"
 import { allowErc20Approve, allowErc20Transfer } from "../helpers/erc20"
 import {
   dynamicEqual,
   forAllTargetAddresses,
   staticEqual,
 } from "../helpers/utils"
-import { AVATAR_ADDRESS, OMNI_BRIDGE_DATA } from "../placeholders"
+import { AVATAR_ADDRESS, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../placeholders"
+import { RolePreset } from "../types"
 
 import {
   CURVE_x3CRV_GAUGE,
@@ -90,7 +90,7 @@ const preset: RolePreset = {
     {
       targetAddress: TOKENS["Wrapped XDAI"],
       signature: "deposit()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     // OmniBridge -->
@@ -99,7 +99,7 @@ const preset: RolePreset = {
       targetAddress: OMNI_BRIDGE,
       signature: "transferAndCall(address,uint256,bytes)",
       params: {
-        [2]: dynamicEqual(OMNI_BRIDGE_DATA),
+        [2]: dynamicEqual(OMNI_BRIDGE_RECIPIENT_MAINNET.as("bytes")),
       },
     },
     // <-- OmniBridge
@@ -120,7 +120,7 @@ const preset: RolePreset = {
         params: {
           [6]: staticEqual(AVATAR_ADDRESS), // ensure LP tokens are sent to Avatar
         },
-        options: ExecutionOptions.Send,
+        send: true,
       },
       {
         signature:
@@ -273,5 +273,8 @@ const preset: RolePreset = {
     },
     // <-- Mai.finance
   ],
+  placeholders: {
+    OMNI_BRIDGE_RECIPIENT_MAINNET,
+  },
 }
 export default preset

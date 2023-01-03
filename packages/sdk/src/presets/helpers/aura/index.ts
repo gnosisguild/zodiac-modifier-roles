@@ -1,4 +1,4 @@
-import { PresetAllowEntry } from "../../../types"
+import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
 
 import pools from "./pools"

@@ -1,6 +1,6 @@
-import { RolePreset } from "../../types"
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
 import { AVATAR_ADDRESS } from "../placeholders"
+import { RolePreset } from "../types"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
 const CONVEX_CLAIM_ZAP = "0xDd49A93FDcae579AE50B4b9923325e9e335ec82B"
@@ -36,5 +36,7 @@ const preset: RolePreset = {
       signature: "getRewards()",
     },
   ],
+  placeholders: { AVATAR_ADDRESS },
 }
+
 export default preset

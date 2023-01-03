@@ -1,6 +1,6 @@
-import { PresetAllowEntry } from "../../../types"
 import { staticEqual } from "../../helpers/utils"
 import { AVATAR_ADDRESS } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
 
 //Tokens

@@ -1,9 +1,12 @@
-import { ExecutionOptions, RolePreset } from "../../types"
 import { allowAuraPool } from "../helpers/aura"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS, OMNI_BRIDGE_RECEIVER } from "../placeholders"
+import {
+  AVATAR_ADDRESS,
+  OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN,
+} from "../placeholders"
+import { RolePreset } from "../types"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
@@ -84,7 +87,7 @@ const preset: RolePreset = {
         [1]: staticEqual(AVATAR_ADDRESS),
         [2]: staticEqual(AVATAR_ADDRESS),
       },
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     // LIDO
@@ -139,7 +142,7 @@ const preset: RolePreset = {
     {
       targetAddress: WETH,
       signature: "deposit()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     // OMNI BRIDGE
@@ -148,9 +151,10 @@ const preset: RolePreset = {
       targetAddress: OMNI_BRIDGE,
       signature: "relayTokens(address,address,uint256)",
       params: {
-        [1]: staticEqual(OMNI_BRIDGE_RECEIVER),
+        [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
       },
     },
   ],
+  placeholders: { AVATAR_ADDRESS, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 }
 export default preset
