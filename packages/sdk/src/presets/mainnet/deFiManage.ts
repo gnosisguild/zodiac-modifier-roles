@@ -2,10 +2,7 @@ import { allowAuraPool } from "../helpers/aura"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS,
-  OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN,
-} from "../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../placeholders"
 import { RolePreset } from "../types"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
@@ -59,7 +56,7 @@ const preset = {
     {
       targetAddress: AURA_LOCKER,
       signature: "lock(address,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     {
       targetAddress: AURA_BOOSTER,
@@ -84,8 +81,8 @@ const preset = {
       signature:
         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS),
-        [2]: staticEqual(AVATAR_ADDRESS),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
       send: true,
     },
@@ -104,7 +101,7 @@ const preset = {
     {
       targetAddress: CONVEX_LOCKER,
       signature: "lock(address,uint256,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     {
       targetAddress: CONVEX_LOCKER,
@@ -155,7 +152,7 @@ const preset = {
       },
     },
   ],
-  placeholders: { AVATAR_ADDRESS, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
+  placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset
 
 export default preset

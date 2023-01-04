@@ -1,5 +1,5 @@
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS } from "../placeholders"
+import { AVATAR } from "../placeholders"
 import { RolePreset } from "../types"
 
 import {
@@ -18,7 +18,7 @@ const preset = {
     ...forAllTargetAddresses([SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF], {
       signature: "harvest(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS), // ensure rewards are sent to Avatar
+        [1]: staticEqual(AVATAR), // ensure rewards are sent to Avatar
       },
     }),
 
@@ -27,7 +27,7 @@ const preset = {
       {
         signature: "claim_rewards(address)",
         params: {
-          [0]: staticEqual(AVATAR_ADDRESS), // ensure rewards are sent to Avatar
+          [0]: staticEqual(AVATAR), // ensure rewards are sent to Avatar
         },
       }
     ),
@@ -45,7 +45,7 @@ const preset = {
       signature: "getBoosterReward()",
     }),
   ],
-  placeholders: { AVATAR_ADDRESS },
+  placeholders: { AVATAR },
 } satisfies RolePreset
 
 export default preset

@@ -1,5 +1,4 @@
 import { BigNumber } from "ethers"
-import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
@@ -9,8 +8,7 @@ import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManag
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 import balancerManagePreset from "../../src/presets/mainnet/deFiManageBalancerNew"
-import * as placeholders from "../../src/presets/placeholdersTodo"
-import { RolePreset } from "../../src/types"
+import { RolePreset } from "../../src/presets/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
 import balancerManageTransactions from "./testTransactions/balancerManage"
@@ -30,7 +28,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const multiSend = await MultiSend.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
-    const avatar = (await Avatar.deploy()) as TestAvatar
+    const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const Permissions = await hre.ethers.getContractFactory("Permissions")
     const permissions = await Permissions.deploy()
@@ -44,7 +42,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles
+    )) as unknown as Roles
 
     await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
@@ -72,24 +70,16 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     transactions: { from: string; value?: string; data: string; to: string }[]
   }) => {
     const { owner, modifier } = await setup()
+    const placeholderValues = {
+      AVATAR: config.AVATAR,
+      OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
+      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+    }
     const permissionUpdateTransactions = await encodeApplyPreset(
       modifier.address,
       ROLE_ID,
       preset,
-      {
-        [placeholders.AVATAR_ADDRESS.string]: defaultAbiCoder.encode(
-          ["address"],
-          [config.AVATAR]
-        ),
-        [placeholders.OMNI_BRIDGE_DATA.byteslike]: defaultAbiCoder.encode(
-          ["bytes"],
-          [config.BRIDGED_SAFE]
-        ),
-        [placeholders.OMNI_BRIDGE_RECIPIENT.string]: defaultAbiCoder.encode(
-          ["address"],
-          [config.BRIDGED_SAFE]
-        ),
-      },
+      placeholderValues,
       {
         currentPermissions: { targets: [] },
         network: 100, // this value won't be used

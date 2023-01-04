@@ -212,7 +212,7 @@ task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageBalancerPreset,
-    { AVATAR_ADDRESS: config.AVATAR },
+    { AVATAR: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
     }
@@ -231,7 +231,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
-    { AVATAR_ADDRESS: config.AVATAR },
+    { AVATAR: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
     }

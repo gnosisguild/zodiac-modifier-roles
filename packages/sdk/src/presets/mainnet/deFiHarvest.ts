@@ -1,5 +1,5 @@
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS } from "../placeholders"
+import { AVATAR } from "../placeholders"
 import { RolePreset } from "../types"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
@@ -27,7 +27,7 @@ const preset = {
       {
         signature: "claim_rewards(address)",
         params: {
-          [0]: staticEqual(AVATAR_ADDRESS),
+          [0]: staticEqual(AVATAR),
         },
       }
     ),
@@ -36,7 +36,7 @@ const preset = {
       signature: "getRewards()",
     },
   ],
-  placeholders: { AVATAR_ADDRESS },
+  placeholders: { AVATAR },
 } satisfies RolePreset
 
 export default preset

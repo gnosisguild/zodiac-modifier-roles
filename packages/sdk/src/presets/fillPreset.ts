@@ -125,7 +125,7 @@ const fillPlaceholderValues = (
 ) => {
   const mapValue = (valueOrPlaceholder: ComparisonValue) => {
     if (valueOrPlaceholder instanceof Placeholder) {
-      const value = placeholderLookupMap.get(valueOrPlaceholder)
+      const value = placeholderLookupMap.get(valueOrPlaceholder.identity)
       if (value === undefined) {
         throw new Error(
           `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`

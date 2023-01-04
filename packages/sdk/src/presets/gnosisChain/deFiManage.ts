@@ -4,7 +4,7 @@ import {
   forAllTargetAddresses,
   staticEqual,
 } from "../helpers/utils"
-import { AVATAR_ADDRESS, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../placeholders"
 import { RolePreset } from "../types"
 
 import {
@@ -111,14 +111,14 @@ const preset = {
         signature:
           "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
         params: {
-          [6]: staticEqual(AVATAR_ADDRESS), // ensure LP tokens are sent to Avatar
+          [6]: staticEqual(AVATAR), // ensure LP tokens are sent to Avatar
         },
       },
       {
         signature:
           "addLiquidityETH(address,address,uint256,uint256,uint256,uint256,address,uint256)",
         params: {
-          [6]: staticEqual(AVATAR_ADDRESS), // ensure LP tokens are sent to Avatar
+          [6]: staticEqual(AVATAR), // ensure LP tokens are sent to Avatar
         },
         send: true,
       },
@@ -126,14 +126,14 @@ const preset = {
         signature:
           "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
         params: {
-          [5]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
+          [5]: staticEqual(AVATAR), // ensure tokens are sent to Avatar
         },
       },
       {
         signature:
           "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
         params: {
-          [4]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
+          [4]: staticEqual(AVATAR), // ensure tokens are sent to Avatar
         },
       },
     ]),
@@ -151,7 +151,7 @@ const preset = {
         "removeLiquidityxDAI(address,uint256,uint256,uint256,address,uint256)",
       targetAddress: UNI_V2_ROUTERS["Elk Router"],
       params: {
-        [4]: staticEqual(AVATAR_ADDRESS), // ensure tokens are sent to Avatar
+        [4]: staticEqual(AVATAR), // ensure tokens are sent to Avatar
       },
     },
     { signature: "stake(uint256)", targetAddress: ELK_FARMING_REWARDS },
@@ -182,13 +182,13 @@ const preset = {
     {
       signature: "deposit(uint256,uint256,address)",
       targetAddress: SUSHISWAP_MINI_CHEF,
-      params: { [2]: staticEqual(AVATAR_ADDRESS) },
+      params: { [2]: staticEqual(AVATAR) },
     },
 
     {
       targetAddress: SUSHISWAP_MINI_CHEF,
       signature: "withdrawAndHarvest(uint256,uint256,address)",
-      params: { [2]: staticEqual(AVATAR_ADDRESS) },
+      params: { [2]: staticEqual(AVATAR) },
     },
     // <-- SushiSwap
 
@@ -234,14 +234,14 @@ const preset = {
       signature: "remove_liquidity(address,uint256,uint256[4],address)",
       targetAddress: CURVE.DepositContract,
       params: {
-        [3]: staticEqual(AVATAR_ADDRESS),
+        [3]: staticEqual(AVATAR),
       },
     },
     {
       signature: "remove_liquidity_one_coin(address,uint256,int128,uint256)",
       targetAddress: CURVE.DepositContract,
       params: {
-        [3]: staticEqual(AVATAR_ADDRESS),
+        [3]: staticEqual(AVATAR),
       },
     },
     // <-- Curve
@@ -260,7 +260,7 @@ const preset = {
       },
       {
         signature: "exit(address)",
-        params: [staticEqual(AVATAR_ADDRESS)],
+        params: [staticEqual(AVATAR)],
       },
     ]),
 
@@ -274,6 +274,7 @@ const preset = {
     // <-- Mai.finance
   ],
   placeholders: {
+    AVATAR,
     OMNI_BRIDGE_RECIPIENT_MAINNET,
   },
 } satisfies RolePreset
