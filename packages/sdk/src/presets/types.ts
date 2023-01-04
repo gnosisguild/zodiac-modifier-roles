@@ -15,8 +15,7 @@ export class Placeholder<T> {
   readonly type: string
   readonly description?: string
 
-  private original?: Placeholder<T>
-  private _value: T | undefined
+  private _identity?: Placeholder<T>
 
   constructor(name: string, type: ParamType | string, description?: string) {
     this.name = name
@@ -26,20 +25,12 @@ export class Placeholder<T> {
 
   as(newType: ParamType | string) {
     const result = new Placeholder<T>(this.name, newType, this.description)
-    result.original = this.original || this
+    result._identity = this.identity
     return result
   }
 
-  set value(value: T | undefined) {
-    if (this.original) {
-      throw new Error("Cannot set value on a placeholder that has been cast")
-    }
-
-    this._value = value
-  }
-
-  get value() {
-    return this.original ? this.original._value : this._value
+  get identity(): Placeholder<T> {
+    return this._identity || this
   }
 }
 

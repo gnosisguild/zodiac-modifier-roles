@@ -1,7 +1,7 @@
 import { allow as allowMap, contracts } from "../allow"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
-import { AVATAR_ADDRESS } from "../placeholders"
+import { AVATAR } from "../placeholders"
 import { RolePreset } from "../types"
 
 const ZERO = "0x0000000000000000000000000000000000000000"
@@ -32,15 +32,15 @@ const preset = {
     //Staking of AAVE in Safety Module
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([AAVE], [stkAAVE]),
-    allow.aave.stkAave.stake(AVATAR_ADDRESS),
+    allow.aave.stkAave.stake(AVATAR),
 
-    allow.aave.stkAave.claimRewards(AVATAR_ADDRESS),
+    allow.aave.stkAave.claimRewards(AVATAR),
 
     //Initiates 10 days cooldown, till the 2 days unstaking window opens
     allow.aave.stkAave.cooldown(),
 
     //Unstakes, can only be called during the 2 days window after the 10 days cooldown
-    allow.aave.stkAave.redeem(AVATAR_ADDRESS),
+    allow.aave.stkAave.redeem(AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - USDC
@@ -110,7 +110,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - Claiming of rewards
     //---------------------------------------------------------------------------------------------------------------------------------
-    allow.compound.comptroller["claimComp(address,address[])"](AVATAR_ADDRESS, {
+    allow.compound.comptroller["claimComp(address,address[])"](AVATAR, {
       subsetOf: [cAAVE, cDAI, cUSDC]
         .map((address) => address.toLowerCase())
         .sort(), // compound app will always pass tokens in ascending order
@@ -164,7 +164,7 @@ const preset = {
       token0: WBTC,
       token1: WETH,
       fee: 3000,
-      recipient: AVATAR_ADDRESS,
+      recipient: AVATAR,
     }),
     allow.uniswap.nftPositions.refundETH({ send: true }),
 
@@ -177,7 +177,7 @@ const preset = {
     //Remove liquidity
     allow.uniswap.nftPositions.decreaseLiquidity(),
     allow.uniswap.nftPositions.collect({ recipient: ZERO }),
-    allow.uniswap.nftPositions.unwrapWETH9(undefined, AVATAR_ADDRESS),
+    allow.uniswap.nftPositions.unwrapWETH9(undefined, AVATAR),
     allow.uniswap.nftPositions.sweepToken(WBTC),
 
     //Unwrapping of WETH
@@ -186,7 +186,7 @@ const preset = {
       signature: "withdraw(uint256)",
     },
   ],
-  placeholders: { AVATAR_ADDRESS },
+  placeholders: { AVATAR },
 } satisfies RolePreset
 
 export default preset
