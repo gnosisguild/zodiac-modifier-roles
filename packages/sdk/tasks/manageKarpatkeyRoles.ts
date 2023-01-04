@@ -174,7 +174,10 @@ task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
-    { OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE },
+    {
+      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+      AVATAR: config.AVATAR,
+    },
     {
       network: config.NETWORK as NetworkId,
     }

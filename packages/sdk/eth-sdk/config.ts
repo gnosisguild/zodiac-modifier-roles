@@ -5,7 +5,6 @@ export default defineConfig({
     mainnet: {
       uniswap: {
         nftPositions: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
-        test: "0x0000000000000000000000000000000000000000",
       },
       compound: {
         comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b",
