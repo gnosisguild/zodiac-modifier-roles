@@ -8,6 +8,7 @@ import {
 } from "../types"
 
 import { execOptions } from "./execOptions"
+import { solidityPackPadded } from "./scopeParam"
 import {
   PlaceholderValues,
   RolePreset,
@@ -15,6 +16,7 @@ import {
   PresetFunction,
   PresetAllowEntry,
   Placeholder,
+  ComparisonValue,
 } from "./types"
 
 // Takes a RolePreset, fills in the placeholders, and returns a RolePermissions object
@@ -121,7 +123,7 @@ const fillPlaceholderValues = (
   value: PresetScopeParam["value"],
   placeholderLookupMap: Map<Placeholder<any>, any>
 ) => {
-  const mapValue = (valueOrPlaceholder: PresetScopeParam["value"]) => {
+  const mapValue = (valueOrPlaceholder: ComparisonValue) => {
     if (valueOrPlaceholder instanceof Placeholder) {
       const value = placeholderLookupMap.get(valueOrPlaceholder)
       if (value === undefined) {
@@ -129,7 +131,7 @@ const fillPlaceholderValues = (
           `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
         )
       }
-      return value
+      return solidityPackPadded(valueOrPlaceholder.type, value)
     }
 
     return valueOrPlaceholder
