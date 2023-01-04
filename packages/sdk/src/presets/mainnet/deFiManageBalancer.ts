@@ -420,23 +420,13 @@ const preset = {
     ...allowErc20Approve([sETH2], [UV3_NFT_POSITIONS]),
 
     //Add liquidity
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature:
-        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      send: true,
-      params: {
-        [0]: staticEqual(WETH, "address"),
-        [1]: staticEqual(sETH2, "address"),
-        [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "refundETH()",
-      send: true,
-    },
+    allow.uniswap.nftPositions.mint({
+      token0: WETH,
+      token1: sETH2,
+      fee: 3000,
+      recipient: AVATAR,
+    }),
+    allow.uniswap.nftPositions.refundETH({ send: true }),
 
     //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
     /*
