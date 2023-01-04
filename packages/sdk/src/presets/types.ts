@@ -120,7 +120,7 @@ export type PresetFunction = ({ sighash: string } | { signature: string }) & {
 
 export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
-type ComparisonValue = string | Placeholder<any>
+export type ComparisonValue = string | Placeholder<any>
 export interface PresetScopeParam {
   type: ParameterType
   comparison: Comparison
