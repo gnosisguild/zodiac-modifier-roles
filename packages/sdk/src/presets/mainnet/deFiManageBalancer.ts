@@ -1,8 +1,12 @@
+import { allow as allowMap, contracts as contractsMap } from "../allow"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
-import { dynamic32Equal, staticEqual, subsetOf } from "../helpers/utils"
+import { dynamic32Equal, staticEqual } from "../helpers/utils"
 import { AVATAR } from "../placeholders"
 import { RolePreset } from "../types"
+
+const allow = allowMap.mainnet
+const contracts = contractsMap.mainnet
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 //Tokens
@@ -16,14 +20,11 @@ const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 //AAVE contracts
 const AAVE_SPENDER = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9"
 const AAVE = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9"
-const stkAAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
 
 //Compound V3 contracts
-const COMET_REWARDS = "0x1B0e765F6224C21223AeA2af16c1C46E38885a40"
 const cUSDCV3 = "0xc3d688B66703497DAA19211EEdff47f25384cdc3"
 
 //Compound V2 contracts
-const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
 const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
 const cAAVE = "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
 const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
@@ -34,8 +35,6 @@ const ACROSS_HUB = "0xc186fA914353c44b2E33eBE05f21846F1048bEda"
 
 //Idle contracts
 const IDLE_stETH_CDO = "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8"
-const IDLE_wstETH_AA_GAUGE = "0x675eC042325535F6e176638Dd2d4994F645502B9"
-const IDLE_DISTRIBUTOR_PROXY = "0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6"
 const stETH = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
 const IDLE_wstETH_AA_TRANCHE = "0x2688FC68c4eac90d9E5e1B94776cF14eADe8D877"
 
@@ -82,36 +81,17 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Staking of AAVE in Safety Module
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([AAVE], [stkAAVE]),
-    {
-      targetAddress: stkAAVE,
-      signature: "stake(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
-    {
-      targetAddress: stkAAVE,
-      signature: "claimRewards(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
+    ...allowErc20Approve([AAVE], [contracts.aave.stkAave.address]),
+
+    allow.aave.stkAave.stake(AVATAR),
+
+    allow.aave.stkAave.claimRewards(AVATAR),
 
     //Initiates 10 days cooldown, till the 2 days unstaking window opens
-    {
-      targetAddress: stkAAVE,
-      signature: "cooldown()",
-    },
+    allow.aave.stkAave.cooldown(),
 
     //Unstakes, can only be called during the 2 days window after the 10 days cooldown
-    {
-      targetAddress: stkAAVE,
-      signature: "redeem(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
+    allow.aave.stkAave.redeem(AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - USDC
@@ -180,20 +160,12 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - Claiming of rewards
     //---------------------------------------------------------------------------------------------------------------------------------
-    {
-      targetAddress: COMPTROLLER,
-      signature: "claimComp(address,address[])",
-      params: {
-        [0]: staticEqual(AVATAR),
-        [1]: subsetOf(
-          [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
-          "address[]",
-          {
-            restrictOrder: true,
-          }
-        ),
-      },
-    },
+    allow.compound.comptroller["claimComp(address,address[])"](AVATAR, {
+      subsetOf: [cAAVE, cDAI, cUSDC]
+        .map((address) => address.toLowerCase())
+        .sort(), // compound app will always pass tokens in ascending order
+      restrictOrder: true,
+    }),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Idle - Deposit stETH and stake it on "Lido - stETH - Senior Tranche"
@@ -201,6 +173,33 @@ const preset = {
 
     //Depositing
     ...allowErc20Approve([stETH], [IDLE_stETH_CDO]),
+
+    //Deposit in AA tranche
+    allow.idle.stEthCdo.depositAA(),
+
+    //Withdraw from AA tranche
+    allow.idle.stEthCdo.withdrawAA(),
+
+    //Staking
+    ...allowErc20Approve(
+      [IDLE_wstETH_AA_TRANCHE],
+      [contracts.idle.wstEthAaGauge.address]
+    ),
+
+    //Stake in AA gauge
+    allow.idle.wstEthAaGauge["deposit(uint256)"](),
+
+    //Withdraw from AA gauge
+    allow.idle.wstEthAaGauge["withdraw(uint256)"](),
+
+    //Claiming of rewards
+    //Claim LIDO
+    allow.idle.wstEthAaGauge["claim_rewards()"](),
+
+    //Claim IDLE
+    allow.idle.distributorProxy.distribute(
+      contracts.idle.wstEthAaGauge.address
+    ),
 
     //Deposit in AA tranche
     {
@@ -213,57 +212,20 @@ const preset = {
       signature: "withdrawAA(uint256)",
     },
 
-    //Staking
-    ...allowErc20Approve([IDLE_wstETH_AA_TRANCHE], [IDLE_wstETH_AA_GAUGE]),
-    //Stake in AA gauge
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "deposit(uint256)",
-    },
-    //Withdraw from AA gauge
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "withdraw(uint256)",
-    },
-    //Claiming of rewards
-    //Claim LIDO
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "claim_rewards()",
-    },
-    //Claim IDLE
-    {
-      targetAddress: IDLE_DISTRIBUTOR_PROXY,
-      signature: "distribute(address)",
-      params: {
-        [0]: staticEqual(IDLE_wstETH_AA_GAUGE, "address"),
-      },
-    },
-
     //---------------------------------------------------------------------------------------------------------------------------------
     //Uniswap V3 - WBTC + ETH, Range: 11.786 - 15.082. Fee: 0.3%.
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...allowErc20Approve([WBTC], [UV3_NFT_POSITIONS]),
+    ...allowErc20Approve([WBTC], [contracts.uniswap.nftPositions.address]),
 
     //Add liquidity
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature:
-        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      send: true,
-      params: {
-        [0]: staticEqual(WBTC, "address"),
-        [1]: staticEqual(WETH, "address"),
-        [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "refundETH()",
-      send: true,
-    },
+    allow.uniswap.nftPositions.mint({
+      token0: WBTC,
+      token1: WETH,
+      fee: 3000,
+      recipient: AVATAR,
+    }),
+    allow.uniswap.nftPositions.refundETH({ send: true }),
 
     //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id
     /*
@@ -285,32 +247,10 @@ const preset = {
     */
 
     //Remove liquidity
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "collect((uint256,address,uint128,uint128))",
-      params: {
-        [1]: staticEqual(ZERO, "address"),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "unwrapWETH9(uint256,address)",
-      params: {
-        [1]: staticEqual(AVATAR),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "sweepToken(address,uint256,address)",
-      params: {
-        [0]: staticEqual(WBTC, "address"),
-        [2]: staticEqual(AVATAR),
-      },
-    },
+    allow.uniswap.nftPositions.decreaseLiquidity(),
+    allow.uniswap.nftPositions.collect({ recipient: ZERO }),
+    allow.uniswap.nftPositions.unwrapWETH9(undefined, AVATAR),
+    allow.uniswap.nftPositions.sweepToken(WBTC, undefined, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //mStable - staking of MTA
