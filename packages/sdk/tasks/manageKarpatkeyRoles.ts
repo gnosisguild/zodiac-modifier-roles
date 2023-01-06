@@ -3,6 +3,7 @@ import "@nomiclabs/hardhat-ethers"
 import { writeFileSync } from "fs"
 import path from "path"
 
+import { defaultAbiCoder } from "ethers/lib/utils"
 import { task as baseTask, types } from "hardhat/config"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 
@@ -11,8 +12,16 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/deFiManageBalancer"
+import mainnetDeFiManageBalancer1Preset from "../src/presets/mainnet/deFiManageBalancer1"
+import mainnetDeFiHarvestBalancer1Preset from "../src/presets/mainnet/deFiHarvestBalancer1"
+import mainnetDeFiSwapBalancer1Preset from "../src/presets/mainnet/deFiSwapBalancer1"
+import mainnetDeFiManageBalancer2Preset from "../src/presets/mainnet/deFiManageBalancer2"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
+import {
+  AVATAR_ADDRESS_PLACEHOLDER,
+  OMNI_BRIDGE_DATA_PLACEHOLDER,
+  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
+} from "../src/presets/placeholders"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
@@ -27,6 +36,7 @@ export const KARPATKEY_ADDRESSES = {
       // "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
       "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
     ],
+    SWAPPERS: [] as string[],
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
@@ -41,6 +51,7 @@ export const KARPATKEY_ADDRESSES = {
       // "0xe8aA9122832AA971c4802C69D5141Ff4EEB95ec5", // Ale
       "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
     ],
+    SWAPPERS: [],
     NETWORK: 100,
     BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
   },
@@ -49,6 +60,7 @@ export const KARPATKEY_ADDRESSES = {
     MODULE: "",
     MANAGEMENT: "",
     HARVESTERS: [],
+    SWAPPERS: [],
     NETWORK: 1,
     BRIDGED_SAFE: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
   },
@@ -57,6 +69,7 @@ export const KARPATKEY_ADDRESSES = {
     MODULE: "",
     MANAGEMENT: "",
     HARVESTERS: [],
+    SWAPPERS: [],
     NETWORK: 1,
     BRIDGED_SAFE: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
   },
@@ -65,6 +78,7 @@ export const KARPATKEY_ADDRESSES = {
     MODULE: "0x8422d860d48Bc2aFeA8037d3954db31d5d3b4924",
     MANAGEMENT: "0xa928b0F1582126db08f902066403a3C69D2E7814",
     HARVESTERS: [],
+    SWAPPERS: [],
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
@@ -73,14 +87,25 @@ export const KARPATKEY_ADDRESSES = {
     MODULE: "0x8c858908D5f4cEF92f2B2277CB38248D39513f45",
     MANAGEMENT: "0x521041D907AB69Cb95FC0f923Fe5a68541429A2C",
     HARVESTERS: [],
+    SWAPPERS: [],
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
-  BALANCER_TEST_ETH: {
+  BALANCER_1_ETH: {
+    AVATAR: "0xA2372f3C9a26F45b5D69BD513BE0d553Ff9CC617",
+    MODULE: "0xeF14e0f66a2e22Bbe85bFA53b3F956354Ce51e62",
+    MANAGEMENT: "0xc5beBC8c253183F35cc7DB7C4216c124d4BA3F76",
+    HARVESTERS: ["0x19f2ab2c11d818d40b227557d3935ded9e1d201a"],
+    SWAPPERS: ["0x19f2ab2c11d818d40b227557d3935ded9e1d201a"],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+  },
+  BALANCER_2_ETH: {
     AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
     MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86",
     MANAGEMENT: "0x216071B1B5681D67A75f7eEAF92CEC8262bE29f7",
-    HARVESTERS: [],
+    HARVESTERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
+    SWAPPERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
@@ -124,7 +149,7 @@ const getContract = async (safe: string, hre: HardhatRuntimeEnvironment) => {
     "0x0Df1f08f765238dc0b8beAAdDd6681F62e54beC6",
     Roles.interface,
     signers[0]
-  ) as unknown as Roles
+  ) as Roles
 }
 
 task("setMultisend").setAction(async (taskArgs, hre) => {
@@ -168,16 +193,27 @@ task("assignHarvestRole").setAction(async (taskArgs, hre) => {
   console.log("Done.")
 })
 
+task("assignSwapRole").setAction(async (taskArgs, hre) => {
+  const { dryRun, roles, config } = await processArgs(taskArgs, hre)
+
+  const txData = await addMembers(config.MODULE, 3, config.SWAPPERS)
+  console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
+  if (dryRun) return
+
+  const tx = await roles.signer.sendTransaction(txData)
+  console.log(`TX hash: ${tx.hash}`)
+  console.log("Waiting for confirmation...")
+  await tx.wait()
+  console.log("Done.")
+})
+
 task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     1,
     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
-    {
-      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
-      AVATAR: config.AVATAR,
-    },
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
@@ -196,7 +232,7 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageTestPreset,
-    {},
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
@@ -209,23 +245,88 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
 })
 
-task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     1,
-    mainnetDeFiManageBalancerPreset,
-    { AVATAR: config.AVATAR },
+    mainnetDeFiManageBalancer1Preset,
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
   )
 
   writeFileSync(
-    path.join(__dirname, "..", "txData.json"),
+    path.join(__dirname, "..", "txDataManageBalancer1.json"),
     JSON.stringify(txBatches, undefined, 2)
   )
-  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataManageBalancer1.json`
+  )
+})
+
+task("encodeApplyPresetHarvestBalancer1").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    2,
+    mainnetDeFiHarvestBalancer1Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataHarvestBalancer1.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataHarvestBalancer1.json`
+  )
+})
+
+task("encodeApplyPresetSwapBalancer1").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    3,
+    mainnetDeFiSwapBalancer1Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataSwapBalancer1.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataSwapBalancer1.json`
+  )
+})
+
+task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    1,
+    mainnetDeFiManageBalancer2Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataBalancer2.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataBalancer2.json`
+  )
 })
 
 task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
@@ -234,7 +335,7 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     2,
     gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
-    { AVATAR: config.AVATAR },
+    fillPlaceholders(config),
     {
       network: config.NETWORK as NetworkId,
     }
@@ -245,4 +346,19 @@ task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
     JSON.stringify(txBatches, undefined, 2)
   )
   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+})
+
+const fillPlaceholders = (config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]) => ({
+  [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["address"],
+    [config.AVATAR]
+  ),
+  [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["bytes"],
+    [config.BRIDGED_SAFE]
+  ),
+  [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
+    ["address"],
+    [config.BRIDGED_SAFE]
+  ),
 })
