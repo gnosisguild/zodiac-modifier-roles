@@ -1,7 +1,7 @@
 import { expect } from "chai";
+import { defaultAbiCoder } from "ethers/lib/utils";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
 
 describe("Comparison", async () => {
   const setup = deployments.createFixture(async () => {
@@ -38,6 +38,7 @@ describe("Comparison", async () => {
     GREATER,
     LESS,
     ONE_OF,
+    SUBSET_OF,
   }
 
   enum Options {
@@ -391,7 +392,7 @@ describe("Comparison", async () => {
     );
 
     await expect(invoke([])).to.not.be.reverted;
-    await expect(invoke(["0xaabbccddeeff0011"])).to.be.revertedWith(
+    await expect(invoke(["0xaabbccdd"])).to.be.revertedWith(
       "ParameterNotAllowed()"
     );
   });
@@ -565,6 +566,203 @@ describe("Comparison", async () => {
     await expect(invoke("H", [])).to.be.revertedWith(
       "ParameterNotOneOfAllowed()"
     );
+  });
+
+  it("passes a subsetOf comparison for dynamic32", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic32")
+    );
+
+    const invoke = async (a: any) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic32(a)).data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: Comparison.SUBSET_OF,
+          compValues: [
+            ethers.utils.solidityPack(
+              ["bytes4[]"],
+              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+            ),
+          ],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke(["0x11112233", "0xaabbccdd"])).to.not.be.reverted;
+  });
+
+  it("passes a subsetOf comparison for dynamic32 - order does not matter", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic32")
+    );
+
+    const invoke = async (a: any) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic32(a)).data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: Comparison.SUBSET_OF,
+          compValues: [
+            ethers.utils.solidityPack(
+              ["bytes4[]"],
+              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+            ),
+          ],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke(["0xffddeecc", "0xaabbccdd", "0x11112233"])).to.not.be
+      .reverted;
+  });
+
+  it("fails a subsetOf comparison for dynamic32 - empty array is not subset", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic32")
+    );
+
+    const invoke = async (a: any) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic32(a)).data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: Comparison.SUBSET_OF,
+          compValues: [
+            ethers.utils.solidityPack(
+              ["bytes4[]"],
+              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+            ),
+          ],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke([])).to.be.revertedWith(
+      "ParameterNotSubsetOfAllowed()"
+    );
+  });
+
+  it("fails a subsetOf comparison for dynamic32 - does not allow repetition", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic32")
+    );
+
+    const invoke = async (a: any) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic32(a)).data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          _type: TYPE_DYNAMIC32,
+          comp: Comparison.SUBSET_OF,
+          compValues: [
+            ethers.utils.solidityPack(
+              ["bytes4[]"],
+              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+            ),
+          ],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(
+      invoke(["0x11112233", "0x11112233", "0xffddeecc"])
+    ).to.be.revertedWith("ParameterNotSubsetOfAllowed()");
   });
 
   it("passes a gt/lt comparison", async () => {

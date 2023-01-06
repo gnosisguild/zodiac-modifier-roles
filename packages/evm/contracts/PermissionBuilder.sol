@@ -324,14 +324,14 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         uint256 length = compValue.length / 32;
         bytes32[] memory result = new bytes32[](length);
 
-        uint256 index;
+        uint256 offset = 32;
         for (uint256 i = 0; i < length; ++i) {
             bytes32 chunk;
             assembly {
-                chunk := mload(add(compValue, i))
+                chunk := mload(add(compValue, offset))
             }
-            result[index] = chunk;
-            index++;
+            result[i] = chunk;
+            offset += 32;
         }
 
         return result;

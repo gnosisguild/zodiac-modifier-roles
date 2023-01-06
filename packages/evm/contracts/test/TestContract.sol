@@ -25,7 +25,7 @@ contract TestContract {
     event DynamicDynamic32(string, bytes2[]);
 
     event Dynamic(bytes);
-    event Dynamic32(bytes8[]);
+    event Dynamic32(bytes4[]);
 
     error AnError();
 
@@ -99,7 +99,7 @@ contract TestContract {
         emit Dynamic(first);
     }
 
-    function dynamic32(bytes8[] calldata first) public {
+    function dynamic32(bytes4[] calldata first) public {
         emit Dynamic32(first);
     }
 }
