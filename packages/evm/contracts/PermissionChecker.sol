@@ -300,32 +300,35 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _compareOneOf(
-        bytes32[] storage compValue,
+        bytes32[] storage compValues,
         bytes32 value
     ) private view {
-        if (!_isOneOf(compValue, value)) {
-            revert ParameterNotOneOfAllowed();
+        for (uint256 i = 0; i < compValues.length; i++) {
+            if (compValues[i] == value) return;
         }
+        revert ParameterNotOneOfAllowed();
     }
 
     function _compareSubsetOf(
-        bytes32[] storage compValue,
+        bytes32[] storage compValues,
         bytes32[] memory value
     ) private view {
+        if (value.length == 0) {
+            revert ParameterNotSubsetOfAllowed();
+        }
+
+        uint256 taken = 0;
         for (uint256 i = 0; i < value.length; i++) {
-            if (!_isOneOf(compValue, value[i])) {
-                revert ParameterNotSubsetOfAllowed();
+            for (uint256 j = 0; j <= compValues.length; j++) {
+                if (j == compValues.length) {
+                    revert ParameterNotSubsetOfAllowed();
+                }
+                uint256 mask = 1 << j;
+                if ((mask & taken) == 0 && value[i] == compValues[j]) {
+                    taken |= mask;
+                    break;
+                }
             }
         }
-    }
-
-    function _isOneOf(
-        bytes32[] storage compValue,
-        bytes32 value
-    ) private view returns (bool) {
-        for (uint256 i = 0; i < compValue.length; i++) {
-            if (compValue[i] == value) return true;
-        }
-        return false;
     }
 }
