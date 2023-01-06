@@ -12,6 +12,8 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
 
+    error UnsuitableSubsetOfComparison();
+
     /// CompValue for static types should have a size of exactly 32 bytes
     error UnsuitableStaticCompValueSize();
 
@@ -182,17 +184,26 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             );
 
             bytes32 key = _keyForCompValues(targetAddress, selector, i);
-            if (parameter.comp != Comparison.OneOf) {
+            if (
+                parameter.comp == Comparison.EqualTo ||
+                parameter.comp == Comparison.GreaterThan ||
+                parameter.comp == Comparison.LessThan
+            ) {
                 assert(parameter.compValues.length == 1);
                 role.compValue[key] = _compressCompValue(
                     parameter._type,
                     parameter.compValues[0]
                 );
-            } else {
-                assert(parameter.compValues.length > 1);
+            } else if (parameter.comp == Comparison.OneOf) {
                 role.compValues[key] = _compressCompValues(
                     parameter._type,
                     parameter.compValues
+                );
+            } else {
+                assert(parameter.comp == Comparison.SubsetOf);
+                role.compValues[key] = _splitCompValue(
+                    parameter._type,
+                    parameter.compValues[0]
                 );
             }
         }
@@ -219,22 +230,34 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             revert NoCompValuesProvidedForScope();
         }
 
-        if (config.comp == Comparison.OneOf) {
-            if (config.compValues.length < 2) {
-                revert NotEnoughCompValuesForScope();
-            }
-        } else {
+        // equal -> Static, Dynamic, Dynamic32
+        // less -> Static
+        // greater -> Static
+        // oneOf -> Static, Dynamic, Dynamic32
+        // subsetOf -> Dynamic32
+        if (config.comp == Comparison.EqualTo) {
             if (config.compValues.length != 1) {
                 revert TooManyCompValuesForScope();
             }
-        }
-
-        if (
-            (config._type != ParameterType.Static) &&
-            (config.comp == Comparison.GreaterThan ||
-                config.comp == Comparison.LessThan)
-        ) {
-            revert UnsuitableRelativeComparison();
+        } else if (config.comp == Comparison.GreaterThan) {
+            if (config._type != ParameterType.Static) {
+                revert UnsuitableRelativeComparison();
+            }
+        } else if (config.comp == Comparison.LessThan) {
+            if (config._type != ParameterType.Static) {
+                revert UnsuitableRelativeComparison();
+            }
+        } else if (config.comp == Comparison.OneOf) {
+            if (config.compValues.length < 2) {
+                revert NotEnoughCompValuesForScope();
+            }
+        } else if (config.comp == Comparison.SubsetOf) {
+            if (config._type != ParameterType.Dynamic32) {
+                revert UnsuitableSubsetOfComparison();
+            }
+            if (config.compValues.length != 1) {
+                revert TooManyCompValuesForScope();
+            }
         }
 
         for (uint256 i = 0; i < config.compValues.length; i++) {
@@ -272,7 +295,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     function _compressCompValue(
         ParameterType paramType,
-        bytes memory compValue
+        bytes calldata compValue
     ) private pure returns (bytes32) {
         return
             paramType == ParameterType.Static
@@ -282,11 +305,33 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     function _compressCompValues(
         ParameterType paramType,
-        bytes[] memory compValues
+        bytes[] calldata compValues
     ) private pure returns (bytes32[] memory) {
         bytes32[] memory result = new bytes32[](compValues.length);
         for (uint256 i = 0; i < compValues.length; i++) {
             result[i] = _compressCompValue(paramType, compValues[i]);
+        }
+
+        return result;
+    }
+
+    function _splitCompValue(
+        ParameterType paramType,
+        bytes memory compValue
+    ) private pure returns (bytes32[] memory) {
+        assert(paramType == ParameterType.Dynamic32);
+
+        uint256 length = compValue.length / 32;
+        bytes32[] memory result = new bytes32[](length);
+
+        uint256 index;
+        for (uint256 i = 0; i < length; ++i) {
+            bytes32 chunk;
+            assembly {
+                chunk := mload(add(compValue, i))
+            }
+            result[index] = chunk;
+            index++;
         }
 
         return result;
