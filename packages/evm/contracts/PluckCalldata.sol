@@ -99,18 +99,13 @@ library PluckCalldata {
          */
 
         uint256 argumentsBlock;
-        assembly {
-            argumentsBlock := add(data, 36)
-        }
-
-        uint256 argumentBlockIndex = index * 32;
+        uint256 staticOffset = index * 32;
         uint256 argumentOffset;
         assembly {
-            argumentOffset := mload(add(argumentsBlock, argumentBlockIndex))
-        }
-        assembly {
+            argumentsBlock := add(36, data)
+            argumentOffset := mload(add(argumentsBlock, staticOffset))
             // jump over the data buffer length encoding and the function selector
-            length := mload(add(32, add(4, add(data, argumentOffset))))
+            length := mload(add(argumentsBlock, argumentOffset))
         }
 
         // we want to return the relative offset
