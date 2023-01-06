@@ -17,6 +17,10 @@ contract TestPluckParam {
         emit Static(first);
     }
 
+    function dynamic32(uint256[] memory first) external {
+        emit Dynamic32(first);
+    }
+
     function staticDynamic(bytes4 first, string memory second) external {
         emit StaticDynamic(first, second);
     }

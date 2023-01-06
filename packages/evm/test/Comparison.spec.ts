@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
+import { defaultAbiCoder } from "ethers/lib/utils";
 
 describe("Comparison", async () => {
   const setup = deployments.createFixture(async () => {

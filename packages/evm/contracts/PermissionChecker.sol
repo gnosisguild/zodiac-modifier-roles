@@ -4,8 +4,9 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "./Types.sol";
 
-import "./PermissionBuilder.sol";
 import "./ScopeConfig.sol";
+import "./PluckCalldata.sol";
+import "./PermissionBuilder.sol";
 
 abstract contract PermissionChecker is PermissionBuilder {
     /// Sender is not a member of the role
@@ -32,6 +33,8 @@ abstract contract PermissionChecker is PermissionBuilder {
     /// Role not allowed to use bytes for parameter
     error ParameterNotOneOfAllowed();
 
+    error ParameterNotSubsetOfAllowed();
+
     /// Role not allowed to use bytes less than value for parameter
     error ParameterLessThanAllowed();
 
@@ -40,9 +43,6 @@ abstract contract PermissionChecker is PermissionBuilder {
 
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
-
-    /// The provided calldata for execution is too short, or an OutOfBounds scoped parameter was configured
-    error CalldataOutOfBounds();
 
     /*
      *
@@ -210,31 +210,86 @@ abstract contract PermissionChecker is PermissionBuilder {
                 continue;
             }
 
-            bytes32 value;
-            if (paramType != ParameterType.Static) {
-                value = pluckDynamicValue(data, paramType, i);
-            } else {
-                value = pluckStaticValue(data, i);
-            }
-
             bytes32 key = _keyForCompValues(targetAddress, selector, i);
-            if (paramComp != Comparison.OneOf) {
-                compare(paramComp, role.compValue[key], value);
-            } else {
-                compareOneOf(role.compValues[key], value);
+            if (paramType == ParameterType.Static) {
+                _compareStaticValue(
+                    role,
+                    key,
+                    paramComp,
+                    PluckCalldata.pluckStaticValue(data, i)
+                );
+            } else if (paramType == ParameterType.Dynamic) {
+                _compareDynamicValue(
+                    role,
+                    key,
+                    paramComp,
+                    PluckCalldata.pluckDynamicValue(data, i)
+                );
+            } else if (paramType == ParameterType.Dynamic32) {
+                _compareDynamic32Value(
+                    role,
+                    key,
+                    paramComp,
+                    PluckCalldata.pluckDynamic32Value(data, i)
+                );
             }
         }
     }
 
-    /// @dev Will revert if a transaction has a parameter value that is not specifically allowed.
-    /// @param paramComp the type of comparision: equal, greater, or less than.
-    /// @param compValue the value to compare a param against.
-    /// @param value the param to be compared against the allowed value.
-    function compare(
+    function _compareStaticValue(
+        Role storage role,
+        bytes32 key,
+        Comparison paramComp,
+        bytes32 value
+    ) private view {
+        if (paramComp == Comparison.OneOf) {
+            _compareOneOf(role.compValues[key], value);
+        } else {
+            _compare(paramComp, role.compValue[key], value);
+        }
+    }
+
+    function _compareDynamicValue(
+        Role storage role,
+        bytes32 key,
+        Comparison paramComp,
+        bytes memory value
+    ) private view {
+        if (paramComp == Comparison.OneOf) {
+            _compareOneOf(role.compValues[key], keccak256(value));
+        } else {
+            assert(paramComp != Comparison.SubsetOf);
+            _compare(paramComp, role.compValue[key], keccak256(value));
+        }
+    }
+
+    function _compareDynamic32Value(
+        Role storage role,
+        bytes32 key,
+        Comparison paramComp,
+        bytes32[] memory value
+    ) private view {
+        if (paramComp == Comparison.OneOf) {
+            _compareOneOf(
+                role.compValues[key],
+                keccak256(abi.encodePacked(value))
+            );
+        } else if (paramComp == Comparison.SubsetOf) {
+            _compareSubsetOf(role.compValues[key], value);
+        } else {
+            _compare(
+                paramComp,
+                role.compValue[key],
+                keccak256(abi.encodePacked(value))
+            );
+        }
+    }
+
+    function _compare(
         Comparison paramComp,
         bytes32 compValue,
         bytes32 value
-    ) internal pure {
+    ) private pure {
         if (paramComp == Comparison.EqualTo && value != compValue) {
             revert ParameterNotAllowed();
         } else if (paramComp == Comparison.GreaterThan && value <= compValue) {
@@ -244,123 +299,33 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
     }
 
-    /// @dev Will revert if a transaction has a parameter value that is not allowed in an allowlist.
-    /// @param compValue array of allowed params.
-    /// @param value the param to be compared against the allowlist.
-    function compareOneOf(
+    function _compareOneOf(
         bytes32[] storage compValue,
         bytes32 value
-    ) internal view {
+    ) private view {
+        if (!_isOneOf(compValue, value)) {
+            revert ParameterNotOneOfAllowed();
+        }
+    }
+
+    function _compareSubsetOf(
+        bytes32[] storage compValue,
+        bytes32[] memory value
+    ) private view {
+        for (uint256 i = 0; i < value.length; i++) {
+            if (!_isOneOf(compValue, value[i])) {
+                revert ParameterNotSubsetOfAllowed();
+            }
+        }
+    }
+
+    function _isOneOf(
+        bytes32[] storage compValue,
+        bytes32 value
+    ) private view returns (bool) {
         for (uint256 i = 0; i < compValue.length; i++) {
-            if (value == compValue[i]) return;
+            if (compValue[i] == value) return true;
         }
-        revert ParameterNotOneOfAllowed();
-    }
-
-    /// @dev Helper function grab a specific dynamic parameter from data blob.
-    /// @param data the parameter data blob.
-    /// @param paramType provides information about the type of parameter.
-    /// @param index position of the parameter in the data.
-    function pluckDynamicValue(
-        bytes memory data,
-        ParameterType paramType,
-        uint256 index
-    ) internal pure returns (bytes32) {
-        assert(paramType != ParameterType.Static);
-        // pre-check: is there a word available for the current parameter at argumentsBlock?
-        if (data.length < 4 + index * 32 + 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        /*
-         * Encoded calldata:
-         * 4  bytes -> function selector
-         * 32 bytes -> sequence, one chunk per parameter
-         *
-         * There is one (byte32) chunk per parameter. Depending on type it contains:
-         * Static    -> value encoded inline (not plucked by this function)
-         * Dynamic   -> a byte offset to encoded data payload
-         * Dynamic32 -> a byte offset to encoded data payload
-         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
-         * Note: Nested types also do not follow the above described rules, and are unsupported
-         * Note: The offset to payload does not include 4 bytes for functionSig
-         *
-         *
-         * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
-         * Dynamic   -> length in bytes
-         * Dynamic32 -> length in bytes32
-         * Note: Dynamic types are: bytes, string
-         * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
-         */
-
-        // the start of the parameter block
-        // 32 bytes - length encoding of the data bytes array
-        // 4  bytes - function sig
-        uint256 argumentsBlock;
-        assembly {
-            argumentsBlock := add(data, 36)
-        }
-
-        // the two offsets are relative to argumentsBlock
-        uint256 offset = index * 32;
-        uint256 offsetPayload;
-        assembly {
-            offsetPayload := mload(add(argumentsBlock, offset))
-        }
-
-        uint256 lengthPayload;
-        assembly {
-            lengthPayload := mload(add(argumentsBlock, offsetPayload))
-        }
-
-        // account for:
-        // 4  bytes - functionSig
-        // 32 bytes - length encoding for the parameter payload
-        uint256 start = 4 + offsetPayload + 32;
-        uint256 end = start +
-            (
-                paramType == ParameterType.Dynamic32
-                    ? lengthPayload * 32
-                    : lengthPayload
-            );
-
-        // are we slicing out of bounds?
-        if (data.length < end) {
-            revert CalldataOutOfBounds();
-        }
-
-        return keccak256(slice(data, start, end));
-    }
-
-    /// @dev Helper function grab a specific static parameter from data blob.
-    /// @param data the parameter data blob.
-    /// @param index position of the parameter in the data.
-    function pluckStaticValue(
-        bytes memory data,
-        uint256 index
-    ) internal pure returns (bytes32) {
-        // pre-check: is there a word available for the current parameter at argumentsBlock?
-        if (data.length < 4 + index * 32 + 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        uint256 offset = 4 + index * 32;
-        bytes32 value;
-        assembly {
-            // add 32 - jump over the length encoding of the data bytes array
-            value := mload(add(32, add(data, offset)))
-        }
-        return value;
-    }
-
-    function slice(
-        bytes memory data,
-        uint256 start,
-        uint256 end
-    ) internal pure returns (bytes memory result) {
-        result = new bytes(end - start);
-        for (uint256 j = start; j < end; j++) {
-            result[j - start] = data[j];
-        }
+        return false;
     }
 }
