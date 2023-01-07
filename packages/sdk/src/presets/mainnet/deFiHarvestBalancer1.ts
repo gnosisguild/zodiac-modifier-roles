@@ -143,22 +143,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(ZERO, "address"),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "unwrapWETH9(uint256,address)",
-      params: {
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "sweepToken(address,uint256,address)",
-      params: {
-        [0]: staticEqual(WBTC, "address"),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
 
@@ -195,33 +180,18 @@ const preset: RolePreset = {
     //Stakewise - UniswapV3 ETH + sETH2, 0.3%
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    //collect and unwrapWETH9 have already been whitelisted
+    //collect has already been whitelisted
 
     /*
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(ZERO, "address"),
-      },
-    },
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "unwrapWETH9(uint256,address)",
-      params: {
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
+    
     */
-
-    {
-      targetAddress: UV3_NFT_POSITIONS,
-      signature: "sweepToken(address,uint256,address)",
-      params: {
-        [0]: staticEqual(sETH2, "address"),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
   ],
 }
 export default preset

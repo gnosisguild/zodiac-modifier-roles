@@ -296,18 +296,26 @@ const preset: RolePreset = {
     */
 
     //Remove liquidity
+    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represet the uncollected fees
+
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
     },
+    //collect collects token0Owed and token1Owed. The address argument could also be the zero address, which is used to collect ETH
+    //instead of WETH. In this case, the tokens (one of them WETH) are first sent to the NFT Positions contract, and have to then be
+    //claimed by calling unwrapWETH9 and sweepToken. Since this is not safe non-custodial wise, we are only allowing the collecting
+    //of ETH instead of WETH
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(ZERO, "address"),
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
-    {
+
+    //unwrapWETH9 and sweepToken are not necessary
+    /* {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "unwrapWETH9(uint256,address)",
       params: {
@@ -321,7 +329,7 @@ const preset: RolePreset = {
         [0]: staticEqual(WBTC, "address"),
         [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
-    },
+    }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //mStable - staking of MTA
@@ -471,6 +479,7 @@ const preset: RolePreset = {
       },
     },
 
+    //exactInputSingle is needed for the reinvest option, but as of now it is not considered in the strategy
     /* ...allowErc20Approve([rETH2], [UV3_ROUTER]),
 
     {
@@ -504,11 +513,12 @@ const preset: RolePreset = {
         [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
-    {
+    //refundETH has already been whitelisted above
+    /* {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
       options: ExecutionOptions.Send,
-    },
+    }, */
 
     //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
     /*
@@ -530,7 +540,8 @@ const preset: RolePreset = {
     */
 
     //Remove liquidity
-    //decreaseLiquidity, collect and unwrapWETH9 have already been whitelisted
+    //decreaseLiquidity, collect and unwrapWETH9 have already been whitelisted.
+    //See the comments above regarding unwrapETH9 and sweepToken
 
     /*
     {
@@ -541,7 +552,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(ZERO, "address"),
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
     {
@@ -551,7 +562,7 @@ const preset: RolePreset = {
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
-    */
+    
 
     {
       targetAddress: UV3_NFT_POSITIONS,
@@ -561,10 +572,12 @@ const preset: RolePreset = {
         [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
+    */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Element - Curve - stETH/ETH
     //---------------------------------------------------------------------------------------------------------------------------------
+    //For the time being this has been removed from the strategy
 
     /* ...allowErc20Approve([stETH], [CURVE_STETH_ETH_POOL]),
 
@@ -589,6 +602,7 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     //Element steCRV
     //---------------------------------------------------------------------------------------------------------------------------------
+    //For the time being this has been removed from the strategy
 
     /* ...allowErc20Approve([steCRV], [ELEMENT_USER_PROXY]),
 
