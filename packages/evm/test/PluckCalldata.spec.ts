@@ -1,7 +1,7 @@
 import "@nomiclabs/hardhat-ethers";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, constants } from "ethers";
 import {
   defaultAbiCoder,
   hexlify,
@@ -19,14 +19,16 @@ const OPTIONS_NONE = 0;
 // const OPTIONS_DELEGATECALL = 2;
 // const OPTIONS_BOTH = 3;
 
-const TYPE_NONE = 0;
-const TYPE_STATIC = 1;
-const TYPE_DYNAMIC = 2;
-// const TYPE_DYNAMIC32 = 3;
+enum ParameterType {
+  None = 0,
+  Static,
+  Dynamic,
+  Dynamic32,
+}
 
 const UNSCOPED_PARAM = {
   isScoped: false,
-  _type: TYPE_NONE,
+  _type: ParameterType.None,
   comp: COMP_EQUAL,
   compValues: [],
 };
@@ -42,6 +44,11 @@ describe("PluckCalldata library", async () => {
       "TestPluckParam"
     );
     const testPluckParam = await TestPluckParam.deploy();
+
+    const TestPluckTupleParam = await hre.ethers.getContractFactory(
+      "TestPluckTupleParam"
+    );
+    const testPluckTupleParam = await TestPluckTupleParam.deploy();
 
     const [owner, invoker] = waffle.provider.getWallets();
 
@@ -67,6 +74,7 @@ describe("PluckCalldata library", async () => {
 
     return {
       testPluckParam,
+      testPluckTupleParam,
       pluckCalldata,
       Modifier,
       modifier,
@@ -83,8 +91,8 @@ describe("PluckCalldata library", async () => {
       "Hello World!"
     );
 
-    const arg1 = await pluckCalldata.pluckStaticValue(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicValue(data as string, 1);
+    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
+    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
 
     expect(defaultAbiCoder.encode(["bytes4"], ["0x12345678"])).to.equal(arg1);
     expect(hexlify(toUtf8Bytes("Hello World!"))).to.equal(arg2);
@@ -100,9 +108,9 @@ describe("PluckCalldata library", async () => {
         [10, 32, 55]
       );
 
-    const arg1 = await pluckCalldata.pluckStaticValue(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicValue(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamic32Value(data as string, 2);
+    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
+    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
+    const arg3 = await pluckCalldata.pluckDynamic32Param(data as string, 2);
 
     expect(arg1).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
     expect(arg2).to.equal(solidityPack(["bytes"], ["0xabcd"]));
@@ -122,9 +130,9 @@ describe("PluckCalldata library", async () => {
         "Hello World!"
       );
 
-    const arg1 = await pluckCalldata.pluckStaticValue(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamic32Value(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamicValue(data as string, 2);
+    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
+    const arg2 = await pluckCalldata.pluckDynamic32Param(data as string, 1);
+    const arg3 = await pluckCalldata.pluckDynamicParam(data as string, 2);
 
     expect(arg1).to.equal(defaultAbiCoder.encode(["uint32"], [123]));
     expect(arg2).to.deep.equal([
@@ -143,9 +151,9 @@ describe("PluckCalldata library", async () => {
         ["0x1122", "0x3344", "0x5566"]
       );
 
-    const arg1 = await pluckCalldata.pluckDynamicValue(data as string, 0);
-    const arg2 = await pluckCalldata.pluckStaticValue(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamic32Value(data as string, 2);
+    const arg1 = await pluckCalldata.pluckDynamicParam(data as string, 0);
+    const arg2 = await pluckCalldata.pluckStaticParam(data as string, 1);
+    const arg3 = await pluckCalldata.pluckDynamic32Param(data as string, 2);
 
     expect(arg1).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
     expect(arg2).to.equal(defaultAbiCoder.encode(["bool"], [false]));
@@ -166,9 +174,9 @@ describe("PluckCalldata library", async () => {
         123456789
       );
 
-    const arg1 = await pluckCalldata.pluckDynamicValue(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamic32Value(data as string, 1);
-    const arg3 = await pluckCalldata.pluckStaticValue(data as string, 2);
+    const arg1 = await pluckCalldata.pluckDynamicParam(data as string, 0);
+    const arg2 = await pluckCalldata.pluckDynamic32Param(data as string, 1);
+    const arg3 = await pluckCalldata.pluckStaticParam(data as string, 2);
 
     expect(arg1).to.equal(hexlify(toUtf8Bytes("Hello World!")));
     expect(arg2.map((s) => BigNumber.from(s).toNumber())).to.deep.equal([
@@ -187,9 +195,9 @@ describe("PluckCalldata library", async () => {
         "0x0123456789abcdef0123456789abcdef"
       );
 
-    const arg1 = await pluckCalldata.pluckDynamic32Value(data as string, 0);
-    const arg2 = await pluckCalldata.pluckStaticValue(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamicValue(data as string, 2);
+    const arg1 = await pluckCalldata.pluckDynamic32Param(data as string, 0);
+    const arg2 = await pluckCalldata.pluckStaticParam(data as string, 1);
+    const arg3 = await pluckCalldata.pluckDynamicParam(data as string, 2);
 
     expect(arg1).to.deep.equal([
       defaultAbiCoder.encode(["address"], [AddressOne]),
@@ -210,9 +218,9 @@ describe("PluckCalldata library", async () => {
         8976
       );
 
-    const arg1 = await pluckCalldata.pluckDynamic32Value(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicValue(data as string, 1);
-    const arg3 = await pluckCalldata.pluckStaticValue(data as string, 2);
+    const arg1 = await pluckCalldata.pluckDynamic32Param(data as string, 0);
+    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
+    const arg3 = await pluckCalldata.pluckStaticParam(data as string, 2);
 
     expect(arg1).to.deep.equal([
       defaultAbiCoder.encode(["bytes2"], ["0xaabb"]),
@@ -221,6 +229,68 @@ describe("PluckCalldata library", async () => {
     ]);
     expect(arg2).to.equal(hexlify(toUtf8Bytes("Hello World!")));
     expect(arg3).to.equal(defaultAbiCoder.encode(["uint32"], [8976]));
+  });
+
+  it("tuple(static, dynamic, dynamic32) - (tuple(uint256, bytes, uint256[]))", async () => {
+    const { pluckCalldata, testPluckTupleParam } = await setup();
+
+    const { data } = await testPluckTupleParam.populateTransaction.dynamicTuple(
+      { _static: 100, dynamic: "0xabcd", dynamic32: [1, 2, 3] }
+    );
+
+    const result = await pluckCalldata.pluckTupleParam(data as string, 0, [
+      ParameterType.Static,
+      ParameterType.Dynamic,
+      ParameterType.Dynamic32,
+    ]);
+
+    expect(result[0]._type).to.equal(ParameterType.Static);
+    expect(result[0]._static).to.equal(BigNumber.from(100));
+    expect(result[0].dynamic).to.equal("0x");
+    expect(result[0].dynamic32).to.deep.equal([]);
+
+    expect(result[1]._type).to.equal(ParameterType.Dynamic);
+    expect(result[1]._static).to.equal(constants.HashZero);
+    expect(result[1].dynamic).to.equal("0xabcd");
+    expect(result[1].dynamic32).to.deep.equal([]);
+
+    expect(result[2]._type).to.equal(ParameterType.Dynamic32);
+    expect(result[2]._static).to.equal(constants.HashZero);
+    expect(result[2].dynamic).to.equal("0x");
+    expect(result[2].dynamic32).to.deep.equal([
+      "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "0x0000000000000000000000000000000000000000000000000000000000000003",
+    ]);
+
+    // normal
+    // 0x9707b548
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000064
+    // 0000000000000000000000000000000000000000000000000000000000000060
+    // 00000000000000000000000000000000000000000000000000000000000000a0
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // abcd000000000000000000000000000000000000000000000000000000000000
+    // 0000000000000000000000000000000000000000000000000000000000000003
+    // 0000000000000000000000000000000000000000000000000000000000000001
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // 0000000000000000000000000000000000000000000000000000000000000003
+
+    // post
+    // 0xc8b9a899
+    // 0000000000000000000000000000000000000000000000000000000000000009
+    // 0000000000000000000000000000000000000000000000000000000000000040
+    // 0000000000000000000000000000000000000000000000000000000000000064
+    // 0000000000000000000000000000000000000000000000000000000000000060
+    // 00000000000000000000000000000000000000000000000000000000000000a0
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // abcd000000000000000000000000000000000000000000000000000000000000
+    // 0000000000000000000000000000000000000000000000000000000000000003
+    // 0000000000000000000000000000000000000000000000000000000000000001
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // 0000000000000000000000000000000000000000000000000000000000000003
+
+    // console.log(data2);
   });
 
   it("don't try this at home", async () => {
@@ -237,19 +307,19 @@ describe("PluckCalldata library", async () => {
       [
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bool"], [false])],
         },
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bool"], [false])],
         },
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -306,7 +376,7 @@ describe("PluckCalldata library", async () => {
       [
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
         },
@@ -346,7 +416,7 @@ describe("PluckCalldata library", async () => {
       [
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
         },
@@ -372,13 +442,13 @@ describe("PluckCalldata library", async () => {
       [
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
         },
         {
           isScoped: true,
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: COMP_EQUAL,
           compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
         },
@@ -413,7 +483,7 @@ describe("PluckCalldata library", async () => {
         UNSCOPED_PARAM,
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -474,7 +544,7 @@ describe("PluckCalldata library", async () => {
         UNSCOPED_PARAM,
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -529,7 +599,7 @@ describe("PluckCalldata library", async () => {
         UNSCOPED_PARAM,
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -562,7 +632,7 @@ describe("PluckCalldata library", async () => {
         UNSCOPED_PARAM,
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -581,7 +651,7 @@ describe("PluckCalldata library", async () => {
         UNSCOPED_PARAM,
         {
           isScoped: true,
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: COMP_EQUAL,
           compValues: [encodeDynamic(["string"], ["Hello World!"])],
         },
@@ -607,9 +677,5 @@ function encodeStatic(types: any[], values: any[]) {
 }
 
 function encodeDynamic(types: any[], values: any[]) {
-  return ethers.utils.solidityPack(types, values);
-}
-
-function encodeDynamic32(types: any[], values: any[]) {
   return ethers.utils.solidityPack(types, values);
 }

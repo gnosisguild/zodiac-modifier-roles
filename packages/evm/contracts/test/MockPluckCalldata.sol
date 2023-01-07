@@ -4,24 +4,32 @@ pragma solidity >=0.6.0 <0.9.0;
 import "../PluckCalldata.sol";
 
 contract MockPluckCalldata {
-    function pluckDynamicValue(
+    function pluckDynamicParam(
         bytes memory data,
         uint256 index
     ) public pure returns (bytes memory) {
-        return PluckCalldata.pluckDynamicValue(data, index);
+        return PluckCalldata.pluckDynamicParam(data, index);
     }
 
-    function pluckDynamic32Value(
+    function pluckDynamic32Param(
         bytes memory data,
         uint256 index
     ) public pure returns (bytes32[] memory) {
-        return PluckCalldata.pluckDynamic32Value(data, index);
+        return PluckCalldata.pluckDynamic32Param(data, index);
     }
 
-    function pluckStaticValue(
+    function pluckStaticParam(
         bytes memory data,
         uint256 index
     ) public pure returns (bytes32) {
-        return PluckCalldata.pluckStaticValue(data, index);
+        return PluckCalldata.pluckStaticParam(data, index);
+    }
+
+    function pluckTupleParam(
+        bytes memory data,
+        uint256 index,
+        ParameterType[] memory tupleTypes
+    ) public pure returns (PluckedParameter[] memory result) {
+        return PluckCalldata.pluckTupleParam(data, index, tupleTypes);
     }
 }

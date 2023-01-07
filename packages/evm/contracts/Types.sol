@@ -5,7 +5,9 @@ enum ParameterType {
     None,
     Static,
     Dynamic,
-    Dynamic32
+    Dynamic32,
+    Tuple,
+    TupleArray
 }
 
 enum Comparison {
