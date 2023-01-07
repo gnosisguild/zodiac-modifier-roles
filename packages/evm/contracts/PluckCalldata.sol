@@ -42,7 +42,7 @@ library PluckCalldata {
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes32) {
-        return _pluckStaticValue(data, 4 + index * 32);
+        return _loadWordAt(data, 4 + index * 32);
     }
 
     /// @dev Helper function grab a specific dynamic parameter from data blob.
@@ -52,60 +52,49 @@ library PluckCalldata {
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes memory result) {
-        uint256 offset = _dynamicParamOffset(data, index);
-        return _pluckDynamicValue(data, offset);
+        uint256 headOffset = 4 + index * 32;
+        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+        return _pluckDynamicValue(data, tailOffset);
     }
 
     function pluckDynamic32Param(
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes32[] memory result) {
-        uint256 offset = _dynamicParamOffset(data, index);
-        return _pluckDynamic32Value(data, offset);
+        uint256 headOffset = 4 + index * 32;
+        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+        return _pluckDynamic32Value(data, tailOffset);
     }
 
     function pluckTupleParam(
         bytes memory data,
         uint256 index,
         ParameterType[] memory tupleTypes
-    ) internal pure returns (PluckedParameter[] memory result) {
-        result = new PluckedParameter[](tupleTypes.length);
-
-        uint256 offset = _dynamicParamOffset(data, index);
-        for (uint256 i = 0; i < tupleTypes.length; i++) {
-            ParameterType _type = tupleTypes[i];
-
-            if (_type == ParameterType.Static) {
-                result[i]._static = _pluckStaticValue(data, offset + i * 32);
-            } else if (_type == ParameterType.Dynamic) {
-                result[i].dynamic = _pluckDynamicValue(
-                    data,
-                    offset + _tailOffset(data, offset + i * 32)
-                );
-            } else {
-                assert(_type == ParameterType.Dynamic32);
-                result[i].dynamic32 = _pluckDynamic32Value(
-                    data,
-                    offset + _tailOffset(data, offset + i * 32)
-                );
-            }
-            result[i]._type = _type;
-        }
+    ) internal pure returns (PluckedParameter[] memory) {
+        uint256 headOffset = 4 + index * 32;
+        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+        return _pluckTupleValue(data, tailOffset, tupleTypes);
     }
 
-    function _pluckStaticValue(
+    function pluckTupleArrayParam(
         bytes memory data,
-        uint256 offset
-    ) private pure returns (bytes32) {
-        if (data.length < offset + 32) {
-            revert CalldataOutOfBounds();
+        uint256 index,
+        ParameterType[] memory tupleTypes
+    ) internal pure returns (PluckedParameter[][] memory result) {
+        uint256 headOffset = 4 + index * 32;
+        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+
+        uint256 length = _loadUIntAt(data, tailOffset);
+        result = new PluckedParameter[][](length);
+
+        uint256 offset = tailOffset + 32;
+        for (uint256 i; i < length; i++) {
+            result[i] = _pluckTupleValue(
+                data,
+                offset + _loadUIntAt(data, offset + i * 32),
+                tupleTypes
+            );
         }
-        bytes32 value;
-        assembly {
-            // add 32 - jump over the length encoding of the data bytes array
-            value := mload(add(data, add(offset, 32)))
-        }
-        return value;
     }
 
     function _pluckDynamicValue(
@@ -113,13 +102,10 @@ library PluckCalldata {
         uint256 offset
     ) internal pure returns (bytes memory result) {
         // this the relative offset
-        uint256 length;
-        assembly {
-            length := mload(add(data, add(offset, 32)))
-        }
+        uint256 length = _loadUIntAt(data, offset);
         offset += 32;
 
-        if (offset + length > data.length) {
+        if (data.length < offset + length) {
             revert CalldataOutOfBounds();
         }
 
@@ -133,11 +119,7 @@ library PluckCalldata {
         bytes memory data,
         uint256 offset
     ) private pure returns (bytes32[] memory result) {
-        uint256 length;
-        assembly {
-            // jump over the data buffer length encoding and the function selector
-            length := mload(add(data, add(offset, 32)))
-        }
+        uint256 length = _loadUIntAt(data, offset);
         offset += 32;
 
         if (data.length < offset + length * 32) {
@@ -146,36 +128,64 @@ library PluckCalldata {
 
         result = new bytes32[](length);
         for (uint256 i = 0; i < length; i++) {
-            bytes32 chunk;
-            assembly {
-                chunk := mload(add(data, add(offset, 32)))
-            }
-            result[i] = chunk;
+            result[i] = _loadWordAt(data, offset);
             offset += 32;
         }
     }
 
-    function _dynamicParamOffset(
+    function _pluckTupleValue(
         bytes memory data,
-        uint256 index
-    ) private pure returns (uint256) {
-        uint256 headOffset = 4 + index * 32;
-        return 4 + _tailOffset(data, headOffset);
+        uint256 offset,
+        ParameterType[] memory tupleTypes
+    ) internal pure returns (PluckedParameter[] memory result) {
+        result = new PluckedParameter[](tupleTypes.length);
+
+        for (uint256 i = 0; i < tupleTypes.length; i++) {
+            ParameterType _type = tupleTypes[i];
+            uint256 headOffset = offset + i * 32;
+            if (_type == ParameterType.Static) {
+                result[i]._static = _loadWordAt(data, offset + i * 32);
+            } else if (_type == ParameterType.Dynamic) {
+                uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
+                result[i].dynamic = _pluckDynamicValue(data, tailOffset);
+            } else {
+                assert(_type == ParameterType.Dynamic32);
+                uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
+                result[i].dynamic32 = _pluckDynamic32Value(data, tailOffset);
+            }
+            result[i]._type = _type;
+        }
     }
 
-    function _tailOffset(
+    function _loadUIntAt(
         bytes memory data,
-        uint256 headOffset
+        uint256 offset
     ) private pure returns (uint256) {
-        if (data.length < headOffset + 32) {
+        if (data.length < offset + 32) {
             revert CalldataOutOfBounds();
         }
 
-        uint256 tail;
+        uint256 result;
         assembly {
             // jump over the length encoding
-            tail := mload(add(data, add(headOffset, 32)))
+            result := mload(add(data, add(offset, 32)))
         }
-        return tail;
+        return result;
+    }
+
+    function _loadWordAt(
+        bytes memory data,
+        uint256 offset
+    ) private pure returns (bytes32) {
+        if (data.length < offset + 32) {
+            revert CalldataOutOfBounds();
+        }
+
+        bytes32 result;
+        assembly {
+            // jump over the length encoding
+            result := mload(add(data, add(offset, 32)))
+        }
+        return result;
     }
 }
