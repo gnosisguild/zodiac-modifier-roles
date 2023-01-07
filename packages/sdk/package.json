@@ -32,6 +32,9 @@
     "apply:balancer1:eth:harvest": "hardhat encodeApplyPresetHarvestBalancer1 --network mainnet --safe BALANCER_1_ETH",
     "apply:balancer1:eth:swap": "hardhat encodeApplyPresetSwapBalancer1 --network mainnet --safe BALANCER_1_ETH",
     "apply:balancer2:eth:manage": "hardhat encodeApplyPresetManageBalancer2 --network mainnet --safe BALANCER_2_ETH",
+    "apply:ens1:eth:manage": "hardhat encodeApplyPresetManageENS1 --network mainnet --safe ENS_1_ETH",
+    "apply:ens1:eth:harvest": "hardhat encodeApplyPresetHarvestENS1 --network mainnet --safe ENS_1_ETH",
+    "apply:ens1:eth:swap": "hardhat encodeApplyPresetSwapENS1 --network mainnet --safe ENS_1_ETH",
     "pre-commit": "yarn fix"
   },
   "dependencies": {
