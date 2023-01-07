@@ -216,21 +216,21 @@ abstract contract PermissionChecker is PermissionBuilder {
                     role,
                     key,
                     paramComp,
-                    PluckCalldata.pluckStaticValue(data, i)
+                    PluckCalldata.pluckStaticParam(data, i)
                 );
             } else if (paramType == ParameterType.Dynamic) {
                 _compareDynamicValue(
                     role,
                     key,
                     paramComp,
-                    PluckCalldata.pluckDynamicValue(data, i)
+                    PluckCalldata.pluckDynamicParam(data, i)
                 );
             } else if (paramType == ParameterType.Dynamic32) {
                 _compareDynamic32Value(
                     role,
                     key,
                     paramComp,
-                    PluckCalldata.pluckDynamic32Value(data, i)
+                    PluckCalldata.pluckDynamic32Param(data, i)
                 );
             }
         }
@@ -324,7 +324,7 @@ abstract contract PermissionChecker is PermissionBuilder {
                     revert ParameterNotSubsetOfAllowed();
                 }
                 uint256 mask = 1 << j;
-                if ((mask & taken) == 0 && value[i] == compValues[j]) {
+                if ((taken & mask) == 0 && value[i] == compValues[j]) {
                     taken |= mask;
                     break;
                 }
