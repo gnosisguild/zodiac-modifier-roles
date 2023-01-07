@@ -3,27 +3,6 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-/*
- * Encoded calldata:
- * 4  bytes -> function selector
- * 32 bytes -> sequence, one chunk per parameter
- *
- * There is one (byte32) chunk per parameter. Depending on type it contains:
- * Static    -> value encoded inline (not plucked by this function)
- * Dynamic   -> a byte offset to encoded data payload
- * Dynamic32 -> a byte offset to encoded data payload
- * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
- * Note: Nested types also do not follow the above described rules, and are unsupported
- * Note: The offset to payload does not include 4 bytes for functionSig
- *
- *
- * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
- * Dynamic   -> length in bytes
- * Dynamic32 -> length in bytes32
- * Note: Dynamic types are: bytes, string
- * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
- */
-
 struct PluckedParameter {
     ParameterType _type;
     bytes32 _static;
@@ -32,7 +11,6 @@ struct PluckedParameter {
 }
 
 library PluckCalldata {
-    /// The provided calldata for execution is too short, or an OutOfBounds scoped parameter was configured
     error CalldataOutOfBounds();
 
     /// @dev Helper function grab a specific static parameter from data blob.
@@ -54,7 +32,7 @@ library PluckCalldata {
     ) internal pure returns (bytes memory result) {
         uint256 headOffset = 4 + index * 32;
         uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _pluckDynamicValue(data, tailOffset);
+        return _carveDynamic(data, tailOffset);
     }
 
     function pluckDynamic32Param(
@@ -63,7 +41,7 @@ library PluckCalldata {
     ) internal pure returns (bytes32[] memory result) {
         uint256 headOffset = 4 + index * 32;
         uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _pluckDynamic32Value(data, tailOffset);
+        return _carveDynamic32(data, tailOffset);
     }
 
     function pluckTupleParam(
@@ -73,31 +51,35 @@ library PluckCalldata {
     ) internal pure returns (PluckedParameter[] memory) {
         uint256 headOffset = 4 + index * 32;
         uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _pluckTupleValue(data, tailOffset, tupleTypes);
+        return _carveTuple(data, tailOffset, tupleTypes);
     }
 
     function pluckTupleArrayParam(
         bytes memory data,
         uint256 index,
-        ParameterType[] memory tupleTypes
+        ParameterType[] memory types
     ) internal pure returns (PluckedParameter[][] memory result) {
+        // we read the head offset for the whole array
         uint256 headOffset = 4 + index * 32;
+        // and get the offset of where the payload is encoded
         uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
 
+        // The tail for the array contains an encoded length followed by
+        // a 32 bytes head area for each item.
+        // We load the length and then increment baseline offset to point
+        // at start of the item head area
         uint256 length = _loadUIntAt(data, tailOffset);
         result = new PluckedParameter[][](length);
-
         uint256 offset = tailOffset + 32;
+
         for (uint256 i; i < length; i++) {
-            result[i] = _pluckTupleValue(
-                data,
-                offset + _loadUIntAt(data, offset + i * 32),
-                tupleTypes
-            );
+            headOffset = offset + i * 32;
+            tailOffset = offset + _loadUIntAt(data, headOffset);
+            result[i] = _carveTuple(data, tailOffset, types);
         }
     }
 
-    function _pluckDynamicValue(
+    function _carveDynamic(
         bytes memory data,
         uint256 offset
     ) internal pure returns (bytes memory result) {
@@ -115,7 +97,7 @@ library PluckCalldata {
         }
     }
 
-    function _pluckDynamic32Value(
+    function _carveDynamic32(
         bytes memory data,
         uint256 offset
     ) private pure returns (bytes32[] memory result) {
@@ -133,27 +115,26 @@ library PluckCalldata {
         }
     }
 
-    function _pluckTupleValue(
+    function _carveTuple(
         bytes memory data,
         uint256 offset,
-        ParameterType[] memory tupleTypes
+        ParameterType[] memory types
     ) internal pure returns (PluckedParameter[] memory result) {
-        result = new PluckedParameter[](tupleTypes.length);
+        result = new PluckedParameter[](types.length);
 
-        for (uint256 i = 0; i < tupleTypes.length; i++) {
-            ParameterType _type = tupleTypes[i];
+        for (uint256 i = 0; i < types.length; i++) {
             uint256 headOffset = offset + i * 32;
-            if (_type == ParameterType.Static) {
+            if (types[i] == ParameterType.Static) {
                 result[i]._static = _loadWordAt(data, offset + i * 32);
-            } else if (_type == ParameterType.Dynamic) {
+            } else if (types[i] == ParameterType.Dynamic) {
                 uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
-                result[i].dynamic = _pluckDynamicValue(data, tailOffset);
+                result[i].dynamic = _carveDynamic(data, tailOffset);
             } else {
-                assert(_type == ParameterType.Dynamic32);
+                assert(types[i] == ParameterType.Dynamic32);
                 uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
-                result[i].dynamic32 = _pluckDynamic32Value(data, tailOffset);
+                result[i].dynamic32 = _carveDynamic32(data, tailOffset);
             }
-            result[i]._type = _type;
+            result[i]._type = types[i];
         }
     }
 
@@ -189,3 +170,24 @@ library PluckCalldata {
         return result;
     }
 }
+
+/*
+ * Encoded calldata:
+ * 4  bytes -> function selector
+ * 32 bytes -> sequence, one chunk per parameter
+ *
+ * There is one (byte32) chunk per parameter. Depending on type it contains:
+ * Static    -> value encoded inline (not plucked by this function)
+ * Dynamic   -> a byte offset to encoded data payload
+ * Dynamic32 -> a byte offset to encoded data payload
+ * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
+ * Note: Nested types also do not follow the above described rules, and are unsupported
+ * Note: The offset to payload does not include 4 bytes for functionSig
+ *
+ *
+ * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
+ * Dynamic   -> length in bytes
+ * Dynamic32 -> length in bytes32
+ * Note: Dynamic types are: bytes, string
+ * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
+ */
