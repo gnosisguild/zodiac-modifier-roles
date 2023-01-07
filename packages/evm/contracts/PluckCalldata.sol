@@ -59,23 +59,33 @@ library PluckCalldata {
         uint256 index,
         ParameterType[] memory types
     ) internal pure returns (PluckedParameter[][] memory result) {
-        // we read the head offset for the whole array
+        // index head at parameter location, and then read the tail offset
+        // which is the offset to the actual parameter encoding area
         uint256 headOffset = 4 + index * 32;
-        // and get the offset of where the payload is encoded
         uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
 
-        // The tail for the array contains an encoded length followed by
-        // a 32 bytes head area for each item.
-        // We load the length and then increment baseline offset to point
-        // at start of the item head area
+        // The tail for the array param contains starts with the encoded length
+        // which is a 32 byte chunk that indicates how many items are in the array
         uint256 length = _loadUIntAt(data, tailOffset);
         result = new PluckedParameter[][](length);
         uint256 offset = tailOffset + 32;
 
-        for (uint256 i; i < length; i++) {
-            headOffset = offset + i * 32;
-            tailOffset = offset + _loadUIntAt(data, headOffset);
-            result[i] = _carveTuple(data, tailOffset, types);
+        // If the Tuple is Static - each tuple/item is encoded inline
+        // If the Tuple is Dynamic - it is followed by a 32 bytes head area for each item
+        if (_allStatic(types)) {
+            for (uint256 i; i < length; i++) {
+                result[i] = _carveTuple(
+                    data,
+                    offset + i * 32 * types.length,
+                    types
+                );
+            }
+        } else {
+            for (uint256 i; i < length; i++) {
+                headOffset = offset + i * 32;
+                tailOffset = offset + _loadUIntAt(data, headOffset);
+                result[i] = _carveTuple(data, tailOffset, types);
+            }
         }
     }
 
@@ -125,7 +135,7 @@ library PluckCalldata {
         for (uint256 i = 0; i < types.length; i++) {
             uint256 headOffset = offset + i * 32;
             if (types[i] == ParameterType.Static) {
-                result[i]._static = _loadWordAt(data, offset + i * 32);
+                result[i]._static = _loadWordAt(data, headOffset);
             } else if (types[i] == ParameterType.Dynamic) {
                 uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
                 result[i].dynamic = _carveDynamic(data, tailOffset);
@@ -168,6 +178,17 @@ library PluckCalldata {
             result := mload(add(data, add(offset, 32)))
         }
         return result;
+    }
+
+    function _allStatic(
+        ParameterType[] memory types
+    ) private pure returns (bool) {
+        for (uint256 i = 0; i < types.length; i++) {
+            if (types[i] != ParameterType.Static) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
