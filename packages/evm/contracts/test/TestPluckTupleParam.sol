@@ -8,5 +8,7 @@ struct DynamicTuple1 {
 }
 
 contract TestPluckTupleParam {
-    function dynamicTuple(DynamicTuple1 memory arg1) external {}
+    function dynamicTuple(DynamicTuple1 memory) external {}
+
+    function dynamicTupleArray(DynamicTuple1[] memory) external {}
 }
