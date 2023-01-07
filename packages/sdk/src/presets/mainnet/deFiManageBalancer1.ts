@@ -257,7 +257,7 @@ const preset: RolePreset = {
 
     ...allowErc20Approve([WBTC], [UV3_NFT_POSITIONS]),
 
-    //Add liquidity
+    //Adding liquidity: to create a new position in a pool one has to call both the mint and refundETH functions
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
@@ -266,7 +266,7 @@ const preset: RolePreset = {
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
-        [2]: staticEqual(3000, "uint24"),
+        [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
         [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
@@ -276,7 +276,8 @@ const preset: RolePreset = {
       options: ExecutionOptions.Send,
     },
 
-    //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id
+    //Increasing liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
+    //To increase liquidity one has to call the increaseLiquidity and refundETH functions
     /*
     {
       targetAddress: UV3_NFT_POSITIONS,
@@ -295,8 +296,9 @@ const preset: RolePreset = {
     },
     */
 
-    //Remove liquidity
-    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represet the uncollected fees
+    //Removing liquidity: to remove liquidity one has to call the decreaseLiquidity and collect functions
+    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represet the uncollected
+    //fees
 
     {
       targetAddress: UV3_NFT_POSITIONS,
@@ -314,7 +316,7 @@ const preset: RolePreset = {
       },
     },
 
-    //unwrapWETH9 and sweepToken are not necessary
+    //unwrapWETH9 and sweepToken are not necessary since we are not allowing to collect ETH instead of WETH
     /* {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "unwrapWETH9(uint256,address)",
@@ -337,13 +339,13 @@ const preset: RolePreset = {
 
     ...allowErc20Approve([MTA], [stMTA]),
 
-    //Staking of MTA without voting power delegation
+    //Staking of MTA without voting power delegation. One stakes MTA and receives stMTA
     {
       targetAddress: stMTA,
       signature: "stake(uint256)",
     },
 
-    //Staking of MTA with voting power delegation
+    //Staking of MTA with voting power delegation. One stakes MTA and receives stMTA
     {
       targetAddress: stMTA,
       signature: "stake(uint256,address)",
@@ -464,12 +466,14 @@ const preset: RolePreset = {
     //Stakewise
     //---------------------------------------------------------------------------------------------------------------------------------
 
+    //When staking ETH one receives stETH2
     {
       targetAddress: STAKEWISE_ETH2_STAKING,
       signature: "stake()",
       options: ExecutionOptions.Send,
     },
 
+    //By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
@@ -479,7 +483,9 @@ const preset: RolePreset = {
       },
     },
 
-    //exactInputSingle is needed for the reinvest option, but as of now it is not considered in the strategy
+    //exactInputSingle is needed for the reinvest option, which swaps rETH2 for stETH2 in the Uniswap V3 pool.
+    //But as of now it is not considered in the strategy
+
     /* ...allowErc20Approve([rETH2], [UV3_ROUTER]),
 
     {
