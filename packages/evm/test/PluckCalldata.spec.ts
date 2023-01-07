@@ -33,7 +33,7 @@ const UNSCOPED_PARAM = {
   compValues: [],
 };
 
-describe.only("PluckCalldata library", async () => {
+describe("PluckCalldata library", async () => {
   const ROLE_ID = 0;
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -231,7 +231,7 @@ describe.only("PluckCalldata library", async () => {
     expect(arg3).to.equal(defaultAbiCoder.encode(["uint32"], [8976]));
   });
 
-  it("tuple(static, dynamic, dynamic32) - (tuple(uint256, bytes, uint256[]))", async () => {
+  it("DynamicTuple - (tuple(uint256, bytes, uint256[]))", async () => {
     const { pluckCalldata, testPluckTupleParam } = await setup();
 
     const { data } = await testPluckTupleParam.populateTransaction.dynamicTuple(
@@ -264,7 +264,7 @@ describe.only("PluckCalldata library", async () => {
     ]);
   });
 
-  it("tuple(static, dynamic, dynamic32)[] - (tuple(uint256, bytes, uint256[]))[]", async () => {
+  it("DynamicTupleArray - (tuple(uint256, bytes, uint256[]))[]", async () => {
     const { pluckCalldata, testPluckTupleParam } = await setup();
 
     const { data } =
@@ -309,6 +309,46 @@ describe.only("PluckCalldata library", async () => {
       "0x0000000000000000000000000000000000000000000000000000000000000008",
       "0x0000000000000000000000000000000000000000000000000000000000000009",
     ]);
+  });
+
+  it("StaticTupleArray - (tuple(uint256, bytes2, address))[]", async () => {
+    const { pluckCalldata, testPluckTupleParam } = await setup();
+
+    const { data } =
+      await testPluckTupleParam.populateTransaction.staticTupleArray([
+        { a: 5, b: "0xabcd", c: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" },
+        { a: 9, b: "0xffff", c: "0xbadfed0000000000000000000000000000badfed" },
+      ]);
+
+    const result = await pluckCalldata.pluckTupleArrayParam(data as string, 0, [
+      ParameterType.Static,
+      ParameterType.Static,
+      ParameterType.Static,
+    ]);
+
+    expect(result[0][0]._static).to.equal(BigNumber.from(5));
+    expect(result[0][1]._static).to.equal(
+      "0xabcd000000000000000000000000000000000000000000000000000000000000"
+    );
+    expect(result[0][2]._static).to.equal(
+      "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
+    );
+
+    expect(result[1][0]._static).to.equal(BigNumber.from(9));
+    expect(result[1][1]._static).to.equal(
+      "0xffff000000000000000000000000000000000000000000000000000000000000"
+    );
+    expect(result[1][2]._static).to.equal(
+      "0x000000000000000000000000badfed0000000000000000000000000000badfed"
+    );
+
+    for (let j = 0; j <= 1; j++) {
+      for (let i = 0; i <= 2; i++) {
+        expect(result[j][i]._type).to.equal(ParameterType.Static);
+        expect(result[j][i].dynamic).to.equal("0x");
+        expect(result[j][i].dynamic32).to.deep.equal([]);
+      }
+    }
   });
 
   it("don't try this at home", async () => {
