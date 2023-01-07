@@ -12,11 +12,17 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
+import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
+
 import mainnetDeFiManageBalancer1Preset from "../src/presets/mainnet/deFiManageBalancer1"
 import mainnetDeFiHarvestBalancer1Preset from "../src/presets/mainnet/deFiHarvestBalancer1"
 import mainnetDeFiSwapBalancer1Preset from "../src/presets/mainnet/deFiSwapBalancer1"
 import mainnetDeFiManageBalancer2Preset from "../src/presets/mainnet/deFiManageBalancer2"
-import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
+
+import mainnetDeFiManageENS1Preset from "../src/presets/mainnet/deFiManageENS1"
+import mainnetDeFiHarvestENS1Preset from "../src/presets/mainnet/deFiHarvestENS1"
+import mainnetDeFiSwapENS1Preset from "../src/presets/mainnet/deFiSwapENS1"
+
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -104,6 +110,15 @@ export const KARPATKEY_ADDRESSES = {
     AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
     MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86",
     MANAGEMENT: "0x216071B1B5681D67A75f7eEAF92CEC8262bE29f7",
+    HARVESTERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
+    SWAPPERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+  },
+  ENS_1_ETH: {
+    AVATAR: "0xdcba2646961784610ce0bCE7e120BF72bAd9e552",
+    MODULE: "0xa8a8B168CFe8374EC27D110AE5c776cD537c43BA",
+    MANAGEMENT: "0xE13b31dDB4B56C062Ad7f7a3d9aCd686FDEA3313",
     HARVESTERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
     SWAPPERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
     NETWORK: 1,
@@ -326,6 +341,69 @@ task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
   )
   console.log(
     `Transaction builder JSON written to packages/sdk/txDataBalancer2.json`
+  )
+})
+
+task("encodeApplyPresetManageENS1").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    1,
+    mainnetDeFiManageENS1Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataManageENS1.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataManageENS1.json`
+  )
+})
+
+task("encodeApplyPresetHarvestENS1").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    2,
+    mainnetDeFiHarvestENS1Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataHarvestENS1.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataHarvestENS1.json`
+  )
+})
+
+task("encodeApplyPresetSwapENS1").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    3,
+    mainnetDeFiSwapENS1Preset,
+    fillPlaceholders(config),
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataSwapENS1.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataSwapENS1.json`
   )
 })
 
