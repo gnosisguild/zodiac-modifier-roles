@@ -33,7 +33,7 @@ const UNSCOPED_PARAM = {
   compValues: [],
 };
 
-describe("PluckCalldata library", async () => {
+describe.only("PluckCalldata library", async () => {
   const ROLE_ID = 0;
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();

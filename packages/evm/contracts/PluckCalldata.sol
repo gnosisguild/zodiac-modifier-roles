@@ -3,6 +3,27 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
+/*
+ * Encoded calldata:
+ * 4  bytes -> function selector
+ * 32 bytes -> sequence, one chunk per parameter
+ *
+ * There is one (byte32) chunk per parameter. Depending on type it contains:
+ * Static    -> value encoded inline (not plucked by this function)
+ * Dynamic   -> a byte offset to encoded data payload
+ * Dynamic32 -> a byte offset to encoded data payload
+ * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
+ * Note: Nested types also do not follow the above described rules, and are unsupported
+ * Note: The offset to payload does not include 4 bytes for functionSig
+ *
+ *
+ * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
+ * Dynamic   -> length in bytes
+ * Dynamic32 -> length in bytes32
+ * Note: Dynamic types are: bytes, string
+ * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
+ */
+
 struct PluckedParameter {
     ParameterType _type;
     bytes32 _static;
@@ -31,7 +52,6 @@ library PluckCalldata {
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes memory result) {
-        // this the relative offset
         uint256 offset = _dynamicParamOffset(data, index);
         return _pluckDynamicValue(data, offset);
     }
@@ -49,12 +69,12 @@ library PluckCalldata {
         uint256 index,
         ParameterType[] memory tupleTypes
     ) internal pure returns (PluckedParameter[] memory result) {
-        uint256 offset = _dynamicParamOffset(data, index);
-
         result = new PluckedParameter[](tupleTypes.length);
+
+        uint256 offset = _dynamicParamOffset(data, index);
         for (uint256 i = 0; i < tupleTypes.length; i++) {
             ParameterType _type = tupleTypes[i];
-            result[i]._type = _type;
+
             if (_type == ParameterType.Static) {
                 result[i]._static = _pluckStaticValue(data, offset + i * 32);
             } else if (_type == ParameterType.Dynamic) {
@@ -69,6 +89,7 @@ library PluckCalldata {
                     offset + _tailOffset(data, offset + i * 32)
                 );
             }
+            result[i]._type = _type;
         }
     }
 
@@ -119,7 +140,7 @@ library PluckCalldata {
         }
         offset += 32;
 
-        if (offset + length * 32 > data.length) {
+        if (data.length < offset + length * 32) {
             revert CalldataOutOfBounds();
         }
 
@@ -134,58 +155,27 @@ library PluckCalldata {
         }
     }
 
-    function _tailOffset(
-        bytes memory data,
-        uint256 head
-    ) private pure returns (uint256) {
-        uint256 tail;
-        assembly {
-            tail := mload(add(data, add(head, 32)))
-        }
-        return tail;
-    }
-
     function _dynamicParamOffset(
         bytes memory data,
         uint256 index
     ) private pure returns (uint256) {
-        if (data.length < 36 + index * 32) {
+        uint256 headOffset = 4 + index * 32;
+        return 4 + _tailOffset(data, headOffset);
+    }
+
+    function _tailOffset(
+        bytes memory data,
+        uint256 headOffset
+    ) private pure returns (uint256) {
+        if (data.length < headOffset + 32) {
             revert CalldataOutOfBounds();
         }
 
-        /*
-         * Encoded calldata:
-         * 4  bytes -> function selector
-         * 32 bytes -> sequence, one chunk per parameter
-         *
-         * There is one (byte32) chunk per parameter. Depending on type it contains:
-         * Static    -> value encoded inline (not plucked by this function)
-         * Dynamic   -> a byte offset to encoded data payload
-         * Dynamic32 -> a byte offset to encoded data payload
-         * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
-         * Note: Nested types also do not follow the above described rules, and are unsupported
-         * Note: The offset to payload does not include 4 bytes for functionSig
-         *
-         *
-         * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
-         * Dynamic   -> length in bytes
-         * Dynamic32 -> length in bytes32
-         * Note: Dynamic types are: bytes, string
-         * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
-         */
-
-        uint256 argumentsBlock;
-        uint256 staticOffset = index * 32;
-        uint256 argumentOffset;
+        uint256 tail;
         assembly {
-            argumentsBlock := add(36, data)
-            argumentOffset := mload(add(argumentsBlock, staticOffset))
-            // jump over the data buffer length encoding and the function selector
+            // jump over the length encoding
+            tail := mload(add(data, add(headOffset, 32)))
         }
-
-        // we want to return the relative offset
-        // so here we jump over the function selector, but also over
-        // the parameter length encoding
-        return 4 + argumentOffset;
+        return tail;
     }
 }
