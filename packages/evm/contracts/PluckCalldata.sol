@@ -30,18 +30,14 @@ library PluckCalldata {
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes memory result) {
-        uint256 headOffset = 4 + index * 32;
-        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _carveDynamic(data, tailOffset);
+        return _carveDynamic(data, _dynamicParamOffset(data, index));
     }
 
     function pluckDynamic32Param(
         bytes memory data,
         uint256 index
     ) internal pure returns (bytes32[] memory result) {
-        uint256 headOffset = 4 + index * 32;
-        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _carveDynamic32(data, tailOffset);
+        return _carveDynamic32(data, _dynamicParamOffset(data, index));
     }
 
     function pluckTupleParam(
@@ -49,9 +45,7 @@ library PluckCalldata {
         uint256 index,
         ParameterType[] memory tupleTypes
     ) internal pure returns (PluckedParameter[] memory) {
-        uint256 headOffset = 4 + index * 32;
-        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return _carveTuple(data, tailOffset, tupleTypes);
+        return _carveTuple(data, _dynamicParamOffset(data, index), tupleTypes);
     }
 
     function pluckTupleArrayParam(
@@ -59,19 +53,15 @@ library PluckCalldata {
         uint256 index,
         ParameterType[] memory types
     ) internal pure returns (PluckedParameter[][] memory result) {
-        // index head at parameter location, and then read the tail offset
-        // which is the offset to the actual parameter encoding area
-        uint256 headOffset = 4 + index * 32;
-        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+        uint256 offset = _dynamicParamOffset(data, index);
 
-        // The tail for the array param contains starts with the encoded length
-        // which is a 32 byte chunk that indicates how many items are in the array
-        uint256 length = _loadUIntAt(data, tailOffset);
+        // read length, and move offset to point to content start
+        uint256 length = _loadUIntAt(data, offset);
         result = new PluckedParameter[][](length);
-        uint256 offset = tailOffset + 32;
+        offset += 32;
 
         // If the Tuple is Static - each tuple/item is encoded inline
-        // If the Tuple is Dynamic - it is followed by a 32 bytes head area for each item
+        // If the Tuple is Dynamic - each tuple/item has head with offset, tail with content
         if (_allStatic(types)) {
             for (uint256 i; i < length; i++) {
                 result[i] = _carveTuple(
@@ -82,8 +72,8 @@ library PluckCalldata {
             }
         } else {
             for (uint256 i; i < length; i++) {
-                headOffset = offset + i * 32;
-                tailOffset = offset + _loadUIntAt(data, headOffset);
+                uint256 headOffset = offset + i * 32;
+                uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
                 result[i] = _carveTuple(data, tailOffset, types);
             }
         }
@@ -111,6 +101,7 @@ library PluckCalldata {
         bytes memory data,
         uint256 offset
     ) private pure returns (bytes32[] memory result) {
+        // read length and move offset to content start
         uint256 length = _loadUIntAt(data, offset);
         offset += 32;
 
@@ -146,6 +137,25 @@ library PluckCalldata {
             }
             result[i]._type = types[i];
         }
+    }
+
+    function _dynamicParamOffset(
+        bytes memory data,
+        uint256 index
+    ) private pure returns (uint256) {
+        /*
+         * In the parameter encoding area, there is a region called the head
+         * that is divided into 32-byte chunks. Each parameter has its own
+         * corresponding chunk in the head region:
+         * - Static parameters are encoded inline.
+         * - Dynamic parameters have an offset to the tail, which is the start
+         *   of the actual encoding for the dynamic parameter. Note that the
+         *   offset does not include the 4-byte function signature."
+         */
+
+        uint256 headOffset = 4 + index * 32;
+        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
+        return tailOffset;
     }
 
     function _loadUIntAt(
