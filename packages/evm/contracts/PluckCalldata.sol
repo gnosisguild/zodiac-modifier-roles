@@ -43,10 +43,9 @@ library PluckCalldata {
     function pluckTupleParam(
         bytes memory data,
         uint256 index,
-        ParameterType[] memory tupleTypes
+        ParameterType[] memory types
     ) internal pure returns (PluckedParameter[] memory) {
-        return
-            _carveTuple(data, _parameterOffset(data, index, false), tupleTypes);
+        return _carveTuple(data, _parameterOffset(data, index, false), types);
     }
 
     function pluckTupleArrayParam(
@@ -56,7 +55,7 @@ library PluckCalldata {
     ) internal pure returns (PluckedParameter[][] memory result) {
         uint256 offset = _parameterOffset(data, index, false);
 
-        // read length, and move offset to point to content start
+        // read length, and move offset to content start
         uint256 length = _loadUIntAt(data, offset);
         result = new PluckedParameter[][](length);
         offset += 32;
@@ -77,7 +76,7 @@ library PluckCalldata {
         bytes memory data,
         uint256 offset
     ) internal pure returns (bytes memory result) {
-        // this the relative offset
+        // read length, and move offset to content start
         uint256 length = _loadUIntAt(data, offset);
         offset += 32;
 
