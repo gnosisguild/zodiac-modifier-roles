@@ -46,6 +46,13 @@ const LDO = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
 const CURVE_STETH_ETH_POOL = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"
 const CRV = "0xD533a949740bb3306d119CC777fa900bA034cd52"
 
+//Aura contracts
+const AURA_REWARD_POOL_DEPOSIT_WRAPPER = "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
+const AURA_BALANCER_stETH_VAULT = "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528"
+
+//Balancer contracts
+const BALANCER_VAULT ="0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
 const preset: RolePreset = {
   network: 1,
   allow: [
@@ -215,7 +222,10 @@ const preset: RolePreset = {
     //Lido
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    //PENDING, depending on the AURA position.
+    //We need the stETH for the Curve stETH-ETH pool
+    //We'll be getting wstETH from the Aura position, thus we need to be able to unwrap it
+    //We could remove the wrapping of stETH. TO CHECK
+    ...allowLido(),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Curve - stETH/ETH
@@ -248,6 +258,67 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //PENDING
+
+    ...allowErc20Approve([WETH],[AURA_REWARD_POOL_DEPOSIT_WRAPPER])
+
+    //deposiSingle: the (address[],uint256[],bytes,bool) tuple argument represents the request data for joining the pool
+    /* request=(
+          address[] assets,
+          uint256[] maxAmountsIn,
+          bytes userData,
+          bool fromInternalBalance
+    )   
+    */
+   //userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
+
+    {
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
+      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(AURA_BALANCER_stETH_VAULT,"address"),
+        [1]: staticEqual(WETH,"address"),
+        [3]: staticEqual("0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080","bytes32"),//pool ID
+      },
+    },
+
+    //withdrawAndUnwrap: the bool argument specifies whether rewards are claimed when withdrawing
+    //When withdrawing one receives Balancer wstETH/ETH LP token. CHECK WHETHER WILL ALLOW THE STAKING OF IT
+    {
+      targetAddress: AURA_BALANCER_stETH_VAULT,
+      signature: "withdrawAndUnwrap(uint256,bool)",
+    },
+
+    {
+      targetAddress: AURA_BALANCER_stETH_VAULT,
+      signature: "getReward()",
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    //Balancer wstETH -ETH pool
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //exitPool: the (address[],uint256[],bytes,bool) tuple argument represents the request data for joining the pool
+    /* request=(
+          address[] assets,
+          uint256[] maxAmountsIn,
+          bytes userData,
+          bool fromInternalBalance
+    )   
+    */
+   //userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
+    {
+      targetAddress: BALANCER_VAULT,
+      signature:
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(
+          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",//pool ID
+          "bytes32"
+        ),
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Swapping of rewards COMP, CRV, rETH2, SWISE and sETH2 in UniswapV3
@@ -406,6 +477,9 @@ const preset: RolePreset = {
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
+
+    //TO DO: add swaps in Balancer
+    //https://dev.balancer.fi/guides/swaps/single-swaps
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Wrapping and unwrapping of ETH, WETH
