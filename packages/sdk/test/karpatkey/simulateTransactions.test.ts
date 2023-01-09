@@ -196,7 +196,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Balancer Manage preset [balancer:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
         preset: balancerManagePreset,
         transactions: balancerManageTransactions,
       })
