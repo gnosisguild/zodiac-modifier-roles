@@ -12,6 +12,7 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
+
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 
 import mainnetDeFiManageBalancer1Preset from "../src/presets/mainnet/deFiManageBalancer1"
@@ -88,7 +89,7 @@ export const KARPATKEY_ADDRESSES = {
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
-  SANTI_TEST_ETH: {
+  TEST_ETH: {
     AVATAR: "0xcfBE92a0482e0d7D1e6501Ecf56d532B2853014F",
     MODULE: "0x8c858908D5f4cEF92f2B2277CB38248D39513f45",
     MANAGEMENT: "0x521041D907AB69Cb95FC0f923Fe5a68541429A2C",
@@ -254,10 +255,12 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
   )
 
   writeFileSync(
-    path.join(__dirname, "..", "txData.json"),
+    path.join(__dirname, "..", "txDataManageTest.json"),
     JSON.stringify(txBatches, undefined, 2)
   )
-  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataManageTest.json`
+  )
 })
 
 task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
@@ -336,11 +339,11 @@ task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
   )
 
   writeFileSync(
-    path.join(__dirname, "..", "txDataBalancer2.json"),
+    path.join(__dirname, "..", "txDataManageBalancer2.json"),
     JSON.stringify(txBatches, undefined, 2)
   )
   console.log(
-    `Transaction builder JSON written to packages/sdk/txDataBalancer2.json`
+    `Transaction builder JSON written to packages/sdk/txDataManageBalancer2.json`
   )
 })
 
