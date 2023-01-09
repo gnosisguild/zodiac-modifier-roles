@@ -84,6 +84,9 @@ const ELEMENT_ey_24FEB23 = "0x31cF4F5E9594718f8162866545E0d38C33Ad4A99"
 const ELEMENT_LP_eP_24FEB23 = "0x07f589eA6B789249C83992dD1eD324c3b80FD06b"
 const steCRV = "0x06325440D014e39736583c165C2963BA99fAf14E"
 
+//SushiSwap contracts
+const SUSHISWAP_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+
 const preset: RolePreset = {
   network: 1,
   allow: [
@@ -270,11 +273,14 @@ const preset: RolePreset = {
         [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
-    {
+    //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
+    //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
+    //by another address calling the refundETH function
+    /* {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
       options: ExecutionOptions.Send,
-    },
+    }, */
 
     //Increasing liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
     //To increase liquidity one has to call the increaseLiquidity and refundETH functions
@@ -688,6 +694,19 @@ const preset: RolePreset = {
     }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    //Wrapping and unwrapping of ETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    {
+      targetAddress: WETH,
+      signature: "withdraw(uint256)",
+    },
+    {
+      targetAddress: WETH,
+      signature: "deposit()",
+      options: ExecutionOptions.Send,
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     //Swapping of rewards COMP, AAVE, rETH2, SWISE and sETH2 in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -816,17 +835,197 @@ const preset: RolePreset = {
       },
     },
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Wrapping and unwrapping of ETH
-    //---------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------
+    //Swapping of WETH for DAI
     {
-      targetAddress: WETH,
-      signature: "withdraw(uint256)",
+      targetAddress: UV3_ROUTER_2,
+      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+      params: {
+        [2]: dynamic32Equal([WETH, DAI], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
     },
+
+    //------------------------------
+    //Swapping of WETH for USDC
     {
-      targetAddress: WETH,
-      signature: "deposit()",
-      options: ExecutionOptions.Send,
+      targetAddress: UV3_ROUTER_2,
+      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+      params: {
+        [2]: dynamic32Equal([WETH, USDC], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    //Swapping of COMP rewards in Balancer: https://dev.balancer.fi/guides/swaps/single-swaps
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    /*     
+    swap(SingleSwap_struct,FundManagement_struct,token_limit,deadline)
+
+    struct SingleSwap {
+      bytes32 poolId;
+      SwapKind kind;      0 = GIVEN_IN, 1 = GIVEN_OUT
+      IAsset assetIn;
+      IAsset assetOut;
+      uint256 amount;
+      bytes userData;     userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
+    }
+    struct FundManagement {
+      address sender;
+      bool fromInternalBalance;
+      address payable recipient;
+      bool toInternalBalance;
+    }
+     */
+
+    //Swap COMP for WETH
+    ...allowErc20Approve([COMP], [BALANCER_VAULT]),
+    {
+      targetAddress: BALANCER_VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
+          "bytes32"
+        ), //COMP-WETH pool ID
+        [2]: staticEqual(COMP, "address"), //Asset in
+        [3]: staticEqual(WETH, "address"), //Asset out
+        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [7]: staticEqual(false, "bool"),
+        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(false, "bool"),
+      },
+    },
+
+    //Swap WETH for DAI
+    ...allowErc20Approve([WETH], [BALANCER_VAULT]),
+    {
+      targetAddress: BALANCER_VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
+          "bytes32"
+        ), //WETH-DAI pool ID
+        [2]: staticEqual(WETH, "address"), //Asset in
+        [3]: staticEqual(DAI, "address"), //Asset out
+        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [7]: staticEqual(false, "bool"),
+        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(false, "bool"),
+      },
+    },
+
+    //Swap WETH for USDC
+    ...allowErc20Approve([WETH], [BALANCER_VAULT]),
+    {
+      targetAddress: BALANCER_VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
+          "bytes32"
+        ), //USDC-WETH pool ID
+        [2]: staticEqual(WETH, "address"), //Asset in
+        [3]: staticEqual(USDC, "address"), //Asset out
+        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [7]: staticEqual(false, "bool"),
+        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(false, "bool"),
+      },
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    //Swapping of COMP, WETH, BAL for USDC, DAI and WETH in SushiSwap
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    ...allowErc20Approve([COMP, WETH, BAL], [SUSHISWAP_ROUTER]),
+    // WETH
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([WETH, DAI], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([WETH, USDC], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    // COMP
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([COMP, WETH], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    // BAL
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([BAL, WETH], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([BAL, WETH, USDC], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: SUSHISWAP_ROUTER,
+      signature:
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+      params: {
+        [2]: dynamic32Equal([BAL, WETH, DAI], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
     },
   ],
 }
