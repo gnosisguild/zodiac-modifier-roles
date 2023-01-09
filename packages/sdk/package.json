@@ -27,7 +27,7 @@
     "apply:ltd:eth:manage": "hardhat encodeApplyPresetManage --safe LTD_ETH",
     "apply:ltd:eth:harvest": "hardhat encodeApplyPresetHarvest --safe LTD_ETH",
     "apply:santi:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe SANTI_TEST_GNO",
-    "apply:santi:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe SANTI_TEST_ETH",
+    "apply:test:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe TEST_ETH",
     "apply:balancer1:eth:manage": "hardhat encodeApplyPresetManageBalancer1 --network mainnet --safe BALANCER_1_ETH",
     "apply:balancer1:eth:harvest": "hardhat encodeApplyPresetHarvestBalancer1 --network mainnet --safe BALANCER_1_ETH",
     "apply:balancer1:eth:swap": "hardhat encodeApplyPresetSwapBalancer1 --network mainnet --safe BALANCER_1_ETH",

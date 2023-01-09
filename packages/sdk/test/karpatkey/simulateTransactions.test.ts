@@ -8,8 +8,10 @@ import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarv
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import balancerManage1Preset from "../../src/presets/mainnet/deFiManageBalancer1"
-import balancerManage2Preset from "../../src/presets/mainnet/deFiManageBalancer2"
+import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
+import balancer1ManagePreset from "../../src/presets/mainnet/deFiManageBalancer1"
+import balancer2ManagePreset from "../../src/presets/mainnet/deFiManageBalancer2"
+import ens1ManagePreset from "../../src/presets/mainnet/deFiManageENS1"
 import {
   AVATAR_ADDRESS_PLACEHOLDER,
   OMNI_BRIDGE_DATA_PLACEHOLDER,
@@ -18,8 +20,10 @@ import {
 import { RolePreset } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
-import balancerManage1Transactions from "./testTransactions/balancerManage1"
-import balancerManage2Transactions from "./testTransactions/balancerManage2"
+import testManageTransactions from "./testTransactions/testManage"
+import balancerManage1Transactions from "./testTransactions/balancer1Manage"
+import balancerManage2Transactions from "./testTransactions/balancer2Manage"
+import ensManage1Transactions from "./testTransactions/ens1Manage"
 import harvestMainnetTransactions from "./testTransactions/ethHarvest"
 import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
@@ -209,22 +213,42 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   })
 
-  describe("Balancer Manage 1 preset [balancer:manage1]", () => {
+  describe("Test Manage preset [test:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
-        preset: balancerManage1Preset,
+        config: KARPATKEY_ADDRESSES.TEST_ETH,
+        preset: testManagePreset,
         transactions: balancerManage1Transactions,
       })
     })
   })
 
-  describe("Balancer Manage 2 preset [balancer:manage2]", () => {
+  describe("Balancer1 Manage  preset [balancer1:manage]", () => {
+    it("allows executing all listed management transactions from the DAO Safe", async () => {
+      await simulateTransactions({
+        config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
+        preset: balancer1ManagePreset,
+        transactions: balancerManage1Transactions,
+      })
+    })
+  })
+
+  describe("Balancer2 Manage preset [balancer2:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.BALANCER_2_ETH,
-        preset: balancerManage2Preset,
+        preset: balancer2ManagePreset,
         transactions: balancerManage2Transactions,
+      })
+    })
+  })
+
+  describe("ENS1 Manage preset [ens1:manage]", () => {
+    it("allows executing all listed management transactions from the DAO Safe", async () => {
+      await simulateTransactions({
+        config: KARPATKEY_ADDRESSES.ENS_1_ETH,
+        preset: ens1ManagePreset,
+        transactions: ensManage1Transactions,
       })
     })
   })
