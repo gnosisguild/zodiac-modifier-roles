@@ -51,6 +51,14 @@ const preset: RolePreset = {
   network: 1,
   allow: [
     //---------------------------------------------------------------------------------------------------------------------------------
+    //Unwrapping of WETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    {
+      targetAddress: WETH,
+      signature: "withdraw(uint256)",
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     //Swapping of rewards COMP, CRV, rETH2, SWISE and sETH2 in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -150,6 +158,29 @@ const preset: RolePreset = {
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
+
+    //------------------------------
+    //Swapping of WETH for DAI
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+      params: {
+        [2]: dynamic32Equal([WETH, DAI], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    //------------------------------
+    //Swapping of WETH for USDC
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+      params: {
+        [2]: dynamic32Equal([WETH, USDC], "address[]"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
     //------------------------------
     //Swapping of CRV for USDC
     {
