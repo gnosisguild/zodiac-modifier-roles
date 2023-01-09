@@ -54,6 +54,13 @@ type PrimitiveParamScoping<T extends PrimitiveValue> =
   | Placeholder<T>
   | { oneOf: (T | Placeholder<T>)[] }
 
+type BigNumberishParamScoping<T extends BigNumberish> =
+  | T
+  | Placeholder<T>
+  | { oneOf: (T | Placeholder<T>)[] }
+  | { greaterThan: T | Placeholder<T> }
+  | { lessThan: T | Placeholder<T> }
+
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
