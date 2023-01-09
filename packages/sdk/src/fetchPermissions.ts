@@ -97,19 +97,28 @@ const mapGraphQl = (role: { targets: GraphQlTarget[] }): RolePermissions => ({
           sighash: func.sighash,
           executionOptions: EXECUTION_OPTIONS_MAPPING[func.executionOptions],
           wildcarded: func.wildcarded,
-          parameters: func.parameters.map(
-            (param): Parameter => ({
-              index: param.index,
-              type: PARAMETER_TYPE_MAPPING[param.type],
-              comparison: COMPARISON[param.comparison],
-              comparisonValue: param.comparisonValue,
-            })
-          ),
+          parameters: func.parameters
+            .map(
+              (param): Parameter => ({
+                index: param.index,
+                type: PARAMETER_TYPE_MAPPING[param.type],
+                comparison: COMPARISON[param.comparison],
+                comparisonValue: param.comparisonValue,
+              })
+            )
+            // Somehow the subgraph returns empty objects for unscoped parameters, we should fix that.
+            // As a workaround, we filter them out here.
+            .filter((param) => !isEmptyParamScoping(param)),
         })
       ),
     })
   ),
 })
+
+const isEmptyParamScoping = (param: Parameter) =>
+  param.comparison === Comparison.EqualTo &&
+  param.comparisonValue.length === 1 &&
+  param.comparisonValue[0] === "0x"
 
 const CLEARANCE_MAPPING = {
   None: Clearance.None,
