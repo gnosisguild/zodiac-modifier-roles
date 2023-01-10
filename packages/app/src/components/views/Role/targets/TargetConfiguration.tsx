@@ -9,7 +9,7 @@ import { ZodiacPaper } from "zodiac-ui-components"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
 import classNames from "classnames"
-import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
+import { ExecutionOptions } from "./ExecutionOptions"
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -192,7 +192,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
       </Box>
       {allowTarget ? (
         <Box sx={{ mt: 2 }}>
-          <ExecutionTypeSelect value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
+          <ExecutionOptions value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
         </Box>
       ) : null}
       <Box className={classNames(classes.container)}>

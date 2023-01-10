@@ -5,7 +5,7 @@ import Modal from "../commons/Modal"
 import { colors, ZodiacTextField } from "zodiac-ui-components"
 import AddIcon from "@material-ui/icons/Add"
 import { ConditionType, ExecutionOption, Target } from "../../typings/role"
-import { ExecutionTypeSelect } from "../views/Role/targets/ExecutionTypeSelect"
+import { ExecutionOptions } from "../views/Role/targets/ExecutionOptions"
 
 const useStyles = makeStyles((theme) => ({
   link: {
@@ -72,12 +72,12 @@ const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactEle
       <Box sx={{ mt: 2 }} className={classes.textField}>
         <ZodiacTextField
           onChange={(e) => onAddressChange(e.target.value)}
-          label={`target address`}
+          label={`Target address`}
           placeholder={`Add a new target address`}
         />
       </Box>
       <Box sx={{ mt: 2 }}>
-        <ExecutionTypeSelect value={executionOptions} onChange={setExecutionOptions} />
+        <ExecutionOptions value={executionOptions} onChange={setExecutionOptions} />
       </Box>
 
       <Box sx={{ mt: 2 }}>

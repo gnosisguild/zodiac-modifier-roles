@@ -381,10 +381,10 @@ function getParamUpdate(
   original?: FunctionCondition,
 ): UpdateEvent[] {
   const updates = funcCondition.params.reduce((toUpdate, newParamConfig) => {
-    console.log("getParamUpdate - param:", newParamConfig)
+    // console.log("getParamUpdate - param:", newParamConfig)
     if (!newParamConfig) return toUpdate
     const originalParamConfig = original?.params.find((_param) => newParamConfig.index === _param?.index)
-    console.log("getParamUpdate - originalParam:", originalParamConfig)
+    // console.log("getParamUpdate - originalParam:", originalParamConfig)
 
     if (
       originalParamConfig &&

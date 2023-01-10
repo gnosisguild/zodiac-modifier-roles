@@ -7,7 +7,7 @@ import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { ZodiacPaper } from "zodiac-ui-components"
-import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
+import { ExecutionOptions } from "./ExecutionOptions"
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -117,10 +117,10 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
 
       <div className={classNames(classes.content, { [classes.hidden]: !open })}>
         <div className={classes.select}>
-          <ExecutionTypeSelect
+          <ExecutionOptions
             value={functionConditions.executionOption}
             onChange={handleExecutionOption}
-            SelectProps={{ disabled: functionConditions.type === ConditionType.BLOCKED }}
+            disabled={functionConditions.type === ConditionType.BLOCKED}
           />
         </div>
 
