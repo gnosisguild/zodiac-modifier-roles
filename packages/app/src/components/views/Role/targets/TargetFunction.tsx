@@ -79,7 +79,16 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
   const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
 
   const handleExecutionOption = (option: ExecutionOption) => {
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), executionOption: option })
+    let type = functionConditions.type
+    if (type === ConditionType.BLOCKED && option !== ExecutionOption.NONE) {
+      type = ConditionType.WILDCARDED
+    }
+    onChange({
+      ...functionConditions,
+      sighash: Interface.getSighash(func),
+      executionOption: option,
+      type,
+    })
   }
 
   const handleFunctionCheck = (checked: boolean) => {
