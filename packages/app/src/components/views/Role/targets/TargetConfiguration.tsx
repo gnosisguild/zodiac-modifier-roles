@@ -98,7 +98,7 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
     const funcCondition: FunctionCondition = {
       sighash: Interface.getSighash(func),
       type: ConditionType.BLOCKED,
-      executionOption: ExecutionOption.SEND,
+      executionOption: ExecutionOption.NONE,
       params: [],
     }
     return {
@@ -116,7 +116,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   console.log("update events", state.getTargetUpdate(target.id))
   const [refresh, setRefresh] = useState(true)
   const [functions, setFunctions] = useState<FunctionFragment[]>([])
-  const [allowTarget, setAllowTarget] = useState(target.type === ConditionType.WILDCARDED)
+  const [isWildcarded, setIsWildcarded] = useState(target.type === ConditionType.WILDCARDED)
 
   useEffect(() => {
     const funcs = !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
@@ -142,9 +142,9 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   }
 
   const handleAllFuncChange = () => {
-    const type = !allowTarget ? ConditionType.WILDCARDED : ConditionType.SCOPED
+    const type = !isWildcarded ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
-    setAllowTarget((current) => !current)
+    setIsWildcarded((current) => !current)
 
     const conditions = Object.keys(target.conditions).reduce(
       (map, key) => ({
@@ -187,16 +187,19 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         <FormControlLabel
           className={classes.allowAllLabel}
           label="Allow all calls to target"
-          control={<Checkbox checked={allowTarget} onClick={handleAllFuncChange} />}
+          control={<Checkbox checked={isWildcarded} onClick={handleAllFuncChange} />}
         />
       </Box>
-      {allowTarget ? (
+      {isWildcarded ? (
         <Box sx={{ mt: 2 }}>
           <ExecutionOptions value={target.executionOption} onChange={handleChangeTargetExecutionsOptions} />
         </Box>
       ) : null}
       <Box className={classNames(classes.container)}>
-        <ZodiacPaper borderStyle="single" className={classNames(classes.root, { [classes.disabledArea]: allowTarget })}>
+        <ZodiacPaper
+          borderStyle="single"
+          className={classNames(classes.root, { [classes.disabledArea]: isWildcarded })}
+        >
           <TargetFunctionList
             items={functions}
             conditions={target.conditions}

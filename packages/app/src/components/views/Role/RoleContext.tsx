@@ -215,9 +215,7 @@ function handleAddMember(state: RoleContextState, payload: string): RoleContextS
 function handleSetTargetClearance(state: RoleContextState, payload: SetTargetClearancePayload): RoleContextState {
   const replaceOption = (target: Target): Target => {
     if (target.id !== payload.targetId) return target
-    const executionOption =
-      target.executionOption === ExecutionOption.NONE ? ExecutionOption.SEND : target.executionOption
-    return { ...target, executionOption, type: payload.option }
+    return { ...target, executionOption: ExecutionOption.NONE, type: payload.option }
   }
 
   return {

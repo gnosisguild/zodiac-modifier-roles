@@ -33,7 +33,7 @@ type Props = {
 const AddTargetModal = ({ onAddTarget, onClose, isOpen }: Props): React.ReactElement => {
   const classes = useStyles()
   const [address, setAddress] = useState("")
-  const [executionOptions, setExecutionOptions] = useState(ExecutionOption.SEND)
+  const [executionOptions, setExecutionOptions] = useState(ExecutionOption.NONE)
   const [isValidAddress, setIsValidAddress] = useState(false)
 
   const onAddressChange = (address: string) => {

@@ -10,7 +10,6 @@ interface Props {
 }
 
 export const ExecutionOptions = ({ onChange, value, disabled }: Props) => {
-  // const classes = useStyles()
   const { allowSend, allowDelegateCall } = enumToFlags(value)
   return (
     <>
@@ -38,7 +37,6 @@ export const ExecutionOptions = ({ onChange, value, disabled }: Props) => {
 }
 
 const enumToFlags = (value: ExecutionOption) => {
-  console.log({ value })
   let allowSend = false
   let allowDelegateCall = false
   if (value === ExecutionOption.BOTH) {
