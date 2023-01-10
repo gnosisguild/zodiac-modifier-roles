@@ -17,7 +17,6 @@ const fillPreset = (
   placeholderValues: Record<symbol, string>
 ): RolePermissions => {
   preset = mergeFunctionEntries(preset)
-
   sanityCheck(preset)
 
   // fill in avatar placeholders and encode comparison values
@@ -26,16 +25,18 @@ const fillPreset = (
   const fullyClearedTargets = allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => ({
-      address: entry.targetAddress,
+      address: entry.targetAddress.toLowerCase(),
       clearance: Clearance.Target,
       executionOptions: entry.options || ExecutionOptions.None,
       functions: [],
     }))
 
   const functionTargets = Object.entries(
-    groupBy(allow.filter(isScoped), (entry) => entry.targetAddress)
+    groupBy(allow.filter(isScoped), (entry) =>
+      entry.targetAddress.toLowerCase()
+    )
   ).map(([targetAddress, allowFunctions]) => ({
-    address: targetAddress,
+    address: targetAddress.toLowerCase(),
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
@@ -167,7 +168,7 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
   }, {} as Record<K, T[]>)
 
 const functionId = (entry: PresetFunction) =>
-  `${entry.targetAddress}.${
+  `${entry.targetAddress.toLowerCase()}.${
     "sighash" in entry ? entry.sighash : functionSighash(entry.signature)
   }`
 
