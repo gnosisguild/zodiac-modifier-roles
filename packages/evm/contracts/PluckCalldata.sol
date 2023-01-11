@@ -15,11 +15,7 @@ library PluckCalldata {
         for (uint256 i = 0; i < layout.length; i++) {
             result[i] = _carve(
                 data,
-                _parameterOffset(
-                    data,
-                    i,
-                    layout[i]._type == ParameterType.Static
-                ),
+                _parameterOffset(data, i, _isStatic(layout[i])),
                 layout[i]
             );
         }
@@ -76,7 +72,7 @@ library PluckCalldata {
         uint256 offset
     ) internal pure returns (bytes memory result) {
         // read length, and move offset to content start
-        uint256 length = _loadUIntAt(data, offset);
+        uint256 length = uint256(_loadWordAt(data, offset));
         offset += 32;
 
         if (data.length < offset + length) {
@@ -94,7 +90,7 @@ library PluckCalldata {
         uint256 offset
     ) private pure returns (bytes32[] memory result) {
         // read length and move offset to content start
-        uint256 length = _loadUIntAt(data, offset);
+        uint256 length = uint256(_loadWordAt(data, offset));
         offset += 32;
 
         if (data.length < offset + length * 32) {
@@ -136,7 +132,7 @@ library PluckCalldata {
         assert(layout.nested.length == 1);
 
         // read length, and move offset to content start
-        uint256 length = _loadUIntAt(data, offset);
+        uint256 length = uint256(_loadWordAt(data, offset));
         result.nested = new ParameterPayload[](length);
         offset += 32;
 
@@ -180,31 +176,8 @@ library PluckCalldata {
         if (isInline) {
             return headOffset;
         }
-        uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
+        uint256 tailOffset = offset + uint256(_loadWordAt(data, headOffset));
         return tailOffset;
-    }
-
-    function _loadUIntAt(
-        bytes memory data,
-        uint256 offset
-    ) private pure returns (uint256) {
-        return uint256(_loadWordAt(data, offset));
-    }
-
-    function _loadWordAt(
-        bytes memory data,
-        uint256 offset
-    ) private pure returns (bytes32) {
-        if (data.length < offset + 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        bytes32 result;
-        assembly {
-            // jump over the length encoding
-            result := mload(add(data, add(offset, 32)))
-        }
-        return result;
     }
 
     function _isStatic(
@@ -239,6 +212,22 @@ library PluckCalldata {
             result += _size(layout.nested[i]);
         }
 
+        return result;
+    }
+
+    function _loadWordAt(
+        bytes memory data,
+        uint256 offset
+    ) private pure returns (bytes32) {
+        if (data.length < offset + 32) {
+            revert CalldataOutOfBounds();
+        }
+
+        bytes32 result;
+        assembly {
+            // jump over the length encoding
+            result := mload(add(data, add(offset, 32)))
+        }
         return result;
     }
 }
