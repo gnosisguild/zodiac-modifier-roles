@@ -13,6 +13,9 @@ export default defineConfig({
       aave: {
         stkAave: "0x4da27a545c0c5B758a6BA100e3a049001de870f5",
       },
+      balancer: {
+        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+      },
       idle: {
         stEthCdo: "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8",
         wstEthAaGauge: "0x675eC042325535F6e176638Dd2d4994F645502B9",

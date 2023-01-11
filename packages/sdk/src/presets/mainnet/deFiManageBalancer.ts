@@ -569,21 +569,9 @@ const preset = {
     },
 
     //Swapping Principal token for steCRV in Balancer Convergent pool
-    {
-      targetAddress: BALANCER_VAULT,
-      signature:
-        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x07f589ea6b789249c83992dd1ed324c3b80fd06b00020000000000000000034e",
-          "bytes32"
-        ),
-        [2]: staticEqual(ELEMENT_eP_24FEB23, "address"),
-        [3]: staticEqual(steCRV, "address"), //This could be removed
-        [6]: staticEqual(AVATAR),
-        [8]: staticEqual(AVATAR),
-      },
-    },
+    allow.balancer.vault.swap({ poolId: "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a", assetIn: WETH, assetOut: DAI }, { recipient: AVATAR, sender: AVATAR, fromInternalBalance:false, toInternalBalance:false}),
+    allow.balancer.vault.swap({ poolId: "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021", assetIn: COMP, assetOut: WETH }, { recipient: AVATAR, sender: AVATAR, fromInternalBalance:false, toInternalBalance:false}),
+    allow.balancer.vault.swap({ poolId: "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019", assetIn: WETH, assetOut: USDC }, { recipient: AVATAR, sender: AVATAR, fromInternalBalance:false, toInternalBalance:false}),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Swapping of rewards COMP, AAVE, rETH2, SWISE and sETH2 in UniswapV3
