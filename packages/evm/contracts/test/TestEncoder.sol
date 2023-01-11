@@ -19,9 +19,10 @@ struct DynamicTupleWithStaticTuple {
 }
 
 struct DynamicTupleWithDynamicTuple {
-    uint256 a;
-    bytes b;
-    DynamicTuple c;
+    bytes a;
+    StaticTuple b;
+    uint256 c;
+    DynamicTuple d;
 }
 
 struct DynamicTupleWithArray {

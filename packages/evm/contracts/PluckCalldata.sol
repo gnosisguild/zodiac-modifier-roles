@@ -66,6 +66,7 @@ library PluckCalldata {
         } else if (layout._type == ParameterType.Tuple) {
             return _carveTuple(data, offset, layout);
         } else {
+            assert(layout._type == ParameterType.Array);
             return _carveArray(data, offset, layout);
         }
     }
@@ -112,10 +113,7 @@ library PluckCalldata {
         uint256 offset,
         ParameterLayout memory layout
     ) internal pure returns (ParameterPayload memory result) {
-        assert(layout._type == ParameterType.Tuple);
-
         ParameterLayout[] memory parts = layout.nested;
-
         result.nested = new ParameterPayload[](parts.length);
 
         uint256 headOffset = offset;
@@ -125,7 +123,7 @@ library PluckCalldata {
                 ? headOffset
                 : offset + _loadUIntAt(data, headOffset);
             result.nested[i] = _carve(data, tailOffset, parts[i]);
-            headOffset += isStatic ? _staticSize(parts[i]) : 32;
+            headOffset += isStatic ? _size(parts[i]) : 32;
         }
     }
 
@@ -142,7 +140,7 @@ library PluckCalldata {
         offset += 32;
 
         bool isStatic = _isStatic(layout.nested[0]);
-        uint256 itemSize = isStatic ? _staticSize(layout.nested[0]) : 32;
+        uint256 itemSize = isStatic ? _size(layout.nested[0]) : 32;
 
         for (uint256 i; i < length; i++) {
             result.nested[i] = _carve(
@@ -193,37 +191,11 @@ library PluckCalldata {
         return tailOffset;
     }
 
-    function _tuplePartOffset(
-        bytes memory data,
-        uint256 offset,
-        uint256 index,
-        bool isStaticItem,
-        uint256 itemSize
-    ) private pure returns (uint256) {
-        // If the Tuple is Static - each tuple/item is encoded inline
-        // If the Tuple is Dynamic - each tuple/item has head with offset, tail with content
-        uint256 headOffset = offset + index * itemSize;
-        if (isStaticItem) {
-            return headOffset;
-        }
-        uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
-        return tailOffset;
-    }
-
     function _loadUIntAt(
         bytes memory data,
         uint256 offset
     ) private pure returns (uint256) {
-        if (data.length < offset + 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        uint256 result;
-        assembly {
-            // jump over the length encoding
-            result := mload(add(data, add(offset, 32)))
-        }
-        return result;
+        return uint256(_loadWordAt(data, offset));
     }
 
     function _loadWordAt(
@@ -260,16 +232,18 @@ library PluckCalldata {
         }
     }
 
-    function _staticSize(
+    function _size(
         ParameterLayout memory layout
     ) private pure returns (uint256) {
-        if (layout.nested.length == 0) {
+        if (layout._type == ParameterType.Static) {
             return 32;
         }
 
+        assert(layout._type == ParameterType.Tuple);
+
         uint256 result;
         for (uint256 i; i < layout.nested.length; i++) {
-            result += _staticSize(layout.nested[i]);
+            result += _size(layout.nested[i]);
         }
 
         return result;
