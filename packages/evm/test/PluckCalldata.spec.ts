@@ -268,12 +268,15 @@ describe("PluckCalldata library", async () => {
   it("plucks dynamicTupleWithNestedDynamicTuple from encoded calldata", async () => {
     const { pluckCalldata, testEncoder } = await setup();
 
-    // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
     const { data } =
       await testEncoder.populateTransaction.dynamicTupleWithNestedDynamicTuple({
-        a: 2023,
-        b: "0xbadfed",
-        c: {
+        a: "0xbadfed",
+        b: {
+          a: 1234,
+          b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+        },
+        c: 2023,
+        d: {
           dynamic: "0xdeadbeef",
           _static: 999,
           dynamic32: [6, 7, 8],
@@ -286,8 +289,27 @@ describe("PluckCalldata library", async () => {
         _type: ParameterType.Tuple,
         comp: 0,
         nested: [
-          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
           { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Tuple,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+            ],
+          },
+          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
           {
             isScoped: true,
             _type: ParameterType.Tuple,
@@ -319,11 +341,20 @@ describe("PluckCalldata library", async () => {
 
     const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(result[0].nested[0]._static).to.equal(BigNumber.from(2023));
-    expect(result[0].nested[1].dynamic).to.equal("0xbadfed");
-    expect(result[0].nested[2].nested[0].dynamic).to.equal("0xdeadbeef");
-    expect(result[0].nested[2].nested[1]._static).to.equal(BigNumber.from(999));
-    expect(result[0].nested[2].nested[2].dynamic32).to.deep.equal([
+    expect(result[0].nested[0].dynamic).to.equal("0xbadfed");
+
+    expect(result[0].nested[1].nested[0]._static).to.equal(
+      BigNumber.from(1234)
+    );
+    expect(result[0].nested[1].nested[1]._static).to.equal(
+      "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
+    );
+
+    expect(result[0].nested[2]._static).to.equal(BigNumber.from(2023));
+
+    expect(result[0].nested[3].nested[0].dynamic).to.equal("0xdeadbeef");
+    expect(result[0].nested[3].nested[1]._static).to.equal(BigNumber.from(999));
+    expect(result[0].nested[3].nested[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000006",
       "0x0000000000000000000000000000000000000000000000000000000000000007",
       "0x0000000000000000000000000000000000000000000000000000000000000008",
