@@ -2,7 +2,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
-import "hardhat/console.sol";
 
 library PluckCalldata {
     error CalldataOutOfBounds();
