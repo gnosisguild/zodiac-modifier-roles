@@ -56,7 +56,7 @@ const UV3_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
 const UV3_ROUTER_2 = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
 
 //mStable
-const DELEGATE_ADDRESS = "0xd6e96e437b8d42406a64440226b77a51c74e26b1"
+const DELEGATE_ADDRESS = "0xd6E96e437b8d42406A64440226B77a51c74E26b1"
 const MTA = "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2"
 const stMTA = "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7"
 
@@ -255,10 +255,11 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Uniswap V3 - WBTC + ETH, Range: 11.786 - 15.082. Fee: 0.3%.
+    //Uniswap V3 - WBTC + WETH, Range: 11.786 - 15.082. Fee: 0.3%.
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...allowErc20Approve([WBTC], [UV3_NFT_POSITIONS]),
+    //...allowErc20Approve([WBTC], [UV3_NFT_POSITIONS]),
+    ...allowErc20Approve([WBTC, WETH], [UV3_NFT_POSITIONS]),
 
     //Adding liquidity: to create a new position in a pool one has to call both the mint and refundETH functions
     {
@@ -303,7 +304,7 @@ const preset: RolePreset = {
     */
 
     //Removing liquidity: to remove liquidity one has to call the decreaseLiquidity and collect functions
-    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represet the uncollected
+    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represent the uncollected
     //fees
 
     {
@@ -372,7 +373,7 @@ const preset: RolePreset = {
     //Claim rewards without compounding
     {
       targetAddress: stMTA,
-      signature: "claimRewards()",
+      signature: "claimReward()",
     },
 
     //Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
@@ -451,7 +452,7 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Balancer - ETH + GTC
+    //Balancer - WETH + GTC
     //---------------------------------------------------------------------------------------------------------------------------------
 
     {
@@ -507,10 +508,12 @@ const preset: RolePreset = {
     }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Stakewise - UniswapV3 ETH + sETH2, 0.3%
+    //Stakewise - UniswapV3 WETH + sETH2, 0.3%
     //---------------------------------------------------------------------------------------------------------------------------------
 
     ...allowErc20Approve([sETH2], [UV3_NFT_POSITIONS]),
+    // Already allowlisted in Uniswap V3 WBTC + WETH
+    //...allowErc20Approve([WETH], [UV3_NFT_POSITIONS]),
 
     //Add liquidity
     {
@@ -707,10 +710,11 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of rewards COMP, AAVE, rETH2, SWISE and sETH2 in UniswapV3
+    //Swapping of rewards COMP, AAVE, rETH2, SWISE, sETH2 and WETH in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
+    //...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
+    ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2, WETH], [UV3_ROUTER_2]),
 
     //Swapping of COMP for USDC
     {
