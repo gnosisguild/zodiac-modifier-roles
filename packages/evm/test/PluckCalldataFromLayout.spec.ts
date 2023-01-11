@@ -20,7 +20,7 @@ describe("PluckCalldataFromLayout", async () => {
     const testDecoder = await TestDecoder.deploy();
 
     const MockPluckCalldata = await hre.ethers.getContractFactory(
-      "MockPluckCalldata2"
+      "MockPluckCalldata"
     );
     const pluckCalldata = await MockPluckCalldata.deploy();
 
