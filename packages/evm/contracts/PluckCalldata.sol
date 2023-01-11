@@ -116,14 +116,15 @@ library PluckCalldata {
         ParameterLayout[] memory parts = layout.nested;
         result.nested = new ParameterPayload[](parts.length);
 
-        uint256 headOffset = offset;
+        uint256 shift;
         for (uint256 i = 0; i < parts.length; i++) {
-            bool isStatic = _isStatic(parts[i]);
-            uint256 tailOffset = isStatic
-                ? headOffset
-                : offset + _loadUIntAt(data, headOffset);
-            result.nested[i] = _carve(data, tailOffset, parts[i]);
-            headOffset += isStatic ? _size(parts[i]) : 32;
+            bool isInline = _isStatic(parts[i]);
+            result.nested[i] = _carve(
+                data,
+                _headOrTailOffset(data, offset, shift, isInline),
+                parts[i]
+            );
+            shift += isInline ? _size(parts[i]) : 32;
         }
     }
 
@@ -139,13 +140,13 @@ library PluckCalldata {
         result.nested = new ParameterPayload[](length);
         offset += 32;
 
-        bool isStatic = _isStatic(layout.nested[0]);
-        uint256 itemSize = isStatic ? _size(layout.nested[0]) : 32;
+        bool isInline = _isStatic(layout.nested[0]);
+        uint256 itemSize = isInline ? _size(layout.nested[0]) : 32;
 
         for (uint256 i; i < length; i++) {
             result.nested[i] = _carve(
                 data,
-                _arrayItemOffset(data, offset, i, isStatic, itemSize),
+                _headOrTailOffset(data, offset, i * itemSize, isInline),
                 layout.nested[0]
             );
         }
@@ -166,25 +167,17 @@ library PluckCalldata {
          *   offset does not include the 4-byte function signature."
          */
 
-        uint256 headOffset = 4 + index * 32;
-        if (isStaticParam) {
-            return headOffset;
-        }
-        uint256 tailOffset = 4 + _loadUIntAt(data, headOffset);
-        return tailOffset;
+        return _headOrTailOffset(data, 4, index * 32, isStaticParam);
     }
 
-    function _arrayItemOffset(
+    function _headOrTailOffset(
         bytes memory data,
         uint256 offset,
-        uint256 index,
-        bool isStaticItem,
-        uint256 itemSize
+        uint256 shift,
+        bool isInline
     ) private pure returns (uint256) {
-        // If the Tuple is Static - each tuple/item is encoded inline
-        // If the Tuple is Dynamic - each tuple/item has head with offset, tail with content
-        uint256 headOffset = offset + index * itemSize;
-        if (isStaticItem) {
+        uint256 headOffset = offset + shift;
+        if (isInline) {
             return headOffset;
         }
         uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
