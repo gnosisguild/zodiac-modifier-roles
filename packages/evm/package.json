@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test --deploy-fixture",
+    "test": "hardhat test",
     "deploy": "hardhat deploy --network",
     "coverage": "hardhat coverage",
     "lint": "yarn lint:sol && yarn lint:ts",
