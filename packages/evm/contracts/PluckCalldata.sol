@@ -2,16 +2,28 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
-
-struct PluckedParameter {
-    ParameterType _type;
-    bytes32 _static;
-    bytes dynamic;
-    bytes32[] dynamic32;
-}
+import "hardhat/console.sol";
 
 library PluckCalldata {
     error CalldataOutOfBounds();
+
+    function pluck(
+        bytes memory data,
+        ParameterLayout[] memory layout
+    ) internal pure returns (ParameterPayload[] memory result) {
+        result = new ParameterPayload[](layout.length);
+        for (uint256 i = 0; i < layout.length; i++) {
+            result[i] = _carve(
+                data,
+                _parameterOffset(
+                    data,
+                    i,
+                    layout[i]._type == ParameterType.Static
+                ),
+                layout[i]
+            );
+        }
+    }
 
     /// @dev Helper function grab a specific static parameter from data blob.
     /// @param data the parameter data blob.
@@ -40,35 +52,21 @@ library PluckCalldata {
         return _carveDynamic32(data, _parameterOffset(data, index, false));
     }
 
-    function pluckTupleParam(
+    function _carve(
         bytes memory data,
-        uint256 index,
-        ParameterType[] memory types
-    ) internal pure returns (PluckedParameter[] memory) {
-        return _carveTuple(data, _parameterOffset(data, index, false), types);
-    }
-
-    function pluckTupleArrayParam(
-        bytes memory data,
-        uint256 index,
-        ParameterType[] memory types
-    ) internal pure returns (PluckedParameter[][] memory result) {
-        uint256 offset = _parameterOffset(data, index, false);
-
-        // read length, and move offset to content start
-        uint256 length = _loadUIntAt(data, offset);
-        result = new PluckedParameter[][](length);
-        offset += 32;
-
-        bool isStatic = _allStatic(types);
-        uint256 itemSize = isStatic ? types.length * 32 : 32;
-
-        for (uint256 i; i < length; i++) {
-            result[i] = _carveTuple(
-                data,
-                _arrayItemOffset(data, offset, i, isStatic, itemSize),
-                types
-            );
+        uint256 offset,
+        ParameterLayout memory layout
+    ) private pure returns (ParameterPayload memory result) {
+        if (layout._type == ParameterType.Static) {
+            result._static = _loadWordAt(data, offset);
+        } else if (layout._type == ParameterType.Dynamic) {
+            result.dynamic = _carveDynamic(data, offset);
+        } else if (layout._type == ParameterType.Dynamic32) {
+            result.dynamic32 = _carveDynamic32(data, offset);
+        } else if (layout._type == ParameterType.Tuple) {
+            return _carveTuple(data, offset, layout);
+        } else {
+            return _carveArray(data, offset, layout);
         }
     }
 
@@ -112,23 +110,46 @@ library PluckCalldata {
     function _carveTuple(
         bytes memory data,
         uint256 offset,
-        ParameterType[] memory types
-    ) internal pure returns (PluckedParameter[] memory result) {
-        result = new PluckedParameter[](types.length);
+        ParameterLayout memory layout
+    ) internal pure returns (ParameterPayload memory result) {
+        assert(layout._type == ParameterType.Tuple);
 
-        for (uint256 i = 0; i < types.length; i++) {
-            uint256 headOffset = offset + i * 32;
-            if (types[i] == ParameterType.Static) {
-                result[i]._static = _loadWordAt(data, headOffset);
-            } else if (types[i] == ParameterType.Dynamic) {
-                uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
-                result[i].dynamic = _carveDynamic(data, tailOffset);
-            } else {
-                assert(types[i] == ParameterType.Dynamic32);
-                uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
-                result[i].dynamic32 = _carveDynamic32(data, tailOffset);
-            }
-            result[i]._type = types[i];
+        ParameterLayout[] memory parts = layout.nested;
+
+        result.nested = new ParameterPayload[](parts.length);
+
+        uint256 headOffset = offset;
+        for (uint256 i = 0; i < parts.length; i++) {
+            bool isStatic = _isStatic(parts[i]);
+            uint256 tailOffset = isStatic
+                ? headOffset
+                : offset + _loadUIntAt(data, headOffset);
+            result.nested[i] = _carve(data, tailOffset, parts[i]);
+            headOffset += isStatic ? _staticSize(parts[i]) : 32;
+        }
+    }
+
+    function _carveArray(
+        bytes memory data,
+        uint256 offset,
+        ParameterLayout memory layout
+    ) private pure returns (ParameterPayload memory result) {
+        assert(layout.nested.length == 1);
+
+        // read length, and move offset to content start
+        uint256 length = _loadUIntAt(data, offset);
+        result.nested = new ParameterPayload[](length);
+        offset += 32;
+
+        bool isStatic = _isStatic(layout.nested[0]);
+        uint256 itemSize = isStatic ? _staticSize(layout.nested[0]) : 32;
+
+        for (uint256 i; i < length; i++) {
+            result.nested[i] = _carve(
+                data,
+                _arrayItemOffset(data, offset, i, isStatic, itemSize),
+                layout.nested[0]
+            );
         }
     }
 
@@ -156,6 +177,23 @@ library PluckCalldata {
     }
 
     function _arrayItemOffset(
+        bytes memory data,
+        uint256 offset,
+        uint256 index,
+        bool isStaticItem,
+        uint256 itemSize
+    ) private pure returns (uint256) {
+        // If the Tuple is Static - each tuple/item is encoded inline
+        // If the Tuple is Dynamic - each tuple/item has head with offset, tail with content
+        uint256 headOffset = offset + index * itemSize;
+        if (isStaticItem) {
+            return headOffset;
+        }
+        uint256 tailOffset = offset + _loadUIntAt(data, headOffset);
+        return tailOffset;
+    }
+
+    function _tuplePartOffset(
         bytes memory data,
         uint256 offset,
         uint256 index,
@@ -204,15 +242,37 @@ library PluckCalldata {
         return result;
     }
 
-    function _allStatic(
-        ParameterType[] memory types
+    function _isStatic(
+        ParameterLayout memory layout
     ) private pure returns (bool) {
-        for (uint256 i = 0; i < types.length; i++) {
-            if (types[i] != ParameterType.Static) {
-                return false;
+        if (layout._type == ParameterType.Static) {
+            return true;
+        } else if (layout._type == ParameterType.Tuple) {
+            for (uint256 i = 0; i < layout.nested.length; ++i) {
+                if (!_isStatic(layout.nested[i])) return false;
             }
+            return true;
+        } else {
+            // Dynamic
+            // Dynamic32
+            // Array
+            return false;
         }
-        return true;
+    }
+
+    function _staticSize(
+        ParameterLayout memory layout
+    ) private pure returns (uint256) {
+        if (layout.nested.length == 0) {
+            return 32;
+        }
+
+        uint256 result;
+        for (uint256 i; i < layout.nested.length; i++) {
+            result += _staticSize(layout.nested[i]);
+        }
+
+        return result;
     }
 }
 
