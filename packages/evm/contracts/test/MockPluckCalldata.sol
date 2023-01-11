@@ -24,20 +24,4 @@ contract MockPluckCalldata {
     ) public pure returns (bytes32) {
         return PluckCalldata.pluckStaticParam(data, index);
     }
-
-    function pluckTupleParam(
-        bytes memory data,
-        uint256 index,
-        ParameterType[] memory tupleTypes
-    ) public pure returns (PluckedParameter[] memory result) {
-        return PluckCalldata.pluckTupleParam(data, index, tupleTypes);
-    }
-
-    function pluckTupleArrayParam(
-        bytes memory data,
-        uint256 index,
-        ParameterType[] memory tupleTypes
-    ) public pure returns (PluckedParameter[][] memory result) {
-        return PluckCalldata.pluckTupleArrayParam(data, index, tupleTypes);
-    }
 }

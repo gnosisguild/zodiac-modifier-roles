@@ -7,7 +7,7 @@ enum ParameterType {
     Dynamic,
     Dynamic32,
     Tuple,
-    TupleArray
+    Array
 }
 
 enum Comparison {
@@ -36,6 +36,20 @@ struct ParameterConfig {
     ParameterType _type;
     Comparison comp;
     bytes[] compValues;
+}
+
+struct ParameterLayout {
+    bool isScoped;
+    ParameterType _type;
+    Comparison comp;
+    ParameterLayout[] nested;
+}
+
+struct ParameterPayload {
+    bytes32 _static;
+    bytes dynamic;
+    bytes32[] dynamic32;
+    ParameterPayload[] nested;
 }
 
 struct TargetAddress {
