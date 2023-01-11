@@ -1,71 +1,32 @@
 import "@nomiclabs/hardhat-ethers";
+import assert from "assert";
+
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
-import { BigNumber, constants } from "ethers";
+import { BigNumber } from "ethers";
 import {
   defaultAbiCoder,
   hexlify,
   solidityPack,
   toUtf8Bytes,
 } from "ethers/lib/utils";
-import hre, { deployments, waffle, ethers } from "hardhat";
-
-const COMP_EQUAL = 0;
-// const COMP_GREATER = 1;
-// const COMP_LESS = 2;
-
-const OPTIONS_NONE = 0;
-// const OPTIONS_SEND = 1;
-// const OPTIONS_DELEGATECALL = 2;
-// const OPTIONS_BOTH = 3;
+import hre, { deployments } from "hardhat";
 
 enum ParameterType {
   None = 0,
   Static,
   Dynamic,
   Dynamic32,
+  Tuple,
+  Array,
 }
 
-const UNSCOPED_PARAM = {
-  isScoped: false,
-  _type: ParameterType.None,
-  comp: COMP_EQUAL,
-  compValues: [],
-};
-
 describe("PluckCalldata library", async () => {
-  const ROLE_ID = 0;
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
 
-    const TestPluckParam = await hre.ethers.getContractFactory(
-      "TestPluckParam"
-    );
-    const testPluckParam = await TestPluckParam.deploy();
-
-    const TestPluckTupleParam = await hre.ethers.getContractFactory(
-      "TestPluckTupleParam"
-    );
-    const testPluckTupleParam = await TestPluckTupleParam.deploy();
-
-    const [owner, invoker] = waffle.provider.getWallets();
-
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
-      owner.address,
-      avatar.address,
-      avatar.address
-    );
-
-    await modifier.enableModule(invoker.address);
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testPluckParam.address);
+    const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
+    const testEncoder = await TestEncoder.deploy();
 
     const MockPluckCalldata = await hre.ethers.getContractFactory(
       "MockPluckCalldata"
@@ -73,547 +34,499 @@ describe("PluckCalldata library", async () => {
     const pluckCalldata = await MockPluckCalldata.deploy();
 
     return {
-      testPluckParam,
-      testPluckTupleParam,
+      testEncoder,
       pluckCalldata,
-      Modifier,
-      modifier,
-      owner,
-      invoker,
     };
   });
 
-  it("static, dynamic - (bytes4, string)", async () => {
-    const { testPluckParam, pluckCalldata } = await setup();
+  it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {
+    const { testEncoder, pluckCalldata } = await setup();
 
-    const { data } = await testPluckParam.populateTransaction.staticDynamic(
-      "0x12345678",
-      "Hello World!"
-    );
-
-    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
-
-    expect(defaultAbiCoder.encode(["bytes4"], ["0x12345678"])).to.equal(arg1);
-    expect(hexlify(toUtf8Bytes("Hello World!"))).to.equal(arg2);
-  });
-
-  it("static, dynamic, dynamic32 - (address,bytes,uint32[])", async () => {
-    const { testPluckParam, pluckCalldata } = await setup();
+    // (address,bytes,uint32[])
 
     const { data } =
-      await testPluckParam.populateTransaction.staticDynamicDynamic32(
+      await testEncoder.populateTransaction.staticDynamicDynamic32(
         AddressOne,
         "0xabcd",
         [10, 32, 55]
       );
+    assert(data);
 
-    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamic32Param(data as string, 2);
+    const layout = [
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
+    ];
 
-    expect(arg1).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
-    expect(arg2).to.equal(solidityPack(["bytes"], ["0xabcd"]));
-    expect(arg2).to.equal("0xabcd");
-    expect(arg3.map((s) => BigNumber.from(s).toNumber())).to.deep.equal([
-      10, 32, 55,
-    ]);
+    const result = await pluckCalldata.pluck(data, layout);
+
+    expect(result[0]._static).to.equal(
+      defaultAbiCoder.encode(["address"], [AddressOne])
+    );
+    expect(result[1].dynamic).to.equal(solidityPack(["bytes"], ["0xabcd"]));
+    expect(result[1].dynamic).to.equal("0xabcd");
+    expect(
+      result[2].dynamic32.map((s) => BigNumber.from(s).toNumber())
+    ).to.deep.equal([10, 32, 55]);
   });
 
-  it("static, dynamic32, dynamic - (uint32,bytes4[],string)", async () => {
-    const { pluckCalldata, testPluckParam } = await setup();
+  it("plucks (dynamic, static, dynamic32) non nested parameters from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
+
+    // (bytes,bool,bytes2[])
 
     const { data } =
-      await testPluckParam.populateTransaction.staticDynamic32Dynamic(
-        123,
-        ["0xabcdef12"],
-        "Hello World!"
-      );
-
-    const arg1 = await pluckCalldata.pluckStaticParam(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamic32Param(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamicParam(data as string, 2);
-
-    expect(arg1).to.equal(defaultAbiCoder.encode(["uint32"], [123]));
-    expect(arg2).to.deep.equal([
-      defaultAbiCoder.encode(["bytes4"], ["0xabcdef12"]),
-    ]);
-    expect(arg3).to.equal(hexlify(toUtf8Bytes("Hello World!")));
-  });
-
-  it("dynamic, static, dynamic32 - (bytes,bool,bytes2[])", async () => {
-    const { pluckCalldata, testPluckParam } = await setup();
-
-    const { data } =
-      await testPluckParam.populateTransaction.dynamicStaticDynamic32(
+      await testEncoder.populateTransaction.dynamicStaticDynamic32(
         "0x12ab45",
         false,
         ["0x1122", "0x3344", "0x5566"]
       );
 
-    const arg1 = await pluckCalldata.pluckDynamicParam(data as string, 0);
-    const arg2 = await pluckCalldata.pluckStaticParam(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamic32Param(data as string, 2);
+    assert(data);
 
-    expect(arg1).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
-    expect(arg2).to.equal(defaultAbiCoder.encode(["bool"], [false]));
-    expect(arg3).to.deep.equal([
+    const layout = [
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
+    ];
+
+    const result = await pluckCalldata.pluck(data, layout);
+    expect(result[0].dynamic).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
+    expect(result[1]._static).to.equal(
+      defaultAbiCoder.encode(["bool"], [false])
+    );
+    expect(result[2].dynamic32).to.deep.equal([
       defaultAbiCoder.encode(["bytes2"], ["0x1122"]),
       defaultAbiCoder.encode(["bytes2"], ["0x3344"]),
       defaultAbiCoder.encode(["bytes2"], ["0x5566"]),
     ]);
   });
 
-  it("dynamic, dynamic32, static - (string,uint32[],uint256)", async () => {
-    const { pluckCalldata, testPluckParam } = await setup();
+  it("plucks (dynamic32, dynamic, static) non nested parameters from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
+
+    // (bytes2[],string,uint32)
 
     const { data } =
-      await testPluckParam.populateTransaction.dynamicDynamic32Static(
+      await testEncoder.populateTransaction.dynamic32DynamicStatic(
+        ["0xaabb", "0x1234", "0xff33"],
         "Hello World!",
-        [1975, 2000, 2025],
         123456789
       );
 
-    const arg1 = await pluckCalldata.pluckDynamicParam(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamic32Param(data as string, 1);
-    const arg3 = await pluckCalldata.pluckStaticParam(data as string, 2);
+    assert(data);
 
-    expect(arg1).to.equal(hexlify(toUtf8Bytes("Hello World!")));
-    expect(arg2.map((s) => BigNumber.from(s).toNumber())).to.deep.equal([
-      1975, 2000, 2025,
+    const layout = [
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+    ];
+
+    const result = await pluckCalldata.pluck(data, layout);
+    expect(result[0].dynamic32).to.deep.equal([
+      "0xaabb000000000000000000000000000000000000000000000000000000000000",
+      "0x1234000000000000000000000000000000000000000000000000000000000000",
+      "0xff33000000000000000000000000000000000000000000000000000000000000",
     ]);
-    expect(BigNumber.from(arg3).toNumber()).to.equal(123456789);
+    expect(result[1].dynamic).to.equal(hexlify(toUtf8Bytes("Hello World!")));
+    expect(result[2]._static).to.equal(BigNumber.from(123456789));
   });
 
-  it("dynamic32, static, dynamic - (address[],bytes2,bytes)", async () => {
-    const { pluckCalldata, testPluckParam } = await setup();
+  it("plucks pluck fails if calldata is too short", async () => {
+    const { testEncoder, pluckCalldata } = await setup();
 
+    const { data } = await testEncoder.populateTransaction.staticFn(
+      "0xaabbccdd"
+    );
+
+    assert(data);
+
+    const layout = [
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+    ];
+
+    await expect(pluckCalldata.pluck(data, layout)).to.not.be.reverted;
+
+    await expect(
+      pluckCalldata.pluck(data.slice(0, data.length - 2), layout)
+    ).to.be.revertedWith("CalldataOutOfBounds()");
+  });
+
+  it("pluck fails with param scoped out of bounds", async () => {
+    const { testEncoder, pluckCalldata } = await setup();
+
+    const { data } = await testEncoder.populateTransaction.staticFn(
+      "0xaabbccdd"
+    );
+
+    assert(data);
+
+    const layout = [
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+    ];
+
+    await expect(pluckCalldata.pluck(data, layout)).to.be.revertedWith(
+      "CalldataOutOfBounds()"
+    );
+  });
+
+  it("plucks dynamicTuple from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
+
+    // function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))
+    const { data } = await testEncoder.populateTransaction.dynamicTuple({
+      dynamic: "0xabcd",
+      _static: 100,
+      dynamic32: [1, 2, 3],
+    });
+
+    const result = await pluckCalldata.pluck(data as string, [
+      {
+        isScoped: true,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        nested: [
+          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Dynamic32,
+            comp: 0,
+            nested: [],
+          },
+        ],
+      },
+    ]);
+
+    expect(result[0].nested[0].dynamic).to.equal("0xabcd");
+    expect(result[0].nested[1]._static).to.equal(BigNumber.from(100));
+    expect(result[0].nested[2].dynamic32).to.deep.equal([
+      "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "0x0000000000000000000000000000000000000000000000000000000000000003",
+    ]);
+  });
+
+  it("plucks DynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
+
+    // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
     const { data } =
-      await testPluckParam.populateTransaction.dynamic32StaticDynamic(
-        [AddressOne, AddressOne],
-        "0xaabb",
-        "0x0123456789abcdef0123456789abcdef"
-      );
+      await testEncoder.populateTransaction.dynamicTupleWithNestedStaticTuple({
+        a: 2023,
+        b: "0xbadfed",
+        c: {
+          a: 2020,
+          b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+        },
+      });
 
-    const arg1 = await pluckCalldata.pluckDynamic32Param(data as string, 0);
-    const arg2 = await pluckCalldata.pluckStaticParam(data as string, 1);
-    const arg3 = await pluckCalldata.pluckDynamicParam(data as string, 2);
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        nested: [
+          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Tuple,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+            ],
+          },
+        ],
+      },
+    ];
 
-    expect(arg1).to.deep.equal([
-      defaultAbiCoder.encode(["address"], [AddressOne]),
-      defaultAbiCoder.encode(["address"], [AddressOne]),
-    ]);
+    const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(arg2).to.equal(defaultAbiCoder.encode(["bytes2"], ["0xaabb"]));
-    expect(arg3).to.equal("0x0123456789abcdef0123456789abcdef");
+    expect(result[0].nested[0]._static).to.equal(BigNumber.from(2023));
+    expect(result[0].nested[1].dynamic).to.equal("0xbadfed");
+    expect(result[0].nested[2].nested[0]._static).to.equal(
+      BigNumber.from(2020)
+    );
+    expect(result[0].nested[2].nested[1]._static).to.equal(
+      "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
+    );
   });
 
-  it("dynamic32, dynamic, static - (bytes2[],string,uint32)", async () => {
-    const { pluckCalldata, testPluckParam } = await setup();
+  it("plucks dynamicTupleWithNestedDynamicTuple from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
 
+    // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
     const { data } =
-      await testPluckParam.populateTransaction.dynamic32DynamicStatic(
-        ["0xaabb", "0xccdd", "0x1122"],
-        "Hello World!",
-        8976
-      );
+      await testEncoder.populateTransaction.dynamicTupleWithNestedDynamicTuple({
+        a: 2023,
+        b: "0xbadfed",
+        c: {
+          dynamic: "0xdeadbeef",
+          _static: 999,
+          dynamic32: [6, 7, 8],
+        },
+      });
 
-    const arg1 = await pluckCalldata.pluckDynamic32Param(data as string, 0);
-    const arg2 = await pluckCalldata.pluckDynamicParam(data as string, 1);
-    const arg3 = await pluckCalldata.pluckStaticParam(data as string, 2);
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        nested: [
+          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Tuple,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Dynamic,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Dynamic32,
+                comp: 0,
+                nested: [],
+              },
+            ],
+          },
+        ],
+      },
+    ];
 
-    expect(arg1).to.deep.equal([
-      defaultAbiCoder.encode(["bytes2"], ["0xaabb"]),
-      defaultAbiCoder.encode(["bytes2"], ["0xccdd"]),
-      defaultAbiCoder.encode(["bytes2"], ["0x1122"]),
+    const result = await pluckCalldata.pluck(data as string, layout);
+
+    expect(result[0].nested[0]._static).to.equal(BigNumber.from(2023));
+    expect(result[0].nested[1].dynamic).to.equal("0xbadfed");
+    expect(result[0].nested[2].nested[0].dynamic).to.equal("0xdeadbeef");
+    expect(result[0].nested[2].nested[1]._static).to.equal(BigNumber.from(999));
+    expect(result[0].nested[2].nested[2].dynamic32).to.deep.equal([
+      "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "0x0000000000000000000000000000000000000000000000000000000000000007",
+      "0x0000000000000000000000000000000000000000000000000000000000000008",
     ]);
-    expect(arg2).to.equal(hexlify(toUtf8Bytes("Hello World!")));
-    expect(arg3).to.equal(defaultAbiCoder.encode(["uint32"], [8976]));
   });
 
-  it("don't try this at home", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
+  it("plucks dynamicTupleWithNestedArray from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
 
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("unsupportedFixedSizeAndDynamic")
+    // function dynamicTupleWithNestedArray(tuple(uint256 a, bytes b, tuple(uint256 a, address b)[] c))
+    const { data } =
+      await testEncoder.populateTransaction.dynamicTupleWithNestedArray({
+        a: 21000,
+        b: "0x0badbeef",
+        c: [{ a: 10, b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" }],
+      });
+
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        nested: [
+          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Array,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Tuple,
+                comp: 0,
+                nested: [
+                  {
+                    isScoped: true,
+                    _type: ParameterType.Static,
+                    comp: 0,
+                    nested: [],
+                  },
+                  {
+                    isScoped: true,
+                    _type: ParameterType.Static,
+                    comp: 0,
+                    nested: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    // 0xfde07f12
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000005208
+    // 0000000000000000000000000000000000000000000000000000000000000060
+    // 00000000000000000000000000000000000000000000000000000000000000a0
+    // 0000000000000000000000000000000000000000000000000000000000000004
+    // 0badbeef00000000000000000000000000000000000000000000000000000000
+    // 0000000000000000000000000000000000000000000000000000000000000001
+    // 000000000000000000000000000000000000000000000000000000000000000a
+    // 00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f
+
+    const result = await pluckCalldata.pluck(data as string, layout);
+
+    expect(result[0].nested[0]._static).to.equal(BigNumber.from(21000));
+    expect(result[0].nested[1].dynamic).to.equal("0x0badbeef");
+    expect(result[0].nested[2].nested[0].nested[0]._static).to.equal(
+      BigNumber.from(10)
     );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bool"], [false])],
-        },
-        {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bool"], [false])],
-        },
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-      ],
-      OPTIONS_NONE
+    expect(result[0].nested[2].nested[0].nested[1]._static).to.equal(
+      "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
-
-    const { data: dataGood } =
-      await testPluckParam.populateTransaction.unsupportedFixedSizeAndDynamic(
-        [false, false],
-        "Hello World!"
-      );
-
-    const { data: dataBad } =
-      await testPluckParam.populateTransaction.unsupportedFixedSizeAndDynamic(
-        [true, false],
-        "Hello World!"
-      );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataGood as string,
-          0
-        )
-    ).to.emit(testPluckParam, "UnsupportedFixedSizeAndDynamic");
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataBad as string,
-          0
-        )
-    ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
-  it("static - fails if calldata is too short", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
+  it("plucks arrayStaticTupleItems from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
 
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticFn")
-    );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
+    // function arrayStaticTupleItems(tuple(uint256 a, address b)[])
+    const { data } =
+      await testEncoder.populateTransaction.arrayStaticTupleItems([
         {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+          a: 95623,
+          b: "0x00000000219ab540356cbb839cbe05303d7705fa",
         },
-      ],
-      OPTIONS_NONE
+        {
+          a: 11542,
+          b: "0x0716a17fbaee714f1e6ab0f9d59edbc5f09815c0",
+        },
+      ]);
+
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Array,
+        comp: 0,
+        nested: [
+          {
+            isScoped: true,
+            _type: ParameterType.Tuple,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    // 0x83fb7968
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // 0000000000000000000000000000000000000000000000000000000000017587
+    // 00000000000000000000000000000000219ab540356cbb839cbe05303d7705fa
+    // 0000000000000000000000000000000000000000000000000000000000002d16
+    // 0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0
+
+    const result = await pluckCalldata.pluck(data as string, layout);
+    expect(result[0].nested[0].nested[0]._static).to.equal(
+      BigNumber.from(95623)
     );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
-    ).to.be.revertedWith("CalldataOutOfBounds()");
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          `${SELECTOR}aabbccdd`,
-          0
-        )
-    ).to.be.revertedWith("CalldataOutOfBounds()");
+    expect(result[0].nested[0].nested[1]._static).to.equal(
+      "0x00000000000000000000000000000000219ab540356cbb839cbe05303d7705fa"
+    );
+    expect(result[0].nested[1].nested[0]._static).to.equal(
+      BigNumber.from(11542)
+    );
+    expect(result[0].nested[1].nested[1]._static).to.equal(
+      "0x0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0"
+    );
   });
 
-  it("static - fails with param scoped out of bounds", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
+  it("plucks arrayDynamicTupleItems from encoded calldata", async () => {
+    const { pluckCalldata, testEncoder } = await setup();
 
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticFn")
-    );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
+    // function arrayDynamicTupleItems(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32)[])
+    const { data } =
+      await testEncoder.populateTransaction.arrayDynamicTupleItems([
         {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
+          dynamic: "0xbadfed",
+          _static: 9998877,
+          dynamic32: [7, 9],
         },
-      ],
-      OPTIONS_NONE
+      ]);
+
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Array,
+        comp: 0,
+        nested: [
+          {
+            isScoped: true,
+            _type: ParameterType.Tuple,
+            comp: 0,
+            nested: [
+              {
+                isScoped: true,
+                _type: ParameterType.Dynamic,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                nested: [],
+              },
+              {
+                isScoped: true,
+                _type: ParameterType.Dynamic32,
+                comp: 0,
+                nested: [],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const result = await pluckCalldata.pluck(data as string, layout);
+
+    expect(result[0].nested[0].nested[0].dynamic).to.equal("0xbadfed");
+    expect(result[0].nested[0].nested[1]._static).to.equal(
+      BigNumber.from(9998877)
     );
-
-    const { data } = await testPluckParam.populateTransaction.staticFn(
-      "0x12345678"
-    );
-
-    // ok
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, data as string, 0)
-    ).to.emit(testPluckParam, "Static");
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
-        },
-        {
-          isScoped: true,
-          _type: ParameterType.Static,
-          comp: COMP_EQUAL,
-          compValues: [encodeStatic(["bytes4"], ["0x12345678"])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    // ngmi
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, data as string, 0)
-    ).to.be.revertedWith("CalldataOutOfBounds()");
-  });
-
-  it("dynamic - fails if calldata too short", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
-
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticDynamic")
-    );
-
-    const SELECTOR_OTHER = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticFn")
-    );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        UNSCOPED_PARAM,
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    const { data: dataGood } =
-      await testPluckParam.populateTransaction.staticDynamic(
-        "0x12345678",
-        "Hello World!"
-      );
-
-    const dataShort = (
-      (await testPluckParam.populateTransaction.staticFn("0x12345678"))
-        .data as string
-    ).replace(SELECTOR_OTHER.slice(2), SELECTOR.slice(2));
-
-    // shortned call
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, dataShort, 0)
-    ).to.be.revertedWith("CalldataOutOfBounds()");
-
-    // just the selector
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(testPluckParam.address, 0, SELECTOR, 0)
-    ).to.be.revertedWith("CalldataOutOfBounds()");
-
-    // ok
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataGood as string,
-          0
-        )
-    ).to.not.be.reverted;
-  });
-
-  it("dynamic - fails if payload is missing", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
-
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticDynamic")
-    );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        UNSCOPED_PARAM,
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    const { data: dataGood } =
-      await testPluckParam.populateTransaction.staticDynamic(
-        "0x12345678",
-        "Hello World!"
-      );
-
-    // 0x737c0619 -> staticDynamic selector
-    const dataBad = `0x737c061900000000000000000000000000000000000000000000000000000000123456780000000000000000000000000000000000000000000000000000000000300001`;
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataBad as string,
-          0
-        )
-    ).to.be.revertedWith("CalldataOutOfBounds()");
-
-    // ok
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataGood as string,
-          0
-        )
-    ).to.not.be.reverted;
-  });
-
-  it("dynamic - fails with parameter scoped out of bounds", async () => {
-    const { modifier, testPluckParam, owner, invoker } = await setup();
-    const SELECTOR = testPluckParam.interface.getSighash(
-      testPluckParam.interface.getFunction("staticDynamic")
-    );
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        UNSCOPED_PARAM,
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    const { data: dataGood } =
-      await testPluckParam.populateTransaction.staticDynamic(
-        "0x12345678",
-        "Hello World!"
-      );
-    // ok
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataGood as string,
-          0
-        )
-    ).to.not.be.reverted;
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testPluckParam.address,
-      SELECTOR,
-      [
-        UNSCOPED_PARAM,
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        UNSCOPED_PARAM,
-        {
-          isScoped: true,
-          _type: ParameterType.Dynamic,
-          comp: COMP_EQUAL,
-          compValues: [encodeDynamic(["string"], ["Hello World!"])],
-        },
-      ],
-      OPTIONS_NONE
-    );
-
-    await expect(
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testPluckParam.address,
-          0,
-          dataGood as string,
-          0
-        )
-    ).to.be.revertedWith("CalldataOutOfBounds()");
+    expect(result[0].nested[0].nested[2].dynamic32).to.deep.equal([
+      "0x0000000000000000000000000000000000000000000000000000000000000007",
+      "0x0000000000000000000000000000000000000000000000000000000000000009",
+    ]);
   });
 });
-
-function encodeStatic(types: any[], values: any[]) {
-  return ethers.utils.defaultAbiCoder.encode(types, values);
-}
-
-function encodeDynamic(types: any[], values: any[]) {
-  return ethers.utils.solidityPack(types, values);
-}

@@ -30,18 +30,27 @@ struct DynamicTupleWithArray {
     StaticTuple[] c;
 }
 
-/*
-[
-  'function arrayDynamicTupleItems(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32)[])',
-  'function arrayStaticTupleItems(tuple(uint256 a, address b)[])',
-  'function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))',
-  'function dynamicTupleWithNestedArray(tuple(uint256 a, bytes b, tuple(uint256 a, address b)[] c))',
-  'function dynamicTupleWithNestedDynamicTuple(tuple(uint256 a, bytes b, tuple(bytes dynamic, uint256 _static, uint256[] dynamic32) c))',
-  'function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))'
-]
-*/
+contract TestEncoder {
+    function staticFn(bytes4) external {}
 
-contract TestDecoder {
+    function staticDynamicDynamic32(
+        address,
+        bytes calldata,
+        uint32[] memory
+    ) external {}
+
+    function dynamicStaticDynamic32(
+        bytes calldata,
+        bool,
+        bytes2[] memory
+    ) external {}
+
+    function dynamic32DynamicStatic(
+        bytes2[] calldata,
+        string memory,
+        uint32
+    ) external {}
+
     function dynamicTuple(DynamicTuple memory) external {}
 
     function dynamicTupleWithNestedStaticTuple(
