@@ -138,7 +138,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         } else if (target.clearance == Clearance.Function) {
             Role storage role = roles[roleId];
             uint256 scopeConfig = role.functions[
-                _keyForFunctions(targetAddress, bytes4(data))
+                _key(targetAddress, bytes4(data))
             ];
 
             if (scopeConfig == 0) {
@@ -151,7 +151,7 @@ abstract contract PermissionChecker is PermissionBuilder {
             checkExecutionOptions(value, operation, options);
 
             if (!isWildcarded) {
-                checkParameters(role, targetAddress, scopeConfig, data);
+                checkParameters(role, targetAddress, data);
             }
         } else {
             assert(target.clearance == Clearance.None);
@@ -188,51 +188,54 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param scopeConfig packed bytes representing the scope for a role.
     /// @param data the transaction data to check
     function checkParameters(
         Role storage role,
         address targetAddress,
-        uint256 scopeConfig,
         bytes memory data
     ) internal view {
         bytes4 selector = bytes4(data);
-        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
+        bytes memory key = abi.encodePacked(targetAddress, selector);
 
-        for (uint256 i = 0; i < length; i++) {
-            (
-                bool isScoped,
-                ParameterType paramType,
-                Comparison paramComp
-            ) = ScopeConfig.unpackParameter(scopeConfig, i);
+        ParameterLayout[] memory layout = _loadParameterLayout(role, key);
+        ParameterPayload[] memory payload = PluckCalldata.pluck(data, layout);
 
-            if (!isScoped) {
-                continue;
+        for (uint256 i = 0; i < layout.length; ++i) {
+            if (layout[i].isScoped) {
+                _checkParameter(role, layout[i], payload[i], key, i);
             }
+        }
+    }
 
-            bytes32 key = _keyForCompValues(targetAddress, selector, i);
-            if (paramType == ParameterType.Static) {
-                _checkStaticValue(
-                    role,
-                    key,
-                    paramComp,
-                    PluckCalldata.pluckStaticParam(data, i)
-                );
-            } else if (paramType == ParameterType.Dynamic) {
-                _checkDynamicValue(
-                    role,
-                    key,
-                    paramComp,
-                    PluckCalldata.pluckDynamicParam(data, i)
-                );
-            } else if (paramType == ParameterType.Dynamic32) {
-                _checkDynamic32Value(
-                    role,
-                    key,
-                    paramComp,
-                    PluckCalldata.pluckDynamic32Param(data, i)
-                );
-            }
+    function _checkParameter(
+        Role storage role,
+        ParameterLayout memory layout,
+        ParameterPayload memory payload,
+        bytes memory prefix,
+        uint256 index
+    ) internal view {
+        bytes memory key = abi.encodePacked(prefix, uint8(index));
+        if (layout._type == ParameterType.Static) {
+            _checkStaticValue(
+                role,
+                keccak256(key),
+                layout.comp,
+                payload._static
+            );
+        } else if (layout._type == ParameterType.Dynamic) {
+            _checkDynamicValue(
+                role,
+                keccak256(key),
+                layout.comp,
+                payload.dynamic
+            );
+        } else if (layout._type == ParameterType.Dynamic32) {
+            _checkDynamic32Value(
+                role,
+                keccak256(key),
+                layout.comp,
+                payload.dynamic32
+            );
         }
     }
 
@@ -330,5 +333,35 @@ abstract contract PermissionChecker is PermissionBuilder {
                 }
             }
         }
+    }
+
+    function _loadParameterLayout(
+        Role storage role,
+        bytes memory key
+    ) private view returns (ParameterLayout[] memory result) {
+        uint256 scopeConfig = role.functions[keccak256(key)];
+        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
+
+        result = new ParameterLayout[](length);
+        for (uint256 i = 0; i < length; i++) {
+            (
+                bool isScoped,
+                ParameterType paramType,
+                Comparison paramComp
+            ) = ScopeConfig.unpackParameter(scopeConfig, i);
+            result[i].isScoped = isScoped;
+            result[i]._type = paramType;
+            result[i].comp = paramComp;
+            if (_isNestedType(paramType)) {
+                result[i].nested = _loadParameterLayout(
+                    role,
+                    abi.encodePacked(key, uint8(i))
+                );
+            }
+        }
+    }
+
+    function _isNestedType(ParameterType _type) private pure returns (bool) {
+        return _type == ParameterType.Tuple || _type == ParameterType.Array;
     }
 }
