@@ -212,21 +212,21 @@ abstract contract PermissionChecker is PermissionBuilder {
 
             bytes32 key = _keyForCompValues(targetAddress, selector, i);
             if (paramType == ParameterType.Static) {
-                _compareStaticValue(
+                _checkStaticValue(
                     role,
                     key,
                     paramComp,
                     PluckCalldata.pluckStaticParam(data, i)
                 );
             } else if (paramType == ParameterType.Dynamic) {
-                _compareDynamicValue(
+                _checkDynamicValue(
                     role,
                     key,
                     paramComp,
                     PluckCalldata.pluckDynamicParam(data, i)
                 );
             } else if (paramType == ParameterType.Dynamic32) {
-                _compareDynamic32Value(
+                _checkDynamic32Value(
                     role,
                     key,
                     paramComp,
@@ -236,7 +236,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
     }
 
-    function _compareStaticValue(
+    function _checkStaticValue(
         Role storage role,
         bytes32 key,
         Comparison paramComp,
@@ -249,7 +249,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
     }
 
-    function _compareDynamicValue(
+    function _checkDynamicValue(
         Role storage role,
         bytes32 key,
         Comparison paramComp,
@@ -263,7 +263,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
     }
 
-    function _compareDynamic32Value(
+    function _checkDynamic32Value(
         Role storage role,
         bytes32 key,
         Comparison paramComp,
