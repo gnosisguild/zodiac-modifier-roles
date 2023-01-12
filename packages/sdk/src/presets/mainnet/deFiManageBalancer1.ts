@@ -215,46 +215,46 @@ const preset: RolePreset = {
     //Idle - Deposit stETH and stake it on "Lido - stETH - Senior Tranche"
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    //Depositing
-    ...allowErc20Approve([stETH], [IDLE_stETH_CDO]),
-
-    //Deposit in AA tranche
-    {
-      targetAddress: IDLE_stETH_CDO,
-      signature: "depositAA(uint256)",
-    },
-    //Withdraw from AA tranche
-    {
-      targetAddress: IDLE_stETH_CDO,
-      signature: "withdrawAA(uint256)",
-    },
-
-    //Staking
-    ...allowErc20Approve([IDLE_wstETH_AA_TRANCHE], [IDLE_wstETH_AA_GAUGE]),
-    //Stake in AA gauge
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "deposit(uint256)",
-    },
-    //Withdraw from AA gauge
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "withdraw(uint256)",
-    },
-    //Claiming of rewards
-    //Claim LIDO
-    {
-      targetAddress: IDLE_wstETH_AA_GAUGE,
-      signature: "claim_rewards()",
-    },
-    //Claim IDLE
-    {
-      targetAddress: IDLE_DISTRIBUTOR_PROXY,
-      signature: "distribute(address)",
-      params: {
-        [0]: staticEqual(IDLE_wstETH_AA_GAUGE, "address"),
-      },
-    },
+    /*     //Depositing
+        ...allowErc20Approve([stETH], [IDLE_stETH_CDO]),
+    
+        //Deposit in AA tranche
+        {
+          targetAddress: IDLE_stETH_CDO,
+          signature: "depositAA(uint256)",
+        },
+        //Withdraw from AA tranche
+        {
+          targetAddress: IDLE_stETH_CDO,
+          signature: "withdrawAA(uint256)",
+        },
+    
+        //Staking
+        ...allowErc20Approve([IDLE_wstETH_AA_TRANCHE], [IDLE_wstETH_AA_GAUGE]),
+        //Stake in AA gauge
+        {
+          targetAddress: IDLE_wstETH_AA_GAUGE,
+          signature: "deposit(uint256)",
+        },
+        //Withdraw from AA gauge
+        {
+          targetAddress: IDLE_wstETH_AA_GAUGE,
+          signature: "withdraw(uint256)",
+        },
+        //Claiming of rewards
+        //Claim LIDO
+        {
+          targetAddress: IDLE_wstETH_AA_GAUGE,
+          signature: "claim_rewards()",
+        },
+        //Claim IDLE
+        {
+          targetAddress: IDLE_DISTRIBUTOR_PROXY,
+          signature: "distribute(address)",
+          params: {
+            [0]: staticEqual(IDLE_wstETH_AA_GAUGE, "address"),
+          },
+        }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Uniswap V3 - WBTC + WETH, Range: 11.786 - 15.082. Fee: 0.3%.
@@ -268,7 +268,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      options: ExecutionOptions.Send,
+      //options: ExecutionOptions.Send,
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
@@ -346,64 +346,64 @@ const preset: RolePreset = {
     //mStable - staking of MTA
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...allowErc20Approve([MTA], [stMTA]),
-
-    //Staking of MTA without voting power delegation. One stakes MTA and receives stMTA
-    {
-      targetAddress: stMTA,
-      signature: "stake(uint256)",
-    },
-
-    //Staking of MTA with voting power delegation. One stakes MTA and receives stMTA
-    {
-      targetAddress: stMTA,
-      signature: "stake(uint256,address)",
-      params: {
-        [1]: staticEqual(DELEGATE_ADDRESS, "address"),
+    /*   ...allowErc20Approve([MTA], [stMTA]),
+  
+      //Staking of MTA without voting power delegation. One stakes MTA and receives stMTA
+      {
+        targetAddress: stMTA,
+        signature: "stake(uint256)",
       },
-    },
-
-    //Undelegate voting power
-    {
-      targetAddress: stMTA,
-      signature: "delegate(address)",
-      params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+  
+      //Staking of MTA with voting power delegation. One stakes MTA and receives stMTA
+      {
+        targetAddress: stMTA,
+        signature: "stake(uint256,address)",
+        params: {
+          [1]: staticEqual(DELEGATE_ADDRESS, "address"),
+        },
       },
-    },
-
-    //Claim rewards without compounding
-    {
-      targetAddress: stMTA,
-      signature: "claimReward()",
-    },
-
-    //Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
-    {
-      targetAddress: stMTA,
-      signature: "compoundRewards()",
-    },
-
-    //Start cooldown for withdrawal
-    {
-      targetAddress: stMTA,
-      signature: "startCooldown(uint256)",
-    },
-
-    //Forcefully end cooldown to be able to withdraw, at the expense of a penalty
-    {
-      targetAddress: stMTA,
-      signature: "endCooldown()",
-    },
-
-    //Withdraw after cooldown
-    {
-      targetAddress: stMTA,
-      signature: "withdraw(uint256,address,bool,bool)",
-      params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+  
+      //Undelegate voting power
+      {
+        targetAddress: stMTA,
+        signature: "delegate(address)",
+        params: {
+          [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        },
       },
-    },
+  
+      //Claim rewards without compounding
+      {
+        targetAddress: stMTA,
+        signature: "claimReward()",
+      },
+  
+      //Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
+      {
+        targetAddress: stMTA,
+        signature: "compoundRewards()",
+      },
+  
+      //Start cooldown for withdrawal
+      {
+        targetAddress: stMTA,
+        signature: "startCooldown(uint256)",
+      },
+  
+      //Forcefully end cooldown to be able to withdraw, at the expense of a penalty
+      {
+        targetAddress: stMTA,
+        signature: "endCooldown()",
+      },
+  
+      //Withdraw after cooldown
+      {
+        targetAddress: stMTA,
+        signature: "withdraw(uint256,address,bool,bool)",
+        params: {
+          [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        },
+      }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Notional Finance - lending of USDC
@@ -439,7 +439,7 @@ const preset: RolePreset = {
     //Balancer - D2D + BAL
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    {
+    /* {
       targetAddress: BALANCER_VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
@@ -451,13 +451,13 @@ const preset: RolePreset = {
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
         [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
-    },
+    }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Balancer - WETH + GTC
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    {
+    /* {
       targetAddress: BALANCER_VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
@@ -469,7 +469,7 @@ const preset: RolePreset = {
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
         [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
-    },
+    }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Stakewise
@@ -522,7 +522,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      options: ExecutionOptions.Send,
+      //options: ExecutionOptions.Send,
       params: {
         [0]: staticEqual(WETH, "address"),
         [1]: staticEqual(sETH2, "address"),
@@ -712,7 +712,7 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of rewards COMP, AAVE, rETH2, SWISE, sETH2 and WETH in UniswapV3
+    //Swapping of tokens COMP, AAVE, rETH2, SWISE, sETH2 and WETH in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
