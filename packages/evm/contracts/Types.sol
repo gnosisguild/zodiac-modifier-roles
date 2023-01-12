@@ -49,7 +49,7 @@ struct ParameterPayload {
     bytes32 _static;
     bytes dynamic;
     bytes32[] dynamic32;
-    ParameterPayload[] nested;
+    ParameterPayload[] children;
 }
 
 struct TargetAddress {

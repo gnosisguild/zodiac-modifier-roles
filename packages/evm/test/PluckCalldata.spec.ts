@@ -199,9 +199,9 @@ describe("PluckCalldata library", async () => {
       },
     ]);
 
-    expect(result[0].nested[0].dynamic).to.equal("0xabcd");
-    expect(result[0].nested[1]._static).to.equal(BigNumber.from(100));
-    expect(result[0].nested[2].dynamic32).to.deep.equal([
+    expect(result[0].children[0].dynamic).to.equal("0xabcd");
+    expect(result[0].children[1]._static).to.equal(BigNumber.from(100));
+    expect(result[0].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000001",
       "0x0000000000000000000000000000000000000000000000000000000000000002",
       "0x0000000000000000000000000000000000000000000000000000000000000003",
@@ -255,12 +255,12 @@ describe("PluckCalldata library", async () => {
 
     const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(result[0].nested[0]._static).to.equal(BigNumber.from(2023));
-    expect(result[0].nested[1].dynamic).to.equal("0xbadfed");
-    expect(result[0].nested[2].nested[0]._static).to.equal(
+    expect(result[0].children[0]._static).to.equal(BigNumber.from(2023));
+    expect(result[0].children[1].dynamic).to.equal("0xbadfed");
+    expect(result[0].children[2].children[0]._static).to.equal(
       BigNumber.from(2020)
     );
-    expect(result[0].nested[2].nested[1]._static).to.equal(
+    expect(result[0].children[2].children[1]._static).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
   });
@@ -341,20 +341,22 @@ describe("PluckCalldata library", async () => {
 
     const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(result[0].nested[0].dynamic).to.equal("0xbadfed");
+    expect(result[0].children[0].dynamic).to.equal("0xbadfed");
 
-    expect(result[0].nested[1].nested[0]._static).to.equal(
+    expect(result[0].children[1].children[0]._static).to.equal(
       BigNumber.from(1234)
     );
-    expect(result[0].nested[1].nested[1]._static).to.equal(
+    expect(result[0].children[1].children[1]._static).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
 
-    expect(result[0].nested[2]._static).to.equal(BigNumber.from(2023));
+    expect(result[0].children[2]._static).to.equal(BigNumber.from(2023));
 
-    expect(result[0].nested[3].nested[0].dynamic).to.equal("0xdeadbeef");
-    expect(result[0].nested[3].nested[1]._static).to.equal(BigNumber.from(999));
-    expect(result[0].nested[3].nested[2].dynamic32).to.deep.equal([
+    expect(result[0].children[3].children[0].dynamic).to.equal("0xdeadbeef");
+    expect(result[0].children[3].children[1]._static).to.equal(
+      BigNumber.from(999)
+    );
+    expect(result[0].children[3].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000006",
       "0x0000000000000000000000000000000000000000000000000000000000000007",
       "0x0000000000000000000000000000000000000000000000000000000000000008",
@@ -423,12 +425,12 @@ describe("PluckCalldata library", async () => {
 
     const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(result[0].nested[0]._static).to.equal(BigNumber.from(21000));
-    expect(result[0].nested[1].dynamic).to.equal("0x0badbeef");
-    expect(result[0].nested[2].nested[0].nested[0]._static).to.equal(
+    expect(result[0].children[0]._static).to.equal(BigNumber.from(21000));
+    expect(result[0].children[1].dynamic).to.equal("0x0badbeef");
+    expect(result[0].children[2].children[0].children[0]._static).to.equal(
       BigNumber.from(10)
     );
-    expect(result[0].nested[2].nested[0].nested[1]._static).to.equal(
+    expect(result[0].children[2].children[0].children[1]._static).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
   });
@@ -487,16 +489,16 @@ describe("PluckCalldata library", async () => {
     // 0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0
 
     const result = await pluckCalldata.pluck(data as string, layout);
-    expect(result[0].nested[0].nested[0]._static).to.equal(
+    expect(result[0].children[0].children[0]._static).to.equal(
       BigNumber.from(95623)
     );
-    expect(result[0].nested[0].nested[1]._static).to.equal(
+    expect(result[0].children[0].children[1]._static).to.equal(
       "0x00000000000000000000000000000000219ab540356cbb839cbe05303d7705fa"
     );
-    expect(result[0].nested[1].nested[0]._static).to.equal(
+    expect(result[0].children[1].children[0]._static).to.equal(
       BigNumber.from(11542)
     );
-    expect(result[0].nested[1].nested[1]._static).to.equal(
+    expect(result[0].children[1].children[1]._static).to.equal(
       "0x0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0"
     );
   });
@@ -551,11 +553,11 @@ describe("PluckCalldata library", async () => {
 
     const result = await pluckCalldata.pluck(data as string, layout);
 
-    expect(result[0].nested[0].nested[0].dynamic).to.equal("0xbadfed");
-    expect(result[0].nested[0].nested[1]._static).to.equal(
+    expect(result[0].children[0].children[0].dynamic).to.equal("0xbadfed");
+    expect(result[0].children[0].children[1]._static).to.equal(
       BigNumber.from(9998877)
     );
-    expect(result[0].nested[0].nested[2].dynamic32).to.deep.equal([
+    expect(result[0].children[0].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000007",
       "0x0000000000000000000000000000000000000000000000000000000000000009",
     ]);
