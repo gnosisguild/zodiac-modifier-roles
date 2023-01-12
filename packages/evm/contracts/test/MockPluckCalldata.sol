@@ -87,7 +87,7 @@ contract MockPluckCalldata {
             result[i]._static = output[i]._static;
             result[i].dynamic = output[i].dynamic;
             result[i].dynamic32 = output[i].dynamic32;
-            result[i].nested = copyOutTo2(output[i].nested);
+            result[i].children = copyOutTo2(output[i].children);
         }
     }
 
@@ -99,7 +99,7 @@ contract MockPluckCalldata {
             result[i]._static = output[i]._static;
             result[i].dynamic = output[i].dynamic;
             result[i].dynamic32 = output[i].dynamic32;
-            result[i].nested = copyOutTo3(output[i].nested);
+            result[i].children = copyOutTo3(output[i].children);
         }
     }
 
@@ -120,7 +120,7 @@ contract MockPluckCalldata {
             result[i]._static = output[i]._static;
             result[i].dynamic = output[i].dynamic;
             result[i].dynamic32 = output[i].dynamic32;
-            result[i].nested = copyOutTo4(output[i].nested);
+            result[i].children = copyOutTo4(output[i].children);
         }
     }
 
@@ -184,21 +184,21 @@ contract MockPluckCalldata {
         bytes32 _static;
         bytes dynamic;
         bytes32[] dynamic32;
-        PP2[] nested;
+        PP2[] children;
     }
 
     struct PP2 {
         bytes32 _static;
         bytes dynamic;
         bytes32[] dynamic32;
-        PP3[] nested;
+        PP3[] children;
     }
 
     struct PP3 {
         bytes32 _static;
         bytes dynamic;
         bytes32[] dynamic32;
-        PP4[] nested;
+        PP4[] children;
     }
 
     struct PP4 {

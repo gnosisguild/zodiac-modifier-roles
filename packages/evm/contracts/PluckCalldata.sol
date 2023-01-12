@@ -109,12 +109,12 @@ library PluckCalldata {
         ParameterLayout memory layout
     ) internal pure returns (ParameterPayload memory result) {
         ParameterLayout[] memory parts = layout.nested;
-        result.nested = new ParameterPayload[](parts.length);
+        result.children = new ParameterPayload[](parts.length);
 
         uint256 shift;
         for (uint256 i = 0; i < parts.length; i++) {
             bool isInline = _isStatic(parts[i]);
-            result.nested[i] = _carve(
+            result.children[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, shift, isInline),
                 parts[i]
@@ -132,14 +132,14 @@ library PluckCalldata {
 
         // read length, and move offset to content start
         uint256 length = uint256(_loadWordAt(data, offset));
-        result.nested = new ParameterPayload[](length);
+        result.children = new ParameterPayload[](length);
         offset += 32;
 
         bool isInline = _isStatic(layout.nested[0]);
         uint256 itemSize = isInline ? _size(layout.nested[0]) : 32;
 
         for (uint256 i; i < length; i++) {
-            result.nested[i] = _carve(
+            result.children[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, i * itemSize, isInline),
                 layout.nested[0]
