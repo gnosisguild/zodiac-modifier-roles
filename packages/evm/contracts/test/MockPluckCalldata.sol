@@ -103,15 +103,6 @@ contract MockPluckCalldata {
         }
     }
 
-    function copyOutTo2(
-        ParameterPayload[][] memory output
-    ) private pure returns (PP2[][] memory result) {
-        result = new PP2[][](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i] = copyOutTo2(output[i]);
-        }
-    }
-
     function copyOutTo3(
         ParameterPayload[] memory output
     ) private pure returns (PP3[] memory result) {
@@ -124,15 +115,6 @@ contract MockPluckCalldata {
         }
     }
 
-    function copyOutTo3(
-        ParameterPayload[][] memory output
-    ) private pure returns (PP3[][] memory result) {
-        result = new PP3[][](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i] = copyOutTo3(output[i]);
-        }
-    }
-
     function copyOutTo4(
         ParameterPayload[] memory output
     ) private pure returns (PP4[] memory result) {
@@ -141,15 +123,6 @@ contract MockPluckCalldata {
             result[i]._static = output[i]._static;
             result[i].dynamic = output[i].dynamic;
             result[i].dynamic32 = output[i].dynamic32;
-        }
-    }
-
-    function copyOutTo4(
-        ParameterPayload[][] memory output
-    ) private pure returns (PP4[][] memory result) {
-        result = new PP4[][](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i] = copyOutTo4(output[i]);
         }
     }
 
