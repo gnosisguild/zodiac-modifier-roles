@@ -12,11 +12,13 @@ library PluckCalldata {
     ) internal pure returns (ParameterPayload[] memory result) {
         result = new ParameterPayload[](layout.length);
         for (uint256 i = 0; i < layout.length; i++) {
-            result[i] = _carve(
-                data,
-                _parameterOffset(data, i, _isStatic(layout[i])),
-                layout[i]
-            );
+            if (layout[i].isScoped) {
+                result[i] = _carve(
+                    data,
+                    _parameterOffset(data, i, _isStatic(layout[i])),
+                    layout[i]
+                );
+            }
         }
     }
 
@@ -114,11 +116,13 @@ library PluckCalldata {
         uint256 shift;
         for (uint256 i = 0; i < parts.length; i++) {
             bool isInline = _isStatic(parts[i]);
-            result.children[i] = _carve(
-                data,
-                _headOrTailOffset(data, offset, shift, isInline),
-                parts[i]
-            );
+            if (parts[i].isScoped) {
+                result.children[i] = _carve(
+                    data,
+                    _headOrTailOffset(data, offset, shift, isInline),
+                    parts[i]
+                );
+            }
             shift += isInline ? _size(parts[i]) : 32;
         }
     }

@@ -98,9 +98,7 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: TYPE_STATIC,
             comp: Comparison.ONE_OF,
-            compValues: [
-              ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-            ],
+            compValues: [defaultAbiCoder.encode(["bool"], [false])],
           },
           UNSCOPED_PARAM,
         ],
@@ -120,8 +118,8 @@ describe("Comparison", async () => {
             _type: TYPE_STATIC,
             comp: Comparison.ONE_OF,
             compValues: [
-              ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
-              ethers.utils.defaultAbiCoder.encode(["bool"], [true]),
+              defaultAbiCoder.encode(["bool"], [false]),
+              defaultAbiCoder.encode(["bool"], [true]),
             ],
           },
           UNSCOPED_PARAM,
@@ -142,8 +140,8 @@ describe("Comparison", async () => {
             _type: TYPE_STATIC,
             comp: Comparison.EQUAL,
             compValues: [
-              ethers.utils.defaultAbiCoder.encode(["bool"], [true]),
-              ethers.utils.defaultAbiCoder.encode(["bool"], [false]),
+              defaultAbiCoder.encode(["bool"], [true]),
+              defaultAbiCoder.encode(["bool"], [false]),
             ],
           },
           UNSCOPED_PARAM,
@@ -239,7 +237,7 @@ describe("Comparison", async () => {
       Options.NONE
     );
 
-    await expect(invoke(false, "Some string")).to.not.be.reverted;
+    await expect(invoke(false, "Some string")).to.not.reverted;
     await expect(invoke(false, "Some other string")).to.be.revertedWith(
       "ParameterNotAllowed()"
     );
@@ -433,8 +431,8 @@ describe("Comparison", async () => {
           _type: TYPE_STATIC,
           comp: Comparison.ONE_OF,
           compValues: [
-            ethers.utils.defaultAbiCoder.encode(["uint256"], [11]),
-            ethers.utils.defaultAbiCoder.encode(["uint256"], [22]),
+            defaultAbiCoder.encode(["uint256"], [11]),
+            defaultAbiCoder.encode(["uint256"], [22]),
           ],
         },
       ],
