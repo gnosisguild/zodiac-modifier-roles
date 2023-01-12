@@ -110,9 +110,8 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].functions[
-            _keyForFunctions(targetAddress, selector)
-        ] = ScopeConfig.pack(0, options, true, 0);
+        roles[roleId].functions[_key(targetAddress, selector)] = ScopeConfig
+            .pack(0, options, true, 0);
 
         emit AllowFunction(roleId, targetAddress, selector, options);
     }
@@ -126,9 +125,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleId].functions[
-            _keyForFunctions(targetAddress, selector)
-        ];
+        delete roles[roleId].functions[_key(targetAddress, selector)];
         emit RevokeFunction(roleId, targetAddress, selector);
     }
 
@@ -183,7 +180,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
                 parameter.comp
             );
 
-            bytes32 key = _keyForCompValues(targetAddress, selector, i);
+            bytes32 key = _key(targetAddress, selector, i);
             if (
                 parameter.comp == Comparison.EqualTo ||
                 parameter.comp == Comparison.GreaterThan ||
@@ -207,7 +204,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
                 );
             }
         }
-        role.functions[_keyForFunctions(targetAddress, selector)] = scopeConfig;
+        role.functions[_key(targetAddress, selector)] = scopeConfig;
 
         emit ScopeFunction(
             roleId,
@@ -277,20 +274,21 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         }
     }
 
-    function _keyForFunctions(
+    function _key(
         address targetAddress,
         bytes4 selector
     ) internal pure returns (bytes32) {
-        return bytes32(abi.encodePacked(targetAddress, selector));
+        return keccak256(abi.encodePacked(targetAddress, selector));
     }
 
-    function _keyForCompValues(
+    function _key(
         address targetAddress,
         bytes4 selector,
         uint256 index
     ) internal pure returns (bytes32) {
         assert(index <= type(uint8).max);
-        return bytes32(abi.encodePacked(targetAddress, selector, uint8(index)));
+        return
+            keccak256(abi.encodePacked(targetAddress, selector, uint8(index)));
     }
 
     function _compressCompValue(
