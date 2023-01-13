@@ -292,93 +292,93 @@ const preset: RolePreset = {
       },
     },
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of COMP, WETH, BAL for USDC, DAI and WETH in SushiSwap
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    ...allowErc20Approve([COMP, WETH, BAL], [SUSHISWAP_ROUTER]),
-    // WETH
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    // COMP
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([COMP, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    // BAL
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([BAL, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([BAL, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
-
-    {
-      targetAddress: SUSHISWAP_ROUTER,
-      signature:
-        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: dynamic32Equal([BAL, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
-    },
+    /*  //---------------------------------------------------------------------------------------------------------------------------------
+     //Swapping of COMP, WETH, BAL for USDC, DAI and WETH in SushiSwap
+     //---------------------------------------------------------------------------------------------------------------------------------
+ 
+     ...allowErc20Approve([COMP, WETH, BAL], [SUSHISWAP_ROUTER]),
+     // WETH
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([WETH, DAI], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([WETH, USDC], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     // COMP
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([COMP, WETH], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     // BAL
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([BAL, WETH], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([BAL, WETH, USDC], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     },
+ 
+     {
+       targetAddress: SUSHISWAP_ROUTER,
+       signature:
+         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+       params: {
+         [2]: dynamic32Equal([BAL, WETH, DAI], "address[]"),
+         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+       },
+     }, */
   ],
 }
 export default preset
