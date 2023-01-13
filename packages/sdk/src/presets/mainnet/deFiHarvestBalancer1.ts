@@ -107,7 +107,8 @@ const preset: RolePreset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //Claim rewards without compounding
-    {
+    //Out of scope for now
+    /* {
       targetAddress: stMTA,
       signature: "claimRewards()",
     },
@@ -116,7 +117,7 @@ const preset: RolePreset = {
     {
       targetAddress: stMTA,
       signature: "compoundRewards()",
-    },
+    }, */
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Stakewise

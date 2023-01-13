@@ -55,10 +55,14 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of rewards COMP, AAVE, rETH2, SWISE and sETH2 in UniswapV3
+    //Swapping of tokens COMP, AAVE, rETH2, SWISE, sETH2 and WETH in UniswapV3
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
+    //...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2], [UV3_ROUTER_2]),
+    ...allowErc20Approve(
+      [COMP, AAVE, rETH2, SWISE, sETH2, WETH],
+      [UV3_ROUTER_2]
+    ),
 
     //Swapping of COMP for USDC
     {
@@ -235,16 +239,16 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual(
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [2]: staticEqual(false, "bool"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [4]: staticEqual(false, "bool"),
+        [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
           "bytes32"
         ), //COMP-WETH pool ID
-        [2]: staticEqual(COMP, "address"), //Asset in
-        [3]: staticEqual(WETH, "address"), //Asset out
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [7]: staticEqual(false, "bool"),
-        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [9]: staticEqual(false, "bool"),
+        [9]: staticEqual(COMP, "address"), //Asset in
+        [10]: staticEqual(WETH, "address"), //Asset out
       },
     },
 
@@ -255,16 +259,16 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual(
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [2]: staticEqual(false, "bool"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [4]: staticEqual(false, "bool"),
+        [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
           "bytes32"
         ), //WETH-DAI pool ID
-        [2]: staticEqual(WETH, "address"), //Asset in
-        [3]: staticEqual(DAI, "address"), //Asset out
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [7]: staticEqual(false, "bool"),
-        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [9]: staticEqual(false, "bool"),
+        [9]: staticEqual(WETH, "address"), //Asset in
+        [10]: staticEqual(DAI, "address"), //Asset out
       },
     },
 
@@ -275,16 +279,16 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual(
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [2]: staticEqual(false, "bool"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [4]: staticEqual(false, "bool"),
+        [7]: staticEqual(
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
           "bytes32"
         ), //USDC-WETH pool ID
-        [2]: staticEqual(WETH, "address"), //Asset in
-        [3]: staticEqual(USDC, "address"), //Asset out
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [7]: staticEqual(false, "bool"),
-        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [9]: staticEqual(false, "bool"),
+        [9]: staticEqual(WETH, "address"), //Asset in
+        [10]: staticEqual(USDC, "address"), //Asset out
       },
     },
 
