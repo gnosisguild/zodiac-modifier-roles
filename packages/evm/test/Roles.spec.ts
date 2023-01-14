@@ -121,6 +121,52 @@ describe("RolesModifier", async () => {
       ],
       0
     );
+
+    const parameterConfig_9 = [
+      {
+        path: [0],
+        _type: TYPE_DYNAMIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_3],
+      },
+      {
+        path: [1],
+        _type: TYPE_STATIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_4],
+      },
+      {
+        path: [2],
+        _type: TYPE_DYNAMIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_5],
+      },
+      {
+        path: [3],
+        _type: TYPE_STATIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_6],
+      },
+      {
+        path: [4],
+        _type: TYPE_STATIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_7],
+      },
+      {
+        path: [5],
+        _type: TYPE_DYNAMIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_8],
+      },
+      {
+        path: [6],
+        _type: TYPE_DYNAMIC,
+        comp: COMP_EQUAL,
+        compValues: [encodedParam_9],
+      },
+    ];
+
     return {
       ...baseAvatar,
       encodedParam_1,
@@ -132,6 +178,7 @@ describe("RolesModifier", async () => {
       encodedParam_7,
       encodedParam_8,
       encodedParam_9,
+      parameterConfig_9,
       tx_1,
       tx_2,
       tx_3,
@@ -536,13 +583,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -597,13 +644,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -667,43 +714,43 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_DYNAMIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_3],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_4],
           },
           {
-            isScoped: true,
+            path: [2],
             _type: TYPE_DYNAMIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_5],
           },
           {
-            isScoped: true,
+            path: [3],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_6],
           },
           {
-            isScoped: true,
+            path: [4],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_7],
           },
           {
-            isScoped: true,
+            path: [5],
             _type: TYPE_DYNAMIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_8],
           },
           {
-            isScoped: true,
+            path: [6],
             _type: TYPE_DYNAMIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_9],
@@ -734,18 +781,8 @@ describe("RolesModifier", async () => {
     });
 
     it("executes a call with allowed dynamic parameter", async () => {
-      const {
-        avatar,
-        modifier,
-        testContract,
-        encodedParam_3,
-        encodedParam_4,
-        encodedParam_5,
-        encodedParam_6,
-        encodedParam_7,
-        encodedParam_8,
-        encodedParam_9,
-      } = await txSetup();
+      const { avatar, modifier, testContract, parameterConfig_9 } =
+        await txSetup();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [1],
@@ -770,50 +807,7 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_3],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_4],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_5],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_6],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_7],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_8],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_9],
-          },
-        ],
+        parameterConfig_9,
         OPTIONS_NONE
       );
 
@@ -846,13 +840,7 @@ describe("RolesModifier", async () => {
         testContract,
         encodedParam_1,
         encodedParam_2,
-        encodedParam_3,
-        encodedParam_4,
-        encodedParam_5,
-        encodedParam_6,
-        encodedParam_7,
-        encodedParam_8,
-        encodedParam_9,
+        parameterConfig_9,
         tx_1,
         tx_2,
         tx_3,
@@ -890,13 +878,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -910,50 +898,7 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_3],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_4],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_5],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_6],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_7],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_8],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_9],
-          },
-        ],
+        parameterConfig_9,
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
@@ -1023,13 +968,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1062,13 +1007,7 @@ describe("RolesModifier", async () => {
         testContract,
         encodedParam_1,
         encodedParam_2,
-        encodedParam_3,
-        encodedParam_4,
-        encodedParam_5,
-        encodedParam_6,
-        encodedParam_7,
-        encodedParam_8,
-        encodedParam_9,
+        parameterConfig_9,
         tx_1,
         tx_2,
         tx_3,
@@ -1106,13 +1045,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1126,50 +1065,7 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_3],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_4],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_5],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_6],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_7],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_8],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_9],
-          },
-        ],
+        parameterConfig_9,
         OPTIONS_NONE
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
@@ -1453,13 +1349,7 @@ describe("RolesModifier", async () => {
         testContract,
         encodedParam_1,
         encodedParam_2,
-        encodedParam_3,
-        encodedParam_4,
-        encodedParam_5,
-        encodedParam_6,
-        encodedParam_7,
-        encodedParam_8,
-        encodedParam_9,
+        parameterConfig_9,
         tx_1,
         tx_2,
         tx_3,
@@ -1496,13 +1386,13 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
-            isScoped: true,
+            path: [1],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1516,50 +1406,7 @@ describe("RolesModifier", async () => {
         1,
         testContract.address,
         "0x273454bf",
-        [
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_3],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_4],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_5],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_6],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_7],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_8],
-          },
-          {
-            isScoped: true,
-            _type: TYPE_DYNAMIC,
-            comp: COMP_EQUAL,
-            compValues: [encodedParam_9],
-          },
-        ],
+        parameterConfig_9,
         OPTIONS_NONE
       );
 
@@ -1833,13 +1680,13 @@ describe("RolesModifier", async () => {
           "0x12345678",
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_DYNAMIC,
               comp: COMP_GREATER,
               compValues: ["0x"],
             },
             {
-              isScoped: true,
+              path: [1],
               _type: TYPE_DYNAMIC,
               comp: COMP_GREATER,
               compValues: ["0x"],
@@ -1887,7 +1734,7 @@ describe("RolesModifier", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: COMP_EQUAL,
             compValues: [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],

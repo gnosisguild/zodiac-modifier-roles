@@ -32,10 +32,18 @@ enum Clearance {
 }
 
 struct ParameterConfig {
+    uint8[] path;
+    ParameterType _type;
+    Comparison comp;
+    bytes[] compValues;
+}
+
+struct ParameterConfigTree {
     bool isScoped;
     ParameterType _type;
     Comparison comp;
     bytes[] compValues;
+    ParameterConfigTree[] children;
 }
 
 struct ParameterLayout {

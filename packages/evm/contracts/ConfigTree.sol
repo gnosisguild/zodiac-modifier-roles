@@ -5,30 +5,15 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
-struct ParameterConfig2 {
-    uint8[] path;
-    ParameterType _type;
-    Comparison comp;
-    bytes[] compValues;
-}
-
-struct ParameterConfigTree {
-    bool isScoped;
-    ParameterType _type;
-    Comparison comp;
-    bytes[] compValues;
-    ParameterConfigTree[] children;
-}
-
 library ConfigTree {
     function create(
-        ParameterConfig2[] memory parameters
+        ParameterConfig[] memory parameters
     ) internal pure returns (ParameterConfigTree[] memory) {
         ParameterConfigTree memory tree;
         tree.children = new ParameterConfigTree[](_countTopNodes(parameters));
 
         for (uint256 i; i < parameters.length; i++) {
-            ParameterConfig2 memory parameter = parameters[i];
+            ParameterConfig memory parameter = parameters[i];
             ParameterConfigTree memory node = _select(tree, parameter.path);
             uint256 count = _countChildren(parameter.path, parameters);
             if (count > 0) {
@@ -55,7 +40,7 @@ library ConfigTree {
 
     function _copy(
         ParameterConfigTree memory node,
-        ParameterConfig2 memory parameter
+        ParameterConfig memory parameter
     ) private pure {
         node.isScoped = true;
         node._type = parameter._type;
@@ -64,7 +49,7 @@ library ConfigTree {
     }
 
     function _countTopNodes(
-        ParameterConfig2[] memory parameters
+        ParameterConfig[] memory parameters
     ) private pure returns (uint256 count) {
         for (uint256 i; i < parameters.length; i++) {
             uint8[] memory childPath = parameters[i].path;
@@ -77,7 +62,7 @@ library ConfigTree {
 
     function _countChildren(
         uint8[] memory path,
-        ParameterConfig2[] memory parameters
+        ParameterConfig[] memory parameters
     ) private pure returns (uint256 count) {
         for (uint256 i; i < parameters.length; i++) {
             uint8[] memory childPath = parameters[i].path;

@@ -74,8 +74,8 @@ describe("Scoping", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          new Array(39).fill(null).map(() => ({
-            isScoped: false,
+          new Array(39).fill(null).map((_, index) => ({
+            path: [index],
             _type: TYPE_STATIC,
             comp: Comparison.EQUAL,
             compValues: [],
@@ -89,11 +89,11 @@ describe("Scoping", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          new Array(38).fill(null).map(() => ({
-            isScoped: false,
+          new Array(38).fill(null).map((_, index) => ({
+            path: [index],
             _type: TYPE_STATIC,
             comp: Comparison.EQUAL,
-            compValues: [],
+            compValues: [A_32_BYTES_VALUE],
           })),
           Options.NONE
         )
@@ -122,7 +122,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_STATIC,
               comp: Comparison.EQUAL,
               compValues: [
@@ -144,7 +144,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_DYNAMIC32,
               comp: Comparison.EQUAL,
               compValues: [
@@ -163,7 +163,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_DYNAMIC32,
               comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
@@ -181,13 +181,13 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_DYNAMIC32,
               comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
             },
             {
-              isScoped: false,
+              path: [0],
               _type: TYPE_NONE,
               comp: Comparison.EQUAL,
               compValues: [
@@ -219,7 +219,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_STATIC,
               comp: Comparison.ONE_OF,
               compValues: [
@@ -245,7 +245,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_DYNAMIC32,
               comp: Comparison.ONE_OF,
               compValues: [
@@ -265,7 +265,7 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
+              path: [0],
               _type: TYPE_STATIC,
               comp: Comparison.ONE_OF,
               compValues: [A_32_BYTES_VALUE, A_32_BYTES_VALUE],
@@ -292,7 +292,7 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: Comparison.ONE_OF,
             compValues: [A_32_BYTES_VALUE],
@@ -309,7 +309,7 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
+            path: [0],
             _type: TYPE_STATIC,
             comp: Comparison.ONE_OF,
             compValues: [

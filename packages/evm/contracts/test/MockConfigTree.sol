@@ -5,14 +5,12 @@ import "../ConfigTree.sol";
 
 contract MockConfigTree {
     function create(
-        ParameterConfig2[] calldata parameters
+        ParameterConfig[] calldata parameters
     ) external pure returns (PL1[] memory) {
         return copy(ConfigTree.create(parameters));
     }
 
-    function createNoCopy(
-        ParameterConfig2[] calldata parameters
-    ) external pure {
+    function createNoCopy(ParameterConfig[] calldata parameters) external pure {
         ConfigTree.create(parameters);
     }
 
