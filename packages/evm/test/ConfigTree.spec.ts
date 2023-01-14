@@ -75,11 +75,11 @@ describe("ConfigTree", async () => {
       },
     ];
 
-    const g1 = await configTree.estimateGas.create(config);
-    const g2 = await configTree.estimateGas.createNoCopy(config);
+    // const g1 = await configTree.estimateGas.create(config);
+    // const g2 = await configTree.estimateGas.createNoCopy(config);
 
-    console.log("GAS " + g1.toNumber());
-    console.log("GAS " + g2.toNumber());
+    // console.log("GAS " + g1.toNumber());
+    // console.log("GAS " + g2.toNumber());
 
     expect(cleanUp(result)).to.deep.equal(layout);
   });
@@ -140,11 +140,11 @@ describe("ConfigTree", async () => {
         ],
       },
     ];
-    const g1 = await configTree.estimateGas.create(config);
-    const g2 = await configTree.estimateGas.createNoCopy(config);
+    // const g1 = await configTree.estimateGas.create(config);
+    // const g2 = await configTree.estimateGas.createNoCopy(config);
 
-    console.log("GAS " + g1.toNumber());
-    console.log("GAS " + g2.toNumber());
+    // console.log("GAS " + g1.toNumber());
+    // console.log("GAS " + g2.toNumber());
     expect(cleanUp(result)).to.deep.equal(layout);
   });
 
@@ -212,11 +212,11 @@ describe("ConfigTree", async () => {
       },
     ];
 
-    const g1 = await configTree.estimateGas.create(config);
-    const g2 = await configTree.estimateGas.createNoCopy(config);
+    // const g1 = await configTree.estimateGas.create(config);
+    // const g2 = await configTree.estimateGas.createNoCopy(config);
 
-    console.log("GAS " + g1.toNumber());
-    console.log("GAS " + g2.toNumber());
+    // console.log("GAS " + g1.toNumber());
+    // console.log("GAS " + g2.toNumber());
 
     expect(cleanUp(result)).to.deep.equal(layout);
   });

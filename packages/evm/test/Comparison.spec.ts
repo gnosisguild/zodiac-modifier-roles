@@ -48,6 +48,13 @@ describe("Comparison", async () => {
     BOTH,
   }
 
+  enum Type {
+    NONE = 0,
+    STATIC,
+    DYNAMIC,
+    DYNAMIC32,
+  }
+
   const TYPE_NONE = 0;
   const TYPE_STATIC = 1;
   const TYPE_DYNAMIC = 2;
@@ -182,10 +189,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
-          _type: TYPE_STATIC,
+          _type: Type.STATIC,
           comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["uint256"], [123])],
+          path: [0],
         },
       ],
       Options.NONE
@@ -226,12 +233,11 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
-        UNSCOPED_PARAM,
         {
-          isScoped: true,
           _type: TYPE_DYNAMIC,
           comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
+          path: [1],
         },
       ],
       Options.NONE
@@ -273,10 +279,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           _type: TYPE_DYNAMIC,
           comp: Comparison.EQUAL,
           compValues: ["0x"],
+          path: [0],
         },
       ],
       Options.NONE
@@ -317,14 +323,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
-        UNSCOPED_PARAM,
         {
-          isScoped: true,
           _type: TYPE_DYNAMIC32,
           comp: Comparison.EQUAL,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1234", "0xabcd"]]),
           ],
+          path: [1],
         },
       ],
       Options.NONE
@@ -380,10 +385,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           _type: TYPE_DYNAMIC32,
           comp: Comparison.EQUAL,
           compValues: [[]],
+          path: [0],
         },
       ],
       Options.NONE
@@ -427,7 +432,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_STATIC,
           comp: Comparison.ONE_OF,
           compValues: [
@@ -474,9 +479,8 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
-        UNSCOPED_PARAM,
         {
-          isScoped: true,
+          path: [1],
           _type: TYPE_DYNAMIC,
           comp: Comparison.ONE_OF,
           compValues: [
@@ -529,9 +533,8 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
-        UNSCOPED_PARAM,
         {
-          isScoped: true,
+          path: [1],
           _type: TYPE_DYNAMIC32,
           comp: Comparison.ONE_OF,
           compValues: [
@@ -597,7 +600,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_DYNAMIC32,
           comp: Comparison.SUBSET_OF,
           compValues: [
@@ -645,7 +648,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_DYNAMIC32,
           comp: Comparison.SUBSET_OF,
           compValues: [
@@ -694,7 +697,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_DYNAMIC32,
           comp: Comparison.SUBSET_OF,
           compValues: [
@@ -744,7 +747,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_DYNAMIC32,
           comp: Comparison.SUBSET_OF,
           compValues: [
@@ -794,7 +797,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_STATIC,
           comp: Comparison.GREATER,
           compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
@@ -813,7 +816,7 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
+          path: [0],
           _type: TYPE_STATIC,
           comp: Comparison.LESS,
           compValues: [ethers.utils.solidityPack(["uint256"], [2345])],

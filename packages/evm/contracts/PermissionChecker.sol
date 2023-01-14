@@ -194,15 +194,19 @@ abstract contract PermissionChecker is PermissionBuilder {
         address targetAddress,
         bytes memory data
     ) internal view {
-        bytes4 selector = bytes4(data);
-        bytes memory key = abi.encodePacked(targetAddress, selector);
+        bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
 
         ParameterLayout[] memory layout = _loadParameterLayout(role, key);
         ParameterPayload[] memory payload = PluckCalldata.pluck(data, layout);
 
         for (uint256 i = 0; i < layout.length; ++i) {
             if (layout[i].isScoped) {
-                _checkParameter(role, layout[i], payload[i], key, i);
+                _checkParameter(
+                    role,
+                    layout[i],
+                    payload[i],
+                    abi.encodePacked(key, uint8(i))
+                );
             }
         }
     }
@@ -211,10 +215,8 @@ abstract contract PermissionChecker is PermissionBuilder {
         Role storage role,
         ParameterLayout memory layout,
         ParameterPayload memory payload,
-        bytes memory prefix,
-        uint256 index
+        bytes memory key
     ) internal view {
-        bytes memory key = abi.encodePacked(prefix, uint8(index));
         if (layout._type == ParameterType.Static) {
             _checkStaticValue(
                 role,

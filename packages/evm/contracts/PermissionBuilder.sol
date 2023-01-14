@@ -3,6 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
+import "./ConfigTree.sol";
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
@@ -49,8 +50,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         address targetAddress,
         bytes4 functionSig,
         ParameterConfig[] parameters,
-        ExecutionOptions options,
-        uint256 resultingScopeConfig
+        ExecutionOptions options
     );
 
     mapping(uint16 => Role) internal roles;
@@ -141,26 +141,33 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         ParameterConfig[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
+        bytes memory key = abi.encodePacked(targetAddress, selector);
+        _storeLayout(
+            roles[roleId],
+            key,
+            ConfigTree.create(parameters),
+            options
+        );
+
+        emit ScopeFunction(
+            roleId,
+            targetAddress,
+            selector,
+            parameters,
+            options // TODO is there a need for the resulting scope config to be emitted?
+        );
+    }
+
+    function _storeLayout(
+        Role storage role,
+        bytes memory key,
+        ParameterConfigTree[] memory parameters,
+        ExecutionOptions options
+    ) private {
         if (parameters.length > SCOPE_MAX_PARAMS) {
             revert ScopeMaxParametersExceeded();
         }
 
-        for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i].isScoped) {
-                _enforceParameterConfig(parameters[i]);
-            }
-        }
-
-        Role storage role = roles[roleId];
-
-        /*
-         * pack(
-         *    0           -> start from a fresh scopeConfig
-         *    options     -> externally provided options
-         *    false       -> mark the function as not wildcarded
-         *    length      -> parameter count
-         * )
-         */
         uint256 scopeConfig = ScopeConfig.pack(
             0,
             options,
@@ -168,10 +175,13 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             parameters.length
         );
         for (uint256 i = 0; i < parameters.length; ++i) {
-            ParameterConfig calldata parameter = parameters[i];
+            ParameterConfigTree memory parameter = parameters[i];
             if (!parameter.isScoped) {
                 continue;
             }
+
+            _enforceParameterConfig(parameters[i]);
+
             scopeConfig = ScopeConfig.packParameter(
                 scopeConfig,
                 i,
@@ -180,46 +190,58 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
                 parameter.comp
             );
 
-            bytes32 key = _key(targetAddress, selector, i);
+            bytes memory childKey = abi.encodePacked(key, uint8(i));
+
             if (
-                parameter.comp == Comparison.EqualTo ||
-                parameter.comp == Comparison.GreaterThan ||
-                parameter.comp == Comparison.LessThan
+                parameter._type == ParameterType.Array ||
+                parameter._type == ParameterType.Tuple
             ) {
-                assert(parameter.compValues.length == 1);
-                role.compValue[key] = _compressCompValue(
-                    parameter._type,
-                    parameter.compValues[0]
-                );
-            } else if (parameter.comp == Comparison.OneOf) {
-                role.compValues[key] = _compressCompValues(
-                    parameter._type,
-                    parameter.compValues
+                _storeLayout(
+                    role,
+                    childKey,
+                    parameter.children,
+                    ExecutionOptions.None
                 );
             } else {
-                assert(parameter.comp == Comparison.SubsetOf);
-                role.compValues[key] = _splitCompValue(
-                    parameter._type,
-                    parameter.compValues[0]
-                );
+                _storeCompValue(role, keccak256(childKey), parameter);
             }
         }
-        role.functions[_key(targetAddress, selector)] = scopeConfig;
+        role.functions[keccak256(key)] = scopeConfig;
+    }
 
-        emit ScopeFunction(
-            roleId,
-            targetAddress,
-            selector,
-            parameters,
-            options,
-            scopeConfig
-        );
+    function _storeCompValue(
+        Role storage role,
+        bytes32 key,
+        ParameterConfigTree memory parameter
+    ) private {
+        if (
+            parameter.comp == Comparison.EqualTo ||
+            parameter.comp == Comparison.GreaterThan ||
+            parameter.comp == Comparison.LessThan
+        ) {
+            assert(parameter.compValues.length == 1);
+            role.compValue[key] = _compressCompValue(
+                parameter._type,
+                parameter.compValues[0]
+            );
+        } else if (parameter.comp == Comparison.OneOf) {
+            role.compValues[key] = _compressCompValues(
+                parameter._type,
+                parameter.compValues
+            );
+        } else {
+            assert(parameter.comp == Comparison.SubsetOf);
+            role.compValues[key] = _splitCompValue(
+                parameter._type,
+                parameter.compValues[0]
+            );
+        }
     }
 
     /// @dev Internal function that enforces a param type is valid.
     /// @param config  provides information about the type of parameter and the type of comparison.
     function _enforceParameterConfig(
-        ParameterConfig calldata config
+        ParameterConfigTree memory config
     ) private pure {
         assert(config.isScoped);
 
@@ -293,7 +315,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     function _compressCompValue(
         ParameterType paramType,
-        bytes calldata compValue
+        bytes memory compValue
     ) private pure returns (bytes32) {
         return
             paramType == ParameterType.Static
@@ -303,7 +325,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     function _compressCompValues(
         ParameterType paramType,
-        bytes[] calldata compValues
+        bytes[] memory compValues
     ) private pure returns (bytes32[] memory) {
         bytes32[] memory result = new bytes32[](compValues.length);
         for (uint256 i = 0; i < compValues.length; i++) {
