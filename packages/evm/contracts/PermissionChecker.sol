@@ -62,10 +62,15 @@ abstract contract PermissionChecker is PermissionBuilder {
         if (!roles[roleId].members[msg.sender]) {
             revert NoMembership();
         }
+
+        Status status;
         if (multisend == to) {
-            checkMultisendTransaction(roleId, data);
+            status = checkMultisendTransaction(roleId, data);
         } else {
-            checkTransaction(roleId, to, value, data, operation);
+            status = checkTransaction(roleId, to, value, data, operation);
+        }
+        if (status != Status.Ok) {
+            revertWith(status);
         }
     }
 
@@ -74,7 +79,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     function checkMultisendTransaction(
         uint16 roleId,
         bytes memory data
-    ) internal view {
+    ) internal view returns (Status) {
         Enum.Operation operation;
         address to;
         uint256 value;
@@ -109,8 +114,12 @@ abstract contract PermissionChecker is PermissionBuilder {
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 out := add(data, add(i, 0x35))
             }
-            checkTransaction(roleId, to, value, out, operation);
+            Status status = checkTransaction(roleId, to, value, out, operation);
+            if (status != Status.Ok) {
+                return status;
+            }
         }
+        return Status.Ok;
     }
 
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.
@@ -126,15 +135,15 @@ abstract contract PermissionChecker is PermissionBuilder {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) internal view {
+    ) internal view returns (Status) {
         if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
+            return Status.FunctionSignatureTooShort;
         }
 
         TargetAddress storage target = roles[roleId].targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
-            checkExecutionOptions(value, operation, target.options);
+            return checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
             Role storage role = roles[roleId];
             uint256 scopeConfig = role.functions[
@@ -142,20 +151,24 @@ abstract contract PermissionChecker is PermissionBuilder {
             ];
 
             if (scopeConfig == 0) {
-                revert FunctionNotAllowed();
+                return Status.FunctionNotAllowed;
             }
 
             (ExecutionOptions options, bool isWildcarded, ) = ScopeConfig
                 .unpack(scopeConfig);
 
-            checkExecutionOptions(value, operation, options);
-
-            if (!isWildcarded) {
-                checkParameters(role, targetAddress, data);
+            Status status = checkExecutionOptions(value, operation, options);
+            if (status != Status.Ok) {
+                return status;
             }
+
+            return
+                isWildcarded == true
+                    ? Status.Ok
+                    : checkParameters(role, targetAddress, data);
         } else {
             assert(target.clearance == Clearance.None);
-            revert TargetAddressNotAllowed();
+            return Status.TargetAddressNotAllowed;
         }
     }
 
@@ -167,14 +180,14 @@ abstract contract PermissionChecker is PermissionBuilder {
         uint256 value,
         Enum.Operation operation,
         ExecutionOptions options
-    ) internal pure {
+    ) internal pure returns (Status) {
         // isSend && !canSend
         if (
             value > 0 &&
             options != ExecutionOptions.Send &&
             options != ExecutionOptions.Both
         ) {
-            revert SendNotAllowed();
+            return Status.SendNotAllowed;
         }
 
         // isDelegateCall && !canDelegateCall
@@ -183,8 +196,10 @@ abstract contract PermissionChecker is PermissionBuilder {
             options != ExecutionOptions.DelegateCall &&
             options != ExecutionOptions.Both
         ) {
-            revert DelegateCallNotAllowed();
+            return Status.DelegateCallNotAllowed;
         }
+
+        return Status.Ok;
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
@@ -193,7 +208,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         Role storage role,
         address targetAddress,
         bytes memory data
-    ) internal view {
+    ) internal view returns (Status) {
         bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
 
         ParameterLayout[] memory layout = _loadParameterLayout(role, key);
@@ -201,14 +216,18 @@ abstract contract PermissionChecker is PermissionBuilder {
 
         for (uint256 i = 0; i < layout.length; ++i) {
             if (layout[i].isScoped) {
-                _checkParameter(
+                Status status = _checkParameter(
                     role,
                     layout[i],
                     payload[i],
                     abi.encodePacked(key, uint8(i))
                 );
+                if (status != Status.Ok) {
+                    return status;
+                }
             }
         }
+        return Status.Ok;
     }
 
     function _checkParameter(
@@ -216,29 +235,33 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterLayout memory layout,
         ParameterPayload memory payload,
         bytes memory key
-    ) internal view {
+    ) internal view returns (Status) {
         if (layout._type == ParameterType.Static) {
-            _checkStaticValue(
-                role,
-                keccak256(key),
-                layout.comp,
-                payload._static
-            );
+            return
+                _checkStaticValue(
+                    role,
+                    keccak256(key),
+                    layout.comp,
+                    payload._static
+                );
         } else if (layout._type == ParameterType.Dynamic) {
-            _checkDynamicValue(
-                role,
-                keccak256(key),
-                layout.comp,
-                payload.dynamic
-            );
+            return
+                _checkDynamicValue(
+                    role,
+                    keccak256(key),
+                    layout.comp,
+                    payload.dynamic
+                );
         } else if (layout._type == ParameterType.Dynamic32) {
-            _checkDynamic32Value(
-                role,
-                keccak256(key),
-                layout.comp,
-                payload.dynamic32
-            );
+            return
+                _checkDynamic32Value(
+                    role,
+                    keccak256(key),
+                    layout.comp,
+                    payload.dynamic32
+                );
         }
+        return Status.Ok;
     }
 
     function _checkStaticValue(
@@ -246,11 +269,11 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes32 key,
         Comparison paramComp,
         bytes32 value
-    ) private view {
+    ) private view returns (Status) {
         if (paramComp == Comparison.OneOf) {
-            _compareOneOf(role.compValues[key], value);
+            return _compareOneOf(role.compValues[key], value);
         } else {
-            _compare(paramComp, role.compValue[key], value);
+            return _compare(paramComp, role.compValue[key], value);
         }
     }
 
@@ -259,12 +282,12 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes32 key,
         Comparison paramComp,
         bytes memory value
-    ) private view {
+    ) private view returns (Status) {
         if (paramComp == Comparison.OneOf) {
-            _compareOneOf(role.compValues[key], keccak256(value));
+            return _compareOneOf(role.compValues[key], keccak256(value));
         } else {
             assert(paramComp != Comparison.SubsetOf);
-            _compare(paramComp, role.compValue[key], keccak256(value));
+            return _compare(paramComp, role.compValue[key], keccak256(value));
         }
     }
 
@@ -273,20 +296,22 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes32 key,
         Comparison paramComp,
         bytes32[] memory value
-    ) private view {
+    ) private view returns (Status) {
         if (paramComp == Comparison.OneOf) {
-            _compareOneOf(
-                role.compValues[key],
-                keccak256(abi.encodePacked(value))
-            );
+            return
+                _compareOneOf(
+                    role.compValues[key],
+                    keccak256(abi.encodePacked(value))
+                );
         } else if (paramComp == Comparison.SubsetOf) {
-            _compareSubsetOf(role.compValues[key], value);
+            return _compareSubsetOf(role.compValues[key], value);
         } else {
-            _compare(
-                paramComp,
-                role.compValue[key],
-                keccak256(abi.encodePacked(value))
-            );
+            return
+                _compare(
+                    paramComp,
+                    role.compValue[key],
+                    keccak256(abi.encodePacked(value))
+                );
         }
     }
 
@@ -294,39 +319,40 @@ abstract contract PermissionChecker is PermissionBuilder {
         Comparison paramComp,
         bytes32 compValue,
         bytes32 value
-    ) private pure {
+    ) private pure returns (Status) {
         if (paramComp == Comparison.EqualTo && value != compValue) {
-            revert ParameterNotAllowed();
+            return Status.ParameterNotAllowed;
         } else if (paramComp == Comparison.GreaterThan && value <= compValue) {
-            revert ParameterLessThanAllowed();
+            return Status.ParameterLessThanAllowed;
         } else if (paramComp == Comparison.LessThan && value >= compValue) {
-            revert ParameterGreaterThanAllowed();
+            return Status.ParameterGreaterThanAllowed;
         }
+        return Status.Ok;
     }
 
     function _compareOneOf(
         bytes32[] storage compValues,
         bytes32 value
-    ) private view {
+    ) private view returns (Status) {
         for (uint256 i = 0; i < compValues.length; i++) {
-            if (compValues[i] == value) return;
+            if (compValues[i] == value) return Status.Ok;
         }
-        revert ParameterNotOneOfAllowed();
+        return Status.ParameterNotOneOfAllowed;
     }
 
     function _compareSubsetOf(
         bytes32[] storage compValues,
         bytes32[] memory value
-    ) private view {
+    ) private view returns (Status) {
         if (value.length == 0) {
-            revert ParameterNotSubsetOfAllowed();
+            return Status.ParameterNotSubsetOfAllowed;
         }
 
         uint256 taken = 0;
         for (uint256 i = 0; i < value.length; i++) {
             for (uint256 j = 0; j <= compValues.length; j++) {
                 if (j == compValues.length) {
-                    revert ParameterNotSubsetOfAllowed();
+                    return Status.ParameterNotSubsetOfAllowed;
                 }
                 uint256 mask = 1 << j;
                 if ((taken & mask) == 0 && value[i] == compValues[j]) {
@@ -335,6 +361,7 @@ abstract contract PermissionChecker is PermissionBuilder {
                 }
             }
         }
+        return Status.Ok;
     }
 
     function _loadParameterLayout(
@@ -365,5 +392,58 @@ abstract contract PermissionChecker is PermissionBuilder {
 
     function _isNestedType(ParameterType _type) private pure returns (bool) {
         return _type == ParameterType.Tuple || _type == ParameterType.Array;
+    }
+
+    function revertWith(Status status) public pure returns (bool) {
+        assert(status != Status.Ok);
+
+        if (status == Status.FunctionSignatureTooShort) {
+            revert FunctionSignatureTooShort();
+        } else if (status == Status.DelegateCallNotAllowed) {
+            revert DelegateCallNotAllowed();
+        } else if (status == Status.TargetAddressNotAllowed) {
+            revert TargetAddressNotAllowed();
+        } else if (status == Status.FunctionNotAllowed) {
+            revert FunctionNotAllowed();
+        } else if (status == Status.SendNotAllowed) {
+            revert SendNotAllowed();
+        } else if (status == Status.ParameterNotAllowed) {
+            revert ParameterNotAllowed();
+        } else if (status == Status.ParameterNotOneOfAllowed) {
+            revert ParameterNotOneOfAllowed();
+        } else if (status == Status.ParameterNotSubsetOfAllowed) {
+            revert ParameterNotSubsetOfAllowed();
+        } else if (status == Status.ParameterLessThanAllowed) {
+            revert ParameterLessThanAllowed();
+        } else if (status == Status.ParameterGreaterThanAllowed) {
+            revert ParameterGreaterThanAllowed();
+        } else {
+            assert(status == Status.UnacceptableMultiSendOffset);
+            revert UnacceptableMultiSendOffset();
+        }
+    }
+
+    enum Status {
+        Ok,
+        FunctionSignatureTooShort,
+        /// Role not allowed to delegate call to target address
+        DelegateCallNotAllowed,
+        /// Role not allowed to call target address
+        TargetAddressNotAllowed,
+        /// Role not allowed to call this function on target address
+        FunctionNotAllowed,
+        /// Role not allowed to send to target address
+        SendNotAllowed,
+        /// Role not allowed to use bytes for parameter
+        ParameterNotAllowed,
+        /// Role not allowed to use bytes for parameter
+        ParameterNotOneOfAllowed,
+        ParameterNotSubsetOfAllowed,
+        /// Role not allowed to use bytes less than value for parameter
+        ParameterLessThanAllowed,
+        /// Role not allowed to use bytes greater than value for parameter
+        ParameterGreaterThanAllowed,
+        /// only multisend txs with an offset of 32 bytes are allowed
+        UnacceptableMultiSendOffset
     }
 }

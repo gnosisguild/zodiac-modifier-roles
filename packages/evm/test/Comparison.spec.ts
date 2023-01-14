@@ -833,6 +833,4 @@ describe("Comparison", async () => {
     );
     await expect(invoke(2344)).to.not.be.reverted;
   });
-
-  it("mixed of different comparisons and types");
 });
