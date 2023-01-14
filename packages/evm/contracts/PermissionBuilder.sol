@@ -191,7 +191,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             );
 
             bytes memory childKey = abi.encodePacked(key, uint8(i));
-
             if (
                 parameter._type == ParameterType.Array ||
                 parameter._type == ParameterType.Tuple
@@ -238,8 +237,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         }
     }
 
-    /// @dev Internal function that enforces a param type is valid.
-    /// @param config  provides information about the type of parameter and the type of comparison.
     function _enforceParameterConfig(
         ParameterConfigTree memory config
     ) private pure {
@@ -301,16 +298,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(targetAddress, selector));
-    }
-
-    function _key(
-        address targetAddress,
-        bytes4 selector,
-        uint256 index
-    ) internal pure returns (bytes32) {
-        assert(index <= type(uint8).max);
-        return
-            keccak256(abi.encodePacked(targetAddress, selector, uint8(index)));
     }
 
     function _compressCompValue(
