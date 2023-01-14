@@ -15,7 +15,11 @@ enum Comparison {
     GreaterThan,
     LessThan,
     OneOf,
-    SubsetOf
+    SubsetOf,
+    TupleMatches,
+    ArraySome,
+    ArrayEvery,
+    ArrayMatches
 }
 
 enum ExecutionOptions {

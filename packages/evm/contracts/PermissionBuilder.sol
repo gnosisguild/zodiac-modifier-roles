@@ -158,6 +158,32 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         );
     }
 
+    function _loadLayout(
+        Role storage role,
+        bytes memory key
+    ) internal view returns (ParameterLayout[] memory result) {
+        uint256 scopeConfig = role.functions[keccak256(key)];
+        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
+
+        result = new ParameterLayout[](length);
+        for (uint256 i = 0; i < length; i++) {
+            (
+                bool isScoped,
+                ParameterType paramType,
+                Comparison paramComp
+            ) = ScopeConfig.unpackParameter(scopeConfig, i);
+            result[i].isScoped = isScoped;
+            result[i]._type = paramType;
+            result[i].comp = paramComp;
+            if (_isNested(paramType)) {
+                result[i].nested = _loadLayout(
+                    role,
+                    abi.encodePacked(key, uint8(i))
+                );
+            }
+        }
+    }
+
     function _storeLayout(
         Role storage role,
         bytes memory key,
@@ -191,10 +217,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             );
 
             bytes memory childKey = abi.encodePacked(key, uint8(i));
-            if (
-                parameter._type == ParameterType.Array ||
-                parameter._type == ParameterType.Tuple
-            ) {
+            if (_isNested(parameter._type)) {
                 _storeLayout(
                     role,
                     childKey,
@@ -342,5 +365,11 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         }
 
         return result;
+    }
+
+    function _isNested(ParameterType paramType) private pure returns (bool) {
+        return
+            paramType == ParameterType.Tuple ||
+            paramType == ParameterType.Array;
     }
 }
