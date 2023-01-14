@@ -211,7 +211,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     ) internal view returns (Status) {
         bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
 
-        ParameterLayout[] memory layout = _loadParameterLayout(role, key);
+        ParameterLayout[] memory layout = _loadLayout(role, key);
         ParameterPayload[] memory payload = PluckCalldata.pluck(data, layout);
 
         for (uint256 i = 0; i < layout.length; ++i) {
@@ -236,86 +236,41 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterPayload memory payload,
         bytes memory key
     ) internal view returns (Status) {
-        if (layout._type == ParameterType.Static) {
-            return
-                _checkStaticValue(
-                    role,
-                    keccak256(key),
-                    layout.comp,
-                    payload._static
-                );
-        } else if (layout._type == ParameterType.Dynamic) {
-            return
-                _checkDynamicValue(
-                    role,
-                    keccak256(key),
-                    layout.comp,
-                    payload.dynamic
-                );
-        } else if (layout._type == ParameterType.Dynamic32) {
-            return
-                _checkDynamic32Value(
-                    role,
-                    keccak256(key),
-                    layout.comp,
-                    payload.dynamic32
-                );
-        }
-        return Status.Ok;
-    }
-
-    function _checkStaticValue(
-        Role storage role,
-        bytes32 key,
-        Comparison paramComp,
-        bytes32 value
-    ) private view returns (Status) {
-        if (paramComp == Comparison.OneOf) {
-            return _compareOneOf(role.compValues[key], value);
+        if (layout._type == ParameterType.Array) {
+            return Status.ParameterNotAllowed;
+        } else if (layout._type == ParameterType.Tuple) {
+            return Status.ParameterNotAllowed;
         } else {
-            return _compare(paramComp, role.compValue[key], value);
+            return _checkLeaf(role, keccak256(key), layout, payload);
         }
     }
 
-    function _checkDynamicValue(
+    function _checkLeaf(
         Role storage role,
         bytes32 key,
-        Comparison paramComp,
-        bytes memory value
+        ParameterLayout memory layout,
+        ParameterPayload memory payload
     ) private view returns (Status) {
-        if (paramComp == Comparison.OneOf) {
-            return _compareOneOf(role.compValues[key], keccak256(value));
-        } else {
-            assert(paramComp != Comparison.SubsetOf);
-            return _compare(paramComp, role.compValue[key], keccak256(value));
-        }
-    }
-
-    function _checkDynamic32Value(
-        Role storage role,
-        bytes32 key,
-        Comparison paramComp,
-        bytes32[] memory value
-    ) private view returns (Status) {
-        if (paramComp == Comparison.OneOf) {
+        if (layout.comp == Comparison.OneOf) {
             return
                 _compareOneOf(
                     role.compValues[key],
-                    keccak256(abi.encodePacked(value))
+                    _compressValue(layout._type, payload)
                 );
-        } else if (paramComp == Comparison.SubsetOf) {
-            return _compareSubsetOf(role.compValues[key], value);
+        } else if (layout.comp == Comparison.SubsetOf) {
+            assert(layout._type == ParameterType.Dynamic32);
+            return _compareSubsetOf(role.compValues[key], payload.dynamic32);
         } else {
             return
-                _compare(
-                    paramComp,
+                _compareEqual(
+                    layout.comp,
                     role.compValue[key],
-                    keccak256(abi.encodePacked(value))
+                    _compressValue(layout._type, payload)
                 );
         }
     }
 
-    function _compare(
+    function _compareEqual(
         Comparison paramComp,
         bytes32 compValue,
         bytes32 value
@@ -364,34 +319,18 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.Ok;
     }
 
-    function _loadParameterLayout(
-        Role storage role,
-        bytes memory key
-    ) private view returns (ParameterLayout[] memory result) {
-        uint256 scopeConfig = role.functions[keccak256(key)];
-        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
-
-        result = new ParameterLayout[](length);
-        for (uint256 i = 0; i < length; i++) {
-            (
-                bool isScoped,
-                ParameterType paramType,
-                Comparison paramComp
-            ) = ScopeConfig.unpackParameter(scopeConfig, i);
-            result[i].isScoped = isScoped;
-            result[i]._type = paramType;
-            result[i].comp = paramComp;
-            if (_isNestedType(paramType)) {
-                result[i].nested = _loadParameterLayout(
-                    role,
-                    abi.encodePacked(key, uint8(i))
-                );
-            }
+    function _compressValue(
+        ParameterType paramType,
+        ParameterPayload memory payload
+    ) private pure returns (bytes32) {
+        if (paramType == ParameterType.Static) {
+            return payload._static;
+        } else if (paramType == ParameterType.Dynamic) {
+            return keccak256(payload.dynamic);
+        } else {
+            assert(paramType == ParameterType.Dynamic32);
+            return keccak256(abi.encodePacked(payload.dynamic32));
         }
-    }
-
-    function _isNestedType(ParameterType _type) private pure returns (bool) {
-        return _type == ParameterType.Tuple || _type == ParameterType.Array;
     }
 
     function revertWith(Status status) public pure returns (bool) {
