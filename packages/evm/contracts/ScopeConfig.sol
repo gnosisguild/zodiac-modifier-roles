@@ -4,6 +4,15 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./Types.sol";
 
 library ScopeConfig {
+    uint256 constant MASK_LEFT =
+        0xffff000000000000000000000000000000000000000000000000000000000000;
+    uint256 constant MASK_OPTIONS =
+        0xc000000000000000000000000000000000000000000000000000000000000000;
+    uint256 constant MASK_WILDCARDED =
+        0x2000000000000000000000000000000000000000000000000000000000000000;
+    uint256 constant MASK_LENGTH =
+        0x00ff000000000000000000000000000000000000000000000000000000000000;
+
     function pack(
         uint256 scopeConfig,
         ExecutionOptions options,
@@ -16,12 +25,12 @@ library ScopeConfig {
         // 5   bits -> unused
         // 8   bits -> length
         // RIGHT SIDE
-        // 38  bits -> isScoped
-        // 72  bits -> paramType (2 bits per entry 38*2)
-        // 114 bits -> paramComp (3 bits per entry 38*3)
+        // 32  bits -> isScoped
+        // 114  bits -> paramType (3 bits per entry 32*3)
+        // 114 bits -> paramComp (3 bits per entry 32*3)
 
         // Wipe the LEFT SIDE clean. Start from there
-        scopeConfig = (scopeConfig << 16) >> 16;
+        scopeConfig = scopeConfig & ~MASK_LEFT;
 
         // set options -> 256 - 2 = 254
         scopeConfig |= uint256(options) << 254;
@@ -31,7 +40,7 @@ library ScopeConfig {
             scopeConfig |= 1 << 253;
         }
 
-        // set Length -> 48 + 96 + 96 = 240
+        // set Length -> 256 - 16 = 240
         scopeConfig |= length << 240;
 
         return scopeConfig;
@@ -44,18 +53,15 @@ library ScopeConfig {
         ParameterType paramType,
         Comparison paramComp
     ) internal pure returns (uint256) {
-        // LEFT SIDE
-        // 2   bits -> options
-        // 1   bits -> isWildcarded
-        // 5   bits -> unused
-        // 8   bits -> length
-        // RIGHT SIDE
-        // 38  bits -> isScoped
-        // 72  bits -> paramType (2 bits per entry 38*2)
-        // 114 bits -> paramComp (3 bits per entry 38*3)
-        uint256 isScopedMask = 1 << (index + 72 + 114);
-        uint256 paramTypeMask = 3 << (index * 2 + 114);
-        uint256 paramCompMask = 7 << (index * 3);
+        (
+            uint256 isScopedOffset,
+            uint256 typeOffset,
+            uint256 compOffset
+        ) = _offsets(index);
+
+        uint256 isScopedMask = 1 << isScopedOffset;
+        uint256 typeMask = 7 << typeOffset;
+        uint256 compMask = 7 << compOffset;
 
         if (isScoped) {
             scopeConfig |= isScopedMask;
@@ -63,11 +69,11 @@ library ScopeConfig {
             scopeConfig &= ~isScopedMask;
         }
 
-        scopeConfig &= ~paramTypeMask;
-        scopeConfig |= uint256(paramType) << (index * 2 + 114);
+        scopeConfig &= ~typeMask;
+        scopeConfig |= uint256(paramType) << typeOffset;
 
-        scopeConfig &= ~paramCompMask;
-        scopeConfig |= uint256(paramComp) << (index * 3);
+        scopeConfig &= ~compMask;
+        scopeConfig |= uint256(paramComp) << compOffset;
 
         return scopeConfig;
     }
@@ -79,11 +85,9 @@ library ScopeConfig {
         pure
         returns (ExecutionOptions options, bool isWildcarded, uint256 length)
     {
-        uint256 isWildcardedMask = 1 << 253;
-
         options = ExecutionOptions(scopeConfig >> 254);
-        isWildcarded = scopeConfig & isWildcardedMask != 0;
-        length = (scopeConfig << 8) >> 248;
+        isWildcarded = scopeConfig & MASK_WILDCARDED != 0;
+        length = (scopeConfig & MASK_LENGTH) >> 240;
     }
 
     function unpackParameter(
@@ -94,14 +98,40 @@ library ScopeConfig {
         pure
         returns (bool isScoped, ParameterType paramType, Comparison paramComp)
     {
-        uint256 isScopedMask = 1 << (index + 72 + 114);
-        uint256 paramTypeMask = 3 << (index * 2 + 114);
-        uint256 paramCompMask = 7 << (index * 3);
+        (
+            uint256 isScopedOffset,
+            uint256 typeOffset,
+            uint256 compOffset
+        ) = _offsets(index);
+
+        uint256 isScopedMask = 1 << isScopedOffset;
+        uint256 typeMask = 7 << typeOffset;
+        uint256 compMask = 7 << compOffset;
 
         isScoped = (scopeConfig & isScopedMask) != 0;
-        paramType = ParameterType(
-            (scopeConfig & paramTypeMask) >> (index * 2 + 114)
-        );
-        paramComp = Comparison((scopeConfig & paramCompMask) >> (index * 3));
+        paramType = ParameterType((scopeConfig & typeMask) >> typeOffset);
+        paramComp = Comparison((scopeConfig & compMask) >> compOffset);
+    }
+
+    function _offsets(
+        uint256 index
+    )
+        private
+        pure
+        returns (uint256 isScopedOffset, uint256 typeOffset, uint256 compOffset)
+    {
+        // LEFT SIDE
+        // 2   bits -> options
+        // 1   bits -> isWildcarded
+        // 5   bits -> unused
+        // 8   bits -> length
+        // RIGHT SIDE
+        // 32  bits -> isScoped
+        // 96  bits -> paramType (3 bits per entry 32*3)
+        // 96  bits -> paramComp (3 bits per entry 32*3)
+
+        isScopedOffset = index + 96 + 96;
+        typeOffset = index * 3 + 96;
+        compOffset = index * 3;
     }
 }

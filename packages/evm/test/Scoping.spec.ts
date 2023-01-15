@@ -74,7 +74,7 @@ describe("Scoping", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          new Array(39).fill(null).map((_, index) => ({
+          new Array(33).fill(null).map((_, index) => ({
             path: [index],
             _type: TYPE_STATIC,
             comp: Comparison.EQUAL,
@@ -89,7 +89,7 @@ describe("Scoping", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          new Array(38).fill(null).map((_, index) => ({
+          new Array(32).fill(null).map((_, index) => ({
             path: [index],
             _type: TYPE_STATIC,
             comp: Comparison.EQUAL,

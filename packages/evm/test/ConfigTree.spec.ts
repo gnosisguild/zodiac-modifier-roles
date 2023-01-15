@@ -4,7 +4,7 @@ import { expect } from "chai";
 import hre, { deployments } from "hardhat";
 
 enum ParameterType {
-  None = 0,
+  Unspecified = 0,
   Static,
   Dynamic,
   Dynamic32,
@@ -112,7 +112,7 @@ describe("ConfigTree", async () => {
     const layout = [
       {
         isScoped: false,
-        _type: ParameterType.None,
+        _type: ParameterType.Unspecified,
         comp: 0,
         compValues: [],
         children: [],
