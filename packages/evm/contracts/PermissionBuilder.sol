@@ -8,7 +8,7 @@ import "./ScopeConfig.sol";
 import "./Types.sol";
 
 abstract contract PermissionBuilder is OwnableUpgradeable {
-    uint256 internal constant SCOPE_MAX_PARAMS = 38;
+    uint256 internal constant SCOPE_MAX_PARAMS = 32;
 
     /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
@@ -142,6 +142,8 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         ExecutionOptions options
     ) external onlyOwner {
         bytes memory key = abi.encodePacked(targetAddress, selector);
+
+        // ConfigTree.print(ConfigTree.create(parameters));
         _storeLayout(
             roles[roleId],
             key,
@@ -265,7 +267,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     ) private pure {
         assert(config.isScoped);
 
-        if (config.compValues.length == 0) {
+        if (!_isNested(config._type) && config.compValues.length == 0) {
             revert NoCompValuesProvidedForScope();
         }
 

@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 enum ParameterType {
-    None,
+    Unspecified,
     Static,
     Dynamic,
     Dynamic32,
@@ -16,10 +16,9 @@ enum Comparison {
     LessThan,
     OneOf,
     SubsetOf,
-    TupleMatches,
-    ArraySome,
-    ArrayEvery,
-    ArrayMatches
+    Matches,
+    Some,
+    Every
 }
 
 enum ExecutionOptions {
