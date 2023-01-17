@@ -59,10 +59,11 @@ describe("RolesModifier", async () => {
     };
   });
 
-  const TYPE_NONE = 0;
-  const TYPE_STATIC = 1;
-  const TYPE_DYNAMIC = 2;
-  const TYPE_DYNAMIC32 = 3;
+  enum ParameterType {
+    Static = 0,
+    Dynamic,
+    Dynamic32,
+  }
 
   const txSetup = deployments.createFixture(async () => {
     const baseAvatar = await setupTestWithTestAvatar();
@@ -124,44 +125,51 @@ describe("RolesModifier", async () => {
 
     const parameterConfig_9 = [
       {
+        isScoped: true,
         path: [0],
-        _type: TYPE_DYNAMIC,
+        _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_3],
       },
       {
+        isScoped: true,
         path: [1],
-        _type: TYPE_STATIC,
+        _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_4],
       },
       {
+        isScoped: true,
         path: [2],
-        _type: TYPE_DYNAMIC,
+        _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_5],
       },
       {
+        isScoped: true,
         path: [3],
-        _type: TYPE_STATIC,
+        _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_6],
       },
       {
+        isScoped: true,
         path: [4],
-        _type: TYPE_STATIC,
+        _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_7],
       },
       {
+        isScoped: true,
         path: [5],
-        _type: TYPE_DYNAMIC,
+        _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_8],
       },
       {
+        isScoped: true,
         path: [6],
-        _type: TYPE_DYNAMIC,
+        _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_9],
       },
@@ -583,14 +591,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -644,14 +654,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -714,44 +726,51 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_DYNAMIC,
+            _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_3],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_4],
           },
           {
+            isScoped: true,
             path: [2],
-            _type: TYPE_DYNAMIC,
+            _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_5],
           },
           {
+            isScoped: true,
             path: [3],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_6],
           },
           {
+            isScoped: true,
             path: [4],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_7],
           },
           {
+            isScoped: true,
             path: [5],
-            _type: TYPE_DYNAMIC,
+            _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_8],
           },
           {
+            isScoped: true,
             path: [6],
-            _type: TYPE_DYNAMIC,
+            _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_9],
           },
@@ -878,14 +897,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -968,14 +989,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -1045,14 +1068,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -1386,14 +1411,16 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
+            isScoped: true,
             path: [1],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
           },
@@ -1680,14 +1707,16 @@ describe("RolesModifier", async () => {
           "0x12345678",
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_DYNAMIC,
+              _type: ParameterType.Dynamic,
               comp: COMP_GREATER,
               compValues: ["0x"],
             },
             {
+              isScoped: true,
               path: [1],
-              _type: TYPE_DYNAMIC,
+              _type: ParameterType.Dynamic,
               comp: COMP_GREATER,
               compValues: ["0x"],
             },
@@ -1706,12 +1735,16 @@ describe("RolesModifier", async () => {
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
       );
-      const EXEC_ARGS = (n: number) => [
-        testContract.address,
-        0,
-        testContract.interface.encodeFunctionData("fnWithSingleParam", [n]),
-        0,
-      ];
+
+      const invoke = (n: number) =>
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            testContract.interface.encodeFunctionData("fnWithSingleParam", [n]),
+            0
+          );
 
       await modifier
         .connect(owner)
@@ -1722,9 +1755,7 @@ describe("RolesModifier", async () => {
         .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
 
       // works before making function parameter scoped
-      await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
-      ).to.not.be.reverted;
+      await expect(invoke(1)).to.not.be.reverted;
 
       await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
 
@@ -1734,8 +1765,9 @@ describe("RolesModifier", async () => {
         SELECTOR,
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
           },
@@ -1743,15 +1775,9 @@ describe("RolesModifier", async () => {
         OPTIONS_NONE
       );
 
-      // ngmi
-      await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(1))
-      ).to.be.revertedWith("ParameterNotAllowed");
+      await expect(invoke(1)).to.be.revertedWith("ParameterNotAllowed");
 
-      // gmi
-      await expect(
-        modifier.connect(invoker).execTransactionFromModule(...EXEC_ARGS(2))
-      ).to.not.be.reverted;
+      await expect(invoke(2)).to.not.be.reverted;
     });
   });
 

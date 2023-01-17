@@ -2,7 +2,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 enum ParameterType {
-    Unspecified,
     Static,
     Dynamic,
     Dynamic32,
@@ -34,26 +33,20 @@ enum Clearance {
     Function
 }
 
-struct ParameterConfig {
+struct ParameterConfigFlat {
+    bool isScoped;
     uint8[] path;
     ParameterType _type;
     Comparison comp;
     bytes[] compValues;
 }
 
-struct ParameterConfigTree {
+struct ParameterConfig {
     bool isScoped;
     ParameterType _type;
     Comparison comp;
-    bytes[] compValues;
-    ParameterConfigTree[] children;
-}
-
-struct ParameterLayout {
-    bool isScoped;
-    ParameterType _type;
-    Comparison comp;
-    ParameterLayout[] nested;
+    bytes32[] compValues;
+    ParameterConfig[] children;
 }
 
 struct ParameterPayload {
@@ -72,6 +65,5 @@ struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => uint256) functions;
-    mapping(bytes32 => bytes32) compValue;
     mapping(bytes32 => bytes32[]) compValues;
 }

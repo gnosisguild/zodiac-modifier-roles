@@ -3,7 +3,6 @@ import "@nomiclabs/hardhat-ethers";
 import hre, { deployments } from "hardhat";
 
 enum ParameterType {
-  Unspecified = 0,
   Static,
   Dynamic,
   Dynamic32,
@@ -127,11 +126,11 @@ describe("ScopeConfig library", async () => {
         0,
         index,
         true,
-        ParameterType.Unspecified,
+        ParameterType.Static,
         Comparison.Matches
       );
       let result = await ScopeConfig.unpackParameter(scopeConfig, index);
-      expect(result.paramType).to.equal(ParameterType.Unspecified);
+      expect(result.paramType).to.equal(0);
 
       // try first with the max type of ParameterType enum
       scopeConfig = await ScopeConfig.packParameter(
@@ -164,7 +163,7 @@ describe("ScopeConfig library", async () => {
         0,
         index,
         true,
-        ParameterType.Unspecified,
+        ParameterType.Static,
         Comparison.EqualTo
       );
       let result = await ScopeConfig.unpackParameter(scopeConfig, index);
