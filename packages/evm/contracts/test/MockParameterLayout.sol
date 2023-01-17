@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.6.0 <0.9.0;
 
-import "../ConfigTree.sol";
+import "../ParameterLayout.sol";
 
-contract MockConfigTree {
-    function create(
-        ParameterConfig[] calldata parameters
+contract MockParameterLayout {
+    function flatToTree(
+        ParameterConfigFlat[] calldata parameters
     ) external pure returns (PL1[] memory) {
-        return copy(ConfigTree.create(parameters));
+        return copy(ParameterLayout.flatToTree(parameters));
     }
 
-    function createNoCopy(ParameterConfig[] calldata parameters) external pure {
-        ConfigTree.create(parameters);
+    function flatToTreeNoCopy(
+        ParameterConfigFlat[] calldata parameters
+    ) external pure {
+        ParameterLayout.flatToTree(parameters);
     }
 
     function copy(
-        ParameterConfigTree[] memory input
+        ParameterConfig[] memory input
     ) private pure returns (PL1[] memory result) {
         result = new PL1[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
@@ -28,7 +30,7 @@ contract MockConfigTree {
     }
 
     function copy2(
-        ParameterConfigTree[] memory input
+        ParameterConfig[] memory input
     ) private pure returns (PL2[] memory result) {
         result = new PL2[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
@@ -41,7 +43,7 @@ contract MockConfigTree {
     }
 
     function copy3(
-        ParameterConfigTree[] memory input
+        ParameterConfig[] memory input
     ) private pure returns (PL3[] memory result) {
         result = new PL3[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
@@ -54,7 +56,7 @@ contract MockConfigTree {
     }
 
     function copy4(
-        ParameterConfigTree[] memory input
+        ParameterConfig[] memory input
     ) private pure returns (PL4[] memory result) {
         result = new PL4[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
@@ -69,7 +71,7 @@ contract MockConfigTree {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        bytes[] compValues;
+        bytes32[] compValues;
         PL2[] children;
     }
 
@@ -77,7 +79,7 @@ contract MockConfigTree {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        bytes[] compValues;
+        bytes32[] compValues;
         PL3[] children;
     }
 
@@ -85,7 +87,7 @@ contract MockConfigTree {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        bytes[] compValues;
+        bytes32[] compValues;
         PL4[] children;
     }
 
@@ -93,6 +95,6 @@ contract MockConfigTree {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        bytes[] compValues;
+        bytes32[] compValues;
     }
 }

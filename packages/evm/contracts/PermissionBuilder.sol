@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
-import "./ConfigTree.sol";
+import "./ParameterLayout.sol";
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
@@ -49,7 +49,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        ParameterConfig[] parameters,
+        ParameterConfigFlat[] parameters,
         ExecutionOptions options
     );
 
@@ -138,19 +138,21 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
-        ParameterConfig[] calldata parameters,
+        ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
         bytes memory key = abi.encodePacked(targetAddress, selector);
 
-        // ConfigTree.print(ConfigTree.create(parameters));
-        _storeLayout(
+        for (uint256 i = 0; i < parameters.length; i++) {
+            _enforceParameterConfig(parameters[i]);
+        }
+
+        _storeConfig(
             roles[roleId],
             key,
-            ConfigTree.create(parameters),
+            ParameterLayout.flatToTree(parameters),
             options
         );
-
         emit ScopeFunction(
             roleId,
             targetAddress,
@@ -160,36 +162,10 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         );
     }
 
-    function _loadLayout(
-        Role storage role,
-        bytes memory key
-    ) internal view returns (ParameterLayout[] memory result) {
-        uint256 scopeConfig = role.functions[keccak256(key)];
-        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
-
-        result = new ParameterLayout[](length);
-        for (uint256 i = 0; i < length; i++) {
-            (
-                bool isScoped,
-                ParameterType paramType,
-                Comparison paramComp
-            ) = ScopeConfig.unpackParameter(scopeConfig, i);
-            result[i].isScoped = isScoped;
-            result[i]._type = paramType;
-            result[i].comp = paramComp;
-            if (_isNested(paramType)) {
-                result[i].nested = _loadLayout(
-                    role,
-                    abi.encodePacked(key, uint8(i))
-                );
-            }
-        }
-    }
-
-    function _storeLayout(
+    function _storeConfig(
         Role storage role,
         bytes memory key,
-        ParameterConfigTree[] memory parameters,
+        ParameterConfig[] memory parameters,
         ExecutionOptions options
     ) private {
         if (parameters.length > SCOPE_MAX_PARAMS) {
@@ -203,12 +179,10 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             parameters.length
         );
         for (uint256 i = 0; i < parameters.length; ++i) {
-            ParameterConfigTree memory parameter = parameters[i];
+            ParameterConfig memory parameter = parameters[i];
             if (!parameter.isScoped) {
                 continue;
             }
-
-            _enforceParameterConfig(parameters[i]);
 
             scopeConfig = ScopeConfig.packParameter(
                 scopeConfig,
@@ -220,100 +194,122 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
             bytes memory childKey = abi.encodePacked(key, uint8(i));
             if (_isNested(parameter._type)) {
-                _storeLayout(
+                _storeConfig(
                     role,
                     childKey,
                     parameter.children,
                     ExecutionOptions.None
                 );
             } else {
-                _storeCompValue(role, keccak256(childKey), parameter);
+                role.compValues[keccak256(childKey)] = parameter.compValues;
             }
         }
         role.functions[keccak256(key)] = scopeConfig;
     }
 
-    function _storeCompValue(
+    function _loadConfig(
         Role storage role,
-        bytes32 key,
-        ParameterConfigTree memory parameter
-    ) private {
-        if (
-            parameter.comp == Comparison.EqualTo ||
-            parameter.comp == Comparison.GreaterThan ||
-            parameter.comp == Comparison.LessThan
-        ) {
-            assert(parameter.compValues.length == 1);
-            role.compValue[key] = _compressCompValue(
-                parameter._type,
-                parameter.compValues[0]
-            );
-        } else if (parameter.comp == Comparison.OneOf) {
-            role.compValues[key] = _compressCompValues(
-                parameter._type,
-                parameter.compValues
-            );
-        } else {
-            assert(parameter.comp == Comparison.SubsetOf);
-            role.compValues[key] = _splitCompValue(
-                parameter._type,
-                parameter.compValues[0]
-            );
+        bytes memory key
+    ) internal view returns (ParameterConfig[] memory result) {
+        uint256 scopeConfig = role.functions[keccak256(key)];
+        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
+
+        result = new ParameterConfig[](length);
+        for (uint256 i = 0; i < length; i++) {
+            (
+                bool isScoped,
+                ParameterType paramType,
+                Comparison paramComp
+            ) = ScopeConfig.unpackParameter(scopeConfig, i);
+
+            result[i].isScoped = isScoped;
+            result[i]._type = paramType;
+            result[i].comp = paramComp;
+            if (!isScoped) {
+                continue;
+            }
+
+            if (_isNested(paramType)) {
+                result[i].children = _loadConfig(
+                    role,
+                    abi.encodePacked(key, uint8(i))
+                );
+            } else {
+                result[i].compValues = _loadCompValues(
+                    role,
+                    keccak256(abi.encodePacked(key, uint8(i)))
+                );
+            }
+        }
+    }
+
+    function _loadCompValues(
+        Role storage role,
+        bytes32 key
+    ) private view returns (bytes32[] memory result) {
+        bytes32[] storage compValues = role.compValues[key];
+        result = new bytes32[](compValues.length);
+        for (uint256 i = 0; i < compValues.length; ++i) {
+            result[i] = compValues[i];
         }
     }
 
     function _enforceParameterConfig(
-        ParameterConfigTree memory config
+        ParameterConfigFlat memory config
     ) private pure {
-        assert(config.isScoped);
-
-        if (!_isNested(config._type) && config.compValues.length == 0) {
-            revert NoCompValuesProvidedForScope();
+        if (!config.isScoped) {
+            return;
         }
 
-        // equal -> Static, Dynamic, Dynamic32
-        // less -> Static
-        // greater -> Static
-        // oneOf -> Static, Dynamic, Dynamic32
-        // subsetOf -> Dynamic32
-        if (config.comp == Comparison.EqualTo) {
-            if (config.compValues.length != 1) {
-                revert TooManyCompValuesForScope();
-            }
-        } else if (config.comp == Comparison.GreaterThan) {
-            if (config._type != ParameterType.Static) {
-                revert UnsuitableRelativeComparison();
-            }
-        } else if (config.comp == Comparison.LessThan) {
-            if (config._type != ParameterType.Static) {
-                revert UnsuitableRelativeComparison();
-            }
-        } else if (config.comp == Comparison.OneOf) {
-            if (config.compValues.length < 2) {
-                revert NotEnoughCompValuesForScope();
-            }
-        } else if (config.comp == Comparison.SubsetOf) {
-            if (config._type != ParameterType.Dynamic32) {
-                revert UnsuitableSubsetOfComparison();
-            }
-            if (config.compValues.length != 1) {
-                revert TooManyCompValuesForScope();
-            }
-        }
-
-        for (uint256 i = 0; i < config.compValues.length; i++) {
-            if (
-                config._type == ParameterType.Static &&
-                config.compValues[i].length != 32
-            ) {
-                revert UnsuitableStaticCompValueSize();
+        if (_isLeaf(config._type)) {
+            if (config.compValues.length == 0) {
+                revert NoCompValuesProvidedForScope();
             }
 
-            if (
-                config._type == ParameterType.Dynamic32 &&
-                config.compValues[i].length % 32 != 0
-            ) {
-                revert UnsuitableDynamic32CompValueSize();
+            // equal -> Static, Dynamic, Dynamic32
+            // less -> Static
+            // greater -> Static
+            // oneOf -> Static, Dynamic, Dynamic32
+            // subsetOf -> Dynamic32
+            if (config.comp == Comparison.EqualTo) {
+                if (config.compValues.length != 1) {
+                    revert TooManyCompValuesForScope();
+                }
+            } else if (config.comp == Comparison.GreaterThan) {
+                if (config._type != ParameterType.Static) {
+                    revert UnsuitableRelativeComparison();
+                }
+            } else if (config.comp == Comparison.LessThan) {
+                if (config._type != ParameterType.Static) {
+                    revert UnsuitableRelativeComparison();
+                }
+            } else if (config.comp == Comparison.OneOf) {
+                if (config.compValues.length < 2) {
+                    revert NotEnoughCompValuesForScope();
+                }
+            } else if (config.comp == Comparison.SubsetOf) {
+                if (config._type != ParameterType.Dynamic32) {
+                    revert UnsuitableSubsetOfComparison();
+                }
+                if (config.compValues.length != 1) {
+                    revert TooManyCompValuesForScope();
+                }
+            }
+
+            for (uint256 i = 0; i < config.compValues.length; i++) {
+                if (
+                    config._type == ParameterType.Static &&
+                    config.compValues[i].length != 32
+                ) {
+                    revert UnsuitableStaticCompValueSize();
+                }
+
+                if (
+                    config._type == ParameterType.Dynamic32 &&
+                    config.compValues[i].length % 32 != 0
+                ) {
+                    revert UnsuitableDynamic32CompValueSize();
+                }
             }
         }
     }
@@ -325,53 +321,16 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         return keccak256(abi.encodePacked(targetAddress, selector));
     }
 
-    function _compressCompValue(
-        ParameterType paramType,
-        bytes memory compValue
-    ) private pure returns (bytes32) {
-        return
-            paramType == ParameterType.Static
-                ? bytes32(compValue)
-                : keccak256(compValue);
-    }
-
-    function _compressCompValues(
-        ParameterType paramType,
-        bytes[] memory compValues
-    ) private pure returns (bytes32[] memory) {
-        bytes32[] memory result = new bytes32[](compValues.length);
-        for (uint256 i = 0; i < compValues.length; i++) {
-            result[i] = _compressCompValue(paramType, compValues[i]);
-        }
-
-        return result;
-    }
-
-    function _splitCompValue(
-        ParameterType paramType,
-        bytes memory compValue
-    ) private pure returns (bytes32[] memory) {
-        assert(paramType == ParameterType.Dynamic32);
-
-        uint256 length = compValue.length / 32;
-        bytes32[] memory result = new bytes32[](length);
-
-        uint256 offset = 32;
-        for (uint256 i = 0; i < length; ++i) {
-            bytes32 chunk;
-            assembly {
-                chunk := mload(add(compValue, offset))
-            }
-            result[i] = chunk;
-            offset += 32;
-        }
-
-        return result;
-    }
-
     function _isNested(ParameterType paramType) private pure returns (bool) {
         return
             paramType == ParameterType.Tuple ||
             paramType == ParameterType.Array;
+    }
+
+    function _isLeaf(ParameterType paramType) private pure returns (bool) {
+        return
+            paramType == ParameterType.Static ||
+            paramType == ParameterType.Dynamic ||
+            paramType == ParameterType.Dynamic32;
     }
 }

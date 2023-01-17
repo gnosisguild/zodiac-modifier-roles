@@ -13,8 +13,7 @@ import {
 import hre, { deployments } from "hardhat";
 
 enum ParameterType {
-  None = 0,
-  Static,
+  Static = 0,
   Dynamic,
   Dynamic32,
   Tuple,

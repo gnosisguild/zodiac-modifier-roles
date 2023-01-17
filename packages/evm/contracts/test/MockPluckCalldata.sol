@@ -4,27 +4,6 @@ pragma solidity >=0.6.0 <0.9.0;
 import "../PluckCalldata.sol";
 
 contract MockPluckCalldata {
-    function pluckDynamicParam(
-        bytes memory data,
-        uint256 index
-    ) public pure returns (bytes memory) {
-        return PluckCalldata.pluckDynamicParam(data, index);
-    }
-
-    function pluckDynamic32Param(
-        bytes memory data,
-        uint256 index
-    ) public pure returns (bytes32[] memory) {
-        return PluckCalldata.pluckDynamic32Param(data, index);
-    }
-
-    function pluckStaticParam(
-        bytes memory data,
-        uint256 index
-    ) public pure returns (bytes32) {
-        return PluckCalldata.pluckStaticParam(data, index);
-    }
-
     function pluck(
         bytes memory data,
         PL1[] calldata layout
@@ -34,44 +13,44 @@ contract MockPluckCalldata {
 
     function copyIn(
         PL1[] calldata input
-    ) private pure returns (ParameterLayout[] memory result) {
-        result = new ParameterLayout[](input.length);
+    ) private pure returns (ParameterConfig[] memory result) {
+        result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].nested = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].nested);
         }
     }
 
     function copyIn(
         PL2[] calldata input
-    ) private pure returns (ParameterLayout[] memory result) {
-        result = new ParameterLayout[](input.length);
+    ) private pure returns (ParameterConfig[] memory result) {
+        result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].nested = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].nested);
         }
     }
 
     function copyIn(
         PL3[] calldata input
-    ) private pure returns (ParameterLayout[] memory result) {
-        result = new ParameterLayout[](input.length);
+    ) private pure returns (ParameterConfig[] memory result) {
+        result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].nested = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].nested);
         }
     }
 
     function copyIn(
         PL4[] calldata input
-    ) private pure returns (ParameterLayout[] memory result) {
-        result = new ParameterLayout[](input.length);
+    ) private pure returns (ParameterConfig[] memory result) {
+        result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;

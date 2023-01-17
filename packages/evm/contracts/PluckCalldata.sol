@@ -8,63 +8,38 @@ library PluckCalldata {
 
     function pluck(
         bytes memory data,
-        ParameterLayout[] memory layout
+        ParameterConfig[] memory parameters
     ) internal pure returns (ParameterPayload[] memory result) {
-        result = new ParameterPayload[](layout.length);
-        for (uint256 i = 0; i < layout.length; i++) {
-            if (layout[i].isScoped) {
+        result = new ParameterPayload[](parameters.length);
+        for (uint256 i = 0; i < parameters.length; i++) {
+            if (parameters[i].isScoped) {
                 result[i] = _carve(
                     data,
-                    _parameterOffset(data, i, _isStatic(layout[i])),
-                    layout[i]
+                    _parameterOffset(data, i, _isStatic(parameters[i])),
+                    parameters[i]
                 );
             }
         }
     }
 
-    /// @dev Helper function grab a specific static parameter from data blob.
-    /// @param data the parameter data blob.
-    /// @param index position of the parameter in the data.
-    function pluckStaticParam(
-        bytes memory data,
-        uint256 index
-    ) internal pure returns (bytes32) {
-        return _loadWordAt(data, _parameterOffset(data, index, true));
-    }
-
-    /// @dev Helper function grab a specific dynamic parameter from data blob.
-    /// @param data the parameter data blob.
-    /// @param index position of the parameter in the data.
-    function pluckDynamicParam(
-        bytes memory data,
-        uint256 index
-    ) internal pure returns (bytes memory result) {
-        return _carveDynamic(data, _parameterOffset(data, index, false));
-    }
-
-    function pluckDynamic32Param(
-        bytes memory data,
-        uint256 index
-    ) internal pure returns (bytes32[] memory result) {
-        return _carveDynamic32(data, _parameterOffset(data, index, false));
-    }
-
     function _carve(
         bytes memory data,
         uint256 offset,
-        ParameterLayout memory layout
+        ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        if (layout._type == ParameterType.Static) {
-            result._static = _loadWordAt(data, offset);
-        } else if (layout._type == ParameterType.Dynamic) {
+        assert(parameter.isScoped == true);
+
+        if (parameter._type == ParameterType.Dynamic) {
             result.dynamic = _carveDynamic(data, offset);
-        } else if (layout._type == ParameterType.Dynamic32) {
+        } else if (parameter._type == ParameterType.Dynamic32) {
             result.dynamic32 = _carveDynamic32(data, offset);
-        } else if (layout._type == ParameterType.Tuple) {
-            return _carveTuple(data, offset, layout);
+        } else if (parameter._type == ParameterType.Tuple) {
+            return _carveTuple(data, offset, parameter);
+        } else if (parameter._type == ParameterType.Array) {
+            return _carveArray(data, offset, parameter);
         } else {
-            assert(layout._type == ParameterType.Array);
-            return _carveArray(data, offset, layout);
+            assert(parameter._type == ParameterType.Static);
+            result._static = _loadWordAt(data, offset);
         }
     }
 
@@ -108,9 +83,9 @@ library PluckCalldata {
     function _carveTuple(
         bytes memory data,
         uint256 offset,
-        ParameterLayout memory layout
+        ParameterConfig memory parameter
     ) internal pure returns (ParameterPayload memory result) {
-        ParameterLayout[] memory parts = layout.nested;
+        ParameterConfig[] memory parts = parameter.children;
         result.children = new ParameterPayload[](parts.length);
 
         uint256 shift;
@@ -130,23 +105,21 @@ library PluckCalldata {
     function _carveArray(
         bytes memory data,
         uint256 offset,
-        ParameterLayout memory layout
+        ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        assert(layout.nested.length == 1);
-
         // read length, and move offset to content start
         uint256 length = uint256(_loadWordAt(data, offset));
         result.children = new ParameterPayload[](length);
         offset += 32;
 
-        bool isInline = _isStatic(layout.nested[0]);
-        uint256 itemSize = isInline ? _size(layout.nested[0]) : 32;
+        bool isInline = _isStatic(parameter.children[0]);
+        uint256 itemSize = isInline ? _size(parameter.children[0]) : 32;
 
         for (uint256 i; i < length; i++) {
             result.children[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, i * itemSize, isInline),
-                layout.nested[0]
+                parameter.children[0]
             );
         }
     }
@@ -184,13 +157,13 @@ library PluckCalldata {
     }
 
     function _isStatic(
-        ParameterLayout memory layout
+        ParameterConfig memory parameter
     ) private pure returns (bool) {
-        if (layout._type == ParameterType.Static) {
+        if (parameter._type == ParameterType.Static) {
             return true;
-        } else if (layout._type == ParameterType.Tuple) {
-            for (uint256 i = 0; i < layout.nested.length; ++i) {
-                if (!_isStatic(layout.nested[i])) return false;
+        } else if (parameter._type == ParameterType.Tuple) {
+            for (uint256 i = 0; i < parameter.children.length; ++i) {
+                if (!_isStatic(parameter.children[i])) return false;
             }
             return true;
         } else {
@@ -202,17 +175,17 @@ library PluckCalldata {
     }
 
     function _size(
-        ParameterLayout memory layout
+        ParameterConfig memory parameter
     ) private pure returns (uint256) {
-        if (layout._type == ParameterType.Static) {
+        if (parameter._type == ParameterType.Static) {
             return 32;
         }
 
-        assert(layout._type == ParameterType.Tuple);
+        assert(parameter._type == ParameterType.Tuple);
 
         uint256 result;
-        for (uint256 i; i < layout.nested.length; i++) {
-            result += _size(layout.nested[i]);
+        for (uint256 i; i < parameter.children.length; i++) {
+            result += _size(parameter.children[i]);
         }
 
         return result;
