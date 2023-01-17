@@ -54,6 +54,8 @@ contract TestEncoder {
 
     function dynamicTuple(DynamicTuple memory) external {}
 
+    function staticTuple(StaticTuple memory, uint256) external {}
+
     function dynamicTupleWithNestedStaticTuple(
         DynamicTupleWithStaticTuple memory
     ) external {}
