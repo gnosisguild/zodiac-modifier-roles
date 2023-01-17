@@ -10,15 +10,28 @@ library Decoder {
         bytes memory data,
         ParameterConfig[] memory parameters
     ) internal pure returns (ParameterPayload[] memory result) {
+        /*
+         * In the parameter encoding area, there is a region called the head
+         * that is divided into 32-byte chunks. Each parameter has its own
+         * corresponding chunk in the head region:
+         * - Static parameters are encoded inline.
+         * - Dynamic parameters have an offset to the tail, which is the start
+         *   of the actual encoding for the dynamic parameter. Note that the
+         *   offset does not include the 4-byte function signature."
+         */
+        uint256 offset;
         result = new ParameterPayload[](parameters.length);
         for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i].isScoped) {
+            ParameterConfig memory parameter = parameters[i];
+            bool isInline = _isStatic(parameter);
+            if (parameter.isScoped) {
                 result[i] = _carve(
                     data,
-                    _parameterOffset(data, i, _isStatic(parameters[i])),
-                    parameters[i]
+                    _headOrTailOffset(data, 4, offset, isInline),
+                    parameter
                 );
             }
+            offset += isInline ? _size(parameter) : 32;
         }
     }
 
@@ -122,24 +135,6 @@ library Decoder {
                 parameter.children[0]
             );
         }
-    }
-
-    function _parameterOffset(
-        bytes memory data,
-        uint256 index,
-        bool isStaticParam
-    ) private pure returns (uint256) {
-        /*
-         * In the parameter encoding area, there is a region called the head
-         * that is divided into 32-byte chunks. Each parameter has its own
-         * corresponding chunk in the head region:
-         * - Static parameters are encoded inline.
-         * - Dynamic parameters have an offset to the tail, which is the start
-         *   of the actual encoding for the dynamic parameter. Note that the
-         *   offset does not include the 4-byte function signature."
-         */
-
-        return _headOrTailOffset(data, 4, index * 32, isStaticParam);
     }
 
     function _headOrTailOffset(
