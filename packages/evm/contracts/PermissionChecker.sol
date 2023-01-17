@@ -4,8 +4,8 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "./Types.sol";
 
+import "./Decoder.sol";
 import "./ScopeConfig.sol";
-import "./PluckCalldata.sol";
 import "./PermissionBuilder.sol";
 
 abstract contract PermissionChecker is PermissionBuilder {
@@ -214,7 +214,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
 
         ParameterConfig[] memory parameters = _loadConfig(role, key);
-        ParameterPayload[] memory payloads = PluckCalldata.pluck(
+        ParameterPayload[] memory payloads = Decoder.pluckParameters(
             data,
             parameters
         );
