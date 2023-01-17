@@ -19,20 +19,7 @@ library Decoder {
          *   of the actual encoding for the dynamic parameter. Note that the
          *   offset does not include the 4-byte function signature."
          */
-        uint256 offset;
-        result = new ParameterPayload[](parameters.length);
-        for (uint256 i = 0; i < parameters.length; i++) {
-            ParameterConfig memory parameter = parameters[i];
-            bool isInline = _isStatic(parameter);
-            if (parameter.isScoped) {
-                result[i] = _carve(
-                    data,
-                    _headOrTailOffset(data, 4, offset, isInline),
-                    parameter
-                );
-            }
-            offset += isInline ? _size(parameter) : 32;
-        }
+        return _carveParts(data, 4, parameters);
     }
 
     function _carve(
@@ -42,17 +29,17 @@ library Decoder {
     ) private pure returns (ParameterPayload memory result) {
         assert(parameter.isScoped == true);
 
-        if (parameter._type == ParameterType.Dynamic) {
+        if (parameter._type == ParameterType.Static) {
+            result._static = _loadWordAt(data, offset);
+        } else if (parameter._type == ParameterType.Dynamic) {
             result.dynamic = _carveDynamic(data, offset);
         } else if (parameter._type == ParameterType.Dynamic32) {
             result.dynamic32 = _carveDynamic32(data, offset);
-        } else if (parameter._type == ParameterType.Tuple) {
-            return _carveTuple(data, offset, parameter);
         } else if (parameter._type == ParameterType.Array) {
             return _carveArray(data, offset, parameter);
         } else {
-            assert(parameter._type == ParameterType.Static);
-            result._static = _loadWordAt(data, offset);
+            assert(parameter._type == ParameterType.Tuple);
+            return _carveTuple(data, offset, parameter);
         }
     }
 
@@ -93,28 +80,6 @@ library Decoder {
         }
     }
 
-    function _carveTuple(
-        bytes memory data,
-        uint256 offset,
-        ParameterConfig memory parameter
-    ) internal pure returns (ParameterPayload memory result) {
-        ParameterConfig[] memory parts = parameter.children;
-        result.children = new ParameterPayload[](parts.length);
-
-        uint256 shift;
-        for (uint256 i = 0; i < parts.length; i++) {
-            bool isInline = _isStatic(parts[i]);
-            if (parts[i].isScoped) {
-                result.children[i] = _carve(
-                    data,
-                    _headOrTailOffset(data, offset, shift, isInline),
-                    parts[i]
-                );
-            }
-            shift += isInline ? _size(parts[i]) : 32;
-        }
-    }
-
     function _carveArray(
         bytes memory data,
         uint256 offset,
@@ -134,6 +99,35 @@ library Decoder {
                 _headOrTailOffset(data, offset, i * itemSize, isInline),
                 parameter.children[0]
             );
+        }
+    }
+
+    function _carveTuple(
+        bytes memory data,
+        uint256 offset,
+        ParameterConfig memory parameter
+    ) internal pure returns (ParameterPayload memory result) {
+        result.children = _carveParts(data, offset, parameter.children);
+    }
+
+    function _carveParts(
+        bytes memory data,
+        uint256 offset,
+        ParameterConfig[] memory parts
+    ) internal pure returns (ParameterPayload[] memory result) {
+        result = new ParameterPayload[](parts.length);
+
+        uint256 shift;
+        for (uint256 i = 0; i < parts.length; ++i) {
+            bool isInline = _isStatic(parts[i]);
+            if (parts[i].isScoped) {
+                result[i] = _carve(
+                    data,
+                    _headOrTailOffset(data, offset, shift, isInline),
+                    parts[i]
+                );
+            }
+            shift += isInline ? _size(parts[i]) : 32;
         }
     }
 
