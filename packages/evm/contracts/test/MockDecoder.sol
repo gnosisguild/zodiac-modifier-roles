@@ -19,7 +19,7 @@ contract MockDecoder {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].children);
         }
     }
 
@@ -31,7 +31,7 @@ contract MockDecoder {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].children);
         }
     }
 
@@ -43,7 +43,7 @@ contract MockDecoder {
             result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].nested);
+            result[i].children = copyIn(input[i].children);
         }
     }
 
@@ -109,21 +109,21 @@ contract MockDecoder {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        PL2[] nested;
+        PL2[] children;
     }
 
     struct PL2 {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        PL3[] nested;
+        PL3[] children;
     }
 
     struct PL3 {
         bool isScoped;
         ParameterType _type;
         Comparison comp;
-        PL4[] nested;
+        PL4[] children;
     }
 
     struct PL4 {

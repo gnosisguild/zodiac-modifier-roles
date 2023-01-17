@@ -50,9 +50,9 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
     ];
 
     const result = await decoder.pluckParameters(data, layout);
@@ -82,9 +82,9 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
     ];
 
     const result = await decoder.pluckParameters(data, layout);
@@ -114,9 +114,9 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
     ];
 
     const result = await decoder.pluckParameters(data, layout);
@@ -129,7 +129,7 @@ describe("Decoder library", async () => {
     expect(result[2]._static).to.equal(BigNumber.from(123456789));
   });
 
-  it("plucks pluck fails if calldata is too short", async () => {
+  it("pluck fails if calldata is too short", async () => {
     const { testEncoder, decoder } = await setup();
 
     const { data } = await testEncoder.populateTransaction.staticFn(
@@ -139,7 +139,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
     ];
 
     await expect(decoder.pluckParameters(data, layout)).to.not.be.reverted;
@@ -159,8 +159,8 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
     ];
 
     await expect(decoder.pluckParameters(data, layout)).to.be.revertedWith(
@@ -183,14 +183,24 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
-        nested: [
-          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
-          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Dynamic,
+            comp: 0,
+            children: [],
+          },
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
           {
             isScoped: true,
             _type: ParameterType.Dynamic32,
             comp: 0,
-            nested: [],
+            children: [],
           },
         ],
       },
@@ -203,6 +213,71 @@ describe("Decoder library", async () => {
       "0x0000000000000000000000000000000000000000000000000000000000000002",
       "0x0000000000000000000000000000000000000000000000000000000000000003",
     ]);
+  });
+
+  it("plucks staticTuple (explicitly) from encoded calldata", async () => {
+    const { decoder, testEncoder } = await setup();
+
+    const { data } = await testEncoder.populateTransaction.staticTuple(
+      {
+        a: 1999,
+        b: AddressOne,
+      },
+      2000
+    );
+
+    const result = await decoder.pluckParameters(data as string, [
+      {
+        isScoped: true,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+        ],
+      },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+    ]);
+
+    expect(result[0].children[0]._static).to.equal(BigNumber.from(1999));
+    expect(result[0].children[1]._static).to.equal(
+      "0x0000000000000000000000000000000000000000000000000000000000000001"
+    );
+    expect(result[1]._static).to.deep.equal(BigNumber.from(2000));
+  });
+
+  it("plucks staticTuple (implicitly) from encoded calldata", async () => {
+    const { decoder, testEncoder } = await setup();
+
+    const { data } = await testEncoder.populateTransaction.staticTuple(
+      {
+        a: 1999,
+        b: AddressOne,
+      },
+      2000
+    );
+
+    const result = await decoder.pluckParameters(data as string, [
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+    ]);
+
+    expect(result[0]._static).to.equal(BigNumber.from(1999));
+    expect(result[1]._static).to.deep.equal(
+      "0x0000000000000000000000000000000000000000000000000000000000000001"
+    );
+    expect(result[2]._static).to.equal(BigNumber.from(2000));
   });
 
   it("plucks DynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
@@ -224,25 +299,35 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
-        nested: [
-          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
-          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+          {
+            isScoped: true,
+            _type: ParameterType.Dynamic,
+            comp: 0,
+            children: [],
+          },
           {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
             ],
           },
@@ -285,50 +370,60 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
-        nested: [
-          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Dynamic,
+            comp: 0,
+            children: [],
+          },
           {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
             ],
           },
-          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
           {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Dynamic32,
                 comp: 0,
-                nested: [],
+                children: [],
               },
             ],
           },
@@ -376,30 +471,40 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
-        nested: [
-          { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
-          { isScoped: true, _type: ParameterType.Dynamic, comp: 0, nested: [] },
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+          {
+            isScoped: true,
+            _type: ParameterType.Dynamic,
+            comp: 0,
+            children: [],
+          },
           {
             isScoped: true,
             _type: ParameterType.Array,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Tuple,
                 comp: 0,
-                nested: [
+                children: [
                   {
                     isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
-                    nested: [],
+                    children: [],
                   },
                   {
                     isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
-                    nested: [],
+                    children: [],
                   },
                 ],
               },
@@ -453,23 +558,23 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
-        nested: [
+        children: [
           {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
             ],
           },
@@ -518,29 +623,29 @@ describe("Decoder library", async () => {
         isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
-        nested: [
+        children: [
           {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
-            nested: [
+            children: [
               {
                 isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
-                nested: [],
+                children: [],
               },
               {
                 isScoped: true,
                 _type: ParameterType.Dynamic32,
                 comp: 0,
-                nested: [],
+                children: [],
               },
             ],
           },
