@@ -2,7 +2,7 @@ module.exports = {
   skipFiles: [
     "test/Mock.sol",
     "test/MockConfigTree.sol",
-    "test/MockPluckCalldata.sol",
+    "test/MockDecoder.sol",
     "test/MultiSend.sol",
     "test/TestAvatar.sol",
     "test/TestContract.sol",
