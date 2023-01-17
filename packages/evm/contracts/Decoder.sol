@@ -3,10 +3,10 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-library PluckCalldata {
+library Decoder {
     error CalldataOutOfBounds();
 
-    function pluck(
+    function pluckParameters(
         bytes memory data,
         ParameterConfig[] memory parameters
     ) internal pure returns (ParameterPayload[] memory result) {

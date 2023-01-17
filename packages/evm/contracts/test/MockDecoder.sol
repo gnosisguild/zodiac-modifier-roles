@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.6.0 <0.9.0;
 
-import "../PluckCalldata.sol";
+import "../Decoder.sol";
 
-contract MockPluckCalldata {
-    function pluck(
+contract MockDecoder {
+    function pluckParameters(
         bytes memory data,
         PL1[] calldata layout
     ) public pure returns (PP1[] memory) {
-        return copyOut(PluckCalldata.pluck(data, copyIn(layout)));
+        return copyOut(Decoder.pluckParameters(data, copyIn(layout)));
     }
 
     function copyIn(

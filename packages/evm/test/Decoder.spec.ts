@@ -20,26 +20,24 @@ enum ParameterType {
   Array,
 }
 
-describe("PluckCalldata library", async () => {
+describe("Decoder library", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
     const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
     const testEncoder = await TestEncoder.deploy();
 
-    const MockPluckCalldata = await hre.ethers.getContractFactory(
-      "MockPluckCalldata"
-    );
-    const pluckCalldata = await MockPluckCalldata.deploy();
+    const MockDecoder = await hre.ethers.getContractFactory("MockDecoder");
+    const decoder = await MockDecoder.deploy();
 
     return {
       testEncoder,
-      pluckCalldata,
+      decoder,
     };
   });
 
   it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {
-    const { testEncoder, pluckCalldata } = await setup();
+    const { testEncoder, decoder } = await setup();
 
     // (address,bytes,uint32[])
 
@@ -57,7 +55,7 @@ describe("PluckCalldata library", async () => {
       { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
     ];
 
-    const result = await pluckCalldata.pluck(data, layout);
+    const result = await decoder.pluckParameters(data, layout);
 
     expect(result[0]._static).to.equal(
       defaultAbiCoder.encode(["address"], [AddressOne])
@@ -70,7 +68,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks (dynamic, static, dynamic32) non nested parameters from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // (bytes,bool,bytes2[])
 
@@ -89,7 +87,7 @@ describe("PluckCalldata library", async () => {
       { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, nested: [] },
     ];
 
-    const result = await pluckCalldata.pluck(data, layout);
+    const result = await decoder.pluckParameters(data, layout);
     expect(result[0].dynamic).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
     expect(result[1]._static).to.equal(
       defaultAbiCoder.encode(["bool"], [false])
@@ -102,7 +100,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks (dynamic32, dynamic, static) non nested parameters from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // (bytes2[],string,uint32)
 
@@ -121,7 +119,7 @@ describe("PluckCalldata library", async () => {
       { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
     ];
 
-    const result = await pluckCalldata.pluck(data, layout);
+    const result = await decoder.pluckParameters(data, layout);
     expect(result[0].dynamic32).to.deep.equal([
       "0xaabb000000000000000000000000000000000000000000000000000000000000",
       "0x1234000000000000000000000000000000000000000000000000000000000000",
@@ -132,7 +130,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks pluck fails if calldata is too short", async () => {
-    const { testEncoder, pluckCalldata } = await setup();
+    const { testEncoder, decoder } = await setup();
 
     const { data } = await testEncoder.populateTransaction.staticFn(
       "0xaabbccdd"
@@ -144,15 +142,15 @@ describe("PluckCalldata library", async () => {
       { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
     ];
 
-    await expect(pluckCalldata.pluck(data, layout)).to.not.be.reverted;
+    await expect(decoder.pluckParameters(data, layout)).to.not.be.reverted;
 
     await expect(
-      pluckCalldata.pluck(data.slice(0, data.length - 2), layout)
+      decoder.pluckParameters(data.slice(0, data.length - 2), layout)
     ).to.be.revertedWith("CalldataOutOfBounds()");
   });
 
   it("pluck fails with param scoped out of bounds", async () => {
-    const { testEncoder, pluckCalldata } = await setup();
+    const { testEncoder, decoder } = await setup();
 
     const { data } = await testEncoder.populateTransaction.staticFn(
       "0xaabbccdd"
@@ -165,13 +163,13 @@ describe("PluckCalldata library", async () => {
       { isScoped: true, _type: ParameterType.Static, comp: 0, nested: [] },
     ];
 
-    await expect(pluckCalldata.pluck(data, layout)).to.be.revertedWith(
+    await expect(decoder.pluckParameters(data, layout)).to.be.revertedWith(
       "CalldataOutOfBounds()"
     );
   });
 
   it("plucks dynamicTuple from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))
     const { data } = await testEncoder.populateTransaction.dynamicTuple({
@@ -180,7 +178,7 @@ describe("PluckCalldata library", async () => {
       dynamic32: [1, 2, 3],
     });
 
-    const result = await pluckCalldata.pluck(data as string, [
+    const result = await decoder.pluckParameters(data as string, [
       {
         isScoped: true,
         _type: ParameterType.Tuple,
@@ -208,7 +206,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks DynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
     const { data } =
@@ -252,7 +250,7 @@ describe("PluckCalldata library", async () => {
       },
     ];
 
-    const result = await pluckCalldata.pluck(data as string, layout);
+    const result = await decoder.pluckParameters(data as string, layout);
 
     expect(result[0].children[0]._static).to.equal(BigNumber.from(2023));
     expect(result[0].children[1].dynamic).to.equal("0xbadfed");
@@ -265,7 +263,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks dynamicTupleWithNestedDynamicTuple from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     const { data } =
       await testEncoder.populateTransaction.dynamicTupleWithNestedDynamicTuple({
@@ -338,7 +336,7 @@ describe("PluckCalldata library", async () => {
       },
     ];
 
-    const result = await pluckCalldata.pluck(data as string, layout);
+    const result = await decoder.pluckParameters(data as string, layout);
 
     expect(result[0].children[0].dynamic).to.equal("0xbadfed");
 
@@ -363,7 +361,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks dynamicTupleWithNestedArray from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // function dynamicTupleWithNestedArray(tuple(uint256 a, bytes b, tuple(uint256 a, address b)[] c))
     const { data } =
@@ -422,7 +420,7 @@ describe("PluckCalldata library", async () => {
     // 000000000000000000000000000000000000000000000000000000000000000a
     // 00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f
 
-    const result = await pluckCalldata.pluck(data as string, layout);
+    const result = await decoder.pluckParameters(data as string, layout);
 
     expect(result[0].children[0]._static).to.equal(BigNumber.from(21000));
     expect(result[0].children[1].dynamic).to.equal("0x0badbeef");
@@ -435,7 +433,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks arrayStaticTupleItems from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // function arrayStaticTupleItems(tuple(uint256 a, address b)[])
     const { data } =
@@ -487,7 +485,7 @@ describe("PluckCalldata library", async () => {
     // 0000000000000000000000000000000000000000000000000000000000002d16
     // 0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0
 
-    const result = await pluckCalldata.pluck(data as string, layout);
+    const result = await decoder.pluckParameters(data as string, layout);
     expect(result[0].children[0].children[0]._static).to.equal(
       BigNumber.from(95623)
     );
@@ -503,7 +501,7 @@ describe("PluckCalldata library", async () => {
   });
 
   it("plucks arrayDynamicTupleItems from encoded calldata", async () => {
-    const { pluckCalldata, testEncoder } = await setup();
+    const { decoder, testEncoder } = await setup();
 
     // function arrayDynamicTupleItems(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32)[])
     const { data } =
@@ -550,7 +548,7 @@ describe("PluckCalldata library", async () => {
       },
     ];
 
-    const result = await pluckCalldata.pluck(data as string, layout);
+    const result = await decoder.pluckParameters(data as string, layout);
 
     expect(result[0].children[0].children[0].dynamic).to.equal("0xbadfed");
     expect(result[0].children[0].children[1]._static).to.equal(
