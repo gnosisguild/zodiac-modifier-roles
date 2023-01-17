@@ -41,6 +41,8 @@ abstract contract PermissionChecker is PermissionBuilder {
     /// Role not allowed to use bytes greater than value for parameter
     error ParameterGreaterThanAllowed();
 
+    error ArrayMatchesNotSameLength();
+
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
@@ -211,17 +213,15 @@ abstract contract PermissionChecker is PermissionBuilder {
     ) internal view returns (Status) {
         bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
 
-        ParameterLayout[] memory layout = _loadLayout(role, key);
-        ParameterPayload[] memory payload = PluckCalldata.pluck(data, layout);
+        ParameterConfig[] memory parameters = _loadConfig(role, key);
+        ParameterPayload[] memory payloads = PluckCalldata.pluck(
+            data,
+            parameters
+        );
 
-        for (uint256 i = 0; i < layout.length; ++i) {
-            if (layout[i].isScoped) {
-                Status status = _checkParameter(
-                    role,
-                    layout[i],
-                    payload[i],
-                    abi.encodePacked(key, uint8(i))
-                );
+        for (uint256 i = 0; i < parameters.length; ++i) {
+            if (parameters[i].isScoped) {
+                Status status = _check(parameters[i], payloads[i]);
                 if (status != Status.Ok) {
                     return status;
                 }
@@ -230,42 +230,82 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.Ok;
     }
 
-    function _checkParameter(
-        Role storage role,
-        ParameterLayout memory layout,
-        ParameterPayload memory payload,
-        bytes memory key
+    function _check(
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
     ) internal view returns (Status) {
-        if (layout._type == ParameterType.Array) {
-            return Status.ParameterNotAllowed;
-        } else if (layout._type == ParameterType.Tuple) {
-            return Status.ParameterNotAllowed;
+        if (parameter._type == ParameterType.Array) {
+            return _checkArray(parameter, payload);
+        } else if (parameter._type == ParameterType.Tuple) {
+            return _checkTuple(parameter, payload);
         } else {
-            return _checkLeaf(role, keccak256(key), layout, payload);
+            return _compare(parameter, payload);
         }
     }
 
-    function _checkLeaf(
-        Role storage role,
-        bytes32 key,
-        ParameterLayout memory layout,
+    function _checkArray(
+        ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private view returns (Status) {
-        if (layout.comp == Comparison.OneOf) {
+    ) private view returns (Status status) {
+        Comparison comp = parameter.comp;
+        bool isMatches = comp == Comparison.Matches;
+        bool isEvery = comp == Comparison.Every;
+        bool isSome = comp == Comparison.Some;
+
+        if (isMatches && parameter.children.length != payload.children.length) {
+            return Status.ArrayMatchesNotSameLength;
+        }
+
+        for (uint256 i = 0; i < payload.children.length; i++) {
+            status = _check(
+                parameter.children[isMatches ? i : 0],
+                payload.children[i]
+            );
+
+            bool isOk = status == Status.Ok;
+            if (((isEvery || isMatches) && !isOk) || (isSome && isOk)) {
+                return status;
+            }
+        }
+
+        // TODO create new custom errors
+        return isSome ? Status.ParameterNotAllowed : Status.Ok;
+    }
+
+    function _checkTuple(
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private view returns (Status status) {
+        for (uint256 i = 0; i < parameter.children.length; i++) {
+            if (parameter.children[i].isScoped) {
+                status = _check(parameter.children[i], payload.children[i]);
+                if (status != Status.Ok) {
+                    return status;
+                }
+            }
+        }
+        return Status.Ok;
+    }
+
+    function _compare(
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status) {
+        if (parameter.comp == Comparison.OneOf) {
             return
                 _compareOneOf(
-                    role.compValues[key],
-                    _compressValue(layout._type, payload)
+                    parameter.compValues,
+                    _compressValue(parameter._type, payload)
                 );
-        } else if (layout.comp == Comparison.SubsetOf) {
-            assert(layout._type == ParameterType.Dynamic32);
-            return _compareSubsetOf(role.compValues[key], payload.dynamic32);
+        } else if (parameter.comp == Comparison.SubsetOf) {
+            assert(parameter._type == ParameterType.Dynamic32);
+            return _compareSubsetOf(parameter.compValues, payload.dynamic32);
         } else {
             return
                 _compareEqual(
-                    layout.comp,
-                    role.compValue[key],
-                    _compressValue(layout._type, payload)
+                    parameter.comp,
+                    parameter.compValues[0],
+                    _compressValue(parameter._type, payload)
                 );
         }
     }
@@ -286,9 +326,9 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _compareOneOf(
-        bytes32[] storage compValues,
+        bytes32[] memory compValues,
         bytes32 value
-    ) private view returns (Status) {
+    ) private pure returns (Status) {
         for (uint256 i = 0; i < compValues.length; i++) {
             if (compValues[i] == value) return Status.Ok;
         }
@@ -296,9 +336,9 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _compareSubsetOf(
-        bytes32[] storage compValues,
+        bytes32[] memory compValues,
         bytes32[] memory value
-    ) private view returns (Status) {
+    ) private pure returns (Status) {
         if (value.length == 0) {
             return Status.ParameterNotSubsetOfAllowed;
         }
@@ -356,6 +396,8 @@ abstract contract PermissionChecker is PermissionBuilder {
             revert ParameterLessThanAllowed();
         } else if (status == Status.ParameterGreaterThanAllowed) {
             revert ParameterGreaterThanAllowed();
+        } else if (status == Status.ArrayMatchesNotSameLength) {
+            revert ArrayMatchesNotSameLength();
         } else {
             assert(status == Status.UnacceptableMultiSendOffset);
             revert UnacceptableMultiSendOffset();
@@ -365,6 +407,8 @@ abstract contract PermissionChecker is PermissionBuilder {
     enum Status {
         Ok,
         FunctionSignatureTooShort,
+        /// only multisend txs with an offset of 32 bytes are allowed
+        UnacceptableMultiSendOffset,
         /// Role not allowed to delegate call to target address
         DelegateCallNotAllowed,
         /// Role not allowed to call target address
@@ -382,7 +426,6 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterLessThanAllowed,
         /// Role not allowed to use bytes greater than value for parameter
         ParameterGreaterThanAllowed,
-        /// only multisend txs with an offset of 32 bytes are allowed
-        UnacceptableMultiSendOffset
+        ArrayMatchesNotSameLength
     }
 }

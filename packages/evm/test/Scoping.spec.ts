@@ -16,11 +16,17 @@ enum Options {
   BOTH,
 }
 
-const TYPE_NONE = 0;
-const TYPE_STATIC = 1;
-// const TYPE_DYNAMIC = 2;
-const TYPE_DYNAMIC32 = 3;
+enum ParameterType {
+  Static = 0,
+  Dynamic,
+  Dynamic32,
+}
 
+// Through abi.encodePacked() , Solidity supports a non-standard packed mode where:
+// types shorter than 32 bytes are neither zero padded nor sign extended and
+// dynamic types are encoded in-place and without the length.
+// array elements are padded, but still encoded in-place
+// Furthermore, structs as well as nested arrays are not supported.
 const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(
   ["uint256"],
   [123]
@@ -75,8 +81,9 @@ describe("Scoping", async () => {
           testContract.address,
           SELECTOR,
           new Array(33).fill(null).map((_, index) => ({
+            isScoped: false,
             path: [index],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: Comparison.EQUAL,
             compValues: [],
           })),
@@ -90,8 +97,9 @@ describe("Scoping", async () => {
           testContract.address,
           SELECTOR,
           new Array(32).fill(null).map((_, index) => ({
+            isScoped: false,
             path: [index],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: Comparison.EQUAL,
             compValues: [A_32_BYTES_VALUE],
           })),
@@ -122,8 +130,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_STATIC,
+              _type: ParameterType.Static,
               comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(
@@ -144,8 +153,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_DYNAMIC32,
+              _type: ParameterType.Dynamic32,
               comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
@@ -163,8 +173,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_DYNAMIC32,
+              _type: ParameterType.Dynamic32,
               comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
             },
@@ -181,14 +192,16 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_DYNAMIC32,
+              _type: ParameterType.Dynamic32,
               comp: Comparison.EQUAL,
               compValues: [A_32_BYTES_VALUE],
             },
             {
-              path: [0],
-              _type: TYPE_NONE,
+              isScoped: true,
+              path: [1],
+              _type: ParameterType.Dynamic,
               comp: Comparison.EQUAL,
               compValues: [
                 ethers.utils.solidityPack(
@@ -219,8 +232,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_STATIC,
+              _type: ParameterType.Static,
               comp: Comparison.ONE_OF,
               compValues: [
                 ethers.utils.solidityPack(
@@ -245,8 +259,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_DYNAMIC32,
+              _type: ParameterType.Dynamic32,
               comp: Comparison.ONE_OF,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
@@ -265,8 +280,9 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
+              isScoped: true,
               path: [0],
-              _type: TYPE_STATIC,
+              _type: ParameterType.Static,
               comp: Comparison.ONE_OF,
               compValues: [A_32_BYTES_VALUE, A_32_BYTES_VALUE],
             },
@@ -292,8 +308,9 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: Comparison.ONE_OF,
             compValues: [A_32_BYTES_VALUE],
           },
@@ -309,8 +326,9 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
+            isScoped: true,
             path: [0],
-            _type: TYPE_STATIC,
+            _type: ParameterType.Static,
             comp: Comparison.ONE_OF,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),

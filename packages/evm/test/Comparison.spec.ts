@@ -1,15 +1,25 @@
 import { expect } from "chai";
 import { defaultAbiCoder } from "ethers/lib/utils";
 import hre, { deployments, waffle, ethers } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
+
+import {
+  DynamicTupleStruct,
+  StaticTupleStruct,
+} from "../typechain-types/contracts/test/TestEncoder";
 
 describe("Comparison", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
+
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
+
+    const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
+    const testEncoder = await TestEncoder.deploy();
 
     const [owner, invoker] = waffle.provider.getWallets();
 
@@ -26,6 +36,7 @@ describe("Comparison", async () => {
       Avatar,
       avatar,
       testContract,
+      testEncoder,
       Modifier,
       modifier,
       owner,
@@ -39,6 +50,9 @@ describe("Comparison", async () => {
     LESS,
     ONE_OF,
     SUBSET_OF,
+    MATCHES,
+    SOME,
+    EVERY,
   }
 
   enum Options {
@@ -48,117 +62,15 @@ describe("Comparison", async () => {
     BOTH,
   }
 
-  enum Type {
-    NONE = 0,
-    STATIC,
-    DYNAMIC,
-    DYNAMIC32,
+  enum ParameterType {
+    Static,
+    Dynamic,
+    Dynamic32,
+    Tuple,
+    Array,
   }
 
-  const TYPE_NONE = 0;
-  const TYPE_STATIC = 1;
-  const TYPE_DYNAMIC = 2;
-  const TYPE_DYNAMIC32 = 3;
-
-  const UNSCOPED_PARAM = {
-    isScoped: false,
-    _type: TYPE_NONE,
-    comp: Comparison.EQUAL,
-    compValues: [],
-  };
-
-  it.skip("TODO move to PermissionBuilder tests -> enforces paramCompValues for scopeFunction", async () => {
-    const { modifier, testContract, owner } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          UNSCOPED_PARAM,
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: Comparison.ONE_OF,
-            compValues: [],
-          },
-          UNSCOPED_PARAM,
-        ],
-        Options.NONE
-      )
-    ).to.be.revertedWith("NoCompValuesProvidedForScope");
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          UNSCOPED_PARAM,
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: Comparison.ONE_OF,
-            compValues: [defaultAbiCoder.encode(["bool"], [false])],
-          },
-          UNSCOPED_PARAM,
-        ],
-        Options.NONE
-      )
-    ).to.be.revertedWith("NotEnoughCompValuesForScope");
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          UNSCOPED_PARAM,
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: Comparison.ONE_OF,
-            compValues: [
-              defaultAbiCoder.encode(["bool"], [false]),
-              defaultAbiCoder.encode(["bool"], [true]),
-            ],
-          },
-          UNSCOPED_PARAM,
-        ],
-        Options.NONE
-      )
-    ).to.not.be.reverted;
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          UNSCOPED_PARAM,
-          {
-            isScoped: true,
-            _type: TYPE_STATIC,
-            comp: Comparison.EQUAL,
-            compValues: [
-              defaultAbiCoder.encode(["bool"], [true]),
-              defaultAbiCoder.encode(["bool"], [false]),
-            ],
-          },
-          UNSCOPED_PARAM,
-        ],
-        Options.NONE
-      )
-    ).to.be.revertedWith("TooManyCompValuesForScope");
-  });
-
-  it("passes an eq comparison", async () => {
+  it("checks an eq comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -189,7 +101,8 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          _type: Type.STATIC,
+          isScoped: true,
+          _type: ParameterType.Static,
           comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["uint256"], [123])],
           path: [0],
@@ -202,7 +115,77 @@ describe("Comparison", async () => {
     await expect(invoke(123)).to.not.be.reverted;
   });
 
-  it("passes an eq comparison for dynamic", async () => {
+  it("checks a gt/lt comparison for static", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          path: [0],
+          _type: ParameterType.Static,
+          comp: Comparison.GREATER,
+          compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke(1233)).to.be.revertedWith("ParameterLessThanAllowed()");
+    await expect(invoke(1234)).to.be.revertedWith("ParameterLessThanAllowed()");
+    await expect(invoke(1235)).to.not.be.reverted;
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          path: [0],
+          _type: ParameterType.Static,
+          comp: Comparison.LESS,
+          compValues: [ethers.utils.solidityPack(["uint256"], [2345])],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke(2346)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+    await expect(invoke(2345)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+    await expect(invoke(2344)).to.not.be.reverted;
+  });
+
+  it("checks an eq comparison for dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -234,7 +217,8 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          _type: TYPE_DYNAMIC,
+          isScoped: true,
+          _type: ParameterType.Dynamic,
           comp: Comparison.EQUAL,
           compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
           path: [1],
@@ -249,7 +233,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("passes an eq comparison for dynamic - empty buffer", async () => {
+  it("checks an eq comparison for dynamic - empty buffer", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -279,7 +263,8 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          _type: TYPE_DYNAMIC,
+          isScoped: true,
+          _type: ParameterType.Dynamic,
           comp: Comparison.EQUAL,
           compValues: ["0x"],
           path: [0],
@@ -292,7 +277,7 @@ describe("Comparison", async () => {
     await expect(invoke("0x12")).to.be.revertedWith("ParameterNotAllowed()");
   });
 
-  it("passes an eq comparison for dynamic32", async () => {
+  it("checks an eq comparison for dynamic32", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -324,7 +309,8 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          _type: TYPE_DYNAMIC32,
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.EQUAL,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1234", "0xabcd"]]),
@@ -354,7 +340,7 @@ describe("Comparison", async () => {
       .reverted;
   });
 
-  it("passes an eq comparison for dynamic32 - empty array", async () => {
+  it("checks an eq comparison for dynamic32 - empty array", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -385,7 +371,8 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          _type: TYPE_DYNAMIC32,
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.EQUAL,
           compValues: [[]],
           path: [0],
@@ -400,7 +387,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("passes a oneOf comparison for static", async () => {
+  it("checks a oneOf comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -432,8 +419,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_STATIC,
+          _type: ParameterType.Static,
           comp: Comparison.ONE_OF,
           compValues: [
             defaultAbiCoder.encode(["uint256"], [11]),
@@ -449,7 +437,7 @@ describe("Comparison", async () => {
     await expect(invoke(33)).to.be.revertedWith("ParameterNotOneOfAllowed()");
   });
 
-  it("passes a oneOf comparison for dynamic", async () => {
+  it("checks a oneOf comparison for dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -480,8 +468,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [1],
-          _type: TYPE_DYNAMIC,
+          _type: ParameterType.Dynamic,
           comp: Comparison.ONE_OF,
           compValues: [
             ethers.utils.solidityPack(["string"], ["Hello World!"]),
@@ -502,7 +491,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("passes a oneOf comparison for dynamic32", async () => {
+  it("checks a oneOf comparison for dynamic32", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -534,8 +523,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [1],
-          _type: TYPE_DYNAMIC32,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.ONE_OF,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1111", "0x1111"]]),
@@ -569,7 +559,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("passes a subsetOf comparison for dynamic32", async () => {
+  it("checks a subsetOf comparison for dynamic32", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -600,8 +590,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_DYNAMIC32,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.SUBSET_OF,
           compValues: [
             ethers.utils.solidityPack(
@@ -617,7 +608,7 @@ describe("Comparison", async () => {
     await expect(invoke(["0x11112233", "0xaabbccdd"])).to.not.be.reverted;
   });
 
-  it("passes a subsetOf comparison for dynamic32 - order does not matter", async () => {
+  it("checks a subsetOf comparison for dynamic32 - order does not matter", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -648,8 +639,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_DYNAMIC32,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.SUBSET_OF,
           compValues: [
             ethers.utils.solidityPack(
@@ -697,8 +689,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_DYNAMIC32,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.SUBSET_OF,
           compValues: [
             ethers.utils.solidityPack(
@@ -747,8 +740,9 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_DYNAMIC32,
+          _type: ParameterType.Dynamic32,
           comp: Comparison.SUBSET_OF,
           compValues: [
             ethers.utils.solidityPack(
@@ -766,21 +760,21 @@ describe("Comparison", async () => {
     ).to.be.revertedWith("ParameterNotSubsetOfAllowed()");
   });
 
-  it("passes a gt/lt comparison", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+  it("checks a tuple comparison", async () => {
+    const { modifier, testEncoder, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithSingleParam")
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("dynamicTuple")
     );
 
-    const invoke = async (a: number) =>
+    const invoke = async (s: DynamicTupleStruct) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          testEncoder.address,
           0,
-          (await testContract.populateTransaction.fnWithSingleParam(a))
+          (await testEncoder.populateTransaction.dynamicTuple(s))
             .data as string,
           0
         );
@@ -790,47 +784,416 @@ describe("Comparison", async () => {
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
       ROLE_ID,
-      testContract.address,
+      testEncoder.address,
       SELECTOR,
       [
         {
+          isScoped: true,
           path: [0],
-          _type: TYPE_STATIC,
-          comp: Comparison.GREATER,
-          compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0],
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EQUAL,
+          compValues: [ethers.utils.solidityPack(["bytes"], ["0xabcdef"])],
+        },
+        {
+          isScoped: true,
+          path: [0, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [ethers.utils.solidityPack(["uint256"], [1998])],
+        },
+        {
+          isScoped: true,
+          path: [0, 2],
+          _type: ParameterType.Dynamic32,
+          comp: Comparison.EQUAL,
+          compValues: [ethers.utils.solidityPack(["uint256[]"], [[7, 88, 99]])],
         },
       ],
       Options.NONE
     );
 
-    await expect(invoke(1233)).to.be.revertedWith("ParameterLessThanAllowed()");
-    await expect(invoke(1234)).to.be.revertedWith("ParameterLessThanAllowed()");
-    await expect(invoke(1235)).to.not.be.reverted;
+    await expect(
+      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7] })
+    ).to.be.revertedWith("ParameterNotAllowed()");
 
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          path: [0],
-          _type: TYPE_STATIC,
-          comp: Comparison.LESS,
-          compValues: [ethers.utils.solidityPack(["uint256"], [2345])],
-        },
-      ],
-      Options.NONE
-    );
-
-    await expect(invoke(2346)).to.be.revertedWith(
-      "ParameterGreaterThanAllowed()"
-    );
-    await expect(invoke(2345)).to.be.revertedWith(
-      "ParameterGreaterThanAllowed()"
-    );
-    await expect(invoke(2344)).to.not.be.reverted;
+    await expect(
+      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] })
+    ).to.not.be.reverted;
   });
+
+  it.skip("checks a tuple comparison with partial scoping");
+
+  it.skip("checks a nested tuple comparison");
+
+  it.skip("checks a nested tuple comparison with partial scoping");
+
+  it("checks an array EVERY comparison", async () => {
+    // const address1 = "0x0000000000000000000000000000000000000fff";
+    const address2 = "0x0000000000000000000000000000000000000123";
+    const address3 = "0x0000000000000000000000000000000000000cda";
+
+    const { modifier, testEncoder, owner, invoker } = await setup();
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("arrayStaticTupleItems")
+    );
+    const invoke = async (a: StaticTupleStruct[]) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          path: [0],
+          _type: ParameterType.Array,
+          comp: Comparison.EVERY,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0, 0],
+          _type: ParameterType.Static,
+          comp: Comparison.LESS,
+          compValues: [defaultAbiCoder.encode(["uint256"], [10000])],
+        },
+        {
+          isScoped: true,
+          path: [0, 0, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke([])).to.not.be.reverted;
+    await expect(
+      invoke([
+        { a: 1111, b: address2 },
+        { a: 2222, b: address2 },
+      ])
+    ).to.not.be.reverted;
+    await expect(
+      invoke([
+        { a: 1111, b: address3 },
+        { a: 2222, b: address2 },
+      ])
+    ).to.be.revertedWith("ParameterNotAllowed()");
+    await expect(
+      invoke([
+        { a: 300000, b: address2 },
+        { a: 2222, b: address2 },
+      ])
+    ).to.be.revertedWith("ParameterGreaterThanAllowed()");
+  });
+
+  it("checks an array SOME comparison", async () => {
+    const address1 = "0x0000000000000000000000000000000000000fff";
+    const address2 = "0x0000000000000000000000000000000000000123";
+
+    const { modifier, testEncoder, owner, invoker } = await setup();
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("arrayStaticTupleItems")
+    );
+    const invoke = async (a: StaticTupleStruct[]) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+            .data as string,
+          0
+        );
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          path: [0],
+          _type: ParameterType.Array,
+          comp: Comparison.SOME,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: false,
+          path: [0, 0, 0],
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(invoke([])).to.be.reverted;
+    await expect(invoke([{ a: 1111, b: address2 }])).to.not.be.reverted;
+    await expect(
+      invoke([
+        { a: 1111, b: address2 },
+        { a: 1111, b: address1 },
+      ])
+    ).to.not.be.reverted;
+    await expect(invoke([{ a: 1111, b: address1 }])).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+  });
+
+  it("checks an array MATCHES comparison", async () => {
+    const address1 = "0x0000000000000000000000000000000000000fff";
+    const address2 = "0x0000000000000000000000000000000000000123";
+    const address3 = "0x0000000000000000000000000000000000000cda";
+
+    const { modifier, testEncoder, owner, invoker } = await setup();
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("arrayStaticTupleItems")
+    );
+    const invoke = async (a: StaticTupleStruct[]) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+            .data as string,
+          0
+        );
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          isScoped: true,
+          path: [0],
+          _type: ParameterType.Array,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 0, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [defaultAbiCoder.encode(["address"], [address1])],
+        },
+        {
+          isScoped: true,
+          path: [0, 1],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 1, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+        },
+        {
+          isScoped: true,
+          path: [0, 2],
+          _type: ParameterType.Tuple,
+          comp: Comparison.MATCHES,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          path: [0, 2, 1],
+          _type: ParameterType.Static,
+          comp: Comparison.EQUAL,
+          compValues: [defaultAbiCoder.encode(["address"], [address3])],
+        },
+      ],
+      Options.NONE
+    );
+
+    await expect(
+      invoke([
+        { a: 123, b: address1 },
+        { a: 333, b: address2 },
+        { a: 233, b: address3 },
+      ])
+    ).to.not.be.reverted;
+    await expect(invoke([])).to.be.revertedWith("ArrayMatchesNotSameLength()");
+    await expect(
+      invoke([
+        { a: 123, b: address1 },
+        { a: 333, b: address2 },
+      ])
+    ).to.be.revertedWith("ArrayMatchesNotSameLength()");
+
+    await expect(
+      invoke([
+        { a: 123, b: address1 },
+        { a: 333, b: address2 },
+        { a: 233, b: address2 },
+      ])
+    ).to.be.revertedWith("ParameterNotAllowed()");
+  });
+
+  it.skip("checks an array with a static tuple inside");
+
+  it.skip("checks an array with a nested tuple inside");
 });
+
+// it.skip("TODO move to PermissionBuilder tests -> enforces paramCompValues for scopeFunction", async () => {
+//   const { modifier, testContract, owner } = await setup();
+
+//   const ROLE_ID = 0;
+//   const SELECTOR = testContract.interface.getSighash(
+//     testContract.interface.getFunction("doNothing")
+//   );
+
+//   await expect(
+//     modifier.connect(owner).scopeFunction(
+//       ROLE_ID,
+//       testContract.address,
+//       SELECTOR,
+//       [
+//         UNSCOPED_PARAM,
+//         {
+//           isScoped: true,
+//           _type: TYPE_STATIC,
+//           comp: Comparison.ONE_OF,
+//           compValues: [],
+//         },
+//         UNSCOPED_PARAM,
+//       ],
+//       Options.NONE
+//     )
+//   ).to.be.revertedWith("NoCompValuesProvidedForScope");
+
+//   await expect(
+//     modifier.connect(owner).scopeFunction(
+//       ROLE_ID,
+//       testContract.address,
+//       SELECTOR,
+//       [
+//         UNSCOPED_PARAM,
+//         {
+//           isScoped: true,
+//           _type: TYPE_STATIC,
+//           comp: Comparison.ONE_OF,
+//           compValues: [defaultAbiCoder.encode(["bool"], [false])],
+//         },
+//         UNSCOPED_PARAM,
+//       ],
+//       Options.NONE
+//     )
+//   ).to.be.revertedWith("NotEnoughCompValuesForScope");
+
+//   await expect(
+//     modifier.connect(owner).scopeFunction(
+//       ROLE_ID,
+//       testContract.address,
+//       SELECTOR,
+//       [
+//         UNSCOPED_PARAM,
+//         {
+//           isScoped: true,
+//           _type: TYPE_STATIC,
+//           comp: Comparison.ONE_OF,
+//           compValues: [
+//             defaultAbiCoder.encode(["bool"], [false]),
+//             defaultAbiCoder.encode(["bool"], [true]),
+//           ],
+//         },
+//         UNSCOPED_PARAM,
+//       ],
+//       Options.NONE
+//     )
+//   ).to.not.be.reverted;
+
+//   await expect(
+//     modifier.connect(owner).scopeFunction(
+//       ROLE_ID,
+//       testContract.address,
+//       SELECTOR,
+//       [
+//         UNSCOPED_PARAM,
+//         {
+//           isScoped: true,
+//           _type: TYPE_STATIC,
+//           comp: Comparison.EQUAL,
+//           compValues: [
+//             defaultAbiCoder.encode(["bool"], [true]),
+//             defaultAbiCoder.encode(["bool"], [false]),
+//           ],
+//         },
+//         UNSCOPED_PARAM,
+//       ],
+//       Options.NONE
+//     )
+//   ).to.be.revertedWith("TooManyCompValuesForScope");
+// });
