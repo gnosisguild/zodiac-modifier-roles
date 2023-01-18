@@ -11,6 +11,7 @@ import {
   subsetOf,
 } from "../helpers/utils"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { ZERO_ADDRESS } from "../gnosisChain/addresses"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -61,6 +62,9 @@ const preset: RolePreset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
+      params: {
+        [0]: staticEqual(ZERO_ADDRESS, "address"),
+      },
       options: ExecutionOptions.Send,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
