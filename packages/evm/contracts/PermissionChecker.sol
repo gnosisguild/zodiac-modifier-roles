@@ -219,7 +219,7 @@ abstract contract PermissionChecker is PermissionBuilder {
             parameters
         );
 
-        for (uint256 i = 0; i < parameters.length; ++i) {
+        for (uint256 i; i < parameters.length; ++i) {
             if (parameters[i].isScoped) {
                 Status status = _check(parameters[i], payloads[i]);
                 if (status != Status.Ok) {
@@ -256,7 +256,7 @@ abstract contract PermissionChecker is PermissionBuilder {
             return Status.ArrayMatchesNotSameLength;
         }
 
-        for (uint256 i = 0; i < payload.children.length; i++) {
+        for (uint256 i; i < payload.children.length; ++i) {
             status = _check(
                 parameter.children[isMatches ? i : 0],
                 payload.children[i]
@@ -276,7 +276,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private view returns (Status status) {
-        for (uint256 i = 0; i < parameter.children.length; i++) {
+        for (uint256 i; i < parameter.children.length; ++i) {
             if (parameter.children[i].isScoped) {
                 status = _check(parameter.children[i], payload.children[i]);
                 if (status != Status.Ok) {
@@ -329,7 +329,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes32[] memory compValues,
         bytes32 value
     ) private pure returns (Status) {
-        for (uint256 i = 0; i < compValues.length; i++) {
+        for (uint256 i; i < compValues.length; ++i) {
             if (compValues[i] == value) return Status.Ok;
         }
         return Status.ParameterNotOneOfAllowed;
@@ -343,9 +343,9 @@ abstract contract PermissionChecker is PermissionBuilder {
             return Status.ParameterNotSubsetOfAllowed;
         }
 
-        uint256 taken = 0;
-        for (uint256 i = 0; i < value.length; i++) {
-            for (uint256 j = 0; j <= compValues.length; j++) {
+        uint256 taken;
+        for (uint256 i; i < value.length; ++i) {
+            for (uint256 j; j <= compValues.length; ++j) {
                 if (j == compValues.length) {
                     return Status.ParameterNotSubsetOfAllowed;
                 }

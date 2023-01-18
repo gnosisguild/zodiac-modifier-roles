@@ -46,7 +46,7 @@ library Decoder {
     function _carveDynamic(
         bytes memory data,
         uint256 offset
-    ) internal pure returns (bytes memory result) {
+    ) private pure returns (bytes memory result) {
         // read length, and move offset to content start
         uint256 length = uint256(_loadWordAt(data, offset));
         offset += 32;
@@ -56,7 +56,7 @@ library Decoder {
         }
 
         result = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i; i < length; ++i) {
             result[i] = data[offset + i];
         }
     }
@@ -74,7 +74,7 @@ library Decoder {
         }
 
         result = new bytes32[](length);
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i; i < length; ++i) {
             result[i] = _loadWordAt(data, offset);
             offset += 32;
         }
@@ -93,7 +93,7 @@ library Decoder {
         bool isInline = _isStatic(parameter.children[0]);
         uint256 itemSize = isInline ? _size(parameter.children[0]) : 32;
 
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i < length; ++i) {
             result.children[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, i * itemSize, isInline),
@@ -106,7 +106,7 @@ library Decoder {
         bytes memory data,
         uint256 offset,
         ParameterConfig memory parameter
-    ) internal pure returns (ParameterPayload memory result) {
+    ) private pure returns (ParameterPayload memory result) {
         result.children = _carveParts(data, offset, parameter.children);
     }
 
@@ -114,11 +114,11 @@ library Decoder {
         bytes memory data,
         uint256 offset,
         ParameterConfig[] memory parts
-    ) internal pure returns (ParameterPayload[] memory result) {
+    ) private pure returns (ParameterPayload[] memory result) {
         result = new ParameterPayload[](parts.length);
 
         uint256 shift;
-        for (uint256 i = 0; i < parts.length; ++i) {
+        for (uint256 i; i < parts.length; ++i) {
             bool isInline = _isStatic(parts[i]);
             if (parts[i].isScoped) {
                 result[i] = _carve(
@@ -151,7 +151,7 @@ library Decoder {
         if (parameter._type == ParameterType.Static) {
             return true;
         } else if (parameter._type == ParameterType.Tuple) {
-            for (uint256 i = 0; i < parameter.children.length; ++i) {
+            for (uint256 i; i < parameter.children.length; ++i) {
                 if (!_isStatic(parameter.children[i])) return false;
             }
             return true;
@@ -173,7 +173,7 @@ library Decoder {
         assert(parameter._type == ParameterType.Tuple);
 
         uint256 result;
-        for (uint256 i; i < parameter.children.length; i++) {
+        for (uint256 i; i < parameter.children.length; ++i) {
             result += _size(parameter.children[i]);
         }
 

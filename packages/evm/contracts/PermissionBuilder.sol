@@ -143,7 +143,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     ) external onlyOwner {
         bytes memory key = abi.encodePacked(targetAddress, selector);
 
-        for (uint256 i = 0; i < parameters.length; i++) {
+        for (uint256 i; i < parameters.length; ++i) {
             _enforceParameterConfig(parameters[i]);
         }
 
@@ -178,7 +178,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             false,
             parameters.length
         );
-        for (uint256 i = 0; i < parameters.length; ++i) {
+        for (uint256 i; i < parameters.length; ++i) {
             ParameterConfig memory parameter = parameters[i];
             if (!parameter.isScoped) {
                 continue;
@@ -215,7 +215,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
 
         result = new ParameterConfig[](length);
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i; i < length; ++i) {
             (
                 bool isScoped,
                 ParameterType paramType,
