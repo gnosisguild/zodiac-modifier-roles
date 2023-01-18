@@ -41,7 +41,7 @@ library ParameterLayout {
         ParameterConfig memory node,
         uint8[] memory path
     ) private pure returns (ParameterConfig memory) {
-        for (uint256 i = 0; i < path.length; ++i) {
+        for (uint256 i; i < path.length; ++i) {
             node = node.children[path[i]];
         }
         return node;
@@ -50,7 +50,7 @@ library ParameterLayout {
     function _countTopNodes(
         ParameterConfigFlat[] memory parameters
     ) private pure returns (uint256 count) {
-        for (uint256 i; i < parameters.length; i++) {
+        for (uint256 i; i < parameters.length; ++i) {
             uint8[] memory childPath = parameters[i].path;
             if (childPath.length == 1) {
                 uint256 childIndex = childPath[0];
@@ -63,7 +63,7 @@ library ParameterLayout {
         uint8[] memory path,
         ParameterConfigFlat[] memory parameters
     ) private pure returns (uint256 count) {
-        for (uint256 i; i < parameters.length; i++) {
+        for (uint256 i; i < parameters.length; ++i) {
             uint8[] memory childPath = parameters[i].path;
             if (_isDirectChild(path, childPath)) {
                 uint256 childIndex = childPath[path.length];
@@ -102,7 +102,7 @@ library ParameterLayout {
         bytes[] memory compValues
     ) private pure returns (bytes32[] memory result) {
         result = new bytes32[](compValues.length);
-        for (uint256 i = 0; i < compValues.length; i++) {
+        for (uint256 i; i < compValues.length; ++i) {
             result[i] = paramType == ParameterType.Static
                 ? bytes32(compValues[i])
                 : keccak256(compValues[i]);
@@ -119,7 +119,7 @@ library ParameterLayout {
         bytes32[] memory result = new bytes32[](length);
 
         uint256 offset = 32;
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint256 i; i < length; ++i) {
             bytes32 chunk;
             assembly {
                 chunk := mload(add(compValue, offset))

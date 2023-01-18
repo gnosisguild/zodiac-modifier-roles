@@ -75,7 +75,7 @@ contract Roles is PermissionChecker, Modifier {
         if (_roles.length != memberOf.length) {
             revert ArraysDifferentLength();
         }
-        for (uint16 i = 0; i < _roles.length; i++) {
+        for (uint16 i; i < _roles.length; ++i) {
             roles[_roles[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
