@@ -215,15 +215,16 @@ const preset: RolePreset = {
     //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
     //by another address calling the refundETH function
 
-    //Increasing liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!
-    /*
+    //Increasing liquidity: NFT ID 418522 was created in transaction with hash 0x8cbcaacfc249be70e733123751619359f417301187f854b1b9bc4794a0044694
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      options: ExecutionOptions.Send,
+      params: {
+        [0]: staticEqual(418522, "uint256"),
+      },
     },
-    */
+
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
     //allowing for the depositing of WETH.
 
@@ -294,15 +295,16 @@ const preset: RolePreset = {
     //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
     //by another address calling the refundETH function
 
-    //Increasing liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!
-    /*
+    //Increasing liquidity: NFT ID 418686 was created in transaction with hash 0x198d10fc36ecfd2050990a5f1286d3d7ad226b4b482956d689d7216634fd7503:
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      options: ExecutionOptions.Send,
+      params: {
+        [0]: staticEqual(418686, "uint256"),
+      },
     },
-    */
+
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
     //allowing for the depositing of WETH.
 
@@ -482,7 +484,7 @@ const preset: RolePreset = {
       },
     },
 
-    //Swap wstETH for WETH
+    //Swap WETH for wstETH
     //...allowErc20Approve([WETH], [BALANCER_VAULT]),
     {
       targetAddress: BALANCER_VAULT,
