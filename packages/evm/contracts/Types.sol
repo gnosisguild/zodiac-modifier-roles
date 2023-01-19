@@ -18,6 +18,17 @@ enum Comparison {
     Matches,
     Some,
     Every
+    // Whatever,
+    // EqualTo,
+    // GreaterThan,
+    // LessThan,
+    // OneOf,
+    // Bitmask,
+    // BitmaskOneOf,
+    // SubsetOf,
+    // Matches,
+    // ArraySome,
+    // ArrayEvery
 }
 
 enum ExecutionOptions {
@@ -35,7 +46,7 @@ enum Clearance {
 
 struct ParameterConfigFlat {
     bool isScoped;
-    uint8[] path;
+    uint16 parent;
     ParameterType _type;
     Comparison comp;
     bytes[] compValues;
