@@ -11,7 +11,7 @@ enum ParameterType {
   Array,
 }
 
-describe("ParameterLayout", async () => {
+describe.only("ParameterLayout", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
@@ -31,21 +31,21 @@ describe("ParameterLayout", async () => {
     const config = [
       {
         isScoped: true,
-        path: [0],
+        parent: 0,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [1],
+        parent: 1,
         _type: ParameterType.Dynamic,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [2],
+        parent: 2,
         _type: ParameterType.Dynamic32,
         comp: 0,
         compValues: [],
@@ -91,22 +91,29 @@ describe("ParameterLayout", async () => {
 
     const config = [
       {
+        isScoped: false,
+        parent: 0,
+        _type: ParameterType.Static,
+        comp: 0,
+        compValues: [],
+      },
+      {
         isScoped: true,
-        path: [1],
+        parent: 1,
         _type: ParameterType.Tuple,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [1, 0],
+        parent: 1,
         _type: ParameterType.Dynamic,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [1, 1],
+        parent: 1,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
@@ -159,28 +166,28 @@ describe("ParameterLayout", async () => {
     const config = [
       {
         isScoped: true,
-        path: [0],
+        parent: 0,
         _type: ParameterType.Array,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 0],
+        parent: 0,
         _type: ParameterType.Tuple,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 0, 0],
+        parent: 1,
         _type: ParameterType.Dynamic32,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 0, 1],
+        parent: 1,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
@@ -236,49 +243,70 @@ describe("ParameterLayout", async () => {
     const config = [
       {
         isScoped: true,
-        path: [0],
+        parent: 0,
         _type: ParameterType.Array,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 0],
+        parent: 0,
         _type: ParameterType.Tuple,
         comp: 0,
         compValues: [],
       },
       {
-        isScoped: true,
-        path: [0, 0, 1],
+        isScoped: false,
+        parent: 1,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 1],
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        path: [0, 1, 1],
+        parent: 1,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
       },
       {
         isScoped: true,
-        path: [0, 2],
+        parent: 0,
         _type: ParameterType.Tuple,
         comp: 0,
         compValues: [],
       },
       {
+        isScoped: false,
+        parent: 4,
+        _type: ParameterType.Static,
+        comp: 0,
+        compValues: [],
+      },
+      {
         isScoped: true,
-        path: [0, 2, 1],
+        parent: 4,
+        _type: ParameterType.Static,
+        comp: 0,
+        compValues: [],
+      },
+      {
+        isScoped: true,
+        parent: 0,
+        _type: ParameterType.Tuple,
+        comp: 0,
+        compValues: [],
+      },
+      {
+        isScoped: false,
+        parent: 7,
+        _type: ParameterType.Static,
+        comp: 0,
+        compValues: [],
+      },
+      {
+        isScoped: true,
+        parent: 7,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],

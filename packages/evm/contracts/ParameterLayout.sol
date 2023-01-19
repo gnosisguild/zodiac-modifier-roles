@@ -5,85 +5,78 @@ import "./ScopeConfig.sol";
 import "./Types.sol";
 
 library ParameterLayout {
+    error MalformedFlatParameter(uint256 index);
+
+    //
+
     function flatToTree(
         ParameterConfigFlat[] memory configs
-    ) internal pure returns (ParameterConfig[] memory) {
-        ParameterConfig memory tree;
-        tree.children = new ParameterConfig[](_countTopNodes(configs));
+    ) internal pure returns (ParameterConfig[] memory result) {
+        result = new ParameterConfig[](_countRootNodes(configs));
+        uint256 length = result.length;
+        for (uint256 i; i < length; ++i) {
+            result[i] = pull(configs, i);
+        }
+    }
 
-        // findParent put it there
-        // count children, allocate it
+    function pull(
+        ParameterConfigFlat[] memory configs,
+        uint256 j
+    ) internal pure returns (ParameterConfig memory result) {
+        result.isScoped = configs[j].isScoped;
+        result._type = configs[j]._type;
+        result.comp = configs[j].comp;
+        if (result.isScoped) {
+            if (
+                result._type == ParameterType.Tuple ||
+                result._type == ParameterType.Array
+            ) {
+                result.children = pullChildren(configs, j);
+            } else {
+                result.compValues = _compress(configs[j]);
+            }
+        }
 
-        for (uint256 i; i < configs.length; i++) {
-            ParameterConfigFlat memory config = configs[i];
-            ParameterConfig memory parameter = _select(tree, config.path);
-            parameter.isScoped = config.isScoped;
-            parameter._type = config._type;
-            parameter.comp = config.comp;
+        return result;
+    }
 
-            if (config.isScoped) {
-                if (
-                    config._type != ParameterType.Tuple &&
-                    config._type != ParameterType.Array
-                ) {
-                    parameter.compValues = _compress(config);
-                }
-                uint256 count = _countChildren(config.path, configs);
-                if (count > 0) {
-                    parameter.children = new ParameterConfig[](count);
+    function pullChildren(
+        ParameterConfigFlat[] memory configs,
+        uint256 j
+    ) internal pure returns (ParameterConfig[] memory result) {
+        uint256 count = _countChildren(configs, j);
+        if (count > 0) {
+            result = new ParameterConfig[](count);
+            uint256 insert;
+            for (uint256 i = j + 1; insert < count; i++) {
+                if (configs[i].parent == j) {
+                    result[insert++] = pull(configs, i);
                 }
             }
         }
-        return tree.children;
     }
 
-    function _select(
-        ParameterConfig memory node,
-        uint8[] memory path
-    ) private pure returns (ParameterConfig memory) {
-        for (uint256 i; i < path.length; ++i) {
-            node = node.children[path[i]];
-        }
-        return node;
-    }
-
-    function _countTopNodes(
-        ParameterConfigFlat[] memory parameters
+    function _countRootNodes(
+        ParameterConfigFlat[] memory configs
     ) private pure returns (uint256 count) {
-        for (uint256 i; i < parameters.length; ++i) {
-            uint8[] memory childPath = parameters[i].path;
-            if (childPath.length == 1) {
-                uint256 childIndex = childPath[0];
-                count = count > (childIndex + 1) ? count : (childIndex + 1);
+        uint256 length = configs.length;
+        for (uint256 i; i < length; ++i) {
+            if (configs[i].parent == i) {
+                count++;
             }
         }
     }
 
     function _countChildren(
-        uint8[] memory path,
-        ParameterConfigFlat[] memory parameters
+        ParameterConfigFlat[] memory parameters,
+        uint256 i
     ) private pure returns (uint256 count) {
-        for (uint256 i; i < parameters.length; ++i) {
-            uint8[] memory childPath = parameters[i].path;
-            if (_isDirectChild(path, childPath)) {
-                uint256 childIndex = childPath[path.length];
-                count = count > (childIndex + 1) ? count : (childIndex + 1);
+        uint256 length = parameters.length;
+        for (uint256 j = i + 1; j < length; ++j) {
+            if (parameters[j].parent == i) {
+                count++;
             }
         }
-    }
-
-    function _isDirectChild(
-        uint8[] memory parent,
-        uint8[] memory maybeChild
-    ) private pure returns (bool) {
-        if (parent.length != maybeChild.length - 1) {
-            return false;
-        }
-
-        for (uint256 i; i < parent.length; ++i) {
-            if (parent[i] != maybeChild[i]) return false;
-        }
-        return true;
     }
 
     function _compress(
