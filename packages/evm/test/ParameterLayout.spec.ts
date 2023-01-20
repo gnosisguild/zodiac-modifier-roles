@@ -3,15 +3,9 @@ import "@nomiclabs/hardhat-ethers";
 import { expect } from "chai";
 import hre, { deployments } from "hardhat";
 
-enum ParameterType {
-  Static,
-  Dynamic,
-  Dynamic32,
-  Tuple,
-  Array,
-}
+import { flattenParameterConfig, ParameterType } from "./utils";
 
-describe.only("ParameterLayout", async () => {
+describe("ParameterLayout", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
@@ -28,29 +22,29 @@ describe.only("ParameterLayout", async () => {
   it("builds a one level tree", async () => {
     const { parameterLayout } = await setup();
 
-    const config = [
+    const config = flattenParameterConfig([
       {
         isScoped: true,
-        parent: 0,
         _type: ParameterType.Static,
         comp: 0,
         compValues: [],
+        children: [],
       },
       {
         isScoped: true,
-        parent: 1,
         _type: ParameterType.Dynamic,
         comp: 0,
         compValues: [],
+        children: [],
       },
       {
         isScoped: true,
-        parent: 2,
         _type: ParameterType.Dynamic32,
         comp: 0,
         compValues: [],
+        children: [],
       },
-    ];
+    ]);
     const result = await parameterLayout.flatToTree(config);
 
     const layout = [
@@ -76,12 +70,6 @@ describe.only("ParameterLayout", async () => {
         children: [],
       },
     ];
-
-    // const g1 = await parameterLayout.estimateGas.create(config);
-    // const g2 = await parameterLayout.estimateGas.createNoCopy(config);
-
-    // console.log("GAS " + g1.toNumber());
-    // console.log("GAS " + g2.toNumber());
 
     expect(cleanUp(result)).to.deep.equal(layout);
   });
@@ -89,39 +77,7 @@ describe.only("ParameterLayout", async () => {
   it("builds a two level tree", async () => {
     const { parameterLayout } = await setup();
 
-    const config = [
-      {
-        isScoped: false,
-        parent: 0,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Dynamic,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-    ];
-
-    const result = await parameterLayout.flatToTree(config);
-    const layout = [
+    const tree = [
       {
         isScoped: false,
         _type: ParameterType.Static,
@@ -152,50 +108,18 @@ describe.only("ParameterLayout", async () => {
         ],
       },
     ];
-    // const g1 = await parameterLayout.estimateGas.create(config);
-    // const g2 = await parameterLayout.estimateGas.createNoCopy(config);
 
-    // console.log("GAS " + g1.toNumber());
-    // console.log("GAS " + g2.toNumber());
-    expect(cleanUp(result)).to.deep.equal(layout);
+    const flat = flattenParameterConfig(tree);
+
+    const result = await parameterLayout.flatToTree(flat);
+
+    expect(cleanUp(result)).to.deep.equal(tree);
   });
 
   it("builds a three level three", async () => {
     const { parameterLayout } = await setup();
 
-    const config = [
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Array,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Dynamic32,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-    ];
-
-    const result = await parameterLayout.flatToTree(config);
-    const layout = [
+    const tree = [
       {
         isScoped: true,
         _type: ParameterType.Array,
@@ -228,93 +152,17 @@ describe.only("ParameterLayout", async () => {
       },
     ];
 
-    // const g1 = await parameterLayout.estimateGas.create(config);
-    // const g2 = await parameterLayout.estimateGas.createNoCopy(config);
+    const flat = flattenParameterConfig(tree);
 
-    // console.log("GAS " + g1.toNumber());
-    // console.log("GAS " + g2.toNumber());
+    const result = await parameterLayout.flatToTree(flat);
 
-    expect(cleanUp(result)).to.deep.equal(layout);
+    expect(cleanUp(result)).to.deep.equal(tree);
   });
 
   it("from a bug in another part of the stack", async () => {
     const { parameterLayout } = await setup();
 
-    const config = [
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Array,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: false,
-        parent: 1,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 1,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: false,
-        parent: 4,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 4,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 0,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: false,
-        parent: 7,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-      {
-        isScoped: true,
-        parent: 7,
-        _type: ParameterType.Static,
-        comp: 0,
-        compValues: [],
-      },
-    ];
-
-    const result = await parameterLayout.flatToTree(config);
-    const layout = [
+    const tree = [
       {
         isScoped: true,
         _type: ParameterType.Array,
@@ -391,13 +239,11 @@ describe.only("ParameterLayout", async () => {
       },
     ];
 
-    // const g1 = await parameterLayout.estimateGas.create(config);
-    // const g2 = await parameterLayout.estimateGas.createNoCopy(config);
+    const flat = flattenParameterConfig(tree);
 
-    // console.log("GAS " + g1.toNumber());
-    // console.log("GAS " + g2.toNumber());
+    const result = await parameterLayout.flatToTree(flat);
 
-    expect(cleanUp(result)).to.deep.equal(layout);
+    expect(cleanUp(result)).to.deep.equal(tree);
   });
 
   it.skip("should fail if an intermediate node does not have a parent");

@@ -126,49 +126,49 @@ describe("RolesModifier", async () => {
     const parameterConfig_9 = [
       {
         isScoped: true,
-        path: [0],
+        parent: 0,
         _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_3],
       },
       {
         isScoped: true,
-        path: [1],
+        parent: 1,
         _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_4],
       },
       {
         isScoped: true,
-        path: [2],
+        parent: 2,
         _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_5],
       },
       {
         isScoped: true,
-        path: [3],
+        parent: 3,
         _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_6],
       },
       {
         isScoped: true,
-        path: [4],
+        parent: 4,
         _type: ParameterType.Static,
         comp: COMP_EQUAL,
         compValues: [encodedParam_7],
       },
       {
         isScoped: true,
-        path: [5],
+        parent: 5,
         _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_8],
       },
       {
         isScoped: true,
-        path: [6],
+        parent: 6,
         _type: ParameterType.Dynamic,
         comp: COMP_EQUAL,
         compValues: [encodedParam_9],
@@ -592,14 +592,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -655,14 +655,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -727,49 +727,49 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_3],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_4],
           },
           {
             isScoped: true,
-            path: [2],
+            parent: 2,
             _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_5],
           },
           {
             isScoped: true,
-            path: [3],
+            parent: 3,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_6],
           },
           {
             isScoped: true,
-            path: [4],
+            parent: 4,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_7],
           },
           {
             isScoped: true,
-            path: [5],
+            parent: 5,
             _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_8],
           },
           {
             isScoped: true,
-            path: [6],
+            parent: 6,
             _type: ParameterType.Dynamic,
             comp: COMP_EQUAL,
             compValues: [encodedParam_9],
@@ -898,14 +898,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -990,14 +990,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1069,14 +1069,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1412,14 +1412,14 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_1],
           },
           {
             isScoped: true,
-            path: [1],
+            parent: 1,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [encodedParam_2],
@@ -1708,14 +1708,14 @@ describe("RolesModifier", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Dynamic,
               comp: COMP_GREATER,
               compValues: ["0x"],
             },
             {
               isScoped: true,
-              path: [1],
+              parent: 1,
               _type: ParameterType.Dynamic,
               comp: COMP_GREATER,
               compValues: ["0x"],
@@ -1766,7 +1766,7 @@ describe("RolesModifier", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
             comp: COMP_EQUAL,
             compValues: [ethers.utils.defaultAbiCoder.encode(["uint256"], [2])],
