@@ -1,26 +1,8 @@
 import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
-
-enum Comparison {
-  EQUAL = 0,
-  GREATER,
-  LESS,
-  ONE_OF,
-}
-
-enum Options {
-  NONE = 0,
-  SEND,
-  DELEGATE_CALL,
-  BOTH,
-}
-
-enum ParameterType {
-  Static = 0,
-  Dynamic,
-  Dynamic32,
-}
+import { Comparison, ExecutionOptions, ParameterType } from "./utils";
 
 // Through abi.encodePacked() , Solidity supports a non-standard packed mode where:
 // types shorter than 32 bytes are neither zero padded nor sign extended and
@@ -82,12 +64,12 @@ describe("Scoping", async () => {
           SELECTOR,
           new Array(33).fill(null).map((_, index) => ({
             isScoped: false,
-            path: [index],
+            parent: index,
             _type: ParameterType.Static,
-            comp: Comparison.EQUAL,
+            comp: Comparison.EqualTo,
             compValues: [],
           })),
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.revertedWith("ScopeMaxParametersExceeded()");
 
@@ -98,12 +80,12 @@ describe("Scoping", async () => {
           SELECTOR,
           new Array(32).fill(null).map((_, index) => ({
             isScoped: false,
-            path: [index],
+            parent: index,
             _type: ParameterType.Static,
-            comp: Comparison.EQUAL,
+            comp: Comparison.EqualTo,
             compValues: [A_32_BYTES_VALUE],
           })),
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.not.be.reverted;
     });
@@ -131,9 +113,9 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.EQUAL,
+              comp: Comparison.EqualTo,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -142,7 +124,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -154,15 +136,15 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Dynamic32,
-              comp: Comparison.EQUAL,
+              comp: Comparison.EqualTo,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
               ],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
@@ -174,13 +156,13 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Dynamic32,
-              comp: Comparison.EQUAL,
+              comp: Comparison.EqualTo,
               compValues: [A_32_BYTES_VALUE],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.not.reverted;
 
@@ -193,16 +175,16 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Dynamic32,
-              comp: Comparison.EQUAL,
+              comp: Comparison.EqualTo,
               compValues: [A_32_BYTES_VALUE],
             },
             {
               isScoped: true,
-              path: [1],
+              parent: 1,
               _type: ParameterType.Dynamic,
-              comp: Comparison.EQUAL,
+              comp: Comparison.EqualTo,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -211,7 +193,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.not.be.reverted;
     });
@@ -233,9 +215,9 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.ONE_OF,
+              comp: Comparison.OneOf,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
@@ -248,7 +230,7 @@ describe("Scoping", async () => {
               ],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
 
@@ -260,16 +242,16 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Dynamic32,
-              comp: Comparison.ONE_OF,
+              comp: Comparison.OneOf,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
               ],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
@@ -281,13 +263,13 @@ describe("Scoping", async () => {
           [
             {
               isScoped: true,
-              path: [0],
+              parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.ONE_OF,
+              comp: Comparison.OneOf,
               compValues: [A_32_BYTES_VALUE, A_32_BYTES_VALUE],
             },
           ],
-          Options.NONE
+          ExecutionOptions.None
         )
       ).to.not.be.reverted;
     });
@@ -309,13 +291,13 @@ describe("Scoping", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.ONE_OF,
+            comp: Comparison.OneOf,
             compValues: [A_32_BYTES_VALUE],
           },
         ],
-        Options.NONE
+        ExecutionOptions.None
       )
     ).to.be.revertedWith("NotEnoughCompValuesForScope()");
 
@@ -327,16 +309,16 @@ describe("Scoping", async () => {
         [
           {
             isScoped: true,
-            path: [0],
+            parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.ONE_OF,
+            comp: Comparison.OneOf,
             compValues: [
               ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
               ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
             ],
           },
         ],
-        Options.NONE
+        ExecutionOptions.None
       )
     ).to.not.be.reverted;
   });

@@ -9,6 +9,8 @@ import {
   StaticTupleStruct,
 } from "../typechain-types/contracts/test/TestEncoder";
 
+import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+
 describe("Comparison", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -44,32 +46,6 @@ describe("Comparison", async () => {
     };
   });
 
-  enum Comparison {
-    EQUAL = 0,
-    GREATER,
-    LESS,
-    ONE_OF,
-    SUBSET_OF,
-    MATCHES,
-    SOME,
-    EVERY,
-  }
-
-  enum Options {
-    NONE = 0,
-    SEND,
-    DELEGATE_CALL,
-    BOTH,
-  }
-
-  enum ParameterType {
-    Static,
-    Dynamic,
-    Dynamic32,
-    Tuple,
-    Array,
-  }
-
   it("checks an eq comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
@@ -102,13 +78,13 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
+          parent: 0,
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["uint256"], [123])],
-          path: [0],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(321)).to.be.revertedWith("ParameterNotAllowed()");
@@ -147,13 +123,13 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
-          path: [0],
+          parent: 0,
           _type: ParameterType.Static,
-          comp: Comparison.GREATER,
+          comp: Comparison.GreaterThan,
           compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(1233)).to.be.revertedWith("ParameterLessThanAllowed()");
@@ -167,13 +143,13 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
-          path: [0],
+          parent: 0,
           _type: ParameterType.Static,
-          comp: Comparison.LESS,
+          comp: Comparison.LessThan,
           compValues: [ethers.utils.solidityPack(["uint256"], [2345])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(2346)).to.be.revertedWith(
@@ -217,14 +193,21 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: false,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
           isScoped: true,
           _type: ParameterType.Dynamic,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
-          path: [1],
+          parent: 1,
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(false, "Some string")).to.not.reverted;
@@ -263,14 +246,14 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: ["0x"],
-          path: [0],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke("0x")).to.not.be.reverted;
@@ -309,16 +292,23 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: false,
+          _type: ParameterType.Dynamic,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic32,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1234", "0xabcd"]]),
           ],
-          path: [1],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     //longer
@@ -371,14 +361,14 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [[]],
-          path: [0],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke([])).to.not.be.reverted;
@@ -419,17 +409,17 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Static,
-          comp: Comparison.ONE_OF,
+          comp: Comparison.OneOf,
           compValues: [
             defaultAbiCoder.encode(["uint256"], [11]),
             defaultAbiCoder.encode(["uint256"], [22]),
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(11)).to.not.be.reverted;
@@ -468,10 +458,17 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: false,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 1,
           isScoped: true,
-          path: [1],
           _type: ParameterType.Dynamic,
-          comp: Comparison.ONE_OF,
+          comp: Comparison.OneOf,
           compValues: [
             ethers.utils.solidityPack(["string"], ["Hello World!"]),
             ethers.utils.solidityPack(["string"], ["Good Morning!"]),
@@ -479,7 +476,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(true, "Hello World!")).to.not.be.reverted;
@@ -523,17 +520,24 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: false,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 1,
           isScoped: true,
-          path: [1],
           _type: ParameterType.Dynamic32,
-          comp: Comparison.ONE_OF,
+          comp: Comparison.OneOf,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1111", "0x1111"]]),
             ethers.utils.solidityPack(["bytes2[]"], [["0xffff", "0xffff"]]),
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke("A", ["0x1111", "0x1111"])).to.not.be.reverted;
@@ -590,10 +594,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Dynamic32,
-          comp: Comparison.SUBSET_OF,
+          comp: Comparison.SubsetOf,
           compValues: [
             ethers.utils.solidityPack(
               ["bytes4[]"],
@@ -602,7 +606,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(["0x11112233", "0xaabbccdd"])).to.not.be.reverted;
@@ -639,10 +643,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Dynamic32,
-          comp: Comparison.SUBSET_OF,
+          comp: Comparison.SubsetOf,
           compValues: [
             ethers.utils.solidityPack(
               ["bytes4[]"],
@@ -651,7 +655,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke(["0xffddeecc", "0xaabbccdd", "0x11112233"])).to.not.be
@@ -689,10 +693,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Dynamic32,
-          comp: Comparison.SUBSET_OF,
+          comp: Comparison.SubsetOf,
           compValues: [
             ethers.utils.solidityPack(
               ["bytes4[]"],
@@ -701,7 +705,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke([])).to.be.revertedWith(
@@ -740,10 +744,10 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Dynamic32,
-          comp: Comparison.SUBSET_OF,
+          comp: Comparison.SubsetOf,
           compValues: [
             ethers.utils.solidityPack(
               ["bytes4[]"],
@@ -752,7 +756,7 @@ describe("Comparison", async () => {
           ],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(
@@ -791,35 +795,35 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
           isScoped: true,
-          path: [0],
           _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          comp: Comparison.Matches,
           compValues: [],
         },
         {
+          parent: 0,
           isScoped: true,
-          path: [0, 0],
           _type: ParameterType.Dynamic,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["bytes"], ["0xabcdef"])],
         },
         {
+          parent: 0,
           isScoped: true,
-          path: [0, 1],
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["uint256"], [1998])],
         },
         {
           isScoped: true,
-          path: [0, 2],
+          parent: 0,
           _type: ParameterType.Dynamic32,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["uint256[]"], [[7, 88, 99]])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(
@@ -870,34 +874,34 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
-          path: [0],
+          parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.EVERY,
+          comp: Comparison.Every,
           compValues: [],
         },
         {
           isScoped: true,
-          path: [0, 0],
+          parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          comp: Comparison.Matches,
           compValues: [],
         },
         {
           isScoped: true,
-          path: [0, 0, 0],
+          parent: 1,
           _type: ParameterType.Static,
-          comp: Comparison.LESS,
+          comp: Comparison.LessThan,
           compValues: [defaultAbiCoder.encode(["uint256"], [10000])],
         },
         {
           isScoped: true,
-          path: [0, 0, 1],
+          parent: 1,
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke([])).to.not.be.reverted;
@@ -952,34 +956,34 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
-          path: [0],
+          parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.SOME,
+          comp: Comparison.Some,
           compValues: [],
         },
         {
           isScoped: true,
-          path: [0, 0],
+          parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          comp: Comparison.Matches,
           compValues: [],
         },
         {
           isScoped: false,
-          path: [0, 0, 0],
+          parent: 1,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
           isScoped: true,
-          path: [0, 0, 1],
+          parent: 1,
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(invoke([])).to.be.reverted;
@@ -1027,55 +1031,79 @@ describe("Comparison", async () => {
       [
         {
           isScoped: true,
-          path: [0],
+          parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.MATCHES,
+          comp: Comparison.Matches,
           compValues: [],
         },
+        // tuple first
         {
           isScoped: true,
-          path: [0, 0],
+          parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // tuple second
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // tuple third
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
           compValues: [],
         },
         {
-          isScoped: true,
-          path: [0, 0, 1],
+          isScoped: false,
+          parent: 1,
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 1,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address1])],
         },
         {
-          isScoped: true,
-          path: [0, 1],
-          _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          isScoped: false,
+          parent: 2,
+          _type: ParameterType.Static,
+          comp: 0,
           compValues: [],
         },
         {
           isScoped: true,
-          path: [0, 1, 1],
+          parent: 2,
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
         },
         {
-          isScoped: true,
-          path: [0, 2],
-          _type: ParameterType.Tuple,
-          comp: Comparison.MATCHES,
+          isScoped: false,
+          parent: 3,
+          _type: ParameterType.Static,
+          comp: 0,
           compValues: [],
         },
         {
+          parent: 3,
           isScoped: true,
-          path: [0, 2, 1],
           _type: ParameterType.Static,
-          comp: Comparison.EQUAL,
+          comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address3])],
         },
       ],
-      Options.NONE
+      ExecutionOptions.None
     );
 
     await expect(
@@ -1130,7 +1158,7 @@ describe("Comparison", async () => {
 //         },
 //         UNSCOPED_PARAM,
 //       ],
-//       Options.NONE
+//       ExecutionOptions.None
 //     )
 //   ).to.be.revertedWith("NoCompValuesProvidedForScope");
 
@@ -1149,7 +1177,7 @@ describe("Comparison", async () => {
 //         },
 //         UNSCOPED_PARAM,
 //       ],
-//       Options.NONE
+//       ExecutionOptions.None
 //     )
 //   ).to.be.revertedWith("NotEnoughCompValuesForScope");
 
@@ -1171,7 +1199,7 @@ describe("Comparison", async () => {
 //         },
 //         UNSCOPED_PARAM,
 //       ],
-//       Options.NONE
+//       ExecutionOptions.None
 //     )
 //   ).to.not.be.reverted;
 
@@ -1193,7 +1221,7 @@ describe("Comparison", async () => {
 //         },
 //         UNSCOPED_PARAM,
 //       ],
-//       Options.NONE
+//       ExecutionOptions.None
 //     )
 //   ).to.be.revertedWith("TooManyCompValuesForScope");
 // });
