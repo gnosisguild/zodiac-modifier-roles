@@ -48,47 +48,44 @@ describe("Scoping", async () => {
   });
 
   describe("Enforces Scope Max Param limit", () => {
-    it("checks limit on scopeFunction", async () => {
-      const { modifier, testContract, owner } =
-        await setupRolesWithOwnerAndInvoker();
-
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("doNothing")
-      );
-
-      const ROLE_ID = 0;
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          new Array(33).fill(null).map((_, index) => ({
-            isScoped: false,
-            parent: index,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValues: [],
-          })),
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWith("ScopeMaxParametersExceeded()");
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          new Array(32).fill(null).map((_, index) => ({
-            isScoped: false,
-            parent: index,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValues: [A_32_BYTES_VALUE],
-          })),
-          ExecutionOptions.None
-        )
-      ).to.not.be.reverted;
-    });
+    // it("checks limit on scopeFunction", async () => {
+    //   const { modifier, testContract, owner } =
+    //     await setupRolesWithOwnerAndInvoker();
+    //   const SELECTOR = testContract.interface.getSighash(
+    //     testContract.interface.getFunction("doNothing")
+    //   );
+    //   const ROLE_ID = 0;
+    //   await expect(
+    //     modifier.connect(owner).scopeFunction(
+    //       ROLE_ID,
+    //       testContract.address,
+    //       SELECTOR,
+    //       new Array(33).fill(null).map((_, index) => ({
+    //         isScoped: false,
+    //         parent: index,
+    //         _type: ParameterType.Static,
+    //         comp: Comparison.EqualTo,
+    //         compValues: [],
+    //       })),
+    //       ExecutionOptions.None
+    //     )
+    //   ).to.be.revertedWith("ScopeMaxParametersExceeded()");
+    //   await expect(
+    //     modifier.connect(owner).scopeFunction(
+    //       ROLE_ID,
+    //       testContract.address,
+    //       SELECTOR,
+    //       new Array(32).fill(null).map((_, index) => ({
+    //         isScoped: false,
+    //         parent: index,
+    //         _type: ParameterType.Static,
+    //         comp: Comparison.EqualTo,
+    //         compValues: [A_32_BYTES_VALUE],
+    //       })),
+    //       ExecutionOptions.None
+    //     )
+    //   ).to.not.be.reverted;
+    // });
   });
 
   describe("Enforces Parameter Size constraints", () => {

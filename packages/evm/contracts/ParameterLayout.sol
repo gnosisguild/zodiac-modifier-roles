@@ -4,123 +4,51 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
+struct Bounds {
+    uint256 left;
+    uint256 right;
+}
+
 library ParameterLayout {
     error MalformedFlatParameter(uint256 index);
 
-    //
-
-    function flatToTree(
+    function rootBounds(
         ParameterConfigFlat[] memory configs
-    ) internal pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](_countRootNodes(configs));
-        uint256 length = result.length;
-        for (uint256 i; i < length; ++i) {
-            result[i] = pull(configs, i);
-        }
-    }
+    ) internal pure returns (Bounds memory bounds) {
+        bounds.left = 0;
 
-    function pull(
-        ParameterConfigFlat[] memory configs,
-        uint256 j
-    ) internal pure returns (ParameterConfig memory result) {
-        result.isScoped = configs[j].isScoped;
-        result._type = configs[j]._type;
-        result.comp = configs[j].comp;
-        if (result.isScoped) {
-            if (
-                result._type == ParameterType.Tuple ||
-                result._type == ParameterType.Array
-            ) {
-                result.children = pullChildren(configs, j);
-            } else {
-                result.compValues = _compress(configs[j]);
+        uint256 i;
+        while (i < configs.length && configs[i].parent == i) {
+            unchecked {
+                ++i;
             }
         }
-
-        return result;
+        bounds.right = i - 1;
+        assert(bounds.left <= bounds.right);
     }
 
-    function pullChildren(
+    function childrenBounds(
         ParameterConfigFlat[] memory configs,
-        uint256 j
-    ) internal pure returns (ParameterConfig[] memory result) {
-        uint256 count = _countChildren(configs, j);
-        if (count > 0) {
-            result = new ParameterConfig[](count);
-            uint256 insert;
-            for (uint256 i = j + 1; insert < count; i++) {
-                if (configs[i].parent == j) {
-                    result[insert++] = pull(configs, i);
-                }
-            }
-        }
-    }
-
-    function _countRootNodes(
-        ParameterConfigFlat[] memory configs
-    ) private pure returns (uint256 count) {
+        uint256 parent
+    ) internal pure returns (bool hasChildren, Bounds memory bounds) {
         uint256 length = configs.length;
-        for (uint256 i; i < length; ++i) {
-            if (configs[i].parent == i) {
-                count++;
+
+        uint256 i = parent + 1;
+        while (i < length && configs[i].parent != parent) {
+            unchecked {
+                ++i;
             }
         }
-    }
 
-    function _countChildren(
-        ParameterConfigFlat[] memory parameters,
-        uint256 i
-    ) private pure returns (uint256 count) {
-        uint256 length = parameters.length;
-        for (uint256 j = i + 1; j < length; ++j) {
-            if (parameters[j].parent == i) {
-                count++;
+        bounds.left = i;
+        hasChildren = bounds.left < length;
+
+        while (i < configs.length && configs[i].parent == parent) {
+            unchecked {
+                ++i;
             }
         }
-    }
-
-    function _compress(
-        ParameterConfigFlat memory config
-    ) private pure returns (bytes32[] memory) {
-        if (config.comp == Comparison.SubsetOf) {
-            assert(config.compValues.length == 1);
-            return _splitCompValue(config._type, config.compValues[0]);
-        } else {
-            return _compressCompValues(config._type, config.compValues);
-        }
-    }
-
-    function _compressCompValues(
-        ParameterType paramType,
-        bytes[] memory compValues
-    ) private pure returns (bytes32[] memory result) {
-        result = new bytes32[](compValues.length);
-        for (uint256 i; i < compValues.length; ++i) {
-            result[i] = paramType == ParameterType.Static
-                ? bytes32(compValues[i])
-                : keccak256(compValues[i]);
-        }
-    }
-
-    function _splitCompValue(
-        ParameterType paramType,
-        bytes memory compValue
-    ) private pure returns (bytes32[] memory) {
-        assert(paramType == ParameterType.Dynamic32);
-
-        uint256 length = compValue.length / 32;
-        bytes32[] memory result = new bytes32[](length);
-
-        uint256 offset = 32;
-        for (uint256 i; i < length; ++i) {
-            bytes32 chunk;
-            assembly {
-                chunk := mload(add(compValue, offset))
-            }
-            result[i] = chunk;
-            offset += 32;
-        }
-
-        return result;
+        bounds.right = i - 1;
+        assert(!hasChildren || bounds.left <= bounds.right);
     }
 }
