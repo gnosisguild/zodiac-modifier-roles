@@ -150,9 +150,11 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         _storeConfig(
             roles[roleId],
             key,
-            ParameterLayout.flatToTree(parameters),
-            options
+            parameters,
+            options,
+            ParameterLayout.rootBounds(parameters)
         );
+
         emit ScopeFunction(
             roleId,
             targetAddress,
@@ -165,22 +167,18 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
     function _storeConfig(
         Role storage role,
         bytes memory key,
-        ParameterConfig[] memory parameters,
-        ExecutionOptions options
+        ParameterConfigFlat[] memory parameters,
+        ExecutionOptions options,
+        Bounds memory bounds
     ) private {
-        if (parameters.length > SCOPE_MAX_PARAMS) {
-            revert ScopeMaxParametersExceeded();
-        }
+        uint256 length = bounds.right - bounds.left + 1;
+        uint256 scopeConfig = ScopeConfig.pack(0, options, false, length);
 
-        uint256 scopeConfig = ScopeConfig.pack(
-            0,
-            options,
-            false,
-            parameters.length
-        );
-        for (uint256 i; i < parameters.length; ++i) {
-            ParameterConfig memory parameter = parameters[i];
+        uint256 iActual = bounds.left;
+        for (uint256 i; i < length; ++i) {
+            ParameterConfigFlat memory parameter = parameters[iActual];
             if (!parameter.isScoped) {
+                ++iActual;
                 continue;
             }
 
@@ -194,15 +192,21 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
             bytes memory childKey = abi.encodePacked(key, uint8(i));
             if (_isNested(parameter._type)) {
-                _storeConfig(
-                    role,
-                    childKey,
-                    parameter.children,
-                    ExecutionOptions.None
-                );
+                (bool hasChildren, Bounds memory childBounds) = ParameterLayout
+                    .childrenBounds(parameters, iActual);
+
+                if (hasChildren)
+                    _storeConfig(
+                        role,
+                        childKey,
+                        parameters,
+                        ExecutionOptions.None,
+                        childBounds
+                    );
             } else {
-                role.compValues[keccak256(childKey)] = parameter.compValues;
+                role.compValues[keccak256(childKey)] = _compress(parameter);
             }
+            ++iActual;
         }
         role.functions[keccak256(key)] = scopeConfig;
     }
@@ -319,5 +323,50 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             paramType == ParameterType.Static ||
             paramType == ParameterType.Dynamic ||
             paramType == ParameterType.Dynamic32;
+    }
+
+    function _compress(
+        ParameterConfigFlat memory config
+    ) private pure returns (bytes32[] memory) {
+        if (config.comp == Comparison.SubsetOf) {
+            assert(config.compValues.length == 1);
+            return _splitCompValue(config._type, config.compValues[0]);
+        } else {
+            return _compressCompValues(config._type, config.compValues);
+        }
+    }
+
+    function _compressCompValues(
+        ParameterType paramType,
+        bytes[] memory compValues
+    ) private pure returns (bytes32[] memory result) {
+        result = new bytes32[](compValues.length);
+        for (uint256 i; i < compValues.length; ++i) {
+            result[i] = paramType == ParameterType.Static
+                ? bytes32(compValues[i])
+                : keccak256(compValues[i]);
+        }
+    }
+
+    function _splitCompValue(
+        ParameterType paramType,
+        bytes memory compValue
+    ) private pure returns (bytes32[] memory) {
+        assert(paramType == ParameterType.Dynamic32);
+
+        uint256 length = compValue.length / 32;
+        bytes32[] memory result = new bytes32[](length);
+
+        uint256 offset = 32;
+        for (uint256 i; i < length; ++i) {
+            bytes32 chunk;
+            assembly {
+                chunk := mload(add(compValue, offset))
+            }
+            result[i] = chunk;
+            offset += 32;
+        }
+
+        return result;
     }
 }

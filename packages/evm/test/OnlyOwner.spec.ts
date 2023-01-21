@@ -171,19 +171,7 @@ describe("OnlyOwner", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [],
-          OPTIONS_NONE
-        )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(janeDoe)
-        .scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [],
+          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValues: [] }],
           OPTIONS_NONE
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -195,7 +183,7 @@ describe("OnlyOwner", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [],
+          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValues: [] }],
           OPTIONS_NONE
         )
     ).to.not.be.reverted;
