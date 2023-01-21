@@ -76,7 +76,13 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .scopeFunction(ROLE_ID, AddressOne, "0x12345678", [], OPTIONS_NONE)
+        .scopeFunction(
+          ROLE_ID,
+          AddressOne,
+          "0x12345678",
+          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValues: [] }],
+          OPTIONS_NONE
+        )
     ).to.emit(modifier, "ScopeFunction");
   });
 });
