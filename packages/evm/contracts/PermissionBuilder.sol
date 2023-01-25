@@ -110,8 +110,10 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].functions[_key(targetAddress, selector)] = ScopeConfig
-            .pack(0, options, true, 0);
+        ScopeConfig.store(
+            roles[roleId].functions[_key(targetAddress, selector)],
+            ScopeConfig.createBuffer(0, true, options)
+        );
 
         emit AllowFunction(roleId, targetAddress, selector, options);
     }
@@ -125,7 +127,9 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleId].functions[_key(targetAddress, selector)];
+        ScopeConfig.prune(
+            roles[roleId].functions[_key(targetAddress, selector)]
+        );
         emit RevokeFunction(roleId, targetAddress, selector);
     }
 
@@ -141,18 +145,31 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
-        bytes memory key = abi.encodePacked(targetAddress, selector);
-
         for (uint256 i; i < parameters.length; ++i) {
             _enforceParameterConfig(parameters[i]);
         }
 
-        _storeConfig(
-            roles[roleId],
-            key,
-            parameters,
-            options,
-            ParameterLayout.rootBounds(parameters)
+        uint256 length = parameters.length;
+        BitmapBuffer memory buffer = ScopeConfig.createBuffer(
+            length,
+            false,
+            options
+        );
+
+        Role storage role = roles[roleId];
+        for (uint8 i; i < length; ++i) {
+            ParameterConfigFlat memory parameter = parameters[i];
+            ScopeConfig.packParameter(buffer, parameter, i);
+            if (parameter.isScoped && !_isNested(parameter._type)) {
+                role.compValues[_key(targetAddress, selector, i)] = _compress(
+                    parameter
+                );
+            }
+        }
+
+        ScopeConfig.store(
+            role.functions[_key(targetAddress, selector)],
+            buffer
         );
 
         emit ScopeFunction(
@@ -160,85 +177,8 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             targetAddress,
             selector,
             parameters,
-            options // TODO is there a need for the resulting scope config to be emitted?
+            options
         );
-    }
-
-    function _storeConfig(
-        Role storage role,
-        bytes memory key,
-        ParameterConfigFlat[] memory parameters,
-        ExecutionOptions options,
-        Bounds memory bounds
-    ) private {
-        uint256 length = bounds.right - bounds.left + 1;
-        uint256 scopeConfig = ScopeConfig.pack(0, options, false, length);
-
-        uint256 iActual = bounds.left;
-        for (uint256 i; i < length; ++i) {
-            ParameterConfigFlat memory parameter = parameters[iActual];
-            if (!parameter.isScoped) {
-                ++iActual;
-                continue;
-            }
-
-            scopeConfig = ScopeConfig.packParameter(
-                scopeConfig,
-                i,
-                parameter.isScoped,
-                parameter._type,
-                parameter.comp
-            );
-
-            bytes memory childKey = abi.encodePacked(key, uint8(i));
-            if (_isNested(parameter._type)) {
-                (bool hasChildren, Bounds memory childBounds) = ParameterLayout
-                    .childrenBounds(parameters, iActual);
-
-                if (hasChildren)
-                    _storeConfig(
-                        role,
-                        childKey,
-                        parameters,
-                        ExecutionOptions.None,
-                        childBounds
-                    );
-            } else {
-                role.compValues[keccak256(childKey)] = _compress(parameter);
-            }
-            ++iActual;
-        }
-        role.functions[keccak256(key)] = scopeConfig;
-    }
-
-    function _loadConfig(
-        Role storage role,
-        bytes memory key
-    ) internal view returns (ParameterConfig[] memory result) {
-        uint256 scopeConfig = role.functions[keccak256(key)];
-        (, , uint256 length) = ScopeConfig.unpack(scopeConfig);
-
-        result = new ParameterConfig[](length);
-        for (uint256 i; i < length; ++i) {
-            (
-                bool isScoped,
-                ParameterType paramType,
-                Comparison paramComp
-            ) = ScopeConfig.unpackParameter(scopeConfig, i);
-
-            result[i].isScoped = isScoped;
-            result[i]._type = paramType;
-            result[i].comp = paramComp;
-            if (!isScoped) {
-                continue;
-            }
-            bytes memory childKey = abi.encodePacked(key, uint8(i));
-            if (_isNested(paramType)) {
-                result[i].children = _loadConfig(role, childKey);
-            } else {
-                result[i].compValues = role.compValues[keccak256(childKey)];
-            }
-        }
     }
 
     function _enforceParameterConfig(
@@ -307,11 +247,67 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         }
     }
 
+    function _loadParameterConfig(
+        address targetAddress,
+        bytes4 selector,
+        Role storage role,
+        BitmapBuffer memory buffer,
+        Bounds memory bounds
+    ) internal view returns (ParameterConfig[] memory result) {
+        uint256 length = bounds.right - bounds.left + 1;
+        result = new ParameterConfig[](length);
+
+        for (uint256 iWrite; iWrite < length; ++iWrite) {
+            uint256 iRead = iWrite + bounds.left;
+            (
+                bool isScoped,
+                ParameterType paramType,
+                Comparison paramComp
+            ) = ScopeConfig.unpackParameter(buffer, iRead);
+
+            result[iWrite].isScoped = isScoped;
+            result[iWrite]._type = paramType;
+            result[iWrite].comp = paramComp;
+            if (!isScoped) {
+                continue;
+            }
+
+            if (_isNested(paramType)) {
+                (
+                    bool hasChildren,
+                    Bounds memory childrenBounds
+                ) = ParameterLayout.childrenBounds(buffer, iRead);
+
+                if (hasChildren) {
+                    result[iWrite].children = _loadParameterConfig(
+                        targetAddress,
+                        selector,
+                        role,
+                        buffer,
+                        childrenBounds
+                    );
+                }
+            } else {
+                result[iWrite].compValues = role.compValues[
+                    _key(targetAddress, selector, uint8(iRead))
+                ];
+            }
+        }
+    }
+
     function _key(
         address targetAddress,
         bytes4 selector
     ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(targetAddress, selector));
+        return bytes32(abi.encodePacked(targetAddress, selector));
+    }
+
+    function _key(
+        address targetAddress,
+        bytes4 selector,
+        uint8 index
+    ) internal pure returns (bytes32) {
+        return bytes32(abi.encodePacked(targetAddress, selector, index));
     }
 
     function _isNested(ParameterType _type) private pure returns (bool) {

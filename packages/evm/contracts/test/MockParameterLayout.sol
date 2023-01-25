@@ -5,15 +5,15 @@ import "../ParameterLayout.sol";
 
 contract MockParameterLayout {
     function rootBounds(
-        ParameterConfigFlat[] memory configs
+        BitmapBuffer memory buffer
     ) external pure returns (Bounds memory bounds) {
-        return ParameterLayout.rootBounds(configs);
+        return ParameterLayout.rootBounds(buffer);
     }
 
     function childrenBounds(
-        ParameterConfigFlat[] memory configs,
+        BitmapBuffer memory buffer,
         uint256 parent
     ) external pure returns (bool hasChildren, Bounds memory bounds) {
-        return ParameterLayout.childrenBounds(configs, parent);
+        return ParameterLayout.childrenBounds(buffer, parent);
     }
 }

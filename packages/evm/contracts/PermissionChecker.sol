@@ -148,16 +148,17 @@ abstract contract PermissionChecker is PermissionBuilder {
             return checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
             Role storage role = roles[roleId];
-            uint256 scopeConfig = role.functions[
-                _key(targetAddress, bytes4(data))
-            ];
 
-            if (scopeConfig == 0) {
+            BitmapBuffer memory buffer = ScopeConfig.load(
+                role.functions[_key(targetAddress, bytes4(data))]
+            );
+
+            if (buffer.payload[0] == 0) {
                 return Status.FunctionNotAllowed;
             }
 
-            (ExecutionOptions options, bool isWildcarded, ) = ScopeConfig
-                .unpack(scopeConfig);
+            (, bool isWildcarded, ExecutionOptions options) = ScopeConfig
+                .unpackHeader(buffer);
 
             Status status = checkExecutionOptions(value, operation, options);
             if (status != Status.Ok) {
@@ -167,7 +168,7 @@ abstract contract PermissionChecker is PermissionBuilder {
             return
                 isWildcarded == true
                     ? Status.Ok
-                    : checkParameters(role, targetAddress, data);
+                    : checkParameters(role, targetAddress, data, buffer);
         } else {
             assert(target.clearance == Clearance.None);
             return Status.TargetAddressNotAllowed;
@@ -209,11 +210,17 @@ abstract contract PermissionChecker is PermissionBuilder {
     function checkParameters(
         Role storage role,
         address targetAddress,
-        bytes memory data
+        bytes memory data,
+        BitmapBuffer memory buffer
     ) internal view returns (Status) {
-        bytes memory key = abi.encodePacked(targetAddress, bytes4(data));
+        ParameterConfig[] memory parameters = _loadParameterConfig(
+            targetAddress,
+            bytes4(data),
+            role,
+            buffer,
+            ParameterLayout.rootBounds(buffer)
+        );
 
-        ParameterConfig[] memory parameters = _loadConfig(role, key);
         ParameterPayload[] memory payloads = Decoder.pluckParameters(
             data,
             parameters

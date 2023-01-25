@@ -1,5 +1,3 @@
-import assert from "assert";
-
 import { AddressZero } from "@ethersproject/constants";
 import { Contract, utils, BigNumber } from "ethers";
 
@@ -146,46 +144,4 @@ export enum ExecutionOptions {
   Send,
   DelegateCall,
   Both,
-}
-
-// the helper structure
-type ParameterConfigTree = {
-  isScoped: boolean;
-  _type: ParameterType;
-  comp: Comparison;
-  compValues: string[];
-  children: ParameterConfigTree[];
-  parent?: ParameterConfigTree | null;
-};
-
-// the actual contract representation
-type ParameterConfig = {
-  isScoped: boolean;
-  parent: number;
-  _type: ParameterType;
-  comp: Comparison;
-  compValues: string[];
-};
-
-export function flattenParameterConfig(
-  parameters: ParameterConfigTree[]
-): ParameterConfig[] {
-  const flat = flatten(parameters, null);
-
-  return flat.map(({ children, parent, ...rest }, index) => {
-    assert(children);
-    const parentIndex = parent == null ? index : flat.indexOf(parent);
-    assert(parentIndex !== -1);
-    return { ...rest, parent: parentIndex };
-  });
-}
-
-function flatten(
-  parameters: ParameterConfigTree[],
-  parent: ParameterConfigTree | null
-): ParameterConfigTree[] {
-  const first = parameters.map((p) => ({ ...p, parent }));
-  const second = first.map((p) => flatten(p.children, p)).flat();
-
-  return [...first, ...second];
 }
