@@ -4,134 +4,161 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./Types.sol";
 
 library ScopeConfig {
-    uint256 private constant MASK_LEFT =
-        0xffff000000000000000000000000000000000000000000000000000000000000;
-    uint256 private constant MASK_OPTIONS =
-        0xc000000000000000000000000000000000000000000000000000000000000000;
-    uint256 private constant MASK_WILDCARDED =
-        0x2000000000000000000000000000000000000000000000000000000000000000;
-    uint256 private constant MASK_LENGTH =
-        0x00ff000000000000000000000000000000000000000000000000000000000000;
+    // HEADER
+    // 8   bits -> length
+    // 2   bits -> options
+    // 1   bits -> isWildcarded
+    // 5   bits -> unused
+    uint256 private constant offsetLength = 248;
+    uint256 private constant offsetOptions = 246;
+    uint256 private constant offsetIsWildcarded = 245;
+    uint256 private constant maskLength = 0xff << offsetLength;
+    uint256 private constant maskOptions = 0x03 << offsetOptions;
+    uint256 private constant maskIsWildcarded = 0x01 << offsetIsWildcarded;
+    // PARAMETER:
+    // parent     -> 8 bit
+    // isScoped   -> 1 bit
+    // paramType  -> 4 bits
+    // paramComp  -> 3 bits
+    uint256 private constant offsetParent = 8;
+    uint256 private constant offsetIsScoped = 7;
+    uint256 private constant offsetParamType = 3;
+    uint256 private constant offsetParamComp = 0;
+    uint256 private constant maskIsScoped = 0x01 << offsetIsScoped;
+    uint256 private constant maskParameter = 0xffff;
+    // sizes in bits
+    // both header and parameter ought to be equal
+    uint256 private constant chunkSize = 16;
+    uint256 private constant pageCapacity = 256 / chunkSize;
 
-    function pack(
-        uint256 scopeConfig,
-        ExecutionOptions options,
-        bool isWildcarded,
-        uint256 length
-    ) internal pure returns (uint256) {
-        // LEFT SIDE
-        // 2   bits -> options
-        // 1   bits -> isWildcarded
-        // 5   bits -> unused
-        // 8   bits -> length
-        // RIGHT SIDE
-        // 32  bits -> isScoped
-        // 114  bits -> paramType (3 bits per entry 32*3)
-        // 114 bits -> paramComp (3 bits per entry 32*3)
-
-        // Wipe the LEFT SIDE clean. Start from there
-        scopeConfig = scopeConfig & ~MASK_LEFT;
-
-        // set options -> 256 - 2 = 254
-        scopeConfig |= uint256(options) << 254;
-
-        // set isWildcarded -> 256 - 2 - 1 = 253
-        if (isWildcarded) {
-            scopeConfig |= 1 << 253;
+    function store(Bitmap storage bitmap, BitmapBuffer memory buffer) internal {
+        uint256 length = buffer.payload.length;
+        for (uint256 i = 0; i < length; ++i) {
+            bitmap.payload[i] = buffer.payload[i];
         }
+    }
 
-        // set Length -> 256 - 16 = 240
-        scopeConfig |= length << 240;
+    function prune(Bitmap storage bitmap) internal {
+        uint256 header = bitmap.payload[0];
+        uint256 length = (header & maskLength) >> offsetLength;
+        uint256 pageCount = _pageCount(length);
+        for (uint256 i = 0; i < pageCount; ++i) {
+            delete bitmap.payload[i];
+        }
+    }
 
-        return scopeConfig;
+    function load(
+        Bitmap storage bitmap
+    ) internal view returns (BitmapBuffer memory buffer) {
+        uint256 header = bitmap.payload[0];
+        uint256 length = (header & maskLength) >> offsetLength;
+        uint256 pageCount = _pageCount(length);
+
+        buffer.payload = new uint256[](pageCount);
+        // save 100 gas by not repeating a storage read
+        buffer.payload[0] = header;
+        for (uint256 i = 1; i < pageCount; ++i) {
+            buffer.payload[i] = bitmap.payload[i];
+        }
+    }
+
+    function createBuffer(
+        uint256 length,
+        bool isWildcarded,
+        ExecutionOptions options
+    ) internal pure returns (BitmapBuffer memory buffer) {
+        uint256 header = length << offsetLength;
+        if (isWildcarded) {
+            header |= maskIsWildcarded;
+        }
+        header |= uint256(options) << offsetOptions;
+
+        buffer.payload = new uint256[](_pageCount(length));
+        buffer.payload[0] = header;
     }
 
     function packParameter(
-        uint256 scopeConfig,
-        uint256 index,
-        bool isScoped,
-        ParameterType paramType,
-        Comparison paramComp
-    ) internal pure returns (uint256) {
-        (
-            uint256 isScopedOffset,
-            uint256 typeOffset,
-            uint256 compOffset
-        ) = _offsets(index);
+        BitmapBuffer memory buffer,
+        ParameterConfigFlat memory parameter,
+        uint8 index
+    ) internal pure {
+        (uint256 page, uint256 offset) = _parameterOffset(index);
+        uint256 bits = _parameterBits(parameter) << offset;
+        uint256 mask = maskParameter << offset;
 
-        uint256 isScopedMask = 1 << isScopedOffset;
-        uint256 typeMask = 7 << typeOffset;
-        uint256 compMask = 7 << compOffset;
-
-        if (isScoped) {
-            scopeConfig |= isScopedMask;
-        } else {
-            scopeConfig &= ~isScopedMask;
-        }
-
-        scopeConfig &= ~typeMask;
-        scopeConfig |= uint256(paramType) << typeOffset;
-
-        scopeConfig &= ~compMask;
-        scopeConfig |= uint256(paramComp) << compOffset;
-
-        return scopeConfig;
+        buffer.payload[page] = (buffer.payload[page] & ~mask) | bits;
     }
 
-    function unpack(
-        uint256 scopeConfig
+    function unpackHeader(
+        uint256 header
     )
         internal
         pure
-        returns (ExecutionOptions options, bool isWildcarded, uint256 length)
+        returns (uint256 length, bool isWildcarded, ExecutionOptions options)
     {
-        options = ExecutionOptions(scopeConfig >> 254);
-        isWildcarded = scopeConfig & MASK_WILDCARDED != 0;
-        length = (scopeConfig & MASK_LENGTH) >> 240;
+        length = (header & maskLength) >> offsetLength;
+        isWildcarded = header & maskIsWildcarded != 0;
+        options = ExecutionOptions((header & maskOptions) >> offsetOptions);
+    }
+
+    function unpackHeader(
+        BitmapBuffer memory buffer
+    ) internal pure returns (uint256, bool, ExecutionOptions) {
+        return unpackHeader(buffer.payload[0]);
     }
 
     function unpackParameter(
-        uint256 scopeConfig,
+        BitmapBuffer memory buffer,
         uint256 index
     )
         internal
         pure
         returns (bool isScoped, ParameterType paramType, Comparison paramComp)
     {
-        (
-            uint256 isScopedOffset,
-            uint256 typeOffset,
-            uint256 compOffset
-        ) = _offsets(index);
+        (uint256 page, uint256 offset) = _parameterOffset(index);
+        uint256 bits = (buffer.payload[page] >> offset) & maskParameter;
 
-        uint256 isScopedMask = 1 << isScopedOffset;
-        uint256 typeMask = 7 << typeOffset;
-        uint256 compMask = 7 << compOffset;
-
-        isScoped = (scopeConfig & isScopedMask) != 0;
-        paramType = ParameterType((scopeConfig & typeMask) >> typeOffset);
-        paramComp = Comparison((scopeConfig & compMask) >> compOffset);
+        isScoped = (bits & (1 << 7)) != 0;
+        paramType = ParameterType((bits >> 3) & 0xf);
+        paramComp = Comparison(bits & 0x7);
     }
 
-    function _offsets(
+    function unpackParent(
+        BitmapBuffer memory buffer,
         uint256 index
-    )
-        private
-        pure
-        returns (uint256 isScopedOffset, uint256 typeOffset, uint256 compOffset)
-    {
-        // LEFT SIDE
-        // 2   bits -> options
-        // 1   bits -> isWildcarded
-        // 5   bits -> unused
-        // 8   bits -> length
-        // RIGHT SIDE
-        // 32  bits -> isScoped
-        // 96  bits -> paramType (3 bits per entry 32*3)
-        // 96  bits -> paramComp (3 bits per entry 32*3)
+    ) internal pure returns (uint8 parent) {
+        (uint256 page, uint256 offset) = _parameterOffset(index);
+        uint256 bits = (buffer.payload[page] >> offset) & maskParameter;
 
-        isScopedOffset = index + 96 + 96;
-        typeOffset = index * 3 + 96;
-        compOffset = index * 3;
+        parent = uint8(bits >> offsetParent);
+    }
+
+    function _parameterOffset(
+        uint256 index
+    ) internal pure returns (uint256 page, uint256 offset) {
+        unchecked {
+            // jump over the header
+            ++index;
+        }
+
+        page = index / pageCapacity;
+        offset = 256 - ((index % pageCapacity) + 1) * chunkSize;
+    }
+
+    function _parameterBits(
+        ParameterConfigFlat memory parameter
+    ) internal pure returns (uint256 bits) {
+        bits = uint256(parameter.parent) << offsetParent;
+        if (parameter.isScoped) {
+            bits |= maskIsScoped;
+        }
+        bits |= uint256(parameter._type) << offsetParamType;
+        bits |= uint256(parameter.comp);
+    }
+
+    function _pageCount(
+        uint256 length
+    ) internal pure returns (uint256 pageCount) {
+        return ((length * chunkSize) / 256) + 1;
     }
 }

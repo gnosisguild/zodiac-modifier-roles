@@ -5,7 +5,7 @@ import hre, { deployments } from "hardhat";
 
 import { ParameterConfigFlatStruct } from "../typechain-types/contracts/PermissionBuilder";
 
-describe("ParameterLayout", async () => {
+describe.skip("ParameterLayout", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 

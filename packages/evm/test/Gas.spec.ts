@@ -1,5 +1,4 @@
 import "@nomiclabs/hardhat-ethers";
-import { hexlify, keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
 describe.skip("Gas", async () => {
@@ -17,25 +16,24 @@ describe.skip("Gas", async () => {
   it("map insertion", async () => {
     const { testGas } = await setup();
 
-    const call1 = await testGas.insertBytes("0xabf019234aa333", 123456789);
+    const call1 = await testGas.insert();
     const receipts1 = await call1.wait();
-    console.log("insertBytes: ", receipts1.cumulativeGasUsed.toNumber());
+    console.log("insert: ", receipts1.cumulativeGasUsed.toNumber());
 
-    const now = Date.now();
-    const key = keccak256(hexlify(toUtf8Bytes(String(now))));
-
-    const call2 = await testGas.insertBytes32(key, 123456789);
+    const call2 = await testGas.read1();
     const receipts2 = await call2.wait();
-    console.log("insertBytes32: ", receipts2.cumulativeGasUsed.toNumber());
+    console.log("read1:  ", receipts2.cumulativeGasUsed.toNumber());
 
-    const call3 = await testGas.insertHashAndBytes32(
-      "0xabf019234aa444",
-      123456789
-    );
+    const call3 = await testGas.read2();
     const receipts3 = await call3.wait();
-    console.log(
-      "insertHashAndBytes32: ",
-      receipts3.cumulativeGasUsed.toNumber()
-    );
+    console.log("read2:  ", receipts3.cumulativeGasUsed.toNumber());
+
+    // const call4 = await testGas.read3();
+    // const receipts4 = await call4.wait();
+    // console.log("read3:  ", receipts4.cumulativeGasUsed.toNumber());
+
+    // const call5 = await testGas.read4();
+    // const receipts5 = await call5.wait();
+    // console.log("read4:  ", receipts5.cumulativeGasUsed.toNumber());
   });
 });

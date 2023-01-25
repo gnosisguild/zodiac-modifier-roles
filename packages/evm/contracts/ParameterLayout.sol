@@ -10,15 +10,12 @@ struct Bounds {
 }
 
 library ParameterLayout {
-    error MalformedFlatParameter(uint256 index);
-
     function rootBounds(
-        ParameterConfigFlat[] memory configs
+        BitmapBuffer memory scopeConfig
     ) internal pure returns (Bounds memory bounds) {
-        bounds.left = 0;
-
+        (uint256 length, , ) = ScopeConfig.unpackHeader(scopeConfig);
         uint256 i;
-        while (i < configs.length && configs[i].parent == i) {
+        while (i < length && ScopeConfig.unpackParent(scopeConfig, i) == i) {
             unchecked {
                 ++i;
             }
@@ -28,27 +25,32 @@ library ParameterLayout {
     }
 
     function childrenBounds(
-        ParameterConfigFlat[] memory configs,
+        BitmapBuffer memory scopeConfig,
         uint256 parent
     ) internal pure returns (bool hasChildren, Bounds memory bounds) {
-        uint256 length = configs.length;
+        (uint256 length, , ) = ScopeConfig.unpackHeader(scopeConfig);
 
         uint256 i = parent + 1;
-        while (i < length && configs[i].parent != parent) {
+        while (
+            i < length && ScopeConfig.unpackParent(scopeConfig, i) != parent
+        ) {
             unchecked {
                 ++i;
             }
         }
-
         bounds.left = i;
         hasChildren = bounds.left < length;
 
-        while (i < configs.length && configs[i].parent == parent) {
-            unchecked {
-                ++i;
+        if (hasChildren) {
+            while (
+                i < length && ScopeConfig.unpackParent(scopeConfig, i) == parent
+            ) {
+                unchecked {
+                    ++i;
+                }
             }
+            bounds.right = i - 1;
+            assert(bounds.left <= bounds.right);
         }
-        bounds.right = i - 1;
-        assert(!hasChildren || bounds.left <= bounds.right);
     }
 }
