@@ -193,17 +193,15 @@ const preset: RolePreset = {
     //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
     //by another address calling the refundETH function
 
-    //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
-    /*
+    //Increasing liquidity: NFT ID 424810 was created in transaction with hash 0x2995ba040fe1b07978428ca118d9701b5114ec7e2d3ac00f2b4df0f5747dc42e
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
       params: {
-        [0]: staticEqual(XXXXX, "uint256"),
+        [0]: staticEqual(424810, "uint256"),
       },
     },
-    */
 
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
     //allowing for the depositing of WETH.
@@ -591,11 +589,11 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of COMP, LDO, WETH, CRV, BAL for USDC, DAI and WETH in SushiSwap
+    //Swapping of COMP, BAL, LDO, CRV, WETH, USDC, USDT and DAI in SushiSwap
     //---------------------------------------------------------------------------------------------------------------------------------
 
     /* ...allowErc20Approve(
-      [COMP, BAL, LDO, CRV, WETH, USDC, DAI, USDT],
+      [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
       [SUSHISWAP_ROUTER]
     ), */
 
