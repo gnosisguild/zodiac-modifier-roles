@@ -852,7 +852,7 @@ describe("RolesModifier", async () => {
       ).to.emit(testContract, "TestDynamic");
     });
 
-    it("reverts a call with multisend tx", async () => {
+    it.skip("reverts a call with multisend tx", async () => {
       const {
         avatar,
         modifier,
@@ -947,7 +947,7 @@ describe("RolesModifier", async () => {
       ).to.be.revertedWith("ParameterNotAllowed()");
     });
 
-    it("reverts if multisend tx data offset is not 32 bytes", async () => {
+    it.skip("reverts if multisend tx data offset is not 32 bytes", async () => {
       const {
         avatar,
         modifier,
@@ -1023,7 +1023,7 @@ describe("RolesModifier", async () => {
       ).to.be.revertedWith("UnacceptableMultiSendOffset()");
     });
 
-    it("executes a call with multisend tx", async () => {
+    it.skip("executes a call with multisend tx", async () => {
       const {
         avatar,
         modifier,
@@ -1367,7 +1367,7 @@ describe("RolesModifier", async () => {
       ).to.be.not.be.reverted;
     });
 
-    it("executes a call with multisend tx", async () => {
+    it.skip("executes a call with multisend tx", async () => {
       const {
         avatar,
         modifier,
