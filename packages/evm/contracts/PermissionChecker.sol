@@ -65,12 +65,12 @@ abstract contract PermissionChecker is PermissionBuilder {
             revert NoMembership();
         }
 
-        Status status;
-        if (multisend == to) {
-            status = checkMultisendTransaction(roleId, data);
-        } else {
-            status = checkTransaction(roleId, to, value, data, operation);
-        }
+        Status status = checkTransaction(roleId, to, value, data, operation);
+        // if (multisend == to) {
+        //     status = checkMultisendTransaction(roleId, data);
+        // } else {
+        //     status = checkTransaction(roleId, to, value, data, operation);
+        // }
         if (status != Status.Ok) {
             revertWith(status);
         }
@@ -116,10 +116,10 @@ abstract contract PermissionChecker is PermissionBuilder {
                 // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
                 out := add(data, add(i, 0x35))
             }
-            Status status = checkTransaction(roleId, to, value, out, operation);
-            if (status != Status.Ok) {
-                return status;
-            }
+            // Status status = checkTransaction(roleId, to, value, out, operation);
+            // if (status != Status.Ok) {
+            //     return status;
+            // }
         }
         return Status.Ok;
     }
