@@ -252,46 +252,40 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         Role storage role,
         BitmapBuffer memory buffer,
-        Bounds memory bounds
-    ) internal view returns (ParameterConfig[] memory result) {
-        uint256 length = bounds.right - bounds.left + 1;
-        result = new ParameterConfig[](length);
+        uint256 i
+    ) internal view returns (ParameterConfig memory result) {
+        (
+            bool isScoped,
+            ParameterType paramType,
+            Comparison paramComp
+        ) = ScopeConfig.unpackParameter(buffer, i);
 
-        for (uint256 iWrite; iWrite < length; ++iWrite) {
-            uint256 iRead = iWrite + bounds.left;
-            (
-                bool isScoped,
-                ParameterType paramType,
-                Comparison paramComp
-            ) = ScopeConfig.unpackParameter(buffer, iRead);
+        result.isScoped = isScoped;
+        result._type = paramType;
+        result.comp = paramComp;
 
-            result[iWrite].isScoped = isScoped;
-            result[iWrite]._type = paramType;
-            result[iWrite].comp = paramComp;
-            if (!isScoped) {
-                continue;
-            }
+        if (_isNested(paramType)) {
+            (uint256 left, uint256 right) = ParameterLayout.childrenBounds(
+                buffer,
+                i
+            );
 
-            if (_isNested(paramType)) {
-                (
-                    bool hasChildren,
-                    Bounds memory childrenBounds
-                ) = ParameterLayout.childrenBounds(buffer, iRead);
-
-                if (hasChildren) {
-                    result[iWrite].children = _loadParameterConfig(
+            if (left <= right) {
+                result.children = new ParameterConfig[](right - left + 1);
+                for (uint256 j = left; j <= right; j++) {
+                    result.children[j - left] = _loadParameterConfig(
                         targetAddress,
                         selector,
                         role,
                         buffer,
-                        childrenBounds
+                        j
                     );
                 }
-            } else {
-                result[iWrite].compValues = role.compValues[
-                    _key(targetAddress, selector, uint8(iRead))
-                ];
             }
+        } else {
+            result.compValues = role.compValues[
+                _key(targetAddress, selector, uint8(i))
+            ];
         }
     }
 

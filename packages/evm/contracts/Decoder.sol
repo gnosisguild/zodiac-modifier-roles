@@ -8,8 +8,8 @@ library Decoder {
 
     function pluckParameters(
         bytes calldata data,
-        ParameterConfig[] memory parameters
-    ) internal pure returns (ParameterPayload[] memory result) {
+        ParameterConfig memory parameter
+    ) internal pure returns (ParameterPayload memory result) {
         /*
          * In the parameter encoding area, there is a region called the head
          * that is divided into 32-byte chunks. Each parameter has its own
@@ -18,8 +18,10 @@ library Decoder {
          * - Dynamic parameters have an offset to the tail, which is the start
          *   of the actual encoding for the dynamic parameter. Note that the
          *   offset does not include the 4-byte function signature."
+         *
+         * The encoding of the paremeter encoding area is equivalent to a Tuple
          */
-        return _carveParts(data, 4, parameters);
+        return _carveTuple(data, 4, parameter);
     }
 
     function _carve(
@@ -70,21 +72,14 @@ library Decoder {
         uint256 offset,
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        result.children = _carveParts(data, offset, parameter.children);
-    }
-
-    function _carveParts(
-        bytes calldata data,
-        uint256 offset,
-        ParameterConfig[] memory parts
-    ) private pure returns (ParameterPayload[] memory result) {
-        result = new ParameterPayload[](parts.length);
+        ParameterConfig[] memory parts = parameter.children;
+        result.children = new ParameterPayload[](parts.length);
 
         uint256 shift;
         for (uint256 i; i < parts.length; ++i) {
             bool isInline = _isStatic(parts[i]);
             if (parts[i].isScoped) {
-                result[i] = _carve(
+                result.children[i] = _carve(
                     data,
                     _headOrTailOffset(data, offset, shift, isInline),
                     parts[i]
@@ -119,9 +114,6 @@ library Decoder {
             }
             return true;
         } else {
-            // Dynamic
-            // Dynamic32
-            // Array
             return false;
         }
     }
