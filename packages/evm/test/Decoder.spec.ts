@@ -49,21 +49,33 @@ describe("Decoder library", async () => {
       );
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+        {
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
+          comp: 0,
+          children: [],
+        },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data, layout);
 
-    expect(result[0]._static).to.equal(
+    expect(result.children[0]._static).to.equal(
       defaultAbiCoder.encode(["address"], [AddressOne])
     );
-    expect(result[1].dynamic).to.equal(solidityPack(["bytes"], ["0xabcd"]));
-    expect(result[1].dynamic).to.equal("0xabcd");
+    expect(result.children[1].dynamic).to.equal(
+      solidityPack(["bytes"], ["0xabcd"])
+    );
+    expect(result.children[1].dynamic).to.equal("0xabcd");
     expect(
-      result[2].dynamic32.map((s) => BigNumber.from(s).toNumber())
+      result.children[2].dynamic32.map((s) => BigNumber.from(s).toNumber())
     ).to.deep.equal([10, 32, 55]);
   });
 
@@ -81,18 +93,30 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+        {
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
+          comp: 0,
+          children: [],
+        },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data, layout);
-    expect(result[0].dynamic).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
-    expect(result[1]._static).to.equal(
+    expect(result.children[0].dynamic).to.equal(
+      solidityPack(["bytes"], ["0x12ab45"])
+    );
+    expect(result.children[1]._static).to.equal(
       defaultAbiCoder.encode(["bool"], [false])
     );
-    expect(result[2].dynamic32).to.deep.equal([
+    expect(result.children[2].dynamic32).to.deep.equal([
       defaultAbiCoder.encode(["bytes2"], ["0x1122"]),
       defaultAbiCoder.encode(["bytes2"], ["0x3344"]),
       defaultAbiCoder.encode(["bytes2"], ["0x5566"]),
@@ -113,20 +137,32 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Dynamic32, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
+          comp: 0,
+          children: [],
+        },
+        { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data, layout);
-    expect(result[0].dynamic32).to.deep.equal([
+    expect(result.children[0].dynamic32).to.deep.equal([
       "0xaabb000000000000000000000000000000000000000000000000000000000000",
       "0x1234000000000000000000000000000000000000000000000000000000000000",
       "0xff33000000000000000000000000000000000000000000000000000000000000",
     ]);
-    expect(result[1].dynamic).to.equal(hexlify(toUtf8Bytes("Hello World!")));
-    expect(result[2]._static).to.equal(BigNumber.from(123456789));
+    expect(result.children[1].dynamic).to.equal(
+      hexlify(toUtf8Bytes("Hello World!"))
+    );
+    expect(result.children[2]._static).to.equal(BigNumber.from(123456789));
   });
 
   it("pluck fails if calldata is too short", async () => {
@@ -138,9 +174,14 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
 
     await expect(decoder.pluckParameters(data, layout)).to.not.be.reverted;
 
@@ -158,10 +199,15 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
 
     await expect(decoder.pluckParameters(data, layout)).to.be.revertedWith(
       "CalldataOutOfBounds()"
@@ -178,37 +224,44 @@ describe("Decoder library", async () => {
       dynamic32: [1, 2, 3],
     });
 
-    const result = await decoder.pluckParameters(data as string, [
-      {
-        isScoped: true,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Dynamic32,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-    ]);
+    const result = await decoder.pluckParameters(data as string, {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Dynamic32,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+      ],
+    });
 
-    expect(result[0].children[0].dynamic).to.equal("0xabcd");
-    expect(result[0].children[1]._static).to.equal(BigNumber.from(100));
-    expect(result[0].children[2].dynamic32).to.deep.equal([
+    expect(result.children[0].children[0].dynamic).to.equal("0xabcd");
+    expect(result.children[0].children[1]._static).to.equal(
+      BigNumber.from(100)
+    );
+    expect(result.children[0].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000001",
       "0x0000000000000000000000000000000000000000000000000000000000000002",
       "0x0000000000000000000000000000000000000000000000000000000000000003",
@@ -226,34 +279,42 @@ describe("Decoder library", async () => {
       2000
     );
 
-    const result = await decoder.pluckParameters(data as string, [
-      {
-        isScoped: true,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ]);
+    const result = await decoder.pluckParameters(data as string, {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    });
 
-    expect(result[0].children[0]._static).to.equal(BigNumber.from(1999));
-    expect(result[0].children[1]._static).to.equal(
+    expect(result.children[0].children[0]._static).to.equal(
+      BigNumber.from(1999)
+    );
+    expect(result.children[0].children[1]._static).to.equal(
       "0x0000000000000000000000000000000000000000000000000000000000000001"
     );
-    expect(result[1]._static).to.deep.equal(BigNumber.from(2000));
+
+    expect(result.children[1]._static).to.deep.equal(BigNumber.from(2000));
   });
 
   it("plucks staticTuple (implicitly) from encoded calldata", async () => {
@@ -267,17 +328,22 @@ describe("Decoder library", async () => {
       2000
     );
 
-    const result = await decoder.pluckParameters(data as string, [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ]);
+    const result = await decoder.pluckParameters(data as string, {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+        { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    });
 
-    expect(result[0]._static).to.equal(BigNumber.from(1999));
-    expect(result[1]._static).to.deep.equal(
+    expect(result.children[0]._static).to.equal(BigNumber.from(1999));
+    expect(result.children[1]._static).to.deep.equal(
       "0x0000000000000000000000000000000000000000000000000000000000000001"
     );
-    expect(result[2]._static).to.equal(BigNumber.from(2000));
+    expect(result.children[2]._static).to.equal(BigNumber.from(2000));
   });
 
   it("plucks DynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
@@ -294,55 +360,62 @@ describe("Decoder library", async () => {
         },
       });
 
-    const layout = [
-      {
-        isScoped: true,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data as string, layout);
 
-    expect(result[0].children[0]._static).to.equal(BigNumber.from(2023));
-    expect(result[0].children[1].dynamic).to.equal("0xbadfed");
-    expect(result[0].children[2].children[0]._static).to.equal(
+    expect(result.children[0].children[0]._static).to.equal(
+      BigNumber.from(2023)
+    );
+    expect(result.children[0].children[1].dynamic).to.equal("0xbadfed");
+    expect(result.children[0].children[2].children[0]._static).to.equal(
       BigNumber.from(2020)
     );
-    expect(result[0].children[2].children[1]._static).to.equal(
+    expect(result.children[0].children[2].children[1]._static).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
   });
@@ -365,90 +438,99 @@ describe("Decoder library", async () => {
         },
       });
 
-    const layout = [
-      {
-        isScoped: true,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Dynamic,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Dynamic32,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Dynamic,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Dynamic32,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data as string, layout);
 
-    expect(result[0].children[0].dynamic).to.equal("0xbadfed");
+    expect(result.children[0].children[0].dynamic).to.equal("0xbadfed");
 
-    expect(result[0].children[1].children[0]._static).to.equal(
+    expect(result.children[0].children[1].children[0]._static).to.equal(
       BigNumber.from(1234)
     );
-    expect(result[0].children[1].children[1]._static).to.equal(
+    expect(result.children[0].children[1].children[1]._static).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
 
-    expect(result[0].children[2]._static).to.equal(BigNumber.from(2023));
+    expect(result.children[0].children[2]._static).to.equal(
+      BigNumber.from(2023)
+    );
 
-    expect(result[0].children[3].children[0].dynamic).to.equal("0xdeadbeef");
-    expect(result[0].children[3].children[1]._static).to.equal(
+    expect(result.children[0].children[3].children[0].dynamic).to.equal(
+      "0xdeadbeef"
+    );
+    expect(result.children[0].children[3].children[1]._static).to.equal(
       BigNumber.from(999)
     );
-    expect(result[0].children[3].children[2].dynamic32).to.deep.equal([
+    expect(result.children[0].children[3].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000006",
       "0x0000000000000000000000000000000000000000000000000000000000000007",
       "0x0000000000000000000000000000000000000000000000000000000000000008",
@@ -466,53 +548,58 @@ describe("Decoder library", async () => {
         c: [{ a: 10, b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" }],
       });
 
-    const layout = [
-      {
-        isScoped: true,
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            isScoped: true,
-            _type: ParameterType.Array,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Tuple,
-                comp: 0,
-                children: [
-                  {
-                    isScoped: true,
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                  {
-                    isScoped: true,
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              isScoped: true,
+              _type: ParameterType.Array,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Tuple,
+                  comp: 0,
+                  children: [
+                    {
+                      isScoped: true,
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                    {
+                      isScoped: true,
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     // 0xfde07f12
     // 0000000000000000000000000000000000000000000000000000000000000020
@@ -527,12 +614,16 @@ describe("Decoder library", async () => {
 
     const result = await decoder.pluckParameters(data as string, layout);
 
-    expect(result[0].children[0]._static).to.equal(BigNumber.from(21000));
-    expect(result[0].children[1].dynamic).to.equal("0x0badbeef");
-    expect(result[0].children[2].children[0].children[0]._static).to.equal(
-      BigNumber.from(10)
+    expect(result.children[0].children[0]._static).to.equal(
+      BigNumber.from(21000)
     );
-    expect(result[0].children[2].children[0].children[1]._static).to.equal(
+    expect(result.children[0].children[1].dynamic).to.equal("0x0badbeef");
+    expect(
+      result.children[0].children[2].children[0].children[0]._static
+    ).to.equal(BigNumber.from(10));
+    expect(
+      result.children[0].children[2].children[0].children[1]._static
+    ).to.equal(
       "0x00000000000000000000000071c7656ec7ab88b098defb751b7401b5f6d8976f"
     );
   });
@@ -553,34 +644,39 @@ describe("Decoder library", async () => {
         },
       ]);
 
-    const layout = [
-      {
-        isScoped: true,
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     // 0x83fb7968
     // 0000000000000000000000000000000000000000000000000000000000000020
@@ -591,16 +687,16 @@ describe("Decoder library", async () => {
     // 0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0
 
     const result = await decoder.pluckParameters(data as string, layout);
-    expect(result[0].children[0].children[0]._static).to.equal(
+    expect(result.children[0].children[0].children[0]._static).to.equal(
       BigNumber.from(95623)
     );
-    expect(result[0].children[0].children[1]._static).to.equal(
+    expect(result.children[0].children[0].children[1]._static).to.equal(
       "0x00000000000000000000000000000000219ab540356cbb839cbe05303d7705fa"
     );
-    expect(result[0].children[1].children[0]._static).to.equal(
+    expect(result.children[0].children[1].children[0]._static).to.equal(
       BigNumber.from(11542)
     );
-    expect(result[0].children[1].children[1]._static).to.equal(
+    expect(result.children[0].children[1].children[1]._static).to.equal(
       "0x0000000000000000000000000716a17fbaee714f1e6ab0f9d59edbc5f09815c0"
     );
   });
@@ -618,48 +714,55 @@ describe("Decoder library", async () => {
         },
       ]);
 
-    const layout = [
-      {
-        isScoped: true,
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                isScoped: true,
-                _type: ParameterType.Dynamic,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                isScoped: true,
-                _type: ParameterType.Dynamic32,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      isScoped: true,
+      _type: ParameterType.Tuple,
+      comp: 0,
+      children: [
+        {
+          isScoped: true,
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              isScoped: true,
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  isScoped: true,
+                  _type: ParameterType.Dynamic,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  isScoped: true,
+                  _type: ParameterType.Dynamic32,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.pluckParameters(data as string, layout);
 
-    expect(result[0].children[0].children[0].dynamic).to.equal("0xbadfed");
-    expect(result[0].children[0].children[1]._static).to.equal(
+    expect(result.children[0].children[0].children[0].dynamic).to.equal(
+      "0xbadfed"
+    );
+    expect(result.children[0].children[0].children[1]._static).to.equal(
       BigNumber.from(9998877)
     );
-    expect(result[0].children[0].children[2].dynamic32).to.deep.equal([
+    expect(result.children[0].children[0].children[2].dynamic32).to.deep.equal([
       "0x0000000000000000000000000000000000000000000000000000000000000007",
       "0x0000000000000000000000000000000000000000000000000000000000000009",
     ]);

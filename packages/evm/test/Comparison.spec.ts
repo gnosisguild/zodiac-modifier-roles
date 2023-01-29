@@ -79,6 +79,13 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["uint256"], [123])],
@@ -124,6 +131,13 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.GreaterThan,
           compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
@@ -141,6 +155,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
         {
           isScoped: true,
           parent: 0,
@@ -193,6 +214,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: false,
           _type: ParameterType.Static,
@@ -200,11 +228,11 @@ describe("Comparison", async () => {
           compValues: [],
         },
         {
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
-          parent: 1,
         },
       ],
       ExecutionOptions.None
@@ -245,6 +273,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
         {
           parent: 0,
           isScoped: true,
@@ -292,6 +327,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: false,
           _type: ParameterType.Dynamic,
@@ -299,7 +341,7 @@ describe("Comparison", async () => {
           compValues: [],
         },
         {
-          parent: 1,
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
@@ -361,6 +403,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
@@ -408,6 +457,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
         {
           parent: 0,
           isScoped: true,
@@ -458,6 +514,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: false,
           _type: ParameterType.Static,
@@ -465,7 +528,7 @@ describe("Comparison", async () => {
           compValues: [],
         },
         {
-          parent: 1,
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.OneOf,
@@ -520,6 +583,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: false,
           _type: ParameterType.Static,
@@ -527,7 +597,7 @@ describe("Comparison", async () => {
           compValues: [],
         },
         {
-          parent: 1,
+          parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.OneOf,
@@ -594,6 +664,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
@@ -642,6 +719,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
         {
           parent: 0,
           isScoped: true,
@@ -692,6 +776,13 @@ describe("Comparison", async () => {
       testContract.address,
       SELECTOR,
       [
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
         {
           parent: 0,
           isScoped: true,
@@ -744,6 +835,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
@@ -764,7 +862,79 @@ describe("Comparison", async () => {
     ).to.be.revertedWith("ParameterNotSubsetOfAllowed()");
   });
 
-  it("checks a tuple comparison", async () => {
+  it("checks a static tuple comparison", async () => {
+    const { modifier, testEncoder, owner, invoker } = await setup();
+
+    const addressOk = "0x0000000000000000000000000000000000000123";
+    const addressNok = "0x0000000000000000000000000000000000000cda";
+
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("staticTuple")
+    );
+
+    const invoke = async (s: StaticTupleStruct) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.staticTuple(s, 100))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [345])],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [addressOk])],
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke({ a: 345, b: addressNok })).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+
+    await expect(invoke({ a: 345, b: addressOk })).to.not.be;
+  });
+
+  it("checks a dynamic tuple comparison", async () => {
     const { modifier, testEncoder, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -798,18 +968,32 @@ describe("Comparison", async () => {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Tuple,
-          comp: Comparison.Matches,
+          comp: Comparison.EqualTo,
           compValues: [],
         },
         {
           parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          parent: 1,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["bytes"], ["0xabcdef"])],
         },
         {
-          parent: 0,
+          parent: 1,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -817,7 +1001,7 @@ describe("Comparison", async () => {
         },
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
           compValues: [ethers.utils.solidityPack(["uint256[]"], [[7, 88, 99]])],
@@ -873,6 +1057,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
@@ -881,21 +1072,21 @@ describe("Comparison", async () => {
         },
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValues: [],
         },
         {
           isScoped: true,
-          parent: 1,
+          parent: 2,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
           compValues: [defaultAbiCoder.encode(["uint256"], [10000])],
         },
         {
           isScoped: true,
-          parent: 1,
+          parent: 2,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
@@ -955,6 +1146,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
@@ -963,21 +1161,21 @@ describe("Comparison", async () => {
         },
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValues: [],
         },
         {
           isScoped: false,
-          parent: 1,
+          parent: 2,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
           isScoped: true,
-          parent: 1,
+          parent: 2,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
@@ -1030,6 +1228,13 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
@@ -1039,7 +1244,7 @@ describe("Comparison", async () => {
         // tuple first
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValues: [],
@@ -1047,7 +1252,7 @@ describe("Comparison", async () => {
         // tuple second
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValues: [],
@@ -1055,20 +1260,20 @@ describe("Comparison", async () => {
         // tuple third
         {
           isScoped: true,
-          parent: 0,
+          parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValues: [],
         },
         {
           isScoped: false,
-          parent: 1,
+          parent: 2,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
-          parent: 1,
+          parent: 2,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -1076,27 +1281,27 @@ describe("Comparison", async () => {
         },
         {
           isScoped: false,
-          parent: 2,
+          parent: 3,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
           isScoped: true,
-          parent: 2,
+          parent: 3,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["address"], [address2])],
         },
         {
           isScoped: false,
-          parent: 3,
+          parent: 4,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
-          parent: 3,
+          parent: 4,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -1134,94 +1339,3 @@ describe("Comparison", async () => {
 
   it.skip("checks an array with a nested tuple inside");
 });
-
-// it.skip("TODO move to PermissionBuilder tests -> enforces paramCompValues for scopeFunction", async () => {
-//   const { modifier, testContract, owner } = await setup();
-
-//   const ROLE_ID = 0;
-//   const SELECTOR = testContract.interface.getSighash(
-//     testContract.interface.getFunction("doNothing")
-//   );
-
-//   await expect(
-//     modifier.connect(owner).scopeFunction(
-//       ROLE_ID,
-//       testContract.address,
-//       SELECTOR,
-//       [
-//         UNSCOPED_PARAM,
-//         {
-//           isScoped: true,
-//           _type: TYPE_STATIC,
-//           comp: Comparison.ONE_OF,
-//           compValues: [],
-//         },
-//         UNSCOPED_PARAM,
-//       ],
-//       ExecutionOptions.None
-//     )
-//   ).to.be.revertedWith("NoCompValuesProvidedForScope");
-
-//   await expect(
-//     modifier.connect(owner).scopeFunction(
-//       ROLE_ID,
-//       testContract.address,
-//       SELECTOR,
-//       [
-//         UNSCOPED_PARAM,
-//         {
-//           isScoped: true,
-//           _type: TYPE_STATIC,
-//           comp: Comparison.ONE_OF,
-//           compValues: [defaultAbiCoder.encode(["bool"], [false])],
-//         },
-//         UNSCOPED_PARAM,
-//       ],
-//       ExecutionOptions.None
-//     )
-//   ).to.be.revertedWith("NotEnoughCompValuesForScope");
-
-//   await expect(
-//     modifier.connect(owner).scopeFunction(
-//       ROLE_ID,
-//       testContract.address,
-//       SELECTOR,
-//       [
-//         UNSCOPED_PARAM,
-//         {
-//           isScoped: true,
-//           _type: TYPE_STATIC,
-//           comp: Comparison.ONE_OF,
-//           compValues: [
-//             defaultAbiCoder.encode(["bool"], [false]),
-//             defaultAbiCoder.encode(["bool"], [true]),
-//           ],
-//         },
-//         UNSCOPED_PARAM,
-//       ],
-//       ExecutionOptions.None
-//     )
-//   ).to.not.be.reverted;
-
-//   await expect(
-//     modifier.connect(owner).scopeFunction(
-//       ROLE_ID,
-//       testContract.address,
-//       SELECTOR,
-//       [
-//         UNSCOPED_PARAM,
-//         {
-//           isScoped: true,
-//           _type: TYPE_STATIC,
-//           comp: Comparison.EQUAL,
-//           compValues: [
-//             defaultAbiCoder.encode(["bool"], [true]),
-//             defaultAbiCoder.encode(["bool"], [false]),
-//           ],
-//         },
-//         UNSCOPED_PARAM,
-//       ],
-//       ExecutionOptions.None
-//     )
-//   ).to.be.revertedWith("TooManyCompValuesForScope");
-// });
