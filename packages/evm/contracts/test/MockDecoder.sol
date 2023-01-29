@@ -5,7 +5,7 @@ import "../Decoder.sol";
 
 contract MockDecoder {
     function pluckParameters(
-        bytes memory data,
+        bytes calldata data,
         PL1[] calldata layout
     ) public pure returns (PP1[] memory) {
         return copyOut(Decoder.pluckParameters(data, copyIn(layout)));
