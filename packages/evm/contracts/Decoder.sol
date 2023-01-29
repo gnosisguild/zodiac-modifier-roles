@@ -30,53 +30,16 @@ library Decoder {
         assert(parameter.isScoped == true);
 
         if (parameter._type == ParameterType.Static) {
-            result._static = _loadWordAt(data, offset);
+            result._static = _loadWord(data, offset);
         } else if (parameter._type == ParameterType.Dynamic) {
-            result.dynamic = _carveDynamic(data, offset);
+            result.dynamic = _loadDynamic(data, offset);
         } else if (parameter._type == ParameterType.Dynamic32) {
-            result.dynamic32 = _carveDynamic32(data, offset);
+            result.dynamic32 = _loadDynamic32(data, offset);
         } else if (parameter._type == ParameterType.Array) {
             return _carveArray(data, offset, parameter);
         } else {
             assert(parameter._type == ParameterType.Tuple);
             return _carveTuple(data, offset, parameter);
-        }
-    }
-
-    function _carveDynamic(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes memory result) {
-        // read length, and move offset to content start
-        uint256 length = uint256(_loadWordAt(data, offset));
-        offset += 32;
-
-        if (data.length < offset + length) {
-            revert CalldataOutOfBounds();
-        }
-
-        result = new bytes(length);
-        for (uint256 i; i < length; ++i) {
-            result[i] = data[offset + i];
-        }
-    }
-
-    function _carveDynamic32(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes32[] memory result) {
-        // read length and move offset to content start
-        uint256 length = uint256(_loadWordAt(data, offset));
-        offset += 32;
-
-        if (data.length < offset + length * 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        result = new bytes32[](length);
-        for (uint256 i; i < length; ++i) {
-            result[i] = _loadWordAt(data, offset);
-            offset += 32;
         }
     }
 
@@ -86,7 +49,7 @@ library Decoder {
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
         // read length, and move offset to content start
-        uint256 length = uint256(_loadWordAt(data, offset));
+        uint256 length = uint256(_loadWord(data, offset));
         result.children = new ParameterPayload[](length);
         offset += 32;
 
@@ -141,7 +104,7 @@ library Decoder {
         if (isInline) {
             return headOffset;
         }
-        uint256 tailOffset = offset + uint256(_loadWordAt(data, headOffset));
+        uint256 tailOffset = offset + uint256(_loadWord(data, headOffset));
         return tailOffset;
     }
 
@@ -180,20 +143,53 @@ library Decoder {
         return result;
     }
 
-    function _loadWordAt(
+    function _loadDynamic(
         bytes calldata data,
         uint256 offset
-    ) private pure returns (bytes32) {
+    ) private pure returns (bytes memory result) {
+        uint256 length = uint256(_loadWord(data, offset));
+        uint256 size = 32 + length;
+
+        if (data.length < offset + size) {
+            revert CalldataOutOfBounds();
+        }
+
+        assembly {
+            result := mload(0x40)
+            calldatacopy(result, add(data.offset, offset), size)
+            mstore(0x40, add(result, size))
+        }
+    }
+
+    function _loadDynamic32(
+        bytes calldata data,
+        uint256 offset
+    ) private pure returns (bytes32[] memory result) {
+        uint256 length = uint256(_loadWord(data, offset));
+        uint256 size = 32 + length * 32;
+
+        if (data.length < offset + size) {
+            revert CalldataOutOfBounds();
+        }
+
+        assembly {
+            result := mload(0x40)
+            calldatacopy(result, add(data.offset, offset), size)
+            mstore(0x40, add(result, size))
+        }
+    }
+
+    function _loadWord(
+        bytes calldata data,
+        uint256 offset
+    ) private pure returns (bytes32 result) {
         if (data.length < offset + 32) {
             revert CalldataOutOfBounds();
         }
 
-        bytes32 result;
         assembly {
-            // jump over the length encoding
             result := calldataload(add(data.offset, offset))
         }
-        return result;
     }
 }
 
