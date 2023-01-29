@@ -7,7 +7,7 @@ library Decoder {
     error CalldataOutOfBounds();
 
     function pluckParameters(
-        bytes memory data,
+        bytes calldata data,
         ParameterConfig[] memory parameters
     ) internal pure returns (ParameterPayload[] memory result) {
         /*
@@ -23,7 +23,7 @@ library Decoder {
     }
 
     function _carve(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset,
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
@@ -44,7 +44,7 @@ library Decoder {
     }
 
     function _carveDynamic(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset
     ) private pure returns (bytes memory result) {
         // read length, and move offset to content start
@@ -62,7 +62,7 @@ library Decoder {
     }
 
     function _carveDynamic32(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset
     ) private pure returns (bytes32[] memory result) {
         // read length and move offset to content start
@@ -81,7 +81,7 @@ library Decoder {
     }
 
     function _carveArray(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset,
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
@@ -103,7 +103,7 @@ library Decoder {
     }
 
     function _carveTuple(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset,
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
@@ -111,7 +111,7 @@ library Decoder {
     }
 
     function _carveParts(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset,
         ParameterConfig[] memory parts
     ) private pure returns (ParameterPayload[] memory result) {
@@ -132,7 +132,7 @@ library Decoder {
     }
 
     function _headOrTailOffset(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset,
         uint256 shift,
         bool isInline
@@ -181,7 +181,7 @@ library Decoder {
     }
 
     function _loadWordAt(
-        bytes memory data,
+        bytes calldata data,
         uint256 offset
     ) private pure returns (bytes32) {
         if (data.length < offset + 32) {
@@ -191,7 +191,7 @@ library Decoder {
         bytes32 result;
         assembly {
             // jump over the length encoding
-            result := mload(add(data, add(offset, 32)))
+            result := calldataload(add(data.offset, offset))
         }
         return result;
     }

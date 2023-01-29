@@ -135,7 +135,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         uint16 roleId,
         address targetAddress,
         uint256 value,
-        bytes memory data,
+        bytes calldata data,
         Enum.Operation operation
     ) internal view returns (Status) {
         if (data.length != 0 && data.length < 4) {
@@ -210,7 +210,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     function checkParameters(
         Role storage role,
         address targetAddress,
-        bytes memory data,
+        bytes calldata data,
         BitmapBuffer memory buffer
     ) internal view returns (Status) {
         ParameterConfig[] memory parameters = _loadParameterConfig(
