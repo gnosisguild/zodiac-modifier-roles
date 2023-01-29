@@ -213,28 +213,20 @@ abstract contract PermissionChecker is PermissionBuilder {
         bytes calldata data,
         BitmapBuffer memory buffer
     ) internal view returns (Status) {
-        ParameterConfig[] memory parameters = _loadParameterConfig(
+        ParameterConfig memory parameters = _loadParameterConfig(
             targetAddress,
             bytes4(data),
             role,
             buffer,
-            ParameterLayout.rootBounds(buffer)
+            0
         );
 
-        ParameterPayload[] memory payloads = Decoder.pluckParameters(
+        ParameterPayload memory payloads = Decoder.pluckParameters(
             data,
             parameters
         );
 
-        for (uint256 i; i < parameters.length; ++i) {
-            if (parameters[i].isScoped) {
-                Status status = _check(parameters[i], payloads[i]);
-                if (status != Status.Ok) {
-                    return status;
-                }
-            }
-        }
-        return Status.Ok;
+        return _check(parameters, payloads);
     }
 
     function _check(
