@@ -3,32 +3,13 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
+import "./ConfigValidation.sol";
 import "./ParameterLayout.sol";
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
 abstract contract PermissionBuilder is OwnableUpgradeable {
     uint256 internal constant SCOPE_MAX_PARAMS = 32;
-
-    /// Not possible to define gt/lt for Dynamic types
-    error UnsuitableRelativeComparison();
-
-    error UnsuitableSubsetOfComparison();
-
-    /// CompValue for static types should have a size of exactly 32 bytes
-    error UnsuitableStaticCompValueSize();
-
-    /// CompValue for Dynamic32 types should be a multiple of exactly 32 bytes
-    error UnsuitableDynamic32CompValueSize();
-
-    /// Exceeds the max number of params supported
-    error ScopeMaxParametersExceeded();
-
-    error NoCompValuesProvidedForScope();
-
-    error NotEnoughCompValuesForScope();
-
-    error TooManyCompValuesForScope();
 
     event AllowTarget(
         uint16 role,
@@ -145,9 +126,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
-        for (uint256 i; i < parameters.length; ++i) {
-            _enforceParameterConfig(parameters[i]);
-        }
+        ConfigValidation.check(parameters);
 
         uint256 length = parameters.length;
         BitmapBuffer memory buffer = ScopeConfig.createBuffer(
@@ -179,72 +158,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             parameters,
             options
         );
-    }
-
-    function _enforceParameterConfig(
-        ParameterConfigFlat calldata config
-    ) private pure {
-        if (!config.isScoped) {
-            return;
-        }
-
-        if (_isLeaf(config._type)) {
-            bytes[] calldata compValues = config.compValues;
-            if (config.compValues.length == 0) {
-                revert NoCompValuesProvidedForScope();
-            }
-
-            Comparison comp = config.comp;
-            if (
-                comp == Comparison.EqualTo ||
-                comp == Comparison.GreaterThan ||
-                comp == Comparison.LessThan ||
-                (comp == Comparison.SubsetOf)
-            ) {
-                if (compValues.length != 1) {
-                    revert TooManyCompValuesForScope();
-                }
-            }
-
-            ParameterType _type = config._type;
-            // equal -> Static, Dynamic, Dynamic32
-            // less -> Static
-            // greater -> Static
-            // oneOf -> Static, Dynamic, Dynamic32
-            // subsetOf -> Dynamic32
-            if (comp == Comparison.GreaterThan) {
-                if (_type != ParameterType.Static) {
-                    revert UnsuitableRelativeComparison();
-                }
-            } else if (comp == Comparison.LessThan) {
-                if (_type != ParameterType.Static) {
-                    revert UnsuitableRelativeComparison();
-                }
-            } else if (comp == Comparison.OneOf) {
-                if (compValues.length < 2) {
-                    revert NotEnoughCompValuesForScope();
-                }
-            } else if (comp == Comparison.SubsetOf) {
-                if (_type != ParameterType.Dynamic32) {
-                    revert UnsuitableSubsetOfComparison();
-                }
-            }
-
-            for (uint256 i; i < compValues.length; ++i) {
-                if (
-                    _type == ParameterType.Static && compValues[i].length != 32
-                ) {
-                    revert UnsuitableStaticCompValueSize();
-                }
-
-                if (
-                    _type == ParameterType.Dynamic32 &&
-                    compValues[i].length % 32 != 0
-                ) {
-                    revert UnsuitableDynamic32CompValueSize();
-                }
-            }
-        }
     }
 
     function _loadParameterConfig(
@@ -302,17 +215,6 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         uint8 index
     ) internal pure returns (bytes32) {
         return bytes32(abi.encodePacked(targetAddress, selector, index));
-    }
-
-    function _isNested(ParameterType _type) private pure returns (bool) {
-        return _type == ParameterType.Tuple || _type == ParameterType.Array;
-    }
-
-    function _isLeaf(ParameterType paramType) private pure returns (bool) {
-        return
-            paramType == ParameterType.Static ||
-            paramType == ParameterType.Dynamic ||
-            paramType == ParameterType.Dynamic32;
     }
 
     function _compress(
