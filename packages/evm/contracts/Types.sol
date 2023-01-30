@@ -17,6 +17,10 @@ enum ParameterType {
     Array
 }
 
+function _isNested(ParameterType _type) pure returns (bool) {
+    return uint8(_type) >= uint8(ParameterType.Tuple);
+}
+
 enum Comparison {
     EqualTo,
     GreaterThan,
@@ -26,17 +30,6 @@ enum Comparison {
     Matches,
     Some,
     Every
-    // Whatever,
-    // EqualTo,
-    // GreaterThan,
-    // LessThan,
-    // OneOf,
-    // Bitmask,
-    // BitmaskOneOf,
-    // SubsetOf,
-    // Matches,
-    // ArraySome,
-    // ArrayEvery
 }
 
 enum ExecutionOptions {
