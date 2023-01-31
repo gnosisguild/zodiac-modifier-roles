@@ -115,28 +115,17 @@ export enum ParameterType {
   Dynamic32,
   Tuple,
   Array,
+  OneOf,
 }
 
 export enum Comparison {
   EqualTo = 0,
   GreaterThan,
   LessThan,
-  OneOf,
   SubsetOf,
   Matches,
   Some,
   Every,
-  // Whatever,
-  // EqualTo,
-  // GreaterThan,
-  // LessThan,
-  // OneOf,
-  // Bitmask,
-  // BitmaskOneOf,
-  // SubsetOf,
-  // Matches,
-  // ArraySome,
-  // ArrayEvery
 }
 
 export enum ExecutionOptions {

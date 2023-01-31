@@ -46,7 +46,7 @@ library Integrity {
 
         // check at least 2 oneOf nodes
         for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i].comp == Comparison.OneOf) {
+            if (parameters[i]._type == ParameterType.OneOf) {
                 if (parameters[i].compValues.length > 0) {
                     revert MalformedOneOfComparison();
                 }
@@ -81,7 +81,7 @@ library Integrity {
             comp == Comparison.EqualTo ||
             comp == Comparison.GreaterThan ||
             comp == Comparison.LessThan ||
-            (comp == Comparison.SubsetOf)
+            comp == Comparison.SubsetOf
         ) {
             if (compValues.length != 1) {
                 revert TooManyCompValuesForScope();
@@ -104,9 +104,6 @@ library Integrity {
         }
 
         for (uint256 i; i < compValues.length; ++i) {
-            if (comp == Comparison.OneOf) {
-                continue;
-            }
             if (_type == ParameterType.Static && compValues[i].length != 32) {
                 revert UnsuitableStaticCompValueSize();
             }

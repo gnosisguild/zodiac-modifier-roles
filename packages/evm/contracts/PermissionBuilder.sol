@@ -177,7 +177,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         result._type = paramType;
         result.comp = paramComp;
 
-        if (_isNested(paramType) || paramComp == Comparison.OneOf) {
+        if (_isNested(paramType)) {
             (uint256 left, uint256 right) = Topology.childrenBounds(
                 buffer,
                 index

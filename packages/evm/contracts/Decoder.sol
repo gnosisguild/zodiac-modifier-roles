@@ -30,7 +30,7 @@ library Decoder {
         uint256 offset,
         ParameterTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        assert(parameter.comp != Comparison.OneOf);
+        assert(parameter._type != ParameterType.OneOf);
 
         if (parameter._type == ParameterType.Static) {
             result._static = _loadWord(data, offset);
