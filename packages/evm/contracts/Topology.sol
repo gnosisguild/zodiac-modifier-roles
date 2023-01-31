@@ -45,7 +45,7 @@ library Topology {
     function prune(
         ParameterConfig memory input
     ) internal pure returns (ParameterTopology memory result) {
-        if (input.comp == Comparison.OneOf) {
+        if (input._type == ParameterType.OneOf) {
             return prune(input.children[0]);
         }
 

@@ -47,47 +47,6 @@ describe("Scoping", async () => {
     };
   });
 
-  describe("Enforces Scope Max Param limit", () => {
-    // it("checks limit on scopeFunction", async () => {
-    //   const { modifier, testContract, owner } =
-    //     await setupRolesWithOwnerAndInvoker();
-    //   const SELECTOR = testContract.interface.getSighash(
-    //     testContract.interface.getFunction("doNothing")
-    //   );
-    //   const ROLE_ID = 0;
-    //   await expect(
-    //     modifier.connect(owner).scopeFunction(
-    //       ROLE_ID,
-    //       testContract.address,
-    //       SELECTOR,
-    //       new Array(33).fill(null).map((_, index) => ({
-    //         isScoped: false,
-    //         parent: index,
-    //         _type: ParameterType.Static,
-    //         comp: Comparison.EqualTo,
-    //         compValues: [],
-    //       })),
-    //       ExecutionOptions.None
-    //     )
-    //   ).to.be.revertedWith("ScopeMaxParametersExceeded()");
-    //   await expect(
-    //     modifier.connect(owner).scopeFunction(
-    //       ROLE_ID,
-    //       testContract.address,
-    //       SELECTOR,
-    //       new Array(32).fill(null).map((_, index) => ({
-    //         isScoped: false,
-    //         parent: index,
-    //         _type: ParameterType.Static,
-    //         comp: Comparison.EqualTo,
-    //         compValues: [A_32_BYTES_VALUE],
-    //       })),
-    //       ExecutionOptions.None
-    //     )
-    //   ).to.not.be.reverted;
-    // });
-  });
-
   describe("Enforces Parameter Size constraints", () => {
     const MORE_THAN_32_BYTES_TEXT =
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
@@ -213,8 +172,8 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              _type: ParameterType.OneOf,
+              comp: 0,
               compValues: [],
             },
             {
@@ -255,8 +214,8 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              _type: ParameterType.OneOf,
+              comp: 0,
               compValues: [],
             },
             {
@@ -291,8 +250,8 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              _type: ParameterType.OneOf,
+              comp: 0,
               compValues: [],
             },
             {
@@ -331,10 +290,10 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
             parent: 0,
-            _type: 0,
-            comp: Comparison.OneOf,
+            isScoped: true,
+            _type: ParameterType.OneOf,
+            comp: 0,
             compValues: [],
           },
           {
@@ -356,22 +315,22 @@ describe("Scoping", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
             parent: 0,
-            _type: 0,
-            comp: Comparison.OneOf,
+            isScoped: true,
+            _type: ParameterType.OneOf,
+            comp: 0,
             compValues: [],
           },
           {
-            isScoped: true,
             parent: 0,
+            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValues: [A_32_BYTES_VALUE],
           },
           {
-            isScoped: true,
             parent: 0,
+            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValues: [A_32_BYTES_VALUE],

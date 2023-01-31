@@ -460,8 +460,8 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           parent: 0,
-          _type: ParameterType.Tuple,
-          comp: Comparison.OneOf,
+          _type: ParameterType.OneOf,
+          comp: 0,
           compValues: [],
         },
         {
@@ -534,8 +534,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: ParameterType.Tuple,
-          comp: Comparison.OneOf,
+          _type: ParameterType.OneOf,
+          comp: 0,
           compValues: [],
         },
         {
@@ -672,8 +672,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: ParameterType.Dynamic32,
-          comp: Comparison.OneOf,
+          _type: ParameterType.OneOf,
+          comp: 0,
           compValues: [],
         },
         {
@@ -764,8 +764,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: 0,
-          comp: Comparison.OneOf,
+          _type: ParameterType.OneOf,
+          comp: 0,
           compValues: [],
         },
         {
@@ -869,8 +869,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: 0,
-          comp: Comparison.OneOf,
+          _type: ParameterType.OneOf,
+          comp: 0,
           compValues: [],
         },
         // first Array
