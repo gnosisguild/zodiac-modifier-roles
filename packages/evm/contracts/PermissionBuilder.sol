@@ -3,10 +3,10 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
-import "./ConfigValidation.sol";
+import "./Types.sol";
+import "./Integrity.sol";
 import "./Topology.sol";
 import "./ScopeConfig.sol";
-import "./Types.sol";
 
 abstract contract PermissionBuilder is OwnableUpgradeable {
     uint256 internal constant SCOPE_MAX_PARAMS = 32;
@@ -126,7 +126,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) external onlyOwner {
-        ConfigValidation.check(parameters);
+        Integrity.validate(parameters);
 
         uint256 length = parameters.length;
         BitmapBuffer memory buffer = ScopeConfig.createBuffer(

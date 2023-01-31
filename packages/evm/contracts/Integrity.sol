@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-library ConfigValidation {
+library Integrity {
     /// Not possible to define gt/lt for Dynamic types
     error ConfigTopologyNotBFS(uint256 index);
 
@@ -26,7 +26,7 @@ library ConfigValidation {
 
     error TooFewCompValuesForOneOf(uint256 index);
 
-    function check(ParameterConfigFlat[] calldata parameters) internal pure {
+    function validate(ParameterConfigFlat[] calldata parameters) internal pure {
         topology(parameters);
 
         for (uint256 i = 0; i < parameters.length; ++i) {
