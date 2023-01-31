@@ -9,7 +9,7 @@ struct Bounds {
     uint256 right;
 }
 
-library ParameterLayout {
+library Topology {
     function childrenBounds(
         BitmapBuffer memory scopeConfig,
         uint256 parent
@@ -39,6 +39,26 @@ library ParameterLayout {
         } else {
             left = type(uint256).max;
             right = 0;
+        }
+    }
+
+    function prune(
+        ParameterConfig memory input
+    ) internal pure returns (ParameterTopology memory result) {
+        if (input.comp == Comparison.OneOf) {
+            return prune(input.children[0]);
+        }
+
+        result._type = input._type;
+        result.comp = input.comp;
+        if (input._type == ParameterType.Array) {
+            result.children = new ParameterTopology[](1);
+            result.children[0] = prune(input.children[0]);
+        } else if (input._type == ParameterType.Tuple) {
+            result.children = new ParameterTopology[](input.children.length);
+            for (uint256 i; i < input.children.length; i++) {
+                result.children[i] = prune(input.children[i]);
+            }
         }
     }
 }
