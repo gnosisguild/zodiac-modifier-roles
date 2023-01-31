@@ -195,7 +195,7 @@ describe("Scoping", async () => {
       ).to.not.be.reverted;
     });
 
-    it("checks limit on todo rename this", async () => {
+    it("checks well formed oneOf node", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
 
@@ -215,11 +215,26 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
+              compValues: [],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.EqualTo,
               compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
                   [MORE_THAN_32_BYTES_TEXT]
                 ),
+              ],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.EqualTo,
+              compValues: [
                 ethers.utils.solidityPack(
                   ["string"],
                   [MORE_THAN_32_BYTES_TEXT]
@@ -240,10 +255,25 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Dynamic32,
+              _type: ParameterType.Static,
               comp: Comparison.OneOf,
+              compValues: [],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Dynamic32,
+              comp: Comparison.EqualTo,
               compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
+              ],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Dynamic32,
+              comp: Comparison.EqualTo,
+              compValues: [
                 ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
               ],
             },
@@ -263,7 +293,21 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
-              compValues: [A_32_BYTES_VALUE, A_32_BYTES_VALUE],
+              compValues: [],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.EqualTo,
+              compValues: [A_32_BYTES_VALUE],
+            },
+            {
+              isScoped: true,
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.EqualTo,
+              compValues: [A_32_BYTES_VALUE],
             },
           ],
           ExecutionOptions.None
@@ -289,14 +333,21 @@ describe("Scoping", async () => {
           {
             isScoped: true,
             parent: 0,
-            _type: ParameterType.Static,
+            _type: 0,
             comp: Comparison.OneOf,
+            compValues: [],
+          },
+          {
+            isScoped: true,
+            parent: 0,
+            _type: ParameterType.Static,
+            comp: Comparison.EqualTo,
             compValues: [A_32_BYTES_VALUE],
           },
         ],
         ExecutionOptions.None
       )
-    ).to.be.revertedWith("NotEnoughCompValuesForScope()");
+    ).to.be.revertedWith("TooFewCompValuesForOneOf(0)");
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -307,12 +358,23 @@ describe("Scoping", async () => {
           {
             isScoped: true,
             parent: 0,
-            _type: ParameterType.Static,
+            _type: 0,
             comp: Comparison.OneOf,
-            compValues: [
-              ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
-              ethers.utils.defaultAbiCoder.encode(["uint256"], [123]),
-            ],
+            compValues: [],
+          },
+          {
+            isScoped: true,
+            parent: 0,
+            _type: ParameterType.Static,
+            comp: Comparison.EqualTo,
+            compValues: [A_32_BYTES_VALUE],
+          },
+          {
+            isScoped: true,
+            parent: 0,
+            _type: ParameterType.Static,
+            comp: Comparison.EqualTo,
+            compValues: [A_32_BYTES_VALUE],
           },
         ],
         ExecutionOptions.None

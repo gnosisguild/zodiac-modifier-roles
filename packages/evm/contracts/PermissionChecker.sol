@@ -233,13 +233,28 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal view returns (Status) {
-        if (parameter._type == ParameterType.Array) {
+        if (parameter.comp == Comparison.OneOf) {
+            return _checkOneOf(parameter, payload);
+        } else if (parameter._type == ParameterType.Array) {
             return _checkArray(parameter, payload);
         } else if (parameter._type == ParameterType.Tuple) {
             return _checkTuple(parameter, payload);
         } else {
             return _compare(parameter, payload);
         }
+    }
+
+    function _checkOneOf(
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private view returns (Status status) {
+        for (uint256 i; i < parameter.children.length; ++i) {
+            if (_check(parameter.children[i], payload) == Status.Ok) {
+                return status;
+            }
+        }
+
+        return Status.ParameterNotOneOfAllowed;
     }
 
     function _checkArray(
@@ -290,16 +305,15 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status) {
-        if (parameter.comp == Comparison.OneOf) {
-            return
-                _compareOneOf(
-                    parameter.compValues,
-                    _compressValue(parameter._type, payload)
-                );
-        } else if (parameter.comp == Comparison.SubsetOf) {
+        if (parameter.comp == Comparison.SubsetOf) {
             assert(parameter._type == ParameterType.Dynamic32);
             return _compareSubsetOf(parameter.compValues, payload.dynamic32);
         } else {
+            assert(
+                parameter.comp == Comparison.EqualTo ||
+                    parameter.comp == Comparison.GreaterThan ||
+                    parameter.comp == Comparison.LessThan
+            );
             return
                 _compareEqual(
                     parameter.comp,

@@ -461,18 +461,36 @@ describe("Comparison", async () => {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
+          comp: Comparison.OneOf,
+          compValues: [],
+        },
+        {
+          isScoped: true,
+          parent: 0,
+          _type: ParameterType.Tuple,
           comp: Comparison.EqualTo,
           compValues: [],
         },
         {
+          isScoped: true,
           parent: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          parent: 1,
           isScoped: true,
           _type: ParameterType.Static,
-          comp: Comparison.OneOf,
-          compValues: [
-            defaultAbiCoder.encode(["uint256"], [11]),
-            defaultAbiCoder.encode(["uint256"], [22]),
-          ],
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [11])],
+        },
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [22])],
         },
       ],
       ExecutionOptions.None
@@ -514,37 +532,92 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
+          isScoped: true,
           _type: ParameterType.Tuple,
-          comp: Comparison.EqualTo,
+          comp: Comparison.OneOf,
           compValues: [],
         },
         {
           parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // first variant
+        {
+          parent: 1,
           isScoped: false,
           _type: ParameterType.Static,
           comp: 0,
           compValues: [],
         },
         {
-          parent: 0,
+          parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic,
-          comp: Comparison.OneOf,
+          comp: Comparison.EqualTo,
+          compValues: [ethers.utils.solidityPack(["string"], ["First String"])],
+        },
+        // second variant
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["bool"], [true])],
+        },
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EqualTo,
           compValues: [
-            ethers.utils.solidityPack(["string"], ["Hello World!"]),
             ethers.utils.solidityPack(["string"], ["Good Morning!"]),
-            ethers.utils.solidityPack(["string"], ["gm!!!!!!!!!!!"]),
           ],
+        },
+        // third variant
+        {
+          parent: 3,
+          isScoped: false,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          parent: 3,
+          isScoped: true,
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EqualTo,
+          compValues: [ethers.utils.solidityPack(["string"], ["Third String"])],
         },
       ],
       ExecutionOptions.None
     );
 
-    await expect(invoke(true, "Hello World!")).to.not.be.reverted;
-    await expect(invoke(false, "Good Morning!")).to.not.be.reverted;
-    await expect(invoke(true, "gm!!!!!!!!!!!")).to.not.be.reverted;
+    await expect(invoke(true, "First String")).to.not.be.reverted;
+    // wrong first argument
+    await expect(invoke(false, "Good Morning!")).to.be.revertedWith(
+      "ParameterNotOneOfAllowed()"
+    );
+    // fixing the first argument
+    await expect(invoke(true, "Good Morning!")).to.not.be.reverted;
+    await expect(invoke(true, "Third String")).to.not.be.reverted;
 
     await expect(invoke(false, "Something else")).to.be.revertedWith(
       "ParameterNotOneOfAllowed()"
@@ -601,8 +674,23 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.OneOf,
+          compValues: [],
+        },
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
+          comp: Comparison.EqualTo,
           compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0x1111", "0x1111"]]),
+          ],
+        },
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Dynamic32,
+          comp: Comparison.EqualTo,
+          compValues: [
             ethers.utils.solidityPack(["bytes2[]"], [["0xffff", "0xffff"]]),
           ],
         },
@@ -631,6 +719,263 @@ describe("Comparison", async () => {
     await expect(invoke("H", [])).to.be.revertedWith(
       "ParameterNotOneOfAllowed()"
     );
+  });
+
+  it("checks a oneOf tuple comparison", async () => {
+    const { modifier, testEncoder, owner, invoker } = await setup();
+
+    const addressOne = "0x0000000000000000000000000000000000000123";
+    const addressTwo = "0x0000000000000000000000000000000000000cda";
+
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("staticTuple")
+    );
+
+    const invoke = async (s: StaticTupleStruct) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.staticTuple(s, 100))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: 0,
+          comp: Comparison.OneOf,
+          compValues: [],
+        },
+        {
+          parent: 1,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        {
+          parent: 1,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // first tuple variant
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [1111])],
+        },
+        {
+          parent: 2,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [addressOne])],
+        },
+        // second tuple variant
+        {
+          parent: 3,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [22222])],
+        },
+        {
+          parent: 3,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [addressTwo])],
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke({ a: 1111, b: addressOne })).to.not.be.reverted;
+
+    await expect(invoke({ a: 22222, b: addressTwo })).to.not.be.reverted;
+
+    await expect(invoke({ a: 22222, b: addressOne })).to.be.revertedWith(
+      "ParameterNotOneOfAllowed()"
+    );
+
+    await expect(
+      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
+    ).to.be.revertedWith("ParameterNotOneOfAllowed()");
+  });
+
+  it("checks a oneOf array comparison", async () => {
+    const address1 = "0x0000000000000000000000000000000000000fff";
+    const address2 = "0x0000000000000000000000000000000000000123";
+    const address3 = "0x0000000000000000000000000000000000000cda";
+
+    const { modifier, testEncoder, owner, invoker } = await setup();
+    const ROLE_ID = 0;
+    const SELECTOR = testEncoder.interface.getSighash(
+      testEncoder.interface.getFunction("arrayStaticTupleItems")
+    );
+    const invoke = async (a: StaticTupleStruct[]) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testEncoder.address,
+          0,
+          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+            .data as string,
+          0
+        );
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testEncoder.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          isScoped: true,
+          _type: ParameterType.Tuple,
+          comp: Comparison.EqualTo,
+          compValues: [],
+        },
+        {
+          parent: 0,
+          isScoped: true,
+          _type: 0,
+          comp: Comparison.OneOf,
+          compValues: [],
+        },
+        // first Array
+        {
+          isScoped: true,
+          parent: 1,
+          _type: ParameterType.Array,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // second Array
+        {
+          isScoped: true,
+          parent: 1,
+          _type: ParameterType.Array,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+
+        // first array first element 4
+        {
+          isScoped: true,
+          parent: 2,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // first array second element 5
+        {
+          isScoped: true,
+          parent: 2,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+        // second array first element 6
+        {
+          isScoped: true,
+          parent: 3,
+          _type: ParameterType.Tuple,
+          comp: Comparison.Matches,
+          compValues: [],
+        },
+
+        // tuple first
+        {
+          isScoped: false,
+          parent: 4,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 4,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [address1])],
+        },
+
+        // tuple second 8
+        {
+          isScoped: true,
+          parent: 5,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["uint256"], [334455])],
+        },
+        {
+          parent: 5,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+        },
+
+        // tuple third 9
+        {
+          isScoped: false,
+          parent: 6,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValues: [],
+        },
+        {
+          parent: 6,
+          isScoped: true,
+          _type: ParameterType.Static,
+          comp: Comparison.EqualTo,
+          compValues: [defaultAbiCoder.encode(["address"], [address3])],
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(
+      invoke([
+        { a: 123, b: address1 },
+        { a: 334455, b: address2 },
+      ])
+    ).to.not.be.reverted;
+
+    await expect(invoke([{ a: 123121212, b: address3 }])).to.not.be.reverted;
+
+    await expect(invoke([])).to.be.revertedWith("ParameterNotOneOfAllowed()");
   });
 
   it("checks a subsetOf comparison for dynamic32", async () => {

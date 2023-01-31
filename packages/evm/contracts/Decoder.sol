@@ -21,7 +21,7 @@ library Decoder {
          *
          * The encoding of the paremeter encoding area is equivalent to a Tuple
          */
-        return _carveTuple(data, 4, parameter);
+        return _carve(data, 4, parameter);
     }
 
     function _carve(
@@ -29,7 +29,14 @@ library Decoder {
         uint256 offset,
         ParameterConfig memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        assert(parameter.isScoped == true);
+        if (parameter.comp == Comparison.OneOf) {
+            // this is meta node in the tree as it does not impact topology
+            // tree was previously validated to have at least two children
+            // with equivalent topology
+            assert(parameter.children.length > 0);
+
+            return _carve(data, offset, parameter.children[0]);
+        }
 
         if (parameter._type == ParameterType.Static) {
             result._static = _loadWord(data, offset);
@@ -78,13 +85,11 @@ library Decoder {
         uint256 shift;
         for (uint256 i; i < parts.length; ++i) {
             bool isInline = _isStatic(parts[i]);
-            if (parts[i].isScoped) {
-                result.children[i] = _carve(
-                    data,
-                    _headOrTailOffset(data, offset, shift, isInline),
-                    parts[i]
-                );
-            }
+            result.children[i] = _carve(
+                data,
+                _headOrTailOffset(data, offset, shift, isInline),
+                parts[i]
+            );
             shift += isInline ? _size(parts[i]) : 32;
         }
     }
@@ -106,6 +111,9 @@ library Decoder {
     function _isStatic(
         ParameterConfig memory parameter
     ) private pure returns (bool) {
+        if (parameter.comp == Comparison.OneOf) {
+            return _isStatic(parameter.children[0]);
+        }
         if (parameter._type == ParameterType.Static) {
             return true;
         } else if (parameter._type == ParameterType.Tuple) {

@@ -20,17 +20,13 @@ library ConfigValidation {
 
     error NoCompValuesProvidedForScope();
 
-    error NotEnoughCompValuesForScope();
-
     error TooManyCompValuesForScope();
 
-    function check(ParameterConfigFlat[] calldata parameters) internal pure {
-        for (uint256 i = 1; i < parameters.length; ++i) {
-            if (parameters[i - 1].parent > parameters[i].parent) {
-                revert ConfigTopologyNotBFS(i);
-            }
-        }
+    error MalformedOneOfComparison();
 
+    error TooFewCompValuesForOneOf(uint256 index);
+
+    function check(ParameterConfigFlat[] calldata parameters) internal pure {
         topology(parameters);
 
         for (uint256 i = 0; i < parameters.length; ++i) {
@@ -39,7 +35,39 @@ library ConfigValidation {
     }
 
     function topology(ParameterConfigFlat[] calldata parameters) private pure {
-        // TODO check that array and tuple-oneOf nodes are topologically equivalent
+        // this function will be optimized
+
+        // check BFS
+        for (uint256 i = 1; i < parameters.length; ++i) {
+            if (parameters[i - 1].parent > parameters[i].parent) {
+                revert ConfigTopologyNotBFS(i);
+            }
+        }
+
+        // check at least 2 oneOf nodes
+        for (uint256 i = 0; i < parameters.length; i++) {
+            if (parameters[i].comp == Comparison.OneOf) {
+                if (parameters[i].compValues.length > 0) {
+                    revert MalformedOneOfComparison();
+                }
+
+                uint256 count;
+                for (
+                    uint256 j = i + 1;
+                    j < parameters.length && parameters[j].parent <= i;
+                    j++
+                ) {
+                    if (parameters[j].parent == i) {
+                        count++;
+                    }
+                }
+                if (count < 2) {
+                    revert TooFewCompValuesForOneOf(i);
+                }
+            }
+        }
+
+        // TODO check that Array and tuple-oneOf nodes are topologically equivalent
     }
 
     function entry(ParameterConfigFlat calldata parameter) internal pure {
@@ -48,10 +76,6 @@ library ConfigValidation {
         }
 
         bytes[] calldata compValues = parameter.compValues;
-        if (parameter.compValues.length == 0) {
-            revert NoCompValuesProvidedForScope();
-        }
-
         Comparison comp = parameter.comp;
         if (
             comp == Comparison.EqualTo ||
@@ -65,11 +89,6 @@ library ConfigValidation {
         }
 
         ParameterType _type = parameter._type;
-        // equal -> Static, Dynamic, Dynamic32
-        // less -> Static
-        // greater -> Static
-        // oneOf -> Static, Dynamic, Dynamic32
-        // subsetOf -> Dynamic32
         if (comp == Comparison.GreaterThan) {
             if (_type != ParameterType.Static) {
                 revert UnsuitableRelativeComparison();
@@ -78,10 +97,6 @@ library ConfigValidation {
             if (_type != ParameterType.Static) {
                 revert UnsuitableRelativeComparison();
             }
-        } else if (comp == Comparison.OneOf) {
-            if (compValues.length < 2) {
-                revert NotEnoughCompValuesForScope();
-            }
         } else if (comp == Comparison.SubsetOf) {
             if (_type != ParameterType.Dynamic32) {
                 revert UnsuitableSubsetOfComparison();
@@ -89,6 +104,9 @@ library ConfigValidation {
         }
 
         for (uint256 i; i < compValues.length; ++i) {
+            if (comp == Comparison.OneOf) {
+                continue;
+            }
             if (_type == ParameterType.Static && compValues[i].length != 32) {
                 revert UnsuitableStaticCompValueSize();
             }
