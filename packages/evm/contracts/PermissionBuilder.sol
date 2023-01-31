@@ -165,22 +165,22 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         bytes4 selector,
         Role storage role,
         BitmapBuffer memory buffer,
-        uint256 i
+        uint256 index
     ) internal view returns (ParameterConfig memory result) {
         (
             bool isScoped,
             ParameterType paramType,
             Comparison paramComp
-        ) = ScopeConfig.unpackParameter(buffer, i);
+        ) = ScopeConfig.unpackParameter(buffer, index);
 
         result.isScoped = isScoped;
         result._type = paramType;
         result.comp = paramComp;
 
-        if (_isNested(paramType)) {
+        if (_isNested(paramType) || paramComp == Comparison.OneOf) {
             (uint256 left, uint256 right) = ParameterLayout.childrenBounds(
                 buffer,
-                i
+                index
             );
 
             if (left <= right) {
@@ -197,7 +197,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             }
         } else {
             result.compValues = role.compValues[
-                _key(targetAddress, selector, uint8(i))
+                _key(targetAddress, selector, uint8(index))
             ];
         }
     }
