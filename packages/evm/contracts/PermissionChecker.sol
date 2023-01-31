@@ -233,12 +233,12 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal view returns (Status) {
-        if (parameter.comp == Comparison.OneOf) {
-            return _checkOneOf(parameter, payload);
-        } else if (parameter._type == ParameterType.Array) {
+        if (parameter._type == ParameterType.Array) {
             return _checkArray(parameter, payload);
         } else if (parameter._type == ParameterType.Tuple) {
             return _checkTuple(parameter, payload);
+        } else if (parameter._type == ParameterType.OneOf) {
+            return _checkOneOf(parameter, payload);
         } else {
             return _compare(parameter, payload);
         }

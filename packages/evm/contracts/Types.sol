@@ -14,7 +14,8 @@ enum ParameterType {
     Dynamic,
     Dynamic32,
     Tuple,
-    Array
+    Array,
+    OneOf
 }
 
 function _isNested(ParameterType _type) pure returns (bool) {
@@ -25,7 +26,6 @@ enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
-    OneOf,
     SubsetOf,
     Matches,
     Some,
