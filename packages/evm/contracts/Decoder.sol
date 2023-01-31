@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
+import "./Topology.sol";
 
 library Decoder {
     error CalldataOutOfBounds();
@@ -21,22 +22,15 @@ library Decoder {
          *
          * The encoding of the paremeter encoding area is equivalent to a Tuple
          */
-        return _carve(data, 4, parameter);
+        return _carve(data, 4, Topology.prune(parameter));
     }
 
     function _carve(
         bytes calldata data,
         uint256 offset,
-        ParameterConfig memory parameter
+        ParameterTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        if (parameter.comp == Comparison.OneOf) {
-            // this is meta node in the tree as it does not impact topology
-            // tree was previously validated to have at least two children
-            // with equivalent topology
-            assert(parameter.children.length > 0);
-
-            return _carve(data, offset, parameter.children[0]);
-        }
+        assert(parameter.comp != Comparison.OneOf);
 
         if (parameter._type == ParameterType.Static) {
             result._static = _loadWord(data, offset);
@@ -55,7 +49,7 @@ library Decoder {
     function _carveArray(
         bytes calldata data,
         uint256 offset,
-        ParameterConfig memory parameter
+        ParameterTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         // read length, and move offset to content start
         uint256 length = uint256(_loadWord(data, offset));
@@ -77,9 +71,9 @@ library Decoder {
     function _carveTuple(
         bytes calldata data,
         uint256 offset,
-        ParameterConfig memory parameter
+        ParameterTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        ParameterConfig[] memory parts = parameter.children;
+        ParameterTopology[] memory parts = parameter.children;
         result.children = new ParameterPayload[](parts.length);
 
         uint256 shift;
@@ -109,11 +103,8 @@ library Decoder {
     }
 
     function _isStatic(
-        ParameterConfig memory parameter
+        ParameterTopology memory parameter
     ) private pure returns (bool) {
-        if (parameter.comp == Comparison.OneOf) {
-            return _isStatic(parameter.children[0]);
-        }
         if (parameter._type == ParameterType.Static) {
             return true;
         } else if (parameter._type == ParameterType.Tuple) {
@@ -127,7 +118,7 @@ library Decoder {
     }
 
     function _size(
-        ParameterConfig memory parameter
+        ParameterTopology memory parameter
     ) private pure returns (uint256) {
         if (parameter._type == ParameterType.Static) {
             return 32;

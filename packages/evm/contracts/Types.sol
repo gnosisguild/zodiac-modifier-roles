@@ -61,6 +61,12 @@ struct ParameterConfig {
     ParameterConfig[] children;
 }
 
+struct ParameterTopology {
+    ParameterType _type;
+    Comparison comp;
+    ParameterTopology[] children;
+}
+
 struct ParameterPayload {
     bytes32 _static;
     bytes dynamic;
