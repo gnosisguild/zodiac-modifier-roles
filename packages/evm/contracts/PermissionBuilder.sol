@@ -4,7 +4,7 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 import "./ConfigValidation.sol";
-import "./ParameterLayout.sol";
+import "./Topology.sol";
 import "./ScopeConfig.sol";
 import "./Types.sol";
 
@@ -178,7 +178,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         result.comp = paramComp;
 
         if (_isNested(paramType) || paramComp == Comparison.OneOf) {
-            (uint256 left, uint256 right) = ParameterLayout.childrenBounds(
+            (uint256 left, uint256 right) = Topology.childrenBounds(
                 buffer,
                 index
             );
