@@ -1144,13 +1144,6 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: ParameterType.Tuple,
-          comp: Comparison.Matches,
-          compValues: [],
-        },
-        {
-          parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValues: [defaultAbiCoder.encode(["uint256"], [345])],
