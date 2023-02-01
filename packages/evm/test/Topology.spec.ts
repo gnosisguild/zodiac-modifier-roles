@@ -26,7 +26,7 @@ describe("Topology", async () => {
         children: [
           {
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {
@@ -45,7 +45,7 @@ describe("Topology", async () => {
           },
           {
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {
@@ -64,7 +64,7 @@ describe("Topology", async () => {
           },
           {
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {

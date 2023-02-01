@@ -146,7 +146,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         TargetAddress storage target = roles[roleId].targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
-            return checkExecutionOptions(value, operation, target.options);
+            return _checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
             Role storage role = roles[roleId];
 
@@ -161,17 +161,17 @@ abstract contract PermissionChecker is PermissionBuilder {
             (, bool isWildcarded, ExecutionOptions options) = ScopeConfig
                 .unpackHeader(buffer);
 
-            Status status = checkExecutionOptions(value, operation, options);
+            Status status = _checkExecutionOptions(value, operation, options);
             if (status != Status.Ok) {
                 return status;
             }
 
-            return
-                isWildcarded == true
-                    ? Status.Ok
-                    : checkParameters(role, targetAddress, data, buffer);
+            if (isWildcarded) {
+                return Status.Ok;
+            }
+
+            return _checkFunction(role, targetAddress, data, buffer);
         } else {
-            assert(target.clearance == Clearance.None);
             return Status.TargetAddressNotAllowed;
         }
     }
@@ -180,7 +180,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     /// @param value Ether value of module transaction.
     /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
     /// @param options Determines if a transaction can send ether and/or delegatecall to target.
-    function checkExecutionOptions(
+    function _checkExecutionOptions(
         uint256 value,
         Enum.Operation operation,
         ExecutionOptions options
@@ -206,9 +206,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.Ok;
     }
 
-    /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param data the transaction data to check
-    function checkParameters(
+    function _checkFunction(
         Role storage role,
         address targetAddress,
         bytes calldata data,
@@ -226,24 +224,22 @@ abstract contract PermissionChecker is PermissionBuilder {
             Topology.typeTree(parameters)
         );
 
-        if (Topology.isVariantSignature(parameters)) {
-            assert(parameters.length == 1);
-            return _checkVariant(parameters[0].children, payloads);
-        } else if (Topology.isExplicitSignature(parameters)) {
-            assert(parameters.length == 1);
-            return _checkSignature(parameters[0].children, payloads);
+        if (Topology.isVariantEntrypoint(parameters)) {
+            return _checkFunctionVariants(parameters[0].children, payloads);
+        } else if (Topology.isExplicitEntrypoint(parameters)) {
+            return _checkFunction(parameters[0].children, payloads);
         } else {
             // is implicit
-            return _checkSignature(parameters, payloads);
+            return _checkFunction(parameters, payloads);
         }
     }
 
-    function _checkVariant(
+    function _checkFunctionVariants(
         ParameterConfig[] memory variants,
         ParameterPayload[] memory payloads
     ) internal view returns (Status) {
         for (uint256 i; i < variants.length; ++i) {
-            Status status = _checkSignature(variants[i].children, payloads);
+            Status status = _checkFunction(variants[i].children, payloads);
             if (status == Status.Ok) {
                 return status;
             }
@@ -251,14 +247,14 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.FunctionVariantNotAllowed;
     }
 
-    function _checkSignature(
+    function _checkFunction(
         ParameterConfig[] memory parameters,
         ParameterPayload[] memory payloads
     ) internal view returns (Status) {
         assert(parameters.length == payloads.length);
 
         for (uint256 i; i < parameters.length; ++i) {
-            Status status = _check(parameters[i], payloads[i]);
+            Status status = _checkParameter(parameters[i], payloads[i]);
             if (status != Status.Ok) {
                 return status;
             }
@@ -266,11 +262,11 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.Ok;
     }
 
-    function _check(
+    function _checkParameter(
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal view returns (Status) {
-        assert(parameter._type != ParameterType.Signature);
+        assert(parameter._type != ParameterType.Function);
 
         if (!parameter.isScoped) {
             return Status.Ok;
@@ -292,7 +288,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterPayload memory payload
     ) private view returns (Status status) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            if (_check(parameter.children[i], payload) == Status.Ok) {
+            if (_checkParameter(parameter.children[i], payload) == Status.Ok) {
                 return status;
             }
         }
@@ -314,7 +310,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
 
         for (uint256 i; i < payload.children.length; ++i) {
-            status = _check(
+            status = _checkParameter(
                 parameter.children[isMatches ? i : 0],
                 payload.children[i]
             );
@@ -334,7 +330,10 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterPayload memory payload
     ) private view returns (Status status) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            status = _check(parameter.children[i], payload.children[i]);
+            status = _checkParameter(
+                parameter.children[i],
+                payload.children[i]
+            );
             if (status != Status.Ok) {
                 return status;
             }

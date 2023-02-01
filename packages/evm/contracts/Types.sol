@@ -16,7 +16,7 @@ enum ParameterType {
     Tuple,
     Array,
     OneOf,
-    Signature
+    Function
 }
 
 function _isNested(ParameterType _type) pure returns (bool) {
