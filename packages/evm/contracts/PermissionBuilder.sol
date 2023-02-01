@@ -164,14 +164,33 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         address targetAddress,
         bytes4 selector,
         Role storage role,
-        BitmapBuffer memory buffer,
+        BitmapBuffer memory scopeConfig
+    ) internal view returns (ParameterConfig[] memory result) {
+        (uint256 left, uint256 right) = Topology.rootBounds(scopeConfig);
+        result = new ParameterConfig[](right - left + 1);
+        for (uint256 i = left; i <= right; ++i) {
+            result[i] = _loadParameterConfig(
+                targetAddress,
+                selector,
+                role,
+                scopeConfig,
+                i
+            );
+        }
+    }
+
+    function _loadParameterConfig(
+        address targetAddress,
+        bytes4 selector,
+        Role storage role,
+        BitmapBuffer memory scopeConfig,
         uint256 index
     ) internal view returns (ParameterConfig memory result) {
         (
             bool isScoped,
             ParameterType paramType,
             Comparison paramComp
-        ) = ScopeConfig.unpackParameter(buffer, index);
+        ) = ScopeConfig.unpackParameter(scopeConfig, index);
 
         result.isScoped = isScoped;
         result._type = paramType;
@@ -179,7 +198,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
         if (_isNested(paramType)) {
             (uint256 left, uint256 right) = Topology.childrenBounds(
-                buffer,
+                scopeConfig,
                 index
             );
 
@@ -190,7 +209,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
                         targetAddress,
                         selector,
                         role,
-                        buffer,
+                        scopeConfig,
                         j
                     );
                 }
