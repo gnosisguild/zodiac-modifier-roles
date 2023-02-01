@@ -140,7 +140,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
             ParameterConfigFlat memory parameter = parameters[i];
             ScopeConfig.packParameter(buffer, parameter, i);
             if (parameter.isScoped && !_isNested(parameter._type)) {
-                role.compValues[_key(targetAddress, selector, i)] = _compress(
+                role.compValue[_key(targetAddress, selector, i)] = _compress(
                     parameter
                 );
             }
@@ -215,7 +215,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
                 }
             }
         } else {
-            result.compValues = role.compValues[
+            result.compValue = role.compValue[
                 _key(targetAddress, selector, uint8(index))
             ];
         }
@@ -238,46 +238,54 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
 
     function _compress(
         ParameterConfigFlat memory config
-    ) private pure returns (bytes32[] memory) {
-        if (config.comp == Comparison.SubsetOf) {
-            assert(config.compValues.length == 1);
-            return _splitCompValue(config._type, config.compValues[0]);
-        } else {
-            return _compressCompValues(config._type, config.compValues);
-        }
-    }
-
-    function _compressCompValues(
-        ParameterType paramType,
-        bytes[] memory compValues
-    ) private pure returns (bytes32[] memory result) {
-        result = new bytes32[](compValues.length);
-        for (uint256 i; i < compValues.length; ++i) {
-            result[i] = paramType == ParameterType.Static
-                ? bytes32(compValues[i])
-                : keccak256(compValues[i]);
-        }
-    }
-
-    function _splitCompValue(
-        ParameterType paramType,
-        bytes memory compValue
-    ) private pure returns (bytes32[] memory) {
-        assert(paramType == ParameterType.Dynamic32);
-
-        uint256 length = compValue.length / 32;
-        bytes32[] memory result = new bytes32[](length);
-
-        uint256 offset = 32;
-        for (uint256 i; i < length; ++i) {
-            bytes32 chunk;
-            assembly {
-                chunk := mload(add(compValue, offset))
-            }
-            result[i] = chunk;
-            offset += 32;
-        }
-
-        return result;
+    ) private pure returns (bytes32) {
+        return
+            config._type == ParameterType.Static
+                ? bytes32(config.compValue)
+                : keccak256(config.compValue);
     }
 }
+
+// function _compress(
+//     ParameterConfigFlat memory config
+// ) private pure returns (bytes32[] memory) {
+//     if (config.comp == Comparison.SubsetOf) {
+//         assert(config.compValues.length == 1);
+//         return _splitCompValue(config._type, config.compValues[0]);
+//     } else {
+//         return _compressCompValues(config._type, config.compValues);
+//     }
+// }
+
+// function _compressCompValues(
+//     ParameterType paramType,
+//     bytes[] memory compValues
+// ) private pure returns (bytes32[] memory result) {
+//     result = new bytes32[](compValues.length);
+//     for (uint256 i; i < compValues.length; ++i) {
+//         result[i] = paramType == ParameterType.Static
+//             ? bytes32(compValues[i])
+//             : keccak256(compValues[i]);
+//     }
+// }
+// function _splitCompValue(
+//     ParameterType paramType,
+//     bytes memory compValue
+// ) private pure returns (bytes32[] memory) {
+//     assert(paramType == ParameterType.Dynamic32);
+
+//     uint256 length = compValue.length / 32;
+//     bytes32[] memory result = new bytes32[](length);
+
+//     uint256 offset = 32;
+//     for (uint256 i; i < length; ++i) {
+//         bytes32 chunk;
+//         assembly {
+//             chunk := mload(add(compValue, offset))
+//         }
+//         result[i] = chunk;
+//         offset += 32;
+//     }
+
+//     return result;
+// }

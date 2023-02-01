@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
+import { ExecutionOptions } from "./utils";
 
 describe("Clearance", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -39,11 +41,6 @@ describe("Clearance", async () => {
     };
   });
 
-  const OPTIONS_NONE = 0;
-  const OPTIONS_SEND = 1;
-  const OPTIONS_DELEGATECALL = 1;
-  const OPTIONS_BOTH = 2;
-
   it("allows and then disallows a target", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
@@ -62,7 +59,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
 
     await expect(
       modifier
@@ -91,7 +88,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -131,7 +128,12 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
+      .allowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        ExecutionOptions.None
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -169,7 +171,12 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
+      .allowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        ExecutionOptions.None
+      );
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -207,7 +214,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -229,7 +236,12 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
+      .allowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        ExecutionOptions.None
+      );
 
     await expect(
       modifier
@@ -275,7 +287,12 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE);
+      .allowFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        ExecutionOptions.None
+      );
 
     await expect(
       modifier
@@ -301,7 +318,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE);
+      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
 
     await expect(
       modifier
@@ -343,7 +360,7 @@ describe("Clearance", async () => {
         ROLE_ID,
         testContract.address,
         SEL_DONOTHING,
-        OPTIONS_NONE
+        ExecutionOptions.None
       );
 
     await modifier
@@ -352,7 +369,7 @@ describe("Clearance", async () => {
         ROLE_ID,
         testContract.address,
         SEL_DOEVENLESS,
-        OPTIONS_NONE
+        ExecutionOptions.None
       );
 
     await expect(

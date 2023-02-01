@@ -72,12 +72,10 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(
-                  ["string"],
-                  [MORE_THAN_32_BYTES_TEXT]
-                ),
-              ],
+              compValue: ethers.utils.solidityPack(
+                ["string"],
+                [MORE_THAN_32_BYTES_TEXT]
+              ),
             },
           ],
           ExecutionOptions.None
@@ -95,9 +93,7 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Dynamic32,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
-              ],
+              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
             },
           ],
           ExecutionOptions.None
@@ -115,7 +111,7 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Dynamic32,
               comp: Comparison.EqualTo,
-              compValues: [A_32_BYTES_VALUE],
+              compValue: A_32_BYTES_VALUE,
             },
           ],
           ExecutionOptions.None
@@ -134,19 +130,17 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.Dynamic32,
               comp: Comparison.EqualTo,
-              compValues: [A_32_BYTES_VALUE],
+              compValue: A_32_BYTES_VALUE,
             },
             {
               isScoped: true,
               parent: 1,
               _type: ParameterType.Dynamic,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(
-                  ["string"],
-                  [MORE_THAN_32_BYTES_TEXT]
-                ),
-              ],
+              compValue: ethers.utils.solidityPack(
+                ["string"],
+                [MORE_THAN_32_BYTES_TEXT]
+              ),
             },
           ],
           ExecutionOptions.None
@@ -174,31 +168,27 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.OneOf,
               comp: 0,
-              compValues: [],
+              compValue: "0x",
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(
-                  ["string"],
-                  [MORE_THAN_32_BYTES_TEXT]
-                ),
-              ],
+              compValue: ethers.utils.solidityPack(
+                ["string"],
+                [MORE_THAN_32_BYTES_TEXT]
+              ),
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(
-                  ["string"],
-                  [MORE_THAN_32_BYTES_TEXT]
-                ),
-              ],
+              compValue: ethers.utils.solidityPack(
+                ["string"],
+                [MORE_THAN_32_BYTES_TEXT]
+              ),
             },
           ],
           ExecutionOptions.None
@@ -216,25 +206,21 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.OneOf,
               comp: 0,
-              compValues: [],
+              compValue: "0x",
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Dynamic32,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
-              ],
+              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Dynamic32,
               comp: Comparison.EqualTo,
-              compValues: [
-                ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
-              ],
+              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
             },
           ],
           ExecutionOptions.None
@@ -252,21 +238,21 @@ describe("Scoping", async () => {
               parent: 0,
               _type: ParameterType.OneOf,
               comp: 0,
-              compValues: [],
+              compValue: "0x",
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValues: [A_32_BYTES_VALUE],
+              compValue: A_32_BYTES_VALUE,
             },
             {
               isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValues: [A_32_BYTES_VALUE],
+              compValue: A_32_BYTES_VALUE,
             },
           ],
           ExecutionOptions.None
@@ -294,14 +280,14 @@ describe("Scoping", async () => {
             isScoped: true,
             _type: ParameterType.OneOf,
             comp: 0,
-            compValues: [],
+            compValue: "0x",
           },
           {
             isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [A_32_BYTES_VALUE],
+            compValue: A_32_BYTES_VALUE,
           },
         ],
         ExecutionOptions.None
@@ -319,21 +305,21 @@ describe("Scoping", async () => {
             isScoped: true,
             _type: ParameterType.OneOf,
             comp: 0,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 0,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [A_32_BYTES_VALUE],
+            compValue: A_32_BYTES_VALUE,
           },
           {
             parent: 0,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [A_32_BYTES_VALUE],
+            compValue: A_32_BYTES_VALUE,
           },
         ],
         ExecutionOptions.None
