@@ -123,7 +123,6 @@ export enum Comparison {
   EqualTo = 0,
   GreaterThan,
   LessThan,
-  SubsetOf,
   Matches,
   Some,
   Every,
