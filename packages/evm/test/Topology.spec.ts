@@ -97,8 +97,6 @@ describe("Topology", async () => {
     // ]
 
     const result = await topology.typeTree(layout);
-
-    console.log(JSON.stringify(result, null, 2));
     expect(result.length).to.equal(2);
     expect(result[0]._type).to.equal(ParameterType.Static);
     expect(result[0].children.length).to.equal(0);

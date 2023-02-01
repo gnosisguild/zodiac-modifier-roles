@@ -53,44 +53,49 @@ library Topology {
     }
 
     function typeTree(
-        ParameterConfig[] memory input
+        ParameterConfig[] memory inputs
     ) internal pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](0);
-        for (uint256 i; i < input.length; i++) {
-            result = spread(result, typeTree(input[i]));
+        if (isVariantSignature(inputs)) {
+            return typeTree(inputs[0].children[0].children);
+        }
+
+        if (isExplicitSignature(inputs)) {
+            return typeTree(inputs[0].children);
+        }
+
+        result = new TypeTopology[](inputs.length);
+        for (uint256 i; i < inputs.length; i++) {
+            result[i] = typeTree(inputs[i]);
         }
     }
 
     function typeTree(
         ParameterConfig memory input
-    ) internal pure returns (TypeTopology[] memory result) {
-        if (input._type == ParameterType.Signature) {
-            return typeTree(input.children);
-        } else if (input._type == ParameterType.OneOf) {
+    ) internal pure returns (TypeTopology memory result) {
+        if (input._type == ParameterType.OneOf) {
             return typeTree(input.children[0]);
-        } else {
-            result = new TypeTopology[](1);
-            result[0]._type = input._type;
-            if (
-                input._type == ParameterType.Array ||
-                input._type == ParameterType.Tuple
-            ) {
-                result[0].children = typeTree(input.children);
-            }
+        }
+
+        result._type = input._type;
+        if (input._type == ParameterType.Array) {
+            result.children = new TypeTopology[](1);
+            result.children[0] = typeTree(input.children[0]);
+        } else if (input._type == ParameterType.Tuple) {
+            result.children = typeTree(input.children);
         }
     }
 
-    function spread(
-        TypeTopology[] memory t1,
-        TypeTopology[] memory t2
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](t1.length + t2.length);
+    function isVariantSignature(
+        ParameterConfig[] memory configs
+    ) internal pure returns (bool) {
+        return
+            configs[0]._type == ParameterType.OneOf &&
+            configs[0].children[0]._type == ParameterType.Signature;
+    }
 
-        for (uint256 i; i < t1.length; ++i) {
-            result[i] = t1[i];
-        }
-        for (uint256 i; i < t2.length; ++i) {
-            result[t1.length + i] = t2[i];
-        }
+    function isExplicitSignature(
+        ParameterConfig[] memory configs
+    ) internal pure returns (bool) {
+        return configs[0]._type == ParameterType.Signature;
     }
 }
