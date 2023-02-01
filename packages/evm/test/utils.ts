@@ -116,6 +116,7 @@ export enum ParameterType {
   Tuple,
   Array,
   OneOf,
+  Signature,
 }
 
 export enum Comparison {
