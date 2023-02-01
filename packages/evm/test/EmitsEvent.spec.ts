@@ -80,7 +80,7 @@ describe("EmitsEvent", async () => {
           ROLE_ID,
           AddressOne,
           "0x12345678",
-          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValues: [] }],
+          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValue: "0x" }],
           OPTIONS_NONE
         )
     ).to.emit(modifier, "ScopeFunction");

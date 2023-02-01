@@ -81,14 +81,14 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.EqualTo,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["uint256"], [123])],
+          compValue: ethers.utils.solidityPack(["uint256"], [123]),
         },
       ],
       ExecutionOptions.None
@@ -133,14 +133,14 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.EqualTo,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.GreaterThan,
-          compValues: [ethers.utils.solidityPack(["uint256"], [1234])],
+          compValue: ethers.utils.solidityPack(["uint256"], [1234]),
         },
       ],
       ExecutionOptions.None
@@ -160,14 +160,14 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.EqualTo,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
-          compValues: [ethers.utils.solidityPack(["uint256"], [2345])],
+          compValue: ethers.utils.solidityPack(["uint256"], [2345]),
         },
       ],
       ExecutionOptions.None
@@ -218,21 +218,21 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.EqualTo,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: false,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["string"], ["Some string"])],
+          compValue: ethers.utils.solidityPack(["string"], ["Some string"]),
         },
       ],
       ExecutionOptions.None
@@ -278,14 +278,14 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Function,
           comp: Comparison.EqualTo,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: ["0x"],
+          compValue: "0x",
         },
       ],
       ExecutionOptions.None
@@ -331,16 +331,17 @@ describe("Comparison", async () => {
           isScoped: false,
           _type: ParameterType.Dynamic,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
-          compValues: [
-            ethers.utils.solidityPack(["bytes2[]"], [["0x1234", "0xabcd"]]),
-          ],
+          compValue: ethers.utils.solidityPack(
+            ["bytes2[]"],
+            [["0x1234", "0xabcd"]]
+          ),
         },
       ],
       ExecutionOptions.None
@@ -351,18 +352,18 @@ describe("Comparison", async () => {
       invoke("Doesn't matter", ["0x1234", "0xabcd", "0xabcd"])
     ).to.be.revertedWith("ParameterNotAllowed()");
 
-    // //shorter
-    // await expect(invoke("Doesn't matter", ["0x1234"])).to.be.revertedWith(
-    //   "ParameterNotAllowed()"
-    // );
+    //shorter
+    await expect(invoke("Doesn't matter", ["0x1234"])).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
 
-    // // different
-    // await expect(
-    //   invoke("Doesn't matter", ["0x0234", "0xabcd"])
-    // ).to.be.revertedWith("ParameterNotAllowed()");
+    // different
+    await expect(
+      invoke("Doesn't matter", ["0x0234", "0xabcd"])
+    ).to.be.revertedWith("ParameterNotAllowed()");
 
-    // await expect(invoke("Doesn't matter", ["0x1234", "0xabcd"])).to.not.be
-    //   .reverted;
+    await expect(invoke("Doesn't matter", ["0x1234", "0xabcd"])).to.not.be
+      .reverted;
   });
 
   it("checks an eq comparison for dynamic32 - empty array", async () => {
@@ -400,7 +401,7 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
-          compValues: [[]],
+          compValue: [],
         },
       ],
       ExecutionOptions.None
@@ -448,21 +449,21 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.OneOf,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [11])],
+          compValue: defaultAbiCoder.encode(["uint256"], [11]),
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [22])],
+          compValue: defaultAbiCoder.encode(["uint256"], [22]),
         },
       ],
       ExecutionOptions.None
@@ -508,37 +509,35 @@ describe("Comparison", async () => {
           isScoped: false,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.OneOf,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["string"], ["First String"])],
+          compValue: ethers.utils.solidityPack(["string"], ["First String"]),
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: [
-            ethers.utils.solidityPack(["string"], ["Good Morning!"]),
-          ],
+          compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["string"], ["Third String"])],
+          compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
         },
       ],
       ExecutionOptions.None
@@ -592,32 +591,34 @@ describe("Comparison", async () => {
           isScoped: false,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.OneOf,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
-          compValues: [
-            ethers.utils.solidityPack(["bytes2[]"], [["0x1111", "0x1111"]]),
-          ],
+          compValue: ethers.utils.solidityPack(
+            ["bytes2[]"],
+            [["0x1111", "0x1111"]]
+          ),
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
-          compValues: [
-            ethers.utils.solidityPack(["bytes2[]"], [["0xffff", "0xffff"]]),
-          ],
+          compValue: ethers.utils.solidityPack(
+            ["bytes2[]"],
+            [["0xffff", "0xffff"]]
+          ),
         },
       ],
       ExecutionOptions.None
@@ -684,21 +685,21 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.OneOf,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // first tuple variant
         {
@@ -706,14 +707,14 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [1111])],
+          compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [addressOne])],
+          compValue: defaultAbiCoder.encode(["address"], [addressOne]),
         },
         // second tuple variant
         {
@@ -721,14 +722,14 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [22222])],
+          compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 2,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [addressTwo])],
+          compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
       ],
       ExecutionOptions.None
@@ -782,7 +783,7 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.OneOf,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         // first Array 1
         {
@@ -790,7 +791,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // second Array 2
         {
@@ -798,7 +799,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // first array first element 3
         {
@@ -806,7 +807,7 @@ describe("Comparison", async () => {
           parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // first array second element 4
         {
@@ -814,7 +815,7 @@ describe("Comparison", async () => {
           parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // second array first element 5
         {
@@ -822,7 +823,7 @@ describe("Comparison", async () => {
           parent: 2,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // tuple first
         {
@@ -830,14 +831,14 @@ describe("Comparison", async () => {
           parent: 3,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 3,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address1])],
+          compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         // tuple second 8
         {
@@ -845,14 +846,14 @@ describe("Comparison", async () => {
           parent: 4,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [334455])],
+          compValue: defaultAbiCoder.encode(["uint256"], [334455]),
         },
         {
           parent: 4,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+          compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
 
         // tuple third 9
@@ -861,14 +862,14 @@ describe("Comparison", async () => {
           parent: 5,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 5,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address3])],
+          compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
       ExecutionOptions.None
@@ -898,207 +899,6 @@ describe("Comparison", async () => {
     await expect(invoke([{ a: 123121212, b: address3 }])).to.not.be.reverted;
 
     await expect(invoke([])).to.be.revertedWith("ParameterNotOneOfAllowed()");
-  });
-
-  it("checks a subsetOf comparison for dynamic32", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("dynamic32")
-    );
-
-    const invoke = async (a: any) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.dynamic32(a)).data as string,
-          0
-        );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          isScoped: true,
-          _type: ParameterType.Dynamic32,
-          comp: Comparison.SubsetOf,
-          compValues: [
-            ethers.utils.solidityPack(
-              ["bytes4[]"],
-              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
-            ),
-          ],
-        },
-      ],
-      ExecutionOptions.None
-    );
-
-    await expect(invoke(["0x11112233", "0xaabbccdd"])).to.not.be.reverted;
-  });
-
-  it("checks a subsetOf comparison for dynamic32 - order does not matter", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("dynamic32")
-    );
-
-    const invoke = async (a: any) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.dynamic32(a)).data as string,
-          0
-        );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          isScoped: true,
-          _type: ParameterType.Dynamic32,
-          comp: Comparison.SubsetOf,
-          compValues: [
-            ethers.utils.solidityPack(
-              ["bytes4[]"],
-              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
-            ),
-          ],
-        },
-      ],
-      ExecutionOptions.None
-    );
-
-    await expect(invoke(["0xffddeecc", "0xaabbccdd", "0x11112233"])).to.not.be
-      .reverted;
-  });
-
-  it("fails a subsetOf comparison for dynamic32 - empty array is not subset", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("dynamic32")
-    );
-
-    const invoke = async (a: any) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.dynamic32(a)).data as string,
-          0
-        );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          isScoped: true,
-          _type: ParameterType.Dynamic32,
-          comp: Comparison.SubsetOf,
-          compValues: [
-            ethers.utils.solidityPack(
-              ["bytes4[]"],
-              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
-            ),
-          ],
-        },
-      ],
-      ExecutionOptions.None
-    );
-
-    await expect(invoke([])).to.be.revertedWith(
-      "ParameterNotSubsetOfAllowed()"
-    );
-  });
-
-  it("fails a subsetOf comparison for dynamic32 - does not allow repetition", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("dynamic32")
-    );
-
-    const invoke = async (a: any) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.dynamic32(a)).data as string,
-          0
-        );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          isScoped: true,
-          _type: ParameterType.Dynamic32,
-          comp: Comparison.SubsetOf,
-          compValues: [
-            ethers.utils.solidityPack(
-              ["bytes4[]"],
-              [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
-            ),
-          ],
-        },
-      ],
-      ExecutionOptions.None
-    );
-
-    await expect(
-      invoke(["0x11112233", "0x11112233", "0xffddeecc"])
-    ).to.be.revertedWith("ParameterNotSubsetOfAllowed()");
   });
 
   it("checks a static tuple comparison", async () => {
@@ -1139,21 +939,21 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["uint256"], [345])],
+          compValue: defaultAbiCoder.encode(["uint256"], [345]),
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [addressOk])],
+          compValue: defaultAbiCoder.encode(["address"], [addressOk]),
         },
       ],
       ExecutionOptions.None
@@ -1201,28 +1001,28 @@ describe("Comparison", async () => {
           isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["bytes"], ["0xabcdef"])],
+          compValue: ethers.utils.solidityPack(["bytes"], ["0xabcdef"]),
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["uint256"], [1998])],
+          compValue: ethers.utils.solidityPack(["uint256"], [1998]),
         },
         {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic32,
           comp: Comparison.EqualTo,
-          compValues: [ethers.utils.solidityPack(["uint256[]"], [[7, 88, 99]])],
+          compValue: ethers.utils.solidityPack(["uint256[]"], [[7, 88, 99]]),
         },
       ],
       ExecutionOptions.None
@@ -1279,28 +1079,28 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Every,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
-          compValues: [defaultAbiCoder.encode(["uint256"], [10000])],
+          compValue: defaultAbiCoder.encode(["uint256"], [10000]),
         },
         {
           isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+          compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
       ],
       ExecutionOptions.None
@@ -1361,28 +1161,28 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Some,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: false,
           parent: 1,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+          compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
       ],
       ExecutionOptions.None
@@ -1436,7 +1236,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // tuple first
         {
@@ -1444,7 +1244,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // tuple second
         {
@@ -1452,7 +1252,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         // tuple third
         {
@@ -1460,49 +1260,49 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: false,
           parent: 1,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 1,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address1])],
+          compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         {
           isScoped: false,
           parent: 2,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           isScoped: true,
           parent: 2,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address2])],
+          compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         {
           isScoped: false,
           parent: 3,
           _type: ParameterType.Static,
           comp: 0,
-          compValues: [],
+          compValue: "0x",
         },
         {
           parent: 3,
           isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValues: [defaultAbiCoder.encode(["address"], [address3])],
+          compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
       ExecutionOptions.None
@@ -1572,7 +1372,7 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.OneOf,
             comp: 0,
-            compValues: [],
+            compValue: "0x",
           },
           // 1
           {
@@ -1580,7 +1380,7 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           // 2
           {
@@ -1588,7 +1388,7 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           // 3
           {
@@ -1596,7 +1396,7 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           // first variant
           {
@@ -1604,16 +1404,14 @@ describe("Comparison", async () => {
             isScoped: false,
             _type: ParameterType.Static,
             comp: 0,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 1,
             isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValues: [
-              ethers.utils.solidityPack(["string"], ["First String"]),
-            ],
+            compValue: ethers.utils.solidityPack(["string"], ["First String"]),
           },
           // second variant
           {
@@ -1621,16 +1419,14 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [defaultAbiCoder.encode(["bool"], [true])],
+            compValue: defaultAbiCoder.encode(["bool"], [true]),
           },
           {
             parent: 2,
             isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValues: [
-              ethers.utils.solidityPack(["string"], ["Good Morning!"]),
-            ],
+            compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
           },
           // third variant
           {
@@ -1638,16 +1434,14 @@ describe("Comparison", async () => {
             isScoped: false,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 3,
             isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValues: [
-              ethers.utils.solidityPack(["string"], ["Third String"]),
-            ],
+            compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
           },
         ],
         ExecutionOptions.None
@@ -1705,28 +1499,28 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 0,
             isScoped: true,
             _type: ParameterType.OneOf,
             comp: 0,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 1,
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           {
             parent: 1,
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
-            compValues: [],
+            compValue: "0x",
           },
           // first tuple variant
           {
@@ -1734,14 +1528,14 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [defaultAbiCoder.encode(["uint256"], [1111])],
+            compValue: defaultAbiCoder.encode(["uint256"], [1111]),
           },
           {
             parent: 2,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [defaultAbiCoder.encode(["address"], [addressOne])],
+            compValue: defaultAbiCoder.encode(["address"], [addressOne]),
           },
           // second tuple variant
           {
@@ -1749,14 +1543,14 @@ describe("Comparison", async () => {
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [defaultAbiCoder.encode(["uint256"], [22222])],
+            compValue: defaultAbiCoder.encode(["uint256"], [22222]),
           },
           {
             parent: 3,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
-            compValues: [defaultAbiCoder.encode(["address"], [addressTwo])],
+            compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
           },
         ],
         ExecutionOptions.None
@@ -1776,3 +1570,196 @@ describe("Comparison", async () => {
     });
   });
 });
+
+// it("checks a subsetOf comparison for dynamic32", async () => {
+//   const { modifier, testContract, owner, invoker } = await setup();
+
+//   const ROLE_ID = 0;
+//   const SELECTOR = testContract.interface.getSighash(
+//     testContract.interface.getFunction("dynamic32")
+//   );
+
+//   const invoke = async (a: any) =>
+//     modifier
+//       .connect(invoker)
+//       .execTransactionFromModule(
+//         testContract.address,
+//         0,
+//         (await testContract.populateTransaction.dynamic32(a)).data as string,
+//         0
+//       );
+
+//   await modifier
+//     .connect(owner)
+//     .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+//   // set it to true
+//   await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+//   await modifier.connect(owner).scopeFunction(
+//     ROLE_ID,
+//     testContract.address,
+//     SELECTOR,
+//     [
+//       {
+//         parent: 0,
+//         isScoped: true,
+//         _type: ParameterType.Dynamic32,
+//         comp: Comparison.SubsetOf,
+//         compValue: ethers.utils.solidityPack(
+//           ["bytes4[]"],
+//           [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+//         ),
+//       },
+//     ],
+//     ExecutionOptions.None
+//   );
+
+//   await expect(invoke(["0x11112233", "0xaabbccdd"])).to.not.be.reverted;
+// });
+
+// it("checks a subsetOf comparison for dynamic32 - order does not matter", async () => {
+//   const { modifier, testContract, owner, invoker } = await setup();
+
+//   const ROLE_ID = 0;
+//   const SELECTOR = testContract.interface.getSighash(
+//     testContract.interface.getFunction("dynamic32")
+//   );
+
+//   const invoke = async (a: any) =>
+//     modifier
+//       .connect(invoker)
+//       .execTransactionFromModule(
+//         testContract.address,
+//         0,
+//         (await testContract.populateTransaction.dynamic32(a)).data as string,
+//         0
+//       );
+
+//   await modifier
+//     .connect(owner)
+//     .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+//   // set it to true
+//   await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+//   await modifier.connect(owner).scopeFunction(
+//     ROLE_ID,
+//     testContract.address,
+//     SELECTOR,
+//     [
+//       {
+//         parent: 0,
+//         isScoped: true,
+//         _type: ParameterType.Dynamic32,
+//         comp: Comparison.SubsetOf,
+//         compValue: ethers.utils.solidityPack(
+//           ["bytes4[]"],
+//           [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+//         ),
+//       },
+//     ],
+//     ExecutionOptions.None
+//   );
+
+//   await expect(invoke(["0xffddeecc", "0xaabbccdd", "0x11112233"])).to.not.be
+//     .reverted;
+// });
+
+// it("fails a subsetOf comparison for dynamic32 - empty array is not subset", async () => {
+//   const { modifier, testContract, owner, invoker } = await setup();
+
+//   const ROLE_ID = 0;
+//   const SELECTOR = testContract.interface.getSighash(
+//     testContract.interface.getFunction("dynamic32")
+//   );
+
+//   const invoke = async (a: any) =>
+//     modifier
+//       .connect(invoker)
+//       .execTransactionFromModule(
+//         testContract.address,
+//         0,
+//         (await testContract.populateTransaction.dynamic32(a)).data as string,
+//         0
+//       );
+
+//   await modifier
+//     .connect(owner)
+//     .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+//   // set it to true
+//   await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+//   await modifier.connect(owner).scopeFunction(
+//     ROLE_ID,
+//     testContract.address,
+//     SELECTOR,
+//     [
+//       {
+//         parent: 0,
+//         isScoped: true,
+//         _type: ParameterType.Dynamic32,
+//         comp: Comparison.SubsetOf,
+//         compValue: ethers.utils.solidityPack(
+//           ["bytes4[]"],
+//           [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+//         ),
+//       },
+//     ],
+//     ExecutionOptions.None
+//   );
+
+//   await expect(invoke([])).to.be.revertedWith(
+//     "ParameterNotSubsetOfAllowed()"
+//   );
+// });
+
+// it("fails a subsetOf comparison for dynamic32 - does not allow repetition", async () => {
+//   const { modifier, testContract, owner, invoker } = await setup();
+
+//   const ROLE_ID = 0;
+//   const SELECTOR = testContract.interface.getSighash(
+//     testContract.interface.getFunction("dynamic32")
+//   );
+
+//   const invoke = async (a: any) =>
+//     modifier
+//       .connect(invoker)
+//       .execTransactionFromModule(
+//         testContract.address,
+//         0,
+//         (await testContract.populateTransaction.dynamic32(a)).data as string,
+//         0
+//       );
+
+//   await modifier
+//     .connect(owner)
+//     .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+//   // set it to true
+//   await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+//   await modifier.connect(owner).scopeFunction(
+//     ROLE_ID,
+//     testContract.address,
+//     SELECTOR,
+//     [
+//       {
+//         parent: 0,
+//         isScoped: true,
+//         _type: ParameterType.Dynamic32,
+//         comp: Comparison.SubsetOf,
+//         compValue: ethers.utils.solidityPack(
+//           ["bytes4[]"],
+//           [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
+//         ),
+//       },
+//     ],
+//     ExecutionOptions.None
+//   );
+
+//   await expect(
+//     invoke(["0x11112233", "0x11112233", "0xffddeecc"])
+//   ).to.be.revertedWith("ParameterNotSubsetOfAllowed()");
+// });

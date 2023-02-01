@@ -27,7 +27,7 @@ enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
-    SubsetOf,
+    //SubsetOf,
     Matches,
     Some,
     Every
@@ -51,14 +51,14 @@ struct ParameterConfigFlat {
     uint16 parent;
     ParameterType _type;
     Comparison comp;
-    bytes[] compValues;
+    bytes compValue;
 }
 
 struct ParameterConfig {
     bool isScoped;
     ParameterType _type;
     Comparison comp;
-    bytes32[] compValues;
+    bytes32 compValue;
     ParameterConfig[] children;
 }
 
@@ -84,5 +84,4 @@ struct Role {
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => Bitmap) functions;
     mapping(bytes32 => bytes32) compValue;
-    mapping(bytes32 => bytes32[]) compValues;
 }

@@ -345,59 +345,21 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status) {
-        if (parameter.comp == Comparison.SubsetOf) {
-            assert(parameter._type == ParameterType.Dynamic32);
-            return _compareSubsetOf(parameter.compValues, payload.dynamic32);
-        } else {
-            assert(
-                parameter.comp == Comparison.EqualTo ||
-                    parameter.comp == Comparison.GreaterThan ||
-                    parameter.comp == Comparison.LessThan
-            );
-            return
-                _compareEqual(
-                    parameter.comp,
-                    parameter.compValues[0],
-                    _compressValue(parameter._type, payload)
-                );
-        }
-    }
+        assert(
+            parameter.comp == Comparison.EqualTo ||
+                parameter.comp == Comparison.GreaterThan ||
+                parameter.comp == Comparison.LessThan
+        );
+        Comparison comp = parameter.comp;
+        bytes32 compValue = parameter.compValue;
+        bytes32 value = _compressValue(parameter._type, payload);
 
-    function _compareEqual(
-        Comparison paramComp,
-        bytes32 compValue,
-        bytes32 value
-    ) private pure returns (Status) {
-        if (paramComp == Comparison.EqualTo && value != compValue) {
+        if (comp == Comparison.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
-        } else if (paramComp == Comparison.GreaterThan && value <= compValue) {
+        } else if (comp == Comparison.GreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
-        } else if (paramComp == Comparison.LessThan && value >= compValue) {
+        } else if (comp == Comparison.LessThan && value >= compValue) {
             return Status.ParameterGreaterThanAllowed;
-        }
-        return Status.Ok;
-    }
-
-    function _compareSubsetOf(
-        bytes32[] memory compValues,
-        bytes32[] memory value
-    ) private pure returns (Status) {
-        if (value.length == 0) {
-            return Status.ParameterNotSubsetOfAllowed;
-        }
-
-        uint256 taken;
-        for (uint256 i; i < value.length; ++i) {
-            for (uint256 j; j <= compValues.length; ++j) {
-                if (j == compValues.length) {
-                    return Status.ParameterNotSubsetOfAllowed;
-                }
-                uint256 mask = 1 << j;
-                if ((taken & mask) == 0 && value[i] == compValues[j]) {
-                    taken |= mask;
-                    break;
-                }
-            }
         }
         return Status.Ok;
     }
@@ -411,6 +373,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         } else if (paramType == ParameterType.Dynamic) {
             return keccak256(payload.dynamic);
         } else {
+            // TODO remove this, uniform to bytes memory
             assert(paramType == ParameterType.Dynamic32);
             return keccak256(abi.encodePacked(payload.dynamic32));
         }
@@ -475,3 +438,27 @@ abstract contract PermissionChecker is PermissionBuilder {
         ArrayMatchesNotSameLength
     }
 }
+
+//  function _compareSubsetOf(
+//         bytes32[] memory compValues,
+//         bytes32[] memory value
+//     ) private pure returns (Status) {
+//         if (value.length == 0) {
+//             return Status.ParameterNotSubsetOfAllowed;
+//         }
+
+//         uint256 taken;
+//         for (uint256 i; i < value.length; ++i) {
+//             for (uint256 j; j <= compValues.length; ++j) {
+//                 if (j == compValues.length) {
+//                     return Status.ParameterNotSubsetOfAllowed;
+//                 }
+//                 uint256 mask = 1 << j;
+//                 if ((taken & mask) == 0 && value[i] == compValues[j]) {
+//                     taken |= mask;
+//                     break;
+//                 }
+//             }
+//         }
+//         return Status.Ok;
+//     }

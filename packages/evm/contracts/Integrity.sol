@@ -47,7 +47,7 @@ library Integrity {
         // check at least 2 oneOf nodes
         for (uint256 i = 0; i < parameters.length; i++) {
             if (parameters[i]._type == ParameterType.OneOf) {
-                if (parameters[i].compValues.length > 0) {
+                if (parameters[i].compValue.length != 0) {
                     revert MalformedOneOfComparison();
                 }
 
@@ -75,18 +75,8 @@ library Integrity {
             return;
         }
 
-        bytes[] calldata compValues = parameter.compValues;
+        bytes calldata compValue = parameter.compValue;
         Comparison comp = parameter.comp;
-        if (
-            comp == Comparison.EqualTo ||
-            comp == Comparison.GreaterThan ||
-            comp == Comparison.LessThan ||
-            comp == Comparison.SubsetOf
-        ) {
-            if (compValues.length != 1) {
-                revert TooManyCompValuesForScope();
-            }
-        }
 
         ParameterType _type = parameter._type;
         if (comp == Comparison.GreaterThan) {
@@ -97,23 +87,18 @@ library Integrity {
             if (_type != ParameterType.Static) {
                 revert UnsuitableRelativeComparison();
             }
-        } else if (comp == Comparison.SubsetOf) {
-            if (_type != ParameterType.Dynamic32) {
-                revert UnsuitableSubsetOfComparison();
-            }
+            // } else if (comp == Comparison.SubsetOf) {
+            //     if (_type != ParameterType.Dynamic32) {
+            //         revert UnsuitableSubsetOfComparison();
+            //     }
         }
 
-        for (uint256 i; i < compValues.length; ++i) {
-            if (_type == ParameterType.Static && compValues[i].length != 32) {
-                revert UnsuitableStaticCompValueSize();
-            }
+        if (_type == ParameterType.Static && compValue.length != 32) {
+            revert UnsuitableStaticCompValueSize();
+        }
 
-            if (
-                _type == ParameterType.Dynamic32 &&
-                compValues[i].length % 32 != 0
-            ) {
-                revert UnsuitableDynamic32CompValueSize();
-            }
+        if (_type == ParameterType.Dynamic32 && compValue.length % 32 != 0) {
+            revert UnsuitableDynamic32CompValueSize();
         }
     }
 }
