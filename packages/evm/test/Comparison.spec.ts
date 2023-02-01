@@ -276,7 +276,7 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           parent: 0,
-          _type: ParameterType.Signature,
+          _type: ParameterType.Function,
           comp: Comparison.EqualTo,
           compValues: [],
         },
@@ -1578,7 +1578,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValues: [],
           },
@@ -1586,7 +1586,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValues: [],
           },
@@ -1594,7 +1594,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.Signature,
+            _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValues: [],
           },

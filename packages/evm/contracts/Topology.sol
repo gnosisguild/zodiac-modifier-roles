@@ -55,11 +55,11 @@ library Topology {
     function typeTree(
         ParameterConfig[] memory inputs
     ) internal pure returns (TypeTopology[] memory result) {
-        if (isVariantSignature(inputs)) {
+        if (isVariantEntrypoint(inputs)) {
             return typeTree(inputs[0].children[0].children);
         }
 
-        if (isExplicitSignature(inputs)) {
+        if (isExplicitEntrypoint(inputs)) {
             return typeTree(inputs[0].children);
         }
 
@@ -85,17 +85,17 @@ library Topology {
         }
     }
 
-    function isVariantSignature(
+    function isVariantEntrypoint(
         ParameterConfig[] memory configs
     ) internal pure returns (bool) {
         return
             configs[0]._type == ParameterType.OneOf &&
-            configs[0].children[0]._type == ParameterType.Signature;
+            configs[0].children[0]._type == ParameterType.Function;
     }
 
-    function isExplicitSignature(
+    function isExplicitEntrypoint(
         ParameterConfig[] memory configs
     ) internal pure returns (bool) {
-        return configs[0]._type == ParameterType.Signature;
+        return configs[0]._type == ParameterType.Function;
     }
 }
