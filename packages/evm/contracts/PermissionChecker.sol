@@ -226,15 +226,11 @@ abstract contract PermissionChecker is PermissionBuilder {
             Topology.typeTree(parameters)
         );
 
-        bool isVariant = parameters[0]._type == ParameterType.OneOf &&
-            parameters[0].children[0]._type == ParameterType.Signature;
-        bool isExplicit = parameters[0]._type == ParameterType.Signature;
-
-        if (isVariant) {
-            assert(parameters.length > 0);
+        if (Topology.isVariantSignature(parameters)) {
+            assert(parameters.length == 1);
             return _checkVariant(parameters[0].children, payloads);
-        } else if (isExplicit) {
-            assert(parameters.length > 0);
+        } else if (Topology.isExplicitSignature(parameters)) {
+            assert(parameters.length == 1);
             return _checkSignature(parameters[0].children, payloads);
         } else {
             // is implicit
