@@ -23,6 +23,7 @@ abstract contract PermissionChecker is PermissionBuilder {
 
     /// Role not allowed to call this function on target address
     error FunctionNotAllowed();
+    error FunctionVariantNotAllowed();
 
     /// Role not allowed to send to target address
     error SendNotAllowed();
@@ -211,28 +212,74 @@ abstract contract PermissionChecker is PermissionBuilder {
         Role storage role,
         address targetAddress,
         bytes calldata data,
-        BitmapBuffer memory buffer
+        BitmapBuffer memory scopeConfig
     ) internal view returns (Status) {
-        ParameterConfig memory parameters = _loadParameterConfig(
+        ParameterConfig[] memory parameters = _loadParameterConfig(
             targetAddress,
             bytes4(data),
             role,
-            buffer,
-            0
+            scopeConfig
         );
 
-        ParameterPayload memory payloads = Decoder.pluckParameters(
+        ParameterPayload[] memory payloads = Decoder.pluckParameters(
             data,
-            parameters
+            Topology.typeTree(parameters)
         );
 
-        return _check(parameters, payloads);
+        bool isVariant = parameters[0]._type == ParameterType.OneOf &&
+            parameters[0].children[0]._type == ParameterType.Signature;
+        bool isExplicit = parameters[0]._type == ParameterType.Signature;
+
+        if (isVariant) {
+            assert(parameters.length > 0);
+            return _checkVariant(parameters[0].children, payloads);
+        } else if (isExplicit) {
+            assert(parameters.length > 0);
+            return _checkSignature(parameters[0].children, payloads);
+        } else {
+            // is implicit
+            return _checkSignature(parameters, payloads);
+        }
+    }
+
+    function _checkVariant(
+        ParameterConfig[] memory variants,
+        ParameterPayload[] memory payloads
+    ) internal view returns (Status) {
+        for (uint256 i; i < variants.length; ++i) {
+            Status status = _checkSignature(variants[i].children, payloads);
+            if (status == Status.Ok) {
+                return status;
+            }
+        }
+        return Status.FunctionVariantNotAllowed;
+    }
+
+    function _checkSignature(
+        ParameterConfig[] memory parameters,
+        ParameterPayload[] memory payloads
+    ) internal view returns (Status) {
+        assert(parameters.length == payloads.length);
+
+        for (uint256 i; i < parameters.length; ++i) {
+            Status status = _check(parameters[i], payloads[i]);
+            if (status != Status.Ok) {
+                return status;
+            }
+        }
+        return Status.Ok;
     }
 
     function _check(
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal view returns (Status) {
+        assert(parameter._type != ParameterType.Signature);
+
+        if (!parameter.isScoped) {
+            return Status.Ok;
+        }
+
         if (parameter._type == ParameterType.Array) {
             return _checkArray(parameter, payload);
         } else if (parameter._type == ParameterType.Tuple) {
@@ -291,11 +338,9 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterPayload memory payload
     ) private view returns (Status status) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            if (parameter.children[i].isScoped) {
-                status = _check(parameter.children[i], payload.children[i]);
-                if (status != Status.Ok) {
-                    return status;
-                }
+            status = _check(parameter.children[i], payload.children[i]);
+            if (status != Status.Ok) {
+                return status;
             }
         }
         return Status.Ok;
@@ -336,16 +381,6 @@ abstract contract PermissionChecker is PermissionBuilder {
             return Status.ParameterGreaterThanAllowed;
         }
         return Status.Ok;
-    }
-
-    function _compareOneOf(
-        bytes32[] memory compValues,
-        bytes32 value
-    ) private pure returns (Status) {
-        for (uint256 i; i < compValues.length; ++i) {
-            if (compValues[i] == value) return Status.Ok;
-        }
-        return Status.ParameterNotOneOfAllowed;
     }
 
     function _compareSubsetOf(
@@ -397,6 +432,8 @@ abstract contract PermissionChecker is PermissionBuilder {
             revert TargetAddressNotAllowed();
         } else if (status == Status.FunctionNotAllowed) {
             revert FunctionNotAllowed();
+        } else if (status == Status.FunctionVariantNotAllowed) {
+            revert FunctionVariantNotAllowed();
         } else if (status == Status.SendNotAllowed) {
             revert SendNotAllowed();
         } else if (status == Status.ParameterNotAllowed) {
@@ -428,6 +465,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         TargetAddressNotAllowed,
         /// Role not allowed to call this function on target address
         FunctionNotAllowed,
+        FunctionVariantNotAllowed,
         /// Role not allowed to send to target address
         SendNotAllowed,
         /// Role not allowed to use bytes for parameter

@@ -9,8 +9,8 @@ library Decoder {
 
     function pluckParameters(
         bytes calldata data,
-        ParameterConfig memory parameter
-    ) internal pure returns (ParameterPayload memory result) {
+        TypeTopology[] memory parameters
+    ) internal pure returns (ParameterPayload[] memory result) {
         /*
          * In the parameter encoding area, there is a region called the head
          * that is divided into 32-byte chunks. Each parameter has its own
@@ -22,13 +22,14 @@ library Decoder {
          *
          * The encoding of the paremeter encoding area is equivalent to a Tuple
          */
-        return _carve(data, 4, Topology.prune(parameter));
+
+        return _carveParts(data, 4, parameters);
     }
 
     function _carve(
         bytes calldata data,
         uint256 offset,
-        ParameterTopology memory parameter
+        TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         assert(parameter._type != ParameterType.OneOf);
 
@@ -49,7 +50,7 @@ library Decoder {
     function _carveArray(
         bytes calldata data,
         uint256 offset,
-        ParameterTopology memory parameter
+        TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         // read length, and move offset to content start
         uint256 length = uint256(_loadWord(data, offset));
@@ -71,15 +72,22 @@ library Decoder {
     function _carveTuple(
         bytes calldata data,
         uint256 offset,
-        ParameterTopology memory parameter
+        TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        ParameterTopology[] memory parts = parameter.children;
-        result.children = new ParameterPayload[](parts.length);
+        result.children = _carveParts(data, offset, parameter.children);
+    }
+
+    function _carveParts(
+        bytes calldata data,
+        uint256 offset,
+        TypeTopology[] memory parts
+    ) private pure returns (ParameterPayload[] memory result) {
+        result = new ParameterPayload[](parts.length);
 
         uint256 shift;
         for (uint256 i; i < parts.length; ++i) {
             bool isInline = _isStatic(parts[i]);
-            result.children[i] = _carve(
+            result[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, shift, isInline),
                 parts[i]
@@ -103,7 +111,7 @@ library Decoder {
     }
 
     function _isStatic(
-        ParameterTopology memory parameter
+        TypeTopology memory parameter
     ) private pure returns (bool) {
         if (parameter._type == ParameterType.Static) {
             return true;
@@ -118,7 +126,7 @@ library Decoder {
     }
 
     function _size(
-        ParameterTopology memory parameter
+        TypeTopology memory parameter
     ) private pure returns (uint256) {
         if (parameter._type == ParameterType.Static) {
             return 32;

@@ -15,7 +15,8 @@ enum ParameterType {
     Dynamic32,
     Tuple,
     Array,
-    OneOf
+    OneOf,
+    Signature
 }
 
 function _isNested(ParameterType _type) pure returns (bool) {
@@ -61,10 +62,9 @@ struct ParameterConfig {
     ParameterConfig[] children;
 }
 
-struct ParameterTopology {
+struct TypeTopology {
     ParameterType _type;
-    Comparison comp;
-    ParameterTopology[] children;
+    TypeTopology[] children;
 }
 
 struct ParameterPayload {
