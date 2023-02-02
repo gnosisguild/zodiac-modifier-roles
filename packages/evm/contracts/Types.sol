@@ -68,9 +68,9 @@ struct TypeTopology {
 }
 
 struct ParameterPayload {
-    bytes32 _static;
-    bytes dynamic;
-    bytes32[] dynamic32;
+    uint256 offset;
+    uint256 size;
+    bytes raw;
     ParameterPayload[] children;
 }
 
