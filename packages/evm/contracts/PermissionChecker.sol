@@ -390,14 +390,12 @@ abstract contract PermissionChecker is PermissionBuilder {
         if (payload.size != payload.raw.length) {
             payload.raw = Decoder.pluck(data, payload.offset, payload.size);
         }
+
         if (paramType == ParameterType.Static) {
             return bytes32(payload.raw);
-        } else if (paramType == ParameterType.Dynamic) {
-            return keccak256(payload.raw);
         } else {
-            // TODO remove this, uniform to bytes memory
-            assert(paramType == ParameterType.Dynamic32);
-            return keccak256(abi.encodePacked(payload.raw));
+            assert(paramType == ParameterType.Dynamic);
+            return keccak256(payload.raw);
         }
     }
 

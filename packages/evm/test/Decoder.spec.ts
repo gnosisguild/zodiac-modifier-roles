@@ -58,15 +58,20 @@ describe("Decoder library", async () => {
       },
       {
         isScoped: true,
-        _type: ParameterType.Dynamic32,
+        _type: ParameterType.Array,
         comp: 0,
-        children: [],
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+        ],
       },
     ];
     const result = await decoder.inspect(data, layout);
 
-    expect(result[0].offset).to.equal(4);
-    expect(result[0].size).to.equal(32);
     expect(
       await decoder.pluck(data, result[0].offset, result[0].size)
     ).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
@@ -77,7 +82,11 @@ describe("Decoder library", async () => {
 
     expect(
       await decoder.pluck(data, result[2].offset, result[2].size)
-    ).to.deep.equal(solidityPack(["uint256[]"], [[10, 32, 55]]));
+    ).to.deep.equal(
+      removeTrailingOffset(
+        defaultAbiCoder.encode(["uint256[]"], [[10, 32, 55]])
+      )
+    );
   });
 
   it("plucks (dynamic, static, dynamic32) non nested parameters from encoded calldata", async () => {
@@ -109,9 +118,16 @@ describe("Decoder library", async () => {
       },
       {
         isScoped: true,
-        _type: ParameterType.Dynamic32,
+        _type: ParameterType.Array,
         comp: 0,
-        children: [],
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+        ],
       },
     ];
 
@@ -126,7 +142,11 @@ describe("Decoder library", async () => {
 
     expect(
       await decoder.pluck(data, result[2].offset, result[2].size)
-    ).to.equal(solidityPack(["bytes2[]"], [["0x1122", "0x3344", "0x5566"]]));
+    ).to.equal(
+      removeTrailingOffset(
+        defaultAbiCoder.encode(["bytes2[]"], [["0x1122", "0x3344", "0x5566"]])
+      )
+    );
   });
 
   it("plucks (dynamic32, dynamic, static) non nested parameters from encoded calldata", async () => {
@@ -146,9 +166,16 @@ describe("Decoder library", async () => {
     const layout = [
       {
         isScoped: true,
-        _type: ParameterType.Dynamic32,
+        _type: ParameterType.Array,
         comp: 0,
-        children: [],
+        children: [
+          {
+            isScoped: true,
+            _type: ParameterType.Static,
+            comp: 0,
+            children: [],
+          },
+        ],
       },
       { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
       { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
@@ -158,7 +185,9 @@ describe("Decoder library", async () => {
     expect(
       await decoder.pluck(data, result[0].offset, result[0].size)
     ).to.deep.equal(
-      solidityPack(["bytes2[]"], [["0xaabb", "0x1234", "0xff33"]])
+      removeTrailingOffset(
+        defaultAbiCoder.encode(["bytes2[]"], [["0xaabb", "0x1234", "0xff33"]])
+      )
     );
 
     expect(
@@ -246,9 +275,16 @@ describe("Decoder library", async () => {
           },
           {
             isScoped: true,
-            _type: ParameterType.Dynamic32,
+            _type: ParameterType.Array,
             comp: 0,
-            children: [],
+            children: [
+              {
+                isScoped: true,
+                _type: ParameterType.Static,
+                comp: 0,
+                children: [],
+              },
+            ],
           },
         ],
       },
@@ -514,9 +550,16 @@ describe("Decoder library", async () => {
               },
               {
                 isScoped: true,
-                _type: ParameterType.Dynamic32,
+                _type: ParameterType.Array,
                 comp: 0,
-                children: [],
+                children: [
+                  {
+                    isScoped: true,
+                    _type: ParameterType.Static,
+                    comp: 0,
+                    children: [],
+                  },
+                ],
               },
             ],
           },
@@ -778,9 +821,16 @@ describe("Decoder library", async () => {
               },
               {
                 isScoped: true,
-                _type: ParameterType.Dynamic32,
+                _type: ParameterType.Array,
                 comp: 0,
-                children: [],
+                children: [
+                  {
+                    isScoped: true,
+                    _type: ParameterType.Static,
+                    comp: 0,
+                    children: [],
+                  },
+                ],
               },
             ],
           },
