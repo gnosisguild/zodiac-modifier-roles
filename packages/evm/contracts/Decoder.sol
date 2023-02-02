@@ -37,9 +37,6 @@ library Decoder {
         } else if (parameter._type == ParameterType.Dynamic) {
             result.offset = offset + 32;
             result.size = uint256(_loadWord(data, offset));
-        } else if (parameter._type == ParameterType.Dynamic32) {
-            result.offset = offset + 32;
-            result.size = uint256(_loadWord(data, offset)) * 32;
         } else if (parameter._type == ParameterType.Array) {
             return _carveArray(data, offset, parameter);
         } else {
