@@ -219,27 +219,33 @@ abstract contract PermissionChecker is PermissionBuilder {
             scopeConfig
         );
 
-        ParameterPayload[] memory payloads = Decoder.pluckParameters(
+        ParameterPayload[] memory payloads = Decoder.inspect(
             data,
             Topology.typeTree(parameters)
         );
 
         if (Topology.isVariantEntrypoint(parameters)) {
-            return _checkFunctionVariants(parameters[0].children, payloads);
+            return
+                _checkFunctionVariants(data, parameters[0].children, payloads);
         } else if (Topology.isExplicitEntrypoint(parameters)) {
-            return _checkFunction(parameters[0].children, payloads);
+            return _checkFunction(data, parameters[0].children, payloads);
         } else {
             // is implicit
-            return _checkFunction(parameters, payloads);
+            return _checkFunction(data, parameters, payloads);
         }
     }
 
     function _checkFunctionVariants(
+        bytes calldata data,
         ParameterConfig[] memory variants,
         ParameterPayload[] memory payloads
     ) internal view returns (Status) {
         for (uint256 i; i < variants.length; ++i) {
-            Status status = _checkFunction(variants[i].children, payloads);
+            Status status = _checkFunction(
+                data,
+                variants[i].children,
+                payloads
+            );
             if (status == Status.Ok) {
                 return status;
             }
@@ -248,13 +254,14 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _checkFunction(
+        bytes calldata data,
         ParameterConfig[] memory parameters,
         ParameterPayload[] memory payloads
     ) internal view returns (Status) {
         assert(parameters.length == payloads.length);
 
         for (uint256 i; i < parameters.length; ++i) {
-            Status status = _checkParameter(parameters[i], payloads[i]);
+            Status status = _checkParameter(data, parameters[i], payloads[i]);
             if (status != Status.Ok) {
                 return status;
             }
@@ -263,6 +270,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _checkParameter(
+        bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal view returns (Status) {
@@ -273,22 +281,26 @@ abstract contract PermissionChecker is PermissionBuilder {
         }
 
         if (parameter._type == ParameterType.Array) {
-            return _checkArray(parameter, payload);
+            return _checkArray(data, parameter, payload);
         } else if (parameter._type == ParameterType.Tuple) {
-            return _checkTuple(parameter, payload);
+            return _checkTuple(data, parameter, payload);
         } else if (parameter._type == ParameterType.OneOf) {
-            return _checkOneOf(parameter, payload);
+            return _checkOneOf(data, parameter, payload);
         } else {
-            return _compare(parameter, payload);
+            return _compare(data, parameter, payload);
         }
     }
 
     function _checkOneOf(
+        bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private view returns (Status status) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            if (_checkParameter(parameter.children[i], payload) == Status.Ok) {
+            if (
+                _checkParameter(data, parameter.children[i], payload) ==
+                Status.Ok
+            ) {
                 return status;
             }
         }
@@ -297,6 +309,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _checkArray(
+        bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private view returns (Status status) {
@@ -311,6 +324,7 @@ abstract contract PermissionChecker is PermissionBuilder {
 
         for (uint256 i; i < payload.children.length; ++i) {
             status = _checkParameter(
+                data,
                 parameter.children[isMatches ? i : 0],
                 payload.children[i]
             );
@@ -326,11 +340,13 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _checkTuple(
+        bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private view returns (Status status) {
         for (uint256 i; i < parameter.children.length; ++i) {
             status = _checkParameter(
+                data,
                 parameter.children[i],
                 payload.children[i]
             );
@@ -342,6 +358,7 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _compare(
+        bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status) {
@@ -350,9 +367,10 @@ abstract contract PermissionChecker is PermissionBuilder {
                 parameter.comp == Comparison.GreaterThan ||
                 parameter.comp == Comparison.LessThan
         );
+
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
-        bytes32 value = _compressValue(parameter._type, payload);
+        bytes32 value = _compressValue(data, parameter._type, payload);
 
         if (comp == Comparison.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -365,17 +383,21 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _compressValue(
+        bytes calldata data,
         ParameterType paramType,
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
+        if (payload.size != payload.raw.length) {
+            payload.raw = Decoder.pluck(data, payload.offset, payload.size);
+        }
         if (paramType == ParameterType.Static) {
-            return payload._static;
+            return bytes32(payload.raw);
         } else if (paramType == ParameterType.Dynamic) {
-            return keccak256(payload.dynamic);
+            return keccak256(payload.raw);
         } else {
             // TODO remove this, uniform to bytes memory
             assert(paramType == ParameterType.Dynamic32);
-            return keccak256(abi.encodePacked(payload.dynamic32));
+            return keccak256(abi.encodePacked(payload.raw));
         }
     }
 

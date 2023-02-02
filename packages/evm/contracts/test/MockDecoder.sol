@@ -4,11 +4,19 @@ pragma solidity >=0.6.0 <0.9.0;
 import "../Decoder.sol";
 
 contract MockDecoder {
-    function pluckParameters(
+    function inspect(
         bytes calldata data,
         PL1[] calldata layout
     ) public pure returns (PP1[] memory) {
-        return copyOut(Decoder.pluckParameters(data, copyIn(layout)));
+        return copyOut(Decoder.inspect(data, copyIn(layout)));
+    }
+
+    function pluck(
+        bytes calldata data,
+        uint256 offset,
+        uint256 size
+    ) public pure returns (bytes memory result) {
+        return Decoder.pluck(data, offset, size);
     }
 
     function copyIn(
@@ -64,11 +72,8 @@ contract MockDecoder {
     ) private pure returns (TypeTopology[] memory result) {
         result = new TypeTopology[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
-            // result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].children = new TypeTopology[](0);
-
-            //result[i].comp = input[i].comp;
         }
     }
 
@@ -77,9 +82,9 @@ contract MockDecoder {
     ) private pure returns (PP1[] memory result) {
         result = new PP1[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i]._static = output[i]._static;
-            result[i].dynamic = output[i].dynamic;
-            result[i].dynamic32 = output[i].dynamic32;
+            result[i].offset = output[i].offset;
+            result[i].size = output[i].size;
+            result[i].raw = output[i].raw;
             result[i].children = copyOutTo2(output[i].children);
         }
     }
@@ -89,9 +94,9 @@ contract MockDecoder {
     ) private pure returns (PP2[] memory result) {
         result = new PP2[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i]._static = output[i]._static;
-            result[i].dynamic = output[i].dynamic;
-            result[i].dynamic32 = output[i].dynamic32;
+            result[i].offset = output[i].offset;
+            result[i].size = output[i].size;
+            result[i].raw = output[i].raw;
             result[i].children = copyOutTo3(output[i].children);
         }
     }
@@ -101,9 +106,9 @@ contract MockDecoder {
     ) private pure returns (PP3[] memory result) {
         result = new PP3[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i]._static = output[i]._static;
-            result[i].dynamic = output[i].dynamic;
-            result[i].dynamic32 = output[i].dynamic32;
+            result[i].offset = output[i].offset;
+            result[i].size = output[i].size;
+            result[i].raw = output[i].raw;
             result[i].children = copyOutTo4(output[i].children);
         }
     }
@@ -113,9 +118,9 @@ contract MockDecoder {
     ) private pure returns (PP4[] memory result) {
         result = new PP4[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i]._static = output[i]._static;
-            result[i].dynamic = output[i].dynamic;
-            result[i].dynamic32 = output[i].dynamic32;
+            result[i].offset = output[i].offset;
+            result[i].size = output[i].size;
+            result[i].raw = output[i].raw;
             result[i].children = copyOutTo5(output[i].children);
         }
     }
@@ -125,9 +130,9 @@ contract MockDecoder {
     ) private pure returns (PP5[] memory result) {
         result = new PP5[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i]._static = output[i]._static;
-            result[i].dynamic = output[i].dynamic;
-            result[i].dynamic32 = output[i].dynamic32;
+            result[i].offset = output[i].offset;
+            result[i].size = output[i].size;
+            result[i].raw = output[i].raw;
         }
     }
 
@@ -166,36 +171,36 @@ contract MockDecoder {
     }
 
     struct PP1 {
-        bytes32 _static;
-        bytes dynamic;
-        bytes32[] dynamic32;
+        uint256 offset;
+        uint256 size;
+        bytes raw;
         PP2[] children;
     }
 
     struct PP2 {
-        bytes32 _static;
-        bytes dynamic;
-        bytes32[] dynamic32;
+        uint256 offset;
+        uint256 size;
+        bytes raw;
         PP3[] children;
     }
 
     struct PP3 {
-        bytes32 _static;
-        bytes dynamic;
-        bytes32[] dynamic32;
+        uint256 offset;
+        uint256 size;
+        bytes raw;
         PP4[] children;
     }
 
     struct PP4 {
-        bytes32 _static;
-        bytes dynamic;
-        bytes32[] dynamic32;
+        uint256 offset;
+        uint256 size;
+        bytes raw;
         PP5[] children;
     }
 
     struct PP5 {
-        bytes32 _static;
-        bytes dynamic;
-        bytes32[] dynamic32;
+        uint256 offset;
+        uint256 size;
+        bytes raw;
     }
 }

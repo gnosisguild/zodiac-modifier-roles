@@ -7,7 +7,7 @@ import "./Topology.sol";
 library Decoder {
     error CalldataOutOfBounds();
 
-    function pluckParameters(
+    function inspect(
         bytes calldata data,
         TypeTopology[] memory parameters
     ) internal pure returns (ParameterPayload[] memory result) {
@@ -20,9 +20,7 @@ library Decoder {
          *   of the actual encoding for the dynamic parameter. Note that the
          *   offset does not include the 4-byte function signature."
          *
-         * The encoding of the paremeter encoding area is equivalent to a Tuple
          */
-
         return _carveParts(data, 4, parameters);
     }
 
@@ -34,11 +32,14 @@ library Decoder {
         assert(parameter._type != ParameterType.OneOf);
 
         if (parameter._type == ParameterType.Static) {
-            result._static = _loadWord(data, offset);
+            result.offset = offset;
+            result.size = 32;
         } else if (parameter._type == ParameterType.Dynamic) {
-            result.dynamic = _loadDynamic(data, offset);
+            result.offset = offset + 32;
+            result.size = uint256(_loadWord(data, offset));
         } else if (parameter._type == ParameterType.Dynamic32) {
-            result.dynamic32 = _loadDynamic32(data, offset);
+            result.offset = offset + 32;
+            result.size = uint256(_loadWord(data, offset)) * 32;
         } else if (parameter._type == ParameterType.Array) {
             return _carveArray(data, offset, parameter);
         } else {
@@ -52,21 +53,21 @@ library Decoder {
         uint256 offset,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        // read length, and move offset to content start
         uint256 length = uint256(_loadWord(data, offset));
         result.children = new ParameterPayload[](length);
-        offset += 32;
 
         bool isInline = _isStatic(parameter.children[0]);
-        uint256 itemSize = isInline ? _size(parameter.children[0]) : 32;
+        uint256 itemSize = isInline ? _typeSize(parameter.children[0]) : 32;
 
         for (uint256 i; i < length; ++i) {
             result.children[i] = _carve(
                 data,
-                _headOrTailOffset(data, offset, i * itemSize, isInline),
+                _headOrTailOffset(data, offset + 32, i * itemSize, isInline),
                 parameter.children[0]
             );
         }
+        result.offset = offset;
+        result.size = _payloadSize(result);
     }
 
     function _carveTuple(
@@ -75,6 +76,8 @@ library Decoder {
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         result.children = _carveParts(data, offset, parameter.children);
+        result.offset = offset;
+        result.size = _payloadSize(result);
     }
 
     function _carveParts(
@@ -92,7 +95,7 @@ library Decoder {
                 _headOrTailOffset(data, offset, shift, isInline),
                 parts[i]
             );
-            shift += isInline ? _size(parts[i]) : 32;
+            shift += isInline ? _typeSize(parts[i]) : 32;
         }
     }
 
@@ -125,7 +128,7 @@ library Decoder {
         }
     }
 
-    function _size(
+    function _typeSize(
         TypeTopology memory parameter
     ) private pure returns (uint256) {
         if (parameter._type == ParameterType.Static) {
@@ -136,46 +139,31 @@ library Decoder {
 
         uint256 result;
         for (uint256 i; i < parameter.children.length; ++i) {
-            result += _size(parameter.children[i]);
+            result += _typeSize(parameter.children[i]);
         }
 
         return result;
     }
 
-    function _loadDynamic(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes memory result) {
-        uint256 length = uint256(_loadWord(data, offset));
-        uint256 size = 32 + length;
+    function _payloadSize(
+        ParameterPayload memory payload
+    ) private pure returns (uint256 result) {
+        uint256 length = payload.children.length;
 
-        if (data.length < offset + size) {
-            revert CalldataOutOfBounds();
-        }
+        for (uint256 i; i < length; ++i) {
+            uint256 curr = payload.children[i].offset +
+                _pad(payload.children[i].size) -
+                payload.offset;
 
-        assembly {
-            result := mload(0x40)
-            calldatacopy(result, add(data.offset, offset), size)
-            mstore(0x40, add(result, size))
+            if (curr > result) {
+                result = curr;
+            }
         }
     }
 
-    function _loadDynamic32(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes32[] memory result) {
-        uint256 length = uint256(_loadWord(data, offset));
-        uint256 size = 32 + length * 32;
-
-        if (data.length < offset + size) {
-            revert CalldataOutOfBounds();
-        }
-
-        assembly {
-            result := mload(0x40)
-            calldatacopy(result, add(data.offset, offset), size)
-            mstore(0x40, add(result, size))
-        }
+    function _pad(uint256 size) private pure returns (uint256) {
+        uint256 rest = size % 32;
+        return rest > 0 ? size + 32 - rest : size;
     }
 
     function _loadWord(
@@ -188,6 +176,22 @@ library Decoder {
 
         assembly {
             result := calldataload(add(data.offset, offset))
+        }
+    }
+
+    function pluck(
+        bytes calldata data,
+        uint256 offset,
+        uint256 size
+    ) internal pure returns (bytes memory result) {
+        if (data.length < offset + size) {
+            revert CalldataOutOfBounds();
+        }
+        assembly {
+            result := mload(0x40)
+            mstore(result, size)
+            calldatacopy(add(result, 32), add(data.offset, offset), size)
+            mstore(0x40, add(result, add(32, size)))
         }
     }
 }

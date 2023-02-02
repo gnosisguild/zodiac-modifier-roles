@@ -134,3 +134,7 @@ export enum ExecutionOptions {
   DelegateCall,
   Both,
 }
+
+export function removeTrailingOffset(data: string) {
+  return `0x${data.substring(66)}`;
+}
