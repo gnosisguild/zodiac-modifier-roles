@@ -15,9 +15,6 @@ library Integrity {
     /// CompValue for static types should have a size of exactly 32 bytes
     error UnsuitableStaticCompValueSize();
 
-    /// CompValue for Dynamic32 types should be a multiple of exactly 32 bytes
-    error UnsuitableDynamic32CompValueSize();
-
     error NoCompValuesProvidedForScope();
 
     error TooManyCompValuesForScope();
@@ -87,18 +84,10 @@ library Integrity {
             if (_type != ParameterType.Static) {
                 revert UnsuitableRelativeComparison();
             }
-            // } else if (comp == Comparison.SubsetOf) {
-            //     if (_type != ParameterType.Dynamic32) {
-            //         revert UnsuitableSubsetOfComparison();
-            //     }
         }
 
         if (_type == ParameterType.Static && compValue.length != 32) {
             revert UnsuitableStaticCompValueSize();
-        }
-
-        if (_type == ParameterType.Dynamic32 && compValue.length % 32 != 0) {
-            revert UnsuitableDynamic32CompValueSize();
         }
     }
 }

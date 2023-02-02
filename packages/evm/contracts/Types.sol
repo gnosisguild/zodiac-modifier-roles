@@ -12,7 +12,6 @@ struct BitmapBuffer {
 enum ParameterType {
     Static,
     Dynamic,
-    Dynamic32,
     Tuple,
     Array,
     OneOf,

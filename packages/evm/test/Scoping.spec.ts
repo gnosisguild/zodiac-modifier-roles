@@ -91,25 +91,14 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Dynamic32,
+              _type: ParameterType.Array,
               comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
+              compValue: "0x",
             },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.Dynamic32,
+              _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
             },
@@ -117,35 +106,6 @@ describe("Scoping", async () => {
           ExecutionOptions.None
         )
       ).to.be.not.reverted;
-
-      // it doesn't check for unscoped parameter
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [
-            {
-              isScoped: true,
-              parent: 0,
-              _type: ParameterType.Dynamic32,
-              comp: Comparison.EqualTo,
-              compValue: A_32_BYTES_VALUE,
-            },
-            {
-              isScoped: true,
-              parent: 1,
-              _type: ParameterType.Dynamic,
-              comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(
-                ["string"],
-                [MORE_THAN_32_BYTES_TEXT]
-              ),
-            },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.not.be.reverted;
     });
 
     it("checks well formed oneOf node", async () => {
@@ -194,38 +154,6 @@ describe("Scoping", async () => {
           ExecutionOptions.None
         )
       ).to.be.revertedWith("UnsuitableStaticCompValueSize()");
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [
-            {
-              isScoped: true,
-              parent: 0,
-              _type: ParameterType.OneOf,
-              comp: 0,
-              compValue: "0x",
-            },
-            {
-              isScoped: true,
-              parent: 0,
-              _type: ParameterType.Dynamic32,
-              comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
-            },
-            {
-              isScoped: true,
-              parent: 0,
-              _type: ParameterType.Dynamic32,
-              comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(["string"], ["abcdefghijg"]),
-            },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWith("UnsuitableDynamic32CompValueSize()");
 
       await expect(
         modifier.connect(owner).scopeFunction(
