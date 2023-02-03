@@ -14,22 +14,18 @@ enum ParameterType {
     Dynamic,
     Tuple,
     Array,
-    OneOf,
     Function
-}
-
-function _isNested(ParameterType _type) pure returns (bool) {
-    return uint8(_type) >= uint8(ParameterType.Tuple);
 }
 
 enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
+    OneOf,
     Matches,
+    Subset,
     Some,
     Every
-    //Subset
 }
 
 enum ExecutionOptions {

@@ -21,8 +21,8 @@ describe("Topology", async () => {
     const layout = [
       {
         isScoped: true,
-        _type: ParameterType.OneOf,
-        comp: 0,
+        _type: ParameterType.Function,
+        comp: Comparison.OneOf,
         children: [
           {
             isScoped: true,
@@ -109,8 +109,8 @@ describe("Topology", async () => {
     const layout = [
       {
         isScoped: true,
-        _type: ParameterType.OneOf,
-        comp: 0,
+        _type: ParameterType.Tuple,
+        comp: Comparison.OneOf,
         children: [
           {
             isScoped: true,
@@ -195,8 +195,8 @@ describe("Topology", async () => {
           },
           {
             isScoped: true,
-            _type: ParameterType.OneOf,
-            comp: Comparison.Matches,
+            _type: ParameterType.Array,
+            comp: Comparison.OneOf,
             children: [
               {
                 isScoped: true,
@@ -239,24 +239,26 @@ describe("Topology", async () => {
     //         children: [],
     //       },
     //       {
-    //         _type: ParameterType.Dynamic32,
-    //         children: [],
+    //         _type: ParameterType.Array,
+    //         children: [ Static],
     //       },
     //     ],
     //   },
     // ];
 
     const result = await topology.typeTree(layout);
-    // expect(result.length).to.equal(1);
-    // expect(result[0]._type).to.equal(ParameterType.Tuple);
-    // expect(result[0].children.length).to.equal(2);
-    // expect(result[0].children[0]._type).to.equal(ParameterType.Static);
-    // expect(result[0].children[0].children.length).to.equal(0);
-    // expect(result[0].children[1]._type).to.equal(ParameterType.Array);
-    // expect(result[0].children[1].children.length).to.equal(1);
-    // expect(result[0].children[1].children[0]._type).to.equal(
-    //   ParameterType.Static
-    // );
-    // expect(result[0].children[1].children[0].length).to.equal(0);
+    expect(result.length).to.equal(1);
+    expect(result[0]._type).to.equal(ParameterType.Tuple);
+    expect(result[0].children.length).to.equal(2);
+
+    expect(result[0].children[0]._type).to.equal(ParameterType.Static);
+    expect(result[0].children[0].children.length).to.equal(0);
+
+    expect(result[0].children[1]._type).to.equal(ParameterType.Array);
+    expect(result[0].children[1].children.length).to.equal(1);
+    expect(result[0].children[1].children[0]._type).to.equal(
+      ParameterType.Static
+    );
+    expect(result[0].children[1].children[0].children.length).to.equal(0);
   });
 });

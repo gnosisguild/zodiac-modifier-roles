@@ -85,7 +85,7 @@ describe("Comparison", async () => {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.EqualTo,
+          comp: Comparison.Matches,
           compValue: "0x",
         },
         {
@@ -137,7 +137,7 @@ describe("Comparison", async () => {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.EqualTo,
+          comp: Comparison.Matches,
           compValue: "0x",
         },
         {
@@ -164,7 +164,7 @@ describe("Comparison", async () => {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.EqualTo,
+          comp: Comparison.Matches,
           compValue: "0x",
         },
         {
@@ -222,7 +222,7 @@ describe("Comparison", async () => {
           isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.EqualTo,
+          comp: Comparison.Matches,
           compValue: "0x",
         },
         {
@@ -340,6 +340,13 @@ describe("Comparison", async () => {
             defaultAbiCoder.encode(["bytes2[]"], [["0x1234", "0xabcd"]])
           ),
         },
+        {
+          parent: 1,
+          isScoped: false,
+          _type: ParameterType.Static,
+          comp: 0,
+          compValue: "0x",
+        },
       ],
       ExecutionOptions.None
     );
@@ -399,8 +406,8 @@ describe("Comparison", async () => {
         {
           isScoped: true,
           parent: 0,
-          _type: ParameterType.OneOf,
-          comp: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.OneOf,
           compValue: "0x",
         },
         {
@@ -466,8 +473,8 @@ describe("Comparison", async () => {
         {
           parent: 1,
           isScoped: true,
-          _type: ParameterType.OneOf,
-          comp: 0,
+          _type: ParameterType.Dynamic,
+          comp: Comparison.OneOf,
           compValue: "0x",
         },
         {
@@ -543,8 +550,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: ParameterType.OneOf,
-          comp: 0,
+          _type: ParameterType.Tuple,
+          comp: Comparison.OneOf,
           compValue: "0x",
         },
         {
@@ -641,8 +648,8 @@ describe("Comparison", async () => {
         {
           parent: 0,
           isScoped: true,
-          _type: ParameterType.OneOf,
-          comp: 0,
+          _type: ParameterType.Array,
+          comp: Comparison.OneOf,
           compValue: "0x",
         },
         // first Array 1
@@ -1251,8 +1258,8 @@ describe("Comparison", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.OneOf,
-            comp: 0,
+            _type: ParameterType.Function,
+            comp: Comparison.OneOf,
             compValue: "0x",
           },
           // 1
@@ -1379,25 +1386,18 @@ describe("Comparison", async () => {
             parent: 0,
             isScoped: true,
             _type: ParameterType.Tuple,
-            comp: Comparison.Matches,
+            comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
             parent: 0,
-            isScoped: true,
-            _type: ParameterType.OneOf,
-            comp: 0,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
             compValue: "0x",
           },
           {
-            parent: 1,
+            parent: 0,
             isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
@@ -1405,14 +1405,14 @@ describe("Comparison", async () => {
           },
           // first tuple variant
           {
-            parent: 2,
+            parent: 1,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [1111]),
           },
           {
-            parent: 2,
+            parent: 1,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -1420,14 +1420,14 @@ describe("Comparison", async () => {
           },
           // second tuple variant
           {
-            parent: 3,
+            parent: 2,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [22222]),
           },
           {
-            parent: 3,
+            parent: 2,
             isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
