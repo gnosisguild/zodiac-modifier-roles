@@ -1782,7 +1782,7 @@ describe("RolesModifier", async () => {
             parent: 0,
             isScoped: true,
             _type: ParameterType.Tuple,
-            comp: Comparison.EqualTo,
+            comp: Comparison.Matches,
             compValue: "0x",
           },
           {

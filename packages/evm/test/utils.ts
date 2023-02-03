@@ -114,7 +114,6 @@ export enum ParameterType {
   Dynamic,
   Tuple,
   Array,
-  OneOf,
   Function,
 }
 
@@ -122,7 +121,9 @@ export enum Comparison {
   EqualTo = 0,
   GreaterThan,
   LessThan,
+  OneOf,
   Matches,
+  Subset,
   Some,
   Every,
 }

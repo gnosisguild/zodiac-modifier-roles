@@ -43,7 +43,7 @@ library Integrity {
 
         // check at least 2 oneOf nodes
         for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i]._type == ParameterType.OneOf) {
+            if (parameters[i].comp == Comparison.OneOf) {
                 if (parameters[i].compValue.length != 0) {
                     revert MalformedOneOfComparison();
                 }
@@ -86,8 +86,18 @@ library Integrity {
             }
         }
 
-        if (_type == ParameterType.Static && compValue.length != 32) {
+        if (
+            (comp == Comparison.EqualTo ||
+                comp == Comparison.GreaterThan ||
+                comp == Comparison.LessThan) &&
+            _type == ParameterType.Static &&
+            compValue.length != 32
+        ) {
             revert UnsuitableStaticCompValueSize();
         }
+    }
+
+    function _isNested(ParameterType _type) private pure returns (bool) {
+        return uint8(_type) >= uint8(ParameterType.Tuple);
     }
 }

@@ -12,7 +12,7 @@ import {
 } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
-import { ParameterType, removeTrailingOffset } from "./utils";
+import { Comparison, ParameterType, removeTrailingOffset } from "./utils";
 
 describe("Decoder library", async () => {
   const setup = deployments.createFixture(async () => {
@@ -28,6 +28,27 @@ describe("Decoder library", async () => {
       testEncoder,
       decoder,
     };
+  });
+
+  it("plucks (dynamic) empty buffer from encoded caldata", async () => {
+    const { testEncoder, decoder } = await setup();
+
+    // (address,bytes,uint32[])
+
+    const { data } = await testEncoder.populateTransaction.dynamic("0x");
+    assert(data);
+
+    const layout = [
+      {
+        isScoped: true,
+        _type: ParameterType.Dynamic,
+        comp: Comparison.EqualTo,
+        children: [],
+      },
+    ];
+    const result = await decoder.inspect(data, layout);
+    expect(result[0].offset).to.equal(BigNumber.from(68));
+    expect(result[0].size).to.equal(BigNumber.from(0));
   });
 
   it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {

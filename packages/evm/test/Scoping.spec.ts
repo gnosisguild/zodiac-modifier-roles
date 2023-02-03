@@ -126,8 +126,8 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.OneOf,
-              comp: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
@@ -164,8 +164,8 @@ describe("Scoping", async () => {
             {
               isScoped: true,
               parent: 0,
-              _type: ParameterType.OneOf,
-              comp: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
@@ -206,8 +206,8 @@ describe("Scoping", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.OneOf,
-            comp: 0,
+            _type: ParameterType.Static,
+            comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
@@ -231,8 +231,8 @@ describe("Scoping", async () => {
           {
             parent: 0,
             isScoped: true,
-            _type: ParameterType.OneOf,
-            comp: 0,
+            _type: ParameterType.Static,
+            comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
