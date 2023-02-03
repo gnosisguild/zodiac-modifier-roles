@@ -279,13 +279,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
-          parent: 0,
-          _type: ParameterType.Function,
-          comp: Comparison.EqualTo,
-          compValue: "0x",
-        },
-        {
           parent: 0,
           isScoped: true,
           _type: ParameterType.Dynamic,
