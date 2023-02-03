@@ -53,8 +53,10 @@ library Decoder {
         uint256 length = uint256(_loadWord(data, offset));
         result.children = new ParameterPayload[](length);
 
-        bool isInline = _isStatic(parameter.children[0]);
-        uint256 itemSize = isInline ? _typeSize(parameter.children[0]) : 32;
+        bool isInline = Topology.isStatic(parameter.children[0]);
+        uint256 itemSize = isInline
+            ? Topology.typeSize(parameter.children[0])
+            : 32;
 
         for (uint256 i; i < length; ++i) {
             result.children[i] = _carve(
@@ -64,7 +66,7 @@ library Decoder {
             );
         }
         result.offset = offset;
-        result.size = _payloadSize(result);
+        result.size = _size(result);
     }
 
     function _carveTuple(
@@ -74,7 +76,7 @@ library Decoder {
     ) private pure returns (ParameterPayload memory result) {
         result.children = _carveParts(data, offset, parameter.children);
         result.offset = offset;
-        result.size = _payloadSize(result);
+        result.size = _size(result);
     }
 
     function _carveParts(
@@ -86,13 +88,13 @@ library Decoder {
 
         uint256 shift;
         for (uint256 i; i < parts.length; ++i) {
-            bool isInline = _isStatic(parts[i]);
+            bool isInline = Topology.isStatic(parts[i]);
             result[i] = _carve(
                 data,
                 _headOrTailOffset(data, offset, shift, isInline),
                 parts[i]
             );
-            shift += isInline ? _typeSize(parts[i]) : 32;
+            shift += isInline ? Topology.typeSize(parts[i]) : 32;
         }
     }
 
@@ -110,69 +112,20 @@ library Decoder {
         return tailOffset;
     }
 
-    function _isStatic(
-        TypeTopology memory parameter
-    ) private pure returns (bool) {
-        if (parameter._type == ParameterType.Static) {
-            return true;
-        } else if (parameter._type == ParameterType.Tuple) {
-            for (uint256 i; i < parameter.children.length; ++i) {
-                if (!_isStatic(parameter.children[i])) return false;
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function _typeSize(
-        TypeTopology memory parameter
-    ) private pure returns (uint256) {
-        if (parameter._type == ParameterType.Static) {
-            return 32;
-        }
-
-        assert(parameter._type == ParameterType.Tuple);
-
-        uint256 result;
-        for (uint256 i; i < parameter.children.length; ++i) {
-            result += _typeSize(parameter.children[i]);
-        }
-
-        return result;
-    }
-
-    function _payloadSize(
+    function _size(
         ParameterPayload memory payload
     ) private pure returns (uint256 result) {
         uint256 length = payload.children.length;
 
         for (uint256 i; i < length; ++i) {
-            uint256 curr = payload.children[i].offset +
-                _pad(payload.children[i].size) -
-                payload.offset;
+            uint256 offset = payload.children[i].offset;
+            // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
+            uint256 size = ((payload.children[i].size + 32 - 1) / 32) * 32;
+            uint256 curr = offset + size - payload.offset;
 
             if (curr > result) {
                 result = curr;
             }
-        }
-    }
-
-    function _pad(uint256 size) private pure returns (uint256) {
-        uint256 rest = size % 32;
-        return rest > 0 ? size + 32 - rest : size;
-    }
-
-    function _loadWord(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes32 result) {
-        if (data.length < offset + 32) {
-            revert CalldataOutOfBounds();
-        }
-
-        assembly {
-            result := calldataload(add(data.offset, offset))
         }
     }
 
@@ -189,6 +142,19 @@ library Decoder {
             mstore(result, size)
             calldatacopy(add(result, 32), add(data.offset, offset), size)
             mstore(0x40, add(result, add(32, size)))
+        }
+    }
+
+    function _loadWord(
+        bytes calldata data,
+        uint256 offset
+    ) private pure returns (bytes32 result) {
+        if (data.length < offset + 32) {
+            revert CalldataOutOfBounds();
+        }
+
+        assembly {
+            result := calldataload(add(data.offset, offset))
         }
     }
 }
