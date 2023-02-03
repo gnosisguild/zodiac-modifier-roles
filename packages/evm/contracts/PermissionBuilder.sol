@@ -196,29 +196,27 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         result._type = paramType;
         result.comp = paramComp;
 
-        if (_isNested(paramType)) {
-            (uint256 left, uint256 right) = Topology.childrenBounds(
-                scopeConfig,
-                index
-            );
+        (uint256 left, uint256 right) = Topology.childrenBounds(
+            scopeConfig,
+            index
+        );
 
-            if (left <= right) {
-                result.children = new ParameterConfig[](right - left + 1);
-                for (uint256 j = left; j <= right; j++) {
-                    result.children[j - left] = _loadParameterConfig(
-                        targetAddress,
-                        selector,
-                        role,
-                        scopeConfig,
-                        j
-                    );
-                }
+        if (left <= right) {
+            result.children = new ParameterConfig[](right - left + 1);
+            for (uint256 j = left; j <= right; j++) {
+                result.children[j - left] = _loadParameterConfig(
+                    targetAddress,
+                    selector,
+                    role,
+                    scopeConfig,
+                    j
+                );
             }
-        } else {
-            result.compValue = role.compValue[
-                _key(targetAddress, selector, uint8(index))
-            ];
         }
+
+        result.compValue = role.compValue[
+            _key(targetAddress, selector, uint8(index))
+        ];
     }
 
     function _key(

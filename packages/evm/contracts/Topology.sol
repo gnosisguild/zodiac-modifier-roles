@@ -35,7 +35,7 @@ library Topology {
             }
         }
 
-        if (i < length) {
+        if (i < length && ScopeConfig.unpackParent(scopeConfig, i) == parent) {
             left = i;
             while (
                 i < length && ScopeConfig.unpackParent(scopeConfig, i) == parent
@@ -72,7 +72,7 @@ library Topology {
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
-        if (parameter._type == ParameterType.OneOf) {
+        if (parameter.comp == Comparison.OneOf) {
             return typeTree(parameter.children[0]);
         }
 
@@ -122,13 +122,16 @@ library Topology {
         ParameterConfig[] memory configs
     ) internal pure returns (bool) {
         return
-            configs[0]._type == ParameterType.OneOf &&
-            configs[0].children[0]._type == ParameterType.Function;
+            configs.length == 1 &&
+            configs[0]._type == ParameterType.Function &&
+            configs[0].comp == Comparison.OneOf;
     }
 
     function isExplicitEntrypoint(
         ParameterConfig[] memory configs
     ) internal pure returns (bool) {
-        return configs[0]._type == ParameterType.Function;
+        return
+            configs[0]._type == ParameterType.Function &&
+            configs[0].comp != Comparison.OneOf;
     }
 }

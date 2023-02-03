@@ -29,8 +29,6 @@ library Decoder {
         uint256 offset,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        assert(parameter._type != ParameterType.OneOf);
-
         if (parameter._type == ParameterType.Static) {
             result.offset = offset;
             result.size = 32;
@@ -137,6 +135,8 @@ library Decoder {
         if (data.length < offset + size) {
             revert CalldataOutOfBounds();
         }
+        // result = data[offset:size];
+        // input[1:];
         assembly {
             result := mload(0x40)
             mstore(result, size)
