@@ -139,7 +139,7 @@ abstract contract PermissionBuilder is OwnableUpgradeable {
         for (uint8 i; i < length; ++i) {
             ParameterConfigFlat memory parameter = parameters[i];
             ScopeConfig.packParameter(buffer, parameter, i);
-            if (parameter.isScoped && !_isNested(parameter._type)) {
+            if (parameter.compValue.length > 0) {
                 role.compValue[_key(targetAddress, selector, i)] = _compress(
                     parameter
                 );

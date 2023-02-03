@@ -26,10 +26,10 @@ enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
-    //SubsetOf,
     Matches,
     Some,
     Every
+    //Subset
 }
 
 enum ExecutionOptions {

@@ -170,7 +170,7 @@ abstract contract PermissionChecker is PermissionBuilder {
                 return Status.Ok;
             }
 
-            return _checkFunction(role, targetAddress, data, buffer);
+            return _checkScope(role, targetAddress, data, buffer);
         } else {
             return Status.TargetAddressNotAllowed;
         }
@@ -206,7 +206,7 @@ abstract contract PermissionChecker is PermissionBuilder {
         return Status.Ok;
     }
 
-    function _checkFunction(
+    function _checkScope(
         Role storage role,
         address targetAddress,
         bytes calldata data,

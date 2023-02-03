@@ -70,19 +70,52 @@ library Topology {
     }
 
     function typeTree(
-        ParameterConfig memory input
+        ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
-        if (input._type == ParameterType.OneOf) {
-            return typeTree(input.children[0]);
+        if (parameter._type == ParameterType.OneOf) {
+            return typeTree(parameter.children[0]);
         }
 
-        result._type = input._type;
-        if (input._type == ParameterType.Array) {
+        result._type = parameter._type;
+        if (parameter._type == ParameterType.Array) {
             result.children = new TypeTopology[](1);
-            result.children[0] = typeTree(input.children[0]);
-        } else if (input._type == ParameterType.Tuple) {
-            result.children = typeTree(input.children);
+            result.children[0] = typeTree(parameter.children[0]);
+        } else if (parameter._type == ParameterType.Tuple) {
+            result.children = typeTree(parameter.children);
         }
+    }
+
+    function isStatic(
+        TypeTopology memory typeNode
+    ) internal pure returns (bool) {
+        if (typeNode._type == ParameterType.Static) {
+            return true;
+        } else if (typeNode._type == ParameterType.Tuple) {
+            for (uint256 i; i < typeNode.children.length; ++i) {
+                if (!isStatic(typeNode.children[i])) return false;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function typeSize(
+        TypeTopology memory typeNode
+    ) internal pure returns (uint256) {
+        if (typeNode._type == ParameterType.Static) {
+            return 32;
+        }
+
+        // should only be called for static types
+        assert(typeNode._type == ParameterType.Tuple);
+
+        uint256 result;
+        for (uint256 i; i < typeNode.children.length; ++i) {
+            result += typeSize(typeNode.children[i]);
+        }
+
+        return result;
     }
 
     function isVariantEntrypoint(
