@@ -23,9 +23,9 @@ enum Comparison {
     LessThan,
     OneOf,
     Matches,
-    Subset,
     Some,
-    Every
+    Every,
+    Subset
 }
 
 enum ExecutionOptions {

@@ -123,9 +123,9 @@ export enum Comparison {
   LessThan,
   OneOf,
   Matches,
-  Subset,
   Some,
   Every,
+  Subset,
 }
 
 export enum ExecutionOptions {
