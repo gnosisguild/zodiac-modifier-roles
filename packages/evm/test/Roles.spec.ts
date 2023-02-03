@@ -585,20 +585,13 @@ describe("RolesModifier", async () => {
           {
             isScoped: true,
             parent: 0,
-            _type: ParameterType.Tuple,
-            comp: Comparison.Matches,
-            compValue: "0x",
-          },
-          {
-            isScoped: true,
-            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
             isScoped: true,
-            parent: 0,
+            parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_2,
@@ -1778,13 +1771,6 @@ describe("RolesModifier", async () => {
         testContract.address,
         SELECTOR,
         [
-          {
-            parent: 0,
-            isScoped: true,
-            _type: ParameterType.Tuple,
-            comp: Comparison.Matches,
-            compValue: "0x",
-          },
           {
             parent: 0,
             isScoped: true,
