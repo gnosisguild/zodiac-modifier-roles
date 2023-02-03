@@ -131,18 +131,17 @@ library Decoder {
         bytes calldata data,
         uint256 offset,
         uint256 size
-    ) internal pure returns (bytes memory result) {
+    ) internal pure returns (bytes calldata) {
         if (data.length < offset + size) {
             revert CalldataOutOfBounds();
         }
-        // result = data[offset:size];
-        // input[1:];
-        assembly {
-            result := mload(0x40)
-            mstore(result, size)
-            calldatacopy(add(result, 32), add(data.offset, offset), size)
-            mstore(0x40, add(result, add(32, size)))
-        }
+        return data[offset:offset + size];
+        // assembly {
+        //     result := mload(0x40)
+        //     mstore(result, size)
+        //     calldatacopy(add(result, 32), add(data.offset, offset), size)
+        //     mstore(0x40, add(result, add(32, size)))
+        // }
     }
 
     function _loadWord(
