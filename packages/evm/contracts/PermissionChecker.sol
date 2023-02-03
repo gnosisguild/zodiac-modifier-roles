@@ -28,21 +28,28 @@ abstract contract PermissionChecker is PermissionBuilder {
     /// Role not allowed to send to target address
     error SendNotAllowed();
 
-    /// Role not allowed to use bytes for parameter
+    /// Parameter value not one of allowed
     error ParameterNotAllowed();
 
-    /// Role not allowed to use bytes for parameter
-    error ParameterNotOneOfAllowed();
-
-    error ParameterNotSubsetOfAllowed();
-
-    /// Role not allowed to use bytes less than value for parameter
+    /// Parameter value less than minimum
     error ParameterLessThanAllowed();
 
-    /// Role not allowed to use bytes greater than value for parameter
+    /// Parameter value greater than maximum
     error ParameterGreaterThanAllowed();
 
-    error ArrayMatchesNotSameLength();
+    error ParameterNotOneOfAllowed();
+
+    /// Parameter value does not match specified condition
+    error ParameterNotAMatch();
+
+    /// Array elements do not meet allowed criteria for every element
+    error ArrayElementsNotAllowed();
+
+    /// Array elements do not meet allowed criteria for at least one element
+    error ArrayElementsSomeNotAllowed();
+
+    /// Parameter value not a subset of allowed values
+    error ParameterNotSubsetOfAllowed();
 
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
@@ -229,7 +236,6 @@ abstract contract PermissionChecker is PermissionBuilder {
         } else if (Topology.isExplicitEntrypoint(parameters)) {
             return _checkFunction(data, parameters[0].children, payloads);
         } else {
-            // is implicit
             return _checkFunction(data, parameters, payloads);
         }
     }
@@ -290,13 +296,13 @@ abstract contract PermissionChecker is PermissionBuilder {
             return _oneOf(data, parameter, payload);
         } else if (comp == Comparison.Matches) {
             return _matches(data, parameter, payload);
-        } else if (comp == Comparison.Subset) {
-            return _subset(data, parameter, payload);
         } else if (comp == Comparison.Some) {
             return _some(data, parameter, payload);
-        } else {
-            assert(comp == Comparison.Every);
+        } else if (comp == Comparison.Every) {
             return _every(data, parameter, payload);
+        } else {
+            assert(comp == Comparison.Subset);
+            return _subset(data, parameter, payload);
         }
     }
 
@@ -310,7 +316,6 @@ abstract contract PermissionChecker is PermissionBuilder {
                 return status;
             }
         }
-
         return Status.ParameterNotOneOfAllowed;
     }
 
@@ -320,23 +325,16 @@ abstract contract PermissionChecker is PermissionBuilder {
         ParameterPayload memory payload
     ) private pure returns (Status status) {
         if (parameter.children.length != payload.children.length) {
-            return Status.ArrayMatchesNotSameLength;
+            return Status.ParameterNotAMatch;
         }
 
         for (uint256 i; i < parameter.children.length; ++i) {
             status = _walk(data, parameter.children[i], payload.children[i]);
             if (status != Status.Ok) {
-                return status;
+                // TODO include nested errors
+                return Status.ParameterNotAMatch;
             }
         }
-        return Status.Ok;
-    }
-
-    function _subset(
-        bytes calldata data,
-        ParameterConfig memory parameter,
-        ParameterPayload memory payload
-    ) private pure returns (Status status) {
         return Status.Ok;
     }
 
@@ -347,12 +345,11 @@ abstract contract PermissionChecker is PermissionBuilder {
     ) private pure returns (Status status) {
         for (uint256 i; i < payload.children.length; ++i) {
             status = _walk(data, parameter.children[0], payload.children[i]);
-
             if (status != Status.Ok) {
-                return status;
+                // TODO make nested errors visible
+                return Status.ArrayElementsNotAllowed;
             }
         }
-
         return Status.Ok;
     }
 
@@ -363,14 +360,42 @@ abstract contract PermissionChecker is PermissionBuilder {
     ) private pure returns (Status status) {
         for (uint256 i; i < payload.children.length; ++i) {
             status = _walk(data, parameter.children[0], payload.children[i]);
-
             if (status == Status.Ok) {
                 return status;
             }
         }
+        return Status.ArrayElementsSomeNotAllowed;
+    }
 
-        // TODO create new custom errors
-        return Status.ParameterNotAllowed;
+    function _subset(
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status status) {
+        ParameterPayload[] memory values = payload.children;
+        if (values.length == 0) {
+            return Status.ParameterNotSubsetOfAllowed;
+        }
+        ParameterConfig[] memory compValues = parameter.children;
+
+        uint256 taken;
+        for (uint256 i; i < values.length; ++i) {
+            bool found = false;
+            for (uint256 j; j < compValues.length; ++j) {
+                if (
+                    taken & (1 << j) == 0 &&
+                    _walk(data, compValues[j], values[i]) == Status.Ok
+                ) {
+                    taken |= 1 << j;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return Status.ParameterNotSubsetOfAllowed;
+            }
+        }
+        return Status.Ok;
     }
 
     function _compare(
@@ -436,27 +461,27 @@ abstract contract PermissionChecker is PermissionBuilder {
             revert SendNotAllowed();
         } else if (status == Status.ParameterNotAllowed) {
             revert ParameterNotAllowed();
-        } else if (status == Status.ParameterNotOneOfAllowed) {
-            revert ParameterNotOneOfAllowed();
-        } else if (status == Status.ParameterNotSubsetOfAllowed) {
-            revert ParameterNotSubsetOfAllowed();
         } else if (status == Status.ParameterLessThanAllowed) {
             revert ParameterLessThanAllowed();
         } else if (status == Status.ParameterGreaterThanAllowed) {
             revert ParameterGreaterThanAllowed();
-        } else if (status == Status.ArrayMatchesNotSameLength) {
-            revert ArrayMatchesNotSameLength();
+        } else if (status == Status.ParameterNotOneOfAllowed) {
+            revert ParameterNotOneOfAllowed();
+        } else if (status == Status.ParameterNotAMatch) {
+            revert ParameterNotAMatch();
+        } else if (status == Status.ArrayElementsNotAllowed) {
+            revert ArrayElementsNotAllowed();
+        } else if (status == Status.ArrayElementsSomeNotAllowed) {
+            revert ArrayElementsSomeNotAllowed();
         } else {
-            assert(status == Status.UnacceptableMultiSendOffset);
-            revert UnacceptableMultiSendOffset();
+            assert(status == Status.ParameterNotSubsetOfAllowed);
+            revert ParameterNotSubsetOfAllowed();
         }
     }
 
     enum Status {
         Ok,
         FunctionSignatureTooShort,
-        /// only multisend txs with an offset of 32 bytes are allowed
-        UnacceptableMultiSendOffset,
         /// Role not allowed to delegate call to target address
         DelegateCallNotAllowed,
         /// Role not allowed to call target address
@@ -466,39 +491,21 @@ abstract contract PermissionChecker is PermissionBuilder {
         FunctionVariantNotAllowed,
         /// Role not allowed to send to target address
         SendNotAllowed,
-        /// Role not allowed to use bytes for parameter
+        /// Parameter value is not equal to allowed
         ParameterNotAllowed,
-        /// Role not allowed to use bytes for parameter
-        ParameterNotOneOfAllowed,
-        ParameterNotSubsetOfAllowed,
-        /// Role not allowed to use bytes less than value for parameter
+        /// Parameter value less than allowed
         ParameterLessThanAllowed,
-        /// Role not allowed to use bytes greater than value for parameter
+        /// Parameter value greater than maximum allowed by role
         ParameterGreaterThanAllowed,
-        ArrayMatchesNotSameLength
+        /// Parameter value not a subset of allowed
+        ParameterNotOneOfAllowed,
+        /// Parameter value does not match
+        ParameterNotAMatch,
+        /// Array elements do not meet allowed criteria for every element
+        ArrayElementsNotAllowed,
+        /// Array elements do not meet allowed criteria for at least one element
+        ArrayElementsSomeNotAllowed,
+        /// Parameter value not a subset of allowed
+        ParameterNotSubsetOfAllowed
     }
 }
-
-//  function _compareSubsetOf(
-//         bytes32[] memory compValues,
-//         bytes32[] memory value
-//     ) private view returns (Status) {
-//         if (value.length == 0) {
-//             return Status.ParameterNotSubsetOfAllowed;
-//         }
-
-//         uint256 taken;
-//         for (uint256 i; i < value.length; ++i) {
-//             for (uint256 j; j <= compValues.length; ++j) {
-//                 if (j == compValues.length) {
-//                     return Status.ParameterNotSubsetOfAllowed;
-//                 }
-//                 uint256 mask = 1 << j;
-//                 if ((taken & mask) == 0 && value[i] == compValues[j]) {
-//                     taken |= mask;
-//                     break;
-//                 }
-//             }
-//         }
-//         return Status.Ok;
-//     }
