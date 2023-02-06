@@ -8,6 +8,7 @@ import {
   dynamic32Equal,
   dynamic32OneOf,
   staticEqual,
+  staticOneOf,
   subsetOf,
 } from "../helpers/utils"
 import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
@@ -377,52 +378,115 @@ const preset: RolePreset = {
       [UV3_ROUTER_2]
     ), */
 
+    // Swap COMP for WETH
     {
       targetAddress: UV3_ROUTER_2,
-      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
-        [2]: dynamic32OneOf(
-          [
-            [COMP, WETH, USDC],
-            [COMP, WETH, DAI],
-            [COMP, WETH],
-            [rETH2, sETH2, WETH, USDC],
-            [rETH2, sETH2, WETH, DAI],
-            [rETH2, sETH2, WETH],
-            [SWISE, sETH2, WETH, USDC],
-            [SWISE, sETH2, WETH, DAI],
-            [SWISE, sETH2, WETH],
-            [sETH2, WETH],
-            [WETH, sETH2],
-            [CRV, WETH, USDC],
-            [CRV, WETH, DAI],
-            [CRV, WETH],
-            [LDO, WETH, USDC],
-            [LDO, WETH, DAI],
-            [LDO, WETH],
-            [WETH, USDC],
-            [WETH, DAI],
-            [WETH, USDT],
-            [USDC, WETH],
-            [USDC, USDT],
-            [USDC, WETH, USDT],
-            [USDC, DAI],
-            [USDC, WETH, DAI],
-            [DAI, WETH],
-            [DAI, USDC],
-            [DAI, WETH, USDC],
-            [DAI, USDT],
-            [DAI, WETH, USDT],
-            [USDT, WETH],
-            [USDT, USDC],
-            [USDT, WETH, USDC],
-            [USDT, DAI],
-            [USDT, WETH, DAI],
-          ],
-          "address[]"
-        ),
+        [0]: staticEqual(COMP, "address"),
+        [1]: staticEqual(WETH, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-      },
+      }
+    },
+    // Swap CRV for WETH
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(CRV, "address"),
+        [1]: staticEqual(WETH, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap LDO for WETH
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(LDO, "address"),
+        [1]: staticEqual(WETH, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap rETH2 for sETH2
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(rETH2, "address"),
+        [1]: staticEqual(sETH2, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap SWISE for sETH2
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(SWISE, "address"),
+        [1]: staticEqual(sETH2, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap sETH2 for WETH
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(sETH2, "address"),
+        [1]: staticEqual(WETH, "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap WETH for sETH2/USDC/USDT/DAI
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(WETH, "address"),
+        [1]: staticOneOf([sETH2, USDC, USDT, DAI], "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap USDC for WETH/USDT/DAI
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(USDC, "address"),
+        [1]: staticOneOf([WETH, USDT, DAI], "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap DAI for WETH/USDC/USDT
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(DAI, "address"),
+        [1]: staticOneOf([WETH, USDC, USDT], "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
+    },
+    // Swap USDT for WETH/USDC/DAI
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticEqual(USDT, "address"),
+        [1]: staticOneOf([WETH, USDC, DAI], "address"),
+        [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
