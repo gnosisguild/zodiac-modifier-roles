@@ -149,12 +149,12 @@ abstract contract PermissionChecker is Core {
             return Status.FunctionSignatureTooShort;
         }
 
-        TargetAddress storage target = roles[roleId].targets[targetAddress];
+        Role storage role = roles[roleId];
+        TargetAddress storage target = role.targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
             return _checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
-            Role storage role = roles[roleId];
             bytes32 key = _key(targetAddress, bytes4(data));
 
             uint256 header = uint256(role.scopeConfig[key]);
