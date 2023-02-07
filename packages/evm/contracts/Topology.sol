@@ -77,10 +77,10 @@ library Topology {
         }
 
         result._type = parameter._type;
-        if (parameter._type == ParameterType.Array) {
-            result.children = new TypeTopology[](1);
-            result.children[0] = typeTree(parameter.children[0]);
-        } else if (parameter._type == ParameterType.Tuple) {
+        if (
+            parameter._type == ParameterType.Array ||
+            parameter._type == ParameterType.Tuple
+        ) {
             result.children = typeTree(parameter.children);
         }
     }
