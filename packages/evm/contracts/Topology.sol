@@ -72,6 +72,8 @@ library Topology {
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
+        assert(parameter._type != ParameterType.Function);
+
         if (parameter.comp == Comparison.OneOf) {
             return typeTree(parameter.children[0]);
         }
