@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-struct Bitmap {
-    mapping(uint256 => uint256) payload;
-}
-
 struct BitmapBuffer {
-    uint256[] payload;
+    bytes32[] payload;
 }
 
 enum ParameterType {
@@ -77,6 +73,6 @@ struct TargetAddress {
 struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
-    mapping(bytes32 => Bitmap) functions;
-    mapping(bytes32 => bytes32) compValue;
+    mapping(bytes32 => bytes32) scopeConfig;
+    mapping(bytes32 => bytes32) compValues;
 }
