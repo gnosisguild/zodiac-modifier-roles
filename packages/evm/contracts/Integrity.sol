@@ -65,6 +65,7 @@ library Integrity {
         }
 
         // TODO check that Array and tuple-oneOf nodes are topologically equivalent
+        // TODO a lot more integrity checks
     }
 
     function entry(ParameterConfigFlat calldata parameter) internal pure {
