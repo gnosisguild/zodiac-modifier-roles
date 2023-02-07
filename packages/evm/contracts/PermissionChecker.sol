@@ -2,13 +2,12 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import "./Types.sol";
 
+import "./Core.sol";
 import "./Decoder.sol";
-import "./ScopeConfig.sol";
-import "./PermissionBuilder.sol";
+import "./bitmaps/ScopeConfig.sol";
 
-abstract contract PermissionChecker is PermissionBuilder {
+abstract contract PermissionChecker is Core {
     /// Sender is not a member of the role
     error NoMembership();
 
@@ -21,12 +20,12 @@ abstract contract PermissionChecker is PermissionBuilder {
     /// Role not allowed to call target address
     error TargetAddressNotAllowed();
 
+    /// Role not allowed to send to target address
+    error SendNotAllowed();
+
     /// Role not allowed to call this function on target address
     error FunctionNotAllowed();
     error FunctionVariantNotAllowed();
-
-    /// Role not allowed to send to target address
-    error SendNotAllowed();
 
     /// Parameter value not one of allowed
     error ParameterNotAllowed();
@@ -156,17 +155,15 @@ abstract contract PermissionChecker is PermissionBuilder {
             return _checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
             Role storage role = roles[roleId];
+            bytes32 key = _key(targetAddress, bytes4(data));
 
-            BitmapBuffer memory buffer = ScopeConfig.load(
-                role.functions[_key(targetAddress, bytes4(data))]
-            );
-
-            if (buffer.payload[0] == 0) {
+            uint256 header = uint256(role.scopeConfig[key]);
+            if (header == 0) {
                 return Status.FunctionNotAllowed;
             }
 
             (, bool isWildcarded, ExecutionOptions options) = ScopeConfig
-                .unpackHeader(buffer);
+                .unpackHeader(header);
 
             Status status = _checkExecutionOptions(value, operation, options);
             if (status != Status.Ok) {
@@ -177,7 +174,7 @@ abstract contract PermissionChecker is PermissionBuilder {
                 return Status.Ok;
             }
 
-            return _checkScope(role, targetAddress, data, buffer);
+            return _checkScope(data, role, key);
         } else {
             return Status.TargetAddressNotAllowed;
         }
@@ -214,16 +211,13 @@ abstract contract PermissionChecker is PermissionBuilder {
     }
 
     function _checkScope(
-        Role storage role,
-        address targetAddress,
         bytes calldata data,
-        BitmapBuffer memory scopeConfig
+        Role storage role,
+        bytes32 key
     ) internal view returns (Status) {
-        ParameterConfig[] memory parameters = _loadParameterConfig(
-            targetAddress,
-            bytes4(data),
-            role,
-            scopeConfig
+        ParameterConfig[] memory parameters = _unpack(
+            _loadBitmap(role.scopeConfig, key),
+            _loadBitmap(role.compValues, key)
         );
 
         ParameterPayload[] memory payloads = Decoder.inspect(
