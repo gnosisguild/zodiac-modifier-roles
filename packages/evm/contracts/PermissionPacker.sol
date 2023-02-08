@@ -15,12 +15,12 @@ abstract contract PermissionPacker is Core {
         bytes32 key,
         BitmapBuffer memory value
     ) internal override {
-        bytes32 head = value.payload[0];
-        uint256 pages = uint256(head) >> 251;
+        bytes32 header = value.payload[0];
+        uint256 pages = uint256(header) >> 251;
 
-        bitmap[key] = head;
+        bitmap[key] = header;
         for (uint256 i = 1; i < pages; ++i) {
-            bitmap[_namespace(key, i)] = value.payload[i];
+            bitmap[_key(key, i)] = value.payload[i];
         }
     }
 
@@ -28,13 +28,13 @@ abstract contract PermissionPacker is Core {
         mapping(bytes32 => bytes32) storage bitmap,
         bytes32 key
     ) internal view override returns (BitmapBuffer memory result) {
-        uint256 head = uint256(bitmap[key]);
-        uint256 pages = head >> 251;
+        bytes32 header = bitmap[key];
+        uint256 pages = uint256(header) >> 251;
 
         result.payload = new bytes32[](pages);
-        result.payload[0] = bytes32(head);
+        result.payload[0] = header;
         for (uint256 i = 1; i < pages; ++i) {
-            result.payload[i] = bitmap[_namespace(key, i)];
+            result.payload[i] = bitmap[_key(key, i)];
         }
     }
 
@@ -51,8 +51,8 @@ abstract contract PermissionPacker is Core {
         )
     {
         uint256 length = parameters.length;
-        scopeConfig = ScopeConfig.createBuffer(length, false, options);
-        compValues = CompValues.packHeader(length);
+        scopeConfig = ScopeConfig.create(length, false, options);
+        compValues = CompValues.create(length);
         for (uint8 i; i < length; ++i) {
             ParameterConfigFlat memory parameter = parameters[i];
             ScopeConfig.packParameter(scopeConfig, parameter, i);
@@ -93,10 +93,6 @@ abstract contract PermissionPacker is Core {
                 result.children[j - left] = _unpack(scopeConfig, compValues, j);
             }
         }
-    }
-
-    function _namespace(bytes32 key, uint256 i) private pure returns (bytes32) {
-        return bytes32(abi.encodePacked(bytes24(key), uint8(i)));
     }
 
     function _compress(

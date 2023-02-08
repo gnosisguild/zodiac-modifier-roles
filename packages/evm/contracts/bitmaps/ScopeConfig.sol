@@ -36,7 +36,7 @@ library ScopeConfig {
     uint256 private constant chunkSize = 16;
     uint256 private constant pageCapacity = 256 / chunkSize;
 
-    function createBuffer(
+    function create(
         uint256 length,
         bool isWildcarded,
         ExecutionOptions options
@@ -80,12 +80,6 @@ library ScopeConfig {
         BitmapBuffer memory buffer
     ) internal pure returns (uint256, bool, ExecutionOptions) {
         return unpackHeader(buffer.payload[0]);
-    }
-
-    function unpackHeader(
-        uint256 header
-    ) internal pure returns (uint256, bool, ExecutionOptions) {
-        return unpackHeader(bytes32(header));
     }
 
     function unpackHeader(

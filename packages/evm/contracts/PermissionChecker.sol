@@ -156,8 +156,7 @@ abstract contract PermissionChecker is Core {
             return _checkExecutionOptions(value, operation, target.options);
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
-
-            uint256 header = uint256(role.scopeConfig[key]);
+            bytes32 header = role.scopeConfig[key];
             if (header == 0) {
                 return Status.FunctionNotAllowed;
             }
@@ -174,7 +173,12 @@ abstract contract PermissionChecker is Core {
                 return Status.Ok;
             }
 
-            return _checkScope(data, role, key);
+            return
+                _checkScope(
+                    data,
+                    _loadBitmap(role.scopeConfig, key),
+                    _loadBitmap(role.compValues, key)
+                );
         } else {
             return Status.TargetAddressNotAllowed;
         }
@@ -212,14 +216,10 @@ abstract contract PermissionChecker is Core {
 
     function _checkScope(
         bytes calldata data,
-        Role storage role,
-        bytes32 key
-    ) internal view returns (Status) {
-        ParameterConfig[] memory parameters = _unpack(
-            _loadBitmap(role.scopeConfig, key),
-            _loadBitmap(role.compValues, key)
-        );
-
+        BitmapBuffer memory scopeConfig,
+        BitmapBuffer memory compValues
+    ) internal pure returns (Status) {
+        ParameterConfig[] memory parameters = _unpack(scopeConfig, compValues);
         ParameterPayload[] memory payloads = Decoder.inspect(
             data,
             Topology.typeTree(parameters)
@@ -228,9 +228,9 @@ abstract contract PermissionChecker is Core {
         if (Topology.isVariantEntrypoint(parameters)) {
             return _checkVariants(data, parameters[0].children, payloads);
         } else if (Topology.isExplicitEntrypoint(parameters)) {
-            return _checkFunction(data, parameters[0].children, payloads);
+            return _entrypoint(data, parameters[0].children, payloads);
         } else {
-            return _checkFunction(data, parameters, payloads);
+            return _entrypoint(data, parameters, payloads);
         }
     }
 
@@ -240,11 +240,7 @@ abstract contract PermissionChecker is Core {
         ParameterPayload[] memory payloads
     ) internal pure returns (Status) {
         for (uint256 i; i < variants.length; ++i) {
-            Status status = _checkFunction(
-                data,
-                variants[i].children,
-                payloads
-            );
+            Status status = _entrypoint(data, variants[i].children, payloads);
             if (status == Status.Ok) {
                 return status;
             }
@@ -252,7 +248,7 @@ abstract contract PermissionChecker is Core {
         return Status.FunctionVariantNotAllowed;
     }
 
-    function _checkFunction(
+    function _entrypoint(
         bytes calldata data,
         ParameterConfig[] memory parameters,
         ParameterPayload[] memory payloads
