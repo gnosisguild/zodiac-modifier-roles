@@ -1,6 +1,7 @@
 import { Explorer, ExplorerConfig } from "../services/explorer"
-import { Network } from "./networks"
+import { getNetworkRPC, Network } from "./networks"
 import memoize from "lodash.memoize"
+import { ethers } from "ethers"
 
 const ETHERSCAN_KEY = process.env.REACT_APP_ETHERSCAN_KEY as string
 const POLYGONSCAN_KEY = process.env.REACT_APP_POLYGONSCAN_KEY as string
@@ -64,5 +65,7 @@ const explorerConfig: Record<Network, ExplorerConfig> = {
 
 export const getExplorer = memoize((network: Network) => {
   const config = explorerConfig[network]
-  return new Explorer(config)
+  const rpcUrl = getNetworkRPC(network)
+  const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, network)
+  return new Explorer(config, provider)
 })

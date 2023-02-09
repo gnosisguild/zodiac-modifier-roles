@@ -25,7 +25,7 @@ export const TargetFunctionList = ({ items, conditions, onChange, onSubmit }: Ta
     return (
       <Grid container direction="column" spacing={2}>
         <Grid item>
-          <Typography>The target has 0 function</Typography>{" "}
+          <Typography>Unable to fetch ABI for this address</Typography>{" "}
         </Grid>
         <Grid item>
           <ZodiacTextField
@@ -53,17 +53,36 @@ export const TargetFunctionList = ({ items, conditions, onChange, onSubmit }: Ta
       [format]: funcConditions,
     })
   }
+
+  const sighashesNotInAbi = Object.keys(conditions).filter(
+    (key) => !items.some((item) => getKeyFromFunction(item) === key),
+  )
+
   return (
     <>
+      {/* render functions that are in the ABI */}
       {items.map((func) => {
-        const format = getKeyFromFunction(func)
-        if (!conditions[format]) return null
+        const sighash = getKeyFromFunction(func)
+        if (!conditions[sighash]) return null
         return (
           <TargetFunction
-            key={format}
+            key={sighash}
             func={func}
-            functionConditions={conditions[format]}
-            onChange={handleFunctionChange(format)}
+            functionConditions={conditions[sighash]}
+            onChange={handleFunctionChange(sighash)}
+          />
+        )
+      })}
+
+      {/* render functions that are not in the ABI */}
+      {sighashesNotInAbi.map((sighash) => {
+        const funcConditions = conditions[sighash]
+        return (
+          <TargetFunction
+            key={sighash}
+            func={sighash}
+            functionConditions={funcConditions}
+            onChange={handleFunctionChange(sighash)}
           />
         )
       })}

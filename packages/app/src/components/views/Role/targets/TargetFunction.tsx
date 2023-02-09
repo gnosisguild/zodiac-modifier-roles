@@ -2,7 +2,7 @@ import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { Box, makeStyles, Typography } from "@material-ui/core"
 import { KeyboardArrowDownSharp } from "@material-ui/icons"
 import classNames from "classnames"
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
 import { Checkbox } from "../../../commons/input/Checkbox"
@@ -60,7 +60,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 interface TargetFunctionProps {
-  func: FunctionFragment
+  func: FunctionFragment | string
   functionConditions: FunctionCondition
 
   onChange(value: FunctionCondition): void
@@ -76,7 +76,9 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
 
   const [open, setOpen] = useState(false)
 
-  const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
+  const functionName = typeof func === "string" ? func : func.name
+  const paramsText = typeof func === "string" ? "function not found in ABI" : getParamsTypesTitle(func)
+  const sighash = typeof func === "string" ? func : Interface.getSighash(func)
 
   const handleExecutionOption = (option: ExecutionOption) => {
     let type = functionConditions.type
@@ -85,7 +87,7 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
     }
     onChange({
       ...functionConditions,
-      sighash: Interface.getSighash(func),
+      sighash,
       executionOption: option,
       type,
     })
@@ -98,7 +100,7 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
     return onChange({
       ...functionConditions,
       params: [],
-      sighash: Interface.getSighash(func),
+      sighash,
       type,
     })
   }
@@ -115,7 +117,7 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
           onClick={(evt) => evt.stopPropagation()}
         />
         <Typography variant="body1" className={classes.name}>
-          {func.name}
+          {functionName}
         </Typography>
         <Typography variant="body2" className={classes.type}>
           {paramsText}
