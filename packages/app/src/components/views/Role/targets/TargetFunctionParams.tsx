@@ -4,9 +4,10 @@ import { ParamConditionInput } from "./ParamConditionInput"
 import { ConditionType, FunctionCondition, ParamCondition } from "../../../../typings/role"
 import { FunctionFragment } from "@ethersproject/abi"
 import { ArrowRight } from "@material-ui/icons"
+import { ParamType } from "ethers/lib/utils"
 
 interface TargetFunctionParamsProps {
-  func: FunctionFragment
+  func: FunctionFragment | string
   funcConditions: FunctionCondition
   disabled: boolean
 
@@ -46,7 +47,26 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
     onChange({ ...funcConditions, type, params: newConditions })
   }
 
-  return (
+  return typeof func === "string" ? (
+    <>
+      {funcConditions.params.map((condition, index) => (
+        <div key={index} className={classes.row}>
+          <ArrowRight />
+          <Typography variant="body1">[{index}]</Typography>
+          <Typography variant="body2" className={classes.type}>
+            ({condition.type})
+          </Typography>
+          <ParamConditionInput
+            disabled={disabled}
+            param={ParamType.from("bytes")}
+            index={index}
+            condition={funcConditions.params.find((param) => param?.index === index)}
+            onChange={(condition) => handleConditionChange(index, condition)}
+          />
+        </div>
+      ))}
+    </>
+  ) : (
     <>
       {func.inputs.map((param, index) => (
         <div key={index} className={classes.row}>
