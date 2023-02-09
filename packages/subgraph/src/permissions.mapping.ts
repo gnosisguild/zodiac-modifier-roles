@@ -139,18 +139,20 @@ export function handleScopeFunction(event: ScopeFunction): void {
 
   // create new parameter or override old one
   for (let i = 0; i < event.params.paramType.length; i++) {
-    const paramType = PARAMETER_TYPE[event.params.paramType[i]]
-    const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
-    const compValue = event.params.compValue[i]
+    if (event.params.isParamScoped[i]) {
+      const paramType = PARAMETER_TYPE[event.params.paramType[i]]
+      const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
+      const compValue = event.params.compValue[i]
 
-    const parameterId = getParameterId(functionId, i)
-    const parameter = new Parameter(parameterId)
-    parameter.owningFunction = functionId
-    parameter.index = i
-    parameter.type = paramType
-    parameter.comparison = paramComp
-    parameter.comparisonValue = [compValue]
-    parameter.save()
+      const parameterId = getParameterId(functionId, i)
+      const parameter = new Parameter(parameterId)
+      parameter.owningFunction = functionId
+      parameter.index = i
+      parameter.type = paramType
+      parameter.comparison = paramComp
+      parameter.comparisonValue = [compValue]
+      parameter.save()
+    }
   }
 }
 
