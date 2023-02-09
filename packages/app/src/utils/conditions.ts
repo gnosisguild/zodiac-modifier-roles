@@ -1,5 +1,5 @@
 import { ConditionType, FunctionCondition, ParamComparison, ParameterType, ParamNativeType } from "../typings/role"
-import { FunctionFragment, Interface } from "@ethersproject/abi"
+import { FunctionFragment, Interface, JsonFragment } from "@ethersproject/abi"
 import { ethers } from "ethers"
 
 export function getFunctionConditionType(paramConditions: FunctionCondition["params"]) {
@@ -55,6 +55,9 @@ export function isWriteFunction(method: FunctionFragment) {
   if (!method.stateMutability) return true
   return !["view", "pure"].includes(method.stateMutability)
 }
+
+export const getWriteFunctions = (abi: JsonFragment[] | undefined) =>
+  !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
 
 export function formatParamValue(param: ethers.utils.ParamType, value: string) {
   if (getNativeType(param) === ParamNativeType.ARRAY) return JSON.parse(value)

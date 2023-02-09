@@ -5,9 +5,8 @@ import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
-import { ZodiacPaper } from "zodiac-ui-components"
 import { Checkbox } from "../../../commons/input/Checkbox"
-import { getKeyFromFunction, isWriteFunction } from "../../../../utils/conditions"
+import { getKeyFromFunction, getWriteFunctions } from "../../../../utils/conditions"
 import classNames from "classnames"
 import { ExecutionOptions } from "./ExecutionOptions"
 
@@ -20,16 +19,7 @@ const useStyles = makeStyles((theme) => ({
       fontSize: 16,
     },
   },
-  root: {
-    padding: theme.spacing(2),
-    paddingRight: `calc(${theme.spacing(2)}px - 6px)`,
-    maxHeight: "calc(100vh - 275px)",
-    overflowY: "auto",
-    scrollbarGutter: "stable",
-    "&::-webkit-scrollbar": {
-      width: "6px",
-    },
-  },
+
   functionWrapper: {
     backgroundColor: "rgba(217, 212, 173, 0.1)",
     border: "1px solid rgba(217, 212, 173, 0.3)",
@@ -75,18 +65,6 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: "Roboto Mono",
     fontSize: 12,
   },
-  disabledArea: {
-    opacity: 0.5,
-    "&::after": {
-      content: "''",
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.12)",
-    },
-  },
 }))
 
 type TargetConfigurationProps = {
@@ -119,8 +97,7 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const [isWildcarded, setIsWildcarded] = useState(target.type === ConditionType.WILDCARDED)
 
   useEffect(() => {
-    const funcs = !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
-    setFunctions(funcs)
+    setFunctions(getWriteFunctions(abi))
     setRefresh(true)
   }, [abi])
 
@@ -196,17 +173,13 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
         </Box>
       ) : null}
       <Box className={classNames(classes.container)}>
-        <ZodiacPaper
-          borderStyle="single"
-          className={classNames(classes.root, { [classes.disabledArea]: isWildcarded })}
-        >
-          <TargetFunctionList
-            items={functions}
-            conditions={target.conditions}
-            onChange={handleFuncParamsChange}
-            onSubmit={(customABI) => setAbi(customABI)}
-          />
-        </ZodiacPaper>
+        <TargetFunctionList
+          items={functions}
+          conditions={target.conditions}
+          onChange={handleFuncParamsChange}
+          onSubmit={(customABI) => setAbi(customABI)}
+          wildcarded={isWildcarded}
+        />
       </Box>
     </Box>
   )
