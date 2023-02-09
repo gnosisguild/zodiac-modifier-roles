@@ -137,20 +137,31 @@ export function handleScopeFunction(event: ScopeFunction): void {
   theFunction.wildcarded = false
   theFunction.save()
 
-  // create new parameter or override old one
-  for (let i = 0; i < event.params.paramType.length; i++) {
-    const paramType = PARAMETER_TYPE[event.params.paramType[i]]
-    const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
-    const compValue = event.params.compValue[i]
+  if (theFunction.parameters != null) {
+    // remove old parameters if it exists
+    const parameters: string[] = theFunction.parameters!
+    for (let i = 0; i < parameters.length; i++) {
+      const parameterId = parameters[i]
+      store.remove("Parameter", parameterId)
+    }
+  }
 
-    const parameterId = getParameterId(functionId, i)
-    const parameter = new Parameter(parameterId)
-    parameter.owningFunction = functionId
-    parameter.index = i
-    parameter.type = paramType
-    parameter.comparison = paramComp
-    parameter.comparisonValue = [compValue]
-    parameter.save()
+  for (let i = 0; i < event.params.paramType.length; i++) {
+    // create new parameters
+    if (event.params.isParamScoped[i]) {
+      const paramType = PARAMETER_TYPE[event.params.paramType[i]]
+      const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
+      const compValue = event.params.compValue[i]
+
+      const parameterId = getParameterId(functionId, i)
+      const parameter = new Parameter(parameterId)
+      parameter.owningFunction = functionId
+      parameter.index = i
+      parameter.type = paramType
+      parameter.comparison = paramComp
+      parameter.comparisonValue = [compValue]
+      parameter.save()
+    }
   }
 }
 

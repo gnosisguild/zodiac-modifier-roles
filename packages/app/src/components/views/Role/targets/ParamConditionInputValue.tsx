@@ -58,10 +58,20 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
     }
     onChange({ ...condition, value: [value] })
   }
+
+  const tryAbiDecode = (param: ethers.utils.ParamType, value: string) => {
+    try {
+      return ethers.utils.defaultAbiCoder.decode([param], condition.value[0])
+    } catch (err) {
+      // when decoding fails return raw value instead of crashing
+      return value
+    }
+  }
+
   const humanReadableValue =
     dirty || condition.value[0] == null || condition.value[0] === ""
       ? condition.value[0]
-      : ethers.utils.defaultAbiCoder.decode([param], condition.value[0])
+      : tryAbiDecode(param, condition.value[0])
   return (
     <TextField
       error={!valid && dirty}
