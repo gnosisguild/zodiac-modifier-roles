@@ -137,8 +137,17 @@ export function handleScopeFunction(event: ScopeFunction): void {
   theFunction.wildcarded = false
   theFunction.save()
 
-  // create new parameter or override old one
+  if (theFunction.parameters != null) {
+    // remove old parameters if it exists
+    const parameters: string[] = theFunction.parameters!
+    for (let i = 0; i < parameters.length; i++) {
+      const parameterId = parameters[i]
+      store.remove("Parameter", parameterId)
+    }
+  }
+
   for (let i = 0; i < event.params.paramType.length; i++) {
+    // create new parameters
     if (event.params.isParamScoped[i]) {
       const paramType = PARAMETER_TYPE[event.params.paramType[i]]
       const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
