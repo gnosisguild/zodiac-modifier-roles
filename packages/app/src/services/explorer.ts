@@ -45,7 +45,7 @@ export class Explorer {
       throw new Error(response.data.result)
     }
 
-    let json = JSON.parse(response.data.result) as JsonFragment[]
+    const json = JSON.parse(response.data.result) as JsonFragment[]
 
     if (looksLikeAProxy(json)) {
       const proxyAddress = await this.detectProxyTarget(address)
