@@ -47,23 +47,48 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
     onChange({ ...funcConditions, type, params: newConditions })
   }
 
-  return typeof func === "string" ? (
+  const maxIndex = funcConditions.params.reduce((max, param) => Math.max(max, param.index), -1)
+  const indexes = Array.from({ length: maxIndex + 1 }, (_, i) => i)
+
+  const displayRawParameters = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
+    func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
+
+  return typeof func === "string" || displayRawParameters(func, funcConditions) ? (
     <>
-      {funcConditions.params.map((condition, index) => (
-        <div key={index} className={classes.row}>
-          <ArrowRight />
-          <Typography variant="body1">[{index}]</Typography>
-          <Typography variant="body2" className={classes.type}>
-            ({condition.type})
-          </Typography>
-          <ParamConditionInput
-            disabled={disabled}
-            param={ParamType.from("bytes")}
-            index={index}
-            condition={funcConditions.params.find((param) => param?.index === index)}
-            onChange={(condition) => handleConditionChange(index, condition)}
-          />
-        </div>
+      {indexes.map((index) => (
+        <>
+          {funcConditions.params[index] ? (
+            <div key={index} className={classes.row}>
+              <ArrowRight />
+              <Typography variant="body1">[{index}]</Typography>
+              <Typography variant="body2" className={classes.type}>
+                ({funcConditions.params[index].type})
+              </Typography>
+              <ParamConditionInput
+                disabled={disabled}
+                param={ParamType.from(funcConditions.params[index].value[0])}
+                index={index}
+                condition={funcConditions.params.find((param) => param?.index === index)}
+                onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+              />
+            </div>
+          ) : (
+            <div key={index} className={classes.row}>
+              <ArrowRight />
+              <Typography variant="body1">[{index}]</Typography>
+              <Typography variant="body2" className={classes.type}>
+                Unknown type
+              </Typography>
+              <ParamConditionInput
+                disabled={disabled}
+                param={ParamType.from("")}
+                index={index}
+                condition={funcConditions.params.find((param) => param?.index === index)}
+                onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+              />
+            </div>
+          )}
+        </>
       ))}
     </>
   ) : (
