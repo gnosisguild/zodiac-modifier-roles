@@ -1,6 +1,6 @@
 import { FunctionFragment } from "@ethersproject/abi"
 import { TargetFunction } from "./TargetFunction"
-import { FunctionCondition, TargetConditions } from "../../../../typings/role"
+import { ConditionType, ExecutionOption, FunctionCondition, TargetConditions } from "../../../../typings/role"
 import { getKeyFromFunction } from "../../../../utils/conditions"
 import { Box, Button, Grid, makeStyles, Typography, CircularProgress } from "@material-ui/core"
 import { ZodiacPaper, ZodiacTextField } from "zodiac-ui-components"
@@ -173,12 +173,12 @@ export const TargetFunctionList = ({
           {/* render functions that are in the ABI */}
           {items.map((func) => {
             const sighash = getKeyFromFunction(func)
-            if (!conditions[sighash]) return null
+            const funcConditions = conditions[sighash] || { ...INITIAL_CONDITION, sighash }
             return (
               <TargetFunction
                 key={sighash}
                 func={func}
-                functionConditions={conditions[sighash]}
+                functionConditions={funcConditions}
                 onChange={handleFunctionChange(sighash)}
               />
             )
@@ -200,4 +200,10 @@ export const TargetFunctionList = ({
       </Box>
     </>
   )
+}
+
+const INITIAL_CONDITION = {
+  type: ConditionType.BLOCKED,
+  executionOption: ExecutionOption.NONE,
+  params: [],
 }

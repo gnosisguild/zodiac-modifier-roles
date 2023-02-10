@@ -1,12 +1,11 @@
-import React, { useContext, useEffect, useState } from "react"
+import React, { useContext } from "react"
 import { Box, FormControlLabel, makeStyles, Typography } from "@material-ui/core"
-import { ConditionType, ExecutionOption, FunctionCondition, Target, TargetConditions } from "../../../../typings/role"
+import { ConditionType, ExecutionOption, Target, TargetConditions } from "../../../../typings/role"
 import { useAbi } from "../../../../hooks/useAbi"
 import { TargetFunctionList } from "./TargetFunctionList"
-import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { RoleContext } from "../RoleContext"
 import { Checkbox } from "../../../commons/input/Checkbox"
-import { getKeyFromFunction, getWriteFunctions } from "../../../../utils/conditions"
+import { getWriteFunctions } from "../../../../utils/conditions"
 import classNames from "classnames"
 import { ExecutionOptions } from "./ExecutionOptions"
 
@@ -71,44 +70,14 @@ type TargetConfigurationProps = {
   target: Target
 }
 
-function getInitialTargetConditions(functions: FunctionFragment[]): TargetConditions {
-  return functions.reduce((obj, func): TargetConditions => {
-    const funcCondition: FunctionCondition = {
-      sighash: Interface.getSighash(func),
-      type: ConditionType.BLOCKED,
-      executionOption: ExecutionOption.NONE,
-      params: [],
-    }
-    return {
-      ...obj,
-      [getKeyFromFunction(func)]: funcCondition,
-    }
-  }, {})
-}
-
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
   const { abi, setAbi, fetchAbi, loading: abiLoading } = useAbi(target.address)
   const { setTargetConditions, setTargetClearance, setTargetExecutionOption, state } = useContext(RoleContext)
 
   console.log("update events", state.getTargetUpdate(target.id))
-  const [refresh, setRefresh] = useState(true)
-  const [functions, setFunctions] = useState<FunctionFragment[]>([])
-  const [isWildcarded, setIsWildcarded] = useState(target.type === ConditionType.WILDCARDED)
-
-  useEffect(() => {
-    setFunctions(getWriteFunctions(abi))
-    setRefresh(true)
-  }, [abi])
-
-  useEffect(() => {
-    if (!refresh) return
-    setRefresh(false)
-    const initial = getInitialTargetConditions(functions)
-    const conditions: TargetConditions = { ...initial, ...target.conditions }
-    setTargetConditions({ targetId: target.id, conditions })
-    setTargetClearance({ targetId: target.id, option: target.type })
-  }, [functions, refresh, setTargetConditions, setTargetClearance, target.conditions, target.id, target.type])
+  const isWildcarded = target.type === ConditionType.WILDCARDED
+  const functions = getWriteFunctions(abi)
 
   const handleChangeTargetExecutionsOptions = (value: ExecutionOption) => {
     setTargetExecutionOption({ targetId: target.id, option: value })
@@ -121,7 +90,6 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const handleAllFuncChange = () => {
     const type = !isWildcarded ? ConditionType.WILDCARDED : ConditionType.SCOPED
     setTargetClearance({ targetId: target.id, option: type })
-    setIsWildcarded((current) => !current)
 
     const conditions = Object.keys(target.conditions).reduce(
       (map, key) => ({
