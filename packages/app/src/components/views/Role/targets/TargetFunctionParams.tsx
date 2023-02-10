@@ -53,21 +53,20 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
 
   const parameterMismatch = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
     func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
-
   return typeof func === "string" || parameterMismatch(func, funcConditions) || decodingError ? (
     <>
       {indexes.map((index) => (
         <>
-          {funcConditions.params[index] ? (
+          {funcConditions.params.find((_) => _.index === index) ? (
             <div key={index} className={classes.row}>
               <ArrowRight />
               <Typography variant="body1">[{index}]</Typography>
               <Typography variant="body2" className={classes.type}>
-                ({funcConditions.params[index].type})
+                ({funcConditions.params.find((_) => _.index === index)?.type})
               </Typography>
               <ParamConditionInput
                 disabled={disabled}
-                param={ParamType.from(funcConditions.params[index].value[0])}
+                param={ParamType.from(funcConditions.params.find((_) => _.index === index)?.value[0] || "")}
                 index={index}
                 condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
@@ -85,7 +84,6 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
                 disabled={disabled}
                 param={ParamType.from("")}
                 index={index}
-                condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
                 onDecodingError={() => setDecodingError(true)}
               />
