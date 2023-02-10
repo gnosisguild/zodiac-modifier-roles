@@ -21,8 +21,13 @@ const useStyles = makeStyles((theme) => ({
   row: {
     display: "flex",
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "start",
     marginTop: theme.spacing(1),
+  },
+  rowHead: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
   },
   type: {
     color: "rgb(255,255,255, 0.6)",
@@ -49,37 +54,40 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
   }
 
   const maxIndex = funcConditions.params.reduce((max, param) => Math.max(max, param.index), -1)
-  const indexes = Array.from({ length: maxIndex + 1 }, (_, i) => i)
+  const indices = Array.from({ length: maxIndex + 1 }, (_, i) => i)
 
   const parameterMismatch = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
     func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
   return typeof func === "string" || parameterMismatch(func, funcConditions) || decodingError ? (
     <>
-      {indexes.map((index) => (
+      {indices.map((index) => (
         <>
-          {funcConditions.params.find((_) => _.index === index) ? (
+          {funcConditions.params.some((p) => p.index === index) ? (
             <div key={index} className={classes.row}>
-              <ArrowRight />
-              <Typography variant="body1">[{index}]</Typography>
-              <Typography variant="body2" className={classes.type}>
-                ({funcConditions.params.find((_) => _.index === index)?.type})
-              </Typography>
+              <div className={classes.rowHead}>
+                <ArrowRight />
+                <Typography variant="body1">[{index}]</Typography>
+                <Typography variant="body2" className={classes.type}>
+                  ({funcConditions.params.find((_) => _.index === index)?.type})
+                </Typography>
+              </div>
               <ParamConditionInput
                 disabled={disabled}
                 param={ParamType.from(funcConditions.params.find((_) => _.index === index)?.value[0] || "")}
                 index={index}
-                condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
                 onDecodingError={() => setDecodingError(true)}
               />
             </div>
           ) : (
             <div key={index} className={classes.row}>
-              <ArrowRight />
-              <Typography variant="body1">[{index}]</Typography>
-              <Typography variant="body2" className={classes.type}>
-                Unknown type
-              </Typography>
+              <div className={classes.rowHead}>
+                <ArrowRight />
+                <Typography variant="body1">[{index}]</Typography>
+                <Typography variant="body2" className={classes.type}>
+                  Unknown type
+                </Typography>
+              </div>
               <ParamConditionInput
                 disabled={disabled}
                 param={ParamType.from("")}
@@ -96,11 +104,13 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
     <>
       {func.inputs.map((param, index) => (
         <div key={index} className={classes.row}>
-          <ArrowRight />
-          <Typography variant="body1">{param.name}</Typography>
-          <Typography variant="body2" className={classes.type}>
-            ({param.type})
-          </Typography>
+          <div className={classes.rowHead}>
+            <ArrowRight />
+            <Typography variant="body1">{param.name}</Typography>
+            <Typography variant="body2" className={classes.type}>
+              ({param.type})
+            </Typography>
+          </div>
           <ParamConditionInput
             disabled={disabled}
             param={param}

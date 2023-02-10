@@ -4,7 +4,7 @@ import { Add } from "@material-ui/icons"
 import { ethers } from "ethers"
 import { ParamComparison, ParamCondition, ParamNativeType } from "../../../../typings/role"
 import { BooleanValue, getConditionsPerType, getConditionType, getNativeType } from "../../../../utils/conditions"
-import { ParamConditionInputValue } from "./ParamConditionInputValue"
+import { OneOfParamConditionInputValue, ParamConditionInputValue } from "./ParamConditionInputValue"
 import DeleteIcon from "@material-ui/icons/DeleteOutline"
 
 const useStyles = makeStyles((theme) => ({
@@ -119,6 +119,8 @@ export const ParamConditionInput = ({
     )
   }
 
+  const handleValueChange = (value: string[]) => onChange({ ...condition, value })
+
   return (
     <>
       <Select
@@ -134,13 +136,22 @@ export const ParamConditionInput = ({
           </MenuItem>
         ))}
       </Select>
-      {condition && (
+      {condition && condition.condition !== ParamComparison.ONE_OF && (
         <ParamConditionInputValue
           onDecodingError={onDecodingError}
           param={param}
-          condition={condition}
+          value={condition.value}
           disabled={disabled}
-          onChange={onChange}
+          onChange={handleValueChange}
+        />
+      )}
+      {condition && condition.condition === ParamComparison.ONE_OF && (
+        <OneOfParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          value={condition.value}
+          disabled={disabled}
+          onChange={handleValueChange}
         />
       )}
       {removeButton}
