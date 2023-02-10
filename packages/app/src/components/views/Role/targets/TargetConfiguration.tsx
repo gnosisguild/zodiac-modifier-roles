@@ -88,7 +88,7 @@ function getInitialTargetConditions(functions: FunctionFragment[]): TargetCondit
 
 export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
   const classes = useStyles()
-  const { abi, setAbi } = useAbi(target.address)
+  const { abi, setAbi, fetchAbi, loading: abiLoading } = useAbi(target.address)
   const { setTargetConditions, setTargetClearance, setTargetExecutionOption, state } = useContext(RoleContext)
 
   console.log("update events", state.getTargetUpdate(target.id))
@@ -177,8 +177,10 @@ export const TargetConfiguration = ({ target }: TargetConfigurationProps) => {
           items={functions}
           conditions={target.conditions}
           onChange={handleFuncParamsChange}
-          onSubmit={(customABI) => setAbi(customABI)}
+          abiLoading={abiLoading}
+          onSubmit={(customABI) => (customABI.length ? setAbi(customABI) : fetchAbi())}
           wildcarded={isWildcarded}
+          key={target.id} // force discarding custom entered ABI state when switching between targets
         />
       </Box>
     </Box>

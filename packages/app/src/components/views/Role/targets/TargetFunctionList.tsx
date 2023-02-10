@@ -2,7 +2,7 @@ import { FunctionFragment } from "@ethersproject/abi"
 import { TargetFunction } from "./TargetFunction"
 import { FunctionCondition, TargetConditions } from "../../../../typings/role"
 import { getKeyFromFunction } from "../../../../utils/conditions"
-import { Box, Button, Grid, makeStyles, Typography } from "@material-ui/core"
+import { Box, Button, Grid, makeStyles, Typography, CircularProgress } from "@material-ui/core"
 import { ZodiacPaper, ZodiacTextField } from "zodiac-ui-components"
 import { useState } from "react"
 import { JsonFragment } from "@ethersproject/abi"
@@ -13,7 +13,8 @@ interface TargetFunctionListProps {
   items: FunctionFragment[]
   conditions: TargetConditions
   onChange(conditions: TargetConditions): void
-  onSubmit?: (customABI: JsonFragment[]) => void
+  onSubmit(customABI: JsonFragment[]): void
+  abiLoading: boolean
   wildcarded: boolean
 }
 
@@ -55,6 +56,7 @@ const useStyles = makeStyles((theme) => ({
   icon: {
     height: 32,
     fill: "#B2B5B2",
+    color: "#B2B5B2",
     transition: "transform 0.25s ease-in-out",
     width: 32,
   },
@@ -63,25 +65,30 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export const TargetFunctionList = ({ items, conditions, onChange, onSubmit, wildcarded }: TargetFunctionListProps) => {
+export const TargetFunctionList = ({
+  items,
+  conditions,
+  onChange,
+  onSubmit,
+  abiLoading,
+  wildcarded,
+}: TargetFunctionListProps) => {
   const classes = useStyles()
 
   const [customABI, setCustomABI] = useState<string>("")
   const [usingCustomABI, setUsingCustomABI] = useState(false)
   const [customABIExpanded, setCustomABIExpanded] = useState(false)
 
+  let customABIJson: JsonFragment[] = []
+  try {
+    customABIJson = JSON.parse(customABI) as JsonFragment[]
+  } catch (e) {
+    console.warn("invalid custom ABI", e)
+  }
+
   const handleCustomABI = () => {
-    if (onSubmit && (customABI || customABI !== "")) {
-      try {
-        let json = JSON.parse(customABI) as JsonFragment[]
-        if (json.length > 0) {
-          onSubmit(json)
-          setUsingCustomABI(true)
-        }
-      } catch (err) {
-        console.error("invalid custom ABI", err)
-      }
-    }
+    onSubmit(customABIJson)
+    setUsingCustomABI(customABIJson.length > 0)
   }
 
   const handleFunctionChange = (format: string) => (funcConditions: FunctionCondition) => {
@@ -95,17 +102,26 @@ export const TargetFunctionList = ({ items, conditions, onChange, onSubmit, wild
     (key) => !items.some((item) => getKeyFromFunction(item) === key),
   )
 
-  const expanded = customABIExpanded || items.length === 0
+  const expanded = customABIExpanded || (items.length === 0 && !abiLoading)
 
   return (
     <>
       <ZodiacPaper borderStyle="single" className={classNames(classes.root, { [classes.disabledArea]: wildcarded })}>
         <Grid container direction="column" spacing={2}>
           <Grid item>
-            {!items.length ? (
+            {!items.length && !usingCustomABI ? (
               <div className={classes.title}>
-                <WarningOutlined className={classes.icon} style={{ marginRight: 8 }} />
-                <Typography>Unable to fetch ABI for this address</Typography>
+                {abiLoading ? (
+                  <>
+                    <CircularProgress size={32} className={classes.icon} style={{ marginRight: 8 }} />
+                    <Typography>Fetching contract ABI...</Typography>
+                  </>
+                ) : (
+                  <>
+                    <WarningOutlined className={classes.icon} style={{ marginRight: 8 }} />
+                    <Typography>Unable to fetch ABI for this address</Typography>
+                  </>
+                )}
               </div>
             ) : (
               <div className={classes.triggerTitle} onClick={() => setCustomABIExpanded(!expanded)}>
@@ -139,7 +155,12 @@ export const TargetFunctionList = ({ items, conditions, onChange, onSubmit, wild
                 />
               </Grid>
               <Grid item>
-                <Button color="secondary" variant="contained" onClick={handleCustomABI} disabled={!customABI}>
+                <Button
+                  color="secondary"
+                  variant="contained"
+                  onClick={handleCustomABI}
+                  disabled={!customABIJson.length && customABI.length > 0}
+                >
                   Submit Custom ABI
                 </Button>
               </Grid>
