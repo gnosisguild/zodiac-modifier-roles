@@ -89,14 +89,11 @@ const looksLikeAProxy = (abi: JsonFragment[]) => {
   const signatures = Object.keys(iface.functions)
   return (
     signatures.length === 0 ||
-    (signatures.length === 1 && looksLike(abi, ["implementation()"])) ||
-    looksLike(abi, ERC897) ||
-    looksLike(abi, COMPTROLLER)
+    signatures ||
+    looksLike(abi, ["implementation()"]) || // for EIP-897/EIP-1967/... proxies
+    looksLike(abi, ["comptrollerImplementation()"]) // for Compound Comptroller
   )
 }
-
-const ERC897 = ["proxyType()", "implementation(address)"]
-const COMPTROLLER = ["pendingAdmin()", "comptrollerImplementation()", "pendingComptrollerImplementation()", "admin()"]
 
 const looksLike = (abi: JsonFragment[], expectedFunctions: string[]) => {
   const iface = new Interface(abi)
