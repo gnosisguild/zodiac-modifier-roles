@@ -119,41 +119,30 @@ export const ParamConditionInput = ({
     )
   }
 
-  const menuItems = options.map((option) => (
-    <MenuItem key={option} value={option}>
-      {ConditionLabel[option]}
-    </MenuItem>
-  ))
-  const select = (
-    <Select
-      classes={{ icon: classes.selectIcon }}
-      className={classes.select}
-      disabled={disabled}
-      value={condition.condition}
-      onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
-    >
-      {menuItems}
-    </Select>
-  )
-
-  if (!condition)
-    return (
-      <>
-        {select}
-        {removeButton}
-      </>
-    )
-
   return (
     <>
-      {select}
-      <ParamConditionInputValue
-        onDecodingError={onDecodingError}
-        param={param}
-        condition={condition}
+      <Select
+        classes={{ icon: classes.selectIcon }}
+        className={classes.select}
         disabled={disabled}
-        onChange={onChange}
-      />
+        value={condition.condition}
+        onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
+      >
+        {options.map((option) => (
+          <MenuItem key={option} value={option}>
+            {ConditionLabel[option]}
+          </MenuItem>
+        ))}
+      </Select>
+      {condition && (
+        <ParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          condition={condition}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      )}
       {removeButton}
     </>
   )
