@@ -9,6 +9,7 @@ interface ParamConditionInputValueProps {
   param: ethers.utils.ParamType
   condition: ParamCondition
   disabled?: boolean
+  onDecodingError(err: Error): void
 
   onChange(condition: ParamCondition): void
 }
@@ -43,7 +44,13 @@ function getPlaceholderForType(param: ethers.utils.ParamType) {
   return PlaceholderPerType[nativeType]
 }
 
-export const ParamConditionInputValue = ({ param, condition, disabled, onChange }: ParamConditionInputValueProps) => {
+export const ParamConditionInputValue = ({
+  param,
+  condition,
+  disabled,
+  onChange,
+  onDecodingError,
+}: ParamConditionInputValueProps) => {
   const classes = useStyles()
   const [valid, setValid] = useState<boolean>(false)
   const [dirty, setDirty] = useState(false)
@@ -63,6 +70,7 @@ export const ParamConditionInputValue = ({ param, condition, disabled, onChange 
     try {
       return ethers.utils.defaultAbiCoder.decode([param], condition.value[0])
     } catch (err) {
+      onDecodingError(err as Error)
       // when decoding fails return raw value instead of crashing
       return value
     }

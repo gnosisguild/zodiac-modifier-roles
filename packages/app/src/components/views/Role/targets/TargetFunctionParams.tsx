@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { makeStyles, Typography } from "@material-ui/core"
 import { ParamConditionInput } from "./ParamConditionInput"
 import { ConditionType, FunctionCondition, ParamCondition } from "../../../../typings/role"
@@ -37,6 +37,7 @@ const useStyles = makeStyles((theme) => ({
 
 export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange }: TargetFunctionParamsProps) => {
   const classes = useStyles()
+  const [decodingError, setDecodingError] = useState(false)
 
   const handleConditionChange = (index: number, value?: ParamCondition) => {
     const newConditions = funcConditions.params.filter((param) => param.index !== index)
@@ -50,10 +51,10 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
   const maxIndex = funcConditions.params.reduce((max, param) => Math.max(max, param.index), -1)
   const indexes = Array.from({ length: maxIndex + 1 }, (_, i) => i)
 
-  const displayRawParameters = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
+  const parameterMismatch = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
     func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
 
-  return typeof func === "string" || displayRawParameters(func, funcConditions) ? (
+  return typeof func === "string" || parameterMismatch(func, funcConditions) || decodingError ? (
     <>
       {indexes.map((index) => (
         <>
@@ -70,6 +71,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
                 index={index}
                 condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+                onDecodingError={() => setDecodingError(true)}
               />
             </div>
           ) : (
@@ -85,6 +87,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
                 index={index}
                 condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+                onDecodingError={() => setDecodingError(true)}
               />
             </div>
           )}
@@ -106,6 +109,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
             index={index}
             condition={funcConditions.params.find((param) => param?.index === index)}
             onChange={(condition) => handleConditionChange(index, condition)}
+            onDecodingError={() => setDecodingError(true)}
           />
         </div>
       ))}
