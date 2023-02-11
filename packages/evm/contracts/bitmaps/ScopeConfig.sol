@@ -9,6 +9,7 @@ library ScopeConfig {
     // 8   bits -> length
     // 2   bits -> options
     // 1   bits -> isWildcarded
+    // 2   bits -> unused
     uint256 private constant offsetPage = 251;
     uint256 private constant offsetLength = 243;
     uint256 private constant offsetOptions = 241;
@@ -18,22 +19,25 @@ library ScopeConfig {
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // PARAMETER:
-    // parent     -> 8 bit
-    // isScoped   -> 1 bit
-    // paramType  -> 3 bits
-    // paramComp  -> 4 bits
-    uint256 private constant offsetParent = 8;
-    uint256 private constant offsetIsScoped = 7;
-    uint256 private constant offsetParamType = 4;
-    uint256 private constant offsetParamComp = 0;
+    // 8    bits -> parent
+    // 1    bit  -> isScoped
+    // 3    bits -> type
+    // 4    bits -> comparison
+    // 2    bits -> compression
+    uint256 private constant offsetParent = 10;
+    uint256 private constant offsetIsScoped = 9;
+    uint256 private constant offsetType = 6;
+    uint256 private constant offsetComparison = 2;
+    uint256 private constant offsetCompression = 0;
     uint256 private constant maskParent = 0xff << offsetParent;
     uint256 private constant maskIsScoped = 0x1 << offsetIsScoped;
-    uint256 private constant maskParamType = 0x7 << offsetParamType;
-    uint256 private constant maskParamComp = 0xf << offsetParamComp;
+    uint256 private constant maskType = 0x7 << offsetType;
+    uint256 private constant maskComparison = 0xf << offsetComparison;
+    uint256 private constant maskCompression = 0x3 << offsetCompression;
     uint256 private constant maskParameter = 0xffff;
     // sizes in bits
     // both header and parameter ought to be equal
-    uint256 private constant chunkSize = 16;
+    uint256 private constant chunkSize = 18;
     uint256 private constant pageCapacity = 256 / chunkSize;
 
     function create(
@@ -65,10 +69,11 @@ library ScopeConfig {
     function packParameter(
         BitmapBuffer memory buffer,
         ParameterConfigFlat memory parameter,
+        Compression compression,
         uint8 index
     ) internal pure {
         (uint256 page, uint256 offset) = _parameterOffset(index);
-        uint256 bits = _parameterBits(parameter) << offset;
+        uint256 bits = _parameterBits(parameter, compression) << offset;
         uint256 mask = maskParameter << offset;
 
         buffer.payload[page] = bytes32(
@@ -100,14 +105,15 @@ library ScopeConfig {
         BitmapBuffer memory buffer,
         uint256 index,
         ParameterConfig memory result
-    ) internal pure {
+    ) internal pure returns (Compression) {
         (uint256 page, uint256 offset) = _parameterOffset(index);
         uint256 bits = (uint256(buffer.payload[page]) >> offset) &
             maskParameter;
 
         result.isScoped = (bits & maskIsScoped) != 0;
-        result._type = ParameterType((bits & maskParamType) >> offsetParamType);
-        result.comp = Comparison((bits & maskParamComp) >> offsetParamComp);
+        result._type = ParameterType((bits & maskType) >> offsetType);
+        result.comp = Comparison((bits & maskComparison) >> offsetComparison);
+        return Compression((bits & maskCompression) >> offsetCompression);
     }
 
     function unpackParent(
@@ -134,14 +140,16 @@ library ScopeConfig {
     }
 
     function _parameterBits(
-        ParameterConfigFlat memory parameter
+        ParameterConfigFlat memory parameter,
+        Compression compression
     ) private pure returns (uint256 bits) {
         bits = uint256(parameter.parent) << offsetParent;
         if (parameter.isScoped) {
             bits |= maskIsScoped;
         }
-        bits |= uint256(parameter._type) << offsetParamType;
-        bits |= uint256(parameter.comp) << offsetParamComp;
+        bits |= uint256(parameter._type) << offsetType;
+        bits |= uint256(parameter.comp) << offsetComparison;
+        bits |= uint256(compression) << offsetCompression;
     }
 
     function _pageCount(

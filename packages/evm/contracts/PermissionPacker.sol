@@ -55,8 +55,12 @@ abstract contract PermissionPacker is Core {
         compValues = CompValues.create(length);
         for (uint8 i; i < length; ++i) {
             ParameterConfigFlat memory parameter = parameters[i];
-            ScopeConfig.packParameter(scopeConfig, parameter, i);
-
+            ScopeConfig.packParameter(
+                scopeConfig,
+                parameter,
+                Compression.None,
+                i
+            );
             if (parameter.compValue.length > 0) {
                 CompValues.packCompValue(compValues, _compress(parameter), i);
             }

@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "../Types.sol";
+import "hardhat/console.sol";
 
 library CompValues {
     uint256 private constant offsetPage = 251;
