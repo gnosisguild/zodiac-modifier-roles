@@ -58,6 +58,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
 
   const parameterMismatch = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
     func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
+
   return typeof func === "string" || parameterMismatch(func, funcConditions) || decodingError ? (
     <>
       {indices.map((index) => (
@@ -75,6 +76,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
                 disabled={disabled}
                 param={ParamType.from(funcConditions.params.find((_) => _.index === index)?.value[0] || "")}
                 index={index}
+                condition={funcConditions.params.find((param) => param?.index === index)}
                 onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
                 onDecodingError={() => setDecodingError(true)}
               />
