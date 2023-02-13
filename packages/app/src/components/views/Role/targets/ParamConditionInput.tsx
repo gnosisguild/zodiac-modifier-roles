@@ -51,7 +51,8 @@ export const ConditionLabel: Record<ParamComparison, string> = {
 
 interface ParamConditionInputProps {
   index: number
-  param: ethers.utils.ParamType
+  /** If null is specified, no decoding will be applied */
+  param: ethers.utils.ParamType | null
   condition?: ParamCondition
   disabled?: boolean
   onDecodingError(err: Error): void
@@ -74,8 +75,6 @@ export const ParamConditionInput = ({
 
   const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: [""] })
   const handleRemove = () => onChange(undefined)
-
-  if (nativeType === ParamNativeType.UNSUPPORTED) return null
 
   if (!condition) {
     const handleClick = () => {

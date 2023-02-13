@@ -1,13 +1,13 @@
 import { ethers } from "ethers"
 import { ParamNativeType } from "../../../../typings/role"
 import { makeStyles, TextField } from "@material-ui/core"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { formatParamValue, getNativeType } from "../../../../utils/conditions"
 import classNames from "classnames"
 import { Column } from "../../../commons/layout/Column"
 
 interface ParamConditionInputValueProps {
-  param: ethers.utils.ParamType
+  param: ethers.utils.ParamType | null
   value: string[]
   disabled?: boolean
   onDecodingError(err: Error): void
@@ -38,10 +38,10 @@ const PlaceholderPerType: Record<ParamNativeType, string> = {
   [ParamNativeType.ADDRESS]: "0xABF...123",
   [ParamNativeType.STRING]: "Enter a string",
   [ParamNativeType.BYTES]: "0x...",
-  [ParamNativeType.UNSUPPORTED]: "unsupported type",
+  [ParamNativeType.UNSUPPORTED]: "0x...",
 }
 
-function getPlaceholderForType(param: ethers.utils.ParamType) {
+function getPlaceholderForType(param: ethers.utils.ParamType | null) {
   const nativeType = getNativeType(param)
   return PlaceholderPerType[nativeType]
 }
@@ -55,13 +55,14 @@ export const ParamConditionInputValue = ({
 }: ParamConditionInputValueProps) => {
   const classes = useStyles()
 
-  const valueDecoded = tryAbiDecode(param, value[0] || "", onDecodingError)
+  const valueDecoded = useDecodedValue(param, value[0] || "", onDecodingError)
   const [internalValue, setInternalValue] = useState(valueDecoded)
+
   useEffect(() => {
     setInternalValue(valueDecoded)
   }, [valueDecoded])
 
-  let valid = tryAbiEncode(param, internalValue) !== null
+  let valid = !param || tryAbiEncode(param, internalValue) !== null
 
   const handleChange = (inputValue: string) => {
     setInternalValue(inputValue)
@@ -117,7 +118,28 @@ export const OneOfParamConditionInputValue = ({
   )
 }
 
-const tryAbiEncode = (param: ethers.utils.ParamType, value: string) => {
+const useDecodedValue = (
+  param: ethers.utils.ParamType | null,
+  value: string,
+  onDecodingError: (err: Error) => void,
+) => {
+  const callbackRef = useRef(onDecodingError)
+  callbackRef.current = onDecodingError
+  const paramTypeString = param && param.format("full")
+  const valueDecoded = paramTypeString ? tryAbiDecode(paramTypeString, value) : value
+
+  useEffect(() => {
+    if (paramTypeString) {
+      tryAbiDecode(paramTypeString, value, callbackRef.current)
+    }
+  }, [paramTypeString, value])
+
+  return valueDecoded
+}
+
+const tryAbiEncode = (param: ethers.utils.ParamType | null, value: string) => {
+  if (!param) return value
+
   try {
     return ethers.utils.defaultAbiCoder.encode([param], [formatParamValue(param, value)])
   } catch (err) {
@@ -125,11 +147,11 @@ const tryAbiEncode = (param: ethers.utils.ParamType, value: string) => {
   }
 }
 
-const tryAbiDecode = (param: ethers.utils.ParamType, value: string, onDecodingError: (err: Error) => void) => {
+const tryAbiDecode = (param: string, value: string, onDecodingError?: (err: Error) => void) => {
   try {
     return ethers.utils.defaultAbiCoder.decode([param], value).toString()
   } catch (err) {
-    onDecodingError(err as Error)
+    if (onDecodingError) onDecodingError(err as Error)
     return value
   }
 }

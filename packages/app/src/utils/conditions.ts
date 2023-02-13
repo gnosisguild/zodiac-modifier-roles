@@ -15,7 +15,9 @@ export enum BooleanValue {
   TRUE = "true",
 }
 
-export function getNativeType(param: ethers.utils.ParamType): ParamNativeType {
+export function getNativeType(param: ethers.utils.ParamType | null): ParamNativeType {
+  if (!param) return ParamNativeType.UNSUPPORTED
+
   if (param.baseType === "address") return ParamNativeType.ADDRESS
   if (param.baseType === "string") return ParamNativeType.STRING
   if (param.baseType === "bool") return ParamNativeType.BOOLEAN
