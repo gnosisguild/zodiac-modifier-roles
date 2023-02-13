@@ -1,10 +1,9 @@
-import React, { useState } from "react"
+import React, { Fragment, useState } from "react"
 import { makeStyles, Typography } from "@material-ui/core"
 import { ParamConditionInput } from "./ParamConditionInput"
 import { ConditionType, FunctionCondition, ParamCondition } from "../../../../typings/role"
 import { FunctionFragment } from "@ethersproject/abi"
 import { ArrowRight } from "@material-ui/icons"
-import { ParamType } from "ethers/lib/utils"
 
 interface TargetFunctionParamsProps {
   func: FunctionFragment | string
@@ -21,8 +20,13 @@ const useStyles = makeStyles((theme) => ({
   row: {
     display: "flex",
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "start",
     marginTop: theme.spacing(1),
+  },
+  rowHead: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
   },
   type: {
     color: "rgb(255,255,255, 0.6)",
@@ -49,58 +53,68 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
   }
 
   const maxIndex = funcConditions.params.reduce((max, param) => Math.max(max, param.index), -1)
-  const indexes = Array.from({ length: maxIndex + 1 }, (_, i) => i)
+  const indices = Array.from({ length: maxIndex + 1 }, (_, i) => i)
 
   const parameterMismatch = (func: FunctionFragment, funcConditions: FunctionCondition): boolean =>
     func.inputs.length < funcConditions.params.reduce((acc, param) => (acc < param.index ? param.index : acc), 0)
+
   return typeof func === "string" || parameterMismatch(func, funcConditions) || decodingError ? (
     <>
-      {indexes.map((index) => (
-        <>
-          {funcConditions.params.find((_) => _.index === index) ? (
-            <div key={index} className={classes.row}>
-              <ArrowRight />
-              <Typography variant="body1">[{index}]</Typography>
-              <Typography variant="body2" className={classes.type}>
-                ({funcConditions.params.find((_) => _.index === index)?.type})
-              </Typography>
-              <ParamConditionInput
-                disabled={disabled}
-                param={ParamType.from(funcConditions.params.find((_) => _.index === index)?.value[0] || "")}
-                index={index}
-                condition={funcConditions.params.find((param) => param?.index === index)}
-                onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
-                onDecodingError={() => setDecodingError(true)}
-              />
-            </div>
-          ) : (
-            <div key={index} className={classes.row}>
-              <ArrowRight />
-              <Typography variant="body1">[{index}]</Typography>
-              <Typography variant="body2" className={classes.type}>
-                Unknown type
-              </Typography>
-              <ParamConditionInput
-                disabled={disabled}
-                param={ParamType.from("")}
-                index={index}
-                onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
-                onDecodingError={() => setDecodingError(true)}
-              />
-            </div>
-          )}
-        </>
-      ))}
+      {indices.map((index) => {
+        const param = funcConditions.params.find((p) => p.index === index)
+        return (
+          <Fragment key={index}>
+            {param ? (
+              <div className={classes.row}>
+                <div className={classes.rowHead}>
+                  <ArrowRight />
+                  <Typography variant="body1">[{index}]</Typography>
+                  <Typography variant="body2" className={classes.type}>
+                    ({param.type})
+                  </Typography>
+                </div>
+                <ParamConditionInput
+                  disabled={disabled}
+                  param={null}
+                  index={index}
+                  condition={param}
+                  onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+                  onDecodingError={() => setDecodingError(true)}
+                />
+              </div>
+            ) : (
+              <div className={classes.row}>
+                <div className={classes.rowHead}>
+                  <ArrowRight />
+                  <Typography variant="body1">[{index}]</Typography>
+                  <Typography variant="body2" className={classes.type}>
+                    Unknown type
+                  </Typography>
+                </div>
+                <ParamConditionInput
+                  disabled // we don't support scoping params via the app, if we don't even know the type (Static vs. Dynamic vs. Dynamic32)
+                  param={null}
+                  index={index}
+                  onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
+                  onDecodingError={() => setDecodingError(true)}
+                />
+              </div>
+            )}
+          </Fragment>
+        )
+      })}
     </>
   ) : (
     <>
       {func.inputs.map((param, index) => (
         <div key={index} className={classes.row}>
-          <ArrowRight />
-          <Typography variant="body1">{param.name}</Typography>
-          <Typography variant="body2" className={classes.type}>
-            ({param.type})
-          </Typography>
+          <div className={classes.rowHead}>
+            <ArrowRight />
+            <Typography variant="body1">{param.name}</Typography>
+            <Typography variant="body2" className={classes.type}>
+              ({param.type})
+            </Typography>
+          </div>
           <ParamConditionInput
             disabled={disabled}
             param={param}

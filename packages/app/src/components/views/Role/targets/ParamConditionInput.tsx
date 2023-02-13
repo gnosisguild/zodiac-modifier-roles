@@ -4,7 +4,7 @@ import { Add } from "@material-ui/icons"
 import { ethers } from "ethers"
 import { ParamComparison, ParamCondition, ParamNativeType } from "../../../../typings/role"
 import { BooleanValue, getConditionsPerType, getConditionType, getNativeType } from "../../../../utils/conditions"
-import { ParamConditionInputValue } from "./ParamConditionInputValue"
+import { OneOfParamConditionInputValue, ParamConditionInputValue } from "./ParamConditionInputValue"
 import DeleteIcon from "@material-ui/icons/DeleteOutline"
 
 const useStyles = makeStyles((theme) => ({
@@ -51,7 +51,8 @@ export const ConditionLabel: Record<ParamComparison, string> = {
 
 interface ParamConditionInputProps {
   index: number
-  param: ethers.utils.ParamType
+  /** If null is specified, no decoding will be applied */
+  param: ethers.utils.ParamType | null
   condition?: ParamCondition
   disabled?: boolean
   onDecodingError(err: Error): void
@@ -74,8 +75,6 @@ export const ParamConditionInput = ({
 
   const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: [""] })
   const handleRemove = () => onChange(undefined)
-
-  if (nativeType === ParamNativeType.UNSUPPORTED) return null
 
   if (!condition) {
     const handleClick = () => {
@@ -119,41 +118,41 @@ export const ParamConditionInput = ({
     )
   }
 
-  const menuItems = options.map((option) => (
-    <MenuItem key={option} value={option}>
-      {ConditionLabel[option]}
-    </MenuItem>
-  ))
-  const select = (
-    <Select
-      classes={{ icon: classes.selectIcon }}
-      className={classes.select}
-      disabled={disabled}
-      value={condition.condition}
-      onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
-    >
-      {menuItems}
-    </Select>
-  )
-
-  if (!condition)
-    return (
-      <>
-        {select}
-        {removeButton}
-      </>
-    )
+  const handleValueChange = (value: string[]) => onChange({ ...condition, value })
 
   return (
     <>
-      {select}
-      <ParamConditionInputValue
-        onDecodingError={onDecodingError}
-        param={param}
-        condition={condition}
+      <Select
+        classes={{ icon: classes.selectIcon }}
+        className={classes.select}
         disabled={disabled}
-        onChange={onChange}
-      />
+        value={condition.condition}
+        onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
+      >
+        {options.map((option) => (
+          <MenuItem key={option} value={option}>
+            {ConditionLabel[option]}
+          </MenuItem>
+        ))}
+      </Select>
+      {condition && condition.condition !== ParamComparison.ONE_OF && (
+        <ParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          value={condition.value}
+          disabled={disabled}
+          onChange={handleValueChange}
+        />
+      )}
+      {condition && condition.condition === ParamComparison.ONE_OF && (
+        <OneOfParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          value={condition.value}
+          disabled={disabled}
+          onChange={handleValueChange}
+        />
+      )}
       {removeButton}
     </>
   )

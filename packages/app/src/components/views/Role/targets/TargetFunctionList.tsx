@@ -80,10 +80,12 @@ export const TargetFunctionList = ({
   const [customABIExpanded, setCustomABIExpanded] = useState(false)
 
   let customABIJson: JsonFragment[] = []
-  try {
-    customABIJson = JSON.parse(customABI) as JsonFragment[]
-  } catch (e) {
-    console.warn("invalid custom ABI", e)
+  if (customABI.trim()) {
+    try {
+      customABIJson = JSON.parse(customABI) as JsonFragment[]
+    } catch (e) {
+      console.warn("invalid custom ABI", e)
+    }
   }
 
   const handleCustomABI = () => {
