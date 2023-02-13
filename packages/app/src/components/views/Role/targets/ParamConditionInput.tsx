@@ -54,11 +54,19 @@ interface ParamConditionInputProps {
   param: ethers.utils.ParamType
   condition?: ParamCondition
   disabled?: boolean
+  onDecodingError(err: Error): void
 
   onChange(value?: ParamCondition): void
 }
 
-export const ParamConditionInput = ({ index, param, condition, disabled, onChange }: ParamConditionInputProps) => {
+export const ParamConditionInput = ({
+  index,
+  param,
+  condition,
+  disabled,
+  onChange,
+  onDecodingError,
+}: ParamConditionInputProps) => {
   const classes = useStyles()
   const nativeType = getNativeType(param)
   const type = getConditionType(nativeType)
@@ -139,7 +147,13 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
   return (
     <>
       {select}
-      <ParamConditionInputValue param={param} condition={condition} disabled={disabled} onChange={onChange} />
+      <ParamConditionInputValue
+        onDecodingError={onDecodingError}
+        param={param}
+        condition={condition}
+        disabled={disabled}
+        onChange={onChange}
+      />
       {removeButton}
     </>
   )

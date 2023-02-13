@@ -89,26 +89,14 @@ const looksLikeAProxy = (abi: JsonFragment[]) => {
   const signatures = Object.keys(iface.functions)
   return (
     signatures.length === 0 ||
-    (signatures.length === 1 && signatures[0] === "implementation()") ||
-    looksLikeAComptroller(abi)
+    signatures ||
+    looksLike(abi, ["implementation()"]) || // for EIP-897/EIP-1967/... proxies
+    looksLike(abi, ["comptrollerImplementation()"]) // for Compound Comptroller
   )
 }
 
-const looksLikeAComptroller = (abi: JsonFragment[]) => {
+const looksLike = (abi: JsonFragment[], expectedFunctions: string[]) => {
   const iface = new Interface(abi)
   const signatures = Object.keys(iface.functions)
-  console.log({ signatures })
-  const comptrollerFunctions = [
-    "pendingAdmin()",
-    "_setPendingAdmin(address)",
-    "comptrollerImplementation()",
-    "_acceptImplementation()",
-    "pendingComptrollerImplementation()",
-    "_setPendingImplementation(address)",
-    "_acceptAdmin()",
-    "admin()",
-  ]
-  return (
-    signatures.length === comptrollerFunctions.length && signatures.every((sig) => comptrollerFunctions.includes(sig))
-  )
+  return expectedFunctions.every((sig) => signatures.includes(sig))
 }
