@@ -77,7 +77,7 @@ export const TargetFunctionParams = ({ func, funcConditions, disabled, onChange 
                   disabled={disabled}
                   param={null}
                   index={index}
-                  condition={funcConditions.params.find((param) => param?.index === index)}
+                  condition={param}
                   onChange={(changingCondition) => handleConditionChange(index, changingCondition)}
                   onDecodingError={() => setDecodingError(true)}
                 />
