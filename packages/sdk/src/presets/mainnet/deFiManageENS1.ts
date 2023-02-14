@@ -371,7 +371,7 @@ const preset: RolePreset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of tokens COMP, CRV, LDO, rETH2, SWISE, sETH2, WETH, USDC, DAI and USDT in UniswapV3
+    //Swapping of tokens COMP, CRV, LDO, WETH, USDC, DAI and USDT in Uniswap
     //---------------------------------------------------------------------------------------------------------------------------------
 
     /* ...allowErc20Approve(
@@ -388,14 +388,6 @@ const preset: RolePreset = {
             [COMP, WETH, USDC],
             [COMP, WETH, DAI],
             [COMP, WETH],
-            [rETH2, sETH2, WETH, USDC],
-            [rETH2, sETH2, WETH, DAI],
-            [rETH2, sETH2, WETH],
-            [SWISE, sETH2, WETH, USDC],
-            [SWISE, sETH2, WETH, DAI],
-            [SWISE, sETH2, WETH],
-            [sETH2, WETH],
-            [WETH, sETH2],
             [CRV, WETH, USDC],
             [CRV, WETH, DAI],
             [CRV, WETH],
@@ -423,6 +415,20 @@ const preset: RolePreset = {
           ],
           "address[]"
         ),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      },
+    },
+
+    {
+      targetAddress: UV3_ROUTER_2,
+      signature:
+        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticOneOf(
+          [COMP, WETH, rETH2, sETH2, SWISE, CRV, LDO, USDC, DAI, USDT],
+          "address"
+        ),
+        [1]: staticOneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
