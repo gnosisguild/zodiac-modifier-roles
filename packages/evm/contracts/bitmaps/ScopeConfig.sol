@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "../Types.sol";
+import "./Compression.sol";
 
 library ScopeConfig {
     // HEADER
@@ -9,7 +10,7 @@ library ScopeConfig {
     // 8   bits -> length
     // 2   bits -> options
     // 1   bits -> isWildcarded
-    // 2   bits -> unused
+    // 3   bits -> unused
     uint256 private constant offsetPage = 251;
     uint256 private constant offsetLength = 243;
     uint256 private constant offsetOptions = 241;
@@ -23,21 +24,21 @@ library ScopeConfig {
     // 1    bit  -> isScoped
     // 3    bits -> type
     // 4    bits -> comparison
-    // 2    bits -> compression
-    uint256 private constant offsetParent = 10;
-    uint256 private constant offsetIsScoped = 9;
-    uint256 private constant offsetType = 6;
-    uint256 private constant offsetComparison = 2;
+    // 3    bits -> compression
+    uint256 private constant offsetParent = 11;
+    uint256 private constant offsetIsScoped = 10;
+    uint256 private constant offsetType = 7;
+    uint256 private constant offsetComparison = 3;
     uint256 private constant offsetCompression = 0;
     uint256 private constant maskParent = 0xff << offsetParent;
     uint256 private constant maskIsScoped = 0x1 << offsetIsScoped;
     uint256 private constant maskType = 0x7 << offsetType;
     uint256 private constant maskComparison = 0xf << offsetComparison;
-    uint256 private constant maskCompression = 0x3 << offsetCompression;
-    uint256 private constant maskParameter = 0xffff;
+    uint256 private constant maskCompression = 0x7 << offsetCompression;
+    uint256 private constant maskParameter = 0x7ffff;
     // sizes in bits
     // both header and parameter ought to be equal
-    uint256 private constant chunkSize = 18;
+    uint256 private constant chunkSize = 19;
     uint256 private constant pageCapacity = 256 / chunkSize;
 
     function create(
@@ -69,10 +70,10 @@ library ScopeConfig {
     function packParameter(
         BitmapBuffer memory buffer,
         ParameterConfigFlat memory parameter,
-        Compression compression,
+        Compression.Mode compression,
         uint8 index
     ) internal pure {
-        (uint256 page, uint256 offset) = _parameterOffset(index);
+        (uint256 page, uint256 offset) = _where(index);
         uint256 bits = _parameterBits(parameter, compression) << offset;
         uint256 mask = maskParameter << offset;
 
@@ -105,29 +106,38 @@ library ScopeConfig {
         BitmapBuffer memory buffer,
         uint256 index,
         ParameterConfig memory result
-    ) internal pure returns (Compression) {
-        (uint256 page, uint256 offset) = _parameterOffset(index);
+    ) internal pure {
+        (uint256 page, uint256 offset) = _where(index);
         uint256 bits = (uint256(buffer.payload[page]) >> offset) &
             maskParameter;
 
         result.isScoped = (bits & maskIsScoped) != 0;
         result._type = ParameterType((bits & maskType) >> offsetType);
         result.comp = Comparison((bits & maskComparison) >> offsetComparison);
-        return Compression((bits & maskCompression) >> offsetCompression);
     }
 
     function unpackParent(
         BitmapBuffer memory buffer,
         uint256 index
     ) internal pure returns (uint8 parent) {
-        (uint256 page, uint256 offset) = _parameterOffset(index);
+        (uint256 page, uint256 offset) = _where(index);
         uint256 bits = (uint256(buffer.payload[page]) >> offset) &
             maskParameter;
 
         parent = uint8(bits >> offsetParent);
     }
 
-    function _parameterOffset(
+    function unpackCompression(
+        BitmapBuffer memory buffer,
+        uint256 index
+    ) internal pure returns (Compression.Mode) {
+        (uint256 page, uint256 offset) = _where(index);
+        uint256 bits = (uint256(buffer.payload[page]) >> offset);
+
+        return Compression.Mode((bits & maskCompression) >> offsetCompression);
+    }
+
+    function _where(
         uint256 index
     ) internal pure returns (uint256 page, uint256 offset) {
         unchecked {
@@ -141,7 +151,7 @@ library ScopeConfig {
 
     function _parameterBits(
         ParameterConfigFlat memory parameter,
-        Compression compression
+        Compression.Mode compression
     ) private pure returns (uint256 bits) {
         bits = uint256(parameter.parent) << offsetParent;
         if (parameter.isScoped) {

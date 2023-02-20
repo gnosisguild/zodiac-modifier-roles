@@ -53,17 +53,17 @@ abstract contract PermissionPacker is Core {
         uint256 length = parameters.length;
         scopeConfig = ScopeConfig.create(length, false, options);
         compValues = CompValues.create(length);
+
+        Compression.Mode compression;
+        uint256 offset = 5;
         for (uint8 i; i < length; ++i) {
-            ParameterConfigFlat memory parameter = parameters[i];
-            ScopeConfig.packParameter(
-                scopeConfig,
+            ParameterConfigFlat calldata parameter = parameters[i];
+            (compression, offset) = CompValues.pack(
+                compValues,
                 parameter,
-                Compression.None,
-                i
+                offset
             );
-            if (parameter.compValue.length > 0) {
-                CompValues.packCompValue(compValues, _compress(parameter), i);
-            }
+            ScopeConfig.packParameter(scopeConfig, parameter, compression, i);
         }
     }
 
@@ -84,7 +84,7 @@ abstract contract PermissionPacker is Core {
         uint256 index
     ) private pure returns (ParameterConfig memory result) {
         ScopeConfig.unpackParameter(scopeConfig, index, result);
-        result.compValue = CompValues.unpackCompValue(compValues, index);
+        result.compValue = _compValue(scopeConfig, compValues, index);
 
         (uint256 left, uint256 right) = Topology.childrenBounds(
             scopeConfig,
@@ -99,12 +99,29 @@ abstract contract PermissionPacker is Core {
         }
     }
 
-    function _compress(
-        ParameterConfigFlat memory config
-    ) private pure returns (bytes32) {
-        return
-            config._type == ParameterType.Static
-                ? bytes32(config.compValue)
-                : keccak256(config.compValue);
+    function _compValue(
+        BitmapBuffer memory scopeConfig,
+        BitmapBuffer memory compValues,
+        uint256 index
+    ) private pure returns (bytes32 compValue) {
+        Compression.Mode compression = ScopeConfig.unpackCompression(
+            scopeConfig,
+            index
+        );
+
+        if (compression == Compression.Mode.Empty) {
+            return 0;
+        }
+
+        uint256 offset = 5;
+        for (uint256 i; i < index; ++i) {
+            offset += CompValues.packedSize(
+                compValues,
+                ScopeConfig.unpackCompression(scopeConfig, i),
+                offset
+            );
+        }
+
+        return CompValues.unpack(compValues, compression, offset);
     }
 }
