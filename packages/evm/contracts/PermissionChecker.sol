@@ -401,7 +401,7 @@ abstract contract PermissionChecker is Core {
 
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
-        bytes32 value = _compressValue(data, parameter._type, payload);
+        bytes32 value = _value(data, parameter._type, payload);
 
         if (comp == Comparison.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -413,18 +413,13 @@ abstract contract PermissionChecker is Core {
         return Status.Ok;
     }
 
-    function _compressValue(
+    function _value(
         bytes calldata data,
         ParameterType paramType,
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
         if (payload.size != payload.raw.length) {
             payload.raw = Decoder.pluck(data, payload.offset, payload.size);
-        }
-
-        if (payload.raw.length == 0) {
-            // empty buffer
-            return bytes32(0);
         }
 
         if (paramType == ParameterType.Static) {

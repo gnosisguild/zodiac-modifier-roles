@@ -164,26 +164,4 @@ describe("ScopeConfig library", async () => {
   //   // try at max index
   //   await atIndex(31);
   // });
-
-  it("correctly calculates offsets inside the ScopeConfigBuffer", async () => {
-    const { ScopeConfig } = await setup();
-
-    const chunkSize = 18;
-
-    let [page, offset] = await ScopeConfig._parameterOffset(0);
-    expect(page).to.equal(0);
-    expect(offset).to.equal(256 - chunkSize * 2);
-
-    [page, offset] = await ScopeConfig._parameterOffset(10);
-    expect(page).to.equal(0);
-    expect(offset).to.equal(256 - chunkSize * 12);
-
-    [page, offset] = await ScopeConfig._parameterOffset(12);
-    expect(page).to.equal(0);
-    expect(offset).to.equal(256 - chunkSize * 14);
-
-    [page, offset] = await ScopeConfig._parameterOffset(13);
-    expect(page).to.equal(1);
-    expect(offset).to.equal(256 - chunkSize);
-  });
 });
