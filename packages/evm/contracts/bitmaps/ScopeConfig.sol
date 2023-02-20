@@ -83,19 +83,8 @@ library ScopeConfig {
     }
 
     function unpackHeader(
-        BitmapBuffer memory buffer
-    ) internal pure returns (uint256, bool, ExecutionOptions) {
-        return unpackHeader(buffer.payload[0]);
-    }
-
-    function unpackHeader(
         bytes32 header
-    )
-        internal
-        pure
-        returns (uint256 length, bool isWildcarded, ExecutionOptions options)
-    {
-        length = (uint256(header) & maskLength) >> offsetLength;
+    ) internal pure returns (bool isWildcarded, ExecutionOptions options) {
         isWildcarded = uint256(header) & maskIsWildcarded != 0;
         options = ExecutionOptions(
             (uint256(header) & maskOptions) >> offsetOptions
@@ -116,25 +105,28 @@ library ScopeConfig {
         result.comp = Comparison((bits & maskComparison) >> offsetComparison);
     }
 
-    function unpackParent(
-        BitmapBuffer memory buffer,
-        uint256 index
-    ) internal pure returns (uint8 parent) {
-        (uint256 page, uint256 offset) = _where(index);
-        uint256 bits = (uint256(buffer.payload[page]) >> offset) &
-            maskParameter;
+    function unpackMisc(
+        BitmapBuffer memory buffer
+    )
+        internal
+        pure
+        returns (uint8[] memory parents, Compression.Mode[] memory compressions)
+    {
+        uint256 head = uint256(buffer.payload[0]);
+        uint256 length = (head & maskLength) >> offsetLength;
 
-        parent = uint8(bits >> offsetParent);
-    }
+        parents = new uint8[](length);
+        compressions = new Compression.Mode[](length);
 
-    function unpackCompression(
-        BitmapBuffer memory buffer,
-        uint256 index
-    ) internal pure returns (Compression.Mode) {
-        (uint256 page, uint256 offset) = _where(index);
-        uint256 bits = (uint256(buffer.payload[page]) >> offset);
+        for (uint256 i; i < length; i++) {
+            (uint256 page, uint256 offset) = _where(i);
+            uint256 bits = uint256(buffer.payload[page] >> offset);
 
-        return Compression.Mode((bits & maskCompression) >> offsetCompression);
+            parents[i] = uint8((bits & maskParent) >> offsetParent);
+            compressions[i] = Compression.Mode(
+                (bits & maskCompression) >> offsetCompression
+            );
+        }
     }
 
     function _where(
