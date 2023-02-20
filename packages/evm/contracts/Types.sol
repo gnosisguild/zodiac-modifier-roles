@@ -24,13 +24,6 @@ enum Comparison {
     Subset
 }
 
-enum Compression {
-    None,
-    Static,
-    Bytes,
-    Keccak256
-}
-
 enum ExecutionOptions {
     None,
     Send,

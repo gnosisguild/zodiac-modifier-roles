@@ -12,7 +12,6 @@ contract MockScopeConfig {
     // ) public pure returns (uint256) {
     //     return ScopeConfig2.pack(scopeConfig, options, isWildcarded, length);
     // }
-
     // function packParameter(
     //     uint256 scopeConfig,
     //     uint256 index,
@@ -29,7 +28,6 @@ contract MockScopeConfig {
     //             paramComp
     //         );
     // }
-
     // function unpack(
     //     uint256 scopeConfig
     // )
@@ -39,7 +37,6 @@ contract MockScopeConfig {
     // {
     //     return ScopeConfig.unpack(scopeConfig);
     // }
-
     // function unpackParameter(
     //     uint256 scopeConfig,
     //     uint256 index
@@ -50,10 +47,4 @@ contract MockScopeConfig {
     // {
     //     return ScopeConfig.unpackParameter(scopeConfig, index);
     // }
-
-    function _parameterOffset(
-        uint256 index
-    ) public pure returns (uint256 page, uint256 offset) {
-        (page, offset) = ScopeConfig._parameterOffset(index);
-    }
 }
