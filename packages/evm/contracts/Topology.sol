@@ -6,12 +6,11 @@ import "./bitmaps/ScopeConfig.sol";
 
 library Topology {
     function rootBounds(
-        BitmapBuffer memory scopeConfig
+        uint8[] memory parents
     ) internal pure returns (uint256 left, uint256 right) {
-        (uint256 length, , ) = ScopeConfig.unpackHeader(scopeConfig);
-
+        uint256 length = parents.length;
         uint256 i = 1;
-        while (i < length && ScopeConfig.unpackParent(scopeConfig, i) == i) {
+        while (i < length && parents[i] == i) {
             unchecked {
                 ++i;
             }
@@ -21,25 +20,21 @@ library Topology {
     }
 
     function childrenBounds(
-        BitmapBuffer memory scopeConfig,
-        uint256 parent
+        uint8[] memory parents,
+        uint256 n
     ) internal pure returns (uint256 left, uint256 right) {
-        (uint256 length, , ) = ScopeConfig.unpackHeader(scopeConfig);
+        uint256 length = parents.length;
 
-        uint256 i = parent + 1;
-        while (
-            i < length && ScopeConfig.unpackParent(scopeConfig, i) < parent
-        ) {
+        uint256 i = n + 1;
+        while (i < length && parents[i] < n) {
             unchecked {
                 ++i;
             }
         }
 
-        if (i < length && ScopeConfig.unpackParent(scopeConfig, i) == parent) {
+        if (i < length && parents[i] == n) {
             left = i;
-            while (
-                i < length && ScopeConfig.unpackParent(scopeConfig, i) == parent
-            ) {
+            while (i < length && parents[i] == n) {
                 unchecked {
                     ++i;
                 }

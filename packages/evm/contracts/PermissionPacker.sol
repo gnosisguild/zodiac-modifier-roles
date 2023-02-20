@@ -71,43 +71,55 @@ abstract contract PermissionPacker is Core {
         BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues
     ) internal pure override returns (ParameterConfig[] memory result) {
-        (uint256 left, uint256 right) = Topology.rootBounds(scopeConfig);
+        (
+            uint8[] memory parents,
+            Compression.Mode[] memory compressions
+        ) = ScopeConfig.unpackMisc(scopeConfig);
+
+        (uint256 left, uint256 right) = Topology.rootBounds(parents);
         result = new ParameterConfig[](right - left + 1);
         for (uint256 i = left; i <= right; ++i) {
-            result[i] = _unpack(scopeConfig, compValues, i);
+            result[i] = _unpack(
+                scopeConfig,
+                compValues,
+                parents,
+                compressions,
+                i
+            );
         }
     }
 
     function _unpack(
         BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues,
+        uint8[] memory parents,
+        Compression.Mode[] memory compressions,
         uint256 index
     ) private pure returns (ParameterConfig memory result) {
         ScopeConfig.unpackParameter(scopeConfig, index, result);
-        result.compValue = _compValue(scopeConfig, compValues, index);
+        result.compValue = _compValue(compValues, compressions, index);
 
-        (uint256 left, uint256 right) = Topology.childrenBounds(
-            scopeConfig,
-            index
-        );
-
+        (uint256 left, uint256 right) = Topology.childrenBounds(parents, index);
         if (left <= right) {
             result.children = new ParameterConfig[](right - left + 1);
             for (uint256 j = left; j <= right; j++) {
-                result.children[j - left] = _unpack(scopeConfig, compValues, j);
+                result.children[j - left] = _unpack(
+                    scopeConfig,
+                    compValues,
+                    parents,
+                    compressions,
+                    j
+                );
             }
         }
     }
 
     function _compValue(
-        BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues,
+        Compression.Mode[] memory compressions,
         uint256 index
     ) private pure returns (bytes32 compValue) {
-        Compression.Mode compression = ScopeConfig.unpackCompression(
-            scopeConfig,
-            index
-        );
+        Compression.Mode compression = compressions[index];
 
         if (compression == Compression.Mode.Empty) {
             return 0;
@@ -117,7 +129,7 @@ abstract contract PermissionPacker is Core {
         for (uint256 i; i < index; ++i) {
             offset += CompValues.packedSize(
                 compValues,
-                ScopeConfig.unpackCompression(scopeConfig, i),
+                compressions[i],
                 offset
             );
         }
