@@ -25,18 +25,11 @@ library CompValues {
             return (Compression.Mode.Empty, offset);
         }
 
-        Compression.Mode compression;
-        uint256 size;
-        bytes32 payload;
-        if (parameter._type == ParameterType.Static) {
-            (compression, size, payload) = Compression.compressWord(
-                bytes32(parameter.compValue)
-            );
-        } else {
-            (compression, size, payload) = Compression.compressBytes(
-                parameter.compValue
-            );
-        }
+        (
+            Compression.Mode compression,
+            uint256 size,
+            bytes32 payload
+        ) = Compression.compress(parameter.compValue);
 
         BufferPacker.pack(buffer, offset, size, payload);
 
@@ -45,6 +38,7 @@ library CompValues {
 
     function unpack(
         BitmapBuffer memory buffer,
+        ParameterType _type,
         Compression.Mode compression,
         uint256 offset
     ) internal pure returns (bytes32) {
@@ -53,22 +47,23 @@ library CompValues {
         }
 
         uint256 size = packedSize(buffer, compression, offset);
+        bytes32 payload = BufferPacker.unpack(buffer, offset, size);
 
-        bytes32 maybeCompressedChunk = BufferPacker.unpack(
-            buffer,
-            offset,
-            size
-        );
-        if (
-            compression == Compression.Mode.Uncompressed ||
-            compression == Compression.Mode.Hash
-        ) {
-            return maybeCompressedChunk;
-        } else if (compression == Compression.Mode.Word) {
-            return Compression.extractWord(maybeCompressedChunk);
+        if (compression == Compression.Mode.Compressed) {
+            if (_type == ParameterType.Static) {
+                return bytes32(Compression.extract(payload));
+            } else {
+                return keccak256(Compression.extract(payload));
+            }
+        } else if (compression == Compression.Mode.Uncompressed) {
+            if (_type == ParameterType.Static) {
+                return payload;
+            } else {
+                return keccak256(abi.encodePacked(payload));
+            }
         } else {
-            assert(compression == Compression.Mode.Bytes);
-            return keccak256(Compression.extractBytes(maybeCompressedChunk));
+            assert(compression == Compression.Mode.Hash);
+            return payload;
         }
     }
 

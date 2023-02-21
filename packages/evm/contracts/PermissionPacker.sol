@@ -96,8 +96,13 @@ abstract contract PermissionPacker is Core {
         Compression.Mode[] memory compressions,
         uint256 index
     ) private pure returns (ParameterConfig memory result) {
-        ScopeConfig.unpackParameter(scopeConfig, index, result);
-        result.compValue = _compValue(compValues, compressions, index);
+        result = ScopeConfig.unpackParameter(scopeConfig, index);
+        result.compValue = _compValue(
+            compValues,
+            index,
+            result._type,
+            compressions
+        );
 
         (uint256 left, uint256 right) = Topology.childrenBounds(parents, index);
         if (left <= right) {
@@ -116,8 +121,9 @@ abstract contract PermissionPacker is Core {
 
     function _compValue(
         BitmapBuffer memory compValues,
-        Compression.Mode[] memory compressions,
-        uint256 index
+        uint256 index,
+        ParameterType _type,
+        Compression.Mode[] memory compressions
     ) private pure returns (bytes32 compValue) {
         Compression.Mode compression = compressions[index];
 
@@ -134,6 +140,6 @@ abstract contract PermissionPacker is Core {
             );
         }
 
-        return CompValues.unpack(compValues, compression, offset);
+        return CompValues.unpack(compValues, _type, compression, offset);
     }
 }
