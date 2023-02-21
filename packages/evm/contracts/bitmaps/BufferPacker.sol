@@ -39,7 +39,6 @@ library BufferPacker {
         uint256 size
     ) internal pure returns (bytes32 result) {
         assert(size <= 32);
-
         (
             uint256 page,
             uint256 index,

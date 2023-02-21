@@ -93,9 +93,8 @@ library ScopeConfig {
 
     function unpackParameter(
         BitmapBuffer memory buffer,
-        uint256 index,
-        ParameterConfig memory result
-    ) internal pure {
+        uint256 index
+    ) internal pure returns (ParameterConfig memory result) {
         (uint256 page, uint256 offset) = _where(index);
         uint256 bits = (uint256(buffer.payload[page]) >> offset) &
             maskParameter;
