@@ -463,6 +463,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -483,6 +487,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -503,6 +511,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -523,6 +535,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -543,6 +559,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -563,6 +583,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
@@ -583,6 +607,10 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ),
         [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
