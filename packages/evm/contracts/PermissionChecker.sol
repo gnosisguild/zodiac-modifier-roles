@@ -419,7 +419,7 @@ abstract contract PermissionChecker is Core {
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
         if (payload.size != payload.raw.length) {
-            payload.raw = Decoder.pluck(data, payload.offset, payload.size);
+            payload.raw = Decoder.pluck(data, payload.location, payload.size);
         }
 
         if (paramType == ParameterType.Static) {

@@ -82,7 +82,7 @@ contract MockDecoder {
     ) private pure returns (PP1[] memory result) {
         result = new PP1[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].offset;
+            result[i].offset = output[i].location;
             result[i].size = output[i].size;
             result[i].raw = output[i].raw;
             result[i].children = copyOutTo2(output[i].children);
@@ -94,7 +94,7 @@ contract MockDecoder {
     ) private pure returns (PP2[] memory result) {
         result = new PP2[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].offset;
+            result[i].offset = output[i].location;
             result[i].size = output[i].size;
             result[i].raw = output[i].raw;
             result[i].children = copyOutTo3(output[i].children);
@@ -106,7 +106,7 @@ contract MockDecoder {
     ) private pure returns (PP3[] memory result) {
         result = new PP3[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].offset;
+            result[i].offset = output[i].location;
             result[i].size = output[i].size;
             result[i].raw = output[i].raw;
             result[i].children = copyOutTo4(output[i].children);
@@ -118,7 +118,7 @@ contract MockDecoder {
     ) private pure returns (PP4[] memory result) {
         result = new PP4[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].offset;
+            result[i].offset = output[i].location;
             result[i].size = output[i].size;
             result[i].raw = output[i].raw;
             result[i].children = copyOutTo5(output[i].children);
@@ -130,7 +130,7 @@ contract MockDecoder {
     ) private pure returns (PP5[] memory result) {
         result = new PP5[](output.length);
         for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].offset;
+            result[i].offset = output[i].location;
             result[i].size = output[i].size;
             result[i].raw = output[i].raw;
         }
