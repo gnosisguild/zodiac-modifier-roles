@@ -6,9 +6,8 @@ import hre, { deployments } from "hardhat";
 enum Mode {
   Empty = 0,
   Uncompressed,
-  Word,
-  Bytes,
-  Hashed,
+  Compressed,
+  Hash,
 }
 
 describe("Compression", async () => {
@@ -25,192 +24,215 @@ describe("Compression", async () => {
     };
   });
 
-  describe("compressWord", async () => {
-    describe("Uncompressed", async () => {
+  describe("compress - 32 bytes iput", async () => {
+    describe("Mode Uncompressed", async () => {
       it("Misses compression efficiency", async () => {
         const { Compression } = await setup();
-        const { compression } = await Compression.compressWord(
+        const { compression } = await Compression.compress(
           "0xf00000000000000000000000000000000000000000000000000000000000000f"
         );
         expect(compression).to.equal(Mode.Uncompressed);
       });
       it("Misses compression efficiency by one byte", async () => {
         const { Compression } = await setup();
-        let { compression } = await Compression.compressWord(
+        let { compression } = await Compression.compress(
           "0x000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         );
         expect(compression).to.equal(Mode.Uncompressed);
 
-        ({ compression } = await Compression.compressWord(
-          "0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ({ compression } = await Compression.compress(
+          "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         ));
-        expect(compression).to.not.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.Compressed);
 
-        ({ compression } = await Compression.compressWord(
-          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff800000"
+        ({ compression } = await Compression.compress(
+          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000000"
         ));
         expect(compression).to.equal(Mode.Uncompressed);
 
-        ({ compression } = await Compression.compressWord(
-          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000"
+        ({ compression } = await Compression.compress(
+          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000"
         ));
-        expect(compression).to.not.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.Compressed);
 
-        ({ compression } = await Compression.compressWord(
-          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff800000"
-        ));
-        expect(compression).to.equal(Mode.Uncompressed);
-
-        ({ compression } = await Compression.compressWord(
-          "0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00"
-        ));
-        expect(compression).to.equal(Mode.Uncompressed);
-        ({ compression } = await Compression.compressWord(
-          "0x0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00"
-        ));
-        expect(compression).to.not.equal(Mode.Uncompressed);
-
-        ({ compression } = await Compression.compressWord(
+        ({ compression } = await Compression.compress(
           "0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000"
         ));
-        expect(compression).to.not.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.Uncompressed);
+
+        ({ compression } = await Compression.compress(
+          "0x0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000"
+        ));
+        expect(compression).to.equal(Mode.Compressed);
       });
     });
-    describe("Word", async () => {
+    describe("Mode Compressed", async () => {
       it("compressing zero", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressWord(
+        const { compression, size, result } = await Compression.compress(
           "0x0000000000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedSize = 2;
+        const expectedSizeCompressed = 3;
+        const expectedSizeExtracted = 32;
         const expectedOffset = 0;
 
-        expect(compression).to.equal(Mode.Word);
-        expect(size).to.equal(expectedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
-            ["uint8", "uint8", "bytes"],
-            [expectedSize, expectedOffset, "0x"]
+            ["uint8", "uint8", "uint8", "bytes"],
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("compressible amount shifted to the left", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressWord(
+        const { compression, size, result } = await Compression.compress(
           "0xffaabbc000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedSize = 6;
+        const expectedSizeCompressed = 7;
+        const expectedSizeExtracted = 32;
         const expectedOffset = 0;
 
-        expect(compression).to.equal(Mode.Word);
-        expect(size).to.equal(expectedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
-            ["uint8", "uint8", "bytes"],
-            [expectedSize, expectedOffset, "0xffaabbc0"]
+            ["uint8", "uint8", "uint8", "bytes"],
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0xffaabbc0",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("compressible amount shifted to the right", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressWord(
+        const { compression, size, result } = await Compression.compress(
           "0x000000000000000000000000000000000000000000000000000000000000000a"
         );
 
-        const expectedSize = 3;
+        const expectedSizeCompressed = 4;
+        const expectedSizeExtracted = 32;
         const expectedOffset = 31;
 
-        expect(compression).to.equal(Mode.Word);
-        expect(size).to.equal(expectedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
-            ["uint8", "uint8", "bytes"],
-            [expectedSize, expectedOffset, "0x0a"]
+            ["uint8", "uint8", "uint8", "bytes"],
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x0a",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("compressible amount in the middle", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressWord(
+        const { compression, size, result } = await Compression.compress(
           "0x0000000000000000000100004512aafe0000000001ff00000000000000000000"
         );
 
-        const expectedSize = 15;
+        const expectedSizeCompressed = 16;
+        const expectedSizeExtracted = 32;
         const expectedOffset = 9;
 
-        expect(compression).to.equal(Mode.Word);
-        expect(size).to.equal(expectedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
-            ["uint8", "uint8", "bytes"],
-            [expectedSize, expectedOffset, "0x0100004512aafe0000000001ff"]
+            ["uint8", "uint8", "uint8", "bytes"],
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x0100004512aafe0000000001ff",
+            ]
           ).padEnd(66, "0")
         );
       });
     });
   });
 
-  describe("compressBytes", async () => {
-    describe("Bytes", async () => {
+  describe("compress - not 32 bytes", async () => {
+    describe("Mode: Compressed", async () => {
       it("empty string", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
-          "0x"
-        );
+        const { compression, size, result } = await Compression.compress("0x");
 
-        const expectedPackedSize = 3;
+        const expectedSizeCompressed = 3;
+        const expectedSizeExtracted = 0;
         const expectedOffset = 0;
-        const expectedOriginalSize = 0;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [expectedPackedSize, expectedOffset, expectedOriginalSize, "0x"]
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("smaller than 32 only zeroes", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x0000000000"
         );
 
-        const expectedPackedSize = 3;
+        const expectedSizeCompressed = 3;
+        const expectedSizeExtracted = 5;
         const expectedOffset = 0;
-        const expectedOriginalSize = 5;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [expectedPackedSize, expectedOffset, expectedOriginalSize, "0x"]
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("Smaller than 32 bytes that saves one byte", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0xf000000000000000000100004512aafe0000000001ff00000000000f"
         );
 
-        const expectedPackedSize = 31;
+        const expectedSizeCompressed = 31;
+        const expectedSizeExtracted = 28;
         const expectedOffset = 0;
-        const expectedOriginalSize = 28;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedPackedSize,
+              expectedSizeCompressed,
+              expectedSizeExtracted,
               expectedOffset,
-              expectedOriginalSize,
               "0xf000000000000000000100004512aafe0000000001ff00000000000f",
             ]
           ).padEnd(66, "0")
@@ -218,38 +240,39 @@ describe("Compression", async () => {
       });
       it("Smaller than 32 bytes that saves a lot -> content shifted to the left", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x0100004512aafe"
         );
 
-        expect(compression).to.equal(Mode.Bytes);
+        expect(compression).to.equal(Mode.Compressed);
         expect(size).to.equal(10);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [10, 0, 7, "0x0100004512aafe"]
+            [10, 7, 0, "0x0100004512aafe"]
           ).padEnd(66, "0")
         );
       });
+
       it("Smaller than 32 bytes that saves a lot -> content shifted to the right", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x000000000010aabbc0"
         );
 
-        const expectedPackedSize = 7;
+        const expectedSizeCompressed = 7;
+        const expectedSizeExtracted = 9;
         const expectedOffset = 5;
-        const expectedOriginalSize = 9;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedPackedSize,
+              expectedSizeCompressed,
+              expectedSizeExtracted,
               expectedOffset,
-              expectedOriginalSize,
               "0x10aabbc0",
             ]
           ).padEnd(66, "0")
@@ -257,23 +280,23 @@ describe("Compression", async () => {
       });
       it("Smaller than 32 bytes that saves a lot -> content in the middle", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x00000000000ff100004512aafe000000"
         );
 
-        const expectedPackedSize = 11;
+        const expectedSizeCompressed = 11;
+        const expectedSizeExtracted = 16;
         const expectedOffset = 5;
-        const expectedOriginalSize = 16;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedPackedSize,
+              expectedSizeCompressed,
+              expectedSizeExtracted,
               expectedOffset,
-              expectedOriginalSize,
               "0x0ff100004512aafe",
             ]
           ).padEnd(66, "0")
@@ -281,42 +304,47 @@ describe("Compression", async () => {
       });
       it("Larger than 32 only zeroes", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedPackedSize = 3;
+        const expectedSizeCompressed = 3;
+        const expectedSizeExtracted = 42;
         const expectedOffset = 0;
-        const expectedOriginalSize = 42;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [expectedPackedSize, expectedOffset, expectedOriginalSize, "0x"]
+            [
+              expectedSizeCompressed,
+              expectedSizeExtracted,
+              expectedOffset,
+              "0x",
+            ]
           ).padEnd(66, "0")
         );
       });
       it("Larger than 32 bytes that saves a lot", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
         );
 
-        const expectedPackedSize = 11;
+        const expectedSizeCompressed = 11;
+        const expectedSizeExtracted = 66;
         const expectedOffset = 55;
-        const expectedOriginalSize = 66;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedPackedSize,
+              expectedSizeCompressed,
+              expectedSizeExtracted,
               expectedOffset,
-              expectedOriginalSize,
               "0x0ff100004512aafe",
             ]
           ).padEnd(66, "0")
@@ -324,51 +352,37 @@ describe("Compression", async () => {
       });
       it("Larger than 32 bytes that saves one byte", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
         );
 
-        const expectedPackedSize = 31;
+        const expectedSizeCompressed = 31;
+        const expectedSizeExtracted = 47;
         const expectedOffset = 4;
-        const expectedOriginalSize = 47;
 
-        expect(compression).to.equal(Mode.Bytes);
-        expect(size).to.equal(expectedPackedSize);
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(expectedSizeCompressed);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedPackedSize,
+              expectedSizeCompressed,
+              expectedSizeExtracted,
               expectedOffset,
-              expectedOriginalSize,
               "0xff2382837000000000000000000000000000000000000000000000ff",
             ]
           ).padEnd(66, "0")
         );
       });
     });
-    describe("Keccak256", async () => {
-      it("Smaller than 32 bytes that misses compression by one byte", async () => {
-        const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
-          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-        );
-
-        expect(compression).to.equal(Mode.Hashed);
-        expect(size).to.equal(32);
-        expect(result).to.equal(
-          keccak256(
-            "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-          )
-        );
-      });
+    describe("Mode: Hash", async () => {
       it("Larger than 32 bytes that misses compression by one byte", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000"
         );
 
-        expect(compression).to.equal(Mode.Hashed);
+        expect(compression).to.equal(Mode.Hash);
         expect(size).to.equal(32);
         expect(result).to.equal(
           keccak256(
@@ -378,11 +392,11 @@ describe("Compression", async () => {
       });
       it("Larger than 32 bytes that misses compression efficiency by a lot", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressBytes(
+        const { compression, size, result } = await Compression.compress(
           "0x10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
         );
 
-        expect(compression).to.equal(Mode.Hashed);
+        expect(compression).to.equal(Mode.Hash);
         expect(size).to.equal(32);
         expect(result).to.equal(
           keccak256(
@@ -399,172 +413,169 @@ describe("Compression", async () => {
         const compValue255Bytes =
           "0xff0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
-        let { compression, size, result } = await Compression.compressBytes(
+        let { compression, size, result } = await Compression.compress(
           compValue256Bytes
         );
 
-        expect(compression).to.equal(Mode.Hashed);
+        expect(compression).to.equal(Mode.Hash);
         expect(size).to.equal(32);
         expect(result).to.equal(keccak256(compValue256Bytes));
 
-        ({ compression, size, result } = await Compression.compressBytes(
+        ({ compression, size, result } = await Compression.compress(
           compValue255Bytes
         ));
 
-        expect(compression).to.equal(Mode.Bytes);
+        expect(compression).to.equal(Mode.Compressed);
         expect(size).to.equal(4);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [4, 0, 255, "0xff"]
+            [4, 255, 0, "0xff"]
           ).padEnd(66, "0")
         );
       });
     });
   });
 
-  describe("extractWord", async () => {
-    describe("Word", async () => {
+  describe("extract", async () => {
+    describe("32 bytes long data", async () => {
       it("extracting zero", async () => {
         const { Compression } = await setup();
-        const { result } = await Compression.compressWord(
+        const { result } = await Compression.compress(
           "0x0000000000000000000000000000000000000000000000000000000000000000"
         );
 
-        expect(await Compression.extractWord(result)).to.equal(
+        expect(await Compression.extract(result)).to.equal(
           "0x0000000000000000000000000000000000000000000000000000000000000000"
         );
       });
       it("compressible amount shifted to the left", async () => {
         const { Compression } = await setup();
-        const { result } = await Compression.compressWord(
+        const { result } = await Compression.compress(
           "0xffaabbc000000000000000000000000000000000000000000000000000000000"
         );
 
-        expect(await Compression.extractWord(result)).to.equal(
+        expect(await Compression.extract(result)).to.equal(
           "0xffaabbc000000000000000000000000000000000000000000000000000000000"
         );
       });
       it("compressible amount shifted to the right", async () => {
         const { Compression } = await setup();
-        const { compression, size, result } = await Compression.compressWord(
+        const { compression, size, result } = await Compression.compress(
           "0x000000000000000000000000000000000000000000000000000000000000000a"
         );
 
-        expect(compression).to.equal(Mode.Word);
-        expect(size).to.equal(3);
-        expect(await Compression.extractWord(result)).to.equal(
+        expect(compression).to.equal(Mode.Compressed);
+        expect(size).to.equal(4);
+        expect(await Compression.extract(result)).to.equal(
           "0x000000000000000000000000000000000000000000000000000000000000000a"
         );
       });
 
       it("compressible amount in the middle", async () => {
         const { Compression } = await setup();
-        const { compression, result } = await Compression.compressWord(
+        const { compression, result } = await Compression.compress(
           "0x0000000000000000000100004512aafe0000000001ff00000000000000000000"
         );
 
-        expect(compression).to.equal(Mode.Word);
-        expect(await Compression.extractWord(result)).to.equal(
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
           "0x0000000000000000000100004512aafe0000000001ff00000000000000000000"
         );
       });
     });
-  });
+    describe("different than 32 bytes long data", async () => {
+      it("empty string", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress("0x");
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal("0x");
+      });
+      it("smaller than 32 only zeroes", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x0000000000"
+        );
 
-  describe("extractBytes", async () => {
-    it("empty string", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes("0x");
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal("0x");
-    });
-    it("smaller than 32 only zeroes", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x0000000000"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal("0x0000000000");
+      });
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal("0x0000000000");
-    });
+      it("Smaller than 32 bytes that saves one byte", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0xf000000000000000000100004512aafe0000000001ff00000000000f"
+        );
 
-    it("Smaller than 32 bytes that saves one byte", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0xf000000000000000000100004512aafe0000000001ff00000000000f"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0xf000000000000000000100004512aafe0000000001ff00000000000f"
+        );
+      });
+      it("Smaller than 32 bytes that saves a lot -> content shifted to the left", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x0100004512aafe"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0xf000000000000000000100004512aafe0000000001ff00000000000f"
-      );
-    });
-    it("Smaller than 32 bytes that saves a lot -> content shifted to the left", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x0100004512aafe"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal("0x0100004512aafe");
+      });
+      it("Smaller than 32 bytes that saves a lot -> content shifted to the right", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x000000000010aabbc0"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x0100004512aafe"
-      );
-    });
-    it("Smaller than 32 bytes that saves a lot -> content shifted to the right", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x000000000010aabbc0"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0x000000000010aabbc0"
+        );
+      });
+      it("Smaller than 32 bytes that saves a lot -> content in the middle", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x00000000000ff100004512aafe000000"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x000000000010aabbc0"
-      );
-    });
-    it("Smaller than 32 bytes that saves a lot -> content in the middle", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x00000000000ff100004512aafe000000"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0x00000000000ff100004512aafe000000"
+        );
+      });
+      it("Larger than 32 only zeroes", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x00000000000ff100004512aafe000000"
-      );
-    });
-    it("Larger than 32 only zeroes", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+      });
+      it("Larger than 32 bytes that saves a lot", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-      );
-    });
-    it("Larger than 32 bytes that saves a lot", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
+        );
+      });
+      it("Larger than 32 bytes that saves one byte", async () => {
+        const { Compression } = await setup();
+        const { compression, result } = await Compression.compress(
+          "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
+        );
 
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
-      );
-    });
-    it("Larger than 32 bytes that saves one byte", async () => {
-      const { Compression } = await setup();
-      const { compression, result } = await Compression.compressBytes(
-        "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
-      );
-
-      expect(compression).to.equal(Mode.Bytes);
-      expect(await Compression.extractBytes(result)).to.equal(
-        "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
-      );
+        expect(compression).to.equal(Mode.Compressed);
+        expect(await Compression.extract(result)).to.equal(
+          "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
+        );
+      });
     });
   });
 });
