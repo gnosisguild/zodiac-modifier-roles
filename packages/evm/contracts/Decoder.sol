@@ -21,34 +21,34 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        return _carveParts(data, 4, parameters);
+        return __block__(data, 4, parameters);
     }
 
-    function _carve(
+    function _walk(
         bytes calldata data,
-        uint256 offset,
+        uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         if (parameter._type == ParameterType.Static) {
-            result.offset = offset;
+            result.location = location;
             result.size = 32;
         } else if (parameter._type == ParameterType.Dynamic) {
-            result.offset = offset + 32;
-            result.size = uint256(_loadWord(data, offset));
+            result.location = location + 32;
+            result.size = uint256(_loadWord(data, location));
         } else if (parameter._type == ParameterType.Array) {
-            return _carveArray(data, offset, parameter);
+            return _array(data, location, parameter);
         } else {
             assert(parameter._type == ParameterType.Tuple);
-            return _carveTuple(data, offset, parameter);
+            return _tuple(data, location, parameter);
         }
     }
 
-    function _carveArray(
+    function _array(
         bytes calldata data,
-        uint256 offset,
+        uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        uint256 length = uint256(_loadWord(data, offset));
+        uint256 length = uint256(_loadWord(data, location));
         result.children = new ParameterPayload[](length);
 
         bool isInline = Topology.isStatic(parameter.children[0]);
@@ -57,57 +57,65 @@ library Decoder {
             : 32;
 
         for (uint256 i; i < length; ++i) {
-            result.children[i] = _carve(
+            result.children[i] = _walk(
                 data,
-                _headOrTailOffset(data, offset + 32, i * itemSize, isInline),
+                _partLocation(data, location + 32, i * itemSize, isInline),
                 parameter.children[0]
             );
         }
-        result.offset = offset;
+        result.location = location;
         result.size = _size(result);
     }
 
-    function _carveTuple(
+    function _tuple(
         bytes calldata data,
-        uint256 offset,
+        uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        result.children = _carveParts(data, offset, parameter.children);
-        result.offset = offset;
+        result.children = __block__(data, location, parameter.children);
+        result.location = location;
         result.size = _size(result);
     }
 
-    function _carveParts(
+    function __block__(
         bytes calldata data,
-        uint256 offset,
+        uint256 location,
         TypeTopology[] memory parts
     ) private pure returns (ParameterPayload[] memory result) {
         result = new ParameterPayload[](parts.length);
 
-        uint256 shift;
+        uint256 offset;
         for (uint256 i; i < parts.length; ++i) {
             bool isInline = Topology.isStatic(parts[i]);
-            result[i] = _carve(
+            result[i] = _walk(
                 data,
-                _headOrTailOffset(data, offset, shift, isInline),
+                _partLocation(data, location, offset, isInline),
                 parts[i]
             );
-            shift += isInline ? Topology.typeSize(parts[i]) : 32;
+            offset += isInline ? Topology.typeSize(parts[i]) : 32;
         }
     }
 
-    function _headOrTailOffset(
+    function _partLocation(
         bytes calldata data,
+        uint256 blockLocation,
         uint256 offset,
-        uint256 shift,
         bool isInline
     ) private pure returns (uint256) {
-        uint256 headOffset = offset + shift;
+        /*
+         * When encoding a block, a segment can be either included inline within
+         * the block - at the HEAD - or located at an offset relative to the start
+         * of the block - at the TAIL.
+         */
+
+        uint256 headLocation = blockLocation + offset;
         if (isInline) {
-            return headOffset;
+            // located in head
+            return headLocation;
+        } else {
+            // located at tail
+            return blockLocation + uint256(_loadWord(data, headLocation));
         }
-        uint256 tailOffset = offset + uint256(_loadWord(data, headOffset));
-        return tailOffset;
     }
 
     function _size(
@@ -116,10 +124,10 @@ library Decoder {
         uint256 length = payload.children.length;
 
         for (uint256 i; i < length; ++i) {
-            uint256 offset = payload.children[i].offset;
+            uint256 location = payload.children[i].location;
             // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
             uint256 size = ((payload.children[i].size + 32 - 1) / 32) * 32;
-            uint256 curr = offset + size - payload.offset;
+            uint256 curr = location + size - payload.location;
 
             if (curr > result) {
                 result = curr;
@@ -129,19 +137,13 @@ library Decoder {
 
     function pluck(
         bytes calldata data,
-        uint256 offset,
+        uint256 location,
         uint256 size
     ) internal pure returns (bytes calldata) {
-        if (data.length < offset + size) {
+        if (data.length < location + size) {
             revert CalldataOutOfBounds();
         }
-        return data[offset:offset + size];
-        // assembly {
-        //     result := mload(0x40)
-        //     mstore(result, size)
-        //     calldatacopy(add(result, 32), add(data.offset, offset), size)
-        //     mstore(0x40, add(result, add(32, size)))
-        // }
+        return data[location:location + size];
     }
 
     function _loadWord(

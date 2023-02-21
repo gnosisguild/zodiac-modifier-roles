@@ -59,7 +59,7 @@ struct TypeTopology {
 }
 
 struct ParameterPayload {
-    uint256 offset;
+    uint256 location;
     uint256 size;
     bytes raw;
     ParameterPayload[] children;
