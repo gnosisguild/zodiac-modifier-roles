@@ -67,12 +67,18 @@ abstract contract PermissionChecker is Core {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view {
+    ) internal view returns (Tracking[] memory) {
         if (!roles[roleId].members[msg.sender]) {
             revert NoMembership();
         }
 
-        Status status = checkTransaction(roleId, to, value, data, operation);
+        (Status status, Tracking[] memory toBeTracked) = checkTransaction(
+            roleId,
+            to,
+            value,
+            data,
+            operation
+        );
         // if (multisend == to) {
         //     status = checkMultisendTransaction(roleId, data);
         // } else {
@@ -81,6 +87,7 @@ abstract contract PermissionChecker is Core {
         if (status != Status.Ok) {
             revertWith(status);
         }
+        return toBeTracked;
     }
 
     /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
@@ -144,21 +151,24 @@ abstract contract PermissionChecker is Core {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Status) {
+    ) internal view returns (Status, Tracking[] memory toBeTracked) {
         if (data.length != 0 && data.length < 4) {
-            return Status.FunctionSignatureTooShort;
+            return (Status.FunctionSignatureTooShort, toBeTracked);
         }
 
         Role storage role = roles[roleId];
         TargetAddress storage target = role.targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
-            return _checkExecutionOptions(value, operation, target.options);
+            return (
+                _checkExecutionOptions(value, operation, target.options),
+                _trackNothing()
+            );
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
-                return Status.FunctionNotAllowed;
+                return (Status.FunctionNotAllowed, _trackNothing());
             }
 
             (bool isWildcarded, ExecutionOptions options) = ScopeConfig
@@ -166,11 +176,11 @@ abstract contract PermissionChecker is Core {
 
             Status status = _checkExecutionOptions(value, operation, options);
             if (status != Status.Ok) {
-                return status;
+                return (status, _trackNothing());
             }
 
             if (isWildcarded) {
-                return Status.Ok;
+                return (Status.Ok, _trackNothing());
             }
 
             return
@@ -180,7 +190,7 @@ abstract contract PermissionChecker is Core {
                     _loadBitmap(role.compValues, key)
                 );
         } else {
-            return Status.TargetAddressNotAllowed;
+            return (Status.TargetAddressNotAllowed, _trackNothing());
         }
     }
 
@@ -218,7 +228,7 @@ abstract contract PermissionChecker is Core {
         bytes calldata data,
         BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues
-    ) internal pure returns (Status) {
+    ) internal pure returns (Status, Tracking[] memory) {
         ParameterConfig[] memory parameters = _unpack(scopeConfig, compValues);
         ParameterPayload[] memory payloads = Decoder.inspect(
             data,
@@ -238,41 +248,52 @@ abstract contract PermissionChecker is Core {
         bytes calldata data,
         ParameterConfig[] memory variants,
         ParameterPayload[] memory payloads
-    ) internal pure returns (Status) {
+    ) internal pure returns (Status status, Tracking[] memory toBeTracked) {
         for (uint256 i; i < variants.length; ++i) {
-            Status status = _entrypoint(data, variants[i].children, payloads);
+            (status, toBeTracked) = _entrypoint(
+                data,
+                variants[i].children,
+                payloads
+            );
             if (status == Status.Ok) {
-                return status;
+                return (status, toBeTracked);
             }
         }
-        return Status.FunctionVariantNotAllowed;
+        return (Status.FunctionVariantNotAllowed, _trackNothing());
     }
 
     function _entrypoint(
         bytes calldata data,
         ParameterConfig[] memory parameters,
         ParameterPayload[] memory payloads
-    ) internal pure returns (Status) {
+    ) internal pure returns (Status, Tracking[] memory toBeTracked) {
         assert(parameters.length == payloads.length);
 
         for (uint256 i; i < parameters.length; ++i) {
-            Status status = _walk(data, parameters[i], payloads[i]);
+            (Status status, Tracking[] memory moreToBeTracked) = _walk(
+                data,
+                parameters[i],
+                payloads[i]
+            );
             if (status != Status.Ok) {
-                return status;
+                return (status, _trackNothing());
             }
+            toBeTracked = moreToBeTracked.length == 0
+                ? toBeTracked
+                : _trackMerge(toBeTracked, moreToBeTracked);
         }
-        return Status.Ok;
+        return (Status.Ok, toBeTracked);
     }
 
     function _walk(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) internal pure returns (Status) {
+    ) internal pure returns (Status, Tracking[] memory) {
         assert(parameter._type != ParameterType.Function);
 
         if (!parameter.isScoped) {
-            return Status.Ok;
+            return (Status.Ok, _trackNothing());
         }
 
         Comparison comp = parameter.comp;
@@ -300,71 +321,89 @@ abstract contract PermissionChecker is Core {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status status, Tracking[] memory toBeTracked) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            if (_walk(data, parameter.children[i], payload) == Status.Ok) {
-                return status;
+            (status, toBeTracked) = _walk(data, parameter.children[i], payload);
+            if (status == Status.Ok) {
+                return (status, toBeTracked);
             }
         }
-        return Status.ParameterNotOneOfAllowed;
+        return (Status.ParameterNotOneOfAllowed, _trackNothing());
     }
 
     function _matches(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status, Tracking[] memory toBeTracked) {
         if (parameter.children.length != payload.children.length) {
-            return Status.ParameterNotAMatch;
+            return (Status.ParameterNotAMatch, _trackNothing());
         }
 
         for (uint256 i; i < parameter.children.length; ++i) {
-            status = _walk(data, parameter.children[i], payload.children[i]);
+            (Status status, Tracking[] memory moreToBeTracked) = _walk(
+                data,
+                parameter.children[i],
+                payload.children[i]
+            );
             if (status != Status.Ok) {
-                // TODO include nested errors
-                return Status.ParameterNotAMatch;
+                return (Status.ParameterNotAMatch, _trackNothing());
             }
+            toBeTracked = moreToBeTracked.length == 0
+                ? toBeTracked
+                : _trackMerge(toBeTracked, moreToBeTracked);
         }
-        return Status.Ok;
+
+        return (Status.Ok, toBeTracked);
     }
 
     function _every(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status, Tracking[] memory tobeTracked) {
         for (uint256 i; i < payload.children.length; ++i) {
-            status = _walk(data, parameter.children[0], payload.children[i]);
+            (Status status, Tracking[] memory moreToBeTracked) = _walk(
+                data,
+                parameter.children[0],
+                payload.children[i]
+            );
             if (status != Status.Ok) {
-                // TODO make nested errors visible
-                return Status.ArrayElementsNotAllowed;
+                return (Status.ArrayElementsNotAllowed, _trackNothing());
             }
+            tobeTracked = moreToBeTracked.length == 0
+                ? tobeTracked
+                : _trackMerge(tobeTracked, moreToBeTracked);
         }
-        return Status.Ok;
+        return (Status.Ok, tobeTracked);
     }
 
     function _some(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status status, Tracking[] memory toBeTracked) {
         for (uint256 i; i < payload.children.length; ++i) {
-            status = _walk(data, parameter.children[0], payload.children[i]);
+            (status, toBeTracked) = _walk(
+                data,
+                parameter.children[0],
+                payload.children[i]
+            );
             if (status == Status.Ok) {
-                return status;
+                return (status, toBeTracked);
             }
         }
-        return Status.ArrayElementsSomeNotAllowed;
+        return (Status.ArrayElementsSomeNotAllowed, _trackNothing());
     }
 
     function _subset(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status, Tracking[] memory toBeTracked) {
         ParameterPayload[] memory values = payload.children;
         if (values.length == 0) {
-            return Status.ParameterNotSubsetOfAllowed;
+            return (Status.ParameterNotSubsetOfAllowed, _trackNothing());
         }
         ParameterConfig[] memory compValues = parameter.children;
 
@@ -372,27 +411,34 @@ abstract contract PermissionChecker is Core {
         for (uint256 i; i < values.length; ++i) {
             bool found = false;
             for (uint256 j; j < compValues.length; ++j) {
-                if (
-                    taken & (1 << j) == 0 &&
-                    _walk(data, compValues[j], values[i]) == Status.Ok
-                ) {
-                    taken |= 1 << j;
+                if (taken & (1 << j) != 0) continue;
+
+                (Status status, Tracking[] memory moreToBeTracked) = _walk(
+                    data,
+                    compValues[j],
+                    values[i]
+                );
+                if (status == Status.Ok) {
                     found = true;
+                    taken |= 1 << j;
+                    toBeTracked = moreToBeTracked.length == 0
+                        ? toBeTracked
+                        : _trackMerge(toBeTracked, moreToBeTracked);
                     break;
                 }
             }
             if (!found) {
-                return Status.ParameterNotSubsetOfAllowed;
+                return (Status.ParameterNotSubsetOfAllowed, _trackNothing());
             }
         }
-        return Status.Ok;
+        return (Status.Ok, toBeTracked);
     }
 
     function _compare(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status) {
+    ) private pure returns (Status status, Tracking[] memory) {
         assert(
             parameter.comp == Comparison.EqualTo ||
                 parameter.comp == Comparison.GreaterThan ||
@@ -401,19 +447,22 @@ abstract contract PermissionChecker is Core {
 
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
-        bytes32 value = _value(data, parameter._type, payload);
+        bytes32 value = _pluck(data, parameter._type, payload);
 
         if (comp == Comparison.EqualTo && value != compValue) {
-            return Status.ParameterNotAllowed;
+            status = Status.ParameterNotAllowed;
         } else if (comp == Comparison.GreaterThan && value <= compValue) {
-            return Status.ParameterLessThanAllowed;
+            status = Status.ParameterLessThanAllowed;
         } else if (comp == Comparison.LessThan && value >= compValue) {
-            return Status.ParameterGreaterThanAllowed;
+            status = Status.ParameterGreaterThanAllowed;
+        } else {
+            status = Status.Ok;
         }
-        return Status.Ok;
+
+        return (status, _trackNothing());
     }
 
-    function _value(
+    function _pluck(
         bytes calldata data,
         ParameterType paramType,
         ParameterPayload memory payload
@@ -426,6 +475,29 @@ abstract contract PermissionChecker is Core {
             return bytes32(payload.raw);
         } else {
             return keccak256(payload.raw);
+        }
+    }
+
+    function _trackNothing() private pure returns (Tracking[] memory result) {
+        return result;
+    }
+
+    function _trackMerge(
+        Tracking[] memory t1,
+        Tracking[] memory t2
+    ) private pure returns (Tracking[] memory result) {
+        if (t1.length == 0) return t2;
+        if (t2.length == 0) return t1;
+
+        result = new Tracking[](t1.length + t2.length);
+
+        uint i;
+        for (i; i < t1.length; ++i) {
+            result[i] = t1[i];
+        }
+
+        for (uint256 j; j < t2.length; ++j) {
+            result[i++] = t2[j];
         }
     }
 

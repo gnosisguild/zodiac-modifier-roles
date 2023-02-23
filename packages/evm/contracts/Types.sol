@@ -37,6 +37,11 @@ enum Clearance {
     Function
 }
 
+struct TypeTopology {
+    ParameterType _type;
+    TypeTopology[] children;
+}
+
 struct ParameterConfigFlat {
     bool isScoped;
     uint16 parent;
@@ -52,17 +57,16 @@ struct ParameterConfig {
     bytes32 compValue;
     ParameterConfig[] children;
 }
-
-struct TypeTopology {
-    ParameterType _type;
-    TypeTopology[] children;
-}
-
 struct ParameterPayload {
     uint256 location;
     uint256 size;
     bytes raw;
     ParameterPayload[] children;
+}
+
+struct Tracking {
+    ParameterConfig config;
+    ParameterPayload payload;
 }
 
 struct TargetAddress {
