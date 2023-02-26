@@ -6,27 +6,19 @@ import "./Types.sol";
 
 abstract contract Core is OwnableUpgradeable {
     mapping(uint16 => Role) internal roles;
+    mapping(uint16 => Allowance) internal allowances;
 
-    function _storeBitmap(
-        mapping(bytes32 => bytes32) storage bitmap,
+    function _store(
+        Role storage role,
         bytes32 key,
-        BitmapBuffer memory value
-    ) internal virtual;
-
-    function _loadBitmap(
-        mapping(bytes32 => bytes32) storage bitmap,
-        bytes32 key
-    ) internal view virtual returns (BitmapBuffer memory);
-
-    function _pack(
         ParameterConfigFlat[] calldata config,
         ExecutionOptions options
-    ) internal pure virtual returns (BitmapBuffer memory, BitmapBuffer memory);
+    ) internal virtual;
 
-    function _unpack(
-        BitmapBuffer memory scopeConfig,
-        BitmapBuffer memory compValues
-    ) internal pure virtual returns (ParameterConfig[] memory result);
+    function _load(
+        Role storage role,
+        bytes32 key
+    ) internal view virtual returns (ParameterConfig[] memory result);
 
     function _key(
         address targetAddress,

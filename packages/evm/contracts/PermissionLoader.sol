@@ -9,42 +9,55 @@ import "./Topology.sol";
 import "./bitmaps/ScopeConfig.sol";
 import "./bitmaps/CompValues.sol";
 
-abstract contract PermissionPacker is Core {
-    function _storeBitmap(
-        mapping(bytes32 => bytes32) storage bitmap,
+abstract contract PermissionLoader is Core {
+    function _store(
+        Role storage role,
         bytes32 key,
-        BitmapBuffer memory value
+        ParameterConfigFlat[] calldata parameters,
+        ExecutionOptions options
     ) internal override {
-        bytes32 header = value.payload[0];
-        uint256 pages = uint256(header) >> 251;
+        (
+            BitmapBuffer memory scopeConfig,
+            BitmapBuffer memory compValues
+        ) = _packParameters(parameters, options);
 
-        bitmap[key] = header;
-        for (uint256 i = 1; i < pages; ++i) {
-            bitmap[_key(key, i)] = value.payload[i];
-        }
+        _storeBitmap(role.scopeConfig, key, scopeConfig);
+        _storeBitmap(role.compValues, key, compValues);
     }
 
-    function _loadBitmap(
-        mapping(bytes32 => bytes32) storage bitmap,
+    function _load(
+        Role storage role,
         bytes32 key
-    ) internal view override returns (BitmapBuffer memory result) {
-        bytes32 header = bitmap[key];
-        uint256 pages = uint256(header) >> 251;
+    ) internal view override returns (ParameterConfig[] memory result) {
+        BitmapBuffer memory scopeConfig = _loadBitmap(role.scopeConfig, key);
+        BitmapBuffer memory compValues = _loadBitmap(role.compValues, key);
+        result = _unpackParameters(scopeConfig, compValues);
+        _loadAllowances(result);
+    }
 
-        result.payload = new bytes32[](pages);
-        result.payload[0] = header;
-        for (uint256 i = 1; i < pages; ++i) {
-            result.payload[i] = bitmap[_key(key, i)];
+    function _loadAllowances(ParameterConfig[] memory result) private view {
+        uint256 length = result.length;
+        for (uint256 i; i < length; ++i) {
+            if (result[i].comp == Comparison.WithinLimit) {
+                uint16 allowanceId = uint16(uint256(result[i].compValue));
+                (result[i].allowance, ) = accruedBalance(
+                    allowances[allowanceId],
+                    block.timestamp
+                );
+            }
+
+            if (result[i].children.length > 0) {
+                _loadAllowances(result[i].children);
+            }
         }
     }
 
-    function _pack(
+    function _packParameters(
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     )
-        internal
+        private
         pure
-        override
         returns (
             BitmapBuffer memory scopeConfig,
             BitmapBuffer memory compValues
@@ -67,10 +80,10 @@ abstract contract PermissionPacker is Core {
         }
     }
 
-    function _unpack(
+    function _unpackParameters(
         BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues
-    ) internal pure override returns (ParameterConfig[] memory result) {
+    ) internal pure returns (ParameterConfig[] memory result) {
         (
             uint8[] memory parents,
             Compression.Mode[] memory compressions
@@ -79,7 +92,7 @@ abstract contract PermissionPacker is Core {
         (uint256 left, uint256 right) = Topology.rootBounds(parents);
         result = new ParameterConfig[](right - left + 1);
         for (uint256 i = left; i <= right; ++i) {
-            result[i] = _unpack(
+            result[i] = _unpackParameter(
                 scopeConfig,
                 compValues,
                 parents,
@@ -89,7 +102,7 @@ abstract contract PermissionPacker is Core {
         }
     }
 
-    function _unpack(
+    function _unpackParameter(
         BitmapBuffer memory scopeConfig,
         BitmapBuffer memory compValues,
         uint8[] memory parents,
@@ -97,18 +110,21 @@ abstract contract PermissionPacker is Core {
         uint256 index
     ) private pure returns (ParameterConfig memory result) {
         result = ScopeConfig.unpackParameter(scopeConfig, index);
-        result.compValue = _compValue(
-            compValues,
-            index,
-            result._type,
-            compressions
-        );
+
+        if (compressions[index] != Compression.Mode.Empty) {
+            result.compValue = _unpackCompValue(
+                compValues,
+                index,
+                result._type,
+                compressions
+            );
+        }
 
         (uint256 left, uint256 right) = Topology.childrenBounds(parents, index);
         if (left <= right) {
             result.children = new ParameterConfig[](right - left + 1);
             for (uint256 j = left; j <= right; j++) {
-                result.children[j - left] = _unpack(
+                result.children[j - left] = _unpackParameter(
                     scopeConfig,
                     compValues,
                     parents,
@@ -119,7 +135,7 @@ abstract contract PermissionPacker is Core {
         }
     }
 
-    function _compValue(
+    function _unpackCompValue(
         BitmapBuffer memory compValues,
         uint256 index,
         ParameterType _type,
@@ -141,5 +157,33 @@ abstract contract PermissionPacker is Core {
         }
 
         return CompValues.unpack(compValues, _type, compression, offset);
+    }
+
+    function _storeBitmap(
+        mapping(bytes32 => bytes32) storage bitmap,
+        bytes32 key,
+        BitmapBuffer memory value
+    ) private {
+        bytes32 header = value.payload[0];
+        uint256 pages = uint256(header) >> 251;
+
+        bitmap[key] = header;
+        for (uint256 i = 1; i < pages; ++i) {
+            bitmap[_key(key, i)] = value.payload[i];
+        }
+    }
+
+    function _loadBitmap(
+        mapping(bytes32 => bytes32) storage bitmap,
+        bytes32 key
+    ) private view returns (BitmapBuffer memory result) {
+        bytes32 header = bitmap[key];
+        uint256 pages = uint256(header) >> 251;
+
+        result.payload = new bytes32[](pages);
+        result.payload[0] = header;
+        for (uint256 i = 1; i < pages; ++i) {
+            result.payload[i] = bitmap[_key(key, i)];
+        }
     }
 }

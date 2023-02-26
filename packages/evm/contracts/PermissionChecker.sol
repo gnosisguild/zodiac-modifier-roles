@@ -53,6 +53,11 @@ abstract contract PermissionChecker is Core {
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
 
+    /// Allowance exceeded
+    error AllowanceExceeded();
+    /// Allowance was double spent
+    error AllowanceDoubleSpend();
+
     /*
      *
      * CHECKERS
@@ -162,13 +167,13 @@ abstract contract PermissionChecker is Core {
         if (target.clearance == Clearance.Target) {
             return (
                 _checkExecutionOptions(value, operation, target.options),
-                _trackNothing()
+                _track()
             );
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
-                return (Status.FunctionNotAllowed, _trackNothing());
+                return (Status.FunctionNotAllowed, _track());
             }
 
             (bool isWildcarded, ExecutionOptions options) = ScopeConfig
@@ -176,21 +181,22 @@ abstract contract PermissionChecker is Core {
 
             Status status = _checkExecutionOptions(value, operation, options);
             if (status != Status.Ok) {
-                return (status, _trackNothing());
+                return (status, _track());
             }
 
             if (isWildcarded) {
-                return (Status.Ok, _trackNothing());
+                return (Status.Ok, _track());
             }
 
-            return
-                _checkScope(
-                    data,
-                    _loadBitmap(role.scopeConfig, key),
-                    _loadBitmap(role.compValues, key)
-                );
+            ParameterConfig[] memory parameters = _load(role, key);
+            ParameterPayload[] memory payloads = Decoder.inspect(
+                data,
+                Topology.typeTree(parameters)
+            );
+
+            return _checkScope(data, parameters, payloads);
         } else {
-            return (Status.TargetAddressNotAllowed, _trackNothing());
+            return (Status.TargetAddressNotAllowed, _track());
         }
     }
 
@@ -226,15 +232,9 @@ abstract contract PermissionChecker is Core {
 
     function _checkScope(
         bytes calldata data,
-        BitmapBuffer memory scopeConfig,
-        BitmapBuffer memory compValues
+        ParameterConfig[] memory parameters,
+        ParameterPayload[] memory payloads
     ) internal pure returns (Status, Tracking[] memory) {
-        ParameterConfig[] memory parameters = _unpack(scopeConfig, compValues);
-        ParameterPayload[] memory payloads = Decoder.inspect(
-            data,
-            Topology.typeTree(parameters)
-        );
-
         if (Topology.isVariantEntrypoint(parameters)) {
             return _checkVariants(data, parameters[0].children, payloads);
         } else if (Topology.isExplicitEntrypoint(parameters)) {
@@ -259,7 +259,7 @@ abstract contract PermissionChecker is Core {
                 return (status, toBeTracked);
             }
         }
-        return (Status.FunctionVariantNotAllowed, _trackNothing());
+        return (Status.FunctionVariantNotAllowed, _track());
     }
 
     function _entrypoint(
@@ -276,7 +276,7 @@ abstract contract PermissionChecker is Core {
                 payloads[i]
             );
             if (status != Status.Ok) {
-                return (status, _trackNothing());
+                return (status, _track());
             }
             toBeTracked = moreToBeTracked.length == 0
                 ? toBeTracked
@@ -293,7 +293,7 @@ abstract contract PermissionChecker is Core {
         assert(parameter._type != ParameterType.Function);
 
         if (!parameter.isScoped) {
-            return (Status.Ok, _trackNothing());
+            return (Status.Ok, _track());
         }
 
         Comparison comp = parameter.comp;
@@ -328,7 +328,7 @@ abstract contract PermissionChecker is Core {
                 return (status, toBeTracked);
             }
         }
-        return (Status.ParameterNotOneOfAllowed, _trackNothing());
+        return (Status.ParameterNotOneOfAllowed, _track());
     }
 
     function _matches(
@@ -337,7 +337,7 @@ abstract contract PermissionChecker is Core {
         ParameterPayload memory payload
     ) private pure returns (Status, Tracking[] memory toBeTracked) {
         if (parameter.children.length != payload.children.length) {
-            return (Status.ParameterNotAMatch, _trackNothing());
+            return (Status.ParameterNotAMatch, _track());
         }
 
         for (uint256 i; i < parameter.children.length; ++i) {
@@ -347,7 +347,7 @@ abstract contract PermissionChecker is Core {
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ParameterNotAMatch, _trackNothing());
+                return (Status.ParameterNotAMatch, _track());
             }
             toBeTracked = moreToBeTracked.length == 0
                 ? toBeTracked
@@ -369,7 +369,7 @@ abstract contract PermissionChecker is Core {
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ArrayElementsNotAllowed, _trackNothing());
+                return (Status.ArrayElementsNotAllowed, _track());
             }
             tobeTracked = moreToBeTracked.length == 0
                 ? tobeTracked
@@ -393,7 +393,7 @@ abstract contract PermissionChecker is Core {
                 return (status, toBeTracked);
             }
         }
-        return (Status.ArrayElementsSomeNotAllowed, _trackNothing());
+        return (Status.ArrayElementsSomeNotAllowed, _track());
     }
 
     function _subset(
@@ -403,7 +403,7 @@ abstract contract PermissionChecker is Core {
     ) private pure returns (Status, Tracking[] memory toBeTracked) {
         ParameterPayload[] memory values = payload.children;
         if (values.length == 0) {
-            return (Status.ParameterNotSubsetOfAllowed, _trackNothing());
+            return (Status.ParameterNotSubsetOfAllowed, _track());
         }
         ParameterConfig[] memory compValues = parameter.children;
 
@@ -428,10 +428,31 @@ abstract contract PermissionChecker is Core {
                 }
             }
             if (!found) {
-                return (Status.ParameterNotSubsetOfAllowed, _trackNothing());
+                return (Status.ParameterNotSubsetOfAllowed, _track());
             }
         }
         return (Status.Ok, toBeTracked);
+    }
+
+    function _withinLimit(
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status status, Tracking[] memory) {
+        // get compValue
+        assert(parameter._type == ParameterType.Static);
+
+        uint256 amount = uint256(_pluck(data, parameter._type, payload));
+        if (amount > parameter.allowance) {
+            return (Status.AllowanceExceeded, _track());
+        }
+
+        Tracking memory toBeTracked = Tracking({
+            config: parameter,
+            payload: payload
+        });
+
+        return (Status.Ok, _track(toBeTracked));
     }
 
     function _compare(
@@ -459,7 +480,7 @@ abstract contract PermissionChecker is Core {
             status = Status.Ok;
         }
 
-        return (status, _trackNothing());
+        return (status, _track());
     }
 
     function _pluck(
@@ -478,8 +499,15 @@ abstract contract PermissionChecker is Core {
         }
     }
 
-    function _trackNothing() private pure returns (Tracking[] memory result) {
+    function _track() private pure returns (Tracking[] memory result) {
         return result;
+    }
+
+    function _track(
+        Tracking memory tracking
+    ) private pure returns (Tracking[] memory result) {
+        result = new Tracking[](0);
+        result[0] = tracking;
     }
 
     function _trackMerge(
@@ -530,9 +558,13 @@ abstract contract PermissionChecker is Core {
             revert ArrayElementsNotAllowed();
         } else if (status == Status.ArrayElementsSomeNotAllowed) {
             revert ArrayElementsSomeNotAllowed();
-        } else {
-            assert(status == Status.ParameterNotSubsetOfAllowed);
+        } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
+        } else if (status == Status.AllowanceExceeded) {
+            revert AllowanceExceeded();
+        } else {
+            assert(status == Status.AllowanceDoubleSpend);
+            revert AllowanceDoubleSpend();
         }
     }
 
@@ -563,6 +595,10 @@ abstract contract PermissionChecker is Core {
         /// Array elements do not meet allowed criteria for at least one element
         ArrayElementsSomeNotAllowed,
         /// Parameter value not a subset of allowed
-        ParameterNotSubsetOfAllowed
+        ParameterNotSubsetOfAllowed,
+        /// Allowance exceeded
+        AllowanceExceeded,
+        /// Allowance was double spent
+        AllowanceDoubleSpend
     }
 }

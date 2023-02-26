@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
+import "./Allowance.sol";
+
 struct BitmapBuffer {
     bytes32[] payload;
 }
@@ -21,7 +23,8 @@ enum Comparison {
     Matches,
     Some,
     Every,
-    Subset
+    Subset,
+    WithinLimit
 }
 
 enum ExecutionOptions {
@@ -55,6 +58,7 @@ struct ParameterConfig {
     ParameterType _type;
     Comparison comp;
     bytes32 compValue;
+    uint256 allowance;
     ParameterConfig[] children;
 }
 struct ParameterPayload {
@@ -62,11 +66,6 @@ struct ParameterPayload {
     uint256 size;
     bytes raw;
     ParameterPayload[] children;
-}
-
-struct Tracking {
-    ParameterConfig config;
-    ParameterPayload payload;
 }
 
 struct TargetAddress {
@@ -79,4 +78,9 @@ struct Role {
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => bytes32) scopeConfig;
     mapping(bytes32 => bytes32) compValues;
+}
+
+struct Tracking {
+    ParameterConfig config;
+    ParameterPayload payload;
 }
