@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import "./PermissionPacker.sol";
+import "./PermissionLoader.sol";
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
 
 contract Roles is
     Modifier,
-    PermissionPacker,
+    PermissionLoader,
     PermissionBuilder,
     PermissionChecker
 {

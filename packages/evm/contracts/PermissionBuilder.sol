@@ -120,13 +120,7 @@ abstract contract PermissionBuilder is Core {
         Role storage role = roles[roleId];
         bytes32 key = _key(targetAddress, selector);
 
-        (
-            BitmapBuffer memory scopeConfig,
-            BitmapBuffer memory compValues
-        ) = _pack(parameters, options);
-
-        _storeBitmap(role.scopeConfig, key, scopeConfig);
-        _storeBitmap(role.compValues, key, compValues);
+        _store(role, key, parameters, options);
 
         emit ScopeFunction(
             roleId,
