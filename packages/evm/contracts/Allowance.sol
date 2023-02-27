@@ -13,8 +13,8 @@ struct Allowance {
     uint128 maxBalance;
     uint64 refillInterval;
     // only these these two fields are updated on accrual, should live in the same word
-    uint64 refillTimestamp;
     uint128 balance;
+    uint64 refillTimestamp;
 }
 
 function accruedBalance(

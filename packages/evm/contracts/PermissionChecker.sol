@@ -55,8 +55,8 @@ abstract contract PermissionChecker is Core {
 
     /// Allowance exceeded
     error AllowanceExceeded();
+
     /// Allowance was double spent
-    error AllowanceDoubleSpend();
 
     /*
      *
@@ -303,14 +303,16 @@ abstract contract PermissionChecker is Core {
             comp == Comparison.LessThan
         ) {
             return _compare(data, parameter, payload);
-        } else if (comp == Comparison.OneOf) {
-            return _oneOf(data, parameter, payload);
         } else if (comp == Comparison.Matches) {
             return _matches(data, parameter, payload);
+        } else if (comp == Comparison.OneOf) {
+            return _oneOf(data, parameter, payload);
         } else if (comp == Comparison.Some) {
             return _some(data, parameter, payload);
         } else if (comp == Comparison.Every) {
             return _every(data, parameter, payload);
+        } else if (comp == Comparison.WithinLimit) {
+            return _withinLimit(data, parameter, payload);
         } else {
             assert(comp == Comparison.Subset);
             return _subset(data, parameter, payload);
@@ -447,12 +449,10 @@ abstract contract PermissionChecker is Core {
             return (Status.AllowanceExceeded, _track());
         }
 
-        Tracking memory toBeTracked = Tracking({
-            config: parameter,
-            payload: payload
-        });
-
-        return (Status.Ok, _track(toBeTracked));
+        return (
+            Status.Ok,
+            _track(Tracking({config: parameter, payload: payload}))
+        );
     }
 
     function _compare(
@@ -506,7 +506,7 @@ abstract contract PermissionChecker is Core {
     function _track(
         Tracking memory tracking
     ) private pure returns (Tracking[] memory result) {
-        result = new Tracking[](0);
+        result = new Tracking[](1);
         result[0] = tracking;
     }
 
@@ -560,11 +560,9 @@ abstract contract PermissionChecker is Core {
             revert ArrayElementsSomeNotAllowed();
         } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
-        } else if (status == Status.AllowanceExceeded) {
-            revert AllowanceExceeded();
         } else {
-            assert(status == Status.AllowanceDoubleSpend);
-            revert AllowanceDoubleSpend();
+            assert(status == Status.AllowanceExceeded);
+            revert AllowanceExceeded();
         }
     }
 

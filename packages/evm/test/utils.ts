@@ -126,6 +126,7 @@ export enum Comparison {
   Some,
   Every,
   Subset,
+  WithinLimit,
 }
 
 export enum ExecutionOptions {
