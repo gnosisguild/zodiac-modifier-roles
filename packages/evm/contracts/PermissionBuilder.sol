@@ -29,6 +29,8 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     );
 
+    error AllowanceDoubleSpend(uint16 allowanceId);
+
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
@@ -129,5 +131,49 @@ abstract contract PermissionBuilder is Core {
             parameters,
             options
         );
+    }
+
+    function setAllowance(
+        uint16 id,
+        uint128 balance,
+        uint128 maxBalance,
+        uint128 refillAmount,
+        uint64 refillInterval,
+        uint64 refillTimestamp
+    ) external onlyOwner {
+        allowances[id] = Allowance({
+            refillAmount: refillAmount,
+            refillInterval: refillInterval,
+            refillTimestamp: refillTimestamp,
+            balance: balance,
+            maxBalance: maxBalance
+        });
+    }
+
+    function track(Tracking[] memory toBeTracked) internal {
+        uint256 length = toBeTracked.length;
+        for (uint256 i; i < length; ++i) {
+            ParameterConfig memory parameter = toBeTracked[i].config;
+            ParameterPayload memory payload = toBeTracked[i].payload;
+            uint16 id = uint16(uint256(parameter.compValue));
+            Allowance memory allowance = allowances[id];
+            (uint128 balance, uint64 refillTimestamp) = accruedBalance(
+                allowance,
+                block.timestamp
+            );
+            uint128 amount = uint128(uint256(bytes32(payload.raw)));
+            // This was already previously authorized at the checker pass.
+            // However, it is possible that the same limit is used across
+            // different parameters (which is not very common), but it's
+            // something we don't want to restrict. Therefore, we read from
+            // storage again (we don't rely on the allowance value initially
+            // loaded to ParameterConfig). We repeat the accrual math and consider
+            // that if it fails here, then it may be due to a double spend.
+            if (amount > balance) {
+                revert AllowanceDoubleSpend(id);
+            }
+            allowances[id].balance = balance - amount;
+            allowances[id].refillTimestamp = refillTimestamp;
+        }
     }
 }

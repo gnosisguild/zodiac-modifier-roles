@@ -88,6 +88,7 @@ library CompValues {
         return
             comp == Comparison.EqualTo ||
             comp == Comparison.GreaterThan ||
-            comp == Comparison.LessThan;
+            comp == Comparison.LessThan ||
+            comp == Comparison.WithinLimit;
     }
 }

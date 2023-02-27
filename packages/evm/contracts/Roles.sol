@@ -111,7 +111,16 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        check(defaultRoles[msg.sender], multisend, to, value, data, operation);
+        track(
+            check(
+                defaultRoles[msg.sender],
+                multisend,
+                to,
+                value,
+                data,
+                operation
+            )
+        );
         return exec(to, value, data, operation);
     }
 
@@ -127,7 +136,16 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        check(defaultRoles[msg.sender], multisend, to, value, data, operation);
+        track(
+            check(
+                defaultRoles[msg.sender],
+                multisend,
+                to,
+                value,
+                data,
+                operation
+            )
+        );
         return execAndReturnData(to, value, data, operation);
     }
 
@@ -147,7 +165,7 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        check(role, multisend, to, value, data, operation);
+        track(check(role, multisend, to, value, data, operation));
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -170,7 +188,7 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        check(role, multisend, to, value, data, operation);
+        track(check(role, multisend, to, value, data, operation));
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
