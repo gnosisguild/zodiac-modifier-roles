@@ -13,6 +13,6 @@ export const allowLido = (): PresetAllowEntry[] => {
       signature: "submit(address)",
       send: true,
     },
-    ...allowErc20Approve([STETH, WSTETH], [WSTETH]),
+    ...allowErc20Approve([STETH], [WSTETH]),
   ]
 }

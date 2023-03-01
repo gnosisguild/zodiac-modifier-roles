@@ -1,4 +1,8 @@
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
+import { stat } from "fs"
+
+import { hashMessage } from "ethers/lib/utils"
+
+import { ExecutionOptions, RolePreset } from "../../types"
 import { allowErc20Approve } from "../helpers/erc20"
 import {
   dynamic32Equal,
@@ -9,8 +13,8 @@ import {
   dynamicEqual,
   staticOneOf,
 } from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { ZERO_ADDRESS } from "../gnosisChain/addresses"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -48,7 +52,7 @@ const sETH2 = "0xFe2e637202056d30016725477c5da089Ab0A043A"
 const rETH2 = "0x20BC832ca081b91433ff6c17f85701B6e92486c5"
 const SWISE = "0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2"
 
-const preset = {
+const preset: RolePreset = {
   network: 1,
   allow: [
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
@@ -64,7 +68,7 @@ const preset = {
       params: {
         [0]: staticEqual(ZERO_ADDRESS, "address"),
       },
-      send: true,
+      options: ExecutionOptions.Send,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
     { targetAddress: wstETH, signature: "unwrap(uint256)" },
@@ -78,14 +82,14 @@ const preset = {
       targetAddress: stkAAVE,
       signature: "stake(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR),
+        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
     {
       targetAddress: stkAAVE,
       signature: "claimRewards(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR),
+        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
 
@@ -100,7 +104,7 @@ const preset = {
       targetAddress: stkAAVE,
       signature: "redeem(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR),
+        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
 
@@ -181,7 +185,7 @@ const preset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR),
+        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
         [1]: subsetOf(
           [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -207,7 +211,7 @@ const preset = {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
-        [9]: staticEqual(AVATAR),
+        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
@@ -242,7 +246,7 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR),
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
 
@@ -256,7 +260,7 @@ const preset = {
     {
       targetAddress: STAKEWISE_ETH2_STAKING,
       signature: "stake()",
-      send: true,
+      options: ExecutionOptions.Send,
     },
 
     //By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
@@ -264,7 +268,7 @@ const preset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       params: {
-        [1]: staticEqual(AVATAR),
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
         [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
       },
     },
@@ -287,7 +291,7 @@ const preset = {
         [0]: staticEqual(WETH, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR),
+        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     },
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
@@ -321,7 +325,7 @@ const preset = {
     {
       targetAddress: WETH,
       signature: "deposit()",
-      send: true,
+      options: ExecutionOptions.Send,
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -378,129 +382,119 @@ const preset = {
           ],
           "address[]"
         ),
-        [3]: staticEqual(AVATAR),
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
       },
     }, */
 
     // Swap COMP for WETH
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(COMP, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap AAVE for WETH
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(AAVE, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap rETH2 for sETH2
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(rETH2, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap SWISE for sETH2
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(SWISE, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap sETH2 for WETH
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(sETH2, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap WETH for sETH2/USDC/USDT/DAI/WBTC
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(WETH, "address"),
         [1]: staticOneOf([sETH2, USDC, USDT, DAI, WBTC], "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap USDC for WETH/USDT/DAI
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(USDC, "address"),
         [1]: staticOneOf([WETH, USDT, DAI], "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap DAI for WETH/USDC/USDT
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(DAI, "address"),
         [1]: staticOneOf([WETH, USDC, USDT], "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap USDT for WETH/USDC/DAI
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(USDT, "address"),
         [1]: staticOneOf([WETH, USDC, DAI], "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
     // Swap WBTC for WETH
     {
       targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      signature: "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+      }
     },
 
     // THIS FUNCTION CAN'T BE WHITELISTED SINCE THE ROLES MODULE V1 DOES NOT SUPPORT STRUCTS WITH DYNAMIC LENGTH PARAMETERS
@@ -508,7 +502,7 @@ const preset = {
       targetAddress: UV3_ROUTER_2,
       signature: "exactInput((bytes,address,uint256,uint256))",
       params: {
-        [2]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
         [5]: dynamicEqual("0xfe2e637202056d30016725477c5da089ab0a043a000064c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "bytes")
         [6]: dynamicOneOf(
           [
@@ -1068,9 +1062,9 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR), // recipient
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
@@ -1088,9 +1082,9 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR), // recipient
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
@@ -1108,9 +1102,9 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR), // recipient
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
@@ -1128,9 +1122,9 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR), // recipient
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
@@ -1148,9 +1142,9 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR), // recipient
+        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
@@ -1161,7 +1155,5 @@ const preset = {
       },
     },
   ],
-  placeholders: { AVATAR },
-} satisfies RolePreset
-
+}
 export default preset

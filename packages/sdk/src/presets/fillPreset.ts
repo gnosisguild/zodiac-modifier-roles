@@ -35,16 +35,18 @@ const fillPreset = <P extends RolePreset>(
   const fullyClearedTargets = preset.allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => ({
-      address: entry.targetAddress,
+      address: entry.targetAddress.toLowerCase(),
       clearance: Clearance.Target,
       executionOptions: execOptions(entry),
       functions: [],
     }))
 
   const functionTargets = Object.entries(
-    groupBy(preset.allow.filter(isScoped), (entry) => entry.targetAddress)
+    groupBy(preset.allow.filter(isScoped), (entry) =>
+      entry.targetAddress.toLowerCase()
+    )
   ).map(([targetAddress, allowFunctions]) => ({
-    address: targetAddress,
+    address: targetAddress.toLowerCase(),
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
@@ -196,7 +198,7 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
   }, {} as Record<K, T[]>)
 
 const functionId = (entry: PresetFunction) =>
-  `${entry.targetAddress}.${
+  `${entry.targetAddress.toLowerCase()}.${
     "sighash" in entry ? entry.sighash : functionSighash(entry.signature)
   }`
 
