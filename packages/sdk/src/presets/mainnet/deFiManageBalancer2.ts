@@ -1,6 +1,4 @@
-import { hashMessage } from "ethers/lib/utils"
-import { stat } from "fs"
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ExecutionOptions } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
@@ -10,10 +8,8 @@ import {
   staticEqual,
   subsetOf,
 } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 //Tokens
@@ -84,7 +80,7 @@ const ELEMENT_ey_24FEB23 = "0x31cF4F5E9594718f8162866545E0d38C33Ad4A99"
 const ELEMENT_LP_eP_24FEB23 = "0x07f589eA6B789249C83992dD1eD324c3b80FD06b"
 const steCRV = "0x06325440D014e39736583c165C2963BA99fAf14E"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //LIDO
@@ -98,14 +94,14 @@ const preset: RolePreset = {
       targetAddress: stkAAVE,
       signature: "stake(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
     {
       targetAddress: stkAAVE,
       signature: "claimRewards(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -120,7 +116,7 @@ const preset: RolePreset = {
       targetAddress: stkAAVE,
       signature: "redeem(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -195,7 +191,7 @@ const preset: RolePreset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
         [1]: subsetOf(
           [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -262,18 +258,18 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      options: ExecutionOptions.Send,
+      send: true,
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
         [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(AVATAR),
       },
     },
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id
@@ -282,7 +278,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     */
 
@@ -291,7 +287,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     */
 
@@ -311,7 +307,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "unwrapWETH9(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
     {
@@ -319,7 +315,7 @@ const preset: RolePreset = {
       signature: "sweepToken(address,uint256,address)",
       params: {
         [0]: staticEqual(WBTC, "address"),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [2]: staticEqual(AVATAR),
       },
     },
 
@@ -349,7 +345,7 @@ const preset: RolePreset = {
       targetAddress: stMTA,
       signature: "delegate(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -382,7 +378,7 @@ const preset: RolePreset = {
       targetAddress: stMTA,
       signature: "withdraw(uint256,address,bool,bool)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -399,7 +395,7 @@ const preset: RolePreset = {
       signature:
         "batchBalanceAndTradeAction(address,(uint8,uint16,uint256,uint256,bool,bool,bytes32[])[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -428,8 +424,8 @@ const preset: RolePreset = {
           "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
     },
 
@@ -446,8 +442,8 @@ const preset: RolePreset = {
           "0xff083f57a556bfb3bbe46ea1b4fa154b2b1fbe88000200000000000000000030",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
     },
 
@@ -458,14 +454,14 @@ const preset: RolePreset = {
     {
       targetAddress: STAKEWISE_ETH2_STAKING,
       signature: "stake()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
         [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
       },
     },
@@ -480,7 +476,7 @@ const preset: RolePreset = {
         [0]: staticEqual(rETH2, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticEqual(500, "uint24"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -495,18 +491,18 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      options: ExecutionOptions.Send,
+      send: true,
       params: {
         [0]: staticEqual(WETH, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticEqual(3000, "uint24"),
-        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(AVATAR),
       },
     },
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //Increase liquidity: We cannot allow the increaseLiquidity function until we know the NFT id!!!
@@ -515,7 +511,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     */
 
@@ -524,7 +520,7 @@ const preset: RolePreset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "refundETH()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     */
 
@@ -547,7 +543,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "unwrapWETH9(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
     */
@@ -557,7 +553,7 @@ const preset: RolePreset = {
       signature: "sweepToken(address,uint256,address)",
       params: {
         [0]: staticEqual(sETH2, "address"),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [2]: staticEqual(AVATAR),
       },
     },
 
@@ -570,7 +566,7 @@ const preset: RolePreset = {
     {
       targetAddress: CURVE_STETH_ETH_POOL,
       signature: "add_liquidity(uint256[2],uint256)",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     {
       targetAddress: CURVE_STETH_ETH_POOL,
@@ -614,8 +610,8 @@ const preset: RolePreset = {
           "0x07f589ea6b789249c83992dd1ed324c3b80fd06b00020000000000000000034e",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
     },
     //Removing steCRV and Principal from Balancer Convergent pool
@@ -628,8 +624,8 @@ const preset: RolePreset = {
           "0x07f589ea6b789249c83992dd1ed324c3b80fd06b00020000000000000000034e",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
     },
     //Reedeming Principal token for steCRV
@@ -637,7 +633,7 @@ const preset: RolePreset = {
       targetAddress: ELEMENT_eP_24FEB23,
       signature: "withdrawPrincipal(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
     //Reedeming Yield token for steCRV
@@ -645,7 +641,7 @@ const preset: RolePreset = {
       targetAddress: ELEMENT_eP_24FEB23,
       signature: "withdrawInterest(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -661,8 +657,8 @@ const preset: RolePreset = {
         ),
         [2]: staticEqual(ELEMENT_eP_24FEB23, "address"),
         [3]: staticEqual(steCRV, "address"), //This could be removed
-        [6]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [8]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [6]: staticEqual(AVATAR),
+        [8]: staticEqual(AVATAR),
       },
     },
 
@@ -678,7 +674,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of COMP for DAI
@@ -687,7 +683,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -697,7 +693,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([AAVE, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of AAVE for DAI
@@ -706,7 +702,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([AAVE, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -716,7 +712,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([rETH2, sETH2, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of rETH2 for DAI
@@ -725,7 +721,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([rETH2, sETH2, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -735,7 +731,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([SWISE, sETH2, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of SWISE for DAI
@@ -744,7 +740,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([SWISE, sETH2, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -754,7 +750,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([sETH2, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -768,8 +764,10 @@ const preset: RolePreset = {
     {
       targetAddress: WETH,
       signature: "deposit()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset

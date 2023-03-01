@@ -107,7 +107,7 @@ type NetworkName<S extends SdkGetterName> = S extends `get${infer N}Sdk`
 
 type AllowKitMap = {
   [Key in NetworkName<SdkGetterName>]: AllowKit<
-    ReturnType<typeof ethSdk[`get${Capitalize<Key>}Sdk`]>
+    ReturnType<(typeof ethSdk)[`get${Capitalize<Key>}Sdk`]>
   >
 }
 
@@ -126,7 +126,7 @@ export const allow: AllowKitMap = Object.keys(sdkGetters).reduce(
 
 type ContractMap = {
   [Key in NetworkName<SdkGetterName>]: ReturnType<
-    typeof ethSdk[`get${Capitalize<Key>}Sdk`]
+    (typeof ethSdk)[`get${Capitalize<Key>}Sdk`]
   >
 }
 
