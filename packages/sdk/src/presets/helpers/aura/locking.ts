@@ -1,6 +1,6 @@
-import { PresetAllowEntry } from "../../../types"
 import { staticEqual } from "../../helpers/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../../placeholders"
+import { AVATAR } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
 
 //Tokens
@@ -46,7 +46,7 @@ export const allowAuraLocking = (): PresetAllowEntry[] => {
     {
       targetAddress: VLAURA_ADDRESS,
       signature: "getReward(address)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     {
       targetAddress: AURABAL_BASE_REWARD_POOL_ADDRESS,
@@ -55,7 +55,7 @@ export const allowAuraLocking = (): PresetAllowEntry[] => {
     {
       targetAddress: VLAURA_ADDRESS,
       signature: "lock(address,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     { targetAddress: VLAURA_ADDRESS, signature: "delegate(address)" },
     { targetAddress: VLAURA_ADDRESS, signature: "processExpiredLocks(bool)" },

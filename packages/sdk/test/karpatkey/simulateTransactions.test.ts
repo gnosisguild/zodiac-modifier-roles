@@ -1,5 +1,4 @@
 import { BigNumber } from "ethers"
-import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
@@ -8,19 +7,13 @@ import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarv
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
 import balancer1ManagePreset from "../../src/presets/mainnet/deFiManageBalancer1"
 import balancer2ManagePreset from "../../src/presets/mainnet/deFiManageBalancer2"
 import ens1ManagePreset from "../../src/presets/mainnet/deFiManageENS1"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
-import { RolePreset } from "../../src/types"
+import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
+import { RolePreset } from "../../src/presets/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
-import testManageTransactions from "./testTransactions/testManage"
 import balancerManage1Transactions from "./testTransactions/balancer1Manage"
 import balancerManage2Transactions from "./testTransactions/balancer2Manage"
 import ensManage1Transactions from "./testTransactions/ens1Manage"
@@ -28,6 +21,9 @@ import harvestMainnetTransactions from "./testTransactions/ethHarvest"
 import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
 import manageGnosisChainTransactions from "./testTransactions/gnoManage"
+
+type Configs = typeof KARPATKEY_ADDRESSES
+type Config = Configs["DAO_GNO"]
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
   const ROLE_ID = 1
@@ -40,7 +36,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const multiSend = await MultiSend.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
-    const avatar = (await Avatar.deploy()) as TestAvatar
+    const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const Permissions = await hre.ethers.getContractFactory("Permissions")
     const permissions = await Permissions.deploy()
@@ -54,7 +50,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles
+    )) as unknown as Roles
 
     await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
@@ -78,7 +74,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     transactions,
   }: {
     preset: RolePreset
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
+    config: Config
     transactions: {
       from: string
       value?: string
@@ -88,24 +84,16 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     }[]
   }) => {
     const { owner, modifier } = await setup()
+    const placeholderValues = {
+      AVATAR: config.AVATAR,
+      OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
+      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+    }
     const permissionUpdateTransactions = await encodeApplyPreset(
       modifier.address,
       ROLE_ID,
       preset,
-      {
-        [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.AVATAR]
-        ),
-        [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["bytes"],
-          [config.BRIDGED_SAFE]
-        ),
-        [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.BRIDGED_SAFE]
-        ),
-      },
+      placeholderValues,
       {
         currentPermissions: { targets: [] },
         network: 100, // this value won't be used
@@ -162,10 +150,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
 
-  const checkFrom = (
-    txs: { from: string }[],
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
-  ) => {
+  const checkFrom = (txs: { from: string }[], config: Config) => {
     txs.forEach((tx) => {
       if (tx.from.toLowerCase() !== config.AVATAR.toLowerCase()) {
         throw new Error(`Transaction from ${tx.from} is not ${config.AVATAR}`)

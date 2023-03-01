@@ -1,12 +1,9 @@
-import { ExecutionOptions, RolePreset } from "../../types"
 import { allowAuraPool } from "../helpers/aura"
-import allowCurvePool from "../helpers/curve"
+import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { staticEqual } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../placeholders"
+import { RolePreset } from "../types"
 
 const AURA_TOKEN = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
@@ -48,18 +45,18 @@ const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 
 // TODO continue with txs before AUG 16
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     // AURA
-    ...allowAuraPool("Aura "),
+    // ...allowAuraPool("Aura "), // TODO
     ...allowErc20Approve([AURA_TOKEN], [AURA_LOCKER]),
     ...allowErc20Approve([BALANCER_STETH, BALANCER_AURA_BAL], [AURA_BOOSTER]),
     ...allowErc20Approve([AURA_BAL], [AURA_BAL_REWARDS]),
     {
       targetAddress: AURA_LOCKER,
       signature: "lock(address,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     {
       targetAddress: AURA_BOOSTER,
@@ -84,10 +81,10 @@ const preset: RolePreset = {
       signature:
         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     // LIDO
@@ -104,7 +101,7 @@ const preset: RolePreset = {
     {
       targetAddress: CONVEX_LOCKER,
       signature: "lock(address,uint256,uint256)",
-      params: { [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER) },
+      params: { [0]: staticEqual(AVATAR) },
     },
     {
       targetAddress: CONVEX_LOCKER,
@@ -142,7 +139,7 @@ const preset: RolePreset = {
     {
       targetAddress: WETH,
       signature: "deposit()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     // OMNI BRIDGE
@@ -151,9 +148,11 @@ const preset: RolePreset = {
       targetAddress: OMNI_BRIDGE,
       signature: "relayTokens(address,address,uint256)",
       params: {
-        [1]: staticEqual(OMNI_BRIDGE_RECEIVER_PLACEHOLDER),
+        [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
       },
     },
   ],
-}
+  placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
+} satisfies RolePreset
+
 export default preset

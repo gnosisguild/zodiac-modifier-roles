@@ -1,8 +1,5 @@
-import { stat } from "fs"
-
-import { hashMessage } from "ethers/lib/utils"
-
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ExecutionOptions } from "../../types"
+import { ZERO_ADDRESS } from "../gnosisChain/addresses"
 import { allowErc20Approve } from "../helpers/erc20"
 import {
   dynamic32Equal,
@@ -11,8 +8,8 @@ import {
   staticOneOf,
   subsetOf,
 } from "../helpers/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -63,7 +60,7 @@ const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
 //SushiSwap contracts
 const SUSHISWAP_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
@@ -79,7 +76,7 @@ const preset: RolePreset = {
       params: {
         [0]: staticEqual(ZERO_ADDRESS, "address"),
       },
-      options: ExecutionOptions.Send,
+      send: true,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
     { targetAddress: wstETH, signature: "unwrap(uint256)" },
@@ -137,7 +134,7 @@ const preset: RolePreset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
         [1]: subsetOf(
           [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -156,7 +153,7 @@ const preset: RolePreset = {
     {
       targetAddress: STAKEWISE_ETH2_STAKING,
       signature: "stake()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
@@ -164,7 +161,7 @@ const preset: RolePreset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
         [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
       },
     },
@@ -183,12 +180,12 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      //options: ExecutionOptions.Send,
+      //send: true,
       params: {
         [0]: staticEqual(WETH, "address"),
         [1]: staticEqual(sETH2, "address"),
         [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
-        [9]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [9]: staticEqual(AVATAR),
       },
     },
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
@@ -223,7 +220,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -239,7 +236,7 @@ const preset: RolePreset = {
     {
       targetAddress: CURVE_stETH_ETH_POOL,
       signature: "add_liquidity(uint256[2],uint256)",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //Removing liquidity
@@ -275,7 +272,7 @@ const preset: RolePreset = {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -284,7 +281,7 @@ const preset: RolePreset = {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -352,8 +349,8 @@ const preset: RolePreset = {
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", //pool ID
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
-        [2]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
       },
     },
 
@@ -367,7 +364,7 @@ const preset: RolePreset = {
     {
       targetAddress: WETH,
       signature: "deposit()",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -415,7 +412,7 @@ const preset: RolePreset = {
           ],
           "address[]"
         ),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -429,7 +426,7 @@ const preset: RolePreset = {
           "address"
         ),
         [1]: staticOneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -467,9 +464,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
@@ -491,9 +488,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
@@ -515,9 +512,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
@@ -539,9 +536,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
@@ -563,9 +560,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
@@ -587,9 +584,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
@@ -611,9 +608,9 @@ const preset: RolePreset = {
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
         ),
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
@@ -673,7 +670,7 @@ const preset: RolePreset = {
           ],
           "address[]"
         ),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -685,7 +682,7 @@ const preset: RolePreset = {
     {
       targetAddress: CURVE_stETH_ETH_POOL,
       signature: "exchange(int128,int128,uint256,uint256)",
-      options: ExecutionOptions.Send,
+      send: true,
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -698,5 +695,6 @@ const preset: RolePreset = {
       signature: "exchange(int128,int128,uint256,uint256)",
     },
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
 export default preset

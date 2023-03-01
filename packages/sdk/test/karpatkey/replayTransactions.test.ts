@@ -1,31 +1,29 @@
 import { writeFileSync } from "fs"
 import path from "path"
 
-import { EthAdapter } from "@gnosis.pm/safe-core-sdk-types"
-import EthersAdapter, { EthersAdapterConfig } from "@gnosis.pm/safe-ethers-lib"
-import SafeServiceClient, {
+import {
+  EthAdapter,
   SafeMultisigTransactionResponse,
-} from "@gnosis.pm/safe-service-client"
-import { defaultAbiCoder } from "ethers/lib/utils"
+} from "@safe-global/safe-core-sdk-types"
+import EthersAdapter, {
+  EthersAdapterConfig,
+} from "@safe-global/safe-ethers-lib"
+import SafeServiceClient from "@safe-global/safe-service-client"
 import hre, { deployments, waffle, ethers } from "hardhat"
 import "@nomiclabs/hardhat-ethers"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import encodeCalls from "../../src/encodeCalls"
-import fillPreset from "../../src/fillPreset"
 import grantPermissions from "../../src/grantPermissions"
 import logCall from "../../src/logCall"
+import fillPreset from "../../src/presets/fillPreset"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
-import { RolePermissions, RolePreset } from "../../src/types"
+import { RolePreset } from "../../src/presets/types"
+import { RolePermissions } from "../../src/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
 import daoHarvestGnosisChain from "./expectedTransactionResults/daoHarvestGnosisChain.json"
@@ -50,7 +48,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     const multiSend = await MultiSend.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
-    const avatar = (await Avatar.deploy()) as TestAvatar
+    const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const Permissions = await hre.ethers.getContractFactory("Permissions")
     const permissions = await Permissions.deploy()
@@ -64,7 +62,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles
+    )) as unknown as Roles
 
     await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
@@ -107,7 +105,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
 
     const ethAdapter = new EthersAdapter({
       ethers: ethers as unknown as EthersAdapterConfig["ethers"],
-      signer: defaultSigner,
+      signerOrProvider: defaultSigner,
     })
     const safeService = new SafeServiceClient({
       txServiceUrl:
@@ -138,18 +136,9 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     console.log("\n\n------- SUCCESSFULLY SETUP BASE PERMISSIONS -------\n\n")
 
     const placeholderValues = {
-      [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["address"],
-        [config.AVATAR]
-      ),
-      [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["bytes"],
-        [config.BRIDGED_SAFE]
-      ),
-      [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
-        ["address"],
-        [config.BRIDGED_SAFE]
-      ),
+      AVATAR: config.AVATAR,
+      OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
+      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
     }
     const transactions = await encodeApplyPreset(
       modifier.address,

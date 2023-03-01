@@ -1,4 +1,4 @@
-import { ExecutionOptions, PresetAllowEntry } from "../../../types"
+import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
 
 const STETH = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
@@ -11,7 +11,7 @@ export const allowLido = (): PresetAllowEntry[] => {
     {
       targetAddress: STETH,
       signature: "submit(address)",
-      options: ExecutionOptions.Send,
+      send: true,
     },
     ...allowErc20Approve([STETH], [WSTETH]),
   ]

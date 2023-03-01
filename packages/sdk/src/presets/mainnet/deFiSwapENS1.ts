@@ -1,6 +1,4 @@
-import { hashMessage } from "ethers/lib/utils"
-import { stat } from "fs"
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ExecutionOptions } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
@@ -10,10 +8,8 @@ import {
   staticEqual,
   subsetOf,
 } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 //Tokens
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
@@ -47,7 +43,7 @@ const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
 //SushiSwap contracts
 const SUSHISWAP_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +70,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of COMP for DAI
@@ -83,7 +79,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of COMP for WETH
@@ -92,7 +88,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([COMP, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -103,7 +99,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([rETH2, sETH2, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of rETH2 for DAI
@@ -112,7 +108,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([rETH2, sETH2, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of rETH2 for WETH
@@ -121,7 +117,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([rETH2, sETH2, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -131,7 +127,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([SWISE, sETH2, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of SWISE for DAI
@@ -140,7 +136,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([SWISE, sETH2, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of SWISE for WETH
@@ -149,7 +145,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([SWISE, sETH2, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //------------------------------
@@ -159,7 +155,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([sETH2, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -170,7 +166,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -181,7 +177,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -192,7 +188,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([CRV, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of CRV for DAI
@@ -201,7 +197,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([CRV, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of CRV for WETH
@@ -210,7 +206,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([CRV, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -221,7 +217,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([LDO, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of LDO for DAI
@@ -230,7 +226,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([LDO, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
     //Swapping of LDO for WETH
@@ -239,7 +235,7 @@ const preset: RolePreset = {
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
         [2]: dynamic32Equal([LDO, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -273,9 +269,9 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
@@ -293,9 +289,9 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
@@ -313,9 +309,9 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
@@ -333,9 +329,9 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
@@ -353,9 +349,9 @@ const preset: RolePreset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // recipient
+        [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // sender
+        [3]: staticEqual(AVATAR), // sender
         [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
@@ -378,7 +374,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -388,7 +384,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -399,7 +395,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([COMP, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -409,7 +405,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -419,7 +415,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([COMP, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -430,7 +426,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([LDO, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -440,7 +436,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([LDO, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -450,7 +446,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([LDO, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -461,7 +457,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([CRV, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -471,7 +467,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([CRV, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -481,7 +477,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([CRV, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -492,7 +488,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([BAL, WETH], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -502,7 +498,7 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([BAL, WETH, USDC], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
 
@@ -512,9 +508,11 @@ const preset: RolePreset = {
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
         [2]: dynamic32Equal([BAL, WETH, DAI], "address[]"),
-        [3]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [3]: staticEqual(AVATAR),
       },
     },
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset

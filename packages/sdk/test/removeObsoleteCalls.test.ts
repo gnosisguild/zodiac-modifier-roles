@@ -1,4 +1,5 @@
 import { expect } from "chai"
+
 import removeObsoleteCalls from "../src/removeObsoleteCalls"
 import { Call, ExecutionOptions } from "../src/types"
 

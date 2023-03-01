@@ -1,6 +1,6 @@
-import { RolePreset } from "../../types"
 import { forAllTargetAddresses, staticEqual } from "../helpers/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 import {
   CURVE_3POOL_GAUGE_FACTORY,
@@ -12,13 +12,13 @@ import {
   SYMMETRIC_MINI_CHEF,
 } from "./addresses"
 
-const preset: RolePreset = {
+const preset = {
   network: 100,
   allow: [
     ...forAllTargetAddresses([SUSHISWAP_MINI_CHEF, SYMMETRIC_MINI_CHEF], {
       signature: "harvest(uint256,address)",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
+        [1]: staticEqual(AVATAR), // ensure rewards are sent to Avatar
       },
     }),
 
@@ -27,7 +27,7 @@ const preset: RolePreset = {
       {
         signature: "claim_rewards(address)",
         params: {
-          [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER), // ensure rewards are sent to Avatar
+          [0]: staticEqual(AVATAR), // ensure rewards are sent to Avatar
         },
       }
     ),
@@ -45,5 +45,7 @@ const preset: RolePreset = {
       signature: "getBoosterReward()",
     }),
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset
