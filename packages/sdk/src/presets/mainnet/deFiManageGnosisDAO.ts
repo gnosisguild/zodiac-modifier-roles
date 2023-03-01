@@ -1,8 +1,4 @@
-import { stat } from "fs"
-
-import { hashMessage } from "ethers/lib/utils"
-
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ZERO_ADDRESS } from "../gnosisChain/addresses"
 import { allowErc20Approve } from "../helpers/erc20"
 import {
   dynamic32Equal,
@@ -13,8 +9,8 @@ import {
   dynamicEqual,
   staticOneOf,
 } from "../helpers/utils"
-import { AVATAR_ADDRESS_PLACEHOLDER } from "../placeholders"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 // Balancer LP Tokens
 const B_stETH_STABLE = "0x32296969Ef14EB0c6d29669C550D4a0449130230"
@@ -40,10 +36,12 @@ const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
 
 // Aura contracts
 const BOOSTER_ADDRESS = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-const REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS = "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
+const REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS =
+  "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
 
 const auraB_stETH_STABLE_REWARDER = "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528"
-const auraB_auraBAL_STABLE_REWARDER = "0xACAdA51C320947E7ed1a0D0F6b939b0FF465E4c2"
+const auraB_auraBAL_STABLE_REWARDER =
+  "0xACAdA51C320947E7ed1a0D0F6b939b0FF465E4c2"
 const auraB_rETH_STABLE_REWARDER = "0x001B78CEC62DcFdc660E06A91Eb1bC966541d758"
 const auraB_80GNO_20WETH_REWARDER = "0x001B78CEC62DcFdc660E06A91Eb1bC966541d758"
 const aura50COW_50GNO_REWARDER = "0x6256518aE9a97C408a03AAF1A244989Ce6B937F6"
@@ -60,8 +58,7 @@ const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
 
-
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     // All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
@@ -84,11 +81,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(auraB_stETH_STABLE_REWARDER, "address"),
         [1]: staticOneOf([wstETH, WETH], "address"),
-        [3]: staticEqual("0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(wstETH, "address"),
         [11]: staticEqual(WETH, "address"),
       },
@@ -106,7 +107,10 @@ const preset: RolePreset = {
     // Aura B-80BAL-20WETH/auraBAL
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([B_auraBAL_STABLE], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([B_80BAL_20WETH, auraBAL], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve(
+      [B_80BAL_20WETH, auraBAL],
+      [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]
+    ),
     {
       targetAddress: BOOSTER_ADDRESS,
       signature: "deposit(uint256,uint256,bool)",
@@ -116,11 +120,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(auraB_auraBAL_STABLE_REWARDER, "address"),
         [1]: staticOneOf([B_80BAL_20WETH, auraBAL], "address"),
-        [3]: staticEqual("0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(B_80BAL_20WETH, "address"),
         [11]: staticEqual(auraBAL, "address"),
       },
@@ -148,11 +156,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(auraB_rETH_STABLE_REWARDER, "address"),
         [1]: staticOneOf([rETH, WETH], "address"),
-        [3]: staticEqual("0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(rETH, "address"),
         [11]: staticEqual(WETH, "address"),
       },
@@ -180,11 +192,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(auraB_80GNO_20WETH_REWARDER, "address"),
         [1]: staticOneOf([GNO, WETH], "address"),
-        [3]: staticEqual("0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(GNO, "address"),
         [11]: staticEqual(WETH, "address"),
       },
@@ -212,11 +228,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(aura50COW_50GNO_REWARDER, "address"),
         [1]: staticOneOf([GNO, COW], "address"),
-        [3]: staticEqual("0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(GNO, "address"),
         [11]: staticEqual(COW, "address"),
       },
@@ -244,11 +264,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(aura50WSTETH_50LDO_REWARDER, "address"),
         [1]: staticOneOf([LDO, wstETH], "address"),
-        [3]: staticEqual("0x6a5ead5433a50472642cd268e584dafa5a394490000200000000000000000366", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0x6a5ead5433a50472642cd268e584dafa5a394490000200000000000000000366",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(LDO, "address"),
         [11]: staticEqual(wstETH, "address"),
       },
@@ -276,11 +300,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(aura50WETH_50AURA_REWARDER, "address"),
         [1]: staticOneOf([WETH, AURA], "address"),
-        [3]: staticEqual("0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(WETH, "address"),
         [11]: staticEqual(AURA, "address"),
       },
@@ -308,11 +336,15 @@ const preset: RolePreset = {
     },
     {
       targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
-      signature: "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(aura50COW_50WETH_REWARDER, "address"),
         [1]: staticOneOf([WETH, COW], "address"),
-        [3]: staticEqual("0xde8c195aa41c11a0c4787372defbbddaa31306d2000200000000000000000181", "bytes32"), // Balancer PoolId
+        [3]: staticEqual(
+          "0xde8c195aa41c11a0c4787372defbbddaa31306d2000200000000000000000181",
+          "bytes32"
+        ), // Balancer PoolId
         [10]: staticEqual(WETH, "address"),
         [11]: staticEqual(COW, "address"),
       },
@@ -377,7 +409,7 @@ const preset: RolePreset = {
       targetAddress: AURA_LOCKER,
       signature: "lock(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -386,7 +418,7 @@ const preset: RolePreset = {
       targetAddress: AURA_LOCKER,
       signature: "getReward(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -408,14 +440,16 @@ const preset: RolePreset = {
       signature: "setDelegate(bytes32,address)",
     },
 
-
     //---------------------------------------------------------------------------------------------------------------------------------
     // General Rewards Claiming
     //---------------------------------------------------------------------------------------------------------------------------------
     {
       targetAddress: AURA_CLAIM_ZAP,
-      signature: "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
+      signature:
+        "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
     },
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset
