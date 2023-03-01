@@ -1,6 +1,4 @@
-import { hashMessage } from "ethers/lib/utils"
-import { stat } from "fs"
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ExecutionOptions } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
@@ -10,10 +8,8 @@ import {
   staticEqual,
   subsetOf,
 } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 //AAVE contracts
 const stkAAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
@@ -39,7 +35,7 @@ const STAKEWISE_MERKLE_DIS = "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
 const rETH2 = "0x20BC832ca081b91433ff6c17f85701B6e92486c5"
 const SWISE = "0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -50,7 +46,7 @@ const preset: RolePreset = {
       targetAddress: stkAAVE,
       signature: "claimRewards(address,uint256)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -61,7 +57,7 @@ const preset: RolePreset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
         [1]: subsetOf(
           [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -98,7 +94,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -127,7 +123,7 @@ const preset: RolePreset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
         [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
       },
     },
@@ -143,11 +139,13 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
     
     */
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset

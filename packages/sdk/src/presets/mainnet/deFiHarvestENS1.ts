@@ -1,6 +1,4 @@
-import { hashMessage } from "ethers/lib/utils"
-import { stat } from "fs"
-import { ExecutionOptions, RolePreset } from "../../types"
+import { ExecutionOptions } from "../../types"
 import { allowCurvePool } from "../helpers/curve"
 import { allowErc20Approve } from "../helpers/erc20"
 import { allowLido } from "../helpers/lido"
@@ -10,10 +8,8 @@ import {
   staticEqual,
   subsetOf,
 } from "../helpers/utils"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../placeholders"
+import { AVATAR } from "../placeholders"
+import { RolePreset } from "../types"
 
 //Compound V2 contracts
 const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
@@ -35,7 +31,7 @@ const CRV_MINTER = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
 //Aura contracts
 const AURA_BALANCER_stETH_VAULT = "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528"
 
-const preset: RolePreset = {
+const preset = {
   network: 1,
   allow: [
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -45,7 +41,7 @@ const preset: RolePreset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
         [1]: subsetOf(
           [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
           "address[]",
@@ -64,7 +60,7 @@ const preset: RolePreset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
         [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
       },
     },
@@ -77,7 +73,7 @@ const preset: RolePreset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -89,14 +85,14 @@ const preset: RolePreset = {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
     {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
       params: {
-        [0]: staticEqual(AVATAR_ADDRESS_PLACEHOLDER),
+        [0]: staticEqual(AVATAR),
       },
     },
 
@@ -108,5 +104,7 @@ const preset: RolePreset = {
       signature: "getReward()",
     },
   ],
-}
+  placeholders: { AVATAR },
+} satisfies RolePreset
+
 export default preset
