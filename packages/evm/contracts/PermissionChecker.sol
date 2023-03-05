@@ -307,9 +307,9 @@ abstract contract PermissionChecker is Core {
             return _matches(data, parameter, payload);
         } else if (comp == Comparison.OneOf) {
             return _oneOf(data, parameter, payload);
-        } else if (comp == Comparison.Some) {
+        } else if (comp == Comparison.ArraySome) {
             return _some(data, parameter, payload);
-        } else if (comp == Comparison.Every) {
+        } else if (comp == Comparison.ArrayEvery) {
             return _every(data, parameter, payload);
         } else if (comp == Comparison.WithinLimit) {
             return _withinLimit(data, parameter, payload);
@@ -441,7 +441,6 @@ abstract contract PermissionChecker is Core {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Tracking[] memory) {
-        // get compValue
         assert(parameter._type == ParameterType.Static);
 
         uint256 amount = uint256(_pluck(data, parameter._type, payload));

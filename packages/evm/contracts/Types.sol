@@ -17,15 +17,16 @@ enum ParameterType {
 
 enum Comparison {
     Whatever,
+    Matches,
+    Subset,
     EqualTo,
     GreaterThan,
     LessThan,
+    WithinLimit,
     OneOf,
-    Matches,
-    Some,
-    Every,
-    Subset,
-    WithinLimit
+    Bytemask,
+    ArraySome,
+    ArrayEvery
 }
 
 enum ExecutionOptions {
