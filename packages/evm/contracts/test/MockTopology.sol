@@ -15,7 +15,6 @@ contract MockTopology {
     ) private pure returns (ParameterConfig[] memory result) {
         result = new ParameterConfig[](input.length);
         for (uint256 i; i < input.length; i++) {
-            result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
             result[i].children = copyIn(input[i].children);
@@ -27,7 +26,6 @@ contract MockTopology {
     ) private pure returns (ParameterConfig[] memory result) {
         result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
-            result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
             result[i].children = copyIn(input[i].children);
@@ -39,7 +37,6 @@ contract MockTopology {
     ) private pure returns (ParameterConfig[] memory result) {
         result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
-            result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
             result[i].children = copyIn(input[i].children);
@@ -51,7 +48,6 @@ contract MockTopology {
     ) private pure returns (ParameterConfig[] memory result) {
         result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
-            result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
             result[i].children = copyIn(input[i].children);
@@ -63,7 +59,6 @@ contract MockTopology {
     ) private pure returns (ParameterConfig[] memory result) {
         result = new ParameterConfig[](input.length);
         for (uint256 i = 0; i < input.length; i++) {
-            result[i].isScoped = input[i].isScoped;
             result[i]._type = input[i]._type;
             result[i].comp = input[i].comp;
         }
@@ -119,35 +114,30 @@ contract MockTopology {
     }
 
     struct PL1 {
-        bool isScoped;
         ParameterType _type;
         Comparison comp;
         PL2[] children;
     }
 
     struct PL2 {
-        bool isScoped;
         ParameterType _type;
         Comparison comp;
         PL3[] children;
     }
 
     struct PL3 {
-        bool isScoped;
         ParameterType _type;
         Comparison comp;
         PL4[] children;
     }
 
     struct PL4 {
-        bool isScoped;
         ParameterType _type;
         Comparison comp;
         PL5[] children;
     }
 
     struct PL5 {
-        bool isScoped;
         ParameterType _type;
         Comparison comp;
     }

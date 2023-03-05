@@ -118,7 +118,8 @@ export enum ParameterType {
 }
 
 export enum Comparison {
-  EqualTo = 0,
+  Whatever = 0,
+  EqualTo,
   GreaterThan,
   LessThan,
   OneOf,

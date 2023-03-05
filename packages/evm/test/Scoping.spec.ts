@@ -68,7 +68,6 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
@@ -89,14 +88,12 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Array,
               comp: Comparison.EqualTo,
               compValue: "0x",
             },
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
@@ -124,14 +121,12 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
@@ -141,7 +136,6 @@ describe("Scoping", async () => {
               ),
             },
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
@@ -162,21 +156,18 @@ describe("Scoping", async () => {
           SELECTOR,
           [
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
             },
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
@@ -205,13 +196,12 @@ describe("Scoping", async () => {
         [
           {
             parent: 0,
-            isScoped: true,
+
             _type: ParameterType.Static,
             comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -230,21 +220,21 @@ describe("Scoping", async () => {
         [
           {
             parent: 0,
-            isScoped: true,
+
             _type: ParameterType.Static,
             comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
             parent: 0,
-            isScoped: true,
+
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: A_32_BYTES_VALUE,
           },
           {
             parent: 0,
-            isScoped: true,
+
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: A_32_BYTES_VALUE,

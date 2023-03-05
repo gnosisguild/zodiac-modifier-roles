@@ -82,7 +82,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -127,7 +126,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.GreaterThan,
@@ -147,7 +145,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
@@ -199,14 +196,13 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: false,
+
           _type: ParameterType.Static,
           comp: 0,
           compValue: "0x",
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["string"], ["Some string"]),
@@ -252,7 +248,6 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: "0x",
@@ -298,14 +293,12 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: false,
           _type: ParameterType.Dynamic,
-          comp: 0,
+          comp: Comparison.Whatever,
           compValue: "0x",
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.EqualTo,
           compValue: removeTrailingOffset(
@@ -314,16 +307,15 @@ describe("Comparison", async () => {
         },
         {
           parent: 1,
-          isScoped: false,
           _type: ParameterType.Static,
-          comp: 0,
+          comp: Comparison.Whatever,
           compValue: "0x",
         },
       ],
       ExecutionOptions.None
     );
 
-    //longer
+    // longer;
     await expect(
       invoke("Doesn't matter", ["0x1234", "0xabcd", "0xabcd"])
     ).to.be.revertedWith("ParameterNotAllowed()");
@@ -376,7 +368,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.OneOf,
@@ -384,14 +375,12 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [11]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22]),
@@ -437,35 +426,31 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: false,
+
           _type: ParameterType.Static,
           comp: 0,
           compValue: "0x",
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.OneOf,
           compValue: "0x",
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["string"], ["First String"]),
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
@@ -521,21 +506,18 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.OneOf,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
@@ -543,14 +525,12 @@ describe("Comparison", async () => {
         // first tuple variant
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOne]),
@@ -558,14 +538,12 @@ describe("Comparison", async () => {
         // second tuple variant
         {
           parent: 2,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 2,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
@@ -619,14 +597,12 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.OneOf,
           compValue: "0x",
         },
         // first Array 1
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
@@ -634,7 +610,6 @@ describe("Comparison", async () => {
         },
         // second Array 2
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
@@ -642,7 +617,6 @@ describe("Comparison", async () => {
         },
         // first array first element 3
         {
-          isScoped: true,
           parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
@@ -650,7 +624,6 @@ describe("Comparison", async () => {
         },
         // first array second element 4
         {
-          isScoped: true,
           parent: 1,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
@@ -658,7 +631,6 @@ describe("Comparison", async () => {
         },
         // second array first element 5
         {
-          isScoped: true,
           parent: 2,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
@@ -666,7 +638,6 @@ describe("Comparison", async () => {
         },
         // tuple first
         {
-          isScoped: false,
           parent: 3,
           _type: ParameterType.Static,
           comp: 0,
@@ -674,14 +645,12 @@ describe("Comparison", async () => {
         },
         {
           parent: 3,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         // tuple second 8
         {
-          isScoped: true,
           parent: 4,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -689,7 +658,6 @@ describe("Comparison", async () => {
         },
         {
           parent: 4,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
@@ -697,7 +665,6 @@ describe("Comparison", async () => {
 
         // tuple third 9
         {
-          isScoped: false,
           parent: 5,
           _type: ParameterType.Static,
           comp: 0,
@@ -705,7 +672,6 @@ describe("Comparison", async () => {
         },
         {
           parent: 5,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
@@ -775,21 +741,18 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [345]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOk]),
@@ -837,49 +800,42 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["bytes"], ["0xabcdef"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["uint256"], [1998]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
           parent: 3,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["uint256"], [7]),
         },
         {
           parent: 3,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["uint256"], [88]),
         },
         {
           parent: 3,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: ethers.utils.solidityPack(["uint256"], [99]),
@@ -935,28 +891,24 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Every,
           compValue: "0x",
         },
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
-          isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
           compValue: defaultAbiCoder.encode(["uint256"], [10000]),
         },
         {
-          isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -1017,28 +969,24 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Some,
           compValue: "0x",
         },
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
-          isScoped: false,
           parent: 1,
           _type: ParameterType.Static,
           comp: 0,
           compValue: "0x",
         },
         {
-          isScoped: true,
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
@@ -1092,7 +1040,6 @@ describe("Comparison", async () => {
       SELECTOR,
       [
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.Matches,
@@ -1100,7 +1047,6 @@ describe("Comparison", async () => {
         },
         // tuple first
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
@@ -1108,7 +1054,6 @@ describe("Comparison", async () => {
         },
         // tuple second
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
@@ -1116,14 +1061,12 @@ describe("Comparison", async () => {
         },
         // tuple third
         {
-          isScoped: true,
           parent: 0,
           _type: ParameterType.Tuple,
           comp: Comparison.Matches,
           compValue: "0x",
         },
         {
-          isScoped: false,
           parent: 1,
           _type: ParameterType.Static,
           comp: 0,
@@ -1131,27 +1074,23 @@ describe("Comparison", async () => {
         },
         {
           parent: 1,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         {
-          isScoped: false,
           parent: 2,
           _type: ParameterType.Static,
           comp: 0,
           compValue: "0x",
         },
         {
-          isScoped: true,
           parent: 2,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         {
-          isScoped: false,
           parent: 3,
           _type: ParameterType.Static,
           comp: 0,
@@ -1159,7 +1098,6 @@ describe("Comparison", async () => {
         },
         {
           parent: 3,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
@@ -1228,7 +1166,6 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.Subset,
           compValue: ethers.utils.solidityPack(
@@ -1238,21 +1175,18 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0x11112233"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xaabbccdd"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xffddeecc"]),
@@ -1296,28 +1230,24 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.Subset,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0x11112233"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xaabbccdd"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xffddeecc"]),
@@ -1365,28 +1295,24 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.Subset,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0x11112233"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xaabbccdd"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xffddeecc"]),
@@ -1432,28 +1358,24 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Array,
           comp: Comparison.Subset,
           compValue: "0x",
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0x11112233"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xaabbccdd"]),
         },
         {
           parent: 0,
-          isScoped: true,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes4"], ["0xffddeecc"]),
@@ -1503,7 +1425,6 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.OneOf,
             compValue: "0x",
@@ -1511,7 +1432,6 @@ describe("Comparison", async () => {
           // 1
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValue: "0x",
@@ -1519,7 +1439,6 @@ describe("Comparison", async () => {
           // 2
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValue: "0x",
@@ -1527,7 +1446,6 @@ describe("Comparison", async () => {
           // 3
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             compValue: "0x",
@@ -1535,14 +1453,13 @@ describe("Comparison", async () => {
           // first variant
           {
             parent: 1,
-            isScoped: false,
+
             _type: ParameterType.Static,
             comp: 0,
             compValue: "0x",
           },
           {
             parent: 1,
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: ethers.utils.solidityPack(["string"], ["First String"]),
@@ -1550,14 +1467,12 @@ describe("Comparison", async () => {
           // second variant
           {
             parent: 2,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["bool"], [true]),
           },
           {
             parent: 2,
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
@@ -1565,14 +1480,13 @@ describe("Comparison", async () => {
           // third variant
           {
             parent: 3,
-            isScoped: false,
+
             _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            comp: Comparison.Whatever,
             compValue: "0x",
           },
           {
             parent: 3,
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
@@ -1630,21 +1544,18 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
             compValue: "0x",
@@ -1652,14 +1563,12 @@ describe("Comparison", async () => {
           // first tuple variant
           {
             parent: 1,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [1111]),
           },
           {
             parent: 1,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["address"], [addressOne]),
@@ -1667,14 +1576,12 @@ describe("Comparison", async () => {
           // second tuple variant
           {
             parent: 2,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [22222]),
           },
           {
             parent: 2,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
