@@ -41,5 +41,5 @@ function accruedBalance(
     refillTimestamp =
         allowance.refillTimestamp +
         elapsedIntervals *
-        allowance.refillTimestamp;
+        allowance.refillInterval;
 }
