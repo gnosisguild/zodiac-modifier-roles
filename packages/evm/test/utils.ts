@@ -119,15 +119,16 @@ export enum ParameterType {
 
 export enum Comparison {
   Whatever = 0,
+  Matches,
+  Subset,
   EqualTo,
   GreaterThan,
   LessThan,
-  OneOf,
-  Matches,
-  Some,
-  Every,
-  Subset,
   WithinLimit,
+  OneOf,
+  Bytemask,
+  ArraySome,
+  ArrayEvery,
 }
 
 export enum ExecutionOptions {

@@ -893,7 +893,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Every,
+          comp: Comparison.ArrayEvery,
           compValue: "0x",
         },
         {
@@ -971,7 +971,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Some,
+          comp: Comparison.ArraySome,
           compValue: "0x",
         },
         {
