@@ -76,7 +76,6 @@ describe("Comparison", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinLimit,
@@ -119,14 +118,12 @@ describe("Comparison", async () => {
         SELECTOR,
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinLimit,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.WithinLimit,

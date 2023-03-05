@@ -121,49 +121,42 @@ describe("RolesModifier", async () => {
 
     const parameterConfig_9 = [
       {
-        isScoped: true,
         parent: 0,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_3,
       },
       {
-        isScoped: true,
         parent: 1,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_4,
       },
       {
-        isScoped: true,
         parent: 2,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_5,
       },
       {
-        isScoped: true,
         parent: 3,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_6,
       },
       {
-        isScoped: true,
         parent: 4,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_7,
       },
       {
-        isScoped: true,
         parent: 5,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_8,
       },
       {
-        isScoped: true,
         parent: 6,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
@@ -583,14 +576,12 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -646,21 +637,18 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Tuple,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -725,49 +713,42 @@ describe("RolesModifier", async () => {
         "0x273454bf",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_3,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_4,
           },
           {
-            isScoped: true,
             parent: 2,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_5,
           },
           {
-            isScoped: true,
             parent: 3,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_6,
           },
           {
-            isScoped: true,
             parent: 4,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_7,
           },
           {
-            isScoped: true,
             parent: 5,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_8,
           },
           {
-            isScoped: true,
             parent: 6,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
@@ -896,14 +877,12 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -988,14 +967,12 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -1067,14 +1044,12 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -1410,14 +1385,12 @@ describe("RolesModifier", async () => {
         "0x40c10f19",
         [
           {
-            isScoped: true,
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            isScoped: true,
             parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
@@ -1714,14 +1687,12 @@ describe("RolesModifier", async () => {
           "0x12345678",
           [
             {
-              isScoped: true,
               parent: 0,
               _type: ParameterType.Dynamic,
               comp: Comparison.GreaterThan,
               compValue: "0x",
             },
             {
-              isScoped: true,
               parent: 1,
               _type: ParameterType.Dynamic,
               comp: Comparison.GreaterThan,
@@ -1773,7 +1744,6 @@ describe("RolesModifier", async () => {
         [
           {
             parent: 0,
-            isScoped: true,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: ethers.utils.defaultAbiCoder.encode(["uint256"], [2]),

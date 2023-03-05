@@ -69,7 +69,9 @@ library Integrity {
     }
 
     function entry(ParameterConfigFlat calldata parameter) internal pure {
-        if (!parameter.isScoped || _isNested(parameter._type)) {
+        if (
+            parameter.comp == Comparison.Whatever || _isNested(parameter._type)
+        ) {
             return;
         }
 

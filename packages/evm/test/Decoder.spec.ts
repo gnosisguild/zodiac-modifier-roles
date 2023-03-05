@@ -40,7 +40,6 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         children: [],
@@ -66,24 +65,20 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Static,
         comp: 0,
         children: [],
       },
       {
-        isScoped: true,
         _type: ParameterType.Dynamic,
         comp: 0,
         children: [],
       },
       {
-        isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
@@ -126,24 +121,20 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Dynamic,
         comp: 0,
         children: [],
       },
       {
-        isScoped: true,
         _type: ParameterType.Static,
         comp: 0,
         children: [],
       },
       {
-        isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
@@ -186,20 +177,18 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
         ],
       },
-      { isScoped: true, _type: ParameterType.Dynamic, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Dynamic, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
     ];
 
     const result = await decoder.inspect(data, layout);
@@ -228,9 +217,7 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = [{ _type: ParameterType.Static, comp: 0, children: [] }];
 
     const result = await decoder.inspect(data, layout);
 
@@ -253,8 +240,8 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
     ];
 
     const result = await decoder.inspect(data, layout);
@@ -278,29 +265,24 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data, [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Array,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
@@ -347,25 +329,22 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data as string, [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
         ],
       },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
     ]);
 
     expect(
@@ -406,9 +385,9 @@ describe("Decoder library", async () => {
     assert(data);
 
     const result = await decoder.inspect(data as string, [
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
-      { isScoped: true, _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
+      { _type: ParameterType.Static, comp: 0, children: [] },
     ]);
 
     expect(
@@ -460,35 +439,29 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
@@ -548,34 +521,28 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Array,
                 comp: 0,
                 children: [
                   {
-                    isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
                     children: [],
@@ -585,24 +552,20 @@ describe("Decoder library", async () => {
             ],
           },
           {
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
@@ -610,7 +573,6 @@ describe("Decoder library", async () => {
             ],
           },
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
@@ -668,40 +630,33 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Static,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Dynamic,
             comp: 0,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Array,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Tuple,
                 comp: 0,
                 children: [
                   {
-                    isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
                     children: [],
                   },
                   {
-                    isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
                     children: [],
@@ -763,23 +718,19 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
@@ -819,34 +770,28 @@ describe("Decoder library", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Array,
         comp: 0,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: 0,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Array,
                 comp: 0,
                 children: [
                   {
-                    isScoped: true,
                     _type: ParameterType.Static,
                     comp: 0,
                     children: [],
