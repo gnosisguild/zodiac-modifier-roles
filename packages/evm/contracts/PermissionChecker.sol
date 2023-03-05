@@ -292,7 +292,7 @@ abstract contract PermissionChecker is Core {
     ) internal pure returns (Status, Tracking[] memory) {
         assert(parameter._type != ParameterType.Function);
 
-        if (!parameter.isScoped) {
+        if (parameter.comp == Comparison.Whatever) {
             return (Status.Ok, _track());
         }
 

@@ -16,6 +16,7 @@ enum ParameterType {
 }
 
 enum Comparison {
+    Whatever,
     EqualTo,
     GreaterThan,
     LessThan,
@@ -46,7 +47,6 @@ struct TypeTopology {
 }
 
 struct ParameterConfigFlat {
-    bool isScoped;
     uint16 parent;
     ParameterType _type;
     Comparison comp;
@@ -54,7 +54,6 @@ struct ParameterConfigFlat {
 }
 
 struct ParameterConfig {
-    bool isScoped;
     ParameterType _type;
     Comparison comp;
     bytes32 compValue;

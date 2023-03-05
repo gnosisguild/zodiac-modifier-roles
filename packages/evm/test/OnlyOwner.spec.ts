@@ -171,7 +171,7 @@ describe("OnlyOwner", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValue: "0x" }],
+          [{ parent: 0, _type: 0, comp: 0, compValue: "0x" }],
           OPTIONS_NONE
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -183,7 +183,7 @@ describe("OnlyOwner", async () => {
           ROLE_ID,
           testContract.address,
           SELECTOR,
-          [{ parent: 0, isScoped: false, _type: 0, comp: 0, compValue: "0x" }],
+          [{ parent: 0, _type: 0, comp: 0, compValue: "0x" }],
           OPTIONS_NONE
         )
     ).to.not.be.reverted;

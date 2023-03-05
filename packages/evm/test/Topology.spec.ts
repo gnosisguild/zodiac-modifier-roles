@@ -20,23 +20,19 @@ describe("Topology", async () => {
 
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Function,
         comp: Comparison.OneOf,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {
-                isScoped: false,
                 _type: ParameterType.Static,
                 comp: 0,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: Comparison.EqualTo,
                 children: [],
@@ -44,18 +40,15 @@ describe("Topology", async () => {
             ],
           },
           {
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: Comparison.EqualTo,
                 children: [],
@@ -63,18 +56,15 @@ describe("Topology", async () => {
             ],
           },
           {
-            isScoped: true,
             _type: ParameterType.Function,
             comp: Comparison.Matches,
             children: [
               {
-                isScoped: false,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Dynamic,
                 comp: Comparison.EqualTo,
                 children: [],
@@ -108,23 +98,19 @@ describe("Topology", async () => {
     const { topology } = await setup();
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: Comparison.OneOf,
         children: [
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
@@ -132,18 +118,15 @@ describe("Topology", async () => {
             ],
           },
           {
-            isScoped: true,
             _type: ParameterType.Tuple,
             comp: Comparison.Matches,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Static,
                 comp: Comparison.EqualTo,
                 children: [],
@@ -183,28 +166,23 @@ describe("Topology", async () => {
     const { topology } = await setup();
     const layout = [
       {
-        isScoped: true,
         _type: ParameterType.Tuple,
         comp: 0,
         children: [
           {
-            isScoped: false,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             children: [],
           },
           {
-            isScoped: true,
             _type: ParameterType.Array,
             comp: Comparison.OneOf,
             children: [
               {
-                isScoped: true,
                 _type: ParameterType.Array,
                 comp: Comparison.EqualTo,
                 children: [
                   {
-                    isScoped: false,
                     _type: ParameterType.Static,
                     comp: Comparison.EqualTo,
                     children: [],
@@ -212,12 +190,10 @@ describe("Topology", async () => {
                 ],
               },
               {
-                isScoped: true,
                 _type: ParameterType.Array,
                 comp: Comparison.EqualTo,
                 children: [
                   {
-                    isScoped: false,
                     _type: ParameterType.Static,
                     comp: Comparison.EqualTo,
                     children: [],
