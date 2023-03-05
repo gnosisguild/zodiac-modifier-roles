@@ -146,7 +146,7 @@ abstract contract PermissionBuilder is Core {
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
             balance: balance,
-            maxBalance: maxBalance
+            maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
         });
     }
 
