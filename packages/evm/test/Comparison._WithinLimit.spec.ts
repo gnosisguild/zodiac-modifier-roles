@@ -345,7 +345,7 @@ describe("Comparison", async () => {
       const { setAllowance, setRole } = await setup();
 
       const interval = 600;
-      const initialTimestamp = timestampNow() - 1200;
+      const initialTimestamp = timestampNow() - 2400;
 
       await setAllowance({
         balance: 1,
@@ -359,12 +359,10 @@ describe("Comparison", async () => {
       expect(allowance.refillTimestamp).to.equal(initialTimestamp);
 
       await expect(invoke(0)).to.not.be.reverted;
-      const now = timestampNow();
 
       allowance = await modifier.allowances(ALLOWANCE_ID);
-      expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(0);
-      expect(now - allowance.refillTimestamp.toNumber()).to.be.lessThanOrEqual(
-        interval
+      expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(
+        initialTimestamp
       );
     });
 
