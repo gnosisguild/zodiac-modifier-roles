@@ -9,7 +9,11 @@ contract MockCompression {
     )
         public
         pure
-        returns (Compression.Mode compression, uint256 size, bytes32 result)
+        returns (
+            Compression.Mode compression,
+            uint256 resultLength,
+            bytes32 result
+        )
     {
         return Compression.compress(compValue);
     }
