@@ -471,18 +471,18 @@ abstract contract PermissionChecker is Core {
             payload.location,
             payload.size
         );
-        uint256 bytesToShift = uint8(bytes1(compValue));
-        uint256 bytesToCompare = uint8(bytes1(compValue << 8));
-        if (bytesToShift + bytesToCompare > value.length) {
+
+        uint256 left = uint8(bytes1(compValue));
+        uint256 right = uint8(bytes1(compValue << 8));
+        if (right > value.length) {
             return (Status.BytemaskOverflow, empty);
         }
+        uint256 bitLength = (right - left) * 8;
+        bytes32 rinse = _leftMask(bitLength);
 
-        bytes32 carveMask = _leftMask(bytesToCompare * 8);
-        bytes32 mask = (compValue << 16) & carveMask;
-        bytes32 expected = (compValue << (16 + bytesToCompare * 8)) & carveMask;
-        bytes32 slice = bytes32(
-            value[bytesToShift:bytesToShift + bytesToCompare]
-        );
+        bytes32 slice = bytes32(value[left:right]);
+        bytes32 mask = (compValue << 16) & rinse;
+        bytes32 expected = (compValue << (16 + bitLength)) & rinse;
 
         return (
             (slice & mask) == expected ? Status.Ok : Status.BytemaskNotAllowed,

@@ -240,7 +240,7 @@ describe("Comparison", async () => {
       await setAllowance({
         balance: 0,
         maxBalance: 9000,
-        refillInterval: 100,
+        refillInterval: 1000,
         refillAmount: 10000,
         refillTimestamp: timestamp - 5000,
       });
