@@ -23,11 +23,13 @@ library Integrity {
 
     error TooFewCompValuesForOneOf(uint256 index);
 
+    error MalformedBytemask(uint256 index);
+
     function validate(ParameterConfigFlat[] calldata parameters) internal pure {
         topology(parameters);
 
         for (uint256 i = 0; i < parameters.length; ++i) {
-            entry(parameters[i]);
+            entry(parameters[i], i);
         }
     }
 
@@ -68,7 +70,10 @@ library Integrity {
         // TODO a lot more integrity checks
     }
 
-    function entry(ParameterConfigFlat calldata parameter) internal pure {
+    function entry(
+        ParameterConfigFlat calldata parameter,
+        uint256 index
+    ) internal pure {
         if (
             parameter.comp == Comparison.Whatever || _isNested(parameter._type)
         ) {
@@ -97,6 +102,12 @@ library Integrity {
             compValue.length != 32
         ) {
             revert UnsuitableStaticCompValueSize();
+        }
+
+        if (comp == Comparison.Bytemask) {
+            if (compValue.length > 32 || compValue.length % 2 != 0) {
+                revert MalformedBytemask(index);
+            }
         }
     }
 

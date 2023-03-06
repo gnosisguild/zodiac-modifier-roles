@@ -56,6 +56,12 @@ abstract contract PermissionChecker is Core {
     /// Allowance exceeded
     error AllowanceExceeded();
 
+    /// Bytemasking exceeded value length
+    error BytemaskOverflow();
+
+    /// Bytemasking not an allowed value
+    error BytemaskNotAllowed();
+
     /// Allowance was double spent
 
     /*
@@ -313,9 +319,11 @@ abstract contract PermissionChecker is Core {
             return _every(data, parameter, payload);
         } else if (comp == Comparison.WithinLimit) {
             return _withinLimit(data, parameter, payload);
-        } else {
-            assert(comp == Comparison.Subset);
+        } else if (comp == Comparison.Subset) {
             return _subset(data, parameter, payload);
+        } else {
+            assert(comp == Comparison.Bytemask);
+            return _bytemask(data, parameter, payload);
         }
     }
 
@@ -454,6 +462,39 @@ abstract contract PermissionChecker is Core {
         );
     }
 
+    function _bytemask(
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status status, Tracking[] memory empty) {
+        assert(parameter._type == ParameterType.Static);
+
+        bytes32 compValue = parameter.compValue;
+        bytes calldata value = Decoder.pluck(
+            data,
+            payload.location,
+            payload.size
+        );
+        uint256 bytesToShift = uint8(bytes1(compValue));
+        uint256 bytesToCompare = uint8(bytes1(compValue << 8));
+        if (bytesToShift + bytesToCompare >= value.length) {
+            return (Status.BytemaskOverflow, empty);
+        }
+
+        bytes32 carveMask = _leftMask(bytesToCompare * 8);
+
+        bytes32 mask = (compValue << 16) & carveMask;
+        bytes32 expected = (compValue << (16 + bytesToCompare * 8)) & carveMask;
+        bytes32 slice = bytes32(
+            value[bytesToShift:bytesToShift + bytesToCompare]
+        );
+
+        return (
+            (slice & mask) == expected ? Status.Ok : Status.BytemaskNotAllowed,
+            empty
+        );
+    }
+
     function _compare(
         bytes calldata data,
         ParameterConfig memory parameter,
@@ -556,9 +597,13 @@ abstract contract PermissionChecker is Core {
             revert ArrayElementsSomeNotAllowed();
         } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
-        } else {
-            assert(status == Status.AllowanceExceeded);
+        } else if (status == Status.AllowanceExceeded) {
             revert AllowanceExceeded();
+        } else if (status == Status.BytemaskOverflow) {
+            revert BytemaskOverflow();
+        } else {
+            assert(status == Status.BytemaskNotAllowed);
+            revert BytemaskNotAllowed();
         }
     }
 
@@ -593,6 +638,10 @@ abstract contract PermissionChecker is Core {
         /// Allowance exceeded
         AllowanceExceeded,
         /// Allowance was double spent
-        AllowanceDoubleSpend
+        AllowanceDoubleSpend,
+        /// Bytemasking exceeded value length
+        BytemaskOverflow,
+        /// Bytemasking not an allowed value
+        BytemaskNotAllowed
     }
 }
