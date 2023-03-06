@@ -6,75 +6,78 @@ import "../Types.sol";
 library Compression {
     enum Mode {
         Empty,
+        UncompressedWord,
         Uncompressed,
         Compressed,
         Hash
     }
 
-    uint256 private constant offsetSizeCompressed = 248;
-    uint256 private constant offsetSizeExtracted = 240;
-    uint256 private constant offsetShift = 232;
-    uint256 private constant offsetPayload = 24;
+    uint256 private constant offsetSize = 248;
+    uint256 private constant offsetLeftPad = 240;
+    uint256 private constant offsetRightPad = 232;
 
     uint256 private constant oneWord = 32;
     uint256 private constant headSize = 3;
 
     function compress(
         bytes calldata data
-    ) internal pure returns (Mode compression, uint256 size, bytes32 chunk) {
+    ) internal pure returns (Mode compression, uint256 size, bytes32 result) {
         // buffer too large
         uint256 length = data.length;
         if (length > 255) {
             return (Mode.Hash, oneWord, keccak256(data));
         }
 
-        uint256 left = _leadingZeroes(data);
+        uint256 leftPad = _leadingZeroes(data);
         // buffer only zeroes
-        if (left == length) {
+        if (leftPad == length) {
             return (
                 Mode.Compressed,
                 headSize,
-                bytes32(
-                    (headSize << offsetSizeCompressed) |
-                        (length << offsetSizeExtracted)
-                )
+                (bytes32(headSize << offsetSize) |
+                    bytes32(leftPad << offsetLeftPad))
             );
         }
+        uint256 rightPad = _trailingZeroes(data);
+        uint256 compressedSize = length - (leftPad + rightPad) + headSize;
 
-        uint256 right = length - _trailingZeroes(data);
-        size = headSize + (right - left);
-
-        if (size < oneWord) {
+        if (compressedSize < oneWord) {
             compression = Mode.Compressed;
-            chunk =
-                bytes32(size << offsetSizeCompressed) |
-                bytes32(length << offsetSizeExtracted) |
-                bytes32(left << offsetShift) |
-                (bytes32(data[left:right]) >> offsetPayload);
+            size = compressedSize;
+            result =
+                bytes32(size << offsetSize) |
+                bytes32(leftPad << offsetLeftPad) |
+                bytes32(rightPad << offsetRightPad) |
+                (bytes32(data[leftPad:length - rightPad]) >> (headSize * 8));
         } else if (length > oneWord) {
             compression = Mode.Hash;
             size = oneWord;
-            chunk = keccak256(data);
+            result = keccak256(data);
+        } else if (length == oneWord) {
+            compression = Mode.UncompressedWord;
+            size = oneWord;
+            result = bytes32(data);
         } else {
             compression = Mode.Uncompressed;
-            size = oneWord;
-            chunk = bytes32(data);
+            size = length;
+            result = bytes32(data);
         }
     }
 
     function extract(
-        bytes32 payload
+        bytes32 compressed
     ) internal pure returns (bytes memory compValue) {
-        uint256 size = (uint256(payload >> offsetSizeCompressed) & 0xff);
-        uint256 length = uint256(payload >> offsetSizeExtracted) & 0xff;
-        uint256 offset = uint256(payload >> offsetShift) & 0xff;
+        uint256 size = (uint256(compressed >> offsetSize) & 0xff);
+        uint256 leftPad = uint256(compressed >> offsetLeftPad) & 0xff;
+        uint256 rightPad = uint256(compressed >> offsetRightPad) & 0xff;
+        bytes32 payload = compressed << (headSize * 8);
 
-        uint256 sizePayload = size - headSize;
-        bytes32 content = payload << (headSize * 8);
+        uint256 payloadSize = size - headSize;
+        uint256 length = leftPad + payloadSize + rightPad;
 
         compValue = new bytes(length);
-        for (uint256 i; i < sizePayload; ++i) {
-            compValue[i + offset] = content[i];
+        for (uint256 i; i < payloadSize; ++i) {
+            compValue[i + leftPad] = payload[i];
         }
     }
 
