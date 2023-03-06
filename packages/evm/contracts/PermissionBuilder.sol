@@ -155,8 +155,9 @@ abstract contract PermissionBuilder is Core {
         for (uint256 i; i < length; ++i) {
             ParameterConfig memory parameter = toBeTracked[i].config;
             ParameterPayload memory payload = toBeTracked[i].payload;
-            uint16 id = uint16(uint256(parameter.compValue));
-            Allowance memory allowance = allowances[id];
+
+            uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
+            Allowance memory allowance = allowances[allowanceId];
             (uint128 balance, uint64 refillTimestamp) = accruedBalance(
                 allowance,
                 block.timestamp
@@ -170,10 +171,10 @@ abstract contract PermissionBuilder is Core {
             // loaded to ParameterConfig). We repeat the accrual math and consider
             // that if it fails here, then it may be due to a double spend.
             if (amount > balance) {
-                revert AllowanceDoubleSpend(id);
+                revert AllowanceDoubleSpend(allowanceId);
             }
-            allowances[id].balance = balance - amount;
-            allowances[id].refillTimestamp = refillTimestamp;
+            allowances[allowanceId].balance = balance - amount;
+            allowances[allowanceId].refillTimestamp = refillTimestamp;
         }
     }
 }

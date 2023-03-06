@@ -443,7 +443,7 @@ abstract contract PermissionChecker is Core {
     ) private pure returns (Status status, Tracking[] memory) {
         assert(parameter._type == ParameterType.Static);
 
-        uint256 amount = uint256(_pluck(data, parameter._type, payload));
+        uint256 amount = uint256(_pluck(data, parameter, payload));
         if (amount > parameter.allowance) {
             return (Status.AllowanceExceeded, _track());
         }
@@ -467,7 +467,7 @@ abstract contract PermissionChecker is Core {
 
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
-        bytes32 value = _pluck(data, parameter._type, payload);
+        bytes32 value = _pluck(data, parameter, payload);
 
         if (comp == Comparison.EqualTo && value != compValue) {
             status = Status.ParameterNotAllowed;
@@ -484,18 +484,15 @@ abstract contract PermissionChecker is Core {
 
     function _pluck(
         bytes calldata data,
-        ParameterType paramType,
+        ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
         if (payload.size != payload.raw.length) {
             payload.raw = Decoder.pluck(data, payload.location, payload.size);
         }
 
-        if (paramType == ParameterType.Static) {
-            return bytes32(payload.raw);
-        } else {
-            return keccak256(payload.raw);
-        }
+        return
+            parameter.isHashed ? keccak256(payload.raw) : bytes32(payload.raw);
     }
 
     function _track() private pure returns (Tracking[] memory result) {

@@ -10,16 +10,16 @@ library BufferPacker {
     function pack(
         BitmapBuffer memory buffer,
         uint256 offset,
-        uint256 size,
+        uint256 length,
         bytes32 payload
     ) internal pure {
-        assert(size <= 32);
+        assert(length <= 32);
         (
             uint256 page,
             uint256 index,
             uint256 bitsPage1,
             uint256 bitsPage2
-        ) = _plan(offset, size);
+        ) = _plan(offset, length);
 
         buffer.payload[page] |= payload >> (index * 8);
         if (bitsPage2 > 0) {
@@ -36,15 +36,15 @@ library BufferPacker {
     function unpack(
         BitmapBuffer memory buffer,
         uint256 offset,
-        uint256 size
+        uint256 length
     ) internal pure returns (bytes32 result) {
-        assert(size <= 32);
+        assert(length <= 32);
         (
             uint256 page,
             uint256 index,
             uint256 bitsPage1,
             uint256 bitsPage2
-        ) = _plan(offset, size);
+        ) = _plan(offset, length);
 
         result = (buffer.payload[page] << (index * 8)) & _mask(bitsPage1);
         if (bitsPage2 > 0) {
@@ -65,7 +65,7 @@ library BufferPacker {
 
     function _plan(
         uint256 offset,
-        uint256 size
+        uint256 length
     )
         private
         pure
@@ -78,10 +78,10 @@ library BufferPacker {
     {
         page = offset / 32;
         index = offset % 32;
-        uint256 sizeAvailable = 32 - index;
-        (bitCount1stPage, bitCount2ndPage) = size < sizeAvailable
-            ? (size * 8, 0)
-            : (sizeAvailable * 8, (size - sizeAvailable) * 8);
+        uint256 lengthAvailable = 32 - index;
+        (bitCount1stPage, bitCount2ndPage) = length < lengthAvailable
+            ? (length * 8, 0)
+            : (lengthAvailable * 8, (length - lengthAvailable) * 8);
     }
 
     function _mask(uint256 bitCount) private pure returns (bytes32) {
