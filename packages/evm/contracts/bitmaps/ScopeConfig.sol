@@ -10,7 +10,7 @@ library ScopeConfig {
     // 8   bits -> length
     // 2   bits -> options
     // 1   bits -> isWildcarded
-    // 1   bits -> unused
+    // 2   bits -> unused
     uint256 private constant offsetPage = 251;
     uint256 private constant offsetLength = 243;
     uint256 private constant offsetOptions = 241;
@@ -23,19 +23,19 @@ library ScopeConfig {
     // 8    bits -> parent
     // 3    bits -> type
     // 4    bits -> comparison
-    // 2    bits -> compression
-    uint256 private constant offsetParent = 9;
-    uint256 private constant offsetType = 6;
-    uint256 private constant offsetComparison = 2;
+    // 3    bits -> compression
+    uint256 private constant offsetParent = 10;
+    uint256 private constant offsetType = 7;
+    uint256 private constant offsetComparison = 3;
     uint256 private constant offsetCompression = 0;
     uint256 private constant maskParent = 0xff << offsetParent;
     uint256 private constant maskType = 0x7 << offsetType;
     uint256 private constant maskComparison = 0xf << offsetComparison;
-    uint256 private constant maskCompression = 0x3 << offsetCompression;
-    uint256 private constant maskParameter = 0x1ffff;
+    uint256 private constant maskCompression = 0x7 << offsetCompression;
+    uint256 private constant maskParameter = 0x3ffff;
     // sizes in bits
     // both header and parameter ought to be equal
-    uint256 private constant chunkSize = 17;
+    uint256 private constant chunkSize = 18;
     uint256 private constant pageCapacity = 256 / chunkSize;
 
     function create(
