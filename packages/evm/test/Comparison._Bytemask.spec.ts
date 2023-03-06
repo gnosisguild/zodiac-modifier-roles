@@ -155,8 +155,8 @@ describe("Comparison", async () => {
     it("triggers an integrity error at setup - bytemask is too large", async () => {
       const { modifier, owner, testContract } = await setup();
 
-      const shift = "ff";
-      const length = "0f";
+      const left = "ff";
+      const right = "0f";
       const maskLong = "ffffffffffffffffffffffffffffffff";
       const maskOk = "ffffffffffffffffffffffffffffff";
       const expected = "ffffffffffffffffffffffffffffff";
@@ -171,7 +171,7 @@ describe("Comparison", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.Bytemask,
-              compValue: `0x${shift}${length}${maskLong}${expected}`,
+              compValue: `0x${left}${right}${maskLong}${expected}`,
             },
           ],
           ExecutionOptions.None
@@ -188,7 +188,7 @@ describe("Comparison", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.Bytemask,
-              compValue: `0x${shift}${length}${maskOk}${expected}`,
+              compValue: `0x${left}${right}${maskOk}${expected}`,
             },
           ],
           ExecutionOptions.None
@@ -200,14 +200,12 @@ describe("Comparison", async () => {
       it("left aligned", async () => {
         const { setRole } = await setup();
 
-        const shift = "00";
-        const length = "01";
+        const left = "00";
+        const right = "01";
         const mask = "ff";
         const expected = "46";
 
-        const { invoke } = await setRole(
-          `0x${shift}${length}${mask}${expected}`
-        );
+        const { invoke } = await setRole(`0x${left}${right}${mask}${expected}`);
 
         await expect(
           invoke(
@@ -235,14 +233,12 @@ describe("Comparison", async () => {
       it("middle aligned", async () => {
         const { setRole } = await setup();
 
-        const shift = "0a";
-        const length = "03";
+        const left = "0a";
+        const right = "0d";
         const mask = "f0f0f0";
         const expected = "103020";
 
-        const { invoke } = await setRole(
-          `0x${shift}${length}${mask}${expected}`
-        );
+        const { invoke } = await setRole(`0x${left}${right}${mask}${expected}`);
 
         await expect(
           invoke(
@@ -270,14 +266,12 @@ describe("Comparison", async () => {
       it("right aligned", async () => {
         const { setRole } = await setup();
 
-        const shift = "1e";
-        const length = "02";
+        const left = "1e";
+        const right = "20";
         const mask = "ffff";
         const expected = "abcd";
 
-        const { invoke } = await setRole(
-          `0x${shift}${length}${mask}${expected}`
-        );
+        const { invoke } = await setRole(`0x${left}${right}${mask}${expected}`);
 
         await expect(
           invoke(
@@ -308,14 +302,12 @@ describe("Comparison", async () => {
         const { setRole } = await setup();
 
         // 30
-        const shift = "1e";
-        const length = "03";
+        const left = "1e";
+        const right = "21";
         const mask = "ffffff";
         const expected = "abcd11";
 
-        const { invoke } = await setRole(
-          `0x${shift}${length}${mask}${expected}`
-        );
+        const { invoke } = await setRole(`0x${left}${right}${mask}${expected}`);
 
         await expect(
           invoke(
@@ -331,13 +323,13 @@ describe("Comparison", async () => {
       it("left aligned", async () => {
         const { setRoleDynamic } = await setup();
 
-        const shift = "00";
-        const length = "01";
+        const left = "00";
+        const right = "01";
         const mask = "ff";
         const expected = "46";
 
         const { invoke } = await setRoleDynamic(
-          `0x${shift}${length}${mask}${expected}`
+          `0x${left}${right}${mask}${expected}`
         );
 
         await expect(invoke("0x46")).to.not.be.reverted;
@@ -360,13 +352,13 @@ describe("Comparison", async () => {
         const { setRoleDynamic } = await setup();
 
         // 30
-        const shift = "03";
-        const length = "03";
+        const left = "03";
+        const right = "06";
         const mask = "ffffff";
         const expected = "aaaaaa";
 
         const { invoke } = await setRoleDynamic(
-          `0x${shift}${length}${mask}${expected}`
+          `0x${left}${right}${mask}${expected}`
         );
 
         await expect(invoke("0x0000000000")).to.be.revertedWith(
