@@ -57,6 +57,7 @@ struct ParameterConfigFlat {
 struct ParameterConfig {
     ParameterType _type;
     Comparison comp;
+    bool isHashed;
     bytes32 compValue;
     uint256 allowance;
     ParameterConfig[] children;

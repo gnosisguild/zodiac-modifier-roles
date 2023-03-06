@@ -67,7 +67,7 @@ library Compression {
         } else {
             compression = Mode.Uncompressed;
             resultLength = length;
-            result = bytes32(data);
+            result = bytes1(uint8(length)) | (bytes32(data) >> 8);
         }
     }
 
