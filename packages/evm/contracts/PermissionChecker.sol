@@ -284,7 +284,7 @@ abstract contract PermissionChecker is Core {
             }
             toBeTracked = moreToBeTracked.length == 0
                 ? toBeTracked
-                : _trackMerge(toBeTracked, moreToBeTracked);
+                : _track(toBeTracked, moreToBeTracked);
         }
         return (Status.Ok, toBeTracked);
     }
@@ -359,7 +359,7 @@ abstract contract PermissionChecker is Core {
             }
             toBeTracked = moreToBeTracked.length == 0
                 ? toBeTracked
-                : _trackMerge(toBeTracked, moreToBeTracked);
+                : _track(toBeTracked, moreToBeTracked);
         }
 
         return (Status.Ok, toBeTracked);
@@ -381,7 +381,7 @@ abstract contract PermissionChecker is Core {
             }
             tobeTracked = moreToBeTracked.length == 0
                 ? tobeTracked
-                : _trackMerge(tobeTracked, moreToBeTracked);
+                : _track(tobeTracked, moreToBeTracked);
         }
         return (Status.Ok, tobeTracked);
     }
@@ -431,7 +431,7 @@ abstract contract PermissionChecker is Core {
                     taken |= 1 << j;
                     toBeTracked = moreToBeTracked.length == 0
                         ? toBeTracked
-                        : _trackMerge(toBeTracked, moreToBeTracked);
+                        : _track(toBeTracked, moreToBeTracked);
                     break;
                 }
             }
@@ -531,9 +531,7 @@ abstract contract PermissionChecker is Core {
             parameter.isHashed ? keccak256(payload.raw) : bytes32(payload.raw);
     }
 
-    function _track() private pure returns (Tracking[] memory result) {
-        return result;
-    }
+    function _track() private pure returns (Tracking[] memory result) {}
 
     function _track(
         Tracking memory tracking
@@ -542,7 +540,7 @@ abstract contract PermissionChecker is Core {
         result[0] = tracking;
     }
 
-    function _trackMerge(
+    function _track(
         Tracking[] memory t1,
         Tracking[] memory t2
     ) private pure returns (Tracking[] memory result) {
