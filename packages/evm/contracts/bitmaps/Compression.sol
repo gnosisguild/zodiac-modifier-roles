@@ -12,7 +12,7 @@ library Compression {
         Hash
     }
 
-    uint256 private constant offsetSize = 248;
+    uint256 private constant offsetLength = 248;
     uint256 private constant offsetLeftPad = 240;
     uint256 private constant offsetRightPad = 232;
 
@@ -21,7 +21,11 @@ library Compression {
 
     function compress(
         bytes calldata data
-    ) internal pure returns (Mode compression, uint256 size, bytes32 result) {
+    )
+        internal
+        pure
+        returns (Mode compression, uint256 resultLength, bytes32 result)
+    {
         // buffer too large
         uint256 length = data.length;
         if (length > 255) {
@@ -34,50 +38,53 @@ library Compression {
             return (
                 Mode.Compressed,
                 headSize,
-                (bytes32(headSize << offsetSize) |
+                (bytes32((headSize - 1) << offsetLength) |
                     bytes32(leftPad << offsetLeftPad))
             );
         }
         uint256 rightPad = _trailingZeroes(data);
-        uint256 compressedSize = length - (leftPad + rightPad) + headSize;
 
-        if (compressedSize < oneWord) {
+        uint256 contentLength = length - (leftPad + rightPad);
+        uint256 payloadLength = contentLength + headSize - 1;
+        uint256 compressedLength = contentLength + headSize;
+
+        if (compressedLength < oneWord) {
             compression = Mode.Compressed;
-            size = compressedSize;
+            resultLength = compressedLength;
             result =
-                bytes32(size << offsetSize) |
+                bytes32(payloadLength << offsetLength) |
                 bytes32(leftPad << offsetLeftPad) |
                 bytes32(rightPad << offsetRightPad) |
                 (bytes32(data[leftPad:length - rightPad]) >> (headSize * 8));
         } else if (length > oneWord) {
             compression = Mode.Hash;
-            size = oneWord;
+            resultLength = oneWord;
             result = keccak256(data);
         } else if (length == oneWord) {
             compression = Mode.UncompressedWord;
-            size = oneWord;
+            resultLength = oneWord;
             result = bytes32(data);
         } else {
             compression = Mode.Uncompressed;
-            size = length;
+            resultLength = length;
             result = bytes32(data);
         }
     }
 
     function extract(
-        bytes32 compressed
+        bytes32 payload
     ) internal pure returns (bytes memory compValue) {
-        uint256 size = (uint256(compressed >> offsetSize) & 0xff);
-        uint256 leftPad = uint256(compressed >> offsetLeftPad) & 0xff;
-        uint256 rightPad = uint256(compressed >> offsetRightPad) & 0xff;
-        bytes32 payload = compressed << (headSize * 8);
+        uint256 payloadLength = (uint256(payload >> offsetLength) & 0xff);
+        uint256 leftPad = uint256(payload >> offsetLeftPad) & 0xff;
+        uint256 rightPad = uint256(payload >> offsetRightPad) & 0xff;
+        bytes32 content = payload << (headSize * 8);
 
-        uint256 payloadSize = size - headSize;
-        uint256 length = leftPad + payloadSize + rightPad;
+        uint256 contentLength = payloadLength - (headSize - 1);
+        uint256 length = leftPad + contentLength + rightPad;
 
         compValue = new bytes(length);
-        for (uint256 i; i < payloadSize; ++i) {
-            compValue[i + leftPad] = payload[i];
+        for (uint256 i; i < contentLength; ++i) {
+            compValue[i + leftPad] = content[i];
         }
     }
 

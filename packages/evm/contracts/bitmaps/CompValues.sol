@@ -28,10 +28,10 @@ library CompValues {
         (
             Compression.Mode compression,
             uint256 size,
-            bytes32 payload
+            bytes32 result
         ) = Compression.compress(parameter.compValue);
 
-        BufferPacker.pack(buffer, offset, size, payload);
+        BufferPacker.pack(buffer, offset, size, result);
 
         return (compression, offset + size);
     }
@@ -80,7 +80,7 @@ library CompValues {
         ) {
             return 32;
         } else {
-            return uint8(BufferPacker.unpackByte(buffer, offset));
+            return uint8(BufferPacker.unpackByte(buffer, offset)) + 1;
         }
     }
 
