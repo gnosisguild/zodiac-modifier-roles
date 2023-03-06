@@ -5,6 +5,7 @@ import hre, { deployments } from "hardhat";
 
 enum Mode {
   Empty = 0,
+  UncompressedWord,
   Uncompressed,
   Compressed,
   Hash,
@@ -31,14 +32,14 @@ describe("Compression", async () => {
         const { compression } = await Compression.compress(
           "0xf00000000000000000000000000000000000000000000000000000000000000f"
         );
-        expect(compression).to.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.UncompressedWord);
       });
       it("Misses compression efficiency by one byte", async () => {
         const { Compression } = await setup();
         let { compression } = await Compression.compress(
           "0x000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         );
-        expect(compression).to.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.UncompressedWord);
 
         ({ compression } = await Compression.compress(
           "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
@@ -48,7 +49,7 @@ describe("Compression", async () => {
         ({ compression } = await Compression.compress(
           "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000000"
         ));
-        expect(compression).to.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.UncompressedWord);
 
         ({ compression } = await Compression.compress(
           "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000"
@@ -58,7 +59,7 @@ describe("Compression", async () => {
         ({ compression } = await Compression.compress(
           "0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000"
         ));
-        expect(compression).to.equal(Mode.Uncompressed);
+        expect(compression).to.equal(Mode.UncompressedWord);
 
         ({ compression } = await Compression.compress(
           "0x0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000"
@@ -73,21 +74,16 @@ describe("Compression", async () => {
           "0x0000000000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedSizeCompressed = 3;
-        const expectedSizeExtracted = 32;
-        const expectedOffset = 0;
+        const expectedSize = 3;
+        const expectedLeftPad = 32;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x"]
           ).padEnd(66, "0")
         );
       });
@@ -97,45 +93,36 @@ describe("Compression", async () => {
           "0xffaabbc000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedSizeCompressed = 7;
-        const expectedSizeExtracted = 32;
-        const expectedOffset = 0;
+        const expectedSize = 7;
+        const expectedLeftPad = 0;
+        const expectedRightPad = 28;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0xffaabbc0",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0xffaabbc0"]
           ).padEnd(66, "0")
         );
       });
+
       it("compressible amount shifted to the right", async () => {
         const { Compression } = await setup();
         const { compression, size, result } = await Compression.compress(
           "0x000000000000000000000000000000000000000000000000000000000000000a"
         );
 
-        const expectedSizeCompressed = 4;
-        const expectedSizeExtracted = 32;
-        const expectedOffset = 31;
+        const expectedSize = 4;
+        const expectedLeftPad = 31;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x0a",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x0a"]
           ).padEnd(66, "0")
         );
       });
@@ -145,19 +132,19 @@ describe("Compression", async () => {
           "0x0000000000000000000100004512aafe0000000001ff00000000000000000000"
         );
 
-        const expectedSizeCompressed = 16;
-        const expectedSizeExtracted = 32;
-        const expectedOffset = 9;
+        const expectedSize = 16;
+        const expectedLeftPad = 9;
+        const expectedRightPad = 10;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
+              expectedSize,
+              expectedLeftPad,
+              expectedRightPad,
               "0x0100004512aafe0000000001ff",
             ]
           ).padEnd(66, "0")
@@ -172,21 +159,16 @@ describe("Compression", async () => {
         const { Compression } = await setup();
         const { compression, size, result } = await Compression.compress("0x");
 
-        const expectedSizeCompressed = 3;
-        const expectedSizeExtracted = 0;
-        const expectedOffset = 0;
+        const expectedSize = 3;
+        const expectedLeftPad = 0;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x"]
           ).padEnd(66, "0")
         );
       });
@@ -196,21 +178,16 @@ describe("Compression", async () => {
           "0x0000000000"
         );
 
-        const expectedSizeCompressed = 3;
-        const expectedSizeExtracted = 5;
-        const expectedOffset = 0;
+        const expectedSize = 3;
+        const expectedLeftPad = 5;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x"]
           ).padEnd(66, "0")
         );
       });
@@ -220,19 +197,19 @@ describe("Compression", async () => {
           "0xf000000000000000000100004512aafe0000000001ff00000000000f"
         );
 
-        const expectedSizeCompressed = 31;
-        const expectedSizeExtracted = 28;
-        const expectedOffset = 0;
+        const expectedSize = 31;
+        const expectedLeftPad = 0;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
+              expectedSize,
+              expectedLeftPad,
+              expectedRightPad,
               "0xf000000000000000000100004512aafe0000000001ff00000000000f",
             ]
           ).padEnd(66, "0")
@@ -249,7 +226,7 @@ describe("Compression", async () => {
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [10, 7, 0, "0x0100004512aafe"]
+            [10, 0, 0, "0x0100004512aafe"]
           ).padEnd(66, "0")
         );
       });
@@ -260,43 +237,39 @@ describe("Compression", async () => {
           "0x000000000010aabbc0"
         );
 
-        const expectedSizeCompressed = 7;
-        const expectedSizeExtracted = 9;
-        const expectedOffset = 5;
+        const expectedSize = 7;
+        const expectedLeftPad = 5;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x10aabbc0",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x10aabbc0"]
           ).padEnd(66, "0")
         );
       });
+
       it("Smaller than 32 bytes that saves a lot -> content in the middle", async () => {
         const { Compression } = await setup();
         const { compression, size, result } = await Compression.compress(
           "0x00000000000ff100004512aafe000000"
         );
 
-        const expectedSizeCompressed = 11;
-        const expectedSizeExtracted = 16;
-        const expectedOffset = 5;
+        const expectedSize = 11;
+        const expectedLeftPad = 5;
+        const expectedRightPad = 3;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
+              expectedSize,
+              expectedLeftPad,
+              expectedRightPad,
               "0x0ff100004512aafe",
             ]
           ).padEnd(66, "0")
@@ -308,21 +281,16 @@ describe("Compression", async () => {
           "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         );
 
-        const expectedSizeCompressed = 3;
-        const expectedSizeExtracted = 42;
-        const expectedOffset = 0;
+        const expectedSize = 3;
+        const expectedLeftPad = 42;
+        const expectedRightPad = 0;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
-              "0x",
-            ]
+            [expectedSize, expectedLeftPad, expectedRightPad, "0x"]
           ).padEnd(66, "0")
         );
       });
@@ -332,19 +300,19 @@ describe("Compression", async () => {
           "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff100004512aafe000000"
         );
 
-        const expectedSizeCompressed = 11;
-        const expectedSizeExtracted = 66;
-        const expectedOffset = 55;
+        const expectedSize = 11;
+        const expectedLeftPad = 55;
+        const expectedRightPad = 3;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
+              expectedSize,
+              expectedLeftPad,
+              expectedRightPad,
               "0x0ff100004512aafe",
             ]
           ).padEnd(66, "0")
@@ -356,19 +324,19 @@ describe("Compression", async () => {
           "0x00000000ff2382837000000000000000000000000000000000000000000000ff000000000000000000000000000000"
         );
 
-        const expectedSizeCompressed = 31;
-        const expectedSizeExtracted = 47;
-        const expectedOffset = 4;
+        const expectedSize = 31;
+        const expectedLeftPad = 4;
+        const expectedRightPad = 15;
 
         expect(compression).to.equal(Mode.Compressed);
-        expect(size).to.equal(expectedSizeCompressed);
+        expect(size).to.equal(expectedSize);
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
             [
-              expectedSizeCompressed,
-              expectedSizeExtracted,
-              expectedOffset,
+              expectedSize,
+              expectedLeftPad,
+              expectedRightPad,
               "0xff2382837000000000000000000000000000000000000000000000ff",
             ]
           ).padEnd(66, "0")
@@ -430,7 +398,7 @@ describe("Compression", async () => {
         expect(result).to.equal(
           solidityPack(
             ["uint8", "uint8", "uint8", "bytes"],
-            [4, 255, 0, "0xff"]
+            [4, 0, 254, "0xff"]
           ).padEnd(66, "0")
         );
       });
