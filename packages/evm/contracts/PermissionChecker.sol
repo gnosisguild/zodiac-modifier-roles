@@ -62,8 +62,6 @@ abstract contract PermissionChecker is Core {
     /// Bytemasking not an allowed value
     error BytemaskNotAllowed();
 
-    /// Allowance was double spent
-
     /*
      *
      * CHECKERS
@@ -467,8 +465,6 @@ abstract contract PermissionChecker is Core {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Tracking[] memory empty) {
-        assert(parameter._type == ParameterType.Static);
-
         bytes32 compValue = parameter.compValue;
         bytes calldata value = Decoder.pluck(
             data,
@@ -477,12 +473,11 @@ abstract contract PermissionChecker is Core {
         );
         uint256 bytesToShift = uint8(bytes1(compValue));
         uint256 bytesToCompare = uint8(bytes1(compValue << 8));
-        if (bytesToShift + bytesToCompare >= value.length) {
+        if (bytesToShift + bytesToCompare > value.length) {
             return (Status.BytemaskOverflow, empty);
         }
 
         bytes32 carveMask = _leftMask(bytesToCompare * 8);
-
         bytes32 mask = (compValue << 16) & carveMask;
         bytes32 expected = (compValue << (16 + bytesToCompare * 8)) & carveMask;
         bytes32 slice = bytes32(

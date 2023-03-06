@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { BigNumber, BigNumberish } from "ethers";
 import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
@@ -6,6 +7,8 @@ import "@nomiclabs/hardhat-ethers";
 import { Comparison, ExecutionOptions, ParameterType } from "./utils";
 
 describe("Comparison", async () => {
+  const ROLE_ID = 0;
+
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
@@ -27,7 +30,6 @@ describe("Comparison", async () => {
     await modifier.enableModule(invoker.address);
 
     async function setRole(compValue: string) {
-      const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
       );
@@ -53,7 +55,7 @@ describe("Comparison", async () => {
         ExecutionOptions.None
       );
 
-      async function invoke(a: number) {
+      async function invoke(a: BigNumberish) {
         return modifier
           .connect(invoker)
           .execTransactionFromModule(
@@ -65,11 +67,10 @@ describe("Comparison", async () => {
           );
       }
 
-      return { invoke, modifier };
+      return { invoke };
     }
 
     async function setRoleDynamic(compValue: string) {
-      const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("dynamic")
       );
@@ -106,20 +107,273 @@ describe("Comparison", async () => {
           );
       }
 
-      return { invoke, modifier };
+      return { invoke };
     }
 
-    return { setRole, setRoleDynamic };
+    return { setRole, setRoleDynamic, modifier, owner, testContract };
   });
 
   describe("Bytemask", () => {
-    it.skip("triggers an integrity error at setup - bytemask is odd", async () => {});
-    it.skip("triggers an integrity error at setup - bytemask is too large", async () => {});
-    it.skip("passes a bytemask comparison in static parameter", async () => {});
-    it.skip("fails a bytemask comparison in a static parameter", async () => {});
-    it.skip("oveflows a bytemask comparison in a static parameter", async () => {});
-    it.skip("passes a bytemask comparison in dynamic parameter", async () => {});
-    it.skip("fails a bytemask comparison in a dynamic parameter", async () => {});
-    it.skip("oveflows a bytemask comparison in a dynamic parameter", async () => {});
+    it("triggers an integrity error at setup - bytemask is odd", async () => {
+      const { modifier, owner, testContract } = await setup();
+
+      await expect(
+        modifier.connect(owner).scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          "0xaabbccdd",
+          [
+            {
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.Bytemask,
+              compValue: "0xaa",
+            },
+          ],
+          ExecutionOptions.None
+        )
+      ).to.be.revertedWith("MalformedBytemask(0)");
+
+      await expect(
+        modifier.connect(owner).scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          "0xaabbccdd",
+          [
+            {
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.Bytemask,
+              compValue: "0x0a02ffffeeee",
+            },
+          ],
+          ExecutionOptions.None
+        )
+      ).to.not.be.reverted;
+    });
+
+    it("triggers an integrity error at setup - bytemask is too large", async () => {
+      const { modifier, owner, testContract } = await setup();
+
+      const shift = "ff";
+      const length = "0f";
+      const maskLong = "ffffffffffffffffffffffffffffffff";
+      const maskOk = "ffffffffffffffffffffffffffffff";
+      const expected = "ffffffffffffffffffffffffffffff";
+
+      await expect(
+        modifier.connect(owner).scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          "0xaabbccdd",
+          [
+            {
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.Bytemask,
+              compValue: `0x${shift}${length}${maskLong}${expected}`,
+            },
+          ],
+          ExecutionOptions.None
+        )
+      ).to.be.revertedWith("MalformedBytemask(0)");
+
+      await expect(
+        modifier.connect(owner).scopeFunction(
+          ROLE_ID,
+          testContract.address,
+          "0xaabbccdd",
+          [
+            {
+              parent: 0,
+              _type: ParameterType.Static,
+              comp: Comparison.Bytemask,
+              compValue: `0x${shift}${length}${maskOk}${expected}`,
+            },
+          ],
+          ExecutionOptions.None
+        )
+      ).to.not.be.reverted;
+    });
+
+    describe("Static - Passes", async () => {
+      it("left aligned", async () => {
+        const { setRole } = await setup();
+
+        const shift = "00";
+        const length = "01";
+        const mask = "ff";
+        const expected = "46";
+
+        const { invoke } = await setRole(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x4600000000000000000000000000000000000000000000000000000000000000"
+            )
+          )
+        ).to.not.be.reverted;
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x4600ff0000000000000000000000000000000110000000000000000334400000"
+            )
+          )
+        ).to.not.be.reverted;
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x4500000000000000000000000000000000000000000000000000000000000000"
+            )
+          )
+        ).to.be.revertedWith("BytemaskNotAllowed()");
+      });
+      it("middle aligned", async () => {
+        const { setRole } = await setup();
+
+        const shift = "0a";
+        const length = "03";
+        const mask = "f0f0f0";
+        const expected = "103020";
+
+        const { invoke } = await setRole(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x0000000000000000000010302000000000000000000000000000000000000000"
+            )
+          )
+        ).to.not.be.reverted;
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x000000000000000000001030200000000000000000000000000000ffffffffff"
+            )
+          )
+        ).to.not.be.reverted;
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x000000000000000000001030400000000000000000000000000000ffffffffff"
+            )
+          )
+        ).to.be.revertedWith("BytemaskNotAllowed()");
+      });
+      it("right aligned", async () => {
+        const { setRole } = await setup();
+
+        const shift = "1e";
+        const length = "02";
+        const mask = "ffff";
+        const expected = "abcd";
+
+        const { invoke } = await setRole(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x00000000000000000000000000000000000000000000000000000000000abcd"
+            )
+          )
+        ).to.not.be.reverted;
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x00000000ffffffff000000000000000000000000000000000000000000fabcd"
+            )
+          )
+        ).to.not.be.reverted;
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd"
+            )
+          )
+        ).to.be.revertedWith("BytemaskNotAllowed()");
+      });
+    });
+    describe("Static - Fails", async () => {
+      it("overflow", async () => {
+        const { setRole } = await setup();
+
+        // 30
+        const shift = "1e";
+        const length = "03";
+        const mask = "ffffff";
+        const expected = "abcd11";
+
+        const { invoke } = await setRole(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(
+          invoke(
+            BigNumber.from(
+              "0x000000000000000000000000000000000000000000000000000000000000000"
+            )
+          )
+        ).to.be.revertedWith("BytemaskOverflow()");
+      });
+    });
+
+    describe("Dynamic - Passes", async () => {
+      it("left aligned", async () => {
+        const { setRoleDynamic } = await setup();
+
+        const shift = "00";
+        const length = "01";
+        const mask = "ff";
+        const expected = "46";
+
+        const { invoke } = await setRoleDynamic(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(invoke("0x46")).to.not.be.reverted;
+        await expect(
+          invoke(
+            "0x4600ff0000000000000000000000000000000110000000000000000334400000"
+          )
+        ).to.not.be.reverted;
+
+        await expect(invoke("0x45")).to.be.revertedWith("BytemaskNotAllowed()");
+        await expect(invoke("0x45ff0077")).to.be.revertedWith(
+          "BytemaskNotAllowed()"
+        );
+      });
+      it.skip("middle aligned", async () => {});
+      it.skip("right aligned", async () => {});
+    });
+    describe("Dynamic - Fails", async () => {
+      it("overflow", async () => {
+        const { setRoleDynamic } = await setup();
+
+        // 30
+        const shift = "03";
+        const length = "03";
+        const mask = "ffffff";
+        const expected = "aaaaaa";
+
+        const { invoke } = await setRoleDynamic(
+          `0x${shift}${length}${mask}${expected}`
+        );
+
+        await expect(invoke("0x0000000000")).to.be.revertedWith(
+          "BytemaskOverflow()"
+        );
+      });
+      it.skip("mask efficacy - not exactly matching expected", async () => {});
+    });
   });
 });

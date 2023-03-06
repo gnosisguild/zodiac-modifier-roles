@@ -181,7 +181,7 @@ abstract contract PermissionLoader is Core {
         bytes32 header = bitmap[key];
         uint256 pages = uint256(header) >> 251;
 
-        result.payload = new bytes32[](pages);
+        result.payload = new bytes32[](pages > 0 ? pages : 1);
         result.payload[0] = header;
         for (uint256 i = 1; i < pages; ++i) {
             result.payload[i] = bitmap[_key(key, i)];

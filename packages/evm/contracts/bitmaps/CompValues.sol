@@ -90,6 +90,7 @@ library CompValues {
             comp == Comparison.EqualTo ||
             comp == Comparison.GreaterThan ||
             comp == Comparison.LessThan ||
-            comp == Comparison.WithinLimit;
+            comp == Comparison.WithinLimit ||
+            comp == Comparison.Bytemask;
     }
 }
