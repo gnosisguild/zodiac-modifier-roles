@@ -27,44 +27,45 @@ library CompValues {
 
         (
             Compression.Mode compression,
-            uint256 size,
+            uint256 length,
             bytes32 result
         ) = Compression.compress(parameter.compValue);
 
-        BufferPacker.pack(buffer, offset, size, result);
+        BufferPacker.pack(buffer, offset, length, result);
 
-        return (compression, offset + size);
+        return (compression, offset + length);
     }
 
     function unpack(
         BitmapBuffer memory buffer,
-        ParameterType _type,
-        Compression.Mode compression,
-        uint256 offset
-    ) internal pure returns (bytes32) {
+        uint256 offset,
+        Compression.Mode compression
+    )
+        internal
+        pure
+        returns (bytes32 result, bool isHashed, uint256 nextOffset)
+    {
         if (compression == Compression.Mode.Empty) {
-            return 0;
+            return (result, false, offset);
         }
 
         uint256 size = packedSize(buffer, compression, offset);
         bytes32 payload = BufferPacker.unpack(buffer, offset, size);
 
-        if (compression == Compression.Mode.Compressed) {
-            if (_type == ParameterType.Static) {
-                return bytes32(Compression.extract(payload));
-            } else {
-                return keccak256(Compression.extract(payload));
-            }
+        if (compression == Compression.Mode.UncompressedWord) {
+            result = payload;
         } else if (compression == Compression.Mode.Uncompressed) {
-            if (_type == ParameterType.Static) {
-                return payload;
-            } else {
-                return keccak256(abi.encodePacked(payload));
-            }
+            result = payload << 8;
+        } else if (compression == Compression.Mode.Compressed) {
+            bytes memory compValue = Compression.extract(payload);
+            isHashed = compValue.length > 32;
+            result = isHashed ? keccak256(compValue) : bytes32(compValue);
         } else {
             assert(compression == Compression.Mode.Hash);
-            return payload;
+            isHashed = true;
+            result = payload;
         }
+        nextOffset = offset + size;
     }
 
     function packedSize(
@@ -75,7 +76,7 @@ library CompValues {
         if (compression == Compression.Mode.Empty) {
             return 0;
         } else if (
-            compression == Compression.Mode.Uncompressed ||
+            compression == Compression.Mode.UncompressedWord ||
             compression == Compression.Mode.Hash
         ) {
             return 32;

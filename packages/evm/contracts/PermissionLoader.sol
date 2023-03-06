@@ -81,22 +81,27 @@ abstract contract PermissionLoader is Core {
     }
 
     function _unpackParameters(
-        BitmapBuffer memory scopeConfig,
-        BitmapBuffer memory compValues
+        BitmapBuffer memory scopeConfigBuffer,
+        BitmapBuffer memory compValuesBuffer
     ) internal pure returns (ParameterConfig[] memory result) {
         (
             uint8[] memory parents,
             Compression.Mode[] memory compressions
-        ) = ScopeConfig.unpackMisc(scopeConfig);
+        ) = ScopeConfig.unpackMisc(scopeConfigBuffer);
+
+        (
+            bytes32[] memory compValues,
+            bool[] memory isHashed
+        ) = _unpackCompValues(compValuesBuffer, compressions);
 
         (uint256 left, uint256 right) = Topology.rootBounds(parents);
         result = new ParameterConfig[](right - left + 1);
         for (uint256 i = left; i <= right; ++i) {
             result[i] = _unpackParameter(
-                scopeConfig,
+                scopeConfigBuffer,
                 compValues,
                 parents,
-                compressions,
+                isHashed,
                 i
             );
         }
@@ -104,21 +109,14 @@ abstract contract PermissionLoader is Core {
 
     function _unpackParameter(
         BitmapBuffer memory scopeConfig,
-        BitmapBuffer memory compValues,
+        bytes32[] memory compValues,
         uint8[] memory parents,
-        Compression.Mode[] memory compressions,
+        bool[] memory isHashed,
         uint256 index
     ) private pure returns (ParameterConfig memory result) {
         result = ScopeConfig.unpackParameter(scopeConfig, index);
-
-        if (compressions[index] != Compression.Mode.Empty) {
-            result.compValue = _unpackCompValue(
-                compValues,
-                index,
-                result._type,
-                compressions
-            );
-        }
+        result.isHashed = isHashed[index];
+        result.compValue = compValues[index];
 
         (uint256 left, uint256 right) = Topology.childrenBounds(parents, index);
         if (left <= right) {
@@ -128,35 +126,38 @@ abstract contract PermissionLoader is Core {
                     scopeConfig,
                     compValues,
                     parents,
-                    compressions,
+                    isHashed,
                     j
                 );
             }
         }
     }
 
-    function _unpackCompValue(
-        BitmapBuffer memory compValues,
-        uint256 index,
-        ParameterType _type,
+    function _unpackCompValues(
+        BitmapBuffer memory buffer,
         Compression.Mode[] memory compressions
-    ) private pure returns (bytes32 compValue) {
-        Compression.Mode compression = compressions[index];
-
-        if (compression == Compression.Mode.Empty) {
-            return 0;
-        }
+    )
+        private
+        pure
+        returns (bytes32[] memory compValues, bool[] memory isHashed)
+    {
+        uint256 length = compressions.length;
+        compValues = new bytes32[](length);
+        isHashed = new bool[](length);
 
         uint256 offset = 5;
-        for (uint256 i; i < index; ++i) {
-            offset += CompValues.packedSize(
-                compValues,
-                compressions[i],
-                offset
+        for (uint256 i; i < length; ++i) {
+            Compression.Mode compression = compressions[i];
+            if (compression == Compression.Mode.Empty) {
+                continue;
+            }
+
+            (compValues[i], isHashed[i], offset) = CompValues.unpack(
+                buffer,
+                offset,
+                compression
             );
         }
-
-        return CompValues.unpack(compValues, _type, compression, offset);
     }
 
     function _storeBitmap(
