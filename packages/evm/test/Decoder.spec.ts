@@ -33,21 +33,27 @@ describe("Decoder library", async () => {
   it("plucks (dynamic) empty buffer from encoded caldata", async () => {
     const { testEncoder, decoder } = await setup();
 
-    // (address,bytes,uint32[])
-
     const { data } = await testEncoder.populateTransaction.dynamic("0x");
     assert(data);
 
-    const layout = [
-      {
-        _type: ParameterType.Dynamic,
-        comp: Comparison.EqualTo,
-        children: [],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EqualTo,
+          children: [],
+        },
+      ],
+    };
+
     const result = await decoder.inspect(data, layout);
-    expect(result[0].offset).to.equal(BigNumber.from(68));
-    expect(result[0].size).to.equal(BigNumber.from(0));
+    expect(result.offset).to.equal(BigNumber.from(0));
+    expect(result.size).to.equal(BigNumber.from((data.length - 2) / 2));
+
+    expect(result.children[0].offset).to.equal(BigNumber.from(68));
+    expect(result.children[0].size).to.equal(BigNumber.from(0));
   });
 
   it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {
@@ -63,41 +69,57 @@ describe("Decoder library", async () => {
       );
     assert(data);
 
-    const layout = [
-      {
-        _type: ParameterType.Static,
-        comp: 0,
-        children: [],
-      },
-      {
-        _type: ParameterType.Dynamic,
-        comp: 0,
-        children: [],
-      },
-      {
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Static,
+          comp: 0,
+          children: [],
+        },
+        {
+          _type: ParameterType.Dynamic,
+          comp: 0,
+          children: [],
+        },
+        {
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
     const result = await decoder.inspect(data, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
 
     expect(
-      await decoder.pluck(data, result[1].offset, result[1].size)
+      await decoder.pluck(
+        data,
+        result.children[1].offset,
+        result.children[1].size
+      )
     ).to.equal(solidityPack(["bytes"], ["0xabcd"]));
 
     expect(
-      await decoder.pluck(data, result[2].offset, result[2].size)
+      await decoder.pluck(
+        data,
+        result.children[2].offset,
+        result.children[2].size
+      )
     ).to.deep.equal(
       removeTrailingOffset(
         defaultAbiCoder.encode(["uint256[]"], [[10, 32, 55]])
@@ -119,41 +141,57 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      {
-        _type: ParameterType.Dynamic,
-        comp: 0,
-        children: [],
-      },
-      {
-        _type: ParameterType.Static,
-        comp: 0,
-        children: [],
-      },
-      {
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Dynamic,
+          comp: 0,
+          children: [],
+        },
+        {
+          _type: ParameterType.Static,
+          comp: 0,
+          children: [],
+        },
+        {
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.inspect(data, layout);
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
 
     expect(
-      await decoder.pluck(data, result[1].offset, result[1].size)
+      await decoder.pluck(
+        data,
+        result.children[1].offset,
+        result.children[1].size
+      )
     ).to.equal(defaultAbiCoder.encode(["bool"], [false]));
 
     expect(
-      await decoder.pluck(data, result[2].offset, result[2].size)
+      await decoder.pluck(
+        data,
+        result.children[2].offset,
+        result.children[2].size
+      )
     ).to.equal(
       removeTrailingOffset(
         defaultAbiCoder.encode(["bytes2[]"], [["0x1122", "0x3344", "0x5566"]])
@@ -175,25 +213,33 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      {
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-      { _type: ParameterType.Dynamic, comp: 0, children: [] },
-      { _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+        { _type: ParameterType.Dynamic, comp: 0, children: [] },
+        { _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
 
     const result = await decoder.inspect(data, layout);
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.deep.equal(
       removeTrailingOffset(
         defaultAbiCoder.encode(["bytes2[]"], [["0xaabb", "0x1234", "0xff33"]])
@@ -201,10 +247,18 @@ describe("Decoder library", async () => {
     );
 
     expect(
-      await decoder.pluck(data, result[1].offset, result[1].size)
+      await decoder.pluck(
+        data,
+        result.children[1].offset,
+        result.children[1].size
+      )
     ).to.equal(hexlify(toUtf8Bytes("Hello World!")));
     expect(
-      await decoder.pluck(data, result[2].offset, result[2].size)
+      await decoder.pluck(
+        data,
+        result.children[2].offset,
+        result.children[2].size
+      )
     ).to.equal(BigNumber.from(123456789));
   });
 
@@ -217,15 +271,19 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [{ _type: ParameterType.Static, comp: 0, children: [] }];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [{ _type: ParameterType.Static, comp: 0, children: [] }],
+    };
 
     const result = await decoder.inspect(data, layout);
 
     await expect(
       decoder.pluck(
         data.slice(0, data.length - 2),
-        result[0].offset,
-        result[0].size
+        result.children[0].offset,
+        result.children[0].size
       )
     ).to.be.revertedWith("CalldataOutOfBounds()");
   });
@@ -239,15 +297,19 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const layout = [
-      { _type: ParameterType.Static, comp: 0, children: [] },
-      { _type: ParameterType.Static, comp: 0, children: [] },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        { _type: ParameterType.Static, comp: 0, children: [] },
+        { _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
 
     const result = await decoder.inspect(data, layout);
 
     await expect(
-      decoder.pluck(data, result[1].offset, result[1].size)
+      decoder.pluck(data, result.children[1].offset, result.children[1].size)
     ).to.be.revertedWith("CalldataOutOfBounds()");
   });
 
@@ -262,36 +324,41 @@ describe("Decoder library", async () => {
     });
 
     assert(data);
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Array,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
-    const result = await decoder.inspect(data, [
-      {
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Array,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ]);
+    const result = await decoder.inspect(data, layout);
 
     // removing the tuple and letting the abi encoder ommit the offset
     const implicit = defaultAbiCoder.encode(
@@ -299,7 +366,11 @@ describe("Decoder library", async () => {
       ["0xabcd", 100, [1, 2, 3]]
     );
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(implicit);
 
     // removing the offset
@@ -310,7 +381,11 @@ describe("Decoder library", async () => {
       )
     );
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(explicit);
   });
 
@@ -327,28 +402,38 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const result = await decoder.inspect(data as string, [
-      {
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-      { _type: ParameterType.Static, comp: 0, children: [] },
-    ]);
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+        { _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(
       defaultAbiCoder.encode(
         ["tuple(uint256, address)"],
@@ -358,7 +443,11 @@ describe("Decoder library", async () => {
 
     // alternative way
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(
       defaultAbiCoder.encode(
         ["uint256", "address"],
@@ -367,7 +456,11 @@ describe("Decoder library", async () => {
     );
 
     expect(
-      await decoder.pluck(data, result[1].offset, result[1].size)
+      await decoder.pluck(
+        data,
+        result.children[1].offset,
+        result.children[1].size
+      )
     ).to.deep.equal(defaultAbiCoder.encode(["uint256"], [2000]));
   });
 
@@ -384,18 +477,32 @@ describe("Decoder library", async () => {
 
     assert(data);
 
-    const result = await decoder.inspect(data as string, [
-      { _type: ParameterType.Static, comp: 0, children: [] },
-      { _type: ParameterType.Static, comp: 0, children: [] },
-      { _type: ParameterType.Static, comp: 0, children: [] },
-    ]);
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        { _type: ParameterType.Static, comp: 0, children: [] },
+        { _type: ParameterType.Static, comp: 0, children: [] },
+        { _type: ParameterType.Static, comp: 0, children: [] },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(defaultAbiCoder.encode(["uint256"], [1999]));
 
     expect(
-      await decoder.pluck(data, result[1].offset, result[1].size)
+      await decoder.pluck(
+        data,
+        result.children[1].offset,
+        result.children[1].size
+      )
     ).to.equal(
       defaultAbiCoder.encode(
         ["address"],
@@ -437,50 +544,62 @@ describe("Decoder library", async () => {
       )
     );
 
-    const layout = [
-      {
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     assert(data);
 
     const result = await decoder.inspect(data, layout);
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expectedAutomatic);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expectedManual);
   });
 
@@ -519,72 +638,80 @@ describe("Decoder library", async () => {
       ]
     );
 
-    const layout = [
-      {
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Dynamic,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Array,
-                comp: 0,
-                children: [
-                  {
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Dynamic,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Array,
+                  comp: 0,
+                  children: [
+                    {
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.inspect(data as string, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expected);
   });
 
@@ -628,62 +755,74 @@ describe("Decoder library", async () => {
       )
     );
 
-    const layout = [
-      {
-        _type: ParameterType.Tuple,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Static,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Dynamic,
-            comp: 0,
-            children: [],
-          },
-          {
-            _type: ParameterType.Array,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Tuple,
-                comp: 0,
-                children: [
-                  {
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                  {
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Tuple,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Static,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Dynamic,
+              comp: 0,
+              children: [],
+            },
+            {
+              _type: ParameterType.Array,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Tuple,
+                  comp: 0,
+                  children: [
+                    {
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                    {
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.inspect(data, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expectedAutomatic);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expectedManual);
 
     expect(
       await decoder.pluck(
         data,
-        result[0].children[2].offset,
-        result[0].children[2].size
+        result.children[0].children[2].offset,
+        result.children[0].children[2].size
       )
     ).to.equal(expected2);
   });
@@ -716,35 +855,43 @@ describe("Decoder library", async () => {
       )
     );
 
-    const layout = [
-      {
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     const result = await decoder.inspect(data as string, layout);
 
     expect(
-      await decoder.pluck(data as string, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data as string,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expected);
   });
 
@@ -768,48 +915,56 @@ describe("Decoder library", async () => {
       )
     );
 
-    const layout = [
-      {
-        _type: ParameterType.Array,
-        comp: 0,
-        children: [
-          {
-            _type: ParameterType.Tuple,
-            comp: 0,
-            children: [
-              {
-                _type: ParameterType.Dynamic,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Static,
-                comp: 0,
-                children: [],
-              },
-              {
-                _type: ParameterType.Array,
-                comp: 0,
-                children: [
-                  {
-                    _type: ParameterType.Static,
-                    comp: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    const layout = {
+      _type: ParameterType.AbiEncoded,
+      comp: Comparison.Matches,
+      children: [
+        {
+          _type: ParameterType.Array,
+          comp: 0,
+          children: [
+            {
+              _type: ParameterType.Tuple,
+              comp: 0,
+              children: [
+                {
+                  _type: ParameterType.Dynamic,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Static,
+                  comp: 0,
+                  children: [],
+                },
+                {
+                  _type: ParameterType.Array,
+                  comp: 0,
+                  children: [
+                    {
+                      _type: ParameterType.Static,
+                      comp: 0,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
     assert(data);
 
     const result = await decoder.inspect(data, layout);
 
     expect(
-      await decoder.pluck(data, result[0].offset, result[0].size)
+      await decoder.pluck(
+        data,
+        result.children[0].offset,
+        result.children[0].size
+      )
     ).to.equal(expected);
   });
 });

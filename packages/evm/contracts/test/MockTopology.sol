@@ -4,140 +4,132 @@ pragma solidity >=0.6.0 <0.9.0;
 import "../Topology.sol";
 
 contract MockTopology {
-    function typeTree(
-        PL1[] calldata layout
-    ) public pure returns (PP1[] memory) {
+    function typeTree(PC1 calldata layout) public pure returns (PP1 memory) {
         return copyOut(Topology.typeTree(copyIn(layout)));
     }
 
     function copyIn(
-        PL1[] calldata input
-    ) private pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](input.length);
-        for (uint256 i; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].children);
+        PC1 calldata input
+    ) private pure returns (ParameterConfig memory result) {
+        result._type = input._type;
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
+        for (uint256 i; i < result.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL2[] calldata input
-    ) private pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].children);
+        PC2 calldata input
+    ) private pure returns (ParameterConfig memory result) {
+        result._type = input._type;
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
+        for (uint256 i; i < result.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL3[] calldata input
-    ) private pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].children);
+        PC3 calldata input
+    ) private pure returns (ParameterConfig memory result) {
+        result._type = input._type;
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
+        for (uint256 i; i < result.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL4[] calldata input
-    ) private pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].comp = input[i].comp;
-            result[i].children = copyIn(input[i].children);
+        PC4 calldata input
+    ) private pure returns (ParameterConfig memory result) {
+        result._type = input._type;
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
+        for (uint256 i; i < result.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL5[] calldata input
-    ) private pure returns (ParameterConfig[] memory result) {
-        result = new ParameterConfig[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].comp = input[i].comp;
-        }
+        PC5 calldata input
+    ) private pure returns (ParameterConfig memory result) {
+        result._type = input._type;
+        result.comp = input.comp;
     }
 
     function copyOut(
-        TypeTopology[] memory output
-    ) private pure returns (PP1[] memory result) {
-        result = new PP1[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i]._type = output[i]._type;
-            result[i].children = copyOutTo2(output[i].children);
+        TypeTopology memory output
+    ) private pure returns (PP1 memory result) {
+        result._type = output._type;
+        result.children = new PP2[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo2(output.children[i]);
         }
     }
 
     function copyOutTo2(
-        TypeTopology[] memory output
-    ) private pure returns (PP2[] memory result) {
-        result = new PP2[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i]._type = output[i]._type;
-            result[i].children = copyOutTo3(output[i].children);
+        TypeTopology memory output
+    ) private pure returns (PP2 memory result) {
+        result._type = output._type;
+        result.children = new PP3[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo3(output.children[i]);
         }
     }
 
     function copyOutTo3(
-        TypeTopology[] memory output
-    ) private pure returns (PP3[] memory result) {
-        result = new PP3[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i]._type = output[i]._type;
-            result[i].children = copyOutTo4(output[i].children);
+        TypeTopology memory output
+    ) private pure returns (PP3 memory result) {
+        result._type = output._type;
+        result.children = new PP4[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo4(output.children[i]);
         }
     }
 
     function copyOutTo4(
-        TypeTopology[] memory output
-    ) private pure returns (PP4[] memory result) {
-        result = new PP4[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i]._type = output[i]._type;
-            result[i].children = copyOutTo5(output[i].children);
+        TypeTopology memory output
+    ) private pure returns (PP4 memory result) {
+        result._type = output._type;
+        result.children = new PP5[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo5(output.children[i]);
         }
     }
 
     function copyOutTo5(
-        TypeTopology[] memory output
-    ) private pure returns (PP5[] memory result) {
-        result = new PP5[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i]._type = output[i]._type;
-        }
+        TypeTopology memory output
+    ) private pure returns (PP5 memory result) {
+        result._type = output._type;
     }
 
-    struct PL1 {
+    struct PC1 {
         ParameterType _type;
         Comparison comp;
-        PL2[] children;
+        PC2[] children;
     }
 
-    struct PL2 {
+    struct PC2 {
         ParameterType _type;
         Comparison comp;
-        PL3[] children;
+        PC3[] children;
     }
 
-    struct PL3 {
+    struct PC3 {
         ParameterType _type;
         Comparison comp;
-        PL4[] children;
+        PC4[] children;
     }
 
-    struct PL4 {
+    struct PC4 {
         ParameterType _type;
         Comparison comp;
-        PL5[] children;
+        PC5[] children;
     }
 
-    struct PL5 {
+    struct PC5 {
         ParameterType _type;
         Comparison comp;
     }

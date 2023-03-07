@@ -826,7 +826,7 @@ describe("Comparison", async () => {
     );
 
     await expect(invoke({ a: 345, b: addressNok })).to.be.revertedWith(
-      "ParameterNotAMatch()"
+      "ParameterNotAllowed()"
     );
 
     await expect(invoke({ a: 345, b: addressOk })).to.not.be;
@@ -1215,7 +1215,7 @@ describe("Comparison", async () => {
         { a: 333, b: address2 },
         { a: 233, b: address2 },
       ])
-    ).to.be.revertedWith("ParameterNotAMatch()");
+    ).to.be.revertedWith("ParameterNotAllowed()");
   });
 
   it.skip("checks an array with a static tuple inside");
@@ -1607,14 +1607,14 @@ describe("Comparison", async () => {
       await expect(invoke(true, "First String")).to.not.be.reverted;
       // wrong first argument
       await expect(invoke(false, "Good Morning!")).to.be.revertedWith(
-        "FunctionVariantNotAllowed()"
+        "ParameterNotOneOfAllowed()"
       );
       // fixing the first argument
       await expect(invoke(true, "Good Morning!")).to.not.be.reverted;
       await expect(invoke(true, "Third String")).to.not.be.reverted;
 
       await expect(invoke(false, "Something else")).to.be.revertedWith(
-        "FunctionVariantNotAllowed()"
+        "ParameterNotOneOfAllowed()"
       );
     });
 
