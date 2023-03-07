@@ -1167,7 +1167,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Subset,
+          comp: Comparison.SubsetOf,
           compValue: ethers.utils.solidityPack(
             ["bytes4[]"],
             [["0x11112233", "0xaabbccdd", "0xffddeecc"]]
@@ -1231,7 +1231,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Subset,
+          comp: Comparison.SubsetOf,
           compValue: "0x",
         },
         {
@@ -1296,7 +1296,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Subset,
+          comp: Comparison.SubsetOf,
           compValue: "0x",
         },
         {
@@ -1359,7 +1359,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.Subset,
+          comp: Comparison.SubsetOf,
           compValue: "0x",
         },
         {

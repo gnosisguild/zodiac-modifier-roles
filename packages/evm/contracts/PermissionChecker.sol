@@ -317,7 +317,7 @@ abstract contract PermissionChecker is Core {
             return _every(data, parameter, payload);
         } else if (comp == Comparison.WithinAllowance) {
             return _withinAllowance(data, parameter, payload);
-        } else if (comp == Comparison.Subset) {
+        } else if (comp == Comparison.SubsetOf) {
             return _subset(data, parameter, payload);
         } else {
             assert(comp == Comparison.Bitmask);
