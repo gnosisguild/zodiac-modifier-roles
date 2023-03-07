@@ -38,7 +38,7 @@ abstract contract PermissionLoader is Core {
     function _loadAllowances(ParameterConfig[] memory result) private view {
         uint256 length = result.length;
         for (uint256 i; i < length; ++i) {
-            if (result[i].comp == Comparison.WithinLimit) {
+            if (result[i].comp == Comparison.WithinAllowance) {
                 uint16 allowanceId = uint16(uint256(result[i].compValue));
                 (result[i].allowance, ) = accruedBalance(
                     allowances[allowanceId],
