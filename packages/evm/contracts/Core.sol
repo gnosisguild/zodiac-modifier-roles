@@ -18,7 +18,7 @@ abstract contract Core is OwnableUpgradeable {
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view virtual returns (ParameterConfig[] memory result);
+    ) internal view virtual returns (ParameterConfig memory result);
 
     function _key(
         address targetAddress,

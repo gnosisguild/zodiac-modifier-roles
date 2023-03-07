@@ -6,8 +6,8 @@ import "../Decoder.sol";
 contract MockDecoder {
     function inspect(
         bytes calldata data,
-        PL1[] calldata layout
-    ) public pure returns (PP1[] memory) {
+        PL1 calldata layout
+    ) public pure returns (PP1 memory) {
         return copyOut(Decoder.inspect(data, copyIn(layout)));
     }
 
@@ -20,137 +20,125 @@ contract MockDecoder {
     }
 
     function copyIn(
-        PL1[] calldata input
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](input.length);
-        for (uint256 i; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].children = copyIn(input[i].children);
+        PL1 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL2[] calldata input
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].children = copyIn(input[i].children);
+        PL2 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL3[] calldata input
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].children = copyIn(input[i].children);
+        PL3 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL4[] calldata input
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-
-            result[i].children = copyIn(input[i].children);
+        PL4 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL5[] calldata input
-    ) private pure returns (TypeTopology[] memory result) {
-        result = new TypeTopology[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
-            result[i]._type = input[i]._type;
-            result[i].children = new TypeTopology[](0);
-        }
+        PL5 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](0);
     }
 
     function copyOut(
-        ParameterPayload[] memory output
-    ) private pure returns (PP1[] memory result) {
-        result = new PP1[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].location;
-            result[i].size = output[i].size;
-            result[i].children = copyOutTo2(output[i].children);
+        ParameterPayload memory output
+    ) private pure returns (PP1 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
+        result.children = new PP2[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo2(output.children[i]);
         }
     }
 
     function copyOutTo2(
-        ParameterPayload[] memory output
-    ) private pure returns (PP2[] memory result) {
-        result = new PP2[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].location;
-            result[i].size = output[i].size;
-            result[i].children = copyOutTo3(output[i].children);
+        ParameterPayload memory output
+    ) private pure returns (PP2 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
+        result.children = new PP3[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo3(output.children[i]);
         }
     }
 
     function copyOutTo3(
-        ParameterPayload[] memory output
-    ) private pure returns (PP3[] memory result) {
-        result = new PP3[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].location;
-            result[i].size = output[i].size;
-            result[i].children = copyOutTo4(output[i].children);
+        ParameterPayload memory output
+    ) private pure returns (PP3 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
+        result.children = new PP4[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo4(output.children[i]);
         }
     }
 
     function copyOutTo4(
-        ParameterPayload[] memory output
-    ) private pure returns (PP4[] memory result) {
-        result = new PP4[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].location;
-            result[i].size = output[i].size;
-            result[i].children = copyOutTo5(output[i].children);
+        ParameterPayload memory output
+    ) private pure returns (PP4 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
+        result.children = new PP5[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo5(output.children[i]);
         }
     }
 
     function copyOutTo5(
-        ParameterPayload[] memory output
-    ) private pure returns (PP5[] memory result) {
-        result = new PP5[](output.length);
-        for (uint256 i = 0; i < output.length; i++) {
-            result[i].offset = output[i].location;
-            result[i].size = output[i].size;
-        }
+        ParameterPayload memory output
+    ) private pure returns (PP5 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
     }
 
     struct PL1 {
         ParameterType _type;
-        Comparison comp;
         PL2[] children;
     }
 
     struct PL2 {
         ParameterType _type;
-        Comparison comp;
         PL3[] children;
     }
 
     struct PL3 {
         ParameterType _type;
-        Comparison comp;
         PL4[] children;
     }
 
     struct PL4 {
         ParameterType _type;
-        Comparison comp;
         PL5[] children;
     }
 
     struct PL5 {
         ParameterType _type;
-        Comparison comp;
     }
 
     struct PP1 {

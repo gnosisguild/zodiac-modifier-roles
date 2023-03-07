@@ -9,8 +9,8 @@ library Decoder {
 
     function inspect(
         bytes calldata data,
-        TypeTopology[] memory parameters
-    ) internal pure returns (ParameterPayload[] memory result) {
+        TypeTopology memory parameter
+    ) internal pure returns (ParameterPayload memory result) {
         /*
          * In the parameter encoding area, there is a region called the head
          * that is divided into 32-byte chunks. Each parameter has its own
@@ -21,7 +21,8 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        return __block__(data, 4, parameters);
+        result.children = __block__(data, 4, parameter.children);
+        result.size = data.length;
     }
 
     function _walk(
