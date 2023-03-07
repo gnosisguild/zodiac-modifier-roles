@@ -154,7 +154,7 @@ abstract contract PermissionBuilder is Core {
         uint256 length = toBeTracked.length;
         for (uint256 i; i < length; ++i) {
             ParameterConfig memory parameter = toBeTracked[i].config;
-            ParameterPayload memory payload = toBeTracked[i].payload;
+            bytes32 value = toBeTracked[i].value;
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];
@@ -162,7 +162,7 @@ abstract contract PermissionBuilder is Core {
                 allowance,
                 block.timestamp
             );
-            uint128 amount = uint128(uint256(bytes32(payload.raw)));
+            uint256 amount = uint256(value);
             // This was already previously authorized at the checker pass.
             // However, it is possible that the same limit is used across
             // different parameters (which is not very common), but it's
@@ -173,7 +173,7 @@ abstract contract PermissionBuilder is Core {
             if (amount > balance) {
                 revert AllowanceDoubleSpend(allowanceId);
             }
-            allowances[allowanceId].balance = balance - amount;
+            allowances[allowanceId].balance = balance - uint128(amount);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
         }
     }
