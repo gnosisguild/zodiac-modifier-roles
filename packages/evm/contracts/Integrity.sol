@@ -48,7 +48,7 @@ library Integrity {
                 count++;
             }
         }
-        if (count == 0) {
+        if (count == 0 || index != 0) {
             revert NoRootNodeFound();
         }
 

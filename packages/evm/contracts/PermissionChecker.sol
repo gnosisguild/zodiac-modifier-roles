@@ -25,7 +25,6 @@ abstract contract PermissionChecker is Core {
 
     /// Role not allowed to call this function on target address
     error FunctionNotAllowed();
-    error FunctionVariantNotAllowed();
 
     /// Parameter value not one of allowed
     error ParameterNotAllowed();
@@ -192,13 +191,13 @@ abstract contract PermissionChecker is Core {
                 return (Status.Ok, _track());
             }
 
-            ParameterConfig[] memory parameters = _load(role, key);
-            ParameterPayload[] memory payloads = Decoder.inspect(
+            ParameterConfig memory parameter = _load(role, key);
+            ParameterPayload memory payload = Decoder.inspect(
                 data,
-                Topology.typeTree(parameters)
+                Topology.typeTree(parameter)
             );
 
-            return _checkScope(data, parameters, payloads);
+            return _walk(data, parameter, payload);
         } else {
             return (Status.TargetAddressNotAllowed, _track());
         }
@@ -234,68 +233,11 @@ abstract contract PermissionChecker is Core {
         return Status.Ok;
     }
 
-    function _checkScope(
-        bytes calldata data,
-        ParameterConfig[] memory parameters,
-        ParameterPayload[] memory payloads
-    ) internal pure returns (Status, Tracking[] memory) {
-        if (Topology.isVariantEntrypoint(parameters)) {
-            return _checkVariants(data, parameters[0].children, payloads);
-        } else if (Topology.isExplicitEntrypoint(parameters)) {
-            return _entrypoint(data, parameters[0].children, payloads);
-        } else {
-            return _entrypoint(data, parameters, payloads);
-        }
-    }
-
-    function _checkVariants(
-        bytes calldata data,
-        ParameterConfig[] memory variants,
-        ParameterPayload[] memory payloads
-    ) internal pure returns (Status status, Tracking[] memory toBeTracked) {
-        for (uint256 i; i < variants.length; ++i) {
-            (status, toBeTracked) = _entrypoint(
-                data,
-                variants[i].children,
-                payloads
-            );
-            if (status == Status.Ok) {
-                return (status, toBeTracked);
-            }
-        }
-        return (Status.FunctionVariantNotAllowed, _track());
-    }
-
-    function _entrypoint(
-        bytes calldata data,
-        ParameterConfig[] memory parameters,
-        ParameterPayload[] memory payloads
-    ) internal pure returns (Status, Tracking[] memory toBeTracked) {
-        assert(parameters.length == payloads.length);
-
-        for (uint256 i; i < parameters.length; ++i) {
-            (Status status, Tracking[] memory moreToBeTracked) = _walk(
-                data,
-                parameters[i],
-                payloads[i]
-            );
-            if (status != Status.Ok) {
-                return (status, _track());
-            }
-            toBeTracked = moreToBeTracked.length == 0
-                ? toBeTracked
-                : _track(toBeTracked, moreToBeTracked);
-        }
-        return (Status.Ok, toBeTracked);
-    }
-
     function _walk(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal pure returns (Status, Tracking[] memory) {
-        assert(parameter._type != ParameterType.AbiEncoded);
-
         if (parameter.comp == Comparison.Whatever) {
             return (Status.Ok, _track());
         }
@@ -355,7 +297,7 @@ abstract contract PermissionChecker is Core {
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ParameterNotAMatch, _track());
+                return (status, _track());
             }
             toBeTracked = moreToBeTracked.length == 0
                 ? toBeTracked
@@ -568,8 +510,6 @@ abstract contract PermissionChecker is Core {
             revert TargetAddressNotAllowed();
         } else if (status == Status.FunctionNotAllowed) {
             revert FunctionNotAllowed();
-        } else if (status == Status.FunctionVariantNotAllowed) {
-            revert FunctionVariantNotAllowed();
         } else if (status == Status.SendNotAllowed) {
             revert SendNotAllowed();
         } else if (status == Status.ParameterNotAllowed) {
@@ -607,7 +547,6 @@ abstract contract PermissionChecker is Core {
         TargetAddressNotAllowed,
         /// Role not allowed to call this function on target address
         FunctionNotAllowed,
-        FunctionVariantNotAllowed,
         /// Role not allowed to send to target address
         SendNotAllowed,
         /// Parameter value is not equal to allowed

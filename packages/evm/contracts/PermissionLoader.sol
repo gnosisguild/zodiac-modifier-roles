@@ -28,27 +28,25 @@ abstract contract PermissionLoader is Core {
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view override returns (ParameterConfig[] memory result) {
+    ) internal view override returns (ParameterConfig memory result) {
         BitmapBuffer memory scopeConfig = _loadBitmap(role.scopeConfig, key);
         BitmapBuffer memory compValues = _loadBitmap(role.compValues, key);
         result = _unpackParameters(scopeConfig, compValues);
         _loadAllowances(result);
     }
 
-    function _loadAllowances(ParameterConfig[] memory result) private view {
-        uint256 length = result.length;
-        for (uint256 i; i < length; ++i) {
-            if (result[i].comp == Comparison.WithinAllowance) {
-                uint16 allowanceId = uint16(uint256(result[i].compValue));
-                (result[i].allowance, ) = accruedAllowance(
-                    allowances[allowanceId],
-                    block.timestamp
-                );
-            }
+    function _loadAllowances(ParameterConfig memory result) private view {
+        if (result.comp == Comparison.WithinAllowance) {
+            uint16 allowanceId = uint16(uint256(result.compValue));
+            (result.allowance, ) = accruedAllowance(
+                allowances[allowanceId],
+                block.timestamp
+            );
+        }
 
-            if (result[i].children.length > 0) {
-                _loadAllowances(result[i].children);
-            }
+        uint256 length = result.children.length;
+        for (uint256 i; i < length; ++i) {
+            _loadAllowances(result.children[i]);
         }
     }
 
@@ -83,7 +81,7 @@ abstract contract PermissionLoader is Core {
     function _unpackParameters(
         BitmapBuffer memory scopeConfigBuffer,
         BitmapBuffer memory compValuesBuffer
-    ) internal pure returns (ParameterConfig[] memory result) {
+    ) private pure returns (ParameterConfig memory result) {
         (
             uint8[] memory parents,
             Compression.Mode[] memory compressions
@@ -94,17 +92,14 @@ abstract contract PermissionLoader is Core {
             bool[] memory isHashed
         ) = _unpackCompValues(compValuesBuffer, compressions);
 
-        (uint256 left, uint256 right) = Topology.rootBounds(parents);
-        result = new ParameterConfig[](right - left + 1);
-        for (uint256 i = left; i <= right; ++i) {
-            result[i] = _unpackParameter(
+        return
+            _unpackParameter(
                 scopeConfigBuffer,
                 compValues,
                 parents,
                 isHashed,
-                i
+                0
             );
-        }
     }
 
     function _unpackParameter(
