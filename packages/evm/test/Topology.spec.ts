@@ -20,11 +20,11 @@ describe("Topology", async () => {
 
     const layout = [
       {
-        _type: ParameterType.Function,
+        _type: ParameterType.AbiEncoded,
         comp: Comparison.OneOf,
         children: [
           {
-            _type: ParameterType.Function,
+            _type: ParameterType.AbiEncoded,
             comp: Comparison.Matches,
             children: [
               {
@@ -40,7 +40,7 @@ describe("Topology", async () => {
             ],
           },
           {
-            _type: ParameterType.Function,
+            _type: ParameterType.AbiEncoded,
             comp: Comparison.Matches,
             children: [
               {
@@ -56,7 +56,7 @@ describe("Topology", async () => {
             ],
           },
           {
-            _type: ParameterType.Function,
+            _type: ParameterType.AbiEncoded,
             comp: Comparison.Matches,
             children: [
               {

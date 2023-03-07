@@ -122,42 +122,48 @@ describe("RolesModifier", async () => {
     const parameterConfig_9 = [
       {
         parent: 0,
+        _type: ParameterType.AbiEncoded,
+        comp: Comparison.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_3,
       },
       {
-        parent: 1,
+        parent: 0,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_4,
       },
       {
-        parent: 2,
+        parent: 0,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_5,
       },
       {
-        parent: 3,
+        parent: 0,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_6,
       },
       {
-        parent: 4,
+        parent: 0,
         _type: ParameterType.Static,
         comp: Comparison.EqualTo,
         compValue: encodedParam_7,
       },
       {
-        parent: 5,
+        parent: 0,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_8,
       },
       {
-        parent: 6,
+        parent: 0,
         _type: ParameterType.Dynamic,
         comp: Comparison.EqualTo,
         compValue: encodedParam_9,
@@ -577,12 +583,18 @@ describe("RolesModifier", async () => {
         [
           {
             parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_2,
@@ -638,9 +650,9 @@ describe("RolesModifier", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.Tuple,
-            comp: Comparison.EqualTo,
-            compValue: encodedParam_1,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
           },
           {
             parent: 0,
@@ -649,7 +661,7 @@ describe("RolesModifier", async () => {
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_2,
@@ -714,42 +726,48 @@ describe("RolesModifier", async () => {
         [
           {
             parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_3,
           },
           {
-            parent: 1,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_4,
           },
           {
-            parent: 2,
+            parent: 0,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_5,
           },
           {
-            parent: 3,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_6,
           },
           {
-            parent: 4,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: encodedParam_7,
           },
           {
-            parent: 5,
+            parent: 0,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_8,
           },
           {
-            parent: 6,
+            parent: 0,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
             compValue: encodedParam_9,
@@ -1742,6 +1760,12 @@ describe("RolesModifier", async () => {
         testContract.address,
         SELECTOR,
         [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             _type: ParameterType.Static,

@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
+import { Comparison, ParameterType } from "./utils";
 
 describe("OnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -165,27 +167,37 @@ describe("OnlyOwner", async () => {
     );
 
     await expect(
-      modifier
-        .connect(invoker)
-        .scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [{ parent: 0, _type: 0, comp: 0, compValue: "0x" }],
-          OPTIONS_NONE
-        )
+      modifier.connect(invoker).scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+        ],
+        OPTIONS_NONE
+      )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier
-        .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          testContract.address,
-          SELECTOR,
-          [{ parent: 0, _type: 0, comp: 0, compValue: "0x" }],
-          OPTIONS_NONE
-        )
+      modifier.connect(owner).scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+        ],
+        OPTIONS_NONE
+      )
     ).to.not.be.reverted;
   });
 });

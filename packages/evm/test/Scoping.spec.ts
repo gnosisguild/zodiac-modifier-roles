@@ -69,6 +69,12 @@ describe("Scoping", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -89,12 +95,18 @@ describe("Scoping", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Array,
               comp: Comparison.EqualTo,
               compValue: "0x",
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
@@ -122,12 +134,18 @@ describe("Scoping", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -136,7 +154,7 @@ describe("Scoping", async () => {
               ),
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -157,18 +175,24 @@ describe("Scoping", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
               _type: ParameterType.Static,
+              comp: Comparison.OneOf,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
@@ -178,70 +202,5 @@ describe("Scoping", async () => {
         )
       ).to.not.be.reverted;
     });
-  });
-  it("enforces minimum 2 compValues when setting Comparison.OneOf", async () => {
-    const { modifier, testContract, owner } =
-      await setupRolesWithOwnerAndInvoker();
-
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    const ROLE_ID = 0;
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          {
-            parent: 0,
-
-            _type: ParameterType.Static,
-            comp: Comparison.OneOf,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
-          },
-        ],
-        ExecutionOptions.None
-      )
-    ).to.be.revertedWith("TooFewCompValuesForOneOf(0)");
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          {
-            parent: 0,
-
-            _type: ParameterType.Static,
-            comp: Comparison.OneOf,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
-          },
-          {
-            parent: 0,
-
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
-          },
-        ],
-        ExecutionOptions.None
-      )
-    ).to.not.be.reverted;
   });
 });

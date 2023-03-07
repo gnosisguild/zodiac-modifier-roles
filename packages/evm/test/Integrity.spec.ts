@@ -69,6 +69,12 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -89,12 +95,18 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Array,
               comp: Comparison.EqualTo,
               compValue: "0x",
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
@@ -122,12 +134,18 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.OneOf,
               compValue: "0x",
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -136,7 +154,7 @@ describe("Integrity", async () => {
               ),
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -157,18 +175,24 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              _type: ParameterType.AbiEncoded,
+              comp: Comparison.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
               _type: ParameterType.Static,
+              comp: Comparison.OneOf,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
             },
             {
-              parent: 0,
+              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: A_32_BYTES_VALUE,
@@ -196,16 +220,15 @@ describe("Integrity", async () => {
         [
           {
             parent: 0,
-
-            _type: ParameterType.Static,
+            _type: ParameterType.AbiEncoded,
             comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
           },
         ],
         ExecutionOptions.None
@@ -220,21 +243,24 @@ describe("Integrity", async () => {
         [
           {
             parent: 0,
-
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.OneOf,
             compValue: "0x",
           },
           {
-            parent: 0,
-
+            parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: A_32_BYTES_VALUE,
           },
           {
-            parent: 0,
-
+            parent: 1,
             _type: ParameterType.Static,
             comp: Comparison.EqualTo,
             compValue: A_32_BYTES_VALUE,
