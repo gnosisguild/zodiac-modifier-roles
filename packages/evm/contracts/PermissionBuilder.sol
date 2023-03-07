@@ -158,7 +158,7 @@ abstract contract PermissionBuilder is Core {
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];
-            (uint128 balance, uint64 refillTimestamp) = accruedBalance(
+            (uint128 balance, uint64 refillTimestamp) = accruedAllowance(
                 allowance,
                 block.timestamp
             );

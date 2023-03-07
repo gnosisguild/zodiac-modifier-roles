@@ -40,7 +40,7 @@ abstract contract PermissionLoader is Core {
         for (uint256 i; i < length; ++i) {
             if (result[i].comp == Comparison.WithinAllowance) {
                 uint16 allowanceId = uint16(uint256(result[i].compValue));
-                (result[i].allowance, ) = accruedBalance(
+                (result[i].allowance, ) = accruedAllowance(
                     allowances[allowanceId],
                     block.timestamp
                 );
