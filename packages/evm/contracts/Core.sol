@@ -30,4 +30,32 @@ abstract contract Core is OwnableUpgradeable {
     function _key(bytes32 key, uint256 i) internal pure returns (bytes32) {
         return bytes32(abi.encodePacked(bytes24(key), uint8(i)));
     }
+
+    function accruedAllowance(
+        Allowance memory allowance,
+        uint256 timestamp
+    ) internal pure returns (uint128 balance, uint64 refillTimestamp) {
+        if (
+            allowance.refillInterval == 0 ||
+            timestamp < allowance.refillTimestamp
+        ) {
+            return (allowance.balance, allowance.refillTimestamp);
+        }
+
+        uint64 elapsedIntervals = (uint64(timestamp) -
+            allowance.refillTimestamp) / allowance.refillInterval;
+
+        uint128 uncappedBalance = allowance.balance +
+            allowance.refillAmount *
+            elapsedIntervals;
+
+        balance = uncappedBalance < allowance.maxBalance
+            ? uncappedBalance
+            : allowance.maxBalance;
+
+        refillTimestamp =
+            allowance.refillTimestamp +
+            elapsedIntervals *
+            allowance.refillInterval;
+    }
 }
