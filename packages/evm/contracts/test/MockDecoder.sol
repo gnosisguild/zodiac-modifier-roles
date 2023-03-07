@@ -77,7 +77,6 @@ contract MockDecoder {
         for (uint256 i = 0; i < output.length; i++) {
             result[i].offset = output[i].location;
             result[i].size = output[i].size;
-            result[i].raw = output[i].raw;
             result[i].children = copyOutTo2(output[i].children);
         }
     }
@@ -89,7 +88,6 @@ contract MockDecoder {
         for (uint256 i = 0; i < output.length; i++) {
             result[i].offset = output[i].location;
             result[i].size = output[i].size;
-            result[i].raw = output[i].raw;
             result[i].children = copyOutTo3(output[i].children);
         }
     }
@@ -101,7 +99,6 @@ contract MockDecoder {
         for (uint256 i = 0; i < output.length; i++) {
             result[i].offset = output[i].location;
             result[i].size = output[i].size;
-            result[i].raw = output[i].raw;
             result[i].children = copyOutTo4(output[i].children);
         }
     }
@@ -113,7 +110,6 @@ contract MockDecoder {
         for (uint256 i = 0; i < output.length; i++) {
             result[i].offset = output[i].location;
             result[i].size = output[i].size;
-            result[i].raw = output[i].raw;
             result[i].children = copyOutTo5(output[i].children);
         }
     }
@@ -125,7 +121,6 @@ contract MockDecoder {
         for (uint256 i = 0; i < output.length; i++) {
             result[i].offset = output[i].location;
             result[i].size = output[i].size;
-            result[i].raw = output[i].raw;
         }
     }
 
@@ -161,34 +156,29 @@ contract MockDecoder {
     struct PP1 {
         uint256 offset;
         uint256 size;
-        bytes raw;
         PP2[] children;
     }
 
     struct PP2 {
         uint256 offset;
         uint256 size;
-        bytes raw;
         PP3[] children;
     }
 
     struct PP3 {
         uint256 offset;
         uint256 size;
-        bytes raw;
         PP4[] children;
     }
 
     struct PP4 {
         uint256 offset;
         uint256 size;
-        bytes raw;
         PP5[] children;
     }
 
     struct PP5 {
         uint256 offset;
         uint256 size;
-        bytes raw;
     }
 }

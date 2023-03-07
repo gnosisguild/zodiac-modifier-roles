@@ -22,7 +22,7 @@ enum Comparison {
     EqualTo,
     GreaterThan,
     LessThan,
-    WithinLimit,
+    WithinAllowance,
     OneOf,
     Bitmask,
     ArraySome,
@@ -65,7 +65,6 @@ struct ParameterConfig {
 struct ParameterPayload {
     uint256 location;
     uint256 size;
-    bytes raw;
     ParameterPayload[] children;
 }
 
@@ -83,5 +82,5 @@ struct Role {
 
 struct Tracking {
     ParameterConfig config;
-    ParameterPayload payload;
+    bytes32 value;
 }

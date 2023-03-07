@@ -124,7 +124,7 @@ export enum Comparison {
   EqualTo,
   GreaterThan,
   LessThan,
-  WithinLimit,
+  WithinAllowance,
   OneOf,
   Bitmask,
   ArraySome,

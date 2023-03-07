@@ -315,8 +315,8 @@ abstract contract PermissionChecker is Core {
             return _some(data, parameter, payload);
         } else if (comp == Comparison.ArrayEvery) {
             return _every(data, parameter, payload);
-        } else if (comp == Comparison.WithinLimit) {
-            return _withinLimit(data, parameter, payload);
+        } else if (comp == Comparison.WithinAllowance) {
+            return _withinAllowance(data, parameter, payload);
         } else if (comp == Comparison.Subset) {
             return _subset(data, parameter, payload);
         } else {
@@ -442,22 +442,23 @@ abstract contract PermissionChecker is Core {
         return (Status.Ok, toBeTracked);
     }
 
-    function _withinLimit(
+    function _withinAllowance(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Tracking[] memory) {
         assert(parameter._type == ParameterType.Static);
 
-        uint256 amount = uint256(_pluck(data, parameter, payload));
+        bytes32 value = bytes32(
+            Decoder.pluck(data, payload.location, payload.size)
+        );
+
+        uint256 amount = uint256(value);
         if (amount > parameter.allowance) {
             return (Status.AllowanceExceeded, _track());
         }
 
-        return (
-            Status.Ok,
-            _track(Tracking({config: parameter, payload: payload}))
-        );
+        return (Status.Ok, _track(Tracking({config: parameter, value: value})));
     }
 
     function _bitmask(
@@ -520,12 +521,12 @@ abstract contract PermissionChecker is Core {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
-        if (payload.size != payload.raw.length) {
-            payload.raw = Decoder.pluck(data, payload.location, payload.size);
-        }
-
-        return
-            parameter.isHashed ? keccak256(payload.raw) : bytes32(payload.raw);
+        bytes calldata value = Decoder.pluck(
+            data,
+            payload.location,
+            payload.size
+        );
+        return parameter.isHashed ? keccak256(value) : bytes32(value);
     }
 
     function _track() private pure returns (Tracking[] memory result) {}

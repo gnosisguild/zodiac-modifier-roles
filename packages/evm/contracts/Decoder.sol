@@ -138,12 +138,12 @@ library Decoder {
     function pluck(
         bytes calldata data,
         uint256 location,
-        uint256 size
+        uint256 length
     ) internal pure returns (bytes calldata) {
-        if (data.length < location + size) {
+        if (data.length < location + length) {
             revert CalldataOutOfBounds();
         }
-        return data[location:location + size];
+        return data[location:location + length];
     }
 
     function _loadWord(
@@ -159,22 +159,3 @@ library Decoder {
         }
     }
 }
-
-/*
- * Encoded calldata:
- * 4  bytes -> function selector
- * 32 bytes -> sequence, one chunk per parameter
- *
- * There is one (byte32) chunk per parameter. Depending on type it contains:
- * Static    -> value encoded inline (not plucked by this function)
- * Dynamic   -> a byte offset to encoded data payload
- * Dynamic32 -> a byte offset to encoded data payload
- * Note: Fixed Sized Arrays (e.g., bool[2]), are encoded inline
- *
- *
- * At encoded payload, the first 32 bytes are the length encoding of the parameter payload. Depending on ParameterType:
- * Dynamic   -> length in bytes
- * Dynamic32 -> length in bytes32
- * Note: Dynamic types are: bytes, string
- * Note: Dynamic32 types are non-nested arrays: address[] bytes32[] uint[] etc
- */

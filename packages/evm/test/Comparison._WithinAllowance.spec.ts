@@ -78,7 +78,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.WithinLimit,
+            comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
         ],
@@ -120,13 +120,13 @@ describe("Comparison", async () => {
           {
             parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.WithinLimit,
+            comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
           {
             parent: 1,
             _type: ParameterType.Static,
-            comp: Comparison.WithinLimit,
+            comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
         ],
@@ -156,7 +156,7 @@ describe("Comparison", async () => {
     };
   });
 
-  describe("WithinLimit - Check", () => {
+  describe("WithinAllowance - Check", () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
       const { setAllowance, setRole } = await setup();
 
@@ -251,7 +251,7 @@ describe("Comparison", async () => {
     });
   });
 
-  describe("WithinLimit - Track", async () => {
+  describe("WithinAllowance - Track", async () => {
     it("Updates tracking, even with multiple parameters referencing the same limit", async () => {
       const { setAllowance, setRoleTwoParams } = await setup();
       await setAllowance({
