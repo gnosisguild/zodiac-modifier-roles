@@ -24,7 +24,7 @@ enum Comparison {
     LessThan,
     WithinLimit,
     OneOf,
-    Bytemask,
+    Bitmask,
     ArraySome,
     ArrayEvery
 }
