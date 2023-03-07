@@ -114,7 +114,7 @@ export enum ParameterType {
   Dynamic,
   Tuple,
   Array,
-  Function,
+  AbiEncoded,
 }
 
 export enum Comparison {

@@ -47,6 +47,12 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.Bitmask,
             compValue,
@@ -86,6 +92,12 @@ describe("Comparison", async () => {
         testContract.address,
         SELECTOR,
         [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             _type: ParameterType.Dynamic,

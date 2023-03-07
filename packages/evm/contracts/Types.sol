@@ -10,7 +10,7 @@ enum ParameterType {
     Dynamic,
     Tuple,
     Array,
-    Function
+    AbiEncoded
 }
 
 enum Comparison {
