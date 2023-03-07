@@ -4,10 +4,14 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./Types.sol";
 
 library Integrity {
-    /// Not possible to define gt/lt for Dynamic types
+    error NoRootNodeFound();
+
+    error MultipleRootNodesFound();
+
+    error UnsuitableRootNode(uint256 index);
+
     error ConfigTopologyNotBFS(uint256 index);
 
-    /// Not possible to define gt/lt for Dynamic types
     error UnsuitableRelativeComparison();
 
     error UnsuitableSubsetOfComparison();
@@ -26,10 +30,39 @@ library Integrity {
     error MalformedBitmask(uint256 index);
 
     function validate(ParameterConfigFlat[] calldata parameters) internal pure {
+        root(parameters);
         topology(parameters);
 
         for (uint256 i = 0; i < parameters.length; ++i) {
-            entry(parameters[i], i);
+            content(parameters[i], i);
+        }
+    }
+
+    function root(ParameterConfigFlat[] calldata parameters) internal pure {
+        uint256 index;
+        uint256 count;
+
+        for (uint256 i; i < parameters.length; ++i) {
+            if (parameters[i].parent == i) {
+                index = i;
+                count++;
+            }
+        }
+        if (count == 0) {
+            revert NoRootNodeFound();
+        }
+
+        if (count > 1) {
+            revert MultipleRootNodesFound();
+        }
+
+        ParameterConfigFlat calldata parameter = parameters[index];
+        if (
+            !(parameter._type == ParameterType.AbiEncoded &&
+                (parameter.comp == Comparison.OneOf ||
+                    parameter.comp == Comparison.Matches))
+        ) {
+            revert UnsuitableRootNode(index);
         }
     }
 
@@ -70,7 +103,7 @@ library Integrity {
         // TODO a lot more integrity checks
     }
 
-    function entry(
+    function content(
         ParameterConfigFlat calldata parameter,
         uint256 index
     ) internal pure {

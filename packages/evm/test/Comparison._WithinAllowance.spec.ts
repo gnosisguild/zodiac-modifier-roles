@@ -77,6 +77,12 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
@@ -119,12 +125,18 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
           {
-            parent: 1,
+            parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
@@ -222,12 +234,13 @@ describe("Comparison", async () => {
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
+      const interval = 10000;
       await setAllowance({
         balance: 0,
         maxBalance: 1000,
-        refillInterval: 100,
-        refillAmount: 10000,
-        refillTimestamp: timestamp - 5000,
+        refillInterval: interval,
+        refillAmount: 9999999,
+        refillTimestamp: timestamp - interval * 10,
       });
       const { invoke } = await setRole();
 

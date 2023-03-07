@@ -1,7 +1,9 @@
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
+
 import "@nomiclabs/hardhat-ethers";
+import { Comparison, ParameterType } from "./utils";
 
 const ROLE_ID = 123;
 
@@ -74,15 +76,20 @@ describe("EmitsEvent", async () => {
   it("ScopeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
-      modifier
-        .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          [{ parent: 0, _type: 0, comp: 0, compValue: "0x" }],
-          OPTIONS_NONE
-        )
+      modifier.connect(owner).scopeFunction(
+        ROLE_ID,
+        AddressOne,
+        "0x12345678",
+        [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Matches,
+            compValue: "0x",
+          },
+        ],
+        OPTIONS_NONE
+      )
     ).to.emit(modifier, "ScopeFunction");
   });
 });

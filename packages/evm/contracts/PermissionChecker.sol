@@ -294,7 +294,7 @@ abstract contract PermissionChecker is Core {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal pure returns (Status, Tracking[] memory) {
-        assert(parameter._type != ParameterType.Function);
+        assert(parameter._type != ParameterType.AbiEncoded);
 
         if (parameter.comp == Comparison.Whatever) {
             return (Status.Ok, _track());

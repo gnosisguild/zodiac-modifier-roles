@@ -67,7 +67,7 @@ library Topology {
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
-        assert(parameter._type != ParameterType.Function);
+        assert(parameter._type != ParameterType.AbiEncoded);
 
         if (parameter.comp == Comparison.OneOf) {
             return typeTree(parameter.children[0]);
@@ -120,7 +120,7 @@ library Topology {
     ) internal pure returns (bool) {
         return
             configs.length == 1 &&
-            configs[0]._type == ParameterType.Function &&
+            configs[0]._type == ParameterType.AbiEncoded &&
             configs[0].comp == Comparison.OneOf;
     }
 
@@ -128,7 +128,7 @@ library Topology {
         ParameterConfig[] memory configs
     ) internal pure returns (bool) {
         return
-            configs[0]._type == ParameterType.Function &&
+            configs[0]._type == ParameterType.AbiEncoded &&
             configs[0].comp != Comparison.OneOf;
     }
 }
