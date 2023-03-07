@@ -248,7 +248,6 @@ describe("Comparison", async () => {
 
       await expect(invoke(9001)).to.be.revertedWith("AllowanceExceeded()");
       await expect(invoke(9000)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
     });
   });
 

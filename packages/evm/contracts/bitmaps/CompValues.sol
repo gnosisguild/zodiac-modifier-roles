@@ -91,6 +91,6 @@ library CompValues {
             comp == Comparison.GreaterThan ||
             comp == Comparison.LessThan ||
             comp == Comparison.WithinLimit ||
-            comp == Comparison.Bytemask;
+            comp == Comparison.Bitmask;
     }
 }

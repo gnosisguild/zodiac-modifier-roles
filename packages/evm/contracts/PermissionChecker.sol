@@ -56,11 +56,11 @@ abstract contract PermissionChecker is Core {
     /// Allowance exceeded
     error AllowanceExceeded();
 
-    /// Bytemasking exceeded value length
-    error BytemaskOverflow();
+    /// Bitmask exceeded value length
+    error BitmaskOverflow();
 
-    /// Bytemasking not an allowed value
-    error BytemaskNotAllowed();
+    /// Bitmask not an allowed value
+    error BitmaskNotAllowed();
 
     /*
      *
@@ -320,8 +320,8 @@ abstract contract PermissionChecker is Core {
         } else if (comp == Comparison.Subset) {
             return _subset(data, parameter, payload);
         } else {
-            assert(comp == Comparison.Bytemask);
-            return _bytemask(data, parameter, payload);
+            assert(comp == Comparison.Bitmask);
+            return _bitmask(data, parameter, payload);
         }
     }
 
@@ -460,7 +460,7 @@ abstract contract PermissionChecker is Core {
         );
     }
 
-    function _bytemask(
+    function _bitmask(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
@@ -472,22 +472,19 @@ abstract contract PermissionChecker is Core {
             payload.size
         );
 
-        uint256 left = uint8(bytes1(compValue));
-        uint256 right = uint8(bytes1(compValue << 8));
-        if (right > value.length) {
-            return (Status.BytemaskOverflow, empty);
+        uint256 shift = uint16(bytes2(compValue));
+        if (shift >= value.length) {
+            return (Status.BitmaskOverflow, empty);
         }
-        uint256 bitLength = (right - left) * 8;
-        bytes32 rinse = _leftMask(bitLength);
 
-        bytes32 slice = bytes32(value[left:right]);
+        bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
         bytes32 mask = (compValue << 16) & rinse;
-        bytes32 expected = (compValue << (16 + bitLength)) & rinse;
+        bytes32 expected = (compValue << (16 + 15 * 8)) & rinse;
+        bytes32 slice = bytes32(value[shift:]);
 
-        return (
-            (slice & mask) == expected ? Status.Ok : Status.BytemaskNotAllowed,
-            empty
-        );
+        status = (slice & mask) == expected
+            ? Status.Ok
+            : Status.BitmaskNotAllowed;
     }
 
     function _compare(
@@ -592,11 +589,11 @@ abstract contract PermissionChecker is Core {
             revert ParameterNotSubsetOfAllowed();
         } else if (status == Status.AllowanceExceeded) {
             revert AllowanceExceeded();
-        } else if (status == Status.BytemaskOverflow) {
-            revert BytemaskOverflow();
+        } else if (status == Status.BitmaskOverflow) {
+            revert BitmaskOverflow();
         } else {
-            assert(status == Status.BytemaskNotAllowed);
-            revert BytemaskNotAllowed();
+            assert(status == Status.BitmaskNotAllowed);
+            revert BitmaskNotAllowed();
         }
     }
 
@@ -632,9 +629,9 @@ abstract contract PermissionChecker is Core {
         AllowanceExceeded,
         /// Allowance was double spent
         AllowanceDoubleSpend,
-        /// Bytemasking exceeded value length
-        BytemaskOverflow,
-        /// Bytemasking not an allowed value
-        BytemaskNotAllowed
+        /// Bitmask exceeded value length
+        BitmaskOverflow,
+        /// Bitmask not an allowed value
+        BitmaskNotAllowed
     }
 }

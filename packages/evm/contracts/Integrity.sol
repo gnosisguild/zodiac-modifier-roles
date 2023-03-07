@@ -23,7 +23,7 @@ library Integrity {
 
     error TooFewCompValuesForOneOf(uint256 index);
 
-    error MalformedBytemask(uint256 index);
+    error MalformedBitmask(uint256 index);
 
     function validate(ParameterConfigFlat[] calldata parameters) internal pure {
         topology(parameters);
@@ -104,9 +104,9 @@ library Integrity {
             revert UnsuitableStaticCompValueSize();
         }
 
-        if (comp == Comparison.Bytemask) {
-            if (compValue.length > 32 || compValue.length % 2 != 0) {
-                revert MalformedBytemask(index);
+        if (comp == Comparison.Bitmask) {
+            if (compValue.length != 32) {
+                revert MalformedBitmask(index);
             }
         }
     }
