@@ -25,6 +25,17 @@ library Decoder {
         result.size = data.length;
     }
 
+    function pluck(
+        bytes calldata data,
+        uint256 location,
+        uint256 length
+    ) internal pure returns (bytes calldata) {
+        if (data.length < location + length) {
+            revert CalldataOutOfBounds();
+        }
+        return data[location:location + length];
+    }
+
     function _walk(
         bytes calldata data,
         uint256 location,
@@ -50,7 +61,6 @@ library Decoder {
             return _tuple(data, location, parameter);
         } else {
             assert(paramType == ParameterType.Array);
-
             return _array(data, location, parameter);
         }
     }
@@ -71,7 +81,7 @@ library Decoder {
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
-                _partLocation(data, location + 32, i * itemSize, isInline),
+                _locationInBlock(data, location + 32, i * itemSize, isInline),
                 parameter.children[0]
             );
         }
@@ -101,14 +111,14 @@ library Decoder {
             bool isInline = Topology.isStatic(parts[i]);
             result[i] = _walk(
                 data,
-                _partLocation(data, location, offset, isInline),
+                _locationInBlock(data, location, offset, isInline),
                 parts[i]
             );
             offset += isInline ? Topology.typeSize(parts[i]) : 32;
         }
     }
 
-    function _partLocation(
+    function _locationInBlock(
         bytes calldata data,
         uint256 location,
         uint256 offset,
@@ -144,17 +154,6 @@ library Decoder {
                 result = curr;
             }
         }
-    }
-
-    function pluck(
-        bytes calldata data,
-        uint256 location,
-        uint256 length
-    ) internal pure returns (bytes calldata) {
-        if (data.length < location + length) {
-            revert CalldataOutOfBounds();
-        }
-        return data[location:location + length];
     }
 
     function _loadWord(
