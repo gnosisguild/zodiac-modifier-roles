@@ -30,17 +30,28 @@ library Decoder {
         uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        if (parameter._type == ParameterType.Static) {
+        ParameterType paramType = parameter._type;
+
+        if (paramType == ParameterType.Static) {
             result.location = location;
             result.size = 32;
-        } else if (parameter._type == ParameterType.Dynamic) {
+        } else if (paramType == ParameterType.Dynamic) {
             result.location = location + 32;
             result.size = uint256(_loadWord(data, location));
-        } else if (parameter._type == ParameterType.Array) {
-            return _array(data, location, parameter);
-        } else {
-            assert(parameter._type == ParameterType.Tuple);
+        } else if (paramType == ParameterType.AbiEncoded) {
+            result.location = location + 32;
+            result.size = uint256(_loadWord(data, location));
+            result.children = __block__(
+                data,
+                result.location + 4,
+                parameter.children
+            );
+        } else if (paramType == ParameterType.Tuple) {
             return _tuple(data, location, parameter);
+        } else {
+            assert(paramType == ParameterType.Array);
+
+            return _array(data, location, parameter);
         }
     }
 
@@ -73,8 +84,8 @@ library Decoder {
         uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        result.children = __block__(data, location, parameter.children);
         result.location = location;
+        result.children = __block__(data, location, parameter.children);
         result.size = _size(result);
     }
 
@@ -99,7 +110,7 @@ library Decoder {
 
     function _partLocation(
         bytes calldata data,
-        uint256 blockLocation,
+        uint256 location,
         uint256 offset,
         bool isInline
     ) private pure returns (uint256) {
@@ -108,14 +119,13 @@ library Decoder {
          * the block - at the HEAD - or located at an offset relative to the start
          * of the block - at the TAIL.
          */
-
-        uint256 headLocation = blockLocation + offset;
+        uint256 headLocation = location + offset;
         if (isInline) {
             // located in head
             return headLocation;
         } else {
             // located at tail
-            return blockLocation + uint256(_loadWord(data, headLocation));
+            return location + uint256(_loadWord(data, headLocation));
         }
     }
 
