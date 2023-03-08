@@ -872,10 +872,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
-      const multiSendTarget = await modifier.populateTransaction.setMultisend(
-        multisend.address
-      );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
+      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
+      //   multisend.address
+      // );
+      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -962,10 +962,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
-      const multiSendTarget = await modifier.populateTransaction.setMultisend(
-        multisend.address
-      );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
+      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
+      //   multisend.address
+      // );
+      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -1039,10 +1039,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
-      const multiSendTarget = await modifier.populateTransaction.setMultisend(
-        multisend.address
-      );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
+      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
+      //   multisend.address
+      // );
+      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -1386,10 +1386,10 @@ describe("RolesModifier", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
-      const multiSendTarget = await modifier.populateTransaction.setMultisend(
-        multisend.address
-      );
-      await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
+      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
+      //   multisend.address
+      // );
+      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
         1,
@@ -1445,29 +1445,6 @@ describe("RolesModifier", async () => {
           !SHOULD_REVERT
         )
       ).to.emit(testContract, "TestDynamic");
-    });
-  });
-  describe("setMultisend()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await txSetup();
-      await expect(modifier.setMultisend(AddressOne)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
-      );
-    });
-
-    it("sets multisend address to true", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setMultisend(AddressOne);
-      await avatar.exec(modifier.address, 0, tx.data || "", 0);
-      expect(await modifier.multisend()).to.be.equals(AddressOne);
-    });
-
-    it("emits event with correct params", async () => {
-      const { avatar, modifier } = await txSetup();
-      const tx = await modifier.populateTransaction.setMultisend(AddressOne);
-      await expect(avatar.exec(modifier.address, 0, tx.data || "", 0))
-        .to.emit(modifier, "SetMultisendAddress")
-        .withArgs(AddressOne);
     });
   });
 
