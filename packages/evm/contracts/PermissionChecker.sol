@@ -4,10 +4,11 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 import "./Core.sol";
+import "./Periphery.sol";
 import "./Decoder.sol";
 import "./bitmaps/ScopeConfig.sol";
 
-abstract contract PermissionChecker is Core {
+abstract contract PermissionChecker is Core, Periphery {
     /// Sender is not a member of the role
     error NoMembership();
 
@@ -61,89 +62,59 @@ abstract contract PermissionChecker is Core {
     /// Bitmask not an allowed value
     error BitmaskNotAllowed();
 
-    /*
-     *
-     * CHECKERS
-     *
-     */
-
     /// @dev Entry point for checking the scope of a transaction.
     function check(
         uint16 roleId,
-        address multisend,
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Tracking[] memory) {
+    ) internal view returns (Tracking[] memory result) {
         if (!roles[roleId].members[msg.sender]) {
             revert NoMembership();
         }
 
-        (Status status, Tracking[] memory toBeTracked) = checkTransaction(
-            roleId,
-            to,
-            value,
-            data,
-            operation
-        );
-        // if (multisend == to) {
-        //     status = checkMultisendTransaction(roleId, data);
-        // } else {
-        //     status = checkTransaction(roleId, to, value, data, operation);
-        // }
-        if (status != Status.Ok) {
-            revertWith(status);
-        }
-        return toBeTracked;
-    }
-
-    /// @dev Splits a multisend data blob into transactions and forwards them to be checked.
-    /// @param data the packed transaction data (created by utils function buildMultiSendSafeTx).
-    function checkMultisendTransaction(
-        uint16 roleId,
-        bytes memory data
-    ) internal view returns (Status) {
-        Enum.Operation operation;
-        address to;
-        uint256 value;
-        bytes memory out;
-        uint256 dataLength;
-
-        uint256 offset;
-        assembly {
-            offset := mload(add(data, 36))
-        }
-        if (offset != 32) {
-            revert UnacceptableMultiSendOffset();
-        }
-
-        // transaction data (1st tx operation) reads at byte 100,
-        // 4 bytes (multisend_id) + 32 bytes (offset_multisend_data) + 32 bytes multisend_data_length
-        // increment i by the transaction data length
-        // + 85 bytes of the to, value, and operation bytes until we reach the end of the data
-        for (uint256 i = 100; i < data.length; i += (85 + dataLength)) {
-            assembly {
-                // First byte of the data is the operation.
-                // We shift by 248 bits (256 - 8 [operation byte]) right since mload will always load 32 bytes (a word).
-                // This will also zero out unused data.
-                operation := shr(0xf8, mload(add(data, i)))
-                // We offset the load address by 1 byte (operation byte)
-                // We shift it right by 96 bits (256 - 160 [20 address bytes]) to right-align the data and zero out unused data.
-                to := shr(0x60, mload(add(data, add(i, 0x01))))
-                // We offset the load address by 21 byte (operation byte + 20 address bytes)
-                value := mload(add(data, add(i, 0x15)))
-                // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
-                dataLength := mload(add(data, add(i, 0x35)))
-                // We offset the load address by 85 byte (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)
-                out := add(data, add(i, 0x35))
+        if (unwrappers[to] == address(0)) {
+            Status status;
+            (status, result) = checkTransaction(
+                roleId,
+                to,
+                value,
+                data,
+                operation
+            );
+            if (status != Status.Ok) {
+                revertWith(status);
             }
-            // Status status = checkTransaction(roleId, to, value, out, operation);
-            // if (status != Status.Ok) {
-            //     return status;
-            // }
+            return result;
+        } else {
+            // NOTE: this else branch is still a bit unruly to be massaged soon
+            UnwrappedTransaction[] memory transactions = IUnwrappingAdapter(
+                unwrappers[to]
+            ).unwrap(data);
+
+            for (uint256 i; i < transactions.length; ++i) {
+                UnwrappedTransaction memory transaction = transactions[i];
+                bytes calldata transactionData = data[transaction
+                    .location
+                    .left:transaction.location.right];
+                (
+                    Status status,
+                    Tracking[] memory toBeTracked
+                ) = checkTransaction(
+                        roleId,
+                        transaction.to,
+                        transaction.value,
+                        transactionData,
+                        transaction.operation
+                    );
+                if (status != Status.Ok) {
+                    revertWith(status);
+                }
+                result = _track(result, toBeTracked);
+            }
+            return result;
         }
-        return Status.Ok;
     }
 
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.

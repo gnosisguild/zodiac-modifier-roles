@@ -11,12 +11,9 @@ contract Roles is
     PermissionBuilder,
     PermissionChecker
 {
-    address public multisend;
-
     mapping(address => uint16) public defaultRoles;
 
     event AssignRoles(address module, uint16[] roles, bool[] memberOf);
-    event SetMultisendAddress(address multisendAddress);
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
@@ -62,14 +59,6 @@ contract Roles is
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
-    /// @dev Set the address of the expected multisend library
-    /// @notice Only callable by owner.
-    /// @param _multisend address of the multisend library contract
-    function setMultisend(address _multisend) external onlyOwner {
-        multisend = _multisend;
-        emit SetMultisendAddress(multisend);
-    }
-
     /// @dev Assigns and revokes roles to a given module.
     /// @param module Module on which to assign/revoke roles.
     /// @param _roles Roles to assign/revoke.
@@ -111,16 +100,7 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        track(
-            check(
-                defaultRoles[msg.sender],
-                multisend,
-                to,
-                value,
-                data,
-                operation
-            )
-        );
+        track(check(defaultRoles[msg.sender], to, value, data, operation));
         return exec(to, value, data, operation);
     }
 
@@ -136,16 +116,7 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool, bytes memory) {
-        track(
-            check(
-                defaultRoles[msg.sender],
-                multisend,
-                to,
-                value,
-                data,
-                operation
-            )
-        );
+        track(check(defaultRoles[msg.sender], to, value, data, operation));
         return execAndReturnData(to, value, data, operation);
     }
 
@@ -165,7 +136,7 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        track(check(role, multisend, to, value, data, operation));
+        track(check(role, to, value, data, operation));
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -188,7 +159,7 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        track(check(role, multisend, to, value, data, operation));
+        track(check(role, to, value, data, operation));
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
