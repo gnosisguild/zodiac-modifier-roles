@@ -244,8 +244,8 @@ describe("Comparison", async () => {
       });
       const { invoke } = await setRole();
 
-      await expect(invoke(900)).to.not.be.reverted;
-      await expect(invoke(101)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1000)).to.not.be.reverted;
     });
 
     it("fails a check with balance from refill but capped by maxBalance", async () => {

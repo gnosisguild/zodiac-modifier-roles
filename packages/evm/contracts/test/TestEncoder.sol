@@ -1,38 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-struct StaticTuple {
-    uint256 a;
-    address b;
-}
-
-struct DynamicTuple {
-    bytes dynamic;
-    uint256 _static;
-    uint256[] dynamic32;
-}
-
-struct DynamicTupleWithStaticTuple {
-    uint256 a;
-    bytes b;
-    StaticTuple c;
-}
-
-struct DynamicTupleWithDynamicTuple {
-    DynamicTuple d;
-    bytes a;
-    StaticTuple b;
-    uint256 c;
-}
-
-struct DynamicTupleWithArray {
-    uint256 a;
-    bytes b;
-    StaticTuple[] c;
-}
-
 contract TestEncoder {
+    function simple(uint256) external {}
+
     function staticFn(bytes4) external {}
+
+    function dynamic(bytes memory) external {}
+
+    function dynamicArray(bytes[] memory) external {}
 
     function staticDynamicDynamic32(
         address,
@@ -52,19 +28,47 @@ contract TestEncoder {
         uint32
     ) external {}
 
-    function dynamic(bytes memory) external {}
+    struct DynamicTuple {
+        bytes dynamic;
+        uint256 _static;
+        uint256[] dynamic32;
+    }
 
     function dynamicTuple(DynamicTuple memory) external {}
 
+    struct StaticTuple {
+        uint256 a;
+        address b;
+    }
+
     function staticTuple(StaticTuple memory, uint256) external {}
+
+    struct DynamicTupleWithStaticTuple {
+        uint256 a;
+        bytes b;
+        StaticTuple c;
+    }
 
     function dynamicTupleWithNestedStaticTuple(
         DynamicTupleWithStaticTuple memory
     ) external {}
 
+    struct DynamicTupleWithDynamicTuple {
+        bytes a;
+        StaticTuple b;
+        uint256 c;
+        DynamicTuple d;
+    }
+
     function dynamicTupleWithNestedDynamicTuple(
         DynamicTupleWithDynamicTuple memory
     ) external {}
+
+    struct DynamicTupleWithArray {
+        uint256 a;
+        bytes b;
+        StaticTuple[] c;
+    }
 
     function dynamicTupleWithNestedArray(
         DynamicTupleWithArray memory
