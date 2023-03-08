@@ -63,7 +63,56 @@ contract MockDecoder {
         PL5 calldata input
     ) private pure returns (TypeTopology memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](0);
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
+        }
+    }
+
+    function copyIn(
+        PL6 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
+        }
+    }
+
+    function copyIn(
+        PL7 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
+        }
+    }
+
+    function copyIn(
+        PL8 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
+        }
+    }
+
+    function copyIn(
+        PL9 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
+        result.children = new TypeTopology[](input.children.length);
+        for (uint256 i; i < input.children.length; i++) {
+            result.children[i] = copyIn(input.children[i]);
+        }
+    }
+
+    function copyIn(
+        PL10 calldata input
+    ) private pure returns (TypeTopology memory result) {
+        result._type = input._type;
     }
 
     function copyOut(
@@ -115,6 +164,20 @@ contract MockDecoder {
     ) private pure returns (PP5 memory result) {
         result.offset = output.location;
         result.size = output.size;
+        result.children = new PP6[](output.children.length);
+        for (uint256 i = 0; i < output.children.length; i++) {
+            result.children[i] = copyOutTo6(output.children[i]);
+        }
+    }
+
+    function copyOutTo6(
+        ParameterPayload memory output
+    ) private pure returns (PP6 memory result) {
+        result.offset = output.location;
+        result.size = output.size;
+        if (output.children.length > 0) {
+            // throw new Error('Something bad happened');
+        }
     }
 
     struct PL1 {
@@ -138,6 +201,31 @@ contract MockDecoder {
     }
 
     struct PL5 {
+        ParameterType _type;
+        PL6[] children;
+    }
+
+    struct PL6 {
+        ParameterType _type;
+        PL7[] children;
+    }
+
+    struct PL7 {
+        ParameterType _type;
+        PL8[] children;
+    }
+
+    struct PL8 {
+        ParameterType _type;
+        PL9[] children;
+    }
+
+    struct PL9 {
+        ParameterType _type;
+        PL10[] children;
+    }
+
+    struct PL10 {
         ParameterType _type;
     }
 
@@ -166,6 +254,12 @@ contract MockDecoder {
     }
 
     struct PP5 {
+        uint256 offset;
+        uint256 size;
+        PP6[] children;
+    }
+
+    struct PP6 {
         uint256 offset;
         uint256 size;
     }
