@@ -6,6 +6,8 @@ import { BigNumberish } from "ethers";
 import { getAddress, solidityPack } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
+import { UnwrappedTransactionStructOutput } from "../../typechain-types/contracts/adapters/MultiSendAdapter";
+
 describe("MultiSendAdapter", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -130,9 +132,7 @@ describe("MultiSendAdapter", async () => {
     );
     expect(result[0].value.toNumber()).to.equal(999444555);
 
-    const location = result[0].location;
-    const left = location.left.toNumber() * 2;
-    const right = location.right.toNumber() * 2;
+    const { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData.slice(2));
   });
 
@@ -177,14 +177,10 @@ describe("MultiSendAdapter", async () => {
     expect(result[1].value.toNumber()).to.equal(7654);
     expect(result[1].operation).to.equal(0);
 
-    const location1 = result[0].location;
-    let left = location1.left.toNumber() * 2;
-    let right = location1.right.toNumber() * 2;
+    let { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData1.slice(2));
 
-    const location2 = result[1].location;
-    left = location2.left.toNumber() * 2;
-    right = location2.right.toNumber() * 2;
+    ({ left, right } = location(result[1]));
     expect(data.slice(2).slice(left, right)).to.equal(txData2.slice(2));
   });
 
@@ -232,3 +228,12 @@ const multisendPayload = (txs: MetaTransaction[]): string => {
       .join("")
   );
 };
+
+function location(result: UnwrappedTransactionStructOutput) {
+  const offset = result.dataOffset.toNumber();
+  const length = result.dataLength.toNumber();
+  const left = offset * 2;
+  const right = (offset + length) * 2;
+
+  return { left, right };
+}
