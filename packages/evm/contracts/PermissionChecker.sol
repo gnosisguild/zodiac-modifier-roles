@@ -9,61 +9,8 @@ import "./Decoder.sol";
 import "./bitmaps/ScopeConfig.sol";
 
 abstract contract PermissionChecker is Core, Periphery {
-    /// Sender is not a member of the role
-    error NoMembership();
-
-    /// Function signature too short
-    error FunctionSignatureTooShort();
-
-    /// Role not allowed to delegate call to target address
-    error DelegateCallNotAllowed();
-
-    /// Role not allowed to call target address
-    error TargetAddressNotAllowed();
-
-    /// Role not allowed to send to target address
-    error SendNotAllowed();
-
-    /// Role not allowed to call this function on target address
-    error FunctionNotAllowed();
-
-    /// Parameter value not one of allowed
-    error ParameterNotAllowed();
-
-    /// Parameter value less than minimum
-    error ParameterLessThanAllowed();
-
-    /// Parameter value greater than maximum
-    error ParameterGreaterThanAllowed();
-
-    error ParameterNotOneOfAllowed();
-
-    /// Parameter value does not match specified condition
-    error ParameterNotAMatch();
-
-    /// Array elements do not meet allowed criteria for every element
-    error ArrayElementsNotAllowed();
-
-    /// Array elements do not meet allowed criteria for at least one element
-    error ArrayElementsSomeNotAllowed();
-
-    /// Parameter value not a subset of allowed values
-    error ParameterNotSubsetOfAllowed();
-
-    /// only multisend txs with an offset of 32 bytes are allowed
-    error UnacceptableMultiSendOffset();
-
-    /// Allowance exceeded
-    error AllowanceExceeded();
-
-    /// Bitmask exceeded value length
-    error BitmaskOverflow();
-
-    /// Bitmask not an allowed value
-    error BitmaskNotAllowed();
-
     /// @dev Entry point for checking the scope of a transaction.
-    function check(
+    function authorize(
         uint16 roleId,
         address to,
         uint256 value,
@@ -74,47 +21,88 @@ abstract contract PermissionChecker is Core, Periphery {
             revert NoMembership();
         }
 
-        if (unwrappers[to] == address(0)) {
-            Status status;
-            (status, result) = checkTransaction(
+        address adapter = unwrappers[to];
+        if (adapter == address(0)) {
+            return _singleEntrypoint(roleId, to, value, data, operation);
+        } else {
+            return
+                _multiEntrypoint(
+                    ITransactionUnwrapper(adapter),
+                    roleId,
+                    value,
+                    data,
+                    operation
+                );
+        }
+    }
+
+    function _singleEntrypoint(
+        uint16 roleId,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) private view returns (Tracking[] memory) {
+        (Status status, Tracking[] memory result) = _transaction(
+            roleId,
+            to,
+            value,
+            data,
+            operation
+        );
+        if (status != Status.Ok) {
+            revertWith(status);
+        }
+        return result;
+    }
+
+    function _multiEntrypoint(
+        ITransactionUnwrapper adapter,
+        uint16 roleId,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) private view returns (Tracking[] memory result) {
+        UnwrappedTransaction[] memory transactions = adapter.unwrap(data);
+
+        if (value != 0) {
+            revert UnsuitableValueForMultiTransaction();
+        }
+
+        if (operation != Enum.Operation.DelegateCall) {
+            revert UnsuitableOperationForMultiTransaction();
+        }
+
+        for (uint256 i; i < transactions.length; ++i) {
+            (Status status, Tracking[] memory toBeTracked) = _transaction(
                 roleId,
-                to,
-                value,
                 data,
-                operation
+                transactions[i]
             );
             if (status != Status.Ok) {
                 revertWith(status);
             }
-            return result;
-        } else {
-            // NOTE: this else branch is still a bit unruly to be massaged soon
-            UnwrappedTransaction[] memory transactions = IUnwrappingAdapter(
-                unwrappers[to]
-            ).unwrap(data);
-
-            for (uint256 i; i < transactions.length; ++i) {
-                UnwrappedTransaction memory transaction = transactions[i];
-                bytes calldata transactionData = data[transaction
-                    .location
-                    .left:transaction.location.right];
-                (
-                    Status status,
-                    Tracking[] memory toBeTracked
-                ) = checkTransaction(
-                        roleId,
-                        transaction.to,
-                        transaction.value,
-                        transactionData,
-                        transaction.operation
-                    );
-                if (status != Status.Ok) {
-                    revertWith(status);
-                }
-                result = _track(result, toBeTracked);
-            }
-            return result;
+            result = _track(result, toBeTracked);
         }
+        return result;
+    }
+
+    function _transaction(
+        uint16 roleId,
+        bytes calldata data,
+        UnwrappedTransaction memory transaction
+    ) private view returns (Status, Tracking[] memory toBeTracked) {
+        uint256 left = transaction.dataOffset;
+        uint256 right = transaction.dataOffset + transaction.dataLength;
+        bytes calldata slice = data[left:right];
+        return
+            _transaction(
+                roleId,
+                transaction.to,
+                transaction.value,
+                slice,
+                transaction.operation
+            );
     }
 
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.
@@ -124,13 +112,13 @@ abstract contract PermissionChecker is Core, Periphery {
     /// @param value Ether value of module transaction.
     /// @param data Data payload of module transaction.
     /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
-    function checkTransaction(
+    function _transaction(
         uint16 roleId,
         address targetAddress,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Status, Tracking[] memory toBeTracked) {
+    ) private view returns (Status, Tracking[] memory toBeTracked) {
         if (data.length != 0 && data.length < 4) {
             return (Status.FunctionSignatureTooShort, toBeTracked);
         }
@@ -140,7 +128,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
         if (target.clearance == Clearance.Target) {
             return (
-                _checkExecutionOptions(value, operation, target.options),
+                _executionOptions(value, operation, target.options),
                 _track()
             );
         } else if (target.clearance == Clearance.Function) {
@@ -153,7 +141,7 @@ abstract contract PermissionChecker is Core, Periphery {
             (bool isWildcarded, ExecutionOptions options) = ScopeConfig
                 .unpackHeader(header);
 
-            Status status = _checkExecutionOptions(value, operation, options);
+            Status status = _executionOptions(value, operation, options);
             if (status != Status.Ok) {
                 return (status, _track());
             }
@@ -178,11 +166,11 @@ abstract contract PermissionChecker is Core, Periphery {
     /// @param value Ether value of module transaction.
     /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
     /// @param options Determines if a transaction can send ether and/or delegatecall to target.
-    function _checkExecutionOptions(
+    function _executionOptions(
         uint256 value,
         Enum.Operation operation,
         ExecutionOptions options
-    ) internal pure returns (Status) {
+    ) private pure returns (Status) {
         // isSend && !canSend
         if (
             value > 0 &&
@@ -208,9 +196,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) internal pure returns (Status, Tracking[] memory) {
+    ) internal pure returns (Status, Tracking[] memory empty) {
         if (parameter.comp == Comparison.Whatever) {
-            return (Status.Ok, _track());
+            return (Status.Ok, empty);
         }
 
         Comparison comp = parameter.comp;
@@ -225,13 +213,13 @@ abstract contract PermissionChecker is Core, Periphery {
         } else if (comp == Comparison.OneOf) {
             return _oneOf(data, parameter, payload);
         } else if (comp == Comparison.ArraySome) {
-            return _some(data, parameter, payload);
+            return _arraySome(data, parameter, payload);
         } else if (comp == Comparison.ArrayEvery) {
-            return _every(data, parameter, payload);
+            return _arrayEvery(data, parameter, payload);
         } else if (comp == Comparison.WithinAllowance) {
             return _withinAllowance(data, parameter, payload);
         } else if (comp == Comparison.SubsetOf) {
-            return _subset(data, parameter, payload);
+            return _subsetOf(data, parameter, payload);
         } else {
             assert(comp == Comparison.Bitmask);
             return _bitmask(data, parameter, payload);
@@ -278,7 +266,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, toBeTracked);
     }
 
-    function _every(
+    function _arrayEvery(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
@@ -299,7 +287,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, tobeTracked);
     }
 
-    function _some(
+    function _arraySome(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
@@ -317,7 +305,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.ArrayElementsSomeNotAllowed, _track());
     }
 
-    function _subset(
+    function _subsetOf(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
@@ -545,4 +533,61 @@ abstract contract PermissionChecker is Core, Periphery {
         /// Bitmask not an allowed value
         BitmaskNotAllowed
     }
+
+    /// Sender is not a member of the role
+    error NoMembership();
+
+    error UnsuitableValueForMultiTransaction();
+
+    error UnsuitableOperationForMultiTransaction();
+
+    /// Function signature too short
+    error FunctionSignatureTooShort();
+
+    /// Role not allowed to delegate call to target address
+    error DelegateCallNotAllowed();
+
+    /// Role not allowed to call target address
+    error TargetAddressNotAllowed();
+
+    /// Role not allowed to send to target address
+    error SendNotAllowed();
+
+    /// Role not allowed to call this function on target address
+    error FunctionNotAllowed();
+
+    /// Parameter value not one of allowed
+    error ParameterNotAllowed();
+
+    /// Parameter value less than minimum
+    error ParameterLessThanAllowed();
+
+    /// Parameter value greater than maximum
+    error ParameterGreaterThanAllowed();
+
+    error ParameterNotOneOfAllowed();
+
+    /// Parameter value does not match specified condition
+    error ParameterNotAMatch();
+
+    /// Array elements do not meet allowed criteria for every element
+    error ArrayElementsNotAllowed();
+
+    /// Array elements do not meet allowed criteria for at least one element
+    error ArrayElementsSomeNotAllowed();
+
+    /// Parameter value not a subset of allowed values
+    error ParameterNotSubsetOfAllowed();
+
+    /// only multisend txs with an offset of 32 bytes are allowed
+    error UnacceptableMultiSendOffset();
+
+    /// Allowance exceeded
+    error AllowanceExceeded();
+
+    /// Bitmask exceeded value length
+    error BitmaskOverflow();
+
+    /// Bitmask not an allowed value
+    error BitmaskNotAllowed();
 }

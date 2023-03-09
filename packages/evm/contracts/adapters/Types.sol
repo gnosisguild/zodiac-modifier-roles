@@ -8,14 +8,11 @@ struct UnwrappedTransaction {
     address to;
     uint256 value;
     // We wanna deal in calldata slices. We return location, let invoker slice
-    Location location;
-}
-struct Location {
-    uint256 left;
-    uint256 right;
+    uint256 dataOffset;
+    uint256 dataLength;
 }
 
-interface IUnwrappingAdapter {
+interface ITransactionUnwrapper {
     function unwrap(
         bytes calldata data
     ) external view returns (UnwrappedTransaction[] memory result);

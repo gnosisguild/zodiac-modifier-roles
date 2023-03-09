@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-contract MultiSendAdapter is IUnwrappingAdapter {
+contract MultiSendAdapter is ITransactionUnwrapper {
     bytes4 private constant SELECTOR = 0x8d80ff0a;
     uint256 private constant OFFSET_START = 68;
 
@@ -85,7 +85,8 @@ contract MultiSendAdapter is IUnwrappingAdapter {
         uint256 length = uint256(bytes32(data[offset:]));
         offset += 32;
 
-        result.location = Location({left: offset, right: offset + length});
+        result.dataOffset = offset;
+        result.dataLength = length;
 
         return (offset + length, result);
     }
