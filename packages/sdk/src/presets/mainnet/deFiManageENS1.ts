@@ -270,7 +270,7 @@ const preset = {
     //Claiming LDO rewards
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
-      signature: "claim_rewards(address)",
+      signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
       params: {
         [0]: staticEqual(AVATAR),
       },
