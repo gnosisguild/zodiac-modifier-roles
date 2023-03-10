@@ -64,6 +64,12 @@ contract TestContract {
         emit DoEvenLess();
     }
 
+    uint16 public aStorageNumber;
+
+    function setAStorageNumber(uint16 value) public {
+        aStorageNumber = value;
+    }
+
     function fnWithSingleParam(uint256 p) public {
         emit FnWithSingleParam(p);
     }

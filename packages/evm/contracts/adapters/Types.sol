@@ -14,6 +14,9 @@ struct UnwrappedTransaction {
 
 interface ITransactionUnwrapper {
     function unwrap(
-        bytes calldata data
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
     ) external view returns (UnwrappedTransaction[] memory result);
 }
