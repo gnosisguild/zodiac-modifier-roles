@@ -21,7 +21,12 @@ abstract contract PermissionChecker is Core, Periphery {
             revert NoMembership();
         }
 
-        address adapter = unwrappers[to];
+        // The next line saves 830 gas versus:
+        // bytes32(abi.encodePacked(to, bytes4(data)))
+        bytes32 key = bytes32(bytes20(to)) |
+            (bytes32(bytes4(data)) >> (20 * 8));
+
+        address adapter = unwrappers[key];
         if (adapter == address(0)) {
             return _singleEntrypoint(roleId, to, value, data, operation);
         } else {
@@ -29,6 +34,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 _multiEntrypoint(
                     ITransactionUnwrapper(adapter),
                     roleId,
+                    to,
                     value,
                     data,
                     operation
@@ -59,32 +65,28 @@ abstract contract PermissionChecker is Core, Periphery {
     function _multiEntrypoint(
         ITransactionUnwrapper adapter,
         uint16 roleId,
+        address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
     ) private view returns (Tracking[] memory result) {
-        UnwrappedTransaction[] memory transactions = adapter.unwrap(data);
-
-        if (value != 0) {
-            revert UnsuitableValueForMultiTransaction();
-        }
-
-        if (operation != Enum.Operation.DelegateCall) {
-            revert UnsuitableOperationForMultiTransaction();
-        }
-
-        for (uint256 i; i < transactions.length; ++i) {
-            (Status status, Tracking[] memory toBeTracked) = _transaction(
-                roleId,
-                data,
-                transactions[i]
-            );
-            if (status != Status.Ok) {
-                revertWith(status);
+        try adapter.unwrap(to, value, data, operation) returns (
+            UnwrappedTransaction[] memory transactions
+        ) {
+            for (uint256 i; i < transactions.length; ++i) {
+                (Status status, Tracking[] memory toBeTracked) = _transaction(
+                    roleId,
+                    data,
+                    transactions[i]
+                );
+                if (status != Status.Ok) {
+                    revertWith(status);
+                }
+                result = _track(result, toBeTracked);
             }
-            result = _track(result, toBeTracked);
+        } catch {
+            revert MalformedMultiEntrypoint();
         }
-        return result;
     }
 
     function _transaction(
@@ -92,9 +94,8 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         UnwrappedTransaction memory transaction
     ) private view returns (Status, Tracking[] memory toBeTracked) {
-        uint256 left = transaction.dataOffset;
-        uint256 right = transaction.dataOffset + transaction.dataLength;
-        bytes calldata slice = data[left:right];
+        bytes calldata slice = data[transaction.dataOffset:transaction
+            .dataOffset + transaction.dataLength];
         return
             _transaction(
                 roleId,
@@ -537,12 +538,11 @@ abstract contract PermissionChecker is Core, Periphery {
     /// Sender is not a member of the role
     error NoMembership();
 
-    error UnsuitableValueForMultiTransaction();
-
-    error UnsuitableOperationForMultiTransaction();
-
     /// Function signature too short
     error FunctionSignatureTooShort();
+
+    /// Calldata unwrapping failed
+    error MalformedMultiEntrypoint();
 
     /// Role not allowed to delegate call to target address
     error DelegateCallNotAllowed();

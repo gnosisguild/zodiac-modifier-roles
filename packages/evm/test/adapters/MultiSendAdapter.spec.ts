@@ -1,12 +1,19 @@
-import "@nomiclabs/hardhat-ethers";
 import assert from "assert";
 
+import "@nomiclabs/hardhat-ethers";
+
+import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import { BigNumberish } from "ethers";
 import { getAddress, solidityPack } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
 import { UnwrappedTransactionStructOutput } from "../../typechain-types/contracts/adapters/MultiSendAdapter";
+
+enum Operation {
+  Call = 0,
+  DelegateCall,
+}
 
 describe("MultiSendAdapter", async () => {
   const setup = deployments.createFixture(async () => {
@@ -41,7 +48,7 @@ describe("MultiSendAdapter", async () => {
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
-          operation: 1,
+          operation: Operation.Call,
           data: simpleCalldata as string,
         },
       ])
@@ -53,11 +60,21 @@ describe("MultiSendAdapter", async () => {
     const selectorOk = "8d80ff0a";
 
     await expect(
-      unwrapper.unwrap(`${data.slice(0, 2)}${selectorWrong}${data.slice(10)}`)
-    ).to.be.revertedWith("MultiSendMalformed()");
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 2)}${selectorWrong}${data.slice(10)}`,
+        Operation.DelegateCall
+      )
+    ).to.be.reverted;
 
     await expect(
-      unwrapper.unwrap(`${data.slice(0, 2)}${selectorOk}${data.slice(10)}`)
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 2)}${selectorOk}${data.slice(10)}`,
+        Operation.DelegateCall
+      )
     ).to.not.be.reverted;
   });
 
@@ -72,7 +89,7 @@ describe("MultiSendAdapter", async () => {
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
-          operation: 1,
+          operation: Operation.DelegateCall,
           data: simpleCalldata as string,
         },
       ])
@@ -86,12 +103,67 @@ describe("MultiSendAdapter", async () => {
       "f000000000000000000000000000000000000000000000000000000000000020";
 
     await expect(
-      unwrapper.unwrap(`${data.slice(0, 10)}${offsetWrong}${data.slice(74)}`)
-    ).to.be.revertedWith("MultiSendMalformed()");
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 10)}${offsetWrong}${data.slice(74)}`,
+        Operation.DelegateCall
+      )
+    ).to.be.reverted;
 
     await expect(
-      unwrapper.unwrap(`${data.slice(0, 10)}${offsetOk}${data.slice(74)}`)
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 10)}${offsetOk}${data.slice(74)}`,
+        Operation.DelegateCall
+      )
     ).to.not.be.reverted;
+  });
+
+  it("reverts if value not zero", async () => {
+    const { unwrapper, multisend, testEncoder } = await setup();
+
+    const { data: txData } = await testEncoder.populateTransaction.simple(1);
+    assert(txData);
+    const { data } = await multisend.populateTransaction.multiSend(
+      multisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.Call,
+          data: txData,
+        },
+      ])
+    );
+    assert(data);
+
+    await expect(unwrapper.unwrap(AddressOne, 1, data, Operation.DelegateCall))
+      .to.be.reverted;
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
+  });
+
+  it("reverts if operation not delegate call", async () => {
+    const { unwrapper, multisend, testEncoder } = await setup();
+
+    const { data: txData } = await testEncoder.populateTransaction.simple(1);
+    const { data } = await multisend.populateTransaction.multiSend(
+      multisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.Call,
+          data: txData as string,
+        },
+      ])
+    );
+    assert(data);
+
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.Call)).to.be
+      .reverted;
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
   });
 
   it("reverts if no transaction encoded", async () => {
@@ -101,9 +173,8 @@ describe("MultiSendAdapter", async () => {
 
     assert(data);
 
-    await expect(unwrapper.unwrap(data)).to.be.revertedWith(
-      "MultiSendMalformed()"
-    );
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.be.reverted;
   });
 
   it("unwraps a single transaction", async () => {
@@ -115,7 +186,7 @@ describe("MultiSendAdapter", async () => {
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
-          operation: 1,
+          operation: Operation.DelegateCall,
           data: txData as string,
         },
       ])
@@ -124,7 +195,12 @@ describe("MultiSendAdapter", async () => {
     assert(data);
     assert(txData);
 
-    const result = await unwrapper.unwrap(data);
+    const result = await unwrapper.unwrap(
+      AddressOne,
+      0,
+      data,
+      Operation.DelegateCall
+    );
 
     expect(result).to.have.lengthOf(1);
     expect(getAddress(result[0].to)).to.equal(
@@ -166,7 +242,12 @@ describe("MultiSendAdapter", async () => {
     );
     assert(data);
 
-    const result = await unwrapper.unwrap(data);
+    const result = await unwrapper.unwrap(
+      AddressOne,
+      0,
+      data,
+      Operation.DelegateCall
+    );
 
     expect(result).to.have.lengthOf(2);
     expect(result[0].to).to.equal("0x0000000000000000000000000000000000000002");
@@ -184,11 +265,11 @@ describe("MultiSendAdapter", async () => {
     expect(data.slice(2).slice(left, right)).to.equal(txData2.slice(2));
   });
 
-  it("reverts if transaction operation incorrect", async () => {
+  it("reverts if inner transaction operation incorrect", async () => {
     const { unwrapper, multisend, testEncoder } = await setup();
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
-    const { data } = await multisend.populateTransaction.multiSend(
+    let { data } = await multisend.populateTransaction.multiSend(
       multisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -198,13 +279,23 @@ describe("MultiSendAdapter", async () => {
         },
       ])
     );
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+    ).to.be.reverted;
 
-    assert(data);
-    assert(txData);
-
-    await expect(unwrapper.unwrap(data)).to.be.revertedWith(
-      "MultiSendMalformed()"
-    );
+    ({ data } = await multisend.populateTransaction.multiSend(
+      multisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.DelegateCall,
+          data: txData as string,
+        },
+      ])
+    ));
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+    ).to.not.be.reverted;
   });
 });
 

@@ -7,11 +7,14 @@ import "./adapters/Types.sol";
 abstract contract Periphery is OwnableUpgradeable {
     event SetUnwrapAdapter(address to, address adapter);
 
-    mapping(address => address) public unwrappers;
+    mapping(bytes32 => address) public unwrappers;
 
-    function setUnwrapAdapter(address to, address adapter) external onlyOwner {
-        unwrappers[to] = adapter;
-
+    function setUnwrapAdapter(
+        address to,
+        bytes4 selector,
+        address adapter
+    ) external onlyOwner {
+        unwrappers[bytes32(abi.encodePacked(to, selector))] = adapter;
         emit SetUnwrapAdapter(to, adapter);
     }
 }

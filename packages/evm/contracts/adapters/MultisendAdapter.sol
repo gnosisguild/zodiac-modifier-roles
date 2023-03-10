@@ -7,38 +7,40 @@ contract MultiSendAdapter is ITransactionUnwrapper {
     bytes4 private constant SELECTOR = 0x8d80ff0a;
     uint256 private constant OFFSET_START = 68;
 
-    error MultiSendMalformed();
-
     function unwrap(
-        bytes calldata data
-    ) external pure returns (UnwrappedTransaction[] memory result) {
-        _validateHeader(data);
-        uint256 txCount = _validateBody(data);
-        result = new UnwrappedTransaction[](txCount);
-
-        uint256 offset = OFFSET_START;
-        for (uint256 i; i < txCount; ++i) {
-            (offset, result[i]) = _unwrapTx(data, offset);
+        address,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) external pure returns (UnwrappedTransaction[] memory) {
+        if (value != 0) {
+            revert();
         }
+        if (operation != Enum.Operation.DelegateCall) {
+            revert();
+        }
+        _validateHeader(data);
+        uint256 count = _validateEntries(data);
+        return _unwrapEntries(data, count);
     }
 
     function _validateHeader(bytes calldata data) private pure {
         if (bytes4(data) != SELECTOR) {
-            revert MultiSendMalformed();
+            revert();
         }
 
         if (bytes32(data[4:]) != bytes32(uint256(0x20))) {
-            revert MultiSendMalformed();
+            revert();
         }
 
         uint256 length = uint256(bytes32(data[36:]));
         // padded to 32 bytes
-        if (length + 32 + 32 + 4 > data.length) {
-            revert MultiSendMalformed();
+        if (4 + _round(32 + 32 + length) != data.length) {
+            revert();
         }
     }
 
-    function _validateBody(
+    function _validateEntries(
         bytes calldata data
     ) private pure returns (uint256 count) {
         uint256 offset = OFFSET_START;
@@ -51,43 +53,53 @@ contract MultiSendAdapter is ITransactionUnwrapper {
             // Value       32 bytes
             // Length      32 bytes
             // Data        Length bytes
-
             uint8 operation = uint8(bytes1(data[offset:]));
             if (operation > 1) {
-                revert MultiSendMalformed();
+                revert();
             }
 
             uint256 length = uint256(bytes32(data[offset + 53:]));
-            if (offset + 85 + length > data.length) {}
+            if (offset + 85 + length > data.length) {
+                revert();
+            }
 
             offset += 85 + length;
             count++;
         }
 
         if (count == 0) {
-            revert MultiSendMalformed();
+            revert();
         }
     }
 
-    function _unwrapTx(
+    function _unwrapEntries(
         bytes calldata data,
-        uint256 offset
-    ) private pure returns (uint256, UnwrappedTransaction memory result) {
-        result.operation = Enum.Operation(uint8(bytes1(data[offset:])));
-        offset += 1;
+        uint256 count
+    ) private pure returns (UnwrappedTransaction[] memory result) {
+        result = new UnwrappedTransaction[](count);
 
-        result.to = address(bytes20(data[offset:]));
-        offset += 20;
+        uint256 offset = OFFSET_START;
+        for (uint256 i; i < count; ++i) {
+            result[i].operation = Enum.Operation(uint8(bytes1(data[offset:])));
+            offset += 1;
 
-        result.value = uint256(bytes32(data[offset:]));
-        offset += 32;
+            result[i].to = address(bytes20(data[offset:]));
+            offset += 20;
 
-        uint256 length = uint256(bytes32(data[offset:]));
-        offset += 32;
+            result[i].value = uint256(bytes32(data[offset:]));
+            offset += 32;
 
-        result.dataOffset = offset;
-        result.dataLength = length;
+            uint256 length = uint256(bytes32(data[offset:]));
+            offset += 32;
 
-        return (offset + length, result);
+            result[i].dataOffset = offset;
+            result[i].dataLength = length;
+            offset += length;
+        }
+    }
+
+    function _round(uint256 length) private pure returns (uint256) {
+        // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
+        return ((length + 32 - 1) / 32) * 32;
     }
 }
