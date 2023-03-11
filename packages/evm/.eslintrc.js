@@ -23,15 +23,7 @@ module.exports = {
     "typechain-types/",
   ],
   rules: {
-    "import/order": [
-      "error",
-      {
-        "newlines-between": "always",
-        alphabetize: {
-          order: "asc",
-        },
-      },
-    ],
+    "import/order": 0,
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-empty-function": "off",
   },
