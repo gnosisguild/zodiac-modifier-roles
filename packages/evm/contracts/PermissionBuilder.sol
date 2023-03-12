@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Core.sol";
 import "./Integrity.sol";
-import "./bitmaps/ScopeConfig.sol";
+import "./ScopeConfig.sol";
 
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
