@@ -6,7 +6,7 @@ import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "./Core.sol";
 import "./Periphery.sol";
 import "./Decoder.sol";
-import "./bitmaps/ScopeConfig.sol";
+import "./ScopeConfig.sol";
 
 abstract contract PermissionChecker is Core, Periphery {
     /// @dev Entry point for checking the scope of a transaction.

@@ -6,8 +6,7 @@ import "./write-once/SSTORE2.sol";
 
 import "./Core.sol";
 import "./Topology.sol";
-
-import "./bitmaps/ScopeConfig.sol";
+import "./ScopeConfig.sol";
 
 abstract contract PermissionLoader is Core {
     function _store(
