@@ -139,7 +139,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 return (Status.FunctionNotAllowed, _track());
             }
 
-            (bool isWildcarded, ExecutionOptions options) = ScopeConfig
+            (, bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
                 .unpackHeader(header);
 
             Status status = _executionOptions(value, operation, options);

@@ -46,7 +46,7 @@ struct TypeTopology {
 }
 
 struct ParameterConfigFlat {
-    uint16 parent;
+    uint8 parent;
     ParameterType _type;
     Comparison comp;
     bytes compValue;
@@ -75,7 +75,6 @@ struct Role {
     mapping(address => bool) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => bytes32) scopeConfig;
-    mapping(bytes32 => bytes32) compValues;
 }
 
 struct Allowance {
