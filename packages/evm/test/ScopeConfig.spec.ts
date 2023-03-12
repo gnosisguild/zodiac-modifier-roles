@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import hre, { deployments } from "hardhat";
+import { ExecutionOptions } from "./utils";
 
 describe("ScopeConfig library", async () => {
   const setup = deployments.createFixture(async () => {
@@ -16,152 +17,58 @@ describe("ScopeConfig library", async () => {
     };
   });
 
-  // it("packs/unpacks ExecutionOptions", async () => {
-  //   const { ScopeConfig } = await setup();
-  //   let scopeConfig = await ScopeConfig.pack(
-  //     0,
-  //     ExecutionOptions.None,
-  //     false,
-  //     0
-  //   );
-  //   let result = await ScopeConfig.unpack(scopeConfig);
-  //   expect(result.options).to.equal(ExecutionOptions.None);
+  it("packs/unpack Header", async () => {
+    const { ScopeConfig } = await setup();
 
-  //   scopeConfig = await ScopeConfig.pack(
-  //     scopeConfig,
-  //     ExecutionOptions.Both,
-  //     true,
-  //     10
-  //   );
-  //   result = await ScopeConfig.unpack(scopeConfig);
-  //   expect(result.options).to.equal(ExecutionOptions.Both);
-  // });
+    const pointer = "0xffffff00000aaa11232839283000000000000000";
+    const header = await ScopeConfig.packHeader(
+      15,
+      false,
+      ExecutionOptions.DelegateCall,
+      pointer
+    );
+    const result = await ScopeConfig.unpackHeader(header);
+    expect(result._length).to.equal(15);
+    expect(result.isWildcarded).to.equal(false);
+    expect(result.options).to.equal(ExecutionOptions.DelegateCall);
+    expect(result.pointer.toLowerCase()).to.equal(pointer);
+  });
 
-  // it("packs/unpacks isWildcaded", async () => {
-  //   const { ScopeConfig } = await setup();
-  //   let scopeConfig = await ScopeConfig.pack(
-  //     0,
-  //     ExecutionOptions.None,
-  //     false,
-  //     0
-  //   );
-  //   let result = await ScopeConfig.unpack(scopeConfig);
-  //   expect(result.isWildcarded).to.equal(false);
+  it("packs/unpack Parameter", async () => {
+    const { ScopeConfig } = await setup();
 
-  //   scopeConfig = await ScopeConfig.pack(
-  //     scopeConfig,
-  //     ExecutionOptions.Both,
-  //     true,
-  //     32
-  //   );
-  //   result = await ScopeConfig.unpack(scopeConfig);
-  //   expect(result.isWildcarded).to.equal(true);
-  // });
+    let buffer = await ScopeConfig.packParameter(
+      0,
+      {
+        parent: 3,
+        _type: 2,
+        comp: 3,
+        compValue: "0xaabb",
+      },
+      true
+    );
 
-  // it("packs/unpacks length", async () => {
-  //   const { ScopeConfig } = await setup();
+    let result = await ScopeConfig.unpackParameter(buffer, 0);
 
-  //   let scopeConfig = await ScopeConfig.pack(
-  //     0,
-  //     ExecutionOptions.None,
-  //     false,
-  //     32
-  //   );
+    expect(result._type).to.equal(2);
+    expect(result.comp).to.equal(3);
+    expect(result.isHashed).to.equal(true);
 
-  //   let [, , length] = await ScopeConfig.unpack(scopeConfig);
+    buffer = await ScopeConfig.packParameter(
+      0,
+      {
+        parent: 255,
+        _type: 4,
+        comp: 10,
+        compValue: "0xaabb",
+      },
+      false
+    );
 
-  //   expect(length).to.equal(32);
+    result = await ScopeConfig.unpackParameter(buffer, 0);
 
-  //   scopeConfig = await ScopeConfig.pack(
-  //     scopeConfig,
-  //     ExecutionOptions.Both,
-  //     true,
-  //     2
-  //   );
-  //   [, , length] = await ScopeConfig.unpack(scopeConfig);
-  //   expect(length).to.equal(2);
-
-  //   scopeConfig = await ScopeConfig.pack(
-  //     scopeConfig,
-  //     ExecutionOptions.Both,
-  //     true,
-  //     0
-  //   );
-  //   [, , length] = await ScopeConfig.unpack(scopeConfig);
-  //   expect(length).to.equal(0);
-  // });
-
-  // it("packs/unpacks a ParameterType", async () => {
-  //   const { ScopeConfig } = await setup();
-
-  //   const atIndex = async (index: number) => {
-  //     // try first with the min type of ParameterType enum
-  //     let scopeConfig = await ScopeConfig.packParameter(
-  //       0,
-  //       index,
-  //       true,
-  //       ParameterType.Static,
-  //       Comparison.Matches
-  //     );
-  //     let result = await ScopeConfig.unpackParameter(scopeConfig, index);
-  //     expect(result.paramType).to.equal(0);
-
-  //     // try first with the max type of ParameterType enum
-  //     scopeConfig = await ScopeConfig.packParameter(
-  //       scopeConfig,
-  //       index,
-  //       true,
-  //       ParameterType.Array,
-  //       Comparison.Matches
-  //     );
-  //     result = await ScopeConfig.unpackParameter(scopeConfig, index);
-  //     expect(result.paramType).to.equal(ParameterType.Array);
-  //   };
-
-  //   // try at min index
-  //   await atIndex(0);
-
-  //   // try at middle
-  //   await atIndex(16);
-
-  //   // try at max index
-  //   await atIndex(31);
-  // });
-
-  // it("packs/unpacks a Comparison", async () => {
-  //   const { ScopeConfig } = await setup();
-
-  //   const atIndex = async (index: number) => {
-  //     // try first with the min type of Comparison enum
-  //     let scopeConfig = await ScopeConfig.packParameter(
-  //       0,
-  //       index,
-  //       true,
-  //       ParameterType.Static,
-  //       Comparison.EqualTo
-  //     );
-  //     let result = await ScopeConfig.unpackParameter(scopeConfig, index);
-  //     expect(result.paramComp).to.equal(Comparison.EqualTo);
-
-  //     // try first with the max type of Comparison enum
-  //     scopeConfig = await ScopeConfig.packParameter(
-  //       scopeConfig,
-  //       index,
-  //       true,
-  //       ParameterType.Array,
-  //       Comparison.Every
-  //     );
-  //     result = await ScopeConfig.unpackParameter(scopeConfig, index);
-  //     expect(result.paramComp).to.equal(Comparison.Every);
-  //   };
-
-  //   // try at min index
-  //   await atIndex(0);
-
-  //   // try at middle
-  //   await atIndex(16);
-
-  //   // try at max index
-  //   await atIndex(31);
-  // });
+    expect(result._type).to.equal(4);
+    expect(result.comp).to.equal(10);
+    expect(result.isHashed).to.equal(false);
+  });
 });

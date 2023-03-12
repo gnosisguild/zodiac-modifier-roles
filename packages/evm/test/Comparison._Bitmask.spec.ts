@@ -143,6 +143,7 @@ describe("Comparison", async () => {
             )
           )
         ).to.not.be.reverted;
+
         await expect(
           invoke(
             BigNumber.from(
@@ -159,6 +160,7 @@ describe("Comparison", async () => {
           )
         ).to.be.revertedWith("BitmaskNotAllowed()");
       });
+
       it("middle aligned", async () => {
         const { setRole } = await setup();
 

@@ -87,7 +87,7 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     ) external onlyOwner {
         roles[roleId].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .packHeader(0, true, options);
+            .packHeader(0, true, options, address(0));
 
         emit AllowFunction(roleId, targetAddress, selector, options);
     }
