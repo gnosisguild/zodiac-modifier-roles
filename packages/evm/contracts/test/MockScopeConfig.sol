@@ -6,23 +6,19 @@ import "../ScopeConfig.sol";
 contract MockScopeConfig {
     function packParameter(
         uint256 index,
-        ParameterConfigFlat calldata parameter,
-        bool isHashed
+        ParameterConfigFlat calldata parameter
     ) public pure returns (bytes memory buffer) {
         buffer = new bytes(1024);
-        ScopeConfig.packParameter(buffer, index, parameter, isHashed);
+        ScopeConfig.packParameter(buffer, index, parameter);
     }
 
     function unpackParameter(
         bytes memory buffer,
         uint256 index
-    )
-        public
-        pure
-        returns (ParameterType _type, Comparison comp, bool isHashed)
-    {
-        ParameterConfig memory p = ScopeConfig.unpackParameter(buffer, index);
-        return (p._type, p.comp, p.isHashed);
+    ) public pure returns (ParameterType _type, Comparison comp) {
+        ParameterConfig memory p;
+        ScopeConfig.unpackParameter(buffer, index, p);
+        return (p._type, p.comp);
     }
 
     function packHeader(

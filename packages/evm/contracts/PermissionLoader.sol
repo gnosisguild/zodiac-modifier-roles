@@ -15,7 +15,7 @@ abstract contract PermissionLoader is Core {
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) internal override {
-        bytes memory buffer = _packBuffer(parameters);
+        bytes memory buffer = ScopeConfig.packBody(parameters);
         address pointer = SSTORE2.write(buffer);
 
         bytes32 value = ScopeConfig.packHeader(
@@ -36,35 +36,11 @@ abstract contract PermissionLoader is Core {
 
         (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(value);
         bytes memory buffer = SSTORE2.read(pointer);
-        result = _unpackBuffer(buffer, length);
+        result = _unpack(buffer, length);
         _loadAllowances(result);
     }
 
-    function _packBuffer(
-        ParameterConfigFlat[] calldata parameters
-    ) private view returns (bytes memory buffer) {
-        buffer = new bytes(ScopeConfig.bufferSize(parameters));
-
-        uint256 count = parameters.length;
-        uint256 offset = count * 2;
-        for (uint8 i; i < count; ++i) {
-            ParameterConfigFlat calldata parameter = parameters[i];
-            ScopeConfig.Packing mode = ScopeConfig.packMode(
-                parameter.comp,
-                parameter.compValue
-            );
-
-            ScopeConfig.packParameter(
-                buffer,
-                i,
-                parameter,
-                mode == ScopeConfig.Packing.Hash
-            );
-        }
-        ScopeConfig.packCompValues(buffer, parameters);
-    }
-
-    function _unpackBuffer(
+    function _unpack(
         bytes memory buffer,
         uint256 count
     ) private pure returns (ParameterConfig memory result) {
@@ -73,34 +49,32 @@ abstract contract PermissionLoader is Core {
             ScopeConfig.Packing[] memory modes
         ) = ScopeConfig.unpackMisc(buffer, count);
 
-        bytes32[] memory compValues = ScopeConfig.unpackCompValues(
-            buffer,
-            modes
-        );
-
-        result = _unpackParameter(buffer, 0, compValues, parents);
+        result = ScopeConfig.unpackBody(buffer, modes);
+        _unpackParameter(buffer, 0, result, _childrenBounds(parents), modes);
     }
 
     function _unpackParameter(
         bytes memory buffer,
         uint256 index,
-        bytes32[] memory compValues,
-        uint8[] memory parents
-    ) private pure returns (ParameterConfig memory result) {
-        result = ScopeConfig.unpackParameter(buffer, index);
-        result.compValue = compValues[index];
+        ParameterConfig memory parameter,
+        Bounds[] memory bounds,
+        ScopeConfig.Packing[] memory modes
+    ) private pure {
+        uint256 left = bounds[index].left;
+        uint256 right = bounds[index].right;
+        if (right < left) {
+            return;
+        }
 
-        (uint256 left, uint256 right) = Topology.childrenBounds(parents, index);
-        if (left <= right) {
-            result.children = new ParameterConfig[](right - left + 1);
-            for (uint256 j = left; j <= right; j++) {
-                result.children[j - left] = _unpackParameter(
-                    buffer,
-                    j,
-                    compValues,
-                    parents
-                );
-            }
+        parameter.children = ScopeConfig.unpackBody(buffer, left, right, modes);
+        for (uint i = 0; i < parameter.children.length; ++i) {
+            _unpackParameter(
+                buffer,
+                left + i,
+                parameter.children[i],
+                bounds,
+                modes
+            );
         }
     }
 
@@ -117,5 +91,30 @@ abstract contract PermissionLoader is Core {
         for (uint256 i; i < length; ++i) {
             _loadAllowances(result.children[i]);
         }
+    }
+
+    function _childrenBounds(
+        uint8[] memory parents
+    ) private pure returns (Bounds[] memory result) {
+        uint256 count = parents.length;
+        result = new Bounds[](parents.length);
+
+        for (uint256 i = 0; i < count; ++i) {
+            result[i].left = type(uint256).max;
+        }
+
+        // 0 is the root
+        for (uint256 i = 1; i < count; ++i) {
+            Bounds memory bounds = result[parents[i]];
+            if (bounds.left == type(uint256).max) {
+                bounds.left = i;
+            }
+            bounds.right = i;
+        }
+    }
+
+    struct Bounds {
+        uint256 left;
+        uint256 right;
     }
 }
