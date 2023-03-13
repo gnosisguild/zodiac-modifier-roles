@@ -16,7 +16,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Tracking[] memory result) {
+    ) internal view returns (Trace[] memory result) {
         if (!roles[roleId].members[msg.sender]) {
             revert NoMembership();
         }
@@ -51,8 +51,8 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Tracking[] memory) {
-        (Status status, Tracking[] memory result) = _transaction(
+    ) private view returns (Trace[] memory) {
+        (Status status, Trace[] memory result) = _transaction(
             roleId,
             to,
             value,
@@ -72,12 +72,12 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Tracking[] memory result) {
+    ) private view returns (Trace[] memory result) {
         try adapter.unwrap(to, value, data, operation) returns (
             UnwrappedTransaction[] memory transactions
         ) {
             for (uint256 i; i < transactions.length; ++i) {
-                (Status status, Tracking[] memory toBeTracked) = _transaction(
+                (Status status, Trace[] memory more) = _transaction(
                     roleId,
                     data,
                     transactions[i]
@@ -85,7 +85,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 if (status != Status.Ok) {
                     revertWith(status);
                 }
-                result = _track(result, toBeTracked);
+                result = _trace(result, more);
             }
         } catch {
             revert MalformedMultiEntrypoint();
@@ -96,7 +96,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint16 roleId,
         bytes calldata data,
         UnwrappedTransaction memory transaction
-    ) private view returns (Status, Tracking[] memory toBeTracked) {
+    ) private view returns (Status, Trace[] memory) {
         return
             _transaction(
                 roleId,
@@ -121,9 +121,9 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Status, Tracking[] memory toBeTracked) {
+    ) private view returns (Status, Trace[] memory nothing) {
         if (data.length != 0 && data.length < 4) {
-            return (Status.FunctionSignatureTooShort, toBeTracked);
+            return (Status.FunctionSignatureTooShort, nothing);
         }
 
         Role storage role = roles[roleId];
@@ -132,13 +132,13 @@ abstract contract PermissionChecker is Core, Periphery {
         if (target.clearance == Clearance.Target) {
             return (
                 _executionOptions(value, operation, target.options),
-                _track()
+                nothing
             );
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
-                return (Status.FunctionNotAllowed, _track());
+                return (Status.FunctionNotAllowed, nothing);
             }
 
             (, bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
@@ -146,11 +146,11 @@ abstract contract PermissionChecker is Core, Periphery {
 
             Status status = _executionOptions(value, operation, options);
             if (status != Status.Ok) {
-                return (status, _track());
+                return (status, nothing);
             }
 
             if (isWildcarded) {
-                return (Status.Ok, _track());
+                return (Status.Ok, nothing);
             }
 
             ParameterConfig memory parameter = _load(role, key);
@@ -161,7 +161,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
             return _walk(data, parameter, payload);
         } else {
-            return (Status.TargetAddressNotAllowed, _track());
+            return (Status.TargetAddressNotAllowed, nothing);
         }
     }
 
@@ -199,9 +199,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) internal pure returns (Status, Tracking[] memory empty) {
+    ) internal pure returns (Status, Trace[] memory nothing) {
         if (parameter.comp == Comparison.Whatever) {
-            return (Status.Ok, empty);
+            return (Status.Ok, nothing);
         }
 
         Comparison comp = parameter.comp;
@@ -233,89 +233,89 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Tracking[] memory toBeTracked) {
+    ) private pure returns (Status, Trace[] memory nothing) {
         for (uint256 i; i < parameter.children.length; ++i) {
-            (status, toBeTracked) = _walk(data, parameter.children[i], payload);
+            (Status status, Trace[] memory trace) = _walk(
+                data,
+                parameter.children[i],
+                payload
+            );
             if (status == Status.Ok) {
-                return (status, toBeTracked);
+                return (status, trace);
             }
         }
-        return (Status.ParameterNotOneOfAllowed, _track());
+        return (Status.ParameterNotOneOfAllowed, nothing);
     }
 
     function _matches(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Tracking[] memory toBeTracked) {
+    ) private pure returns (Status, Trace[] memory trace) {
         if (parameter.children.length != payload.children.length) {
-            return (Status.ParameterNotAMatch, _track());
+            return (Status.ParameterNotAMatch, trace);
         }
 
         for (uint256 i; i < parameter.children.length; ++i) {
-            (Status status, Tracking[] memory moreToBeTracked) = _walk(
+            (Status status, Trace[] memory more) = _walk(
                 data,
                 parameter.children[i],
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (status, _track());
+                return (status, _trace());
             }
-            toBeTracked = moreToBeTracked.length == 0
-                ? toBeTracked
-                : _track(toBeTracked, moreToBeTracked);
+            trace = _trace(trace, more);
         }
 
-        return (Status.Ok, toBeTracked);
+        return (Status.Ok, trace);
     }
 
     function _arrayEvery(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Tracking[] memory tobeTracked) {
+    ) private pure returns (Status, Trace[] memory trace) {
         for (uint256 i; i < payload.children.length; ++i) {
-            (Status status, Tracking[] memory moreToBeTracked) = _walk(
+            (Status status, Trace[] memory more) = _walk(
                 data,
                 parameter.children[0],
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ArrayElementsNotAllowed, _track());
+                return (Status.ArrayElementsNotAllowed, _trace());
             }
-            tobeTracked = moreToBeTracked.length == 0
-                ? tobeTracked
-                : _track(tobeTracked, moreToBeTracked);
+            trace = _trace(trace, more);
         }
-        return (Status.Ok, tobeTracked);
+        return (Status.Ok, trace);
     }
 
     function _arraySome(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Tracking[] memory toBeTracked) {
+    ) private pure returns (Status status, Trace[] memory trace) {
         for (uint256 i; i < payload.children.length; ++i) {
-            (status, toBeTracked) = _walk(
+            (status, trace) = _walk(
                 data,
                 parameter.children[0],
                 payload.children[i]
             );
             if (status == Status.Ok) {
-                return (status, toBeTracked);
+                return (status, trace);
             }
         }
-        return (Status.ArrayElementsSomeNotAllowed, _track());
+        return (Status.ArrayElementsSomeNotAllowed, _trace());
     }
 
     function _subsetOf(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Tracking[] memory toBeTracked) {
+    ) private pure returns (Status, Trace[] memory trace) {
         ParameterPayload[] memory values = payload.children;
         if (values.length == 0) {
-            return (Status.ParameterNotSubsetOfAllowed, _track());
+            return (Status.ParameterNotSubsetOfAllowed, trace);
         }
         ParameterConfig[] memory compValues = parameter.children;
 
@@ -325,7 +325,7 @@ abstract contract PermissionChecker is Core, Periphery {
             for (uint256 j; j < compValues.length; ++j) {
                 if (taken & (1 << j) != 0) continue;
 
-                (Status status, Tracking[] memory moreToBeTracked) = _walk(
+                (Status status, Trace[] memory more) = _walk(
                     data,
                     compValues[j],
                     values[i]
@@ -333,24 +333,22 @@ abstract contract PermissionChecker is Core, Periphery {
                 if (status == Status.Ok) {
                     found = true;
                     taken |= 1 << j;
-                    toBeTracked = moreToBeTracked.length == 0
-                        ? toBeTracked
-                        : _track(toBeTracked, moreToBeTracked);
+                    trace = _trace(trace, more);
                     break;
                 }
             }
             if (!found) {
-                return (Status.ParameterNotSubsetOfAllowed, _track());
+                return (Status.ParameterNotSubsetOfAllowed, _trace());
             }
         }
-        return (Status.Ok, toBeTracked);
+        return (Status.Ok, trace);
     }
 
     function _withinAllowance(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Tracking[] memory) {
+    ) private pure returns (Status status, Trace[] memory nothing) {
         assert(parameter._type == ParameterType.Static);
 
         bytes32 value = bytes32(
@@ -359,17 +357,17 @@ abstract contract PermissionChecker is Core, Periphery {
 
         uint256 amount = uint256(value);
         if (amount > parameter.allowance) {
-            return (Status.AllowanceExceeded, _track());
+            return (Status.AllowanceExceeded, nothing);
         }
 
-        return (Status.Ok, _track(Tracking({config: parameter, value: value})));
+        return (Status.Ok, _trace(Trace({config: parameter, value: value})));
     }
 
     function _bitmask(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Tracking[] memory empty) {
+    ) private pure returns (Status status, Trace[] memory nothing) {
         bytes32 compValue = parameter.compValue;
         bytes calldata value = Decoder.pluck(
             data,
@@ -379,7 +377,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
         uint256 shift = uint16(bytes2(compValue));
         if (shift >= value.length) {
-            return (Status.BitmaskOverflow, empty);
+            return (Status.BitmaskOverflow, nothing);
         }
 
         bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
@@ -396,7 +394,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Tracking[] memory) {
+    ) private pure returns (Status status, Trace[] memory nothing) {
         assert(
             parameter.comp == Comparison.EqualTo ||
                 parameter.comp == Comparison.GreaterThan ||
@@ -416,8 +414,6 @@ abstract contract PermissionChecker is Core, Periphery {
         } else {
             status = Status.Ok;
         }
-
-        return (status, _track());
     }
 
     function _pluck(
@@ -434,8 +430,6 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function revertWith(Status status) public pure returns (bool) {
-        assert(status != Status.Ok);
-
         if (status == Status.FunctionSignatureTooShort) {
             revert FunctionSignatureTooShort();
         } else if (status == Status.DelegateCallNotAllowed) {
@@ -565,23 +559,23 @@ abstract contract PermissionChecker is Core, Periphery {
     /// Bitmask not an allowed value
     error BitmaskNotAllowed();
 
-    function _track() private pure returns (Tracking[] memory result) {}
+    function _trace() private pure returns (Trace[] memory result) {}
 
-    function _track(
-        Tracking memory tracking
-    ) private pure returns (Tracking[] memory result) {
-        result = new Tracking[](1);
-        result[0] = tracking;
+    function _trace(
+        Trace memory entry
+    ) private pure returns (Trace[] memory result) {
+        result = new Trace[](1);
+        result[0] = entry;
     }
 
-    function _track(
-        Tracking[] memory t1,
-        Tracking[] memory t2
-    ) private pure returns (Tracking[] memory result) {
+    function _trace(
+        Trace[] memory t1,
+        Trace[] memory t2
+    ) private pure returns (Trace[] memory result) {
         if (t1.length == 0) return t2;
         if (t2.length == 0) return t1;
 
-        result = new Tracking[](t1.length + t2.length);
+        result = new Trace[](t1.length + t2.length);
 
         uint i;
         for (i; i < t1.length; ++i) {
