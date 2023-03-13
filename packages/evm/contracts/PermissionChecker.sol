@@ -21,10 +21,13 @@ abstract contract PermissionChecker is Core, Periphery {
             revert NoMembership();
         }
 
-        // The next line saves 830 gas versus:
-        // bytes32(abi.encodePacked(to, bytes4(data)))
-        bytes32 key = bytes32(bytes20(to)) |
-            (bytes32(bytes4(data)) >> (20 * 8));
+        /*
+         *
+         * Optimized version of
+         * bytes32(abi.encodePacked(to, bytes4(data)))
+         *
+         */
+        bytes32 key = bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> (160));
 
         address adapter = unwrappers[key];
         if (adapter == address(0)) {
@@ -94,14 +97,13 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         UnwrappedTransaction memory transaction
     ) private view returns (Status, Tracking[] memory toBeTracked) {
-        bytes calldata slice = data[transaction.dataOffset:transaction
-            .dataOffset + transaction.dataLength];
         return
             _transaction(
                 roleId,
                 transaction.to,
                 transaction.value,
-                slice,
+                data[transaction.dataOffset:transaction.dataOffset +
+                    transaction.dataLength],
                 transaction.operation
             );
     }
@@ -431,34 +433,6 @@ abstract contract PermissionChecker is Core, Periphery {
         return parameter.isHashed ? keccak256(value) : bytes32(value);
     }
 
-    function _track() private pure returns (Tracking[] memory result) {}
-
-    function _track(
-        Tracking memory tracking
-    ) private pure returns (Tracking[] memory result) {
-        result = new Tracking[](1);
-        result[0] = tracking;
-    }
-
-    function _track(
-        Tracking[] memory t1,
-        Tracking[] memory t2
-    ) private pure returns (Tracking[] memory result) {
-        if (t1.length == 0) return t2;
-        if (t2.length == 0) return t1;
-
-        result = new Tracking[](t1.length + t2.length);
-
-        uint i;
-        for (i; i < t1.length; ++i) {
-            result[i] = t1[i];
-        }
-
-        for (uint256 j; j < t2.length; ++j) {
-            result[i++] = t2[j];
-        }
-    }
-
     function revertWith(Status status) public pure returns (bool) {
         assert(status != Status.Ok);
 
@@ -590,4 +564,32 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// Bitmask not an allowed value
     error BitmaskNotAllowed();
+
+    function _track() private pure returns (Tracking[] memory result) {}
+
+    function _track(
+        Tracking memory tracking
+    ) private pure returns (Tracking[] memory result) {
+        result = new Tracking[](1);
+        result[0] = tracking;
+    }
+
+    function _track(
+        Tracking[] memory t1,
+        Tracking[] memory t2
+    ) private pure returns (Tracking[] memory result) {
+        if (t1.length == 0) return t2;
+        if (t2.length == 0) return t1;
+
+        result = new Tracking[](t1.length + t2.length);
+
+        uint i;
+        for (i; i < t1.length; ++i) {
+            result[i] = t1[i];
+        }
+
+        for (uint256 j; j < t2.length; ++j) {
+            result[i++] = t2[j];
+        }
+    }
 }

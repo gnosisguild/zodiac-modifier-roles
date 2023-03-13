@@ -4,34 +4,6 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./Types.sol";
 
 library Topology {
-    function childrenBounds(
-        uint8[] memory parents,
-        uint256 n
-    ) internal pure returns (uint256 left, uint256 right) {
-        uint256 length = parents.length;
-
-        uint256 i = n + 1;
-        while (i < length && parents[i] < n) {
-            unchecked {
-                ++i;
-            }
-        }
-
-        if (i < length && parents[i] == n) {
-            left = i;
-            while (i < length && parents[i] == n) {
-                unchecked {
-                    ++i;
-                }
-            }
-            right = i - 1;
-            assert(left <= right);
-        } else {
-            left = type(uint256).max;
-            right = 0;
-        }
-    }
-
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
