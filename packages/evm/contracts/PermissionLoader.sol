@@ -15,7 +15,7 @@ abstract contract PermissionLoader is Core {
         ParameterConfigFlat[] calldata parameters,
         ExecutionOptions options
     ) internal override {
-        bytes memory buffer = ScopeConfig.packBody(parameters);
+        bytes memory buffer = _pack(parameters);
         address pointer = SSTORE2.write(buffer);
 
         bytes32 value = ScopeConfig.packHeader(
@@ -40,6 +40,18 @@ abstract contract PermissionLoader is Core {
         _loadAllowances(result);
     }
 
+    function _pack(
+        ParameterConfigFlat[] calldata parameters
+    ) private pure returns (bytes memory buffer) {
+        ScopeConfig.Packing[] memory modes = ScopeConfig.packModes(parameters);
+        buffer = new bytes(ScopeConfig.bufferSize(modes));
+
+        uint256 count = parameters.length;
+        for (uint256 i; i < count; ++i) {
+            ScopeConfig.packParameter(buffer, i, modes, parameters[i]);
+        }
+    }
+
     function _unpack(
         bytes memory buffer,
         uint256 count
@@ -47,33 +59,34 @@ abstract contract PermissionLoader is Core {
         (
             uint8[] memory parents,
             ScopeConfig.Packing[] memory modes
-        ) = ScopeConfig.unpackMisc(buffer, count);
+        ) = ScopeConfig.unpackModes(buffer, count);
 
-        result = ScopeConfig.unpackBody(buffer, modes);
-        _unpackParameter(buffer, 0, result, _childrenBounds(parents), modes);
+        _unpackParameter(buffer, 0, _childrenBounds(parents), modes, result);
     }
 
     function _unpackParameter(
         bytes memory buffer,
         uint256 index,
-        ParameterConfig memory parameter,
-        Bounds[] memory bounds,
-        ScopeConfig.Packing[] memory modes
+        Bounds[] memory childrenBounds,
+        ScopeConfig.Packing[] memory modes,
+        ParameterConfig memory result
     ) private pure {
-        uint256 left = bounds[index].left;
-        uint256 right = bounds[index].right;
+        ScopeConfig.unpackParameter(buffer, index, modes, result);
+        uint256 left = childrenBounds[index].left;
+        uint256 right = childrenBounds[index].right;
         if (right < left) {
             return;
         }
 
-        parameter.children = ScopeConfig.unpackBody(buffer, left, right, modes);
-        for (uint i = 0; i < parameter.children.length; ++i) {
+        uint256 childrenCount = right - left + 1;
+        result.children = new ParameterConfig[](childrenCount);
+        for (uint j = 0; j < childrenCount; ++j) {
             _unpackParameter(
                 buffer,
-                left + i,
-                parameter.children[i],
-                bounds,
-                modes
+                left + j,
+                childrenBounds,
+                modes,
+                result.children[j]
             );
         }
     }
