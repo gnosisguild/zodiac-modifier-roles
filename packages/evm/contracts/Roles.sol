@@ -100,7 +100,7 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        Trace[] memory trace = authorize(
+        Trace[] memory result = authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -109,7 +109,7 @@ contract Roles is
         );
         success = exec(to, value, data, operation);
         if (success) {
-            track(trace);
+            track(result);
         }
     }
 
@@ -130,7 +130,7 @@ contract Roles is
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        Trace[] memory trace = authorize(
+        Trace[] memory result = authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -139,7 +139,7 @@ contract Roles is
         );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (success) {
-            track(trace);
+            track(result);
         }
     }
 
@@ -159,13 +159,13 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Trace[] memory trace = authorize(role, to, value, data, operation);
+        Trace[] memory result = authorize(role, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            track(trace);
+            track(result);
         }
     }
 
@@ -185,13 +185,13 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Trace[] memory trace = authorize(role, to, value, data, operation);
+        Trace[] memory result = authorize(role, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            track(trace);
+            track(result);
         }
     }
 }
