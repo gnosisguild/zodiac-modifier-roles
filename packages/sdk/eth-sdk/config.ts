@@ -6,8 +6,8 @@ export default defineConfig({
     gnosis: "https://blockscout.com/xdai/mainnet/api"
   },
   rpc: {
-    //gnosis: "https://rpc.gnosischain.com/"
-    gnosis: "https://rpc.ankr.com/gnosis"
+    gnosis: "https://rpc.gnosischain.com/"
+    //gnosis: "https://rpc.ankr.com/gnosis"
   },
   contracts: {
     mainnet: {
@@ -70,6 +70,14 @@ export default defineConfig({
         crvEUReUSD_pool: "0x056C6C5e684CeC248635eD86033378Cc444459B0",
         crvEUReUSD_gauge: "0xd91770E868c7471a9585d1819143063A40c54D00",
         crvEUReUSD_zap: "0xE3FFF29d4DC930EBb787FeCd49Ee5963DADf60b6",
+        sgnoCRV_lp_pool: "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
+        sgnoCRV_gauge: "0x2686d5E477d1AaA58BF8cE598fA95d97985c7Fb1",
+        crv3crypto_pool: "0x5633E00994896D0F472926050eCb32E38bef3e65",
+        crv3crypto_lp: "0x02E7e2dd3BA409148A49D5cc9a9034D2f884F245",
+        crv3crypto_gauge: "0x3f7693797352A321f8D532A8B297F91DD31898D8",
+        crv3crypto_zap: "0xF182926A64C0A19234E7E1FCDfE772aA7A1CA351",
+        rgnoCRV_lp_pool: "0x5D7309a01B727d6769153fCB1dF5587858d53B9C",
+        rgnoCRV_gauge: "0x9509A9D5C55793858FE8b1C00a99e012a7AF4aaB",
         stake_deposit_zap: "0xB7De33440B7171159a9718CBE748086cecDd9685"
       },
       realt: {

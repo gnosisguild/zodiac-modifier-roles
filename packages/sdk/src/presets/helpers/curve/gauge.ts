@@ -5,7 +5,7 @@ import { staticEqual } from "../utils"
 
 import { Pool } from "./types"
 
-const CRV_MINTER_ADDRESS = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
+const CRV_MINTER = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
 
 export const allowGauge = (pool: Pool) => {
   if (!("gauge" in pool)) return []
@@ -21,9 +21,10 @@ export const allowGauge = (pool: Pool) => {
       signature: "withdraw(uint256)",
     },
     {
-      targetAddress: CRV_MINTER_ADDRESS,
+      targetAddress: CRV_MINTER,
       signature: "mint(address)",
-      params: { [0]: staticEqual(AVATAR) },
+      //params: { [0]: staticEqual(AVATAR) },
+      params: { [0]: staticEqual(pool.gauge.address, "address") },
     },
   ]
 

@@ -3,7 +3,7 @@ import { AVATAR } from "../placeholders"
 import { RolePreset } from "../types"
 
 import {
-  CURVE_3POOL_GAUGE_FACTORY,
+  CRV_MINTER,
   CURVE_MAI_3POOL3CRV_GAUGE,
   CURVE_x3CRV_GAUGE,
   CURVE_x3CRV_REWARD_GAUGE,
@@ -32,7 +32,7 @@ const preset = {
       }
     ),
     {
-      targetAddress: CURVE_3POOL_GAUGE_FACTORY,
+      targetAddress: CRV_MINTER,
       signature: "mint(address)",
       params: {
         [0]: staticEqual(CURVE_x3CRV_GAUGE, "address"),

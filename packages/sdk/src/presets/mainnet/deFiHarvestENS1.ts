@@ -92,7 +92,8 @@ const preset = {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
       params: {
-        [0]: staticEqual(AVATAR),
+        // [0]: staticEqual(AVATAR),
+        [0]: staticEqual(CURVE_stETH_ETH_GAUGE, "address"),
       },
     },
 
