@@ -37,26 +37,26 @@ describe("ScopeConfig library", async () => {
   it("packs/unpack Parameter", async () => {
     const { ScopeConfig } = await setup();
 
-    let buffer = await ScopeConfig.packParameter(0, {
+    let buffer = await ScopeConfig.packParameter(0, [0], {
       parent: 3,
       _type: 2,
       comp: 3,
       compValue: "0xaabb",
     });
 
-    let result = await ScopeConfig.unpackParameter(buffer, 0);
+    let result = await ScopeConfig.unpackParameter(buffer, 0, [0]);
 
     expect(result._type).to.equal(2);
     expect(result.comp).to.equal(3);
 
-    buffer = await ScopeConfig.packParameter(0, {
+    buffer = await ScopeConfig.packParameter(0, [0], {
       parent: 255,
       _type: 4,
       comp: 10,
       compValue: "0xaabb",
     });
 
-    result = await ScopeConfig.unpackParameter(buffer, 0);
+    result = await ScopeConfig.unpackParameter(buffer, 0, [0]);
 
     expect(result._type).to.equal(4);
     expect(result.comp).to.equal(10);
