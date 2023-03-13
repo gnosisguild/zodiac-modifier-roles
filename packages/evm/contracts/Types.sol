@@ -89,7 +89,7 @@ struct Allowance {
     uint64 refillTimestamp;
 }
 
-struct Tracking {
+struct Trace {
     ParameterConfig config;
     bytes32 value;
 }
