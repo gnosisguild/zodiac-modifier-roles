@@ -112,6 +112,7 @@ abstract contract PermissionLoader is Core {
         uint256 count = parents.length;
         result = new Bounds[](parents.length);
 
+        // parents are DFS
         for (uint256 i = 0; i < count; ++i) {
             result[i].left = type(uint256).max;
         }

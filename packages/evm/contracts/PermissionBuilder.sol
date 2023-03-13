@@ -150,11 +150,11 @@ abstract contract PermissionBuilder is Core {
         });
     }
 
-    function track(Tracking[] memory toBeTracked) internal {
-        uint256 length = toBeTracked.length;
+    function track(Trace[] memory entries) internal {
+        uint256 length = entries.length;
         for (uint256 i; i < length; ++i) {
-            ParameterConfig memory parameter = toBeTracked[i].config;
-            bytes32 value = toBeTracked[i].value;
+            ParameterConfig memory parameter = entries[i].config;
+            bytes32 value = entries[i].value;
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];

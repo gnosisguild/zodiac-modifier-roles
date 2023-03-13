@@ -100,8 +100,17 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        track(authorize(defaultRoles[msg.sender], to, value, data, operation));
-        return exec(to, value, data, operation);
+        Trace[] memory trace = authorize(
+            defaultRoles[msg.sender],
+            to,
+            value,
+            data,
+            operation
+        );
+        success = exec(to, value, data, operation);
+        if (success) {
+            track(trace);
+        }
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -115,9 +124,23 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) public override moduleOnly returns (bool, bytes memory) {
-        track(authorize(defaultRoles[msg.sender], to, value, data, operation));
-        return execAndReturnData(to, value, data, operation);
+    )
+        public
+        override
+        moduleOnly
+        returns (bool success, bytes memory returnData)
+    {
+        Trace[] memory trace = authorize(
+            defaultRoles[msg.sender],
+            to,
+            value,
+            data,
+            operation
+        );
+        (success, returnData) = execAndReturnData(to, value, data, operation);
+        if (success) {
+            track(trace);
+        }
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -136,10 +159,13 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        track(authorize(role, to, value, data, operation));
+        Trace[] memory trace = authorize(role, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
+        }
+        if (success) {
+            track(trace);
         }
     }
 
@@ -159,10 +185,13 @@ contract Roles is
         uint16 role,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        track(authorize(role, to, value, data, operation));
+        Trace[] memory trace = authorize(role, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
+        }
+        if (success) {
+            track(trace);
         }
     }
 }
