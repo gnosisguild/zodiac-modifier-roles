@@ -247,10 +247,10 @@ const preset = {
         //         [1]: staticEqual(AVATAR),
         //     },
         // },
-        // allow.gnosis.curve.crvEUReUSD_gauge["deposit(uint256,address,bool)"](
-        //     undefined,
-        //     AVATAR
-        // ),
+        allow.gnosis.curve.crvEUReUSD_gauge["deposit(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
 
         // Unstake
         // {
@@ -267,10 +267,10 @@ const preset = {
         //         [1]: staticEqual(AVATAR),
         //     },
         // },
-        // allow.gnosis.curve.crvEUReUSD_gauge["withdraw(uint256,address,bool)"](
-        //     undefined,
-        //     AVATAR
-        // ),
+        allow.gnosis.curve.crvEUReUSD_gauge["withdraw(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
 
         // Claim Rewards
         // {
@@ -431,8 +431,12 @@ const preset = {
         //     },
         // },
         allow.gnosis.honeyswap.router["addLiquidity"](
-            COW,
-            GNO,
+            {
+                oneOf: [COW, GNO]
+            },
+            {
+                oneOf: [COW, GNO]
+            },
             undefined,
             undefined,
             undefined,
