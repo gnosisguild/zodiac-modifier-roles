@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
-import "./write-once/SSTORE2.sol";
+import "./WriteOnce.sol";
 
 import "./Core.sol";
 import "./Topology.sol";
@@ -16,7 +16,7 @@ abstract contract PermissionLoader is Core {
         ExecutionOptions options
     ) internal override {
         bytes memory buffer = _pack(parameters);
-        address pointer = SSTORE2.write(buffer);
+        address pointer = WriteOnce.store(buffer);
 
         bytes32 value = ScopeConfig.packHeader(
             parameters.length,
@@ -35,7 +35,7 @@ abstract contract PermissionLoader is Core {
         bytes32 value = role.scopeConfig[key];
 
         (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(value);
-        bytes memory buffer = SSTORE2.read(pointer);
+        bytes memory buffer = WriteOnce.load(pointer);
         result = _unpack(buffer, length);
         _loadAllowances(result);
     }
