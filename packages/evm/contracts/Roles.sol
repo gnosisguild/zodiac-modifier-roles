@@ -77,10 +77,10 @@ contract Roles is
 
     /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
     /// @param module Address of the module on which to set default role.
-    /// @param role Role to be set as default.
-    function setDefaultRole(address module, uint16 role) external onlyOwner {
-        defaultRoles[module] = role;
-        emit SetDefaultRole(module, role);
+    /// @param roleId Role to be set as default.
+    function setDefaultRole(address module, uint16 roleId) external onlyOwner {
+        defaultRoles[module] = roleId;
+        emit SetDefaultRole(module, roleId);
     }
 
     /// @dev Passes a transaction to the modifier.
@@ -96,7 +96,7 @@ contract Roles is
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
         Trace[] memory result = authorize(
-            defaultRoles[msg.sender],
+            roles[defaultRoles[msg.sender]],
             to,
             value,
             data,
@@ -104,7 +104,7 @@ contract Roles is
         );
         success = exec(to, value, data, operation);
         if (success) {
-            track(result);
+            _track(result);
         }
     }
 
@@ -126,7 +126,7 @@ contract Roles is
         returns (bool success, bytes memory returnData)
     {
         Trace[] memory result = authorize(
-            defaultRoles[msg.sender],
+            roles[defaultRoles[msg.sender]],
             to,
             value,
             data,
@@ -134,7 +134,7 @@ contract Roles is
         );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (success) {
-            track(result);
+            _track(result);
         }
     }
 
@@ -143,7 +143,7 @@ contract Roles is
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction
+    /// @param roleId Identifier of the role to assume for this transaction
     /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRole(
@@ -151,16 +151,22 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 role,
+        uint16 roleId,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Trace[] memory result = authorize(role, to, value, data, operation);
+        Trace[] memory result = authorize(
+            roles[roleId],
+            to,
+            value,
+            data,
+            operation
+        );
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            track(result);
+            _track(result);
         }
     }
 
@@ -169,7 +175,7 @@ contract Roles is
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param role Identifier of the role to assume for this transaction
+    /// @param roleId Identifier of the role to assume for this transaction
     /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRoleReturnData(
@@ -177,16 +183,22 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 role,
+        uint16 roleId,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Trace[] memory result = authorize(role, to, value, data, operation);
+        Trace[] memory result = authorize(
+            roles[roleId],
+            to,
+            value,
+            data,
+            operation
+        );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            track(result);
+            _track(result);
         }
     }
 }
