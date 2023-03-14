@@ -152,7 +152,7 @@ abstract contract PermissionBuilder is Core {
         });
     }
 
-    function track(Trace[] memory entries) internal {
+    function _track(Trace[] memory entries) internal {
         uint256 length = entries.length;
         for (uint256 i; i < length; ++i) {
             ParameterConfig memory parameter = entries[i].config;
@@ -160,7 +160,7 @@ abstract contract PermissionBuilder is Core {
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];
-            (uint128 balance, uint64 refillTimestamp) = accruedAllowance(
+            (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
                 block.timestamp
             );
@@ -178,5 +178,33 @@ abstract contract PermissionBuilder is Core {
             allowances[allowanceId].balance = balance - uint128(amount);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
         }
+    }
+
+    function _accruedAllowance(
+        Allowance memory allowance,
+        uint256 timestamp
+    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
+        if (
+            allowance.refillInterval == 0 ||
+            timestamp < allowance.refillTimestamp
+        ) {
+            return (allowance.balance, allowance.refillTimestamp);
+        }
+
+        uint64 elapsedIntervals = (uint64(timestamp) -
+            allowance.refillTimestamp) / allowance.refillInterval;
+
+        uint128 uncappedBalance = allowance.balance +
+            allowance.refillAmount *
+            elapsedIntervals;
+
+        balance = uncappedBalance < allowance.maxBalance
+            ? uncappedBalance
+            : allowance.maxBalance;
+
+        refillTimestamp =
+            allowance.refillTimestamp +
+            elapsedIntervals *
+            allowance.refillInterval;
     }
 }
