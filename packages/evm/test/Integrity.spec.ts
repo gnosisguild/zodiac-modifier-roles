@@ -117,7 +117,7 @@ describe("Integrity", async () => {
       ).to.be.not.reverted;
     });
 
-    it("checks well formed oneOf node", async () => {
+    it("checks well formed Or node", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
 
@@ -141,7 +141,7 @@ describe("Integrity", async () => {
             {
               parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              comp: Comparison.Or,
               compValue: "0x",
             },
             {
@@ -182,7 +182,7 @@ describe("Integrity", async () => {
             {
               parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              comp: Comparison.Or,
               compValue: "0x",
             },
             {
@@ -203,7 +203,7 @@ describe("Integrity", async () => {
       ).to.not.be.reverted;
     });
   });
-  it("enforces minimum 2 compValues when setting Comparison.OneOf", async () => {
+  it("enforces minimum 2 compValues when setting Comparison.Or", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -221,7 +221,7 @@ describe("Integrity", async () => {
           {
             parent: 0,
             _type: ParameterType.AbiEncoded,
-            comp: Comparison.OneOf,
+            comp: Comparison.Or,
             compValue: "0x",
           },
           {
@@ -233,7 +233,7 @@ describe("Integrity", async () => {
         ],
         ExecutionOptions.None
       )
-    ).to.be.revertedWith("TooFewCompValuesForOneOf(0)");
+    ).to.be.revertedWith("NotEnoughChildren(0)");
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -250,7 +250,7 @@ describe("Integrity", async () => {
           {
             parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.OneOf,
+            comp: Comparison.Or,
             compValue: "0x",
           },
           {

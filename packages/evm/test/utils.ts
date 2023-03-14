@@ -120,7 +120,8 @@ export enum ParameterType {
 export enum Comparison {
   Whatever = 0,
   Matches,
-  OneOf,
+  And,
+  Or,
   SubsetOf,
   ArraySome,
   ArrayEvery,

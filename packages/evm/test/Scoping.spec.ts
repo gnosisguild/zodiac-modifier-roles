@@ -117,7 +117,7 @@ describe("Scoping", async () => {
       ).to.be.not.reverted;
     });
 
-    it("checks well formed oneOf node", async () => {
+    it("checks well formed Or node", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
 
@@ -141,7 +141,7 @@ describe("Scoping", async () => {
             {
               parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              comp: Comparison.Or,
               compValue: "0x",
             },
             {
@@ -182,7 +182,7 @@ describe("Scoping", async () => {
             {
               parent: 0,
               _type: ParameterType.Static,
-              comp: Comparison.OneOf,
+              comp: Comparison.Or,
               compValue: "0x",
             },
             {

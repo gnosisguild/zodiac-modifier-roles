@@ -20,7 +20,7 @@ describe("Topology", async () => {
 
     const layout = {
       _type: ParameterType.AbiEncoded,
-      comp: Comparison.OneOf,
+      comp: Comparison.Or,
       children: [
         {
           _type: ParameterType.AbiEncoded,
@@ -91,11 +91,11 @@ describe("Topology", async () => {
     expect(result.children[1].children.length).to.equal(0);
   });
 
-  it("top level oneOf gets unfolded to its children types", async () => {
+  it("top level Or gets unfolded to its children types", async () => {
     const { topology } = await setup();
     const layout = {
       _type: ParameterType.Tuple,
-      comp: Comparison.OneOf,
+      comp: Comparison.Or,
       children: [
         {
           _type: ParameterType.Tuple,
@@ -157,7 +157,7 @@ describe("Topology", async () => {
     expect(result.children[1].children.length).to.equal(0);
   });
 
-  it("nested level oneOf gets unfolded to its children types", async () => {
+  it("nested level Or gets unfolded to its children types", async () => {
     const { topology } = await setup();
     const layout = {
       _type: ParameterType.Tuple,
@@ -170,7 +170,7 @@ describe("Topology", async () => {
         },
         {
           _type: ParameterType.Array,
-          comp: Comparison.OneOf,
+          comp: Comparison.Or,
           children: [
             {
               _type: ParameterType.Array,

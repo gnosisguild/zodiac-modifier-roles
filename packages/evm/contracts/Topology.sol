@@ -7,7 +7,9 @@ library Topology {
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
-        if (parameter.comp == Comparison.OneOf) {
+        if (
+            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
+        ) {
             return typeTree(parameter.children[0]);
         }
 
