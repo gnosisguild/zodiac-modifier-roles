@@ -371,7 +371,7 @@ describe("Comparison", async () => {
 
   it.skip("checks an eq comparison for Tuple");
 
-  it("checks a oneOf comparison for static", async () => {
+  it("checks an Or comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -411,7 +411,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.OneOf,
+          comp: Comparison.Or,
           compValue: "0x",
         },
         {
@@ -435,7 +435,151 @@ describe("Comparison", async () => {
     await expect(invoke(33)).to.be.revertedWith("ParameterNotOneOfAllowed()");
   });
 
-  it("checks a oneOf comparison for dynamic", async () => {
+  it("checks an And comparison over an AbiEncoded node", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.And,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          _type: ParameterType.Static,
+          comp: Comparison.LessThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [50000]),
+        },
+        {
+          parent: 2,
+          _type: ParameterType.Static,
+          comp: Comparison.GreaterThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [40000]),
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke(60000)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+
+    await expect(invoke(30000)).to.be.revertedWith(
+      "ParameterLessThanAllowed()"
+    );
+
+    await expect(invoke(45000)).to.not.be.reverted;
+  });
+
+  it("checks an And comparison over a Static node", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("fnWithSingleParam")
+    );
+
+    const invoke = async (a: number) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.fnWithSingleParam(a))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.Static,
+          comp: Comparison.And,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          _type: ParameterType.Static,
+          comp: Comparison.LessThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [50000]),
+        },
+        {
+          parent: 1,
+          _type: ParameterType.Static,
+          comp: Comparison.GreaterThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [40000]),
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke(60000)).to.be.revertedWith(
+      "ParameterGreaterThanAllowed()"
+    );
+
+    await expect(invoke(30000)).to.be.revertedWith(
+      "ParameterLessThanAllowed()"
+    );
+
+    await expect(invoke(45000)).to.not.be.reverted;
+  });
+
+  it("checks an Or comparison for dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
     const ROLE_ID = 0;
@@ -481,7 +625,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Dynamic,
-          comp: Comparison.OneOf,
+          comp: Comparison.Or,
           compValue: "0x",
         },
         {
@@ -518,7 +662,7 @@ describe("Comparison", async () => {
     );
   });
 
-  it("checks a oneOf tuple comparison", async () => {
+  it("checks an Or tuple comparison", async () => {
     const { modifier, testEncoder, owner, invoker } = await setup();
 
     const addressOne = "0x0000000000000000000000000000000000000123";
@@ -560,7 +704,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Tuple,
-          comp: Comparison.OneOf,
+          comp: Comparison.Or,
           compValue: "0x",
         },
         {
@@ -618,7 +762,7 @@ describe("Comparison", async () => {
     ).to.be.revertedWith("ParameterNotOneOfAllowed()");
   });
 
-  it("checks a oneOf array comparison", async () => {
+  it("checks an Or array comparison", async () => {
     const address1 = "0x0000000000000000000000000000000000000fff";
     const address2 = "0x0000000000000000000000000000000000000123";
     const address3 = "0x0000000000000000000000000000000000000cda";
@@ -657,7 +801,7 @@ describe("Comparison", async () => {
         {
           parent: 0,
           _type: ParameterType.Array,
-          comp: Comparison.OneOf,
+          comp: Comparison.Or,
           compValue: "0x",
         },
         // first Array 1
@@ -1535,7 +1679,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             _type: ParameterType.AbiEncoded,
-            comp: Comparison.OneOf,
+            comp: Comparison.Or,
             compValue: "0x",
           },
           // 1
@@ -1660,7 +1804,7 @@ describe("Comparison", async () => {
           {
             parent: 0,
             _type: ParameterType.Tuple,
-            comp: Comparison.OneOf,
+            comp: Comparison.Or,
             compValue: "0x",
           },
           {

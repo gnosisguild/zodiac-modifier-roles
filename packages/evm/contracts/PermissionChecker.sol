@@ -201,22 +201,15 @@ abstract contract PermissionChecker is Core, Periphery {
     ) internal pure returns (Status, Trace[] memory nothing) {
         Comparison comp = parameter.comp;
 
-        if (comp >= Comparison.EqualTo) {
-            if (comp <= Comparison.LessThan) {
-                return _compare(data, parameter, payload);
-            } else if (comp == Comparison.Bitmask) {
-                return _bitmask(data, parameter, payload);
-            } else {
-                assert(comp == Comparison.WithinAllowance);
-                return _withinAllowance(data, parameter, payload);
-            }
-        } else {
+        if (comp < Comparison.EqualTo) {
             if (comp == Comparison.Whatever) {
                 return (Status.Ok, nothing);
             } else if (comp == Comparison.Matches) {
                 return _matches(data, parameter, payload);
-            } else if (comp == Comparison.OneOf) {
-                return _oneOf(data, parameter, payload);
+            } else if (comp == Comparison.And) {
+                return _and(data, parameter, payload);
+            } else if (comp == Comparison.Or) {
+                return _or(data, parameter, payload);
             } else if (comp == Comparison.SubsetOf) {
                 return _subsetOf(data, parameter, payload);
             } else if (comp == Comparison.ArraySome) {
@@ -225,10 +218,41 @@ abstract contract PermissionChecker is Core, Periphery {
                 assert(comp == Comparison.ArrayEvery);
                 return _arrayEvery(data, parameter, payload);
             }
+        } else {
+            if (comp <= Comparison.LessThan) {
+                return _compare(data, parameter, payload);
+            } else if (comp == Comparison.Bitmask) {
+                return _bitmask(data, parameter, payload);
+            } else {
+                assert(comp == Comparison.WithinAllowance);
+                return _withinAllowance(data, parameter, payload);
+            }
         }
     }
 
-    function _oneOf(
+    function _and(
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status, Trace[] memory trace) {
+        for (uint256 i; i < parameter.children.length; ) {
+            (Status status, Trace[] memory more) = _walk(
+                data,
+                parameter.children[i],
+                payload
+            );
+            if (status != Status.Ok) {
+                return (status, _trace());
+            }
+            trace = _trace(trace, more);
+            unchecked {
+                ++i;
+            }
+        }
+        return (Status.Ok, trace);
+    }
+
+    function _or(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload

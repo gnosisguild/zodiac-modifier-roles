@@ -23,9 +23,9 @@ library Integrity {
 
     error TooManyCompValuesForScope();
 
-    error MalformedOneOfComparison();
+    error InvalidComparison();
 
-    error TooFewCompValuesForOneOf(uint256 index);
+    error NotEnoughChildren(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
@@ -55,15 +55,6 @@ library Integrity {
         if (count > 1) {
             revert MultipleRootNodesFound();
         }
-
-        ParameterConfigFlat calldata parameter = parameters[index];
-        if (
-            !(parameter._type == ParameterType.AbiEncoded &&
-                (parameter.comp == Comparison.OneOf ||
-                    parameter.comp == Comparison.Matches))
-        ) {
-            revert UnsuitableRootNode(index);
-        }
     }
 
     function topology(ParameterConfigFlat[] calldata parameters) private pure {
@@ -76,11 +67,11 @@ library Integrity {
             }
         }
 
-        // check at least 2 oneOf nodes
+        // check at least 2 children for relational nodes
         for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i].comp == Comparison.OneOf) {
+            if (parameters[i].comp == Comparison.Or) {
                 if (parameters[i].compValue.length != 0) {
-                    revert MalformedOneOfComparison();
+                    revert InvalidComparison();
                 }
 
                 uint256 count;
@@ -94,7 +85,7 @@ library Integrity {
                     }
                 }
                 if (count < 2) {
-                    revert TooFewCompValuesForOneOf(i);
+                    revert NotEnoughChildren(i);
                 }
             }
         }
