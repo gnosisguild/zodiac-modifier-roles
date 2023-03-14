@@ -119,10 +119,12 @@ abstract contract PermissionBuilder is Core {
     ) external onlyOwner {
         Integrity.validate(parameters);
 
-        Role storage role = roles[roleId];
-        bytes32 key = _key(targetAddress, selector);
-
-        _store(role, key, parameters, options);
+        _store(
+            roles[roleId],
+            _key(targetAddress, selector),
+            parameters,
+            options
+        );
 
         emit ScopeFunction(
             roleId,

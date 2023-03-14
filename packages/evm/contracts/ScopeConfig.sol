@@ -40,9 +40,13 @@ library ScopeConfig {
         uint256 count = modes.length;
 
         result = count * bytesPerParameter;
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ) {
             if (modes[i] != Packing.Nothing) {
                 result += 32;
+            }
+
+            unchecked {
+                ++i;
             }
         }
     }
@@ -169,8 +173,12 @@ library ScopeConfig {
         uint256 count = parameters.length;
         modes = new Packing[](count);
 
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ) {
             modes[i] = _packMode(parameters[i]);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -182,7 +190,7 @@ library ScopeConfig {
         modes = new Packing[](count);
 
         bytes32 word;
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ) {
             uint256 offset = 32 + i * bytesPerParameter;
             assembly {
                 word := mload(add(buffer, offset))
@@ -191,6 +199,10 @@ library ScopeConfig {
             uint16 bits = uint16(bytes2(word));
             parents[i] = uint8((bits & maskParent) >> offsetParent);
             modes[i] = Packing(bits & maskPacking);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -198,13 +210,8 @@ library ScopeConfig {
         ParameterConfigFlat calldata parameter
     ) private pure returns (Packing) {
         Comparison comparison = parameter.comp;
-        bool shouldPack = comparison == Comparison.EqualTo ||
-            comparison == Comparison.GreaterThan ||
-            comparison == Comparison.LessThan ||
-            comparison == Comparison.Bitmask ||
-            comparison == Comparison.WithinAllowance;
 
-        if (!shouldPack) {
+        if (uint8(comparison) < uint8(Comparison.EqualTo)) {
             return Packing.Nothing;
         }
 
@@ -216,9 +223,13 @@ library ScopeConfig {
         Packing[] memory modes
     ) private pure returns (uint256 offset) {
         offset = 32 + modes.length * bytesPerParameter;
-        for (uint256 i; i < index; ++i) {
+        for (uint256 i; i < index; ) {
             if (modes[i] != Packing.Nothing) {
                 offset += 32;
+            }
+
+            unchecked {
+                ++i;
             }
         }
     }

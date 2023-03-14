@@ -47,8 +47,12 @@ abstract contract PermissionLoader is Core {
         buffer = new bytes(ScopeConfig.bufferSize(modes));
 
         uint256 count = parameters.length;
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ) {
             ScopeConfig.packParameter(buffer, i, modes, parameters[i]);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -80,7 +84,7 @@ abstract contract PermissionLoader is Core {
 
         uint256 childrenCount = right - left + 1;
         result.children = new ParameterConfig[](childrenCount);
-        for (uint j = 0; j < childrenCount; ++j) {
+        for (uint j; j < childrenCount; ) {
             _unpackParameter(
                 buffer,
                 left + j,
@@ -88,6 +92,10 @@ abstract contract PermissionLoader is Core {
                 modes,
                 result.children[j]
             );
+
+            unchecked {
+                ++j;
+            }
         }
     }
 
@@ -101,8 +109,11 @@ abstract contract PermissionLoader is Core {
         }
 
         uint256 length = result.children.length;
-        for (uint256 i; i < length; ++i) {
+        for (uint256 i; i < length; ) {
             _loadAllowances(result.children[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -113,17 +124,23 @@ abstract contract PermissionLoader is Core {
         result = new Bounds[](parents.length);
 
         // parents are DFS
-        for (uint256 i = 0; i < count; ++i) {
+        for (uint256 i = 0; i < count; ) {
             result[i].left = type(uint256).max;
+            unchecked {
+                ++i;
+            }
         }
 
         // 0 is the root
-        for (uint256 i = 1; i < count; ++i) {
+        for (uint256 i = 1; i < count; ) {
             Bounds memory bounds = result[parents[i]];
             if (bounds.left == type(uint256).max) {
                 bounds.left = i;
             }
             bounds.right = i;
+            unchecked {
+                ++i;
+            }
         }
     }
 

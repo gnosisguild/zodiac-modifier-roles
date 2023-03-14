@@ -24,11 +24,11 @@ abstract contract Core is OwnableUpgradeable {
         address targetAddress,
         bytes4 selector
     ) internal pure returns (bytes32) {
-        return bytes32(abi.encodePacked(targetAddress, selector));
-    }
-
-    function _key(bytes32 key, uint256 i) internal pure returns (bytes32) {
-        return bytes32(abi.encodePacked(bytes24(key), uint8(i)));
+        /*
+         * Unoptimized version:
+         * bytes32(abi.encodePacked(targetAddress, selector))
+         */
+        return bytes32(bytes20(targetAddress)) | (bytes32(selector) >> 160);
     }
 
     function accruedAllowance(
