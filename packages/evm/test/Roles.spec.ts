@@ -221,7 +221,9 @@ describe("RolesModifier", async () => {
       );
       await expect(
         avatar.exec(modifier.address, 0, disable.data || "", 0)
-      ).to.be.revertedWith("Invalid module");
+      ).to.be.revertedWith(
+        'InvalidModule("0x0000000000000000000000000000000000000001")'
+      );
     });
 
     it("reverts if module is not added ", async () => {
@@ -232,7 +234,7 @@ describe("RolesModifier", async () => {
       );
       await expect(
         avatar.exec(modifier.address, 0, disable.data || "", 0)
-      ).to.be.revertedWith("Module already disabled");
+      ).to.be.revertedWith(`AlreadyDisabledModule("${user1.address}")`);
     });
 
     it("disables a module()", async () => {
@@ -273,7 +275,7 @@ describe("RolesModifier", async () => {
       await avatar.exec(modifier.address, 0, enable.data || "", 0);
       await expect(
         avatar.exec(modifier.address, 0, enable.data || "", 0)
-      ).to.be.revertedWith("Module already enabled");
+      ).to.be.revertedWith(`AlreadyEnabledModule("${user1.address}")`);
     });
 
     it("reverts if module is invalid ", async () => {
@@ -284,7 +286,9 @@ describe("RolesModifier", async () => {
 
       await expect(
         avatar.exec(modifier.address, 0, enable.data || "", 0)
-      ).to.be.revertedWith("Invalid module");
+      ).to.be.revertedWith(
+        'InvalidModule("0x0000000000000000000000000000000000000001")'
+      );
     });
 
     it("enables a module", async () => {
@@ -475,7 +479,7 @@ describe("RolesModifier", async () => {
           mint.data as string,
           0
         )
-      ).to.be.revertedWith("Module not authorized");
+      ).to.be.revertedWith(`NotAuthorized("${user1.address}")`);
     });
 
     it("reverts if the call is not an allowed target", async () => {
@@ -1127,7 +1131,7 @@ describe("RolesModifier", async () => {
           mint.data || "",
           ROLE_ID
         )
-      ).to.be.revertedWith("Module not authorized");
+      ).to.be.revertedWith(`NotAuthorized("${user1.address}")`);
     });
 
     it("reverts if the call is not an allowed target", async () => {

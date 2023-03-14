@@ -38,7 +38,7 @@ contract Roles is
     /// @dev There is no zero address check as solidty will check for
     /// missing arguments and the space of invalid addresses is too large
     /// to check. Invalid avatar or target address can be reset by owner.
-    function setUp(bytes memory initParams) public override {
+    function setUp(bytes memory initParams) public override initializer {
         (address _owner, address _avatar, address _target) = abi.decode(
             initParams,
             (address, address, address)
@@ -52,11 +52,6 @@ contract Roles is
         setupModules();
 
         emit RolesModSetup(msg.sender, _owner, _avatar, _target);
-    }
-
-    function setupModules() internal {
-        assert(modules[SENTINEL_MODULES] == address(0));
-        modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
     /// @dev Assigns and revokes roles to a given module.
