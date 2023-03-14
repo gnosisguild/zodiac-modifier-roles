@@ -20,6 +20,11 @@ abstract contract Core is OwnableUpgradeable {
         bytes32 key
     ) internal view virtual returns (ParameterConfig memory result);
 
+    function _accruedAllowance(
+        Allowance memory allowance,
+        uint256 timestamp
+    ) internal pure virtual returns (uint128 balance, uint64 refillTimestamp);
+
     function _key(
         address targetAddress,
         bytes4 selector
@@ -29,33 +34,5 @@ abstract contract Core is OwnableUpgradeable {
          * bytes32(abi.encodePacked(targetAddress, selector))
          */
         return bytes32(bytes20(targetAddress)) | (bytes32(selector) >> 160);
-    }
-
-    function accruedAllowance(
-        Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure returns (uint128 balance, uint64 refillTimestamp) {
-        if (
-            allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp
-        ) {
-            return (allowance.balance, allowance.refillTimestamp);
-        }
-
-        uint64 elapsedIntervals = (uint64(timestamp) -
-            allowance.refillTimestamp) / allowance.refillInterval;
-
-        uint128 uncappedBalance = allowance.balance +
-            allowance.refillAmount *
-            elapsedIntervals;
-
-        balance = uncappedBalance < allowance.maxBalance
-            ? uncappedBalance
-            : allowance.maxBalance;
-
-        refillTimestamp =
-            allowance.refillTimestamp +
-            elapsedIntervals *
-            allowance.refillInterval;
     }
 }

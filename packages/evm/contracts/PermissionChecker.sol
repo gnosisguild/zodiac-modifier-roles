@@ -11,13 +11,13 @@ import "./ScopeConfig.sol";
 abstract contract PermissionChecker is Core, Periphery {
     /// @dev Entry point for checking the scope of a transaction.
     function authorize(
-        uint16 roleId,
+        Role storage role,
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
     ) internal view returns (Trace[] memory result) {
-        if (!roles[roleId].members[msg.sender]) {
+        if (!role.members[msg.sender]) {
             revert NoMembership();
         }
 
@@ -31,12 +31,12 @@ abstract contract PermissionChecker is Core, Periphery {
 
         address adapter = unwrappers[key];
         if (adapter == address(0)) {
-            return _singleEntrypoint(roleId, to, value, data, operation);
+            return _singleEntrypoint(role, to, value, data, operation);
         } else {
             return
                 _multiEntrypoint(
                     ITransactionUnwrapper(adapter),
-                    roleId,
+                    role,
                     to,
                     value,
                     data,
@@ -46,14 +46,14 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function _singleEntrypoint(
-        uint16 roleId,
+        Role storage role,
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
     ) private view returns (Trace[] memory) {
         (Status status, Trace[] memory result) = _transaction(
-            roleId,
+            role,
             to,
             value,
             data,
@@ -67,7 +67,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
     function _multiEntrypoint(
         ITransactionUnwrapper adapter,
-        uint16 roleId,
+        Role storage role,
         address to,
         uint256 value,
         bytes calldata data,
@@ -78,7 +78,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ) {
             for (uint256 i; i < transactions.length; ++i) {
                 (Status status, Trace[] memory more) = _transaction(
-                    roleId,
+                    role,
                     data,
                     transactions[i]
                 );
@@ -93,13 +93,13 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function _transaction(
-        uint16 roleId,
+        Role storage role,
         bytes calldata data,
         UnwrappedTransaction memory transaction
     ) private view returns (Status, Trace[] memory) {
         return
             _transaction(
-                roleId,
+                role,
                 transaction.to,
                 transaction.value,
                 data[transaction.dataOffset:transaction.dataOffset +
@@ -110,13 +110,13 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.
     /// Wildcarded indicates whether params need to be inspected or not. When true, only ExecutionOptions are checked.
-    /// @param roleId Role to check for.
+    /// @param role Role to check for.
     /// @param targetAddress Destination address of transaction.
     /// @param value Ether value of module transaction.
     /// @param data Data payload of module transaction.
     /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
     function _transaction(
-        uint16 roleId,
+        Role storage role,
         address targetAddress,
         uint256 value,
         bytes calldata data,
@@ -126,7 +126,6 @@ abstract contract PermissionChecker is Core, Periphery {
             return (Status.FunctionSignatureTooShort, nothing);
         }
 
-        Role storage role = roles[roleId];
         TargetAddress storage target = role.targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {

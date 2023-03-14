@@ -64,11 +64,21 @@ contract TestLoaderGas is PermissionLoader {
             comparison == Comparison.Bitmask;
     }
 
-    function _key(bytes32 key, uint256 i) internal pure returns (bytes32) {
+    function _key(bytes32 k, uint256 i) internal pure returns (bytes32) {
         /*
          * Unoptimized version:
          * bytes32(abi.encodePacked(bytes24(key), uint8(i)));
          */
-        return bytes32(abi.encodePacked(bytes24(key), uint8(i)));
+        return bytes32(abi.encodePacked(bytes24(k), uint8(i)));
     }
+
+    function _accruedAllowance(
+        Allowance memory allowance,
+        uint256 timestamp
+    )
+        internal
+        pure
+        override
+        returns (uint128 balance, uint64 refillTimestamp)
+    {}
 }
