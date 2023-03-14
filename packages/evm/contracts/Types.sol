@@ -14,13 +14,15 @@ enum Comparison {
     Matches,
     OneOf,
     SubsetOf,
+    ArraySome,
+    ArrayEvery,
     EqualTo,
     GreaterThan,
     LessThan,
-    WithinAllowance,
     Bitmask,
-    ArraySome,
-    ArrayEvery
+    WithinAllowance,
+    ValueWithinAllowance,
+    CallWithinAllowance
 }
 
 enum ExecutionOptions {
