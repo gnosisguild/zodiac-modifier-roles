@@ -21,7 +21,7 @@ contract TestLoaderGas is PermissionLoader {
 
     function storeNaive(
         ParameterConfigFlat[] calldata parameters,
-        ExecutionOptions options
+        ExecutionOptions
     ) public {
         Role storage role = roles[roleId];
         role.scopeConfig[key] = bytes32(parameters.length);

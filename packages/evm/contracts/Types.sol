@@ -12,7 +12,8 @@ enum ParameterType {
 enum Comparison {
     Whatever,
     Matches,
-    OneOf,
+    And,
+    Or,
     SubsetOf,
     ArraySome,
     ArrayEvery,
@@ -20,9 +21,7 @@ enum Comparison {
     GreaterThan,
     LessThan,
     Bitmask,
-    WithinAllowance,
-    ValueWithinAllowance,
-    CallWithinAllowance
+    WithinAllowance
 }
 
 enum ExecutionOptions {
