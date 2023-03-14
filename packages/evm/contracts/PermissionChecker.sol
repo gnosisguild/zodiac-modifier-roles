@@ -200,32 +200,32 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) internal pure returns (Status, Trace[] memory nothing) {
-        if (parameter.comp == Comparison.Whatever) {
-            return (Status.Ok, nothing);
-        }
-
         Comparison comp = parameter.comp;
-        if (
-            comp == Comparison.EqualTo ||
-            comp == Comparison.GreaterThan ||
-            comp == Comparison.LessThan
-        ) {
-            return _compare(data, parameter, payload);
-        } else if (comp == Comparison.Matches) {
-            return _matches(data, parameter, payload);
-        } else if (comp == Comparison.OneOf) {
-            return _oneOf(data, parameter, payload);
-        } else if (comp == Comparison.ArraySome) {
-            return _arraySome(data, parameter, payload);
-        } else if (comp == Comparison.ArrayEvery) {
-            return _arrayEvery(data, parameter, payload);
-        } else if (comp == Comparison.WithinAllowance) {
-            return _withinAllowance(data, parameter, payload);
-        } else if (comp == Comparison.SubsetOf) {
-            return _subsetOf(data, parameter, payload);
+
+        if (comp >= Comparison.EqualTo) {
+            if (comp <= Comparison.LessThan) {
+                return _compare(data, parameter, payload);
+            } else if (comp == Comparison.Bitmask) {
+                return _bitmask(data, parameter, payload);
+            } else {
+                assert(comp == Comparison.WithinAllowance);
+                return _withinAllowance(data, parameter, payload);
+            }
         } else {
-            assert(comp == Comparison.Bitmask);
-            return _bitmask(data, parameter, payload);
+            if (comp == Comparison.Whatever) {
+                return (Status.Ok, nothing);
+            } else if (comp == Comparison.Matches) {
+                return _matches(data, parameter, payload);
+            } else if (comp == Comparison.OneOf) {
+                return _oneOf(data, parameter, payload);
+            } else if (comp == Comparison.SubsetOf) {
+                return _subsetOf(data, parameter, payload);
+            } else if (comp == Comparison.ArraySome) {
+                return _arraySome(data, parameter, payload);
+            } else {
+                assert(comp == Comparison.ArrayEvery);
+                return _arrayEvery(data, parameter, payload);
+            }
         }
     }
 
@@ -234,7 +234,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory nothing) {
-        for (uint256 i; i < parameter.children.length; ++i) {
+        for (uint256 i; i < parameter.children.length; ) {
             (Status status, Trace[] memory trace) = _walk(
                 data,
                 parameter.children[i],
@@ -242,6 +242,9 @@ abstract contract PermissionChecker is Core, Periphery {
             );
             if (status == Status.Ok) {
                 return (status, trace);
+            }
+            unchecked {
+                ++i;
             }
         }
         return (Status.ParameterNotOneOfAllowed, nothing);
@@ -256,7 +259,7 @@ abstract contract PermissionChecker is Core, Periphery {
             return (Status.ParameterNotAMatch, trace);
         }
 
-        for (uint256 i; i < parameter.children.length; ++i) {
+        for (uint256 i; i < parameter.children.length; ) {
             (Status status, Trace[] memory more) = _walk(
                 data,
                 parameter.children[i],
@@ -266,6 +269,9 @@ abstract contract PermissionChecker is Core, Periphery {
                 return (status, _trace());
             }
             trace = _trace(trace, more);
+            unchecked {
+                ++i;
+            }
         }
 
         return (Status.Ok, trace);
@@ -276,7 +282,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        for (uint256 i; i < payload.children.length; ++i) {
+        for (uint256 i; i < payload.children.length; ) {
             (Status status, Trace[] memory more) = _walk(
                 data,
                 parameter.children[0],
@@ -286,6 +292,9 @@ abstract contract PermissionChecker is Core, Periphery {
                 return (Status.ArrayElementsNotAllowed, _trace());
             }
             trace = _trace(trace, more);
+            unchecked {
+                ++i;
+            }
         }
         return (Status.Ok, trace);
     }
@@ -295,7 +304,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory trace) {
-        for (uint256 i; i < payload.children.length; ++i) {
+        for (uint256 i; i < payload.children.length; ) {
             (status, trace) = _walk(
                 data,
                 parameter.children[0],
@@ -303,6 +312,9 @@ abstract contract PermissionChecker is Core, Periphery {
             );
             if (status == Status.Ok) {
                 return (status, trace);
+            }
+            unchecked {
+                ++i;
             }
         }
         return (Status.ArrayElementsSomeNotAllowed, _trace());
@@ -349,8 +361,6 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
-        assert(parameter._type == ParameterType.Static);
-
         bytes32 value = bytes32(
             Decoder.pluck(data, payload.location, payload.size)
         );
@@ -395,12 +405,6 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
-        assert(
-            parameter.comp == Comparison.EqualTo ||
-                parameter.comp == Comparison.GreaterThan ||
-                parameter.comp == Comparison.LessThan
-        );
-
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
         bytes32 value = _pluck(data, parameter, payload);
@@ -414,6 +418,8 @@ abstract contract PermissionChecker is Core, Periphery {
         } else {
             status = Status.Ok;
         }
+
+        return (status, nothing);
     }
 
     function _pluck(
