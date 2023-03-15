@@ -27,6 +27,7 @@ abstract contract PermissionChecker is Core, Periphery {
          * bytes32(abi.encodePacked(to, bytes4(data)))
          *
          */
+        // TODO can use _key() function from Core
         bytes32 key = bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> (160));
 
         address adapter = unwrappers[key];
