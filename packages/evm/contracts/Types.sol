@@ -67,6 +67,7 @@ struct ParameterPayload {
     ParameterPayload[] children;
 }
 
+// TODO this struct name is a bit awkward, maybe TargetGrant?
 struct TargetAddress {
     Clearance clearance;
     ExecutionOptions options;
