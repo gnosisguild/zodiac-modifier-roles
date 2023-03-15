@@ -26,37 +26,4 @@ library Topology {
             }
         }
     }
-
-    function isStatic(
-        TypeTopology memory typeNode
-    ) internal pure returns (bool) {
-        if (typeNode._type == ParameterType.Static) {
-            return true;
-        } else if (typeNode._type == ParameterType.Tuple) {
-            for (uint256 i; i < typeNode.children.length; ++i) {
-                if (!isStatic(typeNode.children[i])) return false;
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function typeSize(
-        TypeTopology memory typeNode
-    ) internal pure returns (uint256) {
-        if (typeNode._type == ParameterType.Static) {
-            return 32;
-        }
-
-        // should only be called for static types
-        assert(typeNode._type == ParameterType.Tuple);
-
-        uint256 result;
-        for (uint256 i; i < typeNode.children.length; ++i) {
-            result += typeSize(typeNode.children[i]);
-        }
-
-        return result;
-    }
 }
