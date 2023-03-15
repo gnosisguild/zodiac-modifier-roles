@@ -121,7 +121,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Status, Trace[] memory nothing) {
+    ) private view returns (Status, Trace[] memory nothing) { // TODO: why is this named nothing? it can be something!
         if (data.length != 0 && data.length < 4) {
             return (Status.FunctionSignatureTooShort, nothing);
         }
@@ -198,10 +198,11 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) internal pure returns (Status, Trace[] memory nothing) {
+    ) internal pure returns (Status, Trace[] memory nothing) { // TODO: why is this named nothing? it can be something!
         Comparison comp = parameter.comp;
 
         if (comp < Comparison.EqualTo) {
+            // not using compValue
             if (comp == Comparison.Whatever) {
                 return (Status.Ok, nothing);
             } else if (comp == Comparison.Matches) {
@@ -219,7 +220,9 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _arrayEvery(data, parameter, payload);
             }
         } else {
+            // using compValue
             if (comp <= Comparison.LessThan) {
+                // EqualTo / GreaterThan / LessThan
                 return _compare(data, parameter, payload);
             } else if (comp == Comparison.Bitmask) {
                 return _bitmask(data, parameter, payload);
@@ -256,7 +259,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Trace[] memory nothing) {
+    ) private pure returns (Status, Trace[] memory nothing) { // TODO: weird to name this `nothing`. let's rename to `trace` here and destruct to it, while returning `trace()` instead of `nothing`?
         for (uint256 i; i < parameter.children.length; ) {
             (Status status, Trace[] memory trace) = _walk(
                 data,
@@ -270,7 +273,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.ParameterNotOneOfAllowed, nothing);
+        return (Status.ParameterNotOneOfAllowed, nothing); // TODO: rename to Status.NoMatchingBranch?
     }
 
     function _matches(
@@ -312,7 +315,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ArrayElementsNotAllowed, _trace());
+                return (Status.ArrayElementsNotAllowed, _trace()); // TODO: rename to Status.NotEveryArrayElementPasses
             }
             trace = _trace(trace, more);
             unchecked {
@@ -340,9 +343,13 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.ArrayElementsSomeNotAllowed, _trace());
+        return (Status.ArrayElementsSomeNotAllowed, _trace()); // TODO: rename to Status.NoArrayElementPasses ?
     }
 
+    /**
+     * Checks for an array type payload if every item meets one of the children conditions (parameter configs).
+     * Every child condition can be taken at most once, meaning if multiple items meet the condition it will only pass for the first one.
+     */
     function _subsetOf(
         bytes calldata data,
         ParameterConfig memory parameter,
@@ -352,7 +359,7 @@ abstract contract PermissionChecker is Core, Periphery {
         if (values.length == 0) {
             return (Status.ParameterNotSubsetOfAllowed, trace);
         }
-        ParameterConfig[] memory compValues = parameter.children;
+        ParameterConfig[] memory compValues = parameter.children; // TODO compValues is a confusing name for this
 
         uint256 taken;
         for (uint256 i; i < values.length; ++i) {
@@ -379,11 +386,16 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, trace);
     }
 
+    /**
+     * Checks for a uint type payload if it is within the given allowance.
+     * The allowance is referenced by ID in parameter.compValue.
+     * This function only tracks the allowance consumption (trace) while the actual balance check happens in the subsequent _track() pass.
+     */
     function _withinAllowance(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Trace[] memory nothing) {
+    ) private pure returns (Status status, Trace[] memory nothing) { // TODO: why is this named nothing? it can be something!
         bytes32 value = bytes32(
             Decoder.pluck(data, payload.location, payload.size)
         );
@@ -396,11 +408,16 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, _trace(Trace({config: parameter, value: value})));
     }
 
+    /**
+     * Applies a shift and bitmask on the payload bytes and compares the result to the expected value.
+     * shift offset, bitmask, and expected value are read from parameter.compValue, which is tighly packed as follows:
+     *   <2 bytes offset><15 bytes bitmask><15 bytes expected value>
+     */
     function _bitmask(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Trace[] memory nothing) {
+    ) private pure returns (Status status, Trace[] memory nothing) { 
         bytes32 compValue = parameter.compValue;
         bytes calldata value = Decoder.pluck(
             data,
@@ -445,6 +462,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return (status, nothing);
     }
 
+    // TODO would fold this into _compare, which is the only place it's being used.
     function _pluck(
         bytes calldata data,
         ParameterConfig memory parameter,

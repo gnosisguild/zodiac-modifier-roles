@@ -173,7 +173,7 @@ abstract contract PermissionBuilder is Core {
             // loaded to ParameterConfig). We repeat the accrual math and consider
             // that if it fails here, then it may be due to a double spend.
             if (amount > balance) {
-                revert AllowanceDoubleSpend(allowanceId);
+                revert AllowanceDoubleSpend(allowanceId); // TODO not a good name, proposal AllowanceExceeded(allowanceId)
             }
             allowances[allowanceId].balance = balance - uint128(amount);
             allowances[allowanceId].refillTimestamp = refillTimestamp;

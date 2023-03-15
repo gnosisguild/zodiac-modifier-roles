@@ -18,6 +18,9 @@ enum Comparison {
     SubsetOf,
     ArraySome,
     ArrayEvery,
+    // comparison types above don't use compValue
+    // ---
+    // comparison types below use compValue 
     EqualTo,
     GreaterThan,
     LessThan,
