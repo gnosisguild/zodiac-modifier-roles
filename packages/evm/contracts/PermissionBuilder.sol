@@ -154,9 +154,9 @@ abstract contract PermissionBuilder is Core {
 
     function _track(Trace[] memory entries) internal {
         uint256 length = entries.length;
-        for (uint256 i; i < length; ++i) {
+        for (uint256 i; i < length; ) {
             ParameterConfig memory parameter = entries[i].config;
-            bytes32 value = entries[i].value;
+            uint256 amount = uint256(entries[i].value);
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];
@@ -164,7 +164,6 @@ abstract contract PermissionBuilder is Core {
                 allowance,
                 block.timestamp
             );
-            uint256 amount = uint256(value);
             // This was already previously authorized at the checker pass.
             // However, it is possible that the same limit is used across
             // different parameters (which is not very common), but it's
@@ -177,6 +176,10 @@ abstract contract PermissionBuilder is Core {
             }
             allowances[allowanceId].balance = balance - uint128(amount);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
