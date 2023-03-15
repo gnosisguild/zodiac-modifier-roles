@@ -410,7 +410,7 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          _type: ParameterType.Tuple,
+          _type: ParameterType.None,
           comp: Comparison.Or,
           compValue: "0x",
         },
@@ -467,7 +467,7 @@ describe("Comparison", async () => {
       [
         {
           parent: 0,
-          _type: ParameterType.AbiEncoded,
+          _type: ParameterType.None,
           comp: Comparison.And,
           compValue: "0x",
         },
@@ -548,7 +548,7 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          _type: ParameterType.Static,
+          _type: ParameterType.None,
           comp: Comparison.And,
           compValue: "0x",
         },
@@ -617,14 +617,13 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-
           _type: ParameterType.Static,
-          comp: 0,
+          comp: Comparison.Whatever,
           compValue: "0x",
         },
         {
           parent: 0,
-          _type: ParameterType.Dynamic,
+          _type: ParameterType.None,
           comp: Comparison.Or,
           compValue: "0x",
         },
@@ -703,7 +702,7 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          _type: ParameterType.Tuple,
+          _type: ParameterType.None,
           comp: Comparison.Or,
           compValue: "0x",
         },
@@ -800,7 +799,7 @@ describe("Comparison", async () => {
         },
         {
           parent: 0,
-          _type: ParameterType.Array,
+          _type: ParameterType.None,
           comp: Comparison.Or,
           compValue: "0x",
         },
@@ -1678,7 +1677,7 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
+            _type: ParameterType.None,
             comp: Comparison.Or,
             compValue: "0x",
           },
@@ -1803,7 +1802,7 @@ describe("Comparison", async () => {
           },
           {
             parent: 0,
-            _type: ParameterType.Tuple,
+            _type: ParameterType.None,
             comp: Comparison.Or,
             compValue: "0x",
           },

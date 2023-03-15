@@ -8,9 +8,11 @@ library Integrity {
 
     error MultipleRootNodesFound();
 
-    error UnsuitableRootNode(uint256 index);
+    error FlatButNotBFS();
 
-    error ConfigTopologyNotBFS(uint256 index);
+    error UnsuitableComparison(uint256 index);
+
+    error UnsuitableType(uint256 index);
 
     error UnsuitableRelativeComparison();
 
@@ -28,6 +30,8 @@ library Integrity {
     error NotEnoughChildren(uint256 index);
 
     error MalformedBitmask(uint256 index);
+
+    error UnsuitableComparisonForTypeNone(uint256 index);
 
     function validate(ParameterConfigFlat[] calldata parameters) internal pure {
         root(parameters);
@@ -48,7 +52,7 @@ library Integrity {
                 count++;
             }
         }
-        if (count == 0 || index != 0) {
+        if (count == 0) {
             revert NoRootNodeFound();
         }
 
@@ -63,7 +67,7 @@ library Integrity {
         // check BFS
         for (uint256 i = 1; i < parameters.length; ++i) {
             if (parameters[i - 1].parent > parameters[i].parent) {
-                revert ConfigTopologyNotBFS(i);
+                revert FlatButNotBFS();
             }
         }
 
@@ -98,24 +102,29 @@ library Integrity {
         ParameterConfigFlat calldata parameter,
         uint256 index
     ) internal pure {
-        if (
-            parameter.comp == Comparison.Whatever || _isNested(parameter._type)
-        ) {
-            return;
-        }
-
         bytes calldata compValue = parameter.compValue;
         Comparison comp = parameter.comp;
-
         ParameterType _type = parameter._type;
-        if (comp == Comparison.GreaterThan) {
-            if (_type != ParameterType.Static) {
-                revert UnsuitableRelativeComparison();
-            }
-        } else if (comp == Comparison.LessThan) {
-            if (_type != ParameterType.Static) {
-                revert UnsuitableRelativeComparison();
-            }
+
+        if (
+            _type == ParameterType.None &&
+            !(comp == Comparison.Or || comp == Comparison.And)
+        ) {
+            revert UnsuitableComparison(index);
+        }
+
+        if (
+            (comp == Comparison.Or || comp == Comparison.And) &&
+            _type != ParameterType.None
+        ) {
+            revert UnsuitableType(index);
+        }
+
+        if (
+            (comp == Comparison.GreaterThan || comp == Comparison.LessThan) &&
+            _type != ParameterType.Static
+        ) {
+            revert UnsuitableRelativeComparison();
         }
 
         if (
@@ -133,9 +142,5 @@ library Integrity {
                 revert MalformedBitmask(index);
             }
         }
-    }
-
-    function _isNested(ParameterType _type) private pure returns (bool) {
-        return uint8(_type) >= uint8(ParameterType.Tuple);
     }
 }
