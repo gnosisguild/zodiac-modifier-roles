@@ -19,7 +19,7 @@ describe("Topology", async () => {
     const { topology } = await setup();
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
+      _type: ParameterType.None,
       comp: Comparison.Or,
       children: [
         {
@@ -94,7 +94,7 @@ describe("Topology", async () => {
   it("top level Or gets unfolded to its children types", async () => {
     const { topology } = await setup();
     const layout = {
-      _type: ParameterType.Tuple,
+      _type: ParameterType.None,
       comp: Comparison.Or,
       children: [
         {
@@ -169,7 +169,7 @@ describe("Topology", async () => {
           children: [],
         },
         {
-          _type: ParameterType.Array,
+          _type: ParameterType.None,
           comp: Comparison.Or,
           children: [
             {
