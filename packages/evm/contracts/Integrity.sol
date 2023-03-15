@@ -10,6 +10,8 @@ library Integrity {
 
     error FlatButNotBFS();
 
+    error UnsuitableParent(uint256 index);
+
     error UnsuitableComparison(uint256 index);
 
     error UnsuitableType(uint256 index);
@@ -64,10 +66,21 @@ library Integrity {
     function topology(ParameterConfigFlat[] calldata parameters) private pure {
         // this function will be optimized
 
+        uint256 length = parameters.length;
         // check BFS
-        for (uint256 i = 1; i < parameters.length; ++i) {
+        for (uint256 i = 1; i < length; ++i) {
             if (parameters[i - 1].parent > parameters[i].parent) {
                 revert FlatButNotBFS();
+            }
+        }
+
+        for (uint256 i = 0; i < length; ++i) {
+            if (
+                parameters[i].comp == Comparison.ETHWithinAllowance &&
+                parameters[parameters[i].parent]._type !=
+                ParameterType.AbiEncoded
+            ) {
+                revert UnsuitableParent(i);
             }
         }
 
@@ -108,13 +121,17 @@ library Integrity {
 
         if (
             _type == ParameterType.None &&
-            !(comp == Comparison.Or || comp == Comparison.And)
+            !(comp == Comparison.Or ||
+                comp == Comparison.And ||
+                comp == Comparison.ETHWithinAllowance)
         ) {
             revert UnsuitableComparison(index);
         }
 
         if (
-            (comp == Comparison.Or || comp == Comparison.And) &&
+            (comp == Comparison.Or ||
+                comp == Comparison.And ||
+                comp == Comparison.ETHWithinAllowance) &&
             _type != ParameterType.None
         ) {
             revert UnsuitableType(index);

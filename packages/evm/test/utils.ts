@@ -131,7 +131,7 @@ export enum Comparison {
   LessThan,
   Bitmask,
   WithinAllowance,
-  ValueWithinAllowance,
+  ETHWithinAllowance,
   CallWithinAllowance,
 }
 
