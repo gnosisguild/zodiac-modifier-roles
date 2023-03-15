@@ -73,21 +73,17 @@ library Decoder {
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = uint256(_loadWord(data, location));
+        result.location = location;
         result.children = new ParameterPayload[](length);
 
-        bool isInline = Topology.isStatic(parameter.children[0]);
-        uint256 itemSize = isInline
-            ? Topology.typeSize(parameter.children[0])
-            : 32;
-
+        (bool isInline, uint256 itemSize) = _sizeInHead(parameter.children[0]);
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
-                _locationInBlock(data, location + 32, i * itemSize, isInline),
+                _partLocation(data, location + 32, i * itemSize, isInline),
                 parameter.children[0]
             );
         }
-        result.location = location;
         result.size = _size(result);
     }
 
@@ -112,17 +108,17 @@ library Decoder {
         for (uint256 i; i < parts.length; ++i) {
             if (parts[i]._type == ParameterType.None) continue;
 
-            bool isInline = Topology.isStatic(parts[i]);
+            (bool isInline, uint256 size) = _sizeInHead(parts[i]);
             result[i] = _walk(
                 data,
-                _locationInBlock(data, location, offset, isInline),
+                _partLocation(data, location, offset, isInline),
                 parts[i]
             );
-            offset += isInline ? Topology.typeSize(parts[i]) : 32;
+            offset += size;
         }
     }
 
-    function _locationInBlock(
+    function _partLocation(
         bytes calldata data,
         uint256 location,
         uint256 offset,
@@ -135,7 +131,7 @@ library Decoder {
          */
         uint256 headLocation = location + offset;
         if (isInline) {
-            // located in head
+            // located at head
             return headLocation;
         } else {
             // located at tail
@@ -143,10 +139,30 @@ library Decoder {
         }
     }
 
+    function _sizeInHead(
+        TypeTopology memory typeNode
+    ) private pure returns (bool isInline, uint256 size) {
+        isInline = _isStatic(typeNode);
+
+        if (!isInline || typeNode._type == ParameterType.Static) {
+            size = 32;
+        } else {
+            assert(typeNode._type == ParameterType.Tuple);
+            for (uint256 i; i < typeNode.children.length; ++i) {
+                (, uint256 next) = _sizeInHead(typeNode.children[i]);
+                size += next;
+            }
+        }
+    }
+
     function _size(
         ParameterPayload memory payload
     ) private pure returns (uint256 result) {
         uint256 length = payload.children.length;
+
+        if (length == 0) {
+            return 32;
+        }
 
         for (uint256 i; i < length; ++i) {
             uint256 location = payload.children[i].location;
@@ -157,6 +173,21 @@ library Decoder {
             if (curr > result) {
                 result = curr;
             }
+        }
+    }
+
+    function _isStatic(
+        TypeTopology memory typeNode
+    ) internal pure returns (bool) {
+        if (typeNode._type == ParameterType.Static) {
+            return true;
+        } else if (typeNode._type == ParameterType.Tuple) {
+            for (uint256 i; i < typeNode.children.length; ++i) {
+                if (!_isStatic(typeNode.children[i])) return false;
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -171,5 +202,10 @@ library Decoder {
         assembly {
             result := calldataload(add(data.offset, offset))
         }
+    }
+
+    function _pad32(uint256 size) private pure returns (uint256) {
+        // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
+        return ((size + 32 - 1) / 32) * 32;
     }
 }
