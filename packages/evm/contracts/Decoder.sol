@@ -59,9 +59,11 @@ library Decoder {
             );
         } else if (paramType == ParameterType.Tuple) {
             return _tuple(data, location, parameter);
-        } else {
-            assert(paramType == ParameterType.Array);
+        } else if (paramType == ParameterType.Array) {
             return _array(data, location, parameter);
+        } else {
+            assert(paramType == ParameterType.None);
+            return result;
         }
     }
 
@@ -108,6 +110,8 @@ library Decoder {
 
         uint256 offset;
         for (uint256 i; i < parts.length; ++i) {
+            if (parts[i]._type == ParameterType.None) continue;
+
             bool isInline = Topology.isStatic(parts[i]);
             result[i] = _walk(
                 data,
@@ -160,7 +164,7 @@ library Decoder {
         bytes calldata data,
         uint256 offset
     ) private pure returns (bytes32 result) {
-        if (data.length < offset + 32) {
+        if (data.length < offset) {
             revert CalldataOutOfBounds();
         }
 

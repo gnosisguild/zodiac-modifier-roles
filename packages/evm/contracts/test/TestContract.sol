@@ -70,7 +70,7 @@ contract TestContract {
         aStorageNumber = value;
     }
 
-    function fnWithSingleParam(uint256 p) public {
+    function fnWithSingleParam(uint256 p) public payable {
         emit FnWithSingleParam(p);
     }
 
