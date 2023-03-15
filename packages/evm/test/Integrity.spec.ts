@@ -140,7 +140,7 @@ describe("Integrity", async () => {
             },
             {
               parent: 0,
-              _type: ParameterType.Static,
+              _type: ParameterType.None,
               comp: Comparison.Or,
               compValue: "0x",
             },
@@ -181,7 +181,7 @@ describe("Integrity", async () => {
             },
             {
               parent: 0,
-              _type: ParameterType.Static,
+              _type: ParameterType.None,
               comp: Comparison.Or,
               compValue: "0x",
             },
@@ -203,71 +203,98 @@ describe("Integrity", async () => {
       ).to.not.be.reverted;
     });
   });
-  it("enforces minimum 2 compValues when setting Comparison.Or", async () => {
+
+  it("enforces only one root node", async () => {
     const { modifier, testContract, owner } =
       await setupRolesWithOwnerAndInvoker();
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
+    const ROLE_ID = 0;
+
+    await expect(
+      modifier.connect(owner).scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        "0x00000000",
+        [
+          {
+            parent: 1,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Whatever,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            _type: ParameterType.Tuple,
+            comp: Comparison.Whatever,
+            compValue: "0x",
+          },
+        ],
+        ExecutionOptions.None
+      )
+    ).to.be.revertedWith("NoRootNodeFound()");
+
+    await expect(
+      modifier.connect(owner).scopeFunction(
+        ROLE_ID,
+        testContract.address,
+        "0x00000000",
+        [
+          {
+            parent: 0,
+            _type: ParameterType.AbiEncoded,
+            comp: Comparison.Whatever,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            _type: ParameterType.Tuple,
+            comp: Comparison.Whatever,
+            compValue: "0x",
+          },
+        ],
+        ExecutionOptions.None
+      )
+    ).to.be.revertedWith("MultipleRootNodesFound()");
+  });
+
+  it("enforces param config in BFS order", async () => {
+    const { modifier, testContract, owner } =
+      await setupRolesWithOwnerAndInvoker();
 
     const ROLE_ID = 0;
     await expect(
       modifier.connect(owner).scopeFunction(
         ROLE_ID,
         testContract.address,
-        SELECTOR,
+        "0x00000000",
         [
           {
             parent: 0,
             _type: ParameterType.AbiEncoded,
-            comp: Comparison.Or,
+            comp: Comparison.Whatever,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
-            compValue: "0x",
-          },
-        ],
-        ExecutionOptions.None
-      )
-    ).to.be.revertedWith("NotEnoughChildren(0)");
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_ID,
-        testContract.address,
-        SELECTOR,
-        [
-          {
-            parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.Or,
+            _type: ParameterType.Tuple,
+            comp: Comparison.Whatever,
             compValue: "0x",
           },
           {
             parent: 1,
             _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
+            comp: Comparison.Whatever,
+            compValue: "0x",
           },
           {
-            parent: 1,
+            parent: 0,
             _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
-            compValue: A_32_BYTES_VALUE,
+            comp: Comparison.Whatever,
+            compValue: "0x",
           },
         ],
         ExecutionOptions.None
       )
-    ).to.not.be.reverted;
+    ).to.be.revertedWith("FlatButNotBFS()");
   });
 });

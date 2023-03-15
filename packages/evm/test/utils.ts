@@ -110,7 +110,8 @@ export const buildSafeTransaction = (template: {
 };
 
 export enum ParameterType {
-  Static = 0,
+  None = 0,
+  Static,
   Dynamic,
   Tuple,
   Array,

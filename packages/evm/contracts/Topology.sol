@@ -7,9 +7,7 @@ library Topology {
     function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTopology memory result) {
-        if (
-            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
-        ) {
+        if (parameter._type == ParameterType.None) {
             return typeTree(parameter.children[0]);
         }
 
