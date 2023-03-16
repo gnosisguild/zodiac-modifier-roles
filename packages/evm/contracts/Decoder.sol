@@ -47,14 +47,14 @@ library Decoder {
             result.location = location;
             result.size = 32;
         } else if (paramType == ParameterType.Dynamic) {
-            result.location = location + 32;
-            result.size = uint256(_loadWord(data, location));
+            result.location = location;
+            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
         } else if (paramType == ParameterType.AbiEncoded) {
-            result.location = location + 32;
-            result.size = uint256(_loadWord(data, location));
+            result.location = location;
+            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
             result.children = __block__(
                 data,
-                result.location + 4,
+                location + 32 + 4,
                 parameter.children
             );
         } else if (paramType == ParameterType.Tuple) {
@@ -76,7 +76,7 @@ library Decoder {
         result.location = location;
         result.children = new ParameterPayload[](length);
 
-        (bool isInline, uint256 itemSize) = _sizeInHead(parameter.children[0]);
+        (bool isInline, uint256 itemSize) = _headSize(parameter.children[0]);
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
@@ -84,7 +84,7 @@ library Decoder {
                 parameter.children[0]
             );
         }
-        result.size = _size(result);
+        result.size = _totalSize(result);
     }
 
     function _tuple(
@@ -94,7 +94,7 @@ library Decoder {
     ) private pure returns (ParameterPayload memory result) {
         result.location = location;
         result.children = __block__(data, location, parameter.children);
-        result.size = _size(result);
+        result.size = _totalSize(result);
     }
 
     function __block__(
@@ -108,7 +108,7 @@ library Decoder {
         for (uint256 i; i < parts.length; ++i) {
             if (parts[i]._type == ParameterType.None) continue;
 
-            (bool isInline, uint256 size) = _sizeInHead(parts[i]);
+            (bool isInline, uint256 size) = _headSize(parts[i]);
             result[i] = _walk(
                 data,
                 _partLocation(data, location, offset, isInline),
@@ -139,7 +139,7 @@ library Decoder {
         }
     }
 
-    function _sizeInHead(
+    function _headSize(
         TypeTopology memory typeNode
     ) private pure returns (bool isInline, uint256 size) {
         isInline = _isStatic(typeNode);
@@ -149,13 +149,13 @@ library Decoder {
         } else {
             assert(typeNode._type == ParameterType.Tuple);
             for (uint256 i; i < typeNode.children.length; ++i) {
-                (, uint256 next) = _sizeInHead(typeNode.children[i]);
+                (, uint256 next) = _headSize(typeNode.children[i]);
                 size += next;
             }
         }
     }
 
-    function _size(
+    function _totalSize(
         ParameterPayload memory payload
     ) private pure returns (uint256 result) {
         uint256 length = payload.children.length;
@@ -166,8 +166,7 @@ library Decoder {
 
         for (uint256 i; i < length; ++i) {
             uint256 location = payload.children[i].location;
-            // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
-            uint256 size = ((payload.children[i].size + 32 - 1) / 32) * 32;
+            uint256 size = _ceil32(payload.children[i].size);
             uint256 curr = location + size - payload.location;
 
             if (curr > result) {
@@ -204,7 +203,7 @@ library Decoder {
         }
     }
 
-    function _pad32(uint256 size) private pure returns (uint256) {
+    function _ceil32(uint256 size) private pure returns (uint256) {
         // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
         return ((size + 32 - 1) / 32) * 32;
     }

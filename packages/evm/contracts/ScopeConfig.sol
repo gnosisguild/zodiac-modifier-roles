@@ -88,31 +88,24 @@ library ScopeConfig {
     function packParameter(
         bytes memory buffer,
         uint256 index,
-        Packing[] memory modes,
+        Packing mode,
         ParameterConfigFlat calldata parameter
     ) internal pure {
         uint16 bits = (uint16(parameter.parent) << offsetParent) |
             (uint16(parameter._type) << offsetType) |
             (uint16(parameter.comp) << offsetComparison) |
-            (uint16(modes[index]) << offsetPacking);
+            (uint16(mode) << offsetPacking);
 
         uint256 offset = index * bytesPerParameter;
         unchecked {
             buffer[offset] = bytes1(uint8(bits >> 8));
             buffer[offset + 1] = bytes1(uint8(bits));
         }
-        packCompValue(
-            buffer,
-            _compValueOffset(index, modes),
-            modes[index],
-            parameter.compValue
-        );
     }
 
     function unpackParameter(
         bytes memory buffer,
         uint256 index,
-        Packing[] memory modes,
         ParameterConfig memory result
     ) internal pure {
         uint256 offset = 32 + index * bytesPerParameter;
@@ -123,40 +116,37 @@ library ScopeConfig {
         uint16 bits = uint16(bytes2(word));
         result._type = ParameterType((bits & maskType) >> offsetType);
         result.comp = Comparison((bits & maskComparison) >> offsetComparison);
-        unpackCompValue(
-            buffer,
-            _compValueOffset(index, modes),
-            modes[index],
-            result
-        );
     }
 
     function packCompValue(
         bytes memory buffer,
-        uint256 offset,
-        Packing mode,
+        uint256 index,
+        Packing[] memory modes,
         bytes calldata compValue
-    ) private pure returns (uint256) {
-        if (mode == Packing.Nothing) {
-            return offset;
+    ) internal pure {
+        if (modes[index] == Packing.Nothing) {
+            return;
         }
 
-        bytes32 word = mode == Packing.Hash
+        uint256 offset = _compValueOffset(index, modes);
+        bytes32 word = modes[index] == Packing.Hash
             ? keccak256(compValue)
             : bytes32(compValue);
 
         assembly {
             mstore(add(buffer, offset), word)
         }
-        return offset + 32;
     }
 
     function unpackCompValue(
         bytes memory buffer,
-        uint256 offset,
-        Packing mode,
+        uint256 index,
+        Packing[] memory modes,
         ParameterConfig memory result
-    ) private pure {
+    ) internal pure {
+        Packing mode = modes[index];
+        uint256 offset = _compValueOffset(index, modes);
+
         if (mode != Packing.Nothing) {
             bytes32 word;
             assembly {
@@ -164,21 +154,6 @@ library ScopeConfig {
             }
             result.compValue = word;
             result.isHashed = mode == Packing.Hash;
-        }
-    }
-
-    function packModes(
-        ParameterConfigFlat[] calldata parameters
-    ) internal pure returns (Packing[] memory modes) {
-        uint256 count = parameters.length;
-        modes = new Packing[](count);
-
-        for (uint256 i; i < count; ) {
-            modes[i] = _packMode(parameters[i]);
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -206,16 +181,27 @@ library ScopeConfig {
         }
     }
 
-    function _packMode(
-        ParameterConfigFlat calldata parameter
-    ) private pure returns (Packing) {
-        Comparison comparison = parameter.comp;
+    function calculateModes(
+        ParameterConfigFlat[] calldata parameters
+    ) internal pure returns (Packing[] memory modes) {
+        uint256 count = parameters.length;
 
-        if (uint8(comparison) < uint8(Comparison.EqualTo)) {
-            return Packing.Nothing;
+        modes = new Packing[](count);
+        for (uint256 i; i < count; ) {
+            Comparison comparison = parameters[i].comp;
+
+            if (comparison < Comparison.EqualTo) {
+                modes[i] = Packing.Nothing;
+            } else {
+                modes[i] = parameters[i].compValue.length > 32
+                    ? Packing.Hash
+                    : Packing.Word;
+            }
+
+            unchecked {
+                ++i;
+            }
         }
-
-        return parameter.compValue.length > 32 ? Packing.Hash : Packing.Word;
     }
 
     function _compValueOffset(

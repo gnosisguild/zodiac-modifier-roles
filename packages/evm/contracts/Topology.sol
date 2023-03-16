@@ -3,6 +3,11 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
+struct Bounds {
+    uint256 left;
+    uint256 right;
+}
+
 library Topology {
     function typeTree(
         ParameterConfig memory parameter
@@ -24,6 +29,72 @@ library Topology {
                     ++i;
                 }
             }
+        }
+    }
+
+    function childrenBounds(
+        uint8[] memory parents
+    ) internal pure returns (Bounds[] memory result) {
+        uint256 count = parents.length;
+        result = new Bounds[](parents.length);
+
+        // parents are DFS
+        for (uint256 i = 0; i < count; ) {
+            result[i].left = type(uint256).max;
+            unchecked {
+                ++i;
+            }
+        }
+
+        // 0 is the root
+        for (uint256 i = 1; i < count; ) {
+            Bounds memory bounds = result[parents[i]];
+            if (bounds.left == type(uint256).max) {
+                bounds.left = i;
+            }
+            bounds.right = i;
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function isStatic(
+        ParameterConfig memory parameter
+    ) internal pure returns (bool) {
+        if (parameter._type == ParameterType.Static) {
+            return true;
+        } else if (parameter._type == ParameterType.Tuple) {
+            for (uint256 i; i < parameter.children.length; ++i) {
+                if (!isStatic(parameter.children[i])) return false;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function isStatic(
+        ParameterConfigFlat[] calldata parameters,
+        uint256 index
+    ) internal pure returns (bool) {
+        ParameterType _type = parameters[index]._type;
+
+        if (_type == ParameterType.Static) {
+            return true;
+        } else if (_type == ParameterType.Tuple) {
+            uint256 count = parameters.length;
+            for (uint256 j = index + 1; j < count; ++j) {
+                if (parameters[j].parent != index) {
+                    continue;
+                }
+                if (!isStatic(parameters, j)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 }

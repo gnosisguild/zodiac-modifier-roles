@@ -431,10 +431,11 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
         bytes32 compValue = parameter.compValue;
+        bool isStatic = Topology.isStatic(parameter);
         bytes calldata value = Decoder.pluck(
             data,
-            payload.location,
-            payload.size
+            payload.location + (isStatic ? 0 : 32),
+            payload.size - (isStatic ? 0 : 32)
         );
 
         uint256 shift = uint16(bytes2(compValue));

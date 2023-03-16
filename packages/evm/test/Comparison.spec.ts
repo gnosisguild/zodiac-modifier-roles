@@ -91,7 +91,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["uint256"], [123]),
+          compValue: defaultAbiCoder.encode(["uint256"], [123]),
         },
       ],
       ExecutionOptions.None
@@ -141,7 +141,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.GreaterThan,
-          compValue: ethers.utils.solidityPack(["uint256"], [1234]),
+          compValue: defaultAbiCoder.encode(["uint256"], [1234]),
         },
       ],
       ExecutionOptions.None
@@ -166,7 +166,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Static,
           comp: Comparison.LessThan,
-          compValue: ethers.utils.solidityPack(["uint256"], [2345]),
+          compValue: defaultAbiCoder.encode(["uint256"], [2345]),
         },
       ],
       ExecutionOptions.None
@@ -228,7 +228,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["string"], ["Some string"]),
+          compValue: defaultAbiCoder.encode(["string"], ["Some string"]),
         },
       ],
       ExecutionOptions.None
@@ -279,7 +279,7 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: "0x",
+          compValue: defaultAbiCoder.encode(["bytes"], ["0x"]),
         },
       ],
       ExecutionOptions.None
@@ -287,6 +287,58 @@ describe("Comparison", async () => {
 
     await expect(invoke("0x")).to.not.be.reverted;
     await expect(invoke("0x12")).to.be.revertedWith("ParameterNotAllowed()");
+  });
+
+  it("checks an eq comparison for string - empty string", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamicString")
+    );
+
+    const invoke = async (a: string) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamicString(a))
+            .data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EqualTo,
+          compValue: defaultAbiCoder.encode(["string"], [""]),
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke("")).to.not.be.reverted;
+    await expect(invoke("Hello World!")).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
   });
 
   it("checks an eq comparison for Array", async () => {
@@ -336,8 +388,9 @@ describe("Comparison", async () => {
           parent: 0,
           _type: ParameterType.Array,
           comp: Comparison.EqualTo,
-          compValue: removeTrailingOffset(
-            defaultAbiCoder.encode(["bytes2[]"], [["0x1234", "0xabcd"]])
+          compValue: defaultAbiCoder.encode(
+            ["bytes2[]"],
+            [["0x1234", "0xabcd"]]
           ),
         },
         {
@@ -631,19 +684,19 @@ describe("Comparison", async () => {
           parent: 2,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["string"], ["First String"]),
+          compValue: defaultAbiCoder.encode(["string"], ["First String"]),
         },
         {
           parent: 2,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
+          compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
         },
         {
           parent: 2,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
+          compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
         },
       ],
       ExecutionOptions.None
@@ -1021,13 +1074,13 @@ describe("Comparison", async () => {
           parent: 1,
           _type: ParameterType.Dynamic,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["bytes"], ["0xabcdef"]),
+          compValue: defaultAbiCoder.encode(["bytes"], ["0xabcdef"]),
         },
         {
           parent: 1,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["uint256"], [1998]),
+          compValue: defaultAbiCoder.encode(["uint256"], [1998]),
         },
         {
           parent: 1,
@@ -1039,19 +1092,19 @@ describe("Comparison", async () => {
           parent: 4,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["uint256"], [7]),
+          compValue: defaultAbiCoder.encode(["uint256"], [7]),
         },
         {
           parent: 4,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["uint256"], [88]),
+          compValue: defaultAbiCoder.encode(["uint256"], [88]),
         },
         {
           parent: 4,
           _type: ParameterType.Static,
           comp: Comparison.EqualTo,
-          compValue: ethers.utils.solidityPack(["uint256"], [99]),
+          compValue: defaultAbiCoder.encode(["uint256"], [99]),
         },
       ],
       ExecutionOptions.None
@@ -1714,7 +1767,7 @@ describe("Comparison", async () => {
             parent: 1,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValue: ethers.utils.solidityPack(["string"], ["First String"]),
+            compValue: defaultAbiCoder.encode(["string"], ["First String"]),
           },
           // second variant
           {
@@ -1727,7 +1780,7 @@ describe("Comparison", async () => {
             parent: 2,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValue: ethers.utils.solidityPack(["string"], ["Good Morning!"]),
+            compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
           },
           // third variant
           {
@@ -1741,7 +1794,7 @@ describe("Comparison", async () => {
             parent: 3,
             _type: ParameterType.Dynamic,
             comp: Comparison.EqualTo,
-            compValue: ethers.utils.solidityPack(["string"], ["Third String"]),
+            compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
           },
         ],
         ExecutionOptions.None

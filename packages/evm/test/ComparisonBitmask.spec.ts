@@ -290,7 +290,7 @@ describe("Comparison", async () => {
         const { setRoleDynamic } = await setup();
 
         // 30
-        const shift = "0005";
+        const shift = "0050";
         const mask = "ffffff".padEnd(30, "0");
         const expected = "aaaaaa".padEnd(30, "0");
 
