@@ -3,6 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Core.sol";
 import "./Integrity.sol";
+import "./Topology.sol";
 import "./ScopeConfig.sol";
 
 abstract contract PermissionBuilder is Core {
@@ -114,10 +115,11 @@ abstract contract PermissionBuilder is Core {
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
-        ParameterConfigFlat[] calldata parameters,
+        ParameterConfigFlat[] memory parameters,
         ExecutionOptions options
     ) external onlyOwner {
         Integrity.validate(parameters);
+        _removeExtraneousOffsets(parameters);
 
         _store(
             roles[roleId],
@@ -209,5 +211,26 @@ abstract contract PermissionBuilder is Core {
             allowance.refillTimestamp +
             elapsedIntervals *
             allowance.refillInterval;
+    }
+
+    function _removeExtraneousOffsets(
+        ParameterConfigFlat[] memory parameters
+    ) private pure returns (ParameterConfigFlat[] memory) {
+        uint256 length = parameters.length;
+        for (uint256 i; i < length; ++i) {
+            if (
+                parameters[i].comp == Comparison.EqualTo &&
+                Topology.isStatic(parameters, i) == false
+            ) {
+                bytes memory compValue = parameters[i].compValue;
+                uint256 length = compValue.length;
+                assembly {
+                    compValue := add(compValue, 32)
+                    mstore(compValue, sub(length, 32))
+                }
+                parameters[i].compValue = compValue;
+            }
+        }
+        return parameters;
     }
 }

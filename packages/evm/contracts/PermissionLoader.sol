@@ -12,7 +12,7 @@ abstract contract PermissionLoader is Core {
     function _store(
         Role storage role,
         bytes32 key,
-        ParameterConfigFlat[] calldata parameters,
+        ParameterConfigFlat[] memory parameters,
         ExecutionOptions options
     ) internal override {
         bytes memory buffer = _pack(parameters);
@@ -41,25 +41,16 @@ abstract contract PermissionLoader is Core {
     }
 
     function _pack(
-        ParameterConfigFlat[] calldata parameters
-    ) private view returns (bytes memory buffer) {
+        ParameterConfigFlat[] memory parameters
+    ) private pure returns (bytes memory buffer) {
         ScopeConfig.Packing[] memory modes = ScopeConfig.calculateModes(
             parameters
         );
         buffer = new bytes(ScopeConfig.bufferSize(modes));
 
-        bool[] memory needsSlicing = _hasExtraneousOffset(parameters);
         uint256 count = parameters.length;
         for (uint256 i; i < count; ) {
-            ScopeConfig.packParameter(buffer, i, modes[i], parameters[i]);
-            ScopeConfig.packCompValue(
-                buffer,
-                i,
-                modes,
-                needsSlicing[i]
-                    ? parameters[i].compValue[32:]
-                    : parameters[i].compValue
-            );
+            ScopeConfig.packParameter(buffer, i, modes, parameters[i]);
 
             unchecked {
                 ++i;
@@ -92,8 +83,7 @@ abstract contract PermissionLoader is Core {
         ScopeConfig.Packing[] memory modes,
         ParameterConfig memory result
     ) private pure {
-        ScopeConfig.unpackParameter(buffer, index, result);
-        ScopeConfig.unpackCompValue(buffer, index, modes, result);
+        ScopeConfig.unpackParameter(buffer, index, modes, result);
         uint256 left = childrenBounds[index].left;
         uint256 right = childrenBounds[index].right;
         if (right < left) {
@@ -132,23 +122,6 @@ abstract contract PermissionLoader is Core {
         uint256 length = result.children.length;
         for (uint256 i; i < length; ) {
             _loadAllowances(result.children[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function _hasExtraneousOffset(
-        ParameterConfigFlat[] calldata parameters
-    ) private view returns (bool[] memory result) {
-        uint256 count = parameters.length;
-        result = new bool[](count);
-
-        for (uint256 i; i < count; ) {
-            result[i] =
-                parameters[i].comp == Comparison.EqualTo &&
-                !Topology.isStatic(parameters, i);
-
             unchecked {
                 ++i;
             }

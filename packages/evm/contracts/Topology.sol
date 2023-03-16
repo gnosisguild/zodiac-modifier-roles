@@ -75,7 +75,7 @@ library Topology {
     }
 
     function isStatic(
-        ParameterConfigFlat[] calldata parameters,
+        ParameterConfigFlat[] memory parameters,
         uint256 index
     ) internal pure returns (bool) {
         ParameterType _type = parameters[index]._type;

@@ -7,10 +7,10 @@ contract MockScopeConfig {
     function packParameter(
         uint256 index,
         ScopeConfig.Packing[] memory modes,
-        ParameterConfigFlat calldata parameter
+        ParameterConfigFlat memory parameter
     ) public pure returns (bytes memory buffer) {
         buffer = new bytes(1024);
-        ScopeConfig.packParameter(buffer, index, modes[index], parameter);
+        ScopeConfig.packParameter(buffer, index, modes, parameter);
     }
 
     function unpackParameter(
@@ -19,7 +19,7 @@ contract MockScopeConfig {
         ScopeConfig.Packing[] memory modes
     ) public pure returns (ParameterType _type, Comparison comp) {
         ParameterConfig memory p;
-        ScopeConfig.unpackParameter(buffer, index, p);
+        ScopeConfig.unpackParameter(buffer, index, modes, p);
         return (p._type, p.comp);
     }
 
