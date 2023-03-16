@@ -3,16 +3,14 @@ import hre, { deployments, waffle, ethers } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { defaultAbiCoder, solidityPack } from "ethers/lib/utils";
 
 // Through abi.encodePacked() , Solidity supports a non-standard packed mode where:
 // types shorter than 32 bytes are neither zero padded nor sign extended and
 // dynamic types are encoded in-place and without the length.
 // array elements are padded, but still encoded in-place
 // Furthermore, structs as well as nested arrays are not supported.
-const A_32_BYTES_VALUE = ethers.utils.defaultAbiCoder.encode(
-  ["uint256"],
-  [123]
-);
+const A_32_BYTES_VALUE = defaultAbiCoder.encode(["uint256"], [123]);
 
 describe("Integrity", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -77,10 +75,7 @@ describe("Integrity", async () => {
               parent: 0,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(
-                ["string"],
-                [MORE_THAN_32_BYTES_TEXT]
-              ),
+              compValue: solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
             },
           ],
           ExecutionOptions.None
@@ -140,21 +135,6 @@ describe("Integrity", async () => {
             },
             {
               parent: 0,
-              _type: ParameterType.None,
-              comp: Comparison.Or,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
-              compValue: ethers.utils.solidityPack(
-                ["string"],
-                [MORE_THAN_32_BYTES_TEXT]
-              ),
-            },
-            {
-              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
               compValue: ethers.utils.solidityPack(
@@ -181,21 +161,9 @@ describe("Integrity", async () => {
             },
             {
               parent: 0,
-              _type: ParameterType.None,
-              comp: Comparison.Or,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
               _type: ParameterType.Static,
               comp: Comparison.EqualTo,
-              compValue: A_32_BYTES_VALUE,
-            },
-            {
-              parent: 1,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
-              compValue: A_32_BYTES_VALUE,
+              compValue: defaultAbiCoder.encode(["uint256"], [123]),
             },
           ],
           ExecutionOptions.None

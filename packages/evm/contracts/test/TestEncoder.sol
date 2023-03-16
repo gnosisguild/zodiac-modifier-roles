@@ -36,6 +36,12 @@ contract TestEncoder {
 
     function dynamicTuple(DynamicTuple memory) external {}
 
+    struct _DynamicTuple {
+        bytes dynamic;
+    }
+
+    function _dynamicTuple(_DynamicTuple memory) external {}
+
     struct StaticTuple {
         uint256 a;
         address b;

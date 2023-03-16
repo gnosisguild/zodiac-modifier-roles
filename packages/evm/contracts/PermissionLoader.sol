@@ -42,13 +42,24 @@ abstract contract PermissionLoader is Core {
 
     function _pack(
         ParameterConfigFlat[] calldata parameters
-    ) private pure returns (bytes memory buffer) {
-        ScopeConfig.Packing[] memory modes = ScopeConfig.packModes(parameters);
+    ) private view returns (bytes memory buffer) {
+        ScopeConfig.Packing[] memory modes = ScopeConfig.calculateModes(
+            parameters
+        );
         buffer = new bytes(ScopeConfig.bufferSize(modes));
 
+        bool[] memory needsSlicing = _hasExtraneousOffset(parameters);
         uint256 count = parameters.length;
         for (uint256 i; i < count; ) {
-            ScopeConfig.packParameter(buffer, i, modes, parameters[i]);
+            ScopeConfig.packParameter(buffer, i, modes[i], parameters[i]);
+            ScopeConfig.packCompValue(
+                buffer,
+                i,
+                modes,
+                needsSlicing[i]
+                    ? parameters[i].compValue[32:]
+                    : parameters[i].compValue
+            );
 
             unchecked {
                 ++i;
@@ -65,7 +76,13 @@ abstract contract PermissionLoader is Core {
             ScopeConfig.Packing[] memory modes
         ) = ScopeConfig.unpackModes(buffer, count);
 
-        _unpackParameter(buffer, 0, _childrenBounds(parents), modes, result);
+        _unpackParameter(
+            buffer,
+            0,
+            Topology.childrenBounds(parents),
+            modes,
+            result
+        );
     }
 
     function _unpackParameter(
@@ -75,7 +92,8 @@ abstract contract PermissionLoader is Core {
         ScopeConfig.Packing[] memory modes,
         ParameterConfig memory result
     ) private pure {
-        ScopeConfig.unpackParameter(buffer, index, modes, result);
+        ScopeConfig.unpackParameter(buffer, index, result);
+        ScopeConfig.unpackCompValue(buffer, index, modes, result);
         uint256 left = childrenBounds[index].left;
         uint256 right = childrenBounds[index].right;
         if (right < left) {
@@ -120,35 +138,20 @@ abstract contract PermissionLoader is Core {
         }
     }
 
-    function _childrenBounds(
-        uint8[] memory parents
-    ) private pure returns (Bounds[] memory result) {
-        uint256 count = parents.length;
-        result = new Bounds[](parents.length);
+    function _hasExtraneousOffset(
+        ParameterConfigFlat[] calldata parameters
+    ) private view returns (bool[] memory result) {
+        uint256 count = parameters.length;
+        result = new bool[](count);
 
-        // parents are DFS
-        for (uint256 i = 0; i < count; ) {
-            result[i].left = type(uint256).max;
+        for (uint256 i; i < count; ) {
+            result[i] =
+                parameters[i].comp == Comparison.EqualTo &&
+                !Topology.isStatic(parameters, i);
+
             unchecked {
                 ++i;
             }
         }
-
-        // 0 is the root
-        for (uint256 i = 1; i < count; ) {
-            Bounds memory bounds = result[parents[i]];
-            if (bounds.left == type(uint256).max) {
-                bounds.left = i;
-            }
-            bounds.right = i;
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    struct Bounds {
-        uint256 left;
-        uint256 right;
     }
 }
