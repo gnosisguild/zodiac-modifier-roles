@@ -46,13 +46,6 @@ struct TypeTopology {
     TypeTopology[] children;
 }
 
-struct ParameterConfigFlat {
-    uint8 parent;
-    ParameterType _type;
-    Comparison comp;
-    bytes compValue;
-}
-
 struct ParameterConfig {
     ParameterType _type;
     Comparison comp;
@@ -61,6 +54,16 @@ struct ParameterConfig {
     uint256 allowance;
     ParameterConfig[] children;
 }
+
+// This struct is a flattened version of ParameterConfig used for ABI encoding a scope config tree
+// (ABI does not support recursive types)
+struct ParameterConfigFlat {
+    uint8 parent;
+    ParameterType _type;
+    Comparison comp;
+    bytes compValue;
+}
+
 struct ParameterPayload {
     uint256 location;
     uint256 size;

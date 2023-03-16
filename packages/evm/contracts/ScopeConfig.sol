@@ -3,16 +3,24 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
+// This library provides packing and unpacking functions for parameter configs, specifically:
+//  - Pack a ParameterConfigFlat[] provided as calldata into a storage optimized buffer
+//  - Unpack a storage optimized buffer into a ParameterConfig[] in memory
 library ScopeConfig {
-    enum Packing {
+    // Defines how the compValue for this ScopeConfig is stored
+    //  - Nothing: This comparison type does not use a compValue, so nothing is stored
+    //  - Word: The compValue fit into a single word, so it is stored directly
+    //  - Hash: The compValue is too large to fit into a single word, so it is stored as a keccak256 hash
+    enum Packing { // TODO this is mostly referred to as "mode" throughout the code, maybe rename to "PackingMode"?
         Nothing,
         Word,
         Hash
     }
+
     // HEADER
-    // 8   bits -> length
-    // 2   bits -> options
-    // 1   bits -> isWildcarded
+    // 8   bits -> length (count of ScopeConfig nodes)
+    // 2   bits -> options (ExecutionOptions)
+    // 1   bits -> isWildcarded                     // TODO can be killed, same as length = 0
     uint256 private constant offsetLength = 248;
     uint256 private constant offsetOptions = 246;
     uint256 private constant offsetIsWildcarded = 245;
@@ -25,7 +33,7 @@ library ScopeConfig {
     // 4    bits -> comparison
     // 2    bits -> packing
     uint256 private constant bytesPerParameter = 2;
-    uint16 private constant offsetParent = 9;
+    uint16 private constant offsetParent = 9; // TODO why are these constants not uint256?
     uint16 private constant offsetType = 6;
     uint16 private constant offsetComparison = 2;
     uint16 private constant offsetPacking = 0;

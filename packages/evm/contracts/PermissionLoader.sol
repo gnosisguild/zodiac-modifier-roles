@@ -40,6 +40,7 @@ abstract contract PermissionLoader is Core {
         _loadAllowances(result);
     }
 
+    // TODO: consider moving to ScopeConfig lib
     function _pack(
         ParameterConfigFlat[] calldata parameters
     ) private pure returns (bytes memory buffer) {
@@ -56,6 +57,7 @@ abstract contract PermissionLoader is Core {
         }
     }
 
+    // TODO: consider moving to ScopeConfig lib 
     function _unpack(
         bytes memory buffer,
         uint256 count
@@ -68,6 +70,7 @@ abstract contract PermissionLoader is Core {
         _unpackParameter(buffer, 0, _childrenBounds(parents), modes, result);
     }
 
+    // TODO: consider moving to ScopeConfig lib 
     function _unpackParameter(
         bytes memory buffer,
         uint256 index,

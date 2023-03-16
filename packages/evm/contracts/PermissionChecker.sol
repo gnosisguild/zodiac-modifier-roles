@@ -477,7 +477,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return parameter.isHashed ? keccak256(value) : bytes32(value);
     }
 
-    function revertWith(Status status) public pure returns (bool) {
+    function revertWith(Status status) public pure returns (bool) { // TODO why is this public?
         if (status == Status.FunctionSignatureTooShort) {
             revert FunctionSignatureTooShort();
         } else if (status == Status.DelegateCallNotAllowed) {
