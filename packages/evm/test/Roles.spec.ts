@@ -12,6 +12,7 @@ import {
   ExecutionOptions,
   Comparison,
 } from "./utils";
+import { defaultAbiCoder } from "ethers/lib/utils";
 
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
 const FirstAddress = "0x0000000000000000000000000000000000000001";
@@ -71,7 +72,7 @@ describe("RolesModifier", async () => {
       ["uint256"],
       [99]
     );
-    const encodedParam_3 = ethers.utils.solidityPack(
+    const encodedParam_3 = defaultAbiCoder.encode(
       ["string"],
       ["This is a dynamic array"]
     );
@@ -79,14 +80,14 @@ describe("RolesModifier", async () => {
       ["uint256"],
       [4]
     );
-    const encodedParam_5 = ethers.utils.solidityPack(["string"], ["Test"]);
+    const encodedParam_5 = defaultAbiCoder.encode(["string"], ["Test"]);
     const encodedParam_6 = ethers.utils.defaultAbiCoder.encode(
       ["bool"],
       [true]
     );
     const encodedParam_7 = ethers.utils.defaultAbiCoder.encode(["uint8"], [3]);
-    const encodedParam_8 = ethers.utils.solidityPack(["string"], ["weeeeeeee"]);
-    const encodedParam_9 = ethers.utils.solidityPack(
+    const encodedParam_8 = defaultAbiCoder.encode(["string"], ["weeeeeeee"]);
+    const encodedParam_9 = defaultAbiCoder.encode(
       ["string"],
       [
         "This is an input that is larger than 32 bytes and must be scanned for correctness",

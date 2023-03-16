@@ -108,4 +108,6 @@ contract TestContract {
     function dynamic32(bytes4[] calldata first) public {
         emit Dynamic32(first);
     }
+
+    function dynamicString(string memory) public {}
 }

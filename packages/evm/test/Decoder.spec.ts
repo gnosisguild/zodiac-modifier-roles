@@ -4,15 +4,13 @@ import assert from "assert";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
-import {
-  defaultAbiCoder,
-  hexlify,
-  solidityPack,
-  toUtf8Bytes,
-} from "ethers/lib/utils";
+import { defaultAbiCoder } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
-import { Comparison, ParameterType, removeTrailingOffset } from "./utils";
+import { Comparison, ParameterType } from "./utils";
+
+const YesRemoveOffset = true;
+const DontRemoveOffset = false;
 
 describe("Decoder library", async () => {
   const setup = deployments.createFixture(async () => {
@@ -52,8 +50,12 @@ describe("Decoder library", async () => {
     expect(result.offset).to.equal(BigNumber.from(0));
     expect(result.size).to.equal(BigNumber.from((data.length - 2) / 2));
 
-    expect(result.children[0].offset).to.equal(BigNumber.from(68));
-    expect(result.children[0].size).to.equal(BigNumber.from(0));
+    const parameter = result.children[0];
+    expect(parameter.offset).to.equal(36);
+
+    expect(
+      await decoder.pluck(data, parameter.offset, parameter.size)
+    ).to.equal(encode(["bytes"], ["0x"], YesRemoveOffset));
   });
 
   it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {
@@ -104,7 +106,7 @@ describe("Decoder library", async () => {
         result.children[0].offset,
         result.children[0].size
       )
-    ).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
+    ).to.equal(encode(["address"], [AddressOne]));
 
     expect(
       await decoder.pluck(
@@ -112,7 +114,7 @@ describe("Decoder library", async () => {
         result.children[1].offset,
         result.children[1].size
       )
-    ).to.equal(solidityPack(["bytes"], ["0xabcd"]));
+    ).to.equal(encode(["bytes"], ["0xabcd"], YesRemoveOffset));
 
     expect(
       await decoder.pluck(
@@ -120,11 +122,7 @@ describe("Decoder library", async () => {
         result.children[2].offset,
         result.children[2].size
       )
-    ).to.deep.equal(
-      removeTrailingOffset(
-        defaultAbiCoder.encode(["uint256[]"], [[10, 32, 55]])
-      )
-    );
+    ).to.deep.equal(encode(["uint256[]"], [[10, 32, 55]], YesRemoveOffset));
   });
 
   it("plucks (dynamic, static, dynamic32) non nested parameters from encoded calldata", async () => {
@@ -176,7 +174,7 @@ describe("Decoder library", async () => {
         result.children[0].offset,
         result.children[0].size
       )
-    ).to.equal(solidityPack(["bytes"], ["0x12ab45"]));
+    ).to.equal(encode(["bytes"], ["0x12ab45"], YesRemoveOffset));
 
     expect(
       await decoder.pluck(
@@ -184,7 +182,7 @@ describe("Decoder library", async () => {
         result.children[1].offset,
         result.children[1].size
       )
-    ).to.equal(defaultAbiCoder.encode(["bool"], [false]));
+    ).to.equal(encode(["bool"], [false]));
 
     expect(
       await decoder.pluck(
@@ -193,9 +191,7 @@ describe("Decoder library", async () => {
         result.children[2].size
       )
     ).to.equal(
-      removeTrailingOffset(
-        defaultAbiCoder.encode(["bytes2[]"], [["0x1122", "0x3344", "0x5566"]])
-      )
+      encode(["bytes2[]"], [["0x1122", "0x3344", "0x5566"]], YesRemoveOffset)
     );
   });
 
@@ -241,9 +237,7 @@ describe("Decoder library", async () => {
         result.children[0].size
       )
     ).to.deep.equal(
-      removeTrailingOffset(
-        defaultAbiCoder.encode(["bytes2[]"], [["0xaabb", "0x1234", "0xff33"]])
-      )
+      encode(["bytes2[]"], [["0xaabb", "0x1234", "0xff33"]], YesRemoveOffset)
     );
 
     expect(
@@ -252,7 +246,7 @@ describe("Decoder library", async () => {
         result.children[1].offset,
         result.children[1].size
       )
-    ).to.equal(hexlify(toUtf8Bytes("Hello World!")));
+    ).to.equal(encode(["string"], ["Hello World!"], YesRemoveOffset));
     expect(
       await decoder.pluck(
         data,
@@ -317,10 +311,8 @@ describe("Decoder library", async () => {
     const { decoder, testEncoder } = await setup();
 
     // function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))
-    const { data } = await testEncoder.populateTransaction.dynamicTuple({
+    const { data } = await testEncoder.populateTransaction._dynamicTuple({
       dynamic: "0xabcd",
-      _static: 100,
-      dynamic32: [1, 2, 3],
     });
 
     assert(data);
@@ -337,22 +329,6 @@ describe("Decoder library", async () => {
               comp: 0,
               children: [],
             },
-            {
-              _type: ParameterType.Static,
-              comp: 0,
-              children: [],
-            },
-            {
-              _type: ParameterType.Array,
-              comp: 0,
-              children: [
-                {
-                  _type: ParameterType.Static,
-                  comp: 0,
-                  children: [],
-                },
-              ],
-            },
           ],
         },
       ],
@@ -360,33 +336,15 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data, layout);
 
-    // removing the tuple and letting the abi encoder ommit the offset
-    const implicit = defaultAbiCoder.encode(
-      ["bytes", "uint256", "uint256[]"],
-      ["0xabcd", 100, [1, 2, 3]]
-    );
-    expect(
-      await decoder.pluck(
-        data,
-        result.children[0].offset,
-        result.children[0].size
-      )
-    ).to.equal(implicit);
-
     // removing the offset
-    const explicit = removeTrailingOffset(
-      defaultAbiCoder.encode(
-        ["tuple(bytes,uint256,uint256[])"],
-        [["0xabcd", 100, [1, 2, 3]]]
-      )
-    );
+    const expected = encode(["tuple(bytes)"], [["0xabcd"]], true);
     expect(
       await decoder.pluck(
         data,
         result.children[0].offset,
         result.children[0].size
       )
-    ).to.equal(explicit);
+    ).to.equal(expected);
   });
 
   it("plucks staticTuple (explicitly) from encoded calldata", async () => {
@@ -435,23 +393,10 @@ describe("Decoder library", async () => {
         result.children[0].size
       )
     ).to.equal(
-      defaultAbiCoder.encode(
+      encode(
         ["tuple(uint256, address)"],
-        [[1999, "0x0000000000000000000000000000000000000001"]]
-      )
-    );
-
-    // alternative way
-    expect(
-      await decoder.pluck(
-        data,
-        result.children[0].offset,
-        result.children[0].size
-      )
-    ).to.equal(
-      defaultAbiCoder.encode(
-        ["uint256", "address"],
-        [1999, "0x0000000000000000000000000000000000000001"]
+        [[1999, "0x0000000000000000000000000000000000000001"]],
+        false
       )
     );
 
@@ -461,7 +406,7 @@ describe("Decoder library", async () => {
         result.children[1].offset,
         result.children[1].size
       )
-    ).to.deep.equal(defaultAbiCoder.encode(["uint256"], [2000]));
+    ).to.deep.equal(encode(["uint256"], [2000]));
   });
 
   it("plucks staticTuple (implicitly) from encoded calldata", async () => {
@@ -495,7 +440,7 @@ describe("Decoder library", async () => {
         result.children[0].offset,
         result.children[0].size
       )
-    ).to.equal(defaultAbiCoder.encode(["uint256"], [1999]));
+    ).to.equal(encode(["uint256"], [1999]));
 
     expect(
       await decoder.pluck(
@@ -504,14 +449,11 @@ describe("Decoder library", async () => {
         result.children[1].size
       )
     ).to.equal(
-      defaultAbiCoder.encode(
-        ["address"],
-        ["0x0000000000000000000000000000000000000001"]
-      )
+      encode(["address"], ["0x0000000000000000000000000000000000000001"])
     );
   });
 
-  it("plucks DynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
+  it("plucks dynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
     const { decoder, testEncoder } = await setup();
 
     // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
@@ -525,9 +467,10 @@ describe("Decoder library", async () => {
         },
       });
 
-    const expected = defaultAbiCoder.encode(
+    const expected = encode(
       ["uint256", "bytes", "tuple(uint256, address)"],
-      [2023, "0xbadfed", [2020, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]]
+      [2023, "0xbadfed", [2020, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]],
+      false
     );
 
     const layout = {
@@ -582,42 +525,33 @@ describe("Decoder library", async () => {
 
     const field = result.children[0].children[2].children[0];
     expect(await decoder.pluck(data, field.offset, field.size)).to.equal(
-      defaultAbiCoder.encode(["uint256"], [2020])
+      encode(["uint256"], [2020])
     );
   });
 
   it("plucks dynamicTupleWithNestedDynamicTuple from encoded calldata", async () => {
     const { decoder, testEncoder } = await setup();
 
-    const dynamicValue = "0xdeadbeef";
-    const addressValue = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+    const value1 = "0xbadfed";
+    const value2 = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+    const value3 = "0xdeadbeef";
 
     const { data } =
       await testEncoder.populateTransaction.dynamicTupleWithNestedDynamicTuple({
-        a: "0xbadfed",
+        a: value1,
         b: {
           a: 1234,
-          b: addressValue,
+          b: value2,
         },
         c: 2023,
         d: {
-          dynamic: dynamicValue,
+          dynamic: value3,
           _static: 999,
           dynamic32: [6, 7, 8],
         },
       });
 
     assert(data);
-
-    const expected = defaultAbiCoder.encode(
-      [
-        "bytes",
-        "tuple(uint256, address)",
-        "uint256",
-        "tuple(bytes,uint256, uint256[])",
-      ],
-      ["0xbadfed", [1234, addressValue], 2023, [dynamicValue, 999, [6, 7, 8]]]
-    );
 
     const layout = {
       _type: ParameterType.AbiEncoded,
@@ -687,6 +621,15 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data as string, layout);
 
+    const expected = encode(
+      [
+        "bytes",
+        "tuple(uint256, address)",
+        "uint256",
+        "tuple(bytes,uint256, uint256[])",
+      ],
+      [value1, [1234, value2], 2023, [value3, 999, [6, 7, 8]]]
+    );
     expect(
       await decoder.pluck(
         data,
@@ -695,19 +638,45 @@ describe("Decoder library", async () => {
       )
     ).to.equal(expected);
 
-    const fieldWithAddress = result.children[0].children[1].children[1];
-    const fieldWithAddressExpected = defaultAbiCoder.encode(
-      ["address"],
-      [addressValue]
-    );
-    expect(
-      await decoder.pluck(data, fieldWithAddress.offset, fieldWithAddress.size)
-    ).to.equal(fieldWithAddressExpected);
+    const field_0 = result.children[0].children[0];
+    const field_1_static_tuple = result.children[0].children[1];
+    const field_1_1 = result.children[0].children[1].children[1];
+    const field_3_dynamic_tuple = result.children[0].children[3];
+    const field_3_0 = result.children[0].children[3].children[0];
 
-    const fieldWithDynamic = result.children[0].children[3].children[0];
+    expect(await decoder.pluck(data, field_0.offset, field_0.size)).to.equal(
+      encode(["bytes"], [value1], YesRemoveOffset)
+    );
+
     expect(
-      await decoder.pluck(data, fieldWithDynamic.offset, fieldWithDynamic.size)
-    ).to.equal(dynamicValue);
+      await decoder.pluck(
+        data,
+        field_1_static_tuple.offset,
+        field_1_static_tuple.size
+      )
+    ).to.equal(encode(["tuple(uint256, address)"], [[1234, value2]]));
+
+    expect(
+      await decoder.pluck(data, field_1_1.offset, field_1_1.size)
+    ).to.equal(encode(["address"], [value2]));
+
+    expect(
+      await decoder.pluck(
+        data,
+        field_3_dynamic_tuple.offset,
+        field_3_dynamic_tuple.size
+      )
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256, uint256[])"],
+        [[value3, 999, [6, 7, 8]]],
+        YesRemoveOffset
+      )
+    );
+
+    expect(
+      await decoder.pluck(data, field_3_0.offset, field_3_0.size)
+    ).to.equal(encode(["bytes"], [value3], YesRemoveOffset));
   });
 
   it("plucks dynamicTupleWithNestedArray from encoded calldata", async () => {
@@ -776,44 +745,23 @@ describe("Decoder library", async () => {
       data
     );
 
-    // check top tuple
-    const expected = removeTrailingOffset(
-      defaultAbiCoder.encode(
-        ["tuple(uint256,bytes,tuple(uint256,address)[])"],
-        [
-          [
-            21000,
-            dynamicValue,
-            [[10, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]],
-          ],
-        ]
-      )
-    );
-    expect(
-      await decoder.pluck(
-        data,
-        result.children[0].offset,
-        result.children[0].size
-      )
-    ).to.equal(expected);
-
     // check nested tuple
     const fieldTuple = result.children[0].children[2];
-    const fieldTupleExpected = removeTrailingOffset(
-      defaultAbiCoder.encode(
-        ["tuple(uint256,address)[]"],
-        [[[10, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]]]
-      )
-    );
     expect(
       await decoder.pluck(data, fieldTuple.offset, fieldTuple.size)
-    ).to.equal(fieldTupleExpected);
+    ).to.equal(
+      encode(
+        ["tuple(uint256,address)[]"],
+        [[[10, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]]],
+        YesRemoveOffset
+      )
+    );
 
     // check a leaf
     const fieldDynamic = result.children[0].children[1];
     expect(
       await decoder.pluck(data, fieldDynamic.offset, fieldDynamic.size)
-    ).to.equal(dynamicValue);
+    ).to.equal(encode(["bytes"], [dynamicValue], YesRemoveOffset));
   });
 
   it("plucks arrayStaticTupleItems from encoded calldata", async () => {
@@ -869,20 +817,41 @@ describe("Decoder library", async () => {
 
     // check array
     const arrayField = result.children[0];
-    const expected = removeTrailingOffset(
-      defaultAbiCoder.encode(
+    expect(
+      await decoder.pluck(data as string, arrayField.offset, arrayField.size)
+    ).to.equal(
+      encode(
         ["tuple(uint256,address)[]"],
         [
           [
             [95623, "0x00000000219ab540356cbb839cbe05303d7705fa"],
             [11542, "0x0716a17fbaee714f1e6ab0f9d59edbc5f09815c0"],
           ],
-        ]
+        ],
+        YesRemoveOffset
       )
     );
+
+    const arrayEntry1 = result.children[0].children[0];
     expect(
-      await decoder.pluck(data as string, arrayField.offset, arrayField.size)
-    ).to.equal(expected);
+      await decoder.pluck(data as string, arrayEntry1.offset, arrayEntry1.size)
+    ).to.equal(
+      encode(
+        ["tuple(uint256,address)"],
+        [[95623, "0x00000000219ab540356cbb839cbe05303d7705fa"]],
+        DontRemoveOffset
+      )
+    );
+    const arrayEntry2 = result.children[0].children[1];
+    expect(
+      await decoder.pluck(data as string, arrayEntry2.offset, arrayEntry2.size)
+    ).to.equal(
+      encode(
+        ["tuple(uint256,address)"],
+        [[11542, "0x0716a17fbaee714f1e6ab0f9d59edbc5f09815c0"]],
+        DontRemoveOffset
+      )
+    );
   });
 
   it("plucks arrayDynamicTupleItems from encoded calldata", async () => {
@@ -951,36 +920,54 @@ describe("Decoder library", async () => {
     );
 
     // check array
-    const expected = removeTrailingOffset(
-      defaultAbiCoder.encode(
-        ["tuple(bytes,uint256, uint256[])[]"],
-        [
-          [
-            ["0xbadfed", 9998877, [7, 9]],
-            ["0x0badbeef", 444555, [4, 5, 6]],
-          ],
-        ]
-      )
-    );
     expect(
       await decoder.pluck(
         data,
         result.children[0].offset,
         result.children[0].size
       )
-    ).to.equal(expected);
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256, uint256[])[]"],
+        [
+          [
+            ["0xbadfed", 9998877, [7, 9]],
+            ["0x0badbeef", 444555, [4, 5, 6]],
+          ],
+        ],
+        YesRemoveOffset
+      )
+    );
+
+    const arrayEntry1 = result.children[0].children[0];
+    expect(
+      await decoder.pluck(data as string, arrayEntry1.offset, arrayEntry1.size)
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256, uint256[])"],
+        [["0xbadfed", 9998877, [7, 9]]],
+        YesRemoveOffset
+      )
+    );
+    const arrayEntry2 = result.children[0].children[1];
+    expect(
+      await decoder.pluck(data as string, arrayEntry2.offset, arrayEntry2.size)
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256, uint256[])"],
+        [["0x0badbeef", 444555, [4, 5, 6]]],
+        YesRemoveOffset
+      )
+    );
 
     // check array field
     const arrayField = result.children[0].children[1].children[2];
-    const arrayFieldExpected = removeTrailingOffset(
-      defaultAbiCoder.encode(["uint256[]"], [[4, 5, 6]])
-    );
     expect(
       await decoder.pluck(data, arrayField.offset, arrayField.size)
-    ).to.equal(arrayFieldExpected);
+    ).to.equal(encode(["uint256[]"], [[4, 5, 6]], YesRemoveOffset));
   });
 
-  it("plucks nested AbiEncoded from top level", async () => {
+  it("plucks AbiEncoded from top level param", async () => {
     const { decoder, testEncoder } = await setup();
 
     const number = 123456789;
@@ -1033,29 +1020,15 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data as string, layout);
 
-    // check the nested field as whole
-    const nestedDataField = result.children[1];
-    expect(
-      await decoder.pluck(
-        data as string,
-        nestedDataField.offset,
-        nestedDataField.size
-      )
-    ).to.equal(nestedData as string);
-
     // check the nested uint
     const nestedUintField = result.children[1].children[0];
-    const nestedUintFieldExpected = defaultAbiCoder.encode(
-      ["uint256"],
-      [number]
-    );
     expect(
       await decoder.pluck(
         data as string,
         nestedUintField.offset,
         nestedUintField.size
       )
-    ).to.equal(nestedUintFieldExpected);
+    ).to.equal(encode(["uint256"], [number]));
   });
 
   it("plucks nested AbiEncoded from within a tuple", async () => {
@@ -1064,7 +1037,7 @@ describe("Decoder library", async () => {
     const { data: nestedData } =
       await testEncoder.populateTransaction.dynamicTuple({
         dynamic: "0x00",
-        _static: 0,
+        _static: 9922,
         dynamic32: [55, 66, 88],
       });
 
@@ -1140,46 +1113,60 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data as string, layout);
 
-    // check the nested field as whole
-    const nestedDataField = result.children[0].children[0];
+    const nestedDynamicField =
+      result.children[0].children[0].children[0].children[0];
     expect(
       await decoder.pluck(
         data as string,
-        nestedDataField.offset,
-        nestedDataField.size
+        nestedDynamicField.offset,
+        nestedDynamicField.size
       )
-    ).to.equal(nestedData as string);
+    ).to.equal(encode(["bytes"], ["0x00"], YesRemoveOffset));
+
+    const nestedStaticField =
+      result.children[0].children[0].children[0].children[1];
+    expect(
+      await decoder.pluck(
+        data as string,
+        nestedStaticField.offset,
+        nestedStaticField.size
+      )
+    ).to.equal(encode(["uint256"], ["9922"]));
 
     // check the nested uint
     const nestedArrayField =
       result.children[0].children[0].children[0].children[2];
-    const expected = removeTrailingOffset(
-      defaultAbiCoder.encode(["uint256[]"], [[55, 66, 88]])
-    );
     expect(
       await decoder.pluck(
         data as string,
         nestedArrayField.offset,
         nestedArrayField.size
       )
-    ).to.equal(expected);
+    ).to.equal(encode(["uint256[]"], [[55, 66, 88]], YesRemoveOffset));
   });
 
   it("plucks nested AbiEncoded from within an array", async () => {
     const { decoder, testEncoder } = await setup();
 
-    const { data: nestedData } =
+    const { data: nestedData1 } =
       await testEncoder.populateTransaction.dynamicStaticDynamic32(
         "0xaabbccdd",
-        false,
+        true,
         ["0xaabb", "0xf26b"]
       );
+    const { data: nestedData2 } =
+      await testEncoder.populateTransaction.dynamicStaticDynamic32(
+        "0x22334455",
+        false,
+        []
+      );
 
-    assert(nestedData);
+    assert(nestedData1);
+    assert(nestedData2);
 
     const { data } = await testEncoder.populateTransaction.dynamicArray([
-      nestedData,
-      nestedData,
+      nestedData1,
+      nestedData2,
     ]);
 
     const nestedLayout = {
@@ -1224,40 +1211,35 @@ describe("Decoder library", async () => {
 
     const result = await decoder.inspect(data as string, layout);
 
-    // check the nested field as whole
-    const nestedDataField = result.children[0].children[0];
+    const arrayField1 = result.children[0].children[0].children[2];
+    expect(
+      await decoder.pluck(data as string, arrayField1.offset, arrayField1.size)
+    ).to.equal(encode(["bytes2[]"], [["0xaabb", "0xf26b"]], YesRemoveOffset));
+    const staticField1 = result.children[0].children[0].children[1];
     expect(
       await decoder.pluck(
         data as string,
-        nestedDataField.offset,
-        nestedDataField.size
+        staticField1.offset,
+        staticField1.size
       )
-    ).to.equal(nestedData as string);
+    ).to.equal(encode(["bool"], [true]));
 
-    const nesteArrayWithinDataField =
-      result.children[0].children[0].children[2];
-
-    let expected = removeTrailingOffset(
-      defaultAbiCoder.encode(["bytes2[]"], [["0xaabb", "0xf26b"]])
-    );
-
+    const arrayField2 = result.children[0].children[1].children[2];
+    expect(
+      await decoder.pluck(data as string, arrayField2.offset, arrayField2.size)
+    ).to.equal(encode(["bytes2[]"], [[]], YesRemoveOffset));
+    const staticField2 = result.children[0].children[1].children[1];
     expect(
       await decoder.pluck(
         data as string,
-        nesteArrayWithinDataField.offset,
-        nesteArrayWithinDataField.size
+        staticField2.offset,
+        staticField2.size
       )
-    ).to.equal(expected);
-
-    const bytes2NestedField =
-      result.children[0].children[0].children[2].children[1];
-    expected = defaultAbiCoder.encode(["bytes2"], ["0xf26b"]);
-    expect(
-      await decoder.pluck(
-        data as string,
-        bytes2NestedField.offset,
-        bytes2NestedField.size
-      )
-    ).to.equal(expected);
+    ).to.equal(encode(["bool"], [false]));
   });
 });
+
+function encode(types: any, values: any, removeOffset = false) {
+  const result = defaultAbiCoder.encode(types, values);
+  return removeOffset ? `0x${result.slice(66)}` : result;
+}
