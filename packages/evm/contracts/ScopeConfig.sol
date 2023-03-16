@@ -21,13 +21,17 @@ library ScopeConfig {
     // 8   bits -> length (count of ScopeConfig nodes)
     // 2   bits -> options (ExecutionOptions)
     // 1   bits -> isWildcarded                     // TODO can be killed, same as length = 0
+    // 20 bytes address -> address that has the code storing the conditions 
     uint256 private constant offsetLength = 248;
     uint256 private constant offsetOptions = 246;
     uint256 private constant offsetIsWildcarded = 245;
     uint256 private constant maskLength = 0xff << offsetLength;
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
-    // PARAMETER:
+    
+
+    // CONDITIONS
+    // stored as a tighly packed sequence of 16 bit per condition:
     // 7    bits -> parent
     // 3    bits -> type
     // 4    bits -> comparison
@@ -190,6 +194,7 @@ library ScopeConfig {
         }
     }
 
+    // TODO compiling the lists of parents is a significant aspect of this function but not reflected in its name
     function unpackModes(
         bytes memory buffer,
         uint256 count

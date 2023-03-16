@@ -25,17 +25,22 @@ contract MultiSendAdapter is ITransactionUnwrapper { // TODO case mismatch with 
     }
 
     function _validateHeader(bytes calldata data) private pure {
+        // first 4 bytes are the selector for multiSend(bytes)
         if (bytes4(data) != SELECTOR) {
             revert();
         }
 
+        // the following 32 bytes are the offset to the bytes param (always 0x20)
         if (bytes32(data[4:]) != bytes32(uint256(0x20))) {
             revert();
         }
 
+        // the following 32 bytes are the length of the bytes param
         uint256 length = uint256(bytes32(data[36:]));
-        // padded to 32 bytes
-        if (4 + _round(32 + 32 + length) != data.length) {
+
+        // validate that the total calldata length matches
+        // it's the 4 + 32 + 32 bytes checked above + the <length> bytes padded to a multiple of 32 
+        if (4 + 32 + 32 + _round(length) != data.length) {
             revert();
         }
     }
@@ -98,6 +103,7 @@ contract MultiSendAdapter is ITransactionUnwrapper { // TODO case mismatch with 
         }
     }
 
+    // TODO rename to _ceil32
     function _round(uint256 length) private pure returns (uint256) {
         // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
         return ((length + 32 - 1) / 32) * 32;

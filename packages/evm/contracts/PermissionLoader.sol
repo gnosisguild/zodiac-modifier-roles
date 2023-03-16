@@ -40,7 +40,6 @@ abstract contract PermissionLoader is Core {
         _loadAllowances(result);
     }
 
-    // TODO: consider moving to ScopeConfig lib
     function _pack(
         ParameterConfigFlat[] calldata parameters
     ) private pure returns (bytes memory buffer) {
@@ -57,7 +56,6 @@ abstract contract PermissionLoader is Core {
         }
     }
 
-    // TODO: consider moving to ScopeConfig lib 
     function _unpack(
         bytes memory buffer,
         uint256 count
@@ -70,7 +68,6 @@ abstract contract PermissionLoader is Core {
         _unpackParameter(buffer, 0, _childrenBounds(parents), modes, result);
     }
 
-    // TODO: consider moving to ScopeConfig lib 
     function _unpackParameter(
         bytes memory buffer,
         uint256 index,
@@ -120,13 +117,18 @@ abstract contract PermissionLoader is Core {
         }
     }
 
+    /**
+     * Maps an array of parent indices to an array of { left: first child index, right: last child index }
+     * @param parents An array containing the parent node index for each node
+     * @return An array of bounds for each node, where each bound has a `left` (index of the first child) and `right` (index of the last child) 
+     */
     function _childrenBounds(
         uint8[] memory parents
     ) private pure returns (Bounds[] memory result) {
         uint256 count = parents.length;
-        result = new Bounds[](parents.length);
+        result = new Bounds[](count);
 
-        // parents are DFS
+        // parents are DFS  // TODO ???
         for (uint256 i = 0; i < count; ) {
             result[i].left = type(uint256).max;
             unchecked {
@@ -134,7 +136,7 @@ abstract contract PermissionLoader is Core {
             }
         }
 
-        // 0 is the root
+        // first item is the root
         for (uint256 i = 1; i < count; ) {
             Bounds memory bounds = result[parents[i]];
             if (bounds.left == type(uint256).max) {
@@ -147,6 +149,7 @@ abstract contract PermissionLoader is Core {
         }
     }
 
+    // TODO maybe rename to Range {first, last}, left/right misleadingly hints at a binary tree 
     struct Bounds {
         uint256 left;
         uint256 right;

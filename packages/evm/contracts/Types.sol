@@ -51,7 +51,7 @@ struct ParameterConfig {
     Comparison comp;
     bool isHashed;
     bytes32 compValue;
-    uint256 allowance;
+    uint256 allowance; // TODO: This should be removed (see feedback). It's awkward here because it's not coming from the static config we keep in storage, but is only added dynamically to the struct in _loadAllowances
     ParameterConfig[] children;
 }
 
