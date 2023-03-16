@@ -35,7 +35,7 @@ library Integrity {
 
     error UnsuitableComparisonForTypeNone(uint256 index);
 
-    function validate(ParameterConfigFlat[] calldata parameters) internal pure {
+    function validate(ParameterConfigFlat[] memory parameters) internal pure {
         root(parameters);
         topology(parameters);
 
@@ -44,7 +44,7 @@ library Integrity {
         }
     }
 
-    function root(ParameterConfigFlat[] calldata parameters) internal pure {
+    function root(ParameterConfigFlat[] memory parameters) internal pure {
         uint256 index;
         uint256 count;
 
@@ -63,7 +63,7 @@ library Integrity {
         }
     }
 
-    function topology(ParameterConfigFlat[] calldata parameters) private pure {
+    function topology(ParameterConfigFlat[] memory parameters) private pure {
         // this function will be optimized
 
         uint256 length = parameters.length;
@@ -112,10 +112,10 @@ library Integrity {
     }
 
     function content(
-        ParameterConfigFlat calldata parameter,
+        ParameterConfigFlat memory parameter,
         uint256 index
     ) internal pure {
-        bytes calldata compValue = parameter.compValue;
+        bytes memory compValue = parameter.compValue;
         Comparison comp = parameter.comp;
         ParameterType _type = parameter._type;
 

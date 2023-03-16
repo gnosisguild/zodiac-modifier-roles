@@ -8,7 +8,7 @@ contract TestLoaderGas is PermissionLoader {
     bytes32 public constant key = bytes32(bytes4(0xabcdef00));
 
     function store(
-        ParameterConfigFlat[] calldata parameters,
+        ParameterConfigFlat[] memory parameters,
         ExecutionOptions options
     ) public {
         _store(roles[roleId], key, parameters, options);
@@ -20,7 +20,7 @@ contract TestLoaderGas is PermissionLoader {
     }
 
     function storeNaive(
-        ParameterConfigFlat[] calldata parameters,
+        ParameterConfigFlat[] memory parameters,
         ExecutionOptions
     ) public {
         Role storage role = roles[roleId];

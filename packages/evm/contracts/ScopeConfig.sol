@@ -51,6 +51,29 @@ library ScopeConfig {
         }
     }
 
+    function calculateModes(
+        ParameterConfigFlat[] memory parameters
+    ) internal pure returns (Packing[] memory modes) {
+        uint256 count = parameters.length;
+        modes = new Packing[](count);
+
+        for (uint256 i; i < count; ) {
+            Comparison comparison = parameters[i].comp;
+
+            if (comparison < Comparison.EqualTo) {
+                modes[i] = ScopeConfig.Packing.Nothing;
+            } else {
+                modes[i] = parameters[i].compValue.length > 32
+                    ? Packing.Hash
+                    : Packing.Word;
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function packHeader(
         uint256 length,
         bool isWildcarded,
@@ -88,24 +111,34 @@ library ScopeConfig {
     function packParameter(
         bytes memory buffer,
         uint256 index,
-        Packing mode,
-        ParameterConfigFlat calldata parameter
+        Packing[] memory modes,
+        ParameterConfigFlat memory parameter
     ) internal pure {
         uint16 bits = (uint16(parameter.parent) << offsetParent) |
             (uint16(parameter._type) << offsetType) |
             (uint16(parameter.comp) << offsetComparison) |
-            (uint16(mode) << offsetPacking);
+            (uint16(modes[index]) << offsetPacking);
 
         uint256 offset = index * bytesPerParameter;
         unchecked {
             buffer[offset] = bytes1(uint8(bits >> 8));
             buffer[offset + 1] = bytes1(uint8(bits));
         }
+
+        if (modes[index] != Packing.Nothing) {
+            packCompValue(
+                buffer,
+                _compValueOffset(index, modes),
+                modes[index],
+                parameter.compValue
+            );
+        }
     }
 
     function unpackParameter(
         bytes memory buffer,
         uint256 index,
+        Packing[] memory modes,
         ParameterConfig memory result
     ) internal pure {
         uint256 offset = 32 + index * bytesPerParameter;
@@ -116,37 +149,40 @@ library ScopeConfig {
         uint16 bits = uint16(bytes2(word));
         result._type = ParameterType((bits & maskType) >> offsetType);
         result.comp = Comparison((bits & maskComparison) >> offsetComparison);
+
+        if (modes[index] != Packing.Nothing) {
+            unpackCompValue(
+                buffer,
+                _compValueOffset(index, modes),
+                modes[index],
+                result
+            );
+        }
     }
 
     function packCompValue(
         bytes memory buffer,
-        uint256 index,
-        Packing[] memory modes,
-        bytes calldata compValue
-    ) internal pure {
-        if (modes[index] == Packing.Nothing) {
-            return;
-        }
+        uint256 offset,
+        Packing mode,
+        bytes memory compValue
+    ) private pure {
+        if (mode != Packing.Nothing) {
+            bytes32 word = mode == Packing.Hash
+                ? keccak256(compValue)
+                : bytes32(compValue);
 
-        uint256 offset = _compValueOffset(index, modes);
-        bytes32 word = modes[index] == Packing.Hash
-            ? keccak256(compValue)
-            : bytes32(compValue);
-
-        assembly {
-            mstore(add(buffer, offset), word)
+            assembly {
+                mstore(add(buffer, offset), word)
+            }
         }
     }
 
     function unpackCompValue(
         bytes memory buffer,
-        uint256 index,
-        Packing[] memory modes,
+        uint256 offset,
+        Packing mode,
         ParameterConfig memory result
-    ) internal pure {
-        Packing mode = modes[index];
-        uint256 offset = _compValueOffset(index, modes);
-
+    ) private pure {
         if (mode != Packing.Nothing) {
             bytes32 word;
             assembly {
@@ -174,29 +210,6 @@ library ScopeConfig {
             uint16 bits = uint16(bytes2(word));
             parents[i] = uint8((bits & maskParent) >> offsetParent);
             modes[i] = Packing(bits & maskPacking);
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function calculateModes(
-        ParameterConfigFlat[] calldata parameters
-    ) internal pure returns (Packing[] memory modes) {
-        uint256 count = parameters.length;
-
-        modes = new Packing[](count);
-        for (uint256 i; i < count; ) {
-            Comparison comparison = parameters[i].comp;
-
-            if (comparison < Comparison.EqualTo) {
-                modes[i] = Packing.Nothing;
-            } else {
-                modes[i] = parameters[i].compValue.length > 32
-                    ? Packing.Hash
-                    : Packing.Word;
-            }
 
             unchecked {
                 ++i;
