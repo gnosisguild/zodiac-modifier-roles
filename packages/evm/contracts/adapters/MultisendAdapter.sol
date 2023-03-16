@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-contract MultiSendAdapter is ITransactionUnwrapper {
+contract MultiSendAdapter is ITransactionUnwrapper { // TODO case mismatch with filename (MultiSendAdapter vs MultisendAdapter), maybe even better: MultisendUnwrapper
     bytes4 private constant SELECTOR = 0x8d80ff0a;
     uint256 private constant OFFSET_START = 68;
 
@@ -79,7 +79,7 @@ contract MultiSendAdapter is ITransactionUnwrapper {
         result = new UnwrappedTransaction[](count);
 
         uint256 offset = OFFSET_START;
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ++i) { // TODO can use the unchecked optmization
             result[i].operation = Enum.Operation(uint8(bytes1(data[offset:])));
             offset += 1;
 

@@ -30,13 +30,13 @@ abstract contract PermissionChecker is Core, Periphery {
         // TODO can use _key() function from Core
         bytes32 key = bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> (160));
 
-        address adapter = unwrappers[key];
-        if (adapter == address(0)) {
+        ITransactionUnwrapper adapter = unwrappers[key];
+        if (address(adapter) == address(0)) {
             return _singleEntrypoint(role, to, value, data, operation);
         } else {
             return
                 _multiEntrypoint(
-                    ITransactionUnwrapper(adapter),
+                    adapter,
                     role,
                     to,
                     value,
@@ -77,7 +77,7 @@ abstract contract PermissionChecker is Core, Periphery {
         try adapter.unwrap(to, value, data, operation) returns (
             UnwrappedTransaction[] memory transactions
         ) {
-            for (uint256 i; i < transactions.length; ++i) {
+            for (uint256 i; i < transactions.length; ++i) { // TODO can use the unchecked optmization 
                 (Status status, Trace[] memory more) = _transaction(
                     role,
                     data,

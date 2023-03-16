@@ -5,14 +5,14 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./adapters/Types.sol";
 
 abstract contract Periphery is OwnableUpgradeable {
-    event SetUnwrapAdapter(address to, address adapter);
+    event SetUnwrapAdapter(address to, ITransactionUnwrapper adapter);
 
-    mapping(bytes32 => address) public unwrappers;
+    mapping(bytes32 => ITransactionUnwrapper) public unwrappers;
 
     function setUnwrapAdapter(
         address to,
         bytes4 selector,
-        address adapter
+        ITransactionUnwrapper adapter
     ) external onlyOwner {
         unwrappers[bytes32(abi.encodePacked(to, selector))] = adapter;
         emit SetUnwrapAdapter(to, adapter);
