@@ -2,8 +2,8 @@ import { defineConfig } from "@dethcrypto/eth-sdk"
 
 export default defineConfig({
   etherscanURLs: {
-    //gnosis: "https://api.gnosisscan.io/api"
-    gnosis: "https://blockscout.com/xdai/mainnet/api"
+    gnosis: "https://api.gnosisscan.io/api"
+    //gnosis: "https://blockscout.com/xdai/mainnet/api"
   },
   rpc: {
     gnosis: "https://rpc.gnosischain.com/"
@@ -84,11 +84,25 @@ export default defineConfig({
         gateway: "0x80Dc050A8C923C0051D438026f1192d53033728c",
         lending_pool: "0x5B8D36De471880Ee21936f328AAB2383a280CB2A",
         variableDebtrmmWXDAI: "0x6a7CeD66902D07066Ad08c81179d17d0fbE36829"
-
       },
       honeyswap: {
         router: "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
-        hlp_COW_GNO: "0x6a43be8A3daBf8a0A7B56773F536266aE932a451"
+      },
+      swapr: {
+        router: "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0"
+      },
+      agave: {
+        wxdai_gateway: "0x36A644cC38Ae257136EEca5919800f364d73FeFC",
+        lending_pool: "0x5E15d5E33d318dCEd84Bfe3F4EACe07909bE6d9c",
+        incentives_controller: "0xfa255f5104f129B78f477e9a6D050a02f31A5D86",
+        stkAGVE: "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221",
+        variableDebtWXDAI: "0xec72De30C3084023F7908002A2252a606CCe0B2c",
+      },
+      balancer: {
+        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        B_50bbagGNO_50bbagWETH_gauge: "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
+        bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
+        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF"
       }
     },
   },
