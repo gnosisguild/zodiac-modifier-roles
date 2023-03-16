@@ -111,8 +111,36 @@ const preset = {
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"
         ), // Balancer PoolId
+        [4]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000a0",
+          "bytes32"
+        ), // Offset of tuple from beggining 160=32*5
+        [5]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000080",
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
+        [6]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 2224=32*7
+        [7]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000140",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
+        [9]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000002",
+          "bytes32"
+        ), // Length of address[] = 2
         [10]: staticEqual(wstETH, "address"),
         [11]: staticEqual(WETH, "address"),
+        [12]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000002",
+          "bytes32"
+        ), // Length of unit256[] = 2
+        [15]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Length of bytes 192=32*6
       },
     },
 
@@ -792,10 +820,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(wstETH, "address"),
-        // [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(WETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(wstETH, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(WETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -835,9 +863,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(wstETH, "address"),
-        [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(wstETH, "address"),
+        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -895,9 +923,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(B_80BAL_20WETH, "address"),
-        [11]: staticEqual(auraBAL, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(B_80BAL_20WETH, "address"),
+        [10]: staticEqual(auraBAL, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -935,9 +963,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(B_80BAL_20WETH, "address"),
-        [11]: staticEqual(auraBAL, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(B_80BAL_20WETH, "address"),
+        [10]: staticEqual(auraBAL, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -996,10 +1024,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(rETH, "address"),
-        // [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(WETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(rETH, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(WETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1039,9 +1067,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(wstETH, "address"),
-        [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(wstETH, "address"),
+        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1100,10 +1128,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(GNO, "address"),
-        // [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(WETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(GNO, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(WETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1143,9 +1171,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(GNO, "address"),
-        [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(GNO, "address"),
+        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1204,9 +1232,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(GNO, "address"),
-        [11]: staticEqual(COW, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(GNO, "address"),
+        [10]: staticEqual(COW, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1245,9 +1273,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(GNO, "address"),
-        [11]: staticEqual(COW, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(GNO, "address"),
+        [10]: staticEqual(COW, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1306,9 +1334,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(LDO, "address"),
-        [11]: staticEqual(wstETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(LDO, "address"),
+        [10]: staticEqual(wstETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1347,9 +1375,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(LDO, "address"),
-        [11]: staticEqual(wstETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(LDO, "address"),
+        [10]: staticEqual(wstETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1408,10 +1436,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [10]: staticEqual(WETH, "address"),
-        [11]: staticEqual(AURA, "address"),
-        [12]: staticEqual(
+        // [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [9]: staticEqual(WETH, "address"),
+        [10]: staticEqual(AURA, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1451,9 +1479,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(AURA, "address"),
-        [12]: staticEqual(
+        [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(AURA, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1512,10 +1540,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [10]: staticEqual(WETH, "address"),
-        [11]: staticEqual(COW, "address"),
-        [12]: staticEqual(
+        // [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [9]: staticEqual(WETH, "address"),
+        [10]: staticEqual(COW, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1555,9 +1583,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(COW, "address"),
-        [12]: staticEqual(
+        [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(COW, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1615,10 +1643,10 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(BAL, "address"),
-        // [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(WETH, "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(BAL, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [10]: staticEqual(WETH, "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
@@ -1658,9 +1686,9 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [10]: staticEqual(BAL, "address"),
-        [11]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [12]: staticEqual(
+        [9]: staticEqual(BAL, "address"),
+        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
