@@ -30,7 +30,7 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     );
 
-    error AllowanceDoubleSpend(uint16 allowanceId);
+    error AllowanceExceeded(uint16 allowanceId);
 
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
@@ -174,7 +174,7 @@ abstract contract PermissionBuilder is Core {
             // loaded to Condition). We repeat the accrual math and consider
             // that if it fails here, then it may be due to a double spend.
             if (amount > balance) {
-                revert AllowanceDoubleSpend(allowanceId);
+                revert AllowanceExceeded(allowanceId);
             }
             allowances[allowanceId].balance = balance - uint128(amount);
             allowances[allowanceId].refillTimestamp = refillTimestamp;

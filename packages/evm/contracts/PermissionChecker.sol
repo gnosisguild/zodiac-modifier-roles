@@ -509,10 +509,6 @@ abstract contract PermissionChecker is Core, Periphery {
             revert ArrayElementsSomeNotAllowed();
         } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
-        } else if (status == Status.AllowanceExceeded) {
-            revert AllowanceExceeded();
-        } else if (status == Status.ETHAllowanceExceeded) {
-            revert ETHAllowanceExceeded();
         } else if (status == Status.BitmaskOverflow) {
             revert BitmaskOverflow();
         } else {
@@ -551,13 +547,7 @@ abstract contract PermissionChecker is Core, Periphery {
         /// Bitmask exceeded value length
         BitmaskOverflow,
         /// Bitmask not an allowed value
-        BitmaskNotAllowed,
-        /// Allowance exceeded
-        AllowanceExceeded,
-        /// ETH Allowance exceeded
-        ETHAllowanceExceeded,
-        /// Allowance was double spent
-        AllowanceDoubleSpend
+        BitmaskNotAllowed
     }
 
     /// Sender is not a member of the role
@@ -606,12 +596,6 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
-
-    /// Allowance exceeded
-    error AllowanceExceeded();
-
-    /// Allowance exceeded
-    error ETHAllowanceExceeded();
 
     /// Bitmask exceeded value length
     error BitmaskOverflow();

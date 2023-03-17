@@ -181,9 +181,9 @@ describe("Operator", async () => {
 
       const { invoke } = await setRole();
 
-      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(1000)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded(22)");
     });
 
     it("passes a check with only from balance and refill available", async () => {
@@ -196,9 +196,9 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole();
 
-      await expect(invoke(334)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(334)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(333)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded(22)");
     });
 
     it("passes a check balance from available+refill", async () => {
@@ -212,9 +212,9 @@ describe("Operator", async () => {
 
       const { invoke } = await setRole();
 
-      await expect(invoke(351)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(351)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(350)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded(22)");
     });
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
@@ -227,9 +227,9 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole();
 
-      await expect(invoke(251)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(251)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(250)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded(22)");
     });
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
@@ -244,7 +244,7 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole();
 
-      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(1000)).to.not.be.reverted;
     });
 
@@ -259,7 +259,7 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole();
 
-      await expect(invoke(9001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(9001)).to.be.revertedWith("AllowanceExceeded(22)");
       await expect(invoke(9000)).to.not.be.reverted;
     });
   });
@@ -279,7 +279,7 @@ describe("Operator", async () => {
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3001, 3001)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(22)"
       );
       allowance = await modifier.allowances(ALLOWANCE_ID);
       expect(allowance.balance).to.equal(3000);
@@ -303,7 +303,7 @@ describe("Operator", async () => {
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3000, 1)).to.be.revertedWith(
-        `AllowanceDoubleSpend(${ALLOWANCE_ID})`
+        `AllowanceExceeded(${ALLOWANCE_ID})`
       );
       allowance = await modifier.allowances(ALLOWANCE_ID);
       expect(allowance.balance).to.equal(3000);

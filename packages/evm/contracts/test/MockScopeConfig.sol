@@ -18,7 +18,7 @@ contract MockScopeConfig {
         bytes memory buffer,
         uint256 index,
         ScopeConfig.Packing[] memory modes
-    ) public pure returns (ParameterType _type, Operator comp) {
+    ) public pure returns (ParameterType paramType, Operator operator) {
         Condition memory p;
         ScopeConfig.unpackCondition(buffer, index, modes, p);
         return (p.paramType, p.operator);

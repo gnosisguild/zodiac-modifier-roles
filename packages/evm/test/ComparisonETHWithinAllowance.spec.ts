@@ -145,11 +145,11 @@ describe("Operator", async () => {
       );
 
       await expect(executeSendingETH(initialBalance + 1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
       await expect(executeSendingETH(initialBalance)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
 
       expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
@@ -170,11 +170,11 @@ describe("Operator", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(351)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
       await expect(executeSendingETH(350)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
     });
 
@@ -191,11 +191,11 @@ describe("Operator", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(10)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
       await expect(executeSendingETH(9)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        "AllowanceExceeded(1234)"
       );
     });
 
