@@ -404,11 +404,11 @@ describe("Operator", async () => {
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "AllowanceExceeded(0)"
       );
       // Exceed value for Variant2
       await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "AllowanceExceeded(1)"
       );
 
       // Checks that both allowance balances still remain unchanged
@@ -440,10 +440,10 @@ describe("Operator", async () => {
 
       // check that neither variant can now be executed
       await expect(execute(1, value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "AllowanceExceeded(0)"
       );
       await expect(execute(1, value2)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "AllowanceExceeded(1)"
       );
     });
   });
