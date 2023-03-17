@@ -41,6 +41,10 @@ library ScopeConfig {
             if (modes[i] != Packing.Nothing) {
                 result += 32;
             }
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
