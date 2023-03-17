@@ -2,15 +2,21 @@ import { defineConfig } from "@dethcrypto/eth-sdk"
 
 export default defineConfig({
   etherscanURLs: {
+    mainnet: "https://api.etherscan.io/api",
     gnosis: "https://api.gnosisscan.io/api"
     //gnosis: "https://blockscout.com/xdai/mainnet/api"
   },
   rpc: {
+    mainnet: "https://eth-mainnet.g.alchemy.com/v2/twj7sBzB1_Njwoejwj0EFM-_x-TKJkZb",
     gnosis: "https://rpc.gnosischain.com/"
     //gnosis: "https://rpc.ankr.com/gnosis"
   },
   contracts: {
     mainnet: {
+      lido: {
+        stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+        wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+      },
       uniswap: {
         nftPositions: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       },
@@ -100,9 +106,12 @@ export default defineConfig({
       },
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        relayer_library: "0xD7FAD3bd59D6477cbe1BE7f646F7f1BA25b230f8",
+        child_chain_gauge_reward_helper: "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
         B_50bbagGNO_50bbagWETH_gauge: "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
         bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
-        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF"
+        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
+        B_50bbagGNO_50bbagUSD_gauge: "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
       }
     },
   },

@@ -115,7 +115,7 @@ const preset = {
                 [4]: staticEqual(
                     "0x00000000000000000000000000000000000000000000000000000000000000a0",
                     "bytes32"
-                ), // Offset of tuple from beggining 160=32*5
+                ), // Offset of tuple from beginning 160=32*5
                 [5]: staticEqual(
                     "0x0000000000000000000000000000000000000000000000000000000000000080",
                     "bytes32"
