@@ -1165,7 +1165,7 @@ describe("Operator", async () => {
         {
           parent: 0,
           paramType: ParameterType.Array,
-          operator: Operator.ArrayEvery,
+          operator: Operator.Every,
           compValue: "0x",
         },
         {
@@ -1249,7 +1249,7 @@ describe("Operator", async () => {
         {
           parent: 0,
           paramType: ParameterType.Array,
-          operator: Operator.ArraySome,
+          operator: Operator.Some,
           compValue: "0x",
         },
         {

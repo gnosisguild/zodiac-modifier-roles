@@ -91,7 +91,7 @@ describe("Operator", async () => {
           {
             parent: 0,
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EthWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
@@ -124,7 +124,7 @@ describe("Operator", async () => {
     };
   });
 
-  describe("ETHWithinAllowance - Check", () => {
+  describe("EthWithinAllowance - Check", () => {
     it("passes a check from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
@@ -251,7 +251,7 @@ describe("Operator", async () => {
           {
             parent: 0,
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EthWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
@@ -286,7 +286,7 @@ describe("Operator", async () => {
           {
             parent: 0,
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EthWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
           {
@@ -301,7 +301,7 @@ describe("Operator", async () => {
     });
   });
 
-  describe("ETHWithinAllowance - Variants", () => {
+  describe("EthWithinAllowance - Variants", () => {
     it("enforces different allowances per variant", async () => {
       const { owner, invoker, modifier, testContract, setAllowance } =
         await setup();
@@ -377,7 +377,7 @@ describe("Operator", async () => {
           {
             parent: 1,
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EthWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
           },
           {
@@ -389,7 +389,7 @@ describe("Operator", async () => {
           {
             parent: 2,
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EthWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
           },
         ],

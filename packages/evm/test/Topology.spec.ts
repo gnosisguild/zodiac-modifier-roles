@@ -238,7 +238,7 @@ describe("Topology", async () => {
       children: [
         {
           paramType: ParameterType.None,
-          operator: Operator.ETHWithinAllowance,
+          operator: Operator.EthWithinAllowance,
           children: [],
         },
         {
