@@ -181,52 +181,52 @@ contract MockDecoder {
     }
 
     struct PL1 {
-        ParameterType _type;
+        ParameterType paramType;
         PL2[] children;
     }
 
     struct PL2 {
-        ParameterType _type;
+        ParameterType paramType;
         PL3[] children;
     }
 
     struct PL3 {
-        ParameterType _type;
+        ParameterType paramType;
         PL4[] children;
     }
 
     struct PL4 {
-        ParameterType _type;
+        ParameterType paramType;
         PL5[] children;
     }
 
     struct PL5 {
-        ParameterType _type;
+        ParameterType paramType;
         PL6[] children;
     }
 
     struct PL6 {
-        ParameterType _type;
+        ParameterType paramType;
         PL7[] children;
     }
 
     struct PL7 {
-        ParameterType _type;
+        ParameterType paramType;
         PL8[] children;
     }
 
     struct PL8 {
-        ParameterType _type;
+        ParameterType paramType;
         PL9[] children;
     }
 
     struct PL9 {
-        ParameterType _type;
+        ParameterType paramType;
         PL10[] children;
     }
 
     struct PL10 {
-        ParameterType _type;
+        ParameterType paramType;
     }
 
     struct PP1 {

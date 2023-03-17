@@ -2,15 +2,16 @@
 pragma solidity >=0.6.0 <0.9.0;
 
 import "../ScopeConfig.sol";
+import "../Types.sol";
 
 contract MockScopeConfig {
-    function packParameter(
+    function packCondition(
         uint256 index,
         ScopeConfig.Packing[] memory modes,
-        ConditionFlat memory parameter
+        ConditionFlat memory condition
     ) public pure returns (bytes memory buffer) {
         buffer = new bytes(1024);
-        ScopeConfig.packParameter(buffer, index, modes, parameter);
+        ScopeConfig.packCondition(buffer, index, modes, condition);
     }
 
     function unpackCondition(

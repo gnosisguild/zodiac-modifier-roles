@@ -152,13 +152,13 @@ abstract contract PermissionChecker is Core, Periphery {
                 return (Status.Ok, nothing);
             }
 
-            Condition memory parameter = _load(role, key);
+            Condition memory condition = _load(role, key);
             ParameterPayload memory payload = Decoder.inspect(
                 data,
-                Topology.typeTree(parameter)
+                Topology.typeTree(condition)
             );
 
-            return _walk(value, data, parameter, payload);
+            return _walk(value, data, condition, payload);
         } else {
             return (Status.TargetAddressNotAllowed, nothing);
         }
@@ -197,38 +197,38 @@ abstract contract PermissionChecker is Core, Periphery {
     function _walk(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) internal pure returns (Status, Trace[] memory nothing) {
-        Operator comp = parameter.operator;
+        Operator comp = condition.operator;
 
         if (comp < Operator.EqualTo) {
             if (comp == Operator.Whatever) {
                 return (Status.Ok, nothing);
             } else if (comp == Operator.Matches) {
-                return _matches(value, data, parameter, payload);
+                return _matches(value, data, condition, payload);
             } else if (comp == Operator.And) {
-                return _and(value, data, parameter, payload);
+                return _and(value, data, condition, payload);
             } else if (comp == Operator.Or) {
-                return _or(value, data, parameter, payload);
+                return _or(value, data, condition, payload);
             } else if (comp == Operator.SubsetOf) {
-                return _subsetOf(value, data, parameter, payload);
-            } else if (comp == Operator.ArraySome) {
-                return _arraySome(value, data, parameter, payload);
+                return _subsetOf(value, data, condition, payload);
+            } else if (comp == Operator.Some) {
+                return _some(value, data, condition, payload);
             } else {
-                assert(comp == Operator.ArrayEvery);
-                return _arrayEvery(value, data, parameter, payload);
+                assert(comp == Operator.Every);
+                return _every(value, data, condition, payload);
             }
         } else {
             if (comp <= Operator.LessThan) {
-                return _compare(data, parameter, payload);
+                return _compare(data, condition, payload);
             } else if (comp == Operator.Bitmask) {
-                return _bitmask(data, parameter, payload);
+                return _bitmask(data, condition, payload);
             } else if (comp == Operator.WithinAllowance) {
-                return _withinAllowance(data, parameter, payload);
+                return _withinAllowance(data, condition, payload);
             } else {
-                assert(comp == Operator.ETHWithinAllowance);
-                return _ethWithinAllowance(value, parameter);
+                assert(comp == Operator.EthWithinAllowance);
+                return _ethWithinAllowance(value, condition);
             }
         }
     }
@@ -236,14 +236,14 @@ abstract contract PermissionChecker is Core, Periphery {
     function _and(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        for (uint256 i; i < parameter.children.length; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (Status status, Trace[] memory more) = _walk(
                 value,
                 data,
-                parameter.children[i],
+                condition.children[i],
                 payload
             );
             if (status != Status.Ok) {
@@ -260,14 +260,14 @@ abstract contract PermissionChecker is Core, Periphery {
     function _or(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory nothing) {
-        for (uint256 i; i < parameter.children.length; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (Status status, Trace[] memory trace) = _walk(
                 value,
                 data,
-                parameter.children[i],
+                condition.children[i],
                 payload
             );
             if (status == Status.Ok) {
@@ -283,18 +283,18 @@ abstract contract PermissionChecker is Core, Periphery {
     function _matches(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        if (parameter.children.length != payload.children.length) {
+        if (condition.children.length != payload.children.length) {
             return (Status.ParameterNotAMatch, trace);
         }
 
-        for (uint256 i; i < parameter.children.length; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (Status status, Trace[] memory more) = _walk(
                 value,
                 data,
-                parameter.children[i],
+                condition.children[i],
                 payload.children[i]
             );
             if (status != Status.Ok) {
@@ -309,17 +309,17 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, trace);
     }
 
-    function _arrayEvery(
+    function _every(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
         for (uint256 i; i < payload.children.length; ) {
             (Status status, Trace[] memory more) = _walk(
                 value,
                 data,
-                parameter.children[0],
+                condition.children[0],
                 payload.children[i]
             );
             if (status != Status.Ok) {
@@ -333,17 +333,17 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, trace);
     }
 
-    function _arraySome(
+    function _some(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory trace) {
         for (uint256 i; i < payload.children.length; ) {
             (status, trace) = _walk(
                 value,
                 data,
-                parameter.children[0],
+                condition.children[0],
                 payload.children[i]
             );
             if (status == Status.Ok) {
@@ -359,14 +359,14 @@ abstract contract PermissionChecker is Core, Periphery {
     function _subsetOf(
         uint256 value,
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
         ParameterPayload[] memory values = payload.children;
         if (values.length == 0) {
             return (Status.ParameterNotSubsetOfAllowed, trace);
         }
-        Condition[] memory compValues = parameter.children;
+        Condition[] memory compValues = condition.children;
 
         uint256 taken;
         for (uint256 i; i < values.length; ++i) {
@@ -396,42 +396,33 @@ abstract contract PermissionChecker is Core, Periphery {
 
     function _withinAllowance(
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
         bytes32 value = bytes32(
             Decoder.pluck(data, payload.location, payload.size)
         );
 
-        uint256 amount = uint256(value);
-        if (amount > parameter.allowance) {
-            return (Status.AllowanceExceeded, nothing);
-        }
-
-        return (Status.Ok, _trace(Trace({config: parameter, value: value})));
+        return (Status.Ok, _trace(Trace({config: condition, value: value})));
     }
 
     function _ethWithinAllowance(
         uint256 value,
-        Condition memory parameter
+        Condition memory condition
     ) private pure returns (Status status, Trace[] memory nothing) {
-        if (value > parameter.allowance) {
-            return (Status.ETHAllowanceExceeded, nothing);
-        }
-
         return (
             Status.Ok,
-            _trace(Trace({config: parameter, value: bytes32(value)}))
+            _trace(Trace({config: condition, value: bytes32(value)}))
         );
     }
 
     function _bitmask(
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
-        bytes32 compValue = parameter.compValue;
-        bool isStatic = Topology.isStatic(parameter);
+        bytes32 compValue = condition.compValue;
+        bool isStatic = Topology.isStatic(condition);
         bytes calldata value = Decoder.pluck(
             data,
             payload.location + (isStatic ? 0 : 32),
@@ -455,12 +446,12 @@ abstract contract PermissionChecker is Core, Periphery {
 
     function _compare(
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
-        Operator comp = parameter.operator;
-        bytes32 compValue = parameter.compValue;
-        bytes32 value = _pluck(data, parameter, payload);
+        Operator comp = condition.operator;
+        bytes32 compValue = condition.compValue;
+        bytes32 value = _pluck(data, condition, payload);
 
         if (comp == Operator.EqualTo && value != compValue) {
             status = Status.ParameterNotAllowed;
@@ -477,7 +468,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
     function _pluck(
         bytes calldata data,
-        Condition memory parameter,
+        Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (bytes32) {
         bytes calldata value = Decoder.pluck(
@@ -485,7 +476,10 @@ abstract contract PermissionChecker is Core, Periphery {
             payload.location,
             payload.size
         );
-        return parameter.isHashed ? keccak256(value) : bytes32(value);
+        return
+            condition.operator == Operator.EqualTo
+                ? keccak256(value)
+                : bytes32(value);
     }
 
     function revertWith(Status status) public pure returns (bool) {

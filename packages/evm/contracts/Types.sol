@@ -19,8 +19,8 @@ enum Operator {
     // ------------------------------------------------------------
     // 01-04: BOOLEAN EXPRESSIONS
     //          paramType: None
-    //          ✅ children 
-    //          🚫 compValue 
+    //          ✅ children
+    //          🚫 compValue
     /* 01: */ And,
     /* 02: */ Or,
     /* 03: */ Xor,
@@ -42,7 +42,6 @@ enum Operator {
     /* 14: */ _ComplexPlaceholder14,
     /* 15: */ _ComplexPlaceholder15,
     /* 16: */ _ComplexPlaceholder16,
-
     // ------------------------------------------------------------
     // 17-31: BINARY COMPARISON EXPRESSIONS
     //          paramType: Static / Dynamic
@@ -51,7 +50,7 @@ enum Operator {
     /* 17: */ EqualTo,
     /* 18: */ GreaterThan,
     /* 19: */ LessThan,
-    /* 20: */ Bitmask
+    /* 20: */ Bitmask,
     /* 21: */ _BinaryPlaceholder21,
     /* 22: */ _BinaryPlaceholder22,
     /* 23: */ _BinaryPlaceholder23,
@@ -62,7 +61,7 @@ enum Operator {
     /* 28: */ _BinaryPlaceholder28,
     /* 29: */ WithinAllowance,
     /* 30: */ EthWithinAllowance,
-    /* 31: */ CallWithinAllowance,
+    /* 31: */ CallWithinAllowance
 }
 
 enum ExecutionOptions {

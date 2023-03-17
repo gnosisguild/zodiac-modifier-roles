@@ -106,55 +106,55 @@ contract MockTopology {
     }
 
     struct PC1 {
-        ParameterType _type;
-        Operator comp;
+        ParameterType paramType;
+        Operator operator;
         PC2[] children;
     }
 
     struct PC2 {
-        ParameterType _type;
-        Operator comp;
+        ParameterType paramType;
+        Operator operator;
         PC3[] children;
     }
 
     struct PC3 {
-        ParameterType _type;
-        Operator comp;
+        ParameterType paramType;
+        Operator operator;
         PC4[] children;
     }
 
     struct PC4 {
-        ParameterType _type;
-        Operator comp;
+        ParameterType paramType;
+        Operator operator;
         PC5[] children;
     }
 
     struct PC5 {
-        ParameterType _type;
-        Operator comp;
+        ParameterType paramType;
+        Operator operator;
     }
 
     struct PP1 {
-        ParameterType _type;
+        ParameterType paramType;
         PP2[] children;
     }
 
     struct PP2 {
-        ParameterType _type;
+        ParameterType paramType;
         PP3[] children;
     }
 
     struct PP3 {
-        ParameterType _type;
+        ParameterType paramType;
         PP4[] children;
     }
 
     struct PP4 {
-        ParameterType _type;
+        ParameterType paramType;
         PP5[] children;
     }
 
     struct PP5 {
-        ParameterType _type;
+        ParameterType paramType;
     }
 }
