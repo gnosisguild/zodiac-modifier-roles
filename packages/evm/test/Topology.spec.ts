@@ -3,7 +3,7 @@ import hre, { deployments } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 
-import { Comparison, ParameterType } from "./utils";
+import { Operator, ParameterType } from "./utils";
 
 describe("Topology", async () => {
   const setup = deployments.createFixture(async () => {
@@ -19,53 +19,53 @@ describe("Topology", async () => {
     const { topology } = await setup();
 
     const layout = {
-      _type: ParameterType.None,
-      comp: Comparison.Or,
+      paramType: ParameterType.None,
+      operator: Operator.Or,
       children: [
         {
-          _type: ParameterType.AbiEncoded,
-          comp: Comparison.Matches,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Dynamic,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.EqualTo,
               children: [],
             },
           ],
         },
         {
-          _type: ParameterType.AbiEncoded,
-          comp: Comparison.Matches,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              _type: ParameterType.Dynamic,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.EqualTo,
               children: [],
             },
           ],
         },
         {
-          _type: ParameterType.AbiEncoded,
-          comp: Comparison.Matches,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              _type: ParameterType.Dynamic,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.EqualTo,
               children: [],
             },
           ],
@@ -74,57 +74,57 @@ describe("Topology", async () => {
     };
     // [
     //   {
-    //     _type: ParameterType.Static,
+    //     paramType: ParameterType.Static,
     //     children: [],
     //   },
     //   {
-    //     _type: ParameterType.Dynamic,
+    //     paramType: ParameterType.Dynamic,
     //     children: [],
     //   },
     // ]
     const result = await topology.typeTree(layout);
-    expect(result._type).to.equal(ParameterType.AbiEncoded);
+    expect(result.paramType).to.equal(ParameterType.AbiEncoded);
     expect(result.children.length).to.equal(2);
-    expect(result.children[0]._type).to.equal(ParameterType.Static);
+    expect(result.children[0].paramType).to.equal(ParameterType.Static);
     expect(result.children[0].children.length).to.equal(0);
-    expect(result.children[1]._type).to.equal(ParameterType.Dynamic);
+    expect(result.children[1].paramType).to.equal(ParameterType.Dynamic);
     expect(result.children[1].children.length).to.equal(0);
   });
 
   it("top level Or gets unfolded to its children types", async () => {
     const { topology } = await setup();
     const layout = {
-      _type: ParameterType.None,
-      comp: Comparison.Or,
+      paramType: ParameterType.None,
+      operator: Operator.Or,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: Comparison.Matches,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Matches,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
           ],
         },
         {
-          _type: ParameterType.Tuple,
-          comp: Comparison.Matches,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Matches,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
           ],
@@ -135,61 +135,61 @@ describe("Topology", async () => {
 
     // [
     //   {
-    //     _type: ParameterType.Tuple,
+    //     paramType: ParameterType.Tuple,
     //     children: [
     //       {
-    //         _type: ParameterType.Static,
+    //         paramType: ParameterType.Static,
     //         children: [],
     //       },
     //       {
-    //         _type: ParameterType.Static,
+    //         paramType: ParameterType.Static,
     //         children: [],
     //       },
     //     ],
     //   },
     // ]
 
-    expect(result._type).to.equal(ParameterType.Tuple);
+    expect(result.paramType).to.equal(ParameterType.Tuple);
     expect(result.children.length).to.equal(2);
-    expect(result.children[0]._type).to.equal(ParameterType.Static);
+    expect(result.children[0].paramType).to.equal(ParameterType.Static);
     expect(result.children[0].children.length).to.equal(0);
-    expect(result.children[1]._type).to.equal(ParameterType.Static);
+    expect(result.children[1].paramType).to.equal(ParameterType.Static);
     expect(result.children[1].children.length).to.equal(0);
   });
 
   it("nested Or gets unfolded to its children types", async () => {
     const { topology } = await setup();
     const layout = {
-      _type: ParameterType.Tuple,
-      comp: 0,
+      paramType: ParameterType.Tuple,
+      operator: 0,
       children: [
         {
-          _type: ParameterType.Static,
-          comp: Comparison.EqualTo,
+          paramType: ParameterType.Static,
+          operator: Operator.EqualTo,
           children: [],
         },
         {
-          _type: ParameterType.None,
-          comp: Comparison.Or,
+          paramType: ParameterType.None,
+          operator: Operator.Or,
           children: [
             {
-              _type: ParameterType.Array,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Array,
+              operator: Operator.EqualTo,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: Comparison.EqualTo,
+                  paramType: ParameterType.Static,
+                  operator: Operator.EqualTo,
                   children: [],
                 },
               ],
             },
             {
-              _type: ParameterType.Array,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Array,
+              operator: Operator.EqualTo,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: Comparison.EqualTo,
+                  paramType: ParameterType.Static,
+                  operator: Operator.EqualTo,
                   children: [],
                 },
               ],
@@ -201,14 +201,14 @@ describe("Topology", async () => {
 
     // [
     //   {
-    //     _type: ParameterType.Tuple,
+    //     paramType: ParameterType.Tuple,
     //     children: [
     //       {
-    //         _type: ParameterType.Static,
+    //         paramType: ParameterType.Static,
     //         children: [],
     //       },
     //       {
-    //         _type: ParameterType.Array,
+    //         paramType: ParameterType.Array,
     //         children: [ Static],
     //       },
     //     ],
@@ -216,60 +216,62 @@ describe("Topology", async () => {
     // ];
 
     const result = await topology.typeTree(layout);
-    expect(result._type).to.equal(ParameterType.Tuple);
+    expect(result.paramType).to.equal(ParameterType.Tuple);
     expect(result.children.length).to.equal(2);
 
-    expect(result.children[0]._type).to.equal(ParameterType.Static);
+    expect(result.children[0].paramType).to.equal(ParameterType.Static);
     expect(result.children[0].children.length).to.equal(0);
 
-    expect(result.children[1]._type).to.equal(ParameterType.Array);
+    expect(result.children[1].paramType).to.equal(ParameterType.Array);
     expect(result.children[1].children.length).to.equal(1);
-    expect(result.children[1].children[0]._type).to.equal(ParameterType.Static);
+    expect(result.children[1].children[0].paramType).to.equal(
+      ParameterType.Static
+    );
     expect(result.children[1].children[0].children.length).to.equal(0);
   });
 
   it("extraneous Value operation gets included as None", async () => {
     const { topology } = await setup();
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: 0,
+      paramType: ParameterType.AbiEncoded,
+      operator: 0,
       children: [
         {
-          _type: ParameterType.None,
-          comp: Comparison.ETHWithinAllowance,
+          paramType: ParameterType.None,
+          operator: Operator.ETHWithinAllowance,
           children: [],
         },
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              _type: ParameterType.None,
-              comp: Comparison.Or,
+              paramType: ParameterType.None,
+              operator: Operator.Or,
               children: [
                 {
-                  _type: ParameterType.Array,
-                  comp: Comparison.EqualTo,
+                  paramType: ParameterType.Array,
+                  operator: Operator.EqualTo,
                   children: [
                     {
-                      _type: ParameterType.Static,
-                      comp: Comparison.EqualTo,
+                      paramType: ParameterType.Static,
+                      operator: Operator.EqualTo,
                       children: [],
                     },
                   ],
                 },
                 {
-                  _type: ParameterType.Array,
-                  comp: Comparison.EqualTo,
+                  paramType: ParameterType.Array,
+                  operator: Operator.EqualTo,
                   children: [
                     {
-                      _type: ParameterType.Static,
-                      comp: Comparison.EqualTo,
+                      paramType: ParameterType.Static,
+                      operator: Operator.EqualTo,
                       children: [],
                     },
                   ],
@@ -283,18 +285,18 @@ describe("Topology", async () => {
 
     // [
     //   {
-    //     _type: ParameterType.Tuple,
+    //     paramType: ParameterType.Tuple,
     //     children: [
     //       {
-    //         _type: ParameterType.None,
+    //         paramType: ParameterType.None,
     //         children: [],
     //       },
     //       {
-    //         _type: ParameterType.Static,
+    //         paramType: ParameterType.Static,
     //         children: [],
     //       },
     //       {
-    //         _type: ParameterType.Array,
+    //         paramType: ParameterType.Array,
     //         children: [ Static],
     //       },
     //     ],
@@ -302,23 +304,25 @@ describe("Topology", async () => {
     // ];
 
     const root = await topology.typeTree(layout);
-    expect(root._type).to.equal(ParameterType.AbiEncoded);
+    expect(root.paramType).to.equal(ParameterType.AbiEncoded);
     expect(root.children.length).to.equal(2);
 
     const extraneous = root.children[0];
-    expect(extraneous._type).to.equal(ParameterType.None);
+    expect(extraneous.paramType).to.equal(ParameterType.None);
     expect(extraneous.children.length).to.equal(0);
 
     const tuple = root.children[1];
-    expect(tuple._type).to.equal(ParameterType.Tuple);
+    expect(tuple.paramType).to.equal(ParameterType.Tuple);
     expect(tuple.children.length).to.equal(2);
 
-    expect(tuple.children[0]._type).to.equal(ParameterType.Static);
+    expect(tuple.children[0].paramType).to.equal(ParameterType.Static);
     expect(tuple.children[0].children.length).to.equal(0);
 
-    expect(tuple.children[1]._type).to.equal(ParameterType.Array);
+    expect(tuple.children[1].paramType).to.equal(ParameterType.Array);
     expect(tuple.children[1].children.length).to.equal(1);
-    expect(tuple.children[1].children[0]._type).to.equal(ParameterType.Static);
+    expect(tuple.children[1].children[0].paramType).to.equal(
+      ParameterType.Static
+    );
     expect(tuple.children[1].children[0].children.length).to.equal(0);
   });
 });

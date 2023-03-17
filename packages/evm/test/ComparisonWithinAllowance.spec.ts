@@ -5,9 +5,9 @@ import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Comparison", async () => {
+describe("Operator", async () => {
   const ALLOWANCE_ID = 22;
 
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
@@ -77,14 +77,14 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.WithinAllowance,
+            paramType: ParameterType.Static,
+            operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
         ],
@@ -125,20 +125,20 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.WithinAllowance,
+            paramType: ParameterType.Static,
+            operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.WithinAllowance,
+            paramType: ParameterType.Static,
+            operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
           },
         ],

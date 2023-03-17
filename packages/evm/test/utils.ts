@@ -118,7 +118,7 @@ export enum ParameterType {
   AbiEncoded,
 }
 
-export enum Comparison {
+export enum Operator {
   Whatever = 0,
   Matches,
   And,

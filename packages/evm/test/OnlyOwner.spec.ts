@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import { Comparison, ParameterType } from "./utils";
+import { Operator, ParameterType } from "./utils";
 
 describe("OnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -174,8 +174,8 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
         ],
@@ -191,8 +191,8 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
         ],

@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import hre, { deployments, ethers } from "hardhat";
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
 describe.skip("TestLoaderGas", async () => {
   const setup = deployments.createFixture(async () => {
@@ -20,14 +20,14 @@ describe.skip("TestLoaderGas", async () => {
     const paramConfig = [
       {
         parent: 0,
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        _type: ParameterType.Static,
-        comp: Comparison.GreaterThan,
+        paramType: ParameterType.Static,
+        operator: Operator.GreaterThan,
         compValue: ethers.utils.solidityPack(["uint256"], [1234]),
       },
     ];
@@ -86,50 +86,50 @@ describe.skip("TestLoaderGas", async () => {
     const paramConfig = [
       {
         parent: 0,
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        _type: ParameterType.Dynamic,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.EqualTo,
         compValue: encodedParam_3,
       },
       {
         parent: 0,
-        _type: ParameterType.Static,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
         compValue: encodedParam_4,
       },
       {
         parent: 0,
-        _type: ParameterType.Dynamic,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.EqualTo,
         compValue: encodedParam_5,
       },
       {
         parent: 0,
-        _type: ParameterType.Static,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
         compValue: encodedParam_6,
       },
       {
         parent: 0,
-        _type: ParameterType.Static,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
         compValue: encodedParam_7,
       },
       {
         parent: 0,
-        _type: ParameterType.Dynamic,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.EqualTo,
         compValue: encodedParam_8,
       },
       {
         parent: 0,
-        _type: ParameterType.Dynamic,
-        comp: Comparison.EqualTo,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.EqualTo,
         compValue: encodedParam_9,
       },
     ];
