@@ -120,7 +120,7 @@ abstract contract PermissionLoader is Core {
     /**
      * Maps an array of parent indices to an array of { left: first child index, right: last child index }
      * @param parents An array containing the parent node index for each node
-     * @return An array of bounds for each node, where each bound has a `left` (index of the first child) and `right` (index of the last child) 
+     * @return result An array of bounds for each node, where each bound has a `left` (index of the first child) and `right` (index of the last child) 
      */
     function _childrenBounds(
         uint8[] memory parents
@@ -128,7 +128,7 @@ abstract contract PermissionLoader is Core {
         uint256 count = parents.length;
         result = new Bounds[](count);
 
-        // parents are DFS  // TODO ???
+        // parents are breadth-first
         for (uint256 i = 0; i < count; ) {
             result[i].left = type(uint256).max;
             unchecked {

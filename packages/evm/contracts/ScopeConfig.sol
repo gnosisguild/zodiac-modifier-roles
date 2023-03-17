@@ -17,7 +17,7 @@ library ScopeConfig {
         Hash
     }
 
-    // HEADER
+    // HEADER (stored as a single word in storage)
     // 8   bits -> length (count of ScopeConfig nodes)
     // 2   bits -> options (ExecutionOptions)
     // 1   bits -> isWildcarded                     // TODO can be killed, same as length = 0
@@ -30,7 +30,7 @@ library ScopeConfig {
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     
 
-    // CONDITIONS
+    // CONDITIONS (stored in code at the address referenced from the header)
     // stored as a tighly packed sequence of 16 bit per condition:
     // 7    bits -> parent
     // 3    bits -> type
