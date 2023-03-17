@@ -11,14 +11,14 @@ abstract contract Core is OwnableUpgradeable {
     function _store(
         Role storage role,
         bytes32 key,
-        ParameterConfigFlat[] memory config,
+        ConditionFlat[] memory config,
         ExecutionOptions options
     ) internal virtual;
 
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view virtual returns (ParameterConfig memory result);
+    ) internal view virtual returns (Condition memory result);
 
     function _accruedAllowance(
         Allowance memory allowance,

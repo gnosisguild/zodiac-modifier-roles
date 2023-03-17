@@ -12,13 +12,13 @@ library Integrity {
 
     error UnsuitableParent(uint256 index);
 
-    error UnsuitableComparison(uint256 index);
+    error UnsuitableOperator(uint256 index);
 
     error UnsuitableType(uint256 index);
 
-    error UnsuitableRelativeComparison();
+    error UnsuitableRelativeOperator();
 
-    error UnsuitableSubsetOfComparison();
+    error UnsuitableSubsetOfOperator();
 
     /// CompValue for static types should have a size of exactly 32 bytes
     error UnsuitableStaticCompValueSize();
@@ -27,15 +27,15 @@ library Integrity {
 
     error TooManyCompValuesForScope();
 
-    error InvalidComparison();
+    error InvalidOperator();
 
     error NotEnoughChildren(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
-    error UnsuitableComparisonForTypeNone(uint256 index);
+    error UnsuitableOperatorForTypeNone(uint256 index);
 
-    function validate(ParameterConfigFlat[] memory parameters) internal pure {
+    function validate(ConditionFlat[] memory parameters) internal pure {
         root(parameters);
         topology(parameters);
 
@@ -44,7 +44,7 @@ library Integrity {
         }
     }
 
-    function root(ParameterConfigFlat[] memory parameters) internal pure {
+    function root(ConditionFlat[] memory parameters) internal pure {
         uint256 index;
         uint256 count;
 
@@ -63,7 +63,7 @@ library Integrity {
         }
     }
 
-    function topology(ParameterConfigFlat[] memory parameters) private pure {
+    function topology(ConditionFlat[] memory parameters) private pure {
         // this function will be optimized
 
         uint256 length = parameters.length;
@@ -76,8 +76,8 @@ library Integrity {
 
         for (uint256 i = 0; i < length; ++i) {
             if (
-                parameters[i].comp == Comparison.ETHWithinAllowance &&
-                parameters[parameters[i].parent]._type !=
+                parameters[i].operator == Operator.ETHWithinAllowance &&
+                parameters[parameters[i].parent].paramType !=
                 ParameterType.AbiEncoded
             ) {
                 revert UnsuitableParent(i);
@@ -86,9 +86,9 @@ library Integrity {
 
         // check at least 2 children for relational nodes
         for (uint256 i = 0; i < parameters.length; i++) {
-            if (parameters[i].comp == Comparison.Or) {
+            if (parameters[i].operator == Operator.Or) {
                 if (parameters[i].compValue.length != 0) {
-                    revert InvalidComparison();
+                    revert InvalidOperator();
                 }
 
                 uint256 count;
@@ -112,49 +112,49 @@ library Integrity {
     }
 
     function content(
-        ParameterConfigFlat memory parameter,
+        ConditionFlat memory parameter,
         uint256 index
     ) internal pure {
         bytes memory compValue = parameter.compValue;
-        Comparison comp = parameter.comp;
-        ParameterType _type = parameter._type;
+        Operator comp = parameter.operator;
+        ParameterType _type = parameter.paramType;
 
         if (
             _type == ParameterType.None &&
-            !(comp == Comparison.Or ||
-                comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance)
+            !(comp == Operator.Or ||
+                comp == Operator.And ||
+                comp == Operator.ETHWithinAllowance)
         ) {
-            revert UnsuitableComparison(index);
+            revert UnsuitableOperator(index);
         }
 
         if (
-            (comp == Comparison.Or ||
-                comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance) &&
+            (comp == Operator.Or ||
+                comp == Operator.And ||
+                comp == Operator.ETHWithinAllowance) &&
             _type != ParameterType.None
         ) {
             revert UnsuitableType(index);
         }
 
         if (
-            (comp == Comparison.GreaterThan || comp == Comparison.LessThan) &&
+            (comp == Operator.GreaterThan || comp == Operator.LessThan) &&
             _type != ParameterType.Static
         ) {
-            revert UnsuitableRelativeComparison();
+            revert UnsuitableRelativeOperator();
         }
 
         if (
-            (comp == Comparison.EqualTo ||
-                comp == Comparison.GreaterThan ||
-                comp == Comparison.LessThan) &&
+            (comp == Operator.EqualTo ||
+                comp == Operator.GreaterThan ||
+                comp == Operator.LessThan) &&
             _type == ParameterType.Static &&
             compValue.length != 32
         ) {
             revert UnsuitableStaticCompValueSize();
         }
 
-        if (comp == Comparison.Bitmask) {
+        if (comp == Operator.Bitmask) {
             if (compValue.length != 32) {
                 revert MalformedBitmask(index);
             }

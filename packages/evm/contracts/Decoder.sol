@@ -41,7 +41,7 @@ library Decoder {
         uint256 location,
         TypeTopology memory parameter
     ) private pure returns (ParameterPayload memory result) {
-        ParameterType paramType = parameter._type;
+        ParameterType paramType = parameter.paramType;
 
         if (paramType == ParameterType.Static) {
             result.location = location;
@@ -106,7 +106,7 @@ library Decoder {
 
         uint256 offset;
         for (uint256 i; i < parts.length; ++i) {
-            if (parts[i]._type == ParameterType.None) continue;
+            if (parts[i].paramType == ParameterType.None) continue;
 
             (bool isInline, uint256 size) = _headSize(parts[i]);
             result[i] = _walk(
@@ -144,10 +144,10 @@ library Decoder {
     ) private pure returns (bool isInline, uint256 size) {
         isInline = _isStatic(typeNode);
 
-        if (!isInline || typeNode._type == ParameterType.Static) {
+        if (!isInline || typeNode.paramType == ParameterType.Static) {
             size = 32;
         } else {
-            assert(typeNode._type == ParameterType.Tuple);
+            assert(typeNode.paramType == ParameterType.Tuple);
             for (uint256 i; i < typeNode.children.length; ++i) {
                 (, uint256 next) = _headSize(typeNode.children[i]);
                 size += next;
@@ -178,9 +178,9 @@ library Decoder {
     function _isStatic(
         TypeTopology memory typeNode
     ) internal pure returns (bool) {
-        if (typeNode._type == ParameterType.Static) {
+        if (typeNode.paramType == ParameterType.Static) {
             return true;
-        } else if (typeNode._type == ParameterType.Tuple) {
+        } else if (typeNode.paramType == ParameterType.Tuple) {
             for (uint256 i; i < typeNode.children.length; ++i) {
                 if (!_isStatic(typeNode.children[i])) return false;
             }

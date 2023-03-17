@@ -10,15 +10,16 @@ struct Bounds {
 
 library Topology {
     function typeTree(
-        ParameterConfig memory parameter
+        Condition memory parameter
     ) internal pure returns (TypeTopology memory result) {
         if (
-            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
+            parameter.operator == Operator.And ||
+            parameter.operator == Operator.Or
         ) {
             return typeTree(parameter.children[0]);
         }
 
-        result._type = parameter._type;
+        result.paramType = parameter.paramType;
         if (parameter.children.length > 0) {
             uint256 length = parameter.children.length;
 
@@ -56,12 +57,10 @@ library Topology {
         }
     }
 
-    function isStatic(
-        ParameterConfig memory parameter
-    ) internal pure returns (bool) {
-        if (parameter._type == ParameterType.Static) {
+    function isStatic(Condition memory parameter) internal pure returns (bool) {
+        if (parameter.paramType == ParameterType.Static) {
             return true;
-        } else if (parameter._type == ParameterType.Tuple) {
+        } else if (parameter.paramType == ParameterType.Tuple) {
             for (uint256 i; i < parameter.children.length; ++i) {
                 if (!isStatic(parameter.children[i])) return false;
             }
@@ -72,10 +71,10 @@ library Topology {
     }
 
     function isStatic(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory parameters,
         uint256 index
     ) internal pure returns (bool) {
-        ParameterType _type = parameters[index]._type;
+        ParameterType _type = parameters[index].paramType;
 
         if (_type == ParameterType.Static) {
             return true;

@@ -9,6 +9,7 @@ library ScopeConfig {
         Word,
         Hash
     }
+
     // HEADER
     // 8   bits -> length
     // 2   bits -> options
@@ -19,60 +20,43 @@ library ScopeConfig {
     uint256 private constant maskLength = 0xff << offsetLength;
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
-    // PARAMETER:
-    // 7    bits -> parent
-    // 3    bits -> type
-    // 4    bits -> comparison
-    // 2    bits -> packing
-    uint256 private constant bytesPerParameter = 2;
-    uint16 private constant offsetParent = 9;
-    uint16 private constant offsetType = 6;
-    uint16 private constant offsetComparison = 2;
-    uint16 private constant offsetPacking = 0;
-    uint16 private constant maskParent = uint16(0x7f << offsetParent);
-    uint16 private constant maskType = uint16(0x7 << offsetType);
-    uint16 private constant maskComparison = uint16(0xf << offsetComparison);
-    uint16 private constant maskPacking = 0x3;
+    // CONDITION:
+    // 8    bits -> parent
+    // 3    bits -> paramType
+    // 5    bits -> operator
+    uint256 private constant bytesPerCondition = 2;
+    uint16 private constant offsetParent = 8;
+    uint16 private constant offsetParamType = 5;
+    uint16 private constant offsetOperator = 0;
+    uint16 private constant maskParent = uint16(0xff << offsetParent);
+    uint16 private constant maskParamType = uint16(0x7 << offsetParamType);
+    uint16 private constant maskOperator = uint16(0x1f);
 
     function bufferSize(
-        Packing[] memory modes
+        ConditionFlat[] memory conditions
     ) internal pure returns (uint256 result) {
-        uint256 count = modes.length;
-
-        result = count * bytesPerParameter;
+        uint256 count = conditions.length;
+        result = count * bytesPerCondition;
         for (uint256 i; i < count; ) {
-            if (modes[i] != Packing.Nothing) {
+            if (_modeForOperator(conditions[i].operator) != Packing.Nothing) {
                 result += 32;
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
 
     function calculateModes(
-        ParameterConfigFlat[] memory parameters
+        ConditionFlat[] memory conditions
     ) internal pure returns (Packing[] memory modes) {
-        uint256 count = parameters.length;
+        uint256 count = conditions.length;
         modes = new Packing[](count);
-
         for (uint256 i; i < count; ) {
-            Comparison comparison = parameters[i].comp;
-
-            if (comparison < Comparison.EqualTo) {
-                modes[i] = ScopeConfig.Packing.Nothing;
-            } else {
-                modes[i] = parameters[i].compValue.length > 32
-                    ? Packing.Hash
-                    : Packing.Word;
-            }
-
+            modes[i] = _modeForOperator(conditions[i].operator);
             unchecked {
                 ++i;
             }
         }
     }
+
 
     function packHeader(
         uint256 length,
@@ -108,18 +92,17 @@ library ScopeConfig {
         pointer = address(bytes20(header << 16));
     }
 
-    function packParameter(
+    function packCondition(
         bytes memory buffer,
         uint256 index,
         Packing[] memory modes,
-        ParameterConfigFlat memory parameter
+        ConditionFlat memory condition
     ) internal pure {
-        uint16 bits = (uint16(parameter.parent) << offsetParent) |
-            (uint16(parameter._type) << offsetType) |
-            (uint16(parameter.comp) << offsetComparison) |
-            (uint16(modes[index]) << offsetPacking);
+        uint16 bits = (uint16(condition.parent) << offsetParent) |
+            (uint16(condition.paramType) << offsetParamType) |
+            (uint16(condition.operator) << offsetOperator)
 
-        uint256 offset = index * bytesPerParameter;
+        uint256 offset = index * bytesPerCondition;
         unchecked {
             buffer[offset] = bytes1(uint8(bits >> 8));
             buffer[offset + 1] = bytes1(uint8(bits));
@@ -130,26 +113,25 @@ library ScopeConfig {
                 buffer,
                 _compValueOffset(index, modes),
                 modes[index],
-                parameter.compValue
+                condition.compValue
             );
         }
     }
 
-    function unpackParameter(
+    function unpackCondition(
         bytes memory buffer,
         uint256 index,
         Packing[] memory modes,
-        ParameterConfig memory result
+        Condition memory result
     ) internal pure {
-        uint256 offset = 32 + index * bytesPerParameter;
+        uint256 offset = 32 + index * bytesPerCondition;
         bytes32 word;
         assembly {
             word := mload(add(buffer, offset))
         }
         uint16 bits = uint16(bytes2(word));
-        result._type = ParameterType((bits & maskType) >> offsetType);
-        result.comp = Comparison((bits & maskComparison) >> offsetComparison);
-
+        result.paramType = ParameterType((bits & maskParamType) >> offsetParamType);
+        result.operator = Comparison((bits & maskOperator) >> offsetOperator);
         if (modes[index] != Packing.Nothing) {
             unpackCompValue(
                 buffer,
@@ -170,7 +152,6 @@ library ScopeConfig {
             bytes32 word = mode == Packing.Hash
                 ? keccak256(compValue)
                 : bytes32(compValue);
-
             assembly {
                 mstore(add(buffer, offset), word)
             }
@@ -180,17 +161,13 @@ library ScopeConfig {
     function unpackCompValue(
         bytes memory buffer,
         uint256 offset,
-        Packing mode,
-        ParameterConfig memory result
+        Condition memory result
     ) private pure {
-        if (mode != Packing.Nothing) {
-            bytes32 word;
-            assembly {
-                word := mload(add(buffer, offset))
-            }
-            result.compValue = word;
-            result.isHashed = mode == Packing.Hash;
+        bytes32 word;
+        assembly {
+            word := mload(add(buffer, offset))
         }
+        result.compValue = word;
     }
 
     function unpackModes(
@@ -199,18 +176,16 @@ library ScopeConfig {
     ) internal pure returns (uint8[] memory parents, Packing[] memory modes) {
         parents = new uint8[](count);
         modes = new Packing[](count);
-
         bytes32 word;
         for (uint256 i; i < count; ) {
             uint256 offset = 32 + i * bytesPerParameter;
             assembly {
                 word := mload(add(buffer, offset))
             }
-
             uint16 bits = uint16(bytes2(word));
             parents[i] = uint8((bits & maskParent) >> offsetParent);
+            Operator operator = Operator((bits & maskOperator) >> offsetOperator);
             modes[i] = Packing(bits & maskPacking);
-
             unchecked {
                 ++i;
             }
@@ -219,11 +194,11 @@ library ScopeConfig {
 
     function _compValueOffset(
         uint256 index,
-        Packing[] memory modes
+        Operator[] memory operators
     ) private pure returns (uint256 offset) {
-        offset = 32 + modes.length * bytesPerParameter;
+        offset = 32 + operators.length * bytesPerCondition;
         for (uint256 i; i < index; ) {
-            if (modes[i] != Packing.Nothing) {
+            if (_modeForOperator(operators[i]) != Packing.Nothing) {
                 offset += 32;
             }
 
@@ -232,4 +207,17 @@ library ScopeConfig {
             }
         }
     }
+
+
+    function _modeForOperator(Operator operator) internal pure returns (Packing) {
+        if(operator < Operator.EqualTo) {
+            return Packing.Nothing;
+        } else if (operator == Operator.EqualTo) {
+            return Packing.Hash;
+        } else {
+            return Packing.Word;
+        }
+    }
+
 }
+

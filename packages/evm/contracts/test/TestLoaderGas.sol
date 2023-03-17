@@ -8,19 +8,19 @@ contract TestLoaderGas is PermissionLoader {
     bytes32 public constant key = bytes32(bytes4(0xabcdef00));
 
     function store(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory parameters,
         ExecutionOptions options
     ) public {
         _store(roles[roleId], key, parameters, options);
     }
 
     function load() public view {
-        ParameterConfig memory result = _load(roles[roleId], key);
+        Condition memory result = _load(roles[roleId], key);
         assert(result.children.length > 0);
     }
 
     function storeNaive(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory parameters,
         ExecutionOptions
     ) public {
         Role storage role = roles[roleId];
@@ -28,9 +28,9 @@ contract TestLoaderGas is PermissionLoader {
         uint8[] memory config = new uint8[](parameters.length);
 
         for (uint i; i < parameters.length; ++i) {
-            ParameterConfigFlat memory parameter = parameters[i];
+            ConditionFlat memory parameter = parameters[i];
 
-            if (shouldPack(parameter.comp)) {
+            if (shouldPack(parameter.operator)) {
                 config[i] = 1;
                 bytes32 compValue = parameter.compValue.length > 32
                     ? keccak256(parameter.compValue)
@@ -55,13 +55,13 @@ contract TestLoaderGas is PermissionLoader {
         }
     }
 
-    function shouldPack(Comparison comparison) private pure returns (bool) {
+    function shouldPack(Operator comparison) private pure returns (bool) {
         return
-            comparison == Comparison.EqualTo ||
-            comparison == Comparison.GreaterThan ||
-            comparison == Comparison.LessThan ||
-            comparison == Comparison.WithinAllowance ||
-            comparison == Comparison.Bitmask;
+            comparison == Operator.EqualTo ||
+            comparison == Operator.GreaterThan ||
+            comparison == Operator.LessThan ||
+            comparison == Operator.WithinAllowance ||
+            comparison == Operator.Bitmask;
     }
 
     function _key(bytes32 k, uint256 i) internal pure returns (bytes32) {

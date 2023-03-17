@@ -26,7 +26,7 @@ abstract contract PermissionBuilder is Core {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        ParameterConfigFlat[] parameters,
+        ConditionFlat[] parameters,
         ExecutionOptions options
     );
 
@@ -115,7 +115,7 @@ abstract contract PermissionBuilder is Core {
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory parameters,
         ExecutionOptions options
     ) external onlyOwner {
         Integrity.validate(parameters);
@@ -157,7 +157,7 @@ abstract contract PermissionBuilder is Core {
     function _track(Trace[] memory entries) internal {
         uint256 length = entries.length;
         for (uint256 i; i < length; ) {
-            ParameterConfig memory parameter = entries[i].config;
+            Condition memory parameter = entries[i].config;
             uint256 amount = uint256(entries[i].value);
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
@@ -171,7 +171,7 @@ abstract contract PermissionBuilder is Core {
             // different parameters (which is not very common), but it's
             // something we don't want to restrict. Therefore, we read from
             // storage again (we don't rely on the allowance value initially
-            // loaded to ParameterConfig). We repeat the accrual math and consider
+            // loaded to Condition). We repeat the accrual math and consider
             // that if it fails here, then it may be due to a double spend.
             if (amount > balance) {
                 revert AllowanceDoubleSpend(allowanceId);
@@ -214,12 +214,12 @@ abstract contract PermissionBuilder is Core {
     }
 
     function _removeExtraneousOffsets(
-        ParameterConfigFlat[] memory parameters
-    ) private pure returns (ParameterConfigFlat[] memory) {
+        ConditionFlat[] memory parameters
+    ) private pure returns (ConditionFlat[] memory) {
         uint256 length = parameters.length;
         for (uint256 i; i < length; ++i) {
             if (
-                parameters[i].comp == Comparison.EqualTo &&
+                parameters[i].operator == Operator.EqualTo &&
                 Topology.isStatic(parameters, i) == false
             ) {
                 bytes memory compValue = parameters[i].compValue;

@@ -12,7 +12,7 @@ abstract contract PermissionLoader is Core {
     function _store(
         Role storage role,
         bytes32 key,
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory parameters,
         ExecutionOptions options
     ) internal override {
         bytes memory buffer = _pack(parameters);
@@ -31,7 +31,7 @@ abstract contract PermissionLoader is Core {
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view override returns (ParameterConfig memory result) {
+    ) internal view override returns (Condition memory result) {
         bytes32 value = role.scopeConfig[key];
 
         (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(value);
@@ -41,7 +41,7 @@ abstract contract PermissionLoader is Core {
     }
 
     function _pack(
-        ParameterConfigFlat[] memory parameters
+        ConditionFlat[] memory parameters
     ) private pure returns (bytes memory buffer) {
         ScopeConfig.Packing[] memory modes = ScopeConfig.calculateModes(
             parameters
@@ -61,13 +61,13 @@ abstract contract PermissionLoader is Core {
     function _unpack(
         bytes memory buffer,
         uint256 count
-    ) private pure returns (ParameterConfig memory result) {
+    ) private pure returns (Condition memory result) {
         (
             uint8[] memory parents,
             ScopeConfig.Packing[] memory modes
         ) = ScopeConfig.unpackModes(buffer, count);
 
-        _unpackParameter(
+        _unpackCondition(
             buffer,
             0,
             Topology.childrenBounds(parents),
@@ -76,14 +76,14 @@ abstract contract PermissionLoader is Core {
         );
     }
 
-    function _unpackParameter(
+    function _unpackCondition(
         bytes memory buffer,
         uint256 index,
         Bounds[] memory childrenBounds,
         ScopeConfig.Packing[] memory modes,
-        ParameterConfig memory result
+        Condition memory result
     ) private pure {
-        ScopeConfig.unpackParameter(buffer, index, modes, result);
+        ScopeConfig.unpackCondition(buffer, index, modes, result);
         uint256 left = childrenBounds[index].left;
         uint256 right = childrenBounds[index].right;
         if (right < left) {
@@ -91,9 +91,9 @@ abstract contract PermissionLoader is Core {
         }
 
         uint256 childrenCount = right - left + 1;
-        result.children = new ParameterConfig[](childrenCount);
+        result.children = new Condition[](childrenCount);
         for (uint j; j < childrenCount; ) {
-            _unpackParameter(
+            _unpackCondition(
                 buffer,
                 left + j,
                 childrenBounds,
@@ -107,10 +107,10 @@ abstract contract PermissionLoader is Core {
         }
     }
 
-    function _loadAllowances(ParameterConfig memory result) private view {
+    function _loadAllowances(Condition memory result) private view {
         if (
-            result.comp == Comparison.WithinAllowance ||
-            result.comp == Comparison.ETHWithinAllowance
+            result.operator == Operator.WithinAllowance ||
+            result.operator == Operator.ETHWithinAllowance
         ) {
             uint16 allowanceId = uint16(uint256(result.compValue));
             (result.allowance, ) = _accruedAllowance(
