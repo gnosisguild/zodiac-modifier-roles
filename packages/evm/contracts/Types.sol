@@ -11,19 +11,58 @@ enum ParameterType {
 }
 
 enum Comparison {
-    Whatever,
-    Matches,
-    And,
-    Or,
-    SubsetOf,
-    ArraySome,
-    ArrayEvery,
-    EqualTo,
-    GreaterThan,
-    LessThan,
-    Bitmask,
-    WithinAllowance,
-    ETHWithinAllowance
+    // 00:    EMPTY EXPRESSION (default, always passes)
+    //          paramType: Static / Dynamic
+    //          🚫 children
+    //          🚫 compValue
+    /* 00: */ Whatever,
+    // ------------------------------------------------------------
+    // 01-04: BOOLEAN EXPRESSIONS
+    //          paramType: None
+    //          ✅ children 
+    //          🚫 compValue 
+    /* 01: */ And,
+    /* 02: */ Or,
+    /* 03: */ Xor,
+    /* 04: */ Not,
+    // ------------------------------------------------------------
+    // 05-16: COMPLEX TYPE EXPRESSIONS
+    //          paramType: AbiEncoded / Tuple / Array,
+    //          ✅ children
+    //          🚫 compValue
+    /* 05: */ Matches,
+    /* 06: */ Some,
+    /* 07: */ Every,
+    /* 08: */ SubsetOf,
+    /* 09: */ _ComplexPlaceholder09,
+    /* 10: */ _ComplexPlaceholder10,
+    /* 11: */ _ComplexPlaceholder11,
+    /* 12: */ _ComplexPlaceholder12,
+    /* 13: */ _ComplexPlaceholder13,
+    /* 14: */ _ComplexPlaceholder14,
+    /* 15: */ _ComplexPlaceholder15,
+    /* 16: */ _ComplexPlaceholder16,
+
+    // ------------------------------------------------------------
+    // 17-31: BINARY COMPARISON EXPRESSIONS
+    //          paramType: Static / Dynamic
+    //          🚫 children
+    //          ✅ compValue
+    /* 17: */ EqualTo,
+    /* 18: */ GreaterThan,
+    /* 19: */ LessThan,
+    /* 20: */ Bitmask
+    /* 21: */ _BinaryPlaceholder21,
+    /* 22: */ _BinaryPlaceholder22,
+    /* 23: */ _BinaryPlaceholder23,
+    /* 24: */ _BinaryPlaceholder24,
+    /* 25: */ _BinaryPlaceholder25,
+    /* 26: */ _BinaryPlaceholder26,
+    /* 27: */ _BinaryPlaceholder27,
+    /* 28: */ _BinaryPlaceholder28,
+    /* 29: */ WithinAllowance,
+    /* 30: */ EthWithinAllowance,
+    /* 31: */ CallWithinAllowance,
 }
 
 enum ExecutionOptions {
@@ -40,25 +79,24 @@ enum Clearance {
 }
 
 struct TypeTopology {
-    ParameterType _type;
+    ParameterType paramType;
     TypeTopology[] children;
 }
 
-struct ParameterConfigFlat {
+struct ConditionFlat {
     uint8 parent;
-    ParameterType _type;
+    ParameterType paramType;
     Comparison comp;
     bytes compValue;
 }
 
-struct ParameterConfig {
-    ParameterType _type;
+struct Condition {
+    ParameterType paramType;
     Comparison comp;
-    bool isHashed;
     bytes32 compValue;
-    uint256 allowance;
-    ParameterConfig[] children;
+    Condition[] children;
 }
+
 struct ParameterPayload {
     uint256 location;
     uint256 size;
@@ -93,6 +131,6 @@ struct Allowance {
 }
 
 struct Trace {
-    ParameterConfig config;
+    Condition config;
     bytes32 value;
 }
