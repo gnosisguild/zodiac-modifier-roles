@@ -10,7 +10,7 @@ enum ParameterType {
     AbiEncoded
 }
 
-enum Comparison {
+enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
     //          paramType: Static / Dynamic
     //          🚫 children
@@ -86,13 +86,13 @@ struct TypeTopology {
 struct ConditionFlat {
     uint8 parent;
     ParameterType paramType;
-    Comparison comp;
+    Operator operator;
     bytes compValue;
 }
 
 struct Condition {
     ParameterType paramType;
-    Comparison comp;
+    Operator operator;
     bytes32 compValue;
     Condition[] children;
 }
