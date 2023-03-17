@@ -36,18 +36,15 @@ library Topology {
         uint8[] memory parents
     ) internal pure returns (Bounds[] memory result) {
         uint256 count = parents.length;
+        assert(count > 0);
+
         result = new Bounds[](parents.length);
+        result[0].left = type(uint256).max;
 
-        // parents are DFS
-        for (uint256 i = 0; i < count; ) {
-            result[i].left = type(uint256).max;
-            unchecked {
-                ++i;
-            }
-        }
-
+        // parents are BFS ordered, so we can use this to find the bounds
         // 0 is the root
         for (uint256 i = 1; i < count; ) {
+            result[i].left = type(uint256).max;
             Bounds memory bounds = result[parents[i]];
             if (bounds.left == type(uint256).max) {
                 bounds.left = i;
