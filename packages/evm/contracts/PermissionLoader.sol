@@ -79,7 +79,7 @@ abstract contract PermissionLoader is Core {
     function _unpackParameter(
         bytes memory buffer,
         uint256 index,
-        Bounds[] memory childrenBounds,
+        Topology.Bounds[] memory childrenBounds,
         ScopeConfig.Packing[] memory modes,
         ParameterConfig memory result
     ) private pure {
