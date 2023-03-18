@@ -223,11 +223,42 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _bitmask(data, parameter, payload);
             } else if (comp == Comparison.WithinAllowance) {
                 return _withinAllowance(data, parameter, payload);
-            } else {
-                assert(comp == Comparison.ETHWithinAllowance);
+            } else if (comp == Comparison.ETHWithinAllowance) {
                 return _ethWithinAllowance(value, parameter);
+            } else {
+                assert(comp == Comparison.CallWithinAllowance);
+                return _callWithinAllowance(parameter);
             }
         }
+    }
+
+    function _matches(
+        uint256 value,
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status, Trace[] memory trace) {
+        if (parameter.children.length != payload.children.length) {
+            return (Status.ParameterNotAMatch, trace);
+        }
+
+        for (uint256 i; i < parameter.children.length; ) {
+            (Status status, Trace[] memory more) = _walk(
+                value,
+                data,
+                parameter.children[i],
+                payload.children[i]
+            );
+            if (status != Status.Ok) {
+                return (status, _trace());
+            }
+            trace = _trace(trace, more);
+            unchecked {
+                ++i;
+            }
+        }
+
+        return (Status.Ok, trace);
     }
 
     function _and(
@@ -277,32 +308,41 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.ParameterNotOneOfAllowed, nothing);
     }
 
-    function _matches(
+    function _subsetOf(
         uint256 value,
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        if (parameter.children.length != payload.children.length) {
-            return (Status.ParameterNotAMatch, trace);
+        ParameterPayload[] memory values = payload.children;
+        if (values.length == 0) {
+            return (Status.ParameterNotSubsetOfAllowed, trace);
         }
+        ParameterConfig[] memory compValues = parameter.children;
 
-        for (uint256 i; i < parameter.children.length; ) {
-            (Status status, Trace[] memory more) = _walk(
-                value,
-                data,
-                parameter.children[i],
-                payload.children[i]
-            );
-            if (status != Status.Ok) {
-                return (status, _trace());
+        uint256 taken;
+        for (uint256 i; i < values.length; ++i) {
+            bool found = false;
+            for (uint256 j; j < compValues.length; ++j) {
+                if (taken & (1 << j) != 0) continue;
+
+                (Status status, Trace[] memory more) = _walk(
+                    value,
+                    data,
+                    compValues[j],
+                    values[i]
+                );
+                if (status == Status.Ok) {
+                    found = true;
+                    taken |= 1 << j;
+                    trace = _trace(trace, more);
+                    break;
+                }
             }
-            trace = _trace(trace, more);
-            unchecked {
-                ++i;
+            if (!found) {
+                return (Status.ParameterNotSubsetOfAllowed, _trace());
             }
         }
-
         return (Status.Ok, trace);
     }
 
@@ -353,42 +393,54 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.ArrayElementsSomeNotAllowed, _trace());
     }
 
-    function _subsetOf(
-        uint256 value,
+    function _compare(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Trace[] memory trace) {
-        ParameterPayload[] memory values = payload.children;
-        if (values.length == 0) {
-            return (Status.ParameterNotSubsetOfAllowed, trace);
-        }
-        ParameterConfig[] memory compValues = parameter.children;
+    ) private pure returns (Status status, Trace[] memory nothing) {
+        Comparison comp = parameter.comp;
+        bytes32 compValue = parameter.compValue;
+        bytes32 value = _pluck(data, parameter, payload);
 
-        uint256 taken;
-        for (uint256 i; i < values.length; ++i) {
-            bool found = false;
-            for (uint256 j; j < compValues.length; ++j) {
-                if (taken & (1 << j) != 0) continue;
-
-                (Status status, Trace[] memory more) = _walk(
-                    value,
-                    data,
-                    compValues[j],
-                    values[i]
-                );
-                if (status == Status.Ok) {
-                    found = true;
-                    taken |= 1 << j;
-                    trace = _trace(trace, more);
-                    break;
-                }
-            }
-            if (!found) {
-                return (Status.ParameterNotSubsetOfAllowed, _trace());
-            }
+        if (comp == Comparison.EqualTo && value != compValue) {
+            status = Status.ParameterNotAllowed;
+        } else if (comp == Comparison.GreaterThan && value <= compValue) {
+            status = Status.ParameterLessThanAllowed;
+        } else if (comp == Comparison.LessThan && value >= compValue) {
+            status = Status.ParameterGreaterThanAllowed;
+        } else {
+            status = Status.Ok;
         }
-        return (Status.Ok, trace);
+
+        return (status, nothing);
+    }
+
+    function _bitmask(
+        bytes calldata data,
+        ParameterConfig memory parameter,
+        ParameterPayload memory payload
+    ) private pure returns (Status status, Trace[] memory nothing) {
+        bytes32 compValue = parameter.compValue;
+        bool isStatic = Topology.isStatic(parameter);
+        bytes calldata value = Decoder.pluck(
+            data,
+            payload.location + (isStatic ? 0 : 32),
+            payload.size - (isStatic ? 0 : 32)
+        );
+
+        uint256 shift = uint16(bytes2(compValue));
+        if (shift >= value.length) {
+            return (Status.BitmaskOverflow, nothing);
+        }
+
+        bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
+        bytes32 mask = (compValue << 16) & rinse;
+        bytes32 expected = (compValue << (16 + 15 * 8)) & rinse;
+        bytes32 slice = bytes32(value[shift:]);
+
+        status = (slice & mask) == expected
+            ? Status.Ok
+            : Status.BitmaskNotAllowed;
     }
 
     function _withinAllowance(
@@ -422,54 +474,17 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
-    function _bitmask(
-        bytes calldata data,
-        ParameterConfig memory parameter,
-        ParameterPayload memory payload
+    function _callWithinAllowance(
+        ParameterConfig memory parameter
     ) private pure returns (Status status, Trace[] memory nothing) {
-        bytes32 compValue = parameter.compValue;
-        bool isStatic = Topology.isStatic(parameter);
-        bytes calldata value = Decoder.pluck(
-            data,
-            payload.location + (isStatic ? 0 : 32),
-            payload.size - (isStatic ? 0 : 32)
+        if (parameter.allowance == 0) {
+            return (Status.CallAllowanceExceeded, nothing);
+        }
+
+        return (
+            Status.Ok,
+            _trace(Trace({config: parameter, value: bytes32(uint256(1))}))
         );
-
-        uint256 shift = uint16(bytes2(compValue));
-        if (shift >= value.length) {
-            return (Status.BitmaskOverflow, nothing);
-        }
-
-        bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
-        bytes32 mask = (compValue << 16) & rinse;
-        bytes32 expected = (compValue << (16 + 15 * 8)) & rinse;
-        bytes32 slice = bytes32(value[shift:]);
-
-        status = (slice & mask) == expected
-            ? Status.Ok
-            : Status.BitmaskNotAllowed;
-    }
-
-    function _compare(
-        bytes calldata data,
-        ParameterConfig memory parameter,
-        ParameterPayload memory payload
-    ) private pure returns (Status status, Trace[] memory nothing) {
-        Comparison comp = parameter.comp;
-        bytes32 compValue = parameter.compValue;
-        bytes32 value = _pluck(data, parameter, payload);
-
-        if (comp == Comparison.EqualTo && value != compValue) {
-            status = Status.ParameterNotAllowed;
-        } else if (comp == Comparison.GreaterThan && value <= compValue) {
-            status = Status.ParameterLessThanAllowed;
-        } else if (comp == Comparison.LessThan && value >= compValue) {
-            status = Status.ParameterGreaterThanAllowed;
-        } else {
-            status = Status.Ok;
-        }
-
-        return (status, nothing);
     }
 
     function _pluck(
@@ -516,6 +531,8 @@ abstract contract PermissionChecker is Core, Periphery {
             revert AllowanceExceeded();
         } else if (status == Status.ETHAllowanceExceeded) {
             revert ETHAllowanceExceeded();
+        } else if (status == Status.CallAllowanceExceeded) {
+            revert CallAllowanceExceeded();
         } else if (status == Status.BitmaskOverflow) {
             revert BitmaskOverflow();
         } else {
@@ -559,6 +576,8 @@ abstract contract PermissionChecker is Core, Periphery {
         AllowanceExceeded,
         /// ETH Allowance exceeded
         ETHAllowanceExceeded,
+        /// Call Allowance exceeded
+        CallAllowanceExceeded,
         /// Allowance was double spent
         AllowanceDoubleSpend
     }
@@ -615,6 +634,9 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// Allowance exceeded
     error ETHAllowanceExceeded();
+
+    /// Allowance exceeded
+    error CallAllowanceExceeded();
 
     /// Bitmask exceeded value length
     error BitmaskOverflow();
