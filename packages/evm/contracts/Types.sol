@@ -60,6 +60,7 @@ struct ParameterConfig {
     ParameterConfig[] children;
 }
 struct ParameterPayload {
+    bool isInline;
     uint256 location;
     uint256 size;
     ParameterPayload[] children;
