@@ -109,6 +109,7 @@ library Integrity {
 
         // TODO check that Array and tuple-oneOf nodes are topologically equivalent
         // TODO a lot more integrity checks
+        // TODO Extraneous can only be child of AbiEncoded or Tuple
     }
 
     function content(

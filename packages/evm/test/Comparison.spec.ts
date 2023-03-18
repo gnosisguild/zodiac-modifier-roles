@@ -9,12 +9,7 @@ import {
   StaticTupleStruct,
 } from "../typechain-types/contracts/test/TestEncoder";
 
-import {
-  Comparison,
-  ExecutionOptions,
-  ParameterType,
-  removeTrailingOffset,
-} from "./utils";
+import { Comparison, ExecutionOptions, ParameterType } from "./utils";
 
 describe("Comparison", async () => {
   const setup = deployments.createFixture(async () => {
@@ -240,6 +235,62 @@ describe("Comparison", async () => {
     );
   });
 
+  it("checks an eq comparison for large dynamic", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic")
+    );
+
+    const invoke = async (a: string) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic(a)).data as string,
+          0
+        );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    const largeDynamic =
+      "0xaa000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff";
+    const smallDynamic = "0xaa00";
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.Dynamic,
+          comp: Comparison.EqualTo,
+          compValue: defaultAbiCoder.encode(["bytes"], [largeDynamic]),
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke(largeDynamic)).to.not.reverted;
+    await expect(invoke(smallDynamic)).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+  });
+
   it("checks an eq comparison for dynamic - empty buffer", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
@@ -423,6 +474,62 @@ describe("Comparison", async () => {
   });
 
   it.skip("checks an eq comparison for Tuple");
+
+  it("checks an eq comparison for nested AbiEncoded", async () => {
+    const { modifier, testContract, owner, invoker } = await setup();
+
+    const ROLE_ID = 0;
+    const SELECTOR = testContract.interface.getSighash(
+      testContract.interface.getFunction("dynamic")
+    );
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_ID], [true]);
+
+    const nestedData = (await testContract.populateTransaction.doNothing())
+      .data as string;
+
+    const invoke = async (a: string) =>
+      modifier
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContract.address,
+          0,
+          (await testContract.populateTransaction.dynamic(a)).data as string,
+          0
+        );
+
+    // set it to true
+    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+
+    await modifier.connect(owner).scopeFunction(
+      ROLE_ID,
+      testContract.address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          _type: ParameterType.AbiEncoded,
+          comp: Comparison.EqualTo,
+          compValue: defaultAbiCoder.encode(["bytes"], [nestedData]),
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    await expect(invoke(nestedData)).to.not.be.reverted;
+    await expect(invoke(nestedData.slice(0, -2))).to.be.revertedWith(
+      "ParameterNotAllowed()"
+    );
+    await expect(invoke("0x")).to.be.revertedWith("ParameterNotAllowed()");
+  });
 
   it("checks an Or comparison for static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
