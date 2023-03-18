@@ -23,7 +23,8 @@ enum Comparison {
     LessThan,
     Bitmask,
     WithinAllowance,
-    ETHWithinAllowance
+    ETHWithinAllowance,
+    CallWithinAllowance
 }
 
 enum ExecutionOptions {

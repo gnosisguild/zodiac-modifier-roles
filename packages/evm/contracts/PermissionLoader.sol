@@ -110,7 +110,8 @@ abstract contract PermissionLoader is Core {
     function _loadAllowances(ParameterConfig memory result) private view {
         if (
             result.comp == Comparison.WithinAllowance ||
-            result.comp == Comparison.ETHWithinAllowance
+            result.comp == Comparison.ETHWithinAllowance ||
+            result.comp == Comparison.CallWithinAllowance
         ) {
             uint16 allowanceId = uint16(uint256(result.compValue));
             (result.allowance, ) = _accruedAllowance(
