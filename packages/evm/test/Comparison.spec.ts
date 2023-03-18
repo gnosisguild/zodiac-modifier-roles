@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { defaultAbiCoder } from "ethers/lib/utils";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 

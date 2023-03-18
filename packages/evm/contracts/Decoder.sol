@@ -21,11 +21,8 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        result.children = __block__(
-            data,
-            4,
-            Topology.unfold(parameter).children
-        );
+        result = __block__(data, 4, Topology.unfold(parameter));
+        result.location = 0;
         result.size = data.length;
     }
 
@@ -49,17 +46,18 @@ library Decoder {
         assert(paramType != ParameterType.None);
 
         if (paramType == ParameterType.Static) {
+            result.isInline = true;
             result.location = location;
             result.size = 32;
         } else if (paramType == ParameterType.Dynamic) {
             result.location = location;
             result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
         } else if (paramType == ParameterType.AbiEncoded) {
+            result = __block__(data, location + 32 + 4, node);
             result.location = location;
             result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
-            result.children = __block__(data, location + 32 + 4, node.children);
         } else if (paramType == ParameterType.Tuple) {
-            return _tuple(data, location, node);
+            return __block__(data, location, node);
         } else {
             return _array(data, location, node);
         }
@@ -72,6 +70,7 @@ library Decoder {
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = uint256(_loadWord(data, location));
         result.location = location;
+        result.size = 32;
         result.children = new ParameterPayload[](length);
 
         (bool isInline, uint256 itemSize) = _headSize(node.children[0]);
@@ -81,42 +80,38 @@ library Decoder {
                 _partLocation(data, location + 32, i * itemSize, isInline),
                 node.children[0]
             );
+            result.size += isInline ? itemSize : result.children[i].size + 32;
         }
-        result.size = _totalSize(result);
-    }
-
-    function _tuple(
-        bytes calldata data,
-        uint256 location,
-        TypeTree memory node
-    ) private pure returns (ParameterPayload memory result) {
-        result.location = location;
-        result.children = __block__(data, location, node.children);
-        result.size = _totalSize(result);
     }
 
     function __block__(
         bytes calldata data,
         uint256 location,
-        TypeTree[] memory parts
-    ) private pure returns (ParameterPayload[] memory result) {
-        result = new ParameterPayload[](parts.length);
+        TypeTree memory node
+    ) private pure returns (ParameterPayload memory result) {
+        uint256 length = node.children.length;
+
+        result.isInline = true;
+        result.location = location;
+        result.children = new ParameterPayload[](length);
 
         uint256 offset;
-        for (uint256 i; i < parts.length; ++i) {
-            TypeTree memory part = parts[i];
+        for (uint256 i; i < length; ++i) {
+            TypeTree memory part = node.children[i];
             if (part._type == ParameterType.None) {
                 continue;
             }
 
-            (bool isInline, uint256 size) = _headSize(part);
-
-            result[i] = _walk(
+            (bool isInline, ) = _headSize(part);
+            result.isInline = result.isInline && isInline;
+            result.children[i] = _walk(
                 data,
                 _partLocation(data, location, offset, isInline),
                 part
             );
-            offset += size;
+            result.size += result.children[i].size + (isInline ? 0 : 32);
+
+            offset += isInline ? result.children[i].size : 32;
         }
     }
 
@@ -165,26 +160,6 @@ library Decoder {
                 }
             }
             return (true, size);
-        }
-    }
-
-    function _totalSize(
-        ParameterPayload memory payload
-    ) private pure returns (uint256 result) {
-        uint256 length = payload.children.length;
-
-        if (length == 0) {
-            return 32;
-        }
-
-        for (uint256 i; i < length; ++i) {
-            uint256 location = payload.children[i].location;
-            uint256 size = _ceil32(payload.children[i].size);
-            uint256 curr = location + size - payload.location;
-
-            if (curr > result) {
-                result = curr;
-            }
         }
     }
 
