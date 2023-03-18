@@ -155,8 +155,8 @@ abstract contract PermissionBuilder is Core {
     }
 
     function _track(Trace[] memory entries) internal {
-        uint256 length = entries.length;
-        for (uint256 i; i < length; ) {
+        uint256 paramCount = entries.length;
+        for (uint256 i; i < paramCount; ) {
             ParameterConfig memory parameter = entries[i].config;
             uint256 amount = uint256(entries[i].value);
 
@@ -216,11 +216,11 @@ abstract contract PermissionBuilder is Core {
     function _removeExtraneousOffsets(
         ParameterConfigFlat[] memory parameters
     ) private pure returns (ParameterConfigFlat[] memory) {
-        uint256 length = parameters.length;
-        for (uint256 i; i < length; ++i) {
+        uint256 paramCount = parameters.length;
+        for (uint256 i; i < paramCount; ) {
             if (
                 parameters[i].comp == Comparison.EqualTo &&
-                Topology.isStatic(parameters, i) == false
+                !Topology.isStatic(parameters, i)
             ) {
                 bytes memory compValue = parameters[i].compValue;
                 uint256 length = compValue.length;
@@ -229,6 +229,10 @@ abstract contract PermissionBuilder is Core {
                     mstore(compValue, sub(length, 32))
                 }
                 parameters[i].compValue = compValue;
+            }
+
+            unchecked {
+                ++i;
             }
         }
         return parameters;
