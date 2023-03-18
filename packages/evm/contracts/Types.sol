@@ -39,11 +39,6 @@ enum Clearance {
     Function
 }
 
-struct TypeTree {
-    ParameterType _type;
-    TypeTree[] children;
-}
-
 struct ParameterConfigFlat {
     uint8 parent;
     ParameterType _type;
@@ -60,7 +55,6 @@ struct ParameterConfig {
     ParameterConfig[] children;
 }
 struct ParameterPayload {
-    bool isInline;
     uint256 location;
     uint256 size;
     ParameterPayload[] children;
