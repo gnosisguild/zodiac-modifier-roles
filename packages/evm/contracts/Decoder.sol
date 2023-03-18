@@ -40,13 +40,12 @@ library Decoder {
     function _walk(
         bytes calldata data,
         uint256 location,
-        TypeTree memory node
+        Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
         ParameterType paramType = node._type;
         assert(paramType != ParameterType.None);
 
         if (paramType == ParameterType.Static) {
-            result.isInline = true;
             result.location = location;
             result.size = 32;
         } else if (paramType == ParameterType.Dynamic) {
@@ -66,7 +65,7 @@ library Decoder {
     function _array(
         bytes calldata data,
         uint256 location,
-        TypeTree memory node
+        Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = uint256(_loadWord(data, location));
         result.location = location;
@@ -78,9 +77,7 @@ library Decoder {
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
-                isPartInline
-                    ? 32 + location + offset
-                    : _tailLocation(data, 32 + location, offset),
+                _locationInBlock(data, 32 + location, offset, isPartInline),
                 node.children[0]
             );
             result.size += result.children[i].size + (isPartInline ? 0 : 32);
@@ -91,28 +88,23 @@ library Decoder {
     function __block__(
         bytes calldata data,
         uint256 location,
-        TypeTree memory node
+        Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = node.children.length;
-
-        result.isInline = true;
         result.location = location;
         result.children = new ParameterPayload[](length);
 
         uint256 offset;
         for (uint256 i; i < length; ++i) {
-            TypeTree memory part = node.children[i];
+            Topology.TypeTree memory part = node.children[i];
             if (part._type == ParameterType.None) {
                 continue;
             }
 
             bool isPartInline = _isInline(part);
-            result.isInline = result.isInline && isPartInline;
             result.children[i] = _walk(
                 data,
-                isPartInline
-                    ? location + offset
-                    : _tailLocation(data, location, offset),
+                _locationInBlock(data, location, offset, isPartInline),
                 part
             );
             result.size += result.children[i].size + (isPartInline ? 0 : 32);
@@ -120,10 +112,11 @@ library Decoder {
         }
     }
 
-    function _tailLocation(
+    function _locationInBlock(
         bytes calldata data,
         uint256 location,
-        uint256 offset
+        uint256 offset,
+        bool isPartInline
     ) private pure returns (uint256) {
         /*
          * When encoding a block, a segment can be either included inline within
@@ -131,10 +124,16 @@ library Decoder {
          * of the block - at the TAIL.
          */
         uint256 headLocation = location + offset;
-        return location + uint256(_loadWord(data, headLocation));
+        if (isPartInline) {
+            return headLocation;
+        } else {
+            return location + uint256(_loadWord(data, headLocation));
+        }
     }
 
-    function _isInline(TypeTree memory node) private pure returns (bool) {
+    function _isInline(
+        Topology.TypeTree memory node
+    ) private pure returns (bool) {
         assert(node._type != ParameterType.None);
 
         if (node._type == ParameterType.Static) {

@@ -3,33 +3,15 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Types.sol";
 
-struct Bounds {
-    uint256 left;
-    uint256 right;
-}
-
 library Topology {
-    function unfold(
-        ParameterConfig memory parameter
-    ) internal pure returns (TypeTree memory result) {
-        if (
-            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
-        ) {
-            return unfold(parameter.children[0]);
-        }
+    struct TypeTree {
+        ParameterType _type;
+        TypeTree[] children;
+    }
 
-        result._type = parameter._type;
-        if (parameter.children.length > 0) {
-            uint256 length = parameter.children.length;
-
-            result.children = new TypeTree[](length);
-            for (uint256 i; i < length; ) {
-                result.children[i] = unfold(parameter.children[i]);
-                unchecked {
-                    ++i;
-                }
-            }
-        }
+    struct Bounds {
+        uint256 left;
+        uint256 right;
     }
 
     function childrenBounds(
@@ -70,8 +52,11 @@ library Topology {
             return false;
         } else {
             uint256 length = parameter.children.length;
-            for (uint256 i; i < length; ++i) {
+            for (uint256 i; i < length; ) {
                 if (!isStatic(parameter.children[i])) return false;
+                unchecked {
+                    ++i;
+                }
             }
             return true;
         }
@@ -102,6 +87,28 @@ library Topology {
                 }
             }
             return true;
+        }
+    }
+
+    function unfold(
+        ParameterConfig memory parameter
+    ) internal pure returns (TypeTree memory result) {
+        if (
+            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
+        ) {
+            return unfold(parameter.children[0]);
+        }
+
+        result._type = parameter._type;
+        if (parameter.children.length > 0) {
+            uint256 length = parameter.children.length;
+            result.children = new TypeTree[](length);
+            for (uint256 i; i < length; ) {
+                result.children[i] = unfold(parameter.children[i]);
+                unchecked {
+                    ++i;
+                }
+            }
         }
     }
 }
