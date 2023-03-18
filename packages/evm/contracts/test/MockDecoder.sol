@@ -6,7 +6,7 @@ import "../Decoder.sol";
 contract MockDecoder {
     function inspect(
         bytes calldata data,
-        PL1 calldata layout
+        IN1 calldata layout
     ) public pure returns (PP1 memory) {
         return copyOut(Decoder.inspect(data, copyIn(layout)));
     }
@@ -20,105 +20,115 @@ contract MockDecoder {
     }
 
     function copyIn(
-        PL1 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN1 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL2 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN2 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL3 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN3 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL4 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN4 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL5 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN5 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL6 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN6 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL7 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN7 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL8 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN8 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL9 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN9 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
-        result.children = new TypeTopology[](input.children.length);
+        result.comp = input.comp;
+        result.children = new ParameterConfig[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
     }
 
     function copyIn(
-        PL10 calldata input
-    ) private pure returns (TypeTopology memory result) {
+        IN10 calldata input
+    ) private pure returns (ParameterConfig memory result) {
         result._type = input._type;
+        result.comp = input.comp;
     }
 
     function copyOut(
         ParameterPayload memory output
     ) private pure returns (PP1 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         result.children = new PP2[](output.children.length);
         for (uint256 i = 0; i < output.children.length; i++) {
@@ -129,7 +139,7 @@ contract MockDecoder {
     function copyOutTo2(
         ParameterPayload memory output
     ) private pure returns (PP2 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         result.children = new PP3[](output.children.length);
         for (uint256 i = 0; i < output.children.length; i++) {
@@ -140,7 +150,7 @@ contract MockDecoder {
     function copyOutTo3(
         ParameterPayload memory output
     ) private pure returns (PP3 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         result.children = new PP4[](output.children.length);
         for (uint256 i = 0; i < output.children.length; i++) {
@@ -151,7 +161,7 @@ contract MockDecoder {
     function copyOutTo4(
         ParameterPayload memory output
     ) private pure returns (PP4 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         result.children = new PP5[](output.children.length);
         for (uint256 i = 0; i < output.children.length; i++) {
@@ -162,7 +172,7 @@ contract MockDecoder {
     function copyOutTo5(
         ParameterPayload memory output
     ) private pure returns (PP5 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         result.children = new PP6[](output.children.length);
         for (uint256 i = 0; i < output.children.length; i++) {
@@ -173,94 +183,104 @@ contract MockDecoder {
     function copyOutTo6(
         ParameterPayload memory output
     ) private pure returns (PP6 memory result) {
-        result.offset = output.location;
+        result.location = output.location;
         result.size = output.size;
         if (output.children.length > 0) {
-            // throw new Error('Something bad happened');
+            revert("MockDecoder needs more levels of recursion");
         }
     }
 
-    struct PL1 {
+    struct IN1 {
         ParameterType _type;
-        PL2[] children;
+        Comparison comp;
+        IN2[] children;
     }
 
-    struct PL2 {
+    struct IN2 {
         ParameterType _type;
-        PL3[] children;
+        Comparison comp;
+        IN3[] children;
     }
 
-    struct PL3 {
+    struct IN3 {
         ParameterType _type;
-        PL4[] children;
+        Comparison comp;
+        IN4[] children;
     }
 
-    struct PL4 {
+    struct IN4 {
         ParameterType _type;
-        PL5[] children;
+        Comparison comp;
+        IN5[] children;
     }
 
-    struct PL5 {
+    struct IN5 {
         ParameterType _type;
-        PL6[] children;
+        Comparison comp;
+        IN6[] children;
     }
 
-    struct PL6 {
+    struct IN6 {
         ParameterType _type;
-        PL7[] children;
+        Comparison comp;
+        IN7[] children;
     }
 
-    struct PL7 {
+    struct IN7 {
         ParameterType _type;
-        PL8[] children;
+        Comparison comp;
+        IN8[] children;
     }
 
-    struct PL8 {
+    struct IN8 {
         ParameterType _type;
-        PL9[] children;
+        Comparison comp;
+        IN9[] children;
     }
 
-    struct PL9 {
+    struct IN9 {
         ParameterType _type;
-        PL10[] children;
+        Comparison comp;
+        IN10[] children;
     }
 
-    struct PL10 {
+    struct IN10 {
         ParameterType _type;
+        Comparison comp;
     }
 
     struct PP1 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
         PP2[] children;
     }
 
     struct PP2 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
         PP3[] children;
     }
 
     struct PP3 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
         PP4[] children;
     }
 
     struct PP4 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
         PP5[] children;
     }
 
     struct PP5 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
         PP6[] children;
     }
 
     struct PP6 {
-        uint256 offset;
+        uint256 location;
         uint256 size;
     }
 }

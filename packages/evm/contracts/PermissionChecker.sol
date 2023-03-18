@@ -153,10 +153,7 @@ abstract contract PermissionChecker is Core, Periphery {
             }
 
             ParameterConfig memory parameter = _load(role, key);
-            ParameterPayload memory payload = Decoder.inspect(
-                data,
-                Topology.typeTree(parameter)
-            );
+            ParameterPayload memory payload = Decoder.inspect(data, parameter);
 
             return _walk(value, data, parameter, payload);
         } else {
@@ -488,7 +485,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return parameter.isHashed ? keccak256(value) : bytes32(value);
     }
 
-    function revertWith(Status status) public pure returns (bool) {
+    function revertWith(Status status) private pure returns (bool) {
         if (status == Status.FunctionSignatureTooShort) {
             revert FunctionSignatureTooShort();
         } else if (status == Status.DelegateCallNotAllowed) {

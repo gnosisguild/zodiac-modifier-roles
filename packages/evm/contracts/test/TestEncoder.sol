@@ -6,6 +6,8 @@ contract TestEncoder {
 
     function staticFn(bytes4) external {}
 
+    function staticDynamic(uint256, bytes memory) external {}
+
     function dynamic(bytes memory) external {}
 
     function dynamicArray(bytes[] memory) external {}
