@@ -334,17 +334,29 @@ describe("Decoder library", async () => {
       ],
     };
 
+    // 0x28ee4078
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // abcd000000000000000000000000000000000000000000000000000000000000
+
     const result = await decoder.inspect(data, layout);
 
-    // removing the offset
-    const expected = encode(["tuple(bytes)"], [["0xabcd"]], true);
     expect(
       await decoder.pluck(
         data,
         result.children[0].location,
         result.children[0].size
       )
-    ).to.equal(expected);
+    ).to.equal(encode(["tuple(bytes)"], [["0xabcd"]], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(
+        data,
+        result.children[0].children[0].location,
+        result.children[0].children[0].size
+      )
+    ).to.equal(encode(["bytes"], ["0xabcd"], YesRemoveOffset));
   });
 
   it("plucks staticTuple (explicitly) from encoded calldata", async () => {
