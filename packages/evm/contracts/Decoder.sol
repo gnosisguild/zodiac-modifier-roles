@@ -9,7 +9,7 @@ library Decoder {
 
     function inspect(
         bytes calldata data,
-        TypeTopology memory parameter
+        ParameterConfig memory parameter
     ) internal pure returns (ParameterPayload memory result) {
         /*
          * In the parameter encoding area, there is a region called the head
@@ -21,7 +21,11 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        result.children = __block__(data, 4, parameter.children);
+        result.children = __block__(
+            data,
+            4,
+            Topology.unfold(parameter).children
+        );
         result.size = data.length;
     }
 
@@ -39,9 +43,10 @@ library Decoder {
     function _walk(
         bytes calldata data,
         uint256 location,
-        TypeTopology memory parameter
+        TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        ParameterType paramType = parameter._type;
+        ParameterType paramType = node._type;
+        assert(paramType != ParameterType.None);
 
         if (paramType == ParameterType.Static) {
             result.location = location;
@@ -52,36 +57,29 @@ library Decoder {
         } else if (paramType == ParameterType.AbiEncoded) {
             result.location = location;
             result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
-            result.children = __block__(
-                data,
-                location + 32 + 4,
-                parameter.children
-            );
+            result.children = __block__(data, location + 32 + 4, node.children);
         } else if (paramType == ParameterType.Tuple) {
-            return _tuple(data, location, parameter);
-        } else if (paramType == ParameterType.Array) {
-            return _array(data, location, parameter);
+            return _tuple(data, location, node);
         } else {
-            assert(paramType == ParameterType.None);
-            return result;
+            return _array(data, location, node);
         }
     }
 
     function _array(
         bytes calldata data,
         uint256 location,
-        TypeTopology memory parameter
+        TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = uint256(_loadWord(data, location));
         result.location = location;
         result.children = new ParameterPayload[](length);
 
-        (bool isInline, uint256 itemSize) = _headSize(parameter.children[0]);
+        (bool isInline, uint256 itemSize) = _headSize(node.children[0]);
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
                 _partLocation(data, location + 32, i * itemSize, isInline),
-                parameter.children[0]
+                node.children[0]
             );
         }
         result.size = _totalSize(result);
@@ -90,29 +88,33 @@ library Decoder {
     function _tuple(
         bytes calldata data,
         uint256 location,
-        TypeTopology memory parameter
+        TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
         result.location = location;
-        result.children = __block__(data, location, parameter.children);
+        result.children = __block__(data, location, node.children);
         result.size = _totalSize(result);
     }
 
     function __block__(
         bytes calldata data,
         uint256 location,
-        TypeTopology[] memory parts
+        TypeTree[] memory parts
     ) private pure returns (ParameterPayload[] memory result) {
         result = new ParameterPayload[](parts.length);
 
         uint256 offset;
         for (uint256 i; i < parts.length; ++i) {
-            if (parts[i]._type == ParameterType.None) continue;
+            TypeTree memory part = parts[i];
+            if (part._type == ParameterType.None) {
+                continue;
+            }
 
-            (bool isInline, uint256 size) = _headSize(parts[i]);
+            (bool isInline, uint256 size) = _headSize(part);
+
             result[i] = _walk(
                 data,
                 _partLocation(data, location, offset, isInline),
-                parts[i]
+                part
             );
             offset += size;
         }
@@ -140,18 +142,29 @@ library Decoder {
     }
 
     function _headSize(
-        TypeTopology memory typeNode
-    ) private pure returns (bool isInline, uint256 size) {
-        isInline = _isStatic(typeNode);
+        TypeTree memory node
+    ) private pure returns (bool, uint256) {
+        assert(node._type != ParameterType.None);
 
-        if (!isInline || typeNode._type == ParameterType.Static) {
-            size = 32;
+        if (node._type == ParameterType.Static) {
+            return (true, 32);
+        } else if (
+            node._type == ParameterType.Dynamic ||
+            node._type == ParameterType.Array ||
+            node._type == ParameterType.AbiEncoded
+        ) {
+            return (false, 32);
         } else {
-            assert(typeNode._type == ParameterType.Tuple);
-            for (uint256 i; i < typeNode.children.length; ++i) {
-                (, uint256 next) = _headSize(typeNode.children[i]);
-                size += next;
+            uint256 size;
+            for (uint256 i; i < node.children.length; ++i) {
+                (bool isInline, uint256 nextSize) = _headSize(node.children[i]);
+                if (!isInline) {
+                    return (false, 32);
+                } else {
+                    size += nextSize;
+                }
             }
+            return (true, size);
         }
     }
 
@@ -172,21 +185,6 @@ library Decoder {
             if (curr > result) {
                 result = curr;
             }
-        }
-    }
-
-    function _isStatic(
-        TypeTopology memory typeNode
-    ) internal pure returns (bool) {
-        if (typeNode._type == ParameterType.Static) {
-            return true;
-        } else if (typeNode._type == ParameterType.Tuple) {
-            for (uint256 i; i < typeNode.children.length; ++i) {
-                if (!_isStatic(typeNode.children[i])) return false;
-            }
-            return true;
-        } else {
-            return false;
         }
     }
 

@@ -39,9 +39,9 @@ enum Clearance {
     Function
 }
 
-struct TypeTopology {
+struct TypeTree {
     ParameterType _type;
-    TypeTopology[] children;
+    TypeTree[] children;
 }
 
 struct ParameterConfigFlat {

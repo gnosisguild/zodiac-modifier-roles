@@ -9,22 +9,22 @@ struct Bounds {
 }
 
 library Topology {
-    function typeTree(
+    function unfold(
         ParameterConfig memory parameter
-    ) internal pure returns (TypeTopology memory result) {
+    ) internal pure returns (TypeTree memory result) {
         if (
             parameter.comp == Comparison.And || parameter.comp == Comparison.Or
         ) {
-            return typeTree(parameter.children[0]);
+            return unfold(parameter.children[0]);
         }
 
         result._type = parameter._type;
         if (parameter.children.length > 0) {
             uint256 length = parameter.children.length;
 
-            result.children = new TypeTopology[](length);
+            result.children = new TypeTree[](length);
             for (uint256 i; i < length; ) {
-                result.children[i] = typeTree(parameter.children[i]);
+                result.children[i] = unfold(parameter.children[i]);
                 unchecked {
                     ++i;
                 }
@@ -59,15 +59,21 @@ library Topology {
     function isStatic(
         ParameterConfig memory parameter
     ) internal pure returns (bool) {
-        if (parameter._type == ParameterType.Static) {
+        ParameterType _type = parameter._type;
+        if (_type == ParameterType.Static) {
             return true;
-        } else if (parameter._type == ParameterType.Tuple) {
-            for (uint256 i; i < parameter.children.length; ++i) {
+        } else if (
+            _type == ParameterType.Dynamic ||
+            _type == ParameterType.Array ||
+            _type == ParameterType.AbiEncoded
+        ) {
+            return false;
+        } else {
+            uint256 length = parameter.children.length;
+            for (uint256 i; i < length; ++i) {
                 if (!isStatic(parameter.children[i])) return false;
             }
             return true;
-        } else {
-            return false;
         }
     }
 
@@ -79,9 +85,15 @@ library Topology {
 
         if (_type == ParameterType.Static) {
             return true;
-        } else if (_type == ParameterType.Tuple) {
-            uint256 count = parameters.length;
-            for (uint256 j = index + 1; j < count; ++j) {
+        } else if (
+            _type == ParameterType.Dynamic ||
+            _type == ParameterType.Array ||
+            _type == ParameterType.AbiEncoded
+        ) {
+            return false;
+        } else {
+            uint256 length = parameters.length;
+            for (uint256 j = index + 1; j < length; ++j) {
                 if (parameters[j].parent != index) {
                     continue;
                 }
@@ -90,8 +102,6 @@ library Topology {
                 }
             }
             return true;
-        } else {
-            return false;
         }
     }
 }
