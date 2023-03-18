@@ -73,14 +73,18 @@ library Decoder {
         result.size = 32;
         result.children = new ParameterPayload[](length);
 
-        (bool isInline, uint256 itemSize) = _headSize(node.children[0]);
+        uint256 offset;
+        bool isPartInline = _isInline(node.children[0]);
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
-                _partLocation(data, location + 32, i * itemSize, isInline),
+                isPartInline
+                    ? 32 + location + offset
+                    : _tailLocation(data, 32 + location, offset),
                 node.children[0]
             );
-            result.size += isInline ? itemSize : result.children[i].size + 32;
+            result.size += result.children[i].size + (isPartInline ? 0 : 32);
+            offset += isPartInline ? result.children[i].size : 32;
         }
     }
 
@@ -102,24 +106,24 @@ library Decoder {
                 continue;
             }
 
-            (bool isInline, ) = _headSize(part);
-            result.isInline = result.isInline && isInline;
+            bool isPartInline = _isInline(part);
+            result.isInline = result.isInline && isPartInline;
             result.children[i] = _walk(
                 data,
-                _partLocation(data, location, offset, isInline),
+                isPartInline
+                    ? location + offset
+                    : _tailLocation(data, location, offset),
                 part
             );
-            result.size += result.children[i].size + (isInline ? 0 : 32);
-
-            offset += isInline ? result.children[i].size : 32;
+            result.size += result.children[i].size + (isPartInline ? 0 : 32);
+            offset += isPartInline ? result.children[i].size : 32;
         }
     }
 
-    function _partLocation(
+    function _tailLocation(
         bytes calldata data,
         uint256 location,
-        uint256 offset,
-        bool isInline
+        uint256 offset
     ) private pure returns (uint256) {
         /*
          * When encoding a block, a segment can be either included inline within
@@ -127,39 +131,31 @@ library Decoder {
          * of the block - at the TAIL.
          */
         uint256 headLocation = location + offset;
-        if (isInline) {
-            // located at head
-            return headLocation;
-        } else {
-            // located at tail
-            return location + uint256(_loadWord(data, headLocation));
-        }
+        return location + uint256(_loadWord(data, headLocation));
     }
 
-    function _headSize(
-        TypeTree memory node
-    ) private pure returns (bool, uint256) {
+    function _isInline(TypeTree memory node) private pure returns (bool) {
         assert(node._type != ParameterType.None);
 
         if (node._type == ParameterType.Static) {
-            return (true, 32);
+            return true;
         } else if (
             node._type == ParameterType.Dynamic ||
             node._type == ParameterType.Array ||
             node._type == ParameterType.AbiEncoded
         ) {
-            return (false, 32);
+            return false;
         } else {
-            uint256 size;
-            for (uint256 i; i < node.children.length; ++i) {
-                (bool isInline, uint256 nextSize) = _headSize(node.children[i]);
-                if (!isInline) {
-                    return (false, 32);
-                } else {
-                    size += nextSize;
+            uint256 length = node.children.length;
+            for (uint256 i; i < length; ) {
+                if (!_isInline(node.children[i])) {
+                    return false;
+                }
+                unchecked {
+                    ++i;
                 }
             }
-            return (true, size);
+            return true;
         }
     }
 
