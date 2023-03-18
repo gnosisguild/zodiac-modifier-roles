@@ -110,6 +110,7 @@ library Integrity {
         // TODO check that Array and tuple-oneOf nodes are topologically equivalent
         // TODO a lot more integrity checks
         // TODO Extraneous can only be child of AbiEncoded or Tuple
+        // TODO CallWithinAllowance must be direct child of AbiEncoded
     }
 
     function content(
@@ -124,7 +125,8 @@ library Integrity {
             _type == ParameterType.None &&
             !(comp == Comparison.Or ||
                 comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance)
+                comp == Comparison.ETHWithinAllowance ||
+                comp == Comparison.CallWithinAllowance)
         ) {
             revert UnsuitableComparison(index);
         }
@@ -132,7 +134,8 @@ library Integrity {
         if (
             (comp == Comparison.Or ||
                 comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance) &&
+                comp == Comparison.ETHWithinAllowance ||
+                comp == Comparison.CallWithinAllowance) &&
             _type != ParameterType.None
         ) {
             revert UnsuitableType(index);
