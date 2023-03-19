@@ -40,30 +40,6 @@ library Topology {
         }
     }
 
-    function childrenBounds(
-        uint8[] memory parents
-    ) internal pure returns (Bounds[] memory result) {
-        uint256 paramCount = parents.length;
-        assert(paramCount > 0);
-
-        result = new Bounds[](parents.length);
-        result[0].start = type(uint256).max;
-
-        // parents are BFS ordered, 0 is the root
-        for (uint256 i = 1; i < paramCount; ) {
-            result[i].start = type(uint256).max;
-            Bounds memory parentBounds = result[parents[i]];
-            if (parentBounds.start == type(uint256).max) {
-                parentBounds.start = i;
-            }
-            parentBounds.end = i + 1;
-            parentBounds.length = parentBounds.end - parentBounds.start;
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function isInline(TypeTree memory node) internal pure returns (bool) {
         assert(node._type != ParameterType.None);
 

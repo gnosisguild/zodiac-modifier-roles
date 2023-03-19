@@ -489,7 +489,10 @@ abstract contract PermissionChecker is Core, Periphery {
             payload.location,
             payload.size
         );
-        return parameter.isHashed ? keccak256(value) : bytes32(value);
+        return
+            parameter.comp == Comparison.EqualTo
+                ? keccak256(value)
+                : bytes32(value);
     }
 
     function revertWith(Status status) private pure returns (bool) {
