@@ -400,15 +400,15 @@ describe("Comparison", async () => {
        * First check valueOther which, hits no variant
        */
       await expect(execute(1000, valueOther)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
       // Exceed value for Variant2
       await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
 
       // Checks that both allowance balances still remain unchanged
@@ -439,12 +439,8 @@ describe("Comparison", async () => {
       expect((await modifier.allowances(allowanceId2)).balance).to.equal(0);
 
       // check that neither variant can now be executed
-      await expect(execute(1, value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
-      );
-      await expect(execute(1, value2)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
-      );
+      await expect(execute(1, value1)).to.be.revertedWith("NoMatchingBranch()");
+      await expect(execute(1, value2)).to.be.revertedWith("NoMatchingBranch()");
     });
   });
 });

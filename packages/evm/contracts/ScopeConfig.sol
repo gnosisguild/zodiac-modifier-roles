@@ -4,19 +4,19 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 
 library ScopeConfig {
-    // HEADER
-    // 8   bits  -> length
-    // 2   bits  -> options
+    // HEADER (stored as a single word in storage)
+    // 8   bits  -> length (Condition count)
+    // 2   bits  -> options (ExecutionOptions)
     // 1   bits  -> isWildcarded
     // 5   bits  -> unused
-    // 20  bytes -> pointer
+    // 20  bytes -> address that contains packed conditions
     uint256 private constant offsetLength = 248;
     uint256 private constant offsetOptions = 246;
     uint256 private constant offsetIsWildcarded = 245;
     uint256 private constant maskLength = 0xff << offsetLength;
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
-    // PARAMETER:
+    // CONDITION:(stored in code at the address kept in header)
     // 8    bits -> parent
     // 4    bits -> type
     // 4    bits -> comparison
