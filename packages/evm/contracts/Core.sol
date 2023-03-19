@@ -20,11 +20,6 @@ abstract contract Core is OwnableUpgradeable {
         bytes32 key
     ) internal view virtual returns (ParameterConfig memory result);
 
-    function _accruedAllowance(
-        Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure virtual returns (uint128 balance, uint64 refillTimestamp);
-
     function _key(
         address targetAddress,
         bytes4 selector

@@ -145,11 +145,11 @@ describe("Comparison", async () => {
       );
 
       await expect(executeSendingETH(initialBalance + 1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(initialBalance)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
 
       expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
@@ -170,11 +170,11 @@ describe("Comparison", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(351)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(350)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
     });
 
@@ -191,11 +191,11 @@ describe("Comparison", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(10)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(9)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `ETHAllowanceExceeded(${allowanceId})`
       );
     });
 
@@ -404,11 +404,11 @@ describe("Comparison", async () => {
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        "NoMatchingBranch()"
+        `ETHAllowanceExceeded(${allowanceId1})`
       );
       // Exceed value for Variant2
       await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        "NoMatchingBranch()"
+        `ETHAllowanceExceeded(${allowanceId2})`
       );
 
       // Checks that both allowance balances still remain unchanged
@@ -439,8 +439,12 @@ describe("Comparison", async () => {
       expect((await modifier.allowances(allowanceId2)).balance).to.equal(0);
 
       // check that neither variant can now be executed
-      await expect(execute(1, value1)).to.be.revertedWith("NoMatchingBranch()");
-      await expect(execute(1, value2)).to.be.revertedWith("NoMatchingBranch()");
+      await expect(execute(1, value1)).to.be.revertedWith(
+        `ETHAllowanceExceeded(${allowanceId1})`
+      );
+      await expect(execute(1, value2)).to.be.revertedWith(
+        `ETHAllowanceExceeded(${allowanceId2})`
+      );
     });
   });
 });
