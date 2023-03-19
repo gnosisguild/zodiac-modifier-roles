@@ -11,7 +11,7 @@ library WriteOnce {
     function store(bytes memory data) internal returns (address pointer) {
         // Append 00 to data so contract can't be called
         // Build init code
-        bytes memory code = creationCodeFor(abi.encodePacked(hex"00", data));
+        bytes memory code = creationCodeFor(data);
 
         // Deploy contract using create
         assembly {
@@ -45,7 +45,6 @@ library WriteOnce {
             result = new bytes(size);
 
             assembly {
-                // actually retrieve the code, this needs assembly
                 extcodecopy(pointer, add(result, 0x20), start, size)
             }
         }
@@ -73,8 +72,9 @@ library WriteOnce {
         return
             abi.encodePacked(
                 hex"63",
-                uint32(code.length),
+                uint32(code.length + 1),
                 hex"80_60_0E_60_00_39_60_00_F3",
+                hex"00",
                 code
             );
     }
