@@ -84,18 +84,18 @@ abstract contract PermissionLoader is Core {
         ParameterConfig memory result
     ) private pure {
         ScopeConfig.unpackParameter(buffer, index, modes, result);
-        uint256 left = childrenBounds[index].left;
-        uint256 right = childrenBounds[index].right;
-        if (right < left) {
+        if (childrenBounds[index].length == 0) {
             return;
         }
 
-        uint256 childrenCount = right - left + 1;
-        result.children = new ParameterConfig[](childrenCount);
-        for (uint j; j < childrenCount; ) {
+        uint256 start = childrenBounds[index].start;
+        uint256 count = childrenBounds[index].length;
+
+        result.children = new ParameterConfig[](count);
+        for (uint j; j < count; ) {
             _unpackParameter(
                 buffer,
-                left + j,
+                start + j,
                 childrenBounds,
                 modes,
                 result.children[j]

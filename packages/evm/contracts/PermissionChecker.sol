@@ -421,11 +421,11 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
         bytes32 compValue = parameter.compValue;
-        bool isStatic = Topology.isStatic(parameter);
+        bool isInline = parameter._type == ParameterType.Static;
         bytes calldata value = Decoder.pluck(
             data,
-            payload.location + (isStatic ? 0 : 32),
-            payload.size - (isStatic ? 0 : 32)
+            payload.location + (isInline ? 0 : 32),
+            payload.size - (isInline ? 0 : 32)
         );
 
         uint256 shift = uint16(bytes2(compValue));
@@ -448,16 +448,14 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory nothing) {
-        bytes32 value = bytes32(
-            Decoder.pluck(data, payload.location, payload.size)
+        uint256 value = uint256(
+            bytes32(Decoder.pluck(data, payload.location, payload.size))
         );
-
-        uint256 amount = uint256(value);
-        if (amount > parameter.allowance) {
+        if (value > parameter.allowance) {
             return (Status.AllowanceExceeded, nothing);
         }
 
-        return (Status.Ok, _trace(Trace({config: parameter, value: value})));
+        return (Status.Ok, _trace(Trace({condition: parameter, value: value})));
     }
 
     function _ethWithinAllowance(
@@ -468,10 +466,7 @@ abstract contract PermissionChecker is Core, Periphery {
             return (Status.ETHAllowanceExceeded, nothing);
         }
 
-        return (
-            Status.Ok,
-            _trace(Trace({config: parameter, value: bytes32(value)}))
-        );
+        return (Status.Ok, _trace(Trace({condition: parameter, value: value})));
     }
 
     function _callWithinAllowance(
@@ -481,10 +476,7 @@ abstract contract PermissionChecker is Core, Periphery {
             return (Status.CallAllowanceExceeded, nothing);
         }
 
-        return (
-            Status.Ok,
-            _trace(Trace({config: parameter, value: bytes32(uint256(1))}))
-        );
+        return (Status.Ok, _trace(Trace({condition: parameter, value: 1})));
     }
 
     function _pluck(

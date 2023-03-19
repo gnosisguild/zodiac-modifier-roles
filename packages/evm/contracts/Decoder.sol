@@ -21,7 +21,7 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        result = __block__(data, 4, Topology.unfold(parameter));
+        result = __block__(data, 4, Topology.typeTree(parameter));
         result.location = 0;
         result.size = data.length;
     }
@@ -29,12 +29,12 @@ library Decoder {
     function pluck(
         bytes calldata data,
         uint256 location,
-        uint256 length
+        uint256 size
     ) internal pure returns (bytes calldata) {
-        if (data.length < location + length) {
+        if (data.length < location + size) {
             revert CalldataOutOfBounds();
         }
-        return data[location:location + length];
+        return data[location:location + size];
     }
 
     function _walk(
@@ -67,21 +67,23 @@ library Decoder {
         uint256 location,
         Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
+        Topology.TypeTree memory template = node.children[0];
+        bool isInline = Topology.isInline(template);
+
         uint256 length = uint256(_loadWord(data, location));
         result.location = location;
         result.size = 32;
         result.children = new ParameterPayload[](length);
 
         uint256 offset;
-        bool isPartInline = _isInline(node.children[0]);
         for (uint256 i; i < length; ++i) {
             result.children[i] = _walk(
                 data,
-                _locationInBlock(data, 32 + location, offset, isPartInline),
-                node.children[0]
+                _locationInBlock(data, 32 + location, offset, isInline),
+                template
             );
-            result.size += result.children[i].size + (isPartInline ? 0 : 32);
-            offset += isPartInline ? result.children[i].size : 32;
+            result.size += result.children[i].size + (isInline ? 0 : 32);
+            offset += isInline ? result.children[i].size : 32;
         }
     }
 
@@ -101,14 +103,14 @@ library Decoder {
                 continue;
             }
 
-            bool isPartInline = _isInline(part);
+            bool isInline = Topology.isInline(part);
             result.children[i] = _walk(
                 data,
-                _locationInBlock(data, location, offset, isPartInline),
+                _locationInBlock(data, location, offset, isInline),
                 part
             );
-            result.size += result.children[i].size + (isPartInline ? 0 : 32);
-            offset += isPartInline ? result.children[i].size : 32;
+            result.size += result.children[i].size + (isInline ? 0 : 32);
+            offset += isInline ? result.children[i].size : 32;
         }
     }
 
@@ -116,7 +118,7 @@ library Decoder {
         bytes calldata data,
         uint256 location,
         uint256 offset,
-        bool isPartInline
+        bool isInline
     ) private pure returns (uint256) {
         /*
          * When encoding a block, a segment can be either included inline within
@@ -124,37 +126,10 @@ library Decoder {
          * of the block - at the TAIL.
          */
         uint256 headLocation = location + offset;
-        if (isPartInline) {
+        if (isInline) {
             return headLocation;
         } else {
             return location + uint256(_loadWord(data, headLocation));
-        }
-    }
-
-    function _isInline(
-        Topology.TypeTree memory node
-    ) private pure returns (bool) {
-        assert(node._type != ParameterType.None);
-
-        if (node._type == ParameterType.Static) {
-            return true;
-        } else if (
-            node._type == ParameterType.Dynamic ||
-            node._type == ParameterType.Array ||
-            node._type == ParameterType.AbiEncoded
-        ) {
-            return false;
-        } else {
-            uint256 length = node.children.length;
-            for (uint256 i; i < length; ) {
-                if (!_isInline(node.children[i])) {
-                    return false;
-                }
-                unchecked {
-                    ++i;
-                }
-            }
-            return true;
         }
     }
 

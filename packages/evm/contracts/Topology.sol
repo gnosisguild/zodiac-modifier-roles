@@ -10,50 +10,77 @@ library Topology {
     }
 
     struct Bounds {
-        uint256 left;
-        uint256 right;
+        uint256 start;
+        uint256 end;
+        uint256 length;
     }
 
     function childrenBounds(
-        uint8[] memory parents
+        ParameterConfigFlat[] memory parameters
     ) internal pure returns (Bounds[] memory result) {
-        uint256 count = parents.length;
-        assert(count > 0);
+        uint256 paramCount = parameters.length;
+        assert(paramCount > 0);
 
-        result = new Bounds[](parents.length);
-        result[0].left = type(uint256).max;
+        result = new Bounds[](paramCount);
+        result[0].start = type(uint256).max;
 
         // parents are BFS ordered, so we can use this to find the bounds
         // 0 is the root
-        for (uint256 i = 1; i < count; ) {
-            result[i].left = type(uint256).max;
-            Bounds memory bounds = result[parents[i]];
-            if (bounds.left == type(uint256).max) {
-                bounds.left = i;
+        for (uint256 i = 1; i < paramCount; ) {
+            result[i].start = type(uint256).max;
+            Bounds memory parentBounds = result[parameters[i].parent];
+            if (parentBounds.start == type(uint256).max) {
+                parentBounds.start = i;
             }
-            bounds.right = i;
+            parentBounds.end = i + 1;
+            parentBounds.length = parentBounds.end - parentBounds.start;
             unchecked {
                 ++i;
             }
         }
     }
 
-    function isStatic(
-        ParameterConfig memory parameter
-    ) internal pure returns (bool) {
-        ParameterType _type = parameter._type;
-        if (_type == ParameterType.Static) {
+    function childrenBounds(
+        uint8[] memory parents
+    ) internal pure returns (Bounds[] memory result) {
+        uint256 paramCount = parents.length;
+        assert(paramCount > 0);
+
+        result = new Bounds[](parents.length);
+        result[0].start = type(uint256).max;
+
+        // parents are BFS ordered, 0 is the root
+        for (uint256 i = 1; i < paramCount; ) {
+            result[i].start = type(uint256).max;
+            Bounds memory parentBounds = result[parents[i]];
+            if (parentBounds.start == type(uint256).max) {
+                parentBounds.start = i;
+            }
+            parentBounds.end = i + 1;
+            parentBounds.length = parentBounds.end - parentBounds.start;
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function isInline(TypeTree memory node) internal pure returns (bool) {
+        assert(node._type != ParameterType.None);
+
+        if (node._type == ParameterType.Static) {
             return true;
         } else if (
-            _type == ParameterType.Dynamic ||
-            _type == ParameterType.Array ||
-            _type == ParameterType.AbiEncoded
+            node._type == ParameterType.Dynamic ||
+            node._type == ParameterType.Array ||
+            node._type == ParameterType.AbiEncoded
         ) {
             return false;
         } else {
-            uint256 length = parameter.children.length;
+            uint256 length = node.children.length;
             for (uint256 i; i < length; ) {
-                if (!isStatic(parameter.children[i])) return false;
+                if (!isInline(node.children[i])) {
+                    return false;
+                }
                 unchecked {
                     ++i;
                 }
@@ -62,7 +89,7 @@ library Topology {
         }
     }
 
-    function isStatic(
+    function isInline(
         ParameterConfigFlat[] memory parameters,
         uint256 index
     ) internal pure returns (bool) {
@@ -82,7 +109,7 @@ library Topology {
                 if (parameters[j].parent != index) {
                     continue;
                 }
-                if (!isStatic(parameters, j)) {
+                if (!isInline(parameters, j)) {
                     return false;
                 }
             }
@@ -90,13 +117,13 @@ library Topology {
         }
     }
 
-    function unfold(
+    function typeTree(
         ParameterConfig memory parameter
     ) internal pure returns (TypeTree memory result) {
         if (
             parameter.comp == Comparison.And || parameter.comp == Comparison.Or
         ) {
-            return unfold(parameter.children[0]);
+            return typeTree(parameter.children[0]);
         }
 
         result._type = parameter._type;
@@ -104,7 +131,7 @@ library Topology {
             uint256 length = parameter.children.length;
             result.children = new TypeTree[](length);
             for (uint256 i; i < length; ) {
-                result.children[i] = unfold(parameter.children[i]);
+                result.children[i] = typeTree(parameter.children[i]);
                 unchecked {
                     ++i;
                 }

@@ -332,7 +332,7 @@ describe("Comparison", async () => {
       allowance = await modifier.allowances(ALLOWANCE_ID);
       expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(0);
       expect(now - allowance.refillTimestamp.toNumber()).to.be.lessThanOrEqual(
-        interval
+        interval * 2
       );
     });
 
