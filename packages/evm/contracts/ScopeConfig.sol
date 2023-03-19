@@ -128,17 +128,18 @@ library ScopeConfig {
             assembly {
                 word := mload(add(buffer, offset))
             }
-
             uint16 bits = uint16(bytes2(word));
-            result[i].parent = uint8((bits & maskParent) >> offsetParent);
-            result[i].paramType = ParameterType(
+
+            ConditionFlat memory condition = result[i];
+            condition.parent = uint8((bits & maskParent) >> offsetParent);
+            condition.paramType = ParameterType(
                 (bits & maskParamType) >> offsetParamType
             );
-            result[i].operator = Operator(
+            condition.operator = Operator(
                 (bits & maskOperator) >> offsetOperator
             );
 
-            if (result[i].operator >= Operator.EqualTo) {
+            if (condition.operator >= Operator.EqualTo) {
                 assembly {
                     word := mload(add(buffer, compValueOffset))
                 }
