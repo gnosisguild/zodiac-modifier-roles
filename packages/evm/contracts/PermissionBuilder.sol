@@ -157,8 +157,8 @@ abstract contract PermissionBuilder is Core {
     function _track(Trace[] memory entries) internal {
         uint256 paramCount = entries.length;
         for (uint256 i; i < paramCount; ) {
-            ParameterConfig memory parameter = entries[i].config;
-            uint256 amount = uint256(entries[i].value);
+            ParameterConfig memory parameter = entries[i].condition;
+            uint256 value = entries[i].value;
 
             uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
             Allowance memory allowance = allowances[allowanceId];
@@ -173,10 +173,10 @@ abstract contract PermissionBuilder is Core {
             // storage again (we don't rely on the allowance value initially
             // loaded to ParameterConfig). We repeat the accrual math and consider
             // that if it fails here, then it may be due to a double spend.
-            if (amount > balance) {
+            if (value > balance) {
                 revert AllowanceDoubleSpend(allowanceId);
             }
-            allowances[allowanceId].balance = balance - uint128(amount);
+            allowances[allowanceId].balance = balance - uint128(value);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
 
             unchecked {
@@ -220,7 +220,7 @@ abstract contract PermissionBuilder is Core {
         for (uint256 i; i < paramCount; ) {
             if (
                 parameters[i].comp == Comparison.EqualTo &&
-                !Topology.isStatic(parameters, i)
+                Topology.isInline(parameters, i) == false
             ) {
                 bytes memory compValue = parameters[i].compValue;
                 uint256 length = compValue.length;
