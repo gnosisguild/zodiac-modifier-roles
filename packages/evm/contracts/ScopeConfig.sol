@@ -4,15 +4,12 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./Types.sol";
 
 library ScopeConfig {
-    enum Packing {
-        Nothing,
-        Word,
-        Hash
-    }
     // HEADER
-    // 8   bits -> length
-    // 2   bits -> options
-    // 1   bits -> isWildcarded
+    // 8   bits  -> length
+    // 2   bits  -> options
+    // 1   bits  -> isWildcarded
+    // 5   bits  -> unused
+    // 20  bytes -> pointer
     uint256 private constant offsetLength = 248;
     uint256 private constant offsetOptions = 246;
     uint256 private constant offsetIsWildcarded = 245;
@@ -20,52 +17,26 @@ library ScopeConfig {
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // PARAMETER:
-    // 7    bits -> parent
-    // 3    bits -> type
+    // 8    bits -> parent
+    // 4    bits -> type
     // 4    bits -> comparison
-    // 2    bits -> packing
     uint256 private constant bytesPerParameter = 2;
-    uint16 private constant offsetParent = 9;
-    uint16 private constant offsetType = 6;
-    uint16 private constant offsetComparison = 2;
-    uint16 private constant offsetPacking = 0;
-    uint16 private constant maskParent = uint16(0x7f << offsetParent);
-    uint16 private constant maskType = uint16(0x7 << offsetType);
+    uint16 private constant offsetParent = 8;
+    uint16 private constant offsetType = 4;
+    uint16 private constant offsetComparison = 0;
+    uint16 private constant maskParent = uint16(0xff << offsetParent);
+    uint16 private constant maskType = uint16(0xf << offsetType);
     uint16 private constant maskComparison = uint16(0xf << offsetComparison);
-    uint16 private constant maskPacking = 0x3;
 
-    function bufferSize(
-        Packing[] memory modes
-    ) internal pure returns (uint256 result) {
-        uint256 count = modes.length;
-
-        result = count * bytesPerParameter;
-        for (uint256 i; i < count; ) {
-            if (modes[i] != Packing.Nothing) {
-                result += 32;
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function calculateModes(
+    function packedSize(
         ParameterConfigFlat[] memory parameters
-    ) internal pure returns (Packing[] memory modes) {
-        uint256 count = parameters.length;
-        modes = new Packing[](count);
+    ) internal pure returns (uint256 result) {
+        uint256 paramCount = parameters.length;
 
-        for (uint256 i; i < count; ) {
-            Comparison comparison = parameters[i].comp;
-
-            if (comparison < Comparison.EqualTo) {
-                modes[i] = ScopeConfig.Packing.Nothing;
-            } else {
-                modes[i] = parameters[i].compValue.length > 32
-                    ? Packing.Hash
-                    : Packing.Word;
+        result = paramCount * bytesPerParameter;
+        for (uint256 i; i < paramCount; ) {
+            if (parameters[i].comp >= Comparison.EqualTo) {
+                result += 32;
             }
 
             unchecked {
@@ -111,120 +82,69 @@ library ScopeConfig {
     function packParameter(
         bytes memory buffer,
         uint256 index,
-        Packing[] memory modes,
         ParameterConfigFlat memory parameter
     ) internal pure {
         uint16 bits = (uint16(parameter.parent) << offsetParent) |
             (uint16(parameter._type) << offsetType) |
-            (uint16(parameter.comp) << offsetComparison) |
-            (uint16(modes[index]) << offsetPacking);
+            (uint16(parameter.comp) << offsetComparison);
 
         uint256 offset = index * bytesPerParameter;
         unchecked {
             buffer[offset] = bytes1(uint8(bits >> 8));
             buffer[offset + 1] = bytes1(uint8(bits));
         }
-
-        if (modes[index] != Packing.Nothing) {
-            packCompValue(
-                buffer,
-                _compValueOffset(index, modes),
-                modes[index],
-                parameter.compValue
-            );
-        }
-    }
-
-    function unpackParameter(
-        bytes memory buffer,
-        uint256 index,
-        Packing[] memory modes,
-        ParameterConfig memory result
-    ) internal pure {
-        uint256 offset = 32 + index * bytesPerParameter;
-        bytes32 word;
-        assembly {
-            word := mload(add(buffer, offset))
-        }
-        uint16 bits = uint16(bytes2(word));
-        result._type = ParameterType((bits & maskType) >> offsetType);
-        result.comp = Comparison((bits & maskComparison) >> offsetComparison);
-
-        if (modes[index] != Packing.Nothing) {
-            unpackCompValue(
-                buffer,
-                _compValueOffset(index, modes),
-                modes[index],
-                result
-            );
-        }
     }
 
     function packCompValue(
         bytes memory buffer,
         uint256 offset,
-        Packing mode,
-        bytes memory compValue
-    ) private pure {
-        if (mode != Packing.Nothing) {
-            bytes32 word = mode == Packing.Hash
-                ? keccak256(compValue)
-                : bytes32(compValue);
+        ParameterConfigFlat memory parameter
+    ) internal pure {
+        bytes32 word = parameter.comp == Comparison.EqualTo
+            ? keccak256(parameter.compValue)
+            : bytes32(parameter.compValue);
 
-            assembly {
-                mstore(add(buffer, offset), word)
-            }
+        assembly {
+            mstore(add(buffer, offset), word)
         }
     }
 
-    function unpackCompValue(
+    function unpackParameters(
         bytes memory buffer,
-        uint256 offset,
-        Packing mode,
-        ParameterConfig memory result
-    ) private pure {
-        if (mode != Packing.Nothing) {
-            bytes32 word;
-            assembly {
-                word := mload(add(buffer, offset))
-            }
-            result.compValue = word;
-            result.isHashed = mode == Packing.Hash;
-        }
-    }
-
-    function unpackModes(
-        bytes memory buffer,
-        uint256 count
-    ) internal pure returns (uint8[] memory parents, Packing[] memory modes) {
-        parents = new uint8[](count);
-        modes = new Packing[](count);
+        uint256 paramCount
+    )
+        internal
+        pure
+        returns (
+            ParameterConfigFlat[] memory result,
+            bytes32[] memory compValues
+        )
+    {
+        result = new ParameterConfigFlat[](paramCount);
+        compValues = new bytes32[](paramCount);
 
         bytes32 word;
-        for (uint256 i; i < count; ) {
-            uint256 offset = 32 + i * bytesPerParameter;
+        uint256 paramOffset;
+        uint256 compValueOffset = 32 + paramCount * bytesPerParameter;
+        for (uint256 i; i < paramCount; ) {
+            paramOffset = 32 + i * bytesPerParameter;
             assembly {
-                word := mload(add(buffer, offset))
+                word := mload(add(buffer, paramOffset))
             }
 
             uint16 bits = uint16(bytes2(word));
-            parents[i] = uint8((bits & maskParent) >> offsetParent);
-            modes[i] = Packing(bits & maskPacking);
+            result[i].parent = uint8((bits & maskParent) >> offsetParent);
+            result[i]._type = ParameterType((bits & maskType) >> offsetType);
+            result[i].comp = Comparison(
+                (bits & maskComparison) >> offsetComparison
+            );
 
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function _compValueOffset(
-        uint256 index,
-        Packing[] memory modes
-    ) private pure returns (uint256 offset) {
-        offset = 32 + modes.length * bytesPerParameter;
-        for (uint256 i; i < index; ) {
-            if (modes[i] != Packing.Nothing) {
-                offset += 32;
+            if (result[i].comp >= Comparison.EqualTo) {
+                assembly {
+                    word := mload(add(buffer, compValueOffset))
+                }
+                compValues[i] = word;
+                compValueOffset += 32;
             }
 
             unchecked {

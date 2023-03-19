@@ -4,25 +4,6 @@ pragma solidity >=0.6.0 <0.9.0;
 import "../ScopeConfig.sol";
 
 contract MockScopeConfig {
-    function packParameter(
-        uint256 index,
-        ScopeConfig.Packing[] memory modes,
-        ParameterConfigFlat memory parameter
-    ) public pure returns (bytes memory buffer) {
-        buffer = new bytes(1024);
-        ScopeConfig.packParameter(buffer, index, modes, parameter);
-    }
-
-    function unpackParameter(
-        bytes memory buffer,
-        uint256 index,
-        ScopeConfig.Packing[] memory modes
-    ) public pure returns (ParameterType _type, Comparison comp) {
-        ParameterConfig memory p;
-        ScopeConfig.unpackParameter(buffer, index, modes, p);
-        return (p._type, p.comp);
-    }
-
     function packHeader(
         uint256 length,
         bool isWildcarded,
