@@ -71,7 +71,7 @@ abstract contract PermissionChecker is Core, Periphery {
         try adapter.unwrap(to, value, data, operation) returns (
             UnwrappedTransaction[] memory transactions
         ) {
-            for (uint256 i; i < transactions.length; ++i) {
+            for (uint256 i; i < transactions.length; ) {
                 (Status status, Trace[] memory more) = _transaction(
                     role,
                     data,
@@ -81,6 +81,9 @@ abstract contract PermissionChecker is Core, Periphery {
                     revertWith(status);
                 }
                 result = _trace(result, more);
+                unchecked {
+                    ++i;
+                }
             }
         } catch {
             revert MalformedMultiEntrypoint();
@@ -116,23 +119,20 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Status, Trace[] memory nothing) {
+    ) private view returns (Status, Trace[] memory trace) {
         if (data.length != 0 && data.length < 4) {
-            return (Status.FunctionSignatureTooShort, nothing);
+            return (Status.FunctionSignatureTooShort, trace);
         }
 
         TargetAddress storage target = role.targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
-            return (
-                _executionOptions(value, operation, target.options),
-                nothing
-            );
+            return (_executionOptions(value, operation, target.options), trace);
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
-                return (Status.FunctionNotAllowed, nothing);
+                return (Status.FunctionNotAllowed, trace);
             }
 
             (, bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
@@ -140,11 +140,11 @@ abstract contract PermissionChecker is Core, Periphery {
 
             Status status = _executionOptions(value, operation, options);
             if (status != Status.Ok) {
-                return (status, nothing);
+                return (status, trace);
             }
 
             if (isWildcarded) {
-                return (Status.Ok, nothing);
+                return (Status.Ok, trace);
             }
 
             ParameterConfig memory parameter = _load(role, key);
@@ -152,7 +152,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
             return _walk(value, data, parameter, payload);
         } else {
-            return (Status.TargetAddressNotAllowed, nothing);
+            return (Status.TargetAddressNotAllowed, trace);
         }
     }
 
@@ -191,12 +191,12 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) internal pure returns (Status, Trace[] memory nothing) {
+    ) internal pure returns (Status, Trace[] memory trace) {
         Comparison comp = parameter.comp;
 
         if (comp < Comparison.EqualTo) {
             if (comp == Comparison.Whatever) {
-                return (Status.Ok, nothing);
+                return (Status.Ok, trace);
             } else if (comp == Comparison.Matches) {
                 return _matches(value, data, parameter, payload);
             } else if (comp == Comparison.And) {
@@ -285,7 +285,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status, Trace[] memory nothing) {
+    ) private pure returns (Status, Trace[] memory) {
         for (uint256 i; i < parameter.children.length; ) {
             (Status status, Trace[] memory trace) = _walk(
                 value,
@@ -300,7 +300,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.ParameterNotOneOfAllowed, nothing);
+        return (Status.NoMatchingBranch, _trace());
     }
 
     function _subsetOf(
@@ -309,23 +309,23 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterConfig memory parameter,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        ParameterPayload[] memory values = payload.children;
-        if (values.length == 0) {
+        ParameterPayload[] memory payloads = payload.children;
+        if (payloads.length == 0) {
             return (Status.ParameterNotSubsetOfAllowed, trace);
         }
-        ParameterConfig[] memory compValues = parameter.children;
+        ParameterConfig[] memory conditions = parameter.children;
 
         uint256 taken;
-        for (uint256 i; i < values.length; ++i) {
+        for (uint256 i; i < payloads.length; ++i) {
             bool found = false;
-            for (uint256 j; j < compValues.length; ++j) {
+            for (uint256 j; j < conditions.length; ++j) {
                 if (taken & (1 << j) != 0) continue;
 
                 (Status status, Trace[] memory more) = _walk(
                     value,
                     data,
-                    compValues[j],
-                    values[i]
+                    conditions[j],
+                    payloads[i]
                 );
                 if (status == Status.Ok) {
                     found = true;
@@ -355,7 +355,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 payload.children[i]
             );
             if (status != Status.Ok) {
-                return (Status.ArrayElementsNotAllowed, _trace());
+                return (Status.NotEveryArrayElementPasses, _trace());
             }
             trace = _trace(trace, more);
             unchecked {
@@ -385,14 +385,14 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.ArrayElementsSomeNotAllowed, _trace());
+        return (Status.NoArrayElementPasses, _trace());
     }
 
     function _compare(
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Trace[] memory nothing) {
+    ) private pure returns (Status status, Trace[] memory trace) {
         Comparison comp = parameter.comp;
         bytes32 compValue = parameter.compValue;
         bytes32 value = _pluck(data, parameter, payload);
@@ -407,9 +407,16 @@ abstract contract PermissionChecker is Core, Periphery {
             status = Status.Ok;
         }
 
-        return (status, nothing);
+        return (status, trace);
     }
 
+    /**
+     * Applies a shift and bitmask on the payload bytes and compares the
+     * result to the expected value. The shift offset, bitmask, and expected
+     * value are specified in the compValue parameter, which is tightly
+     * packed as follows:
+     * <2 bytes shift offset><15 bytes bitmask><15 bytes expected value>
+     */
     function _bitmask(
         bytes calldata data,
         ParameterConfig memory parameter,
@@ -507,14 +514,14 @@ abstract contract PermissionChecker is Core, Periphery {
             revert ParameterLessThanAllowed();
         } else if (status == Status.ParameterGreaterThanAllowed) {
             revert ParameterGreaterThanAllowed();
-        } else if (status == Status.ParameterNotOneOfAllowed) {
-            revert ParameterNotOneOfAllowed();
         } else if (status == Status.ParameterNotAMatch) {
             revert ParameterNotAMatch();
-        } else if (status == Status.ArrayElementsNotAllowed) {
-            revert ArrayElementsNotAllowed();
-        } else if (status == Status.ArrayElementsSomeNotAllowed) {
-            revert ArrayElementsSomeNotAllowed();
+        } else if (status == Status.NoMatchingBranch) {
+            revert NoMatchingBranch();
+        } else if (status == Status.NotEveryArrayElementPasses) {
+            revert NotEveryArrayElementPasses();
+        } else if (status == Status.NoArrayElementPasses) {
+            revert NoArrayElementPasses();
         } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
         } else if (status == Status.AllowanceExceeded) {
@@ -548,14 +555,14 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterLessThanAllowed,
         /// Parameter value greater than maximum allowed by role
         ParameterGreaterThanAllowed,
-        /// Parameter value not a subset of allowed
-        ParameterNotOneOfAllowed,
         /// Parameter value does not match
         ParameterNotAMatch,
+        /// An order condition was not met
+        NoMatchingBranch,
         /// Array elements do not meet allowed criteria for every element
-        ArrayElementsNotAllowed,
+        NotEveryArrayElementPasses,
         /// Array elements do not meet allowed criteria for at least one element
-        ArrayElementsSomeNotAllowed,
+        NoArrayElementPasses,
         /// Parameter value not a subset of allowed
         ParameterNotSubsetOfAllowed,
         /// Bitmask exceeded value length
@@ -602,16 +609,16 @@ abstract contract PermissionChecker is Core, Periphery {
     /// Parameter value greater than maximum
     error ParameterGreaterThanAllowed();
 
-    error ParameterNotOneOfAllowed();
-
     /// Parameter value does not match specified condition
     error ParameterNotAMatch();
 
+    error NoMatchingBranch();
+
     /// Array elements do not meet allowed criteria for every element
-    error ArrayElementsNotAllowed();
+    error NotEveryArrayElementPasses();
 
     /// Array elements do not meet allowed criteria for at least one element
-    error ArrayElementsSomeNotAllowed();
+    error NoArrayElementPasses();
 
     /// Parameter value not a subset of allowed values
     error ParameterNotSubsetOfAllowed();

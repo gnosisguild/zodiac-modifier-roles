@@ -592,7 +592,7 @@ describe("Comparison", async () => {
 
     await expect(invoke(11)).to.not.be.reverted;
     await expect(invoke(22)).to.not.be.reverted;
-    await expect(invoke(33)).to.be.revertedWith("ParameterNotOneOfAllowed()");
+    await expect(invoke(33)).to.be.revertedWith("NoMatchingBranch()");
   });
 
   it("checks an And comparison over an AbiEncoded node", async () => {
@@ -817,7 +817,7 @@ describe("Comparison", async () => {
     await expect(invoke(false, "Third String")).to.not.be.reverted;
 
     await expect(invoke(false, "Something else")).to.be.revertedWith(
-      "ParameterNotOneOfAllowed()"
+      "NoMatchingBranch()"
     );
   });
 
@@ -913,12 +913,12 @@ describe("Comparison", async () => {
     await expect(invoke({ a: 22222, b: addressTwo })).to.not.be.reverted;
 
     await expect(invoke({ a: 22222, b: addressOne })).to.be.revertedWith(
-      "ParameterNotOneOfAllowed()"
+      "NoMatchingBranch()"
     );
 
     await expect(
       invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-    ).to.be.revertedWith("ParameterNotOneOfAllowed()");
+    ).to.be.revertedWith("NoMatchingBranch()");
   });
 
   it("checks an Or array comparison", async () => {
@@ -1060,11 +1060,11 @@ describe("Comparison", async () => {
         { a: 123456, b: address1 },
         { a: 111111, b: address2 },
       ])
-    ).to.be.revertedWith("ParameterNotOneOfAllowed()");
+    ).to.be.revertedWith("NoMatchingBranch()");
 
     await expect(invoke([{ a: 123121212, b: address3 }])).to.not.be.reverted;
 
-    await expect(invoke([])).to.be.revertedWith("ParameterNotOneOfAllowed()");
+    await expect(invoke([])).to.be.revertedWith("NoMatchingBranch()");
   });
 
   it("checks a static tuple comparison", async () => {
@@ -1309,13 +1309,13 @@ describe("Comparison", async () => {
         { a: 1111, b: address3 },
         { a: 2222, b: address2 },
       ])
-    ).to.be.revertedWith("ArrayElementsNotAllowed()");
+    ).to.be.revertedWith("NotEveryArrayElementPasses()");
     await expect(
       invoke([
         { a: 300000, b: address2 },
         { a: 2222, b: address2 },
       ])
-    ).to.be.revertedWith("ArrayElementsNotAllowed()");
+    ).to.be.revertedWith("NotEveryArrayElementPasses()");
   });
 
   it("checks an array SOME comparison", async () => {
@@ -1390,7 +1390,7 @@ describe("Comparison", async () => {
       ])
     ).to.not.be.reverted;
     await expect(invoke([{ a: 1111, b: address1 }])).to.be.revertedWith(
-      "ArrayElementsSomeNotAllowed()"
+      "NoArrayElementPasses()"
     );
   });
 
@@ -1910,14 +1910,14 @@ describe("Comparison", async () => {
       await expect(invoke(true, "First String")).to.not.be.reverted;
       // wrong first argument
       await expect(invoke(false, "Good Morning!")).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
       // fixing the first argument
       await expect(invoke(true, "Good Morning!")).to.not.be.reverted;
       await expect(invoke(true, "Third String")).to.not.be.reverted;
 
       await expect(invoke(false, "Something else")).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
     });
 
@@ -2013,12 +2013,12 @@ describe("Comparison", async () => {
       await expect(invoke({ a: 22222, b: addressTwo })).to.not.be.reverted;
 
       await expect(invoke({ a: 22222, b: addressOne })).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
 
       await expect(
         invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-      ).to.be.revertedWith("ParameterNotOneOfAllowed()");
+      ).to.be.revertedWith("NoMatchingBranch()");
     });
   });
 });
