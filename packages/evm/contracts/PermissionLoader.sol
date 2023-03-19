@@ -37,7 +37,6 @@ abstract contract PermissionLoader is Core {
         (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(value);
         bytes memory buffer = WriteOnce.load(pointer);
         result = _unpack(buffer, length);
-        _loadAllowances(result);
     }
 
     function _pack(
@@ -110,28 +109,6 @@ abstract contract PermissionLoader is Core {
 
             unchecked {
                 ++j;
-            }
-        }
-    }
-
-    function _loadAllowances(ParameterConfig memory result) private view {
-        if (
-            result.comp == Comparison.WithinAllowance ||
-            result.comp == Comparison.ETHWithinAllowance ||
-            result.comp == Comparison.CallWithinAllowance
-        ) {
-            uint16 allowanceId = uint16(uint256(result.compValue));
-            (result.allowance, ) = _accruedAllowance(
-                allowances[allowanceId],
-                block.timestamp
-            );
-        }
-
-        uint256 length = result.children.length;
-        for (uint256 i; i < length; ) {
-            _loadAllowances(result.children[i]);
-            unchecked {
-                ++i;
             }
         }
     }

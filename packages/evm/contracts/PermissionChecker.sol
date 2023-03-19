@@ -449,13 +449,10 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         ParameterConfig memory parameter,
         ParameterPayload memory payload
-    ) private pure returns (Status status, Trace[] memory nothing) {
+    ) private pure returns (Status, Trace[] memory) {
         uint256 value = uint256(
             bytes32(Decoder.pluck(data, payload.location, payload.size))
         );
-        if (value > parameter.allowance) {
-            return (Status.AllowanceExceeded, nothing);
-        }
 
         return (Status.Ok, _trace(Trace({condition: parameter, value: value})));
     }
@@ -463,21 +460,13 @@ abstract contract PermissionChecker is Core, Periphery {
     function _ethWithinAllowance(
         uint256 value,
         ParameterConfig memory parameter
-    ) private pure returns (Status status, Trace[] memory nothing) {
-        if (value > parameter.allowance) {
-            return (Status.ETHAllowanceExceeded, nothing);
-        }
-
+    ) private pure returns (Status status, Trace[] memory) {
         return (Status.Ok, _trace(Trace({condition: parameter, value: value})));
     }
 
     function _callWithinAllowance(
         ParameterConfig memory parameter
-    ) private pure returns (Status status, Trace[] memory nothing) {
-        if (parameter.allowance == 0) {
-            return (Status.CallAllowanceExceeded, nothing);
-        }
-
+    ) private pure returns (Status status, Trace[] memory) {
         return (Status.Ok, _trace(Trace({condition: parameter, value: 1})));
     }
 
@@ -524,12 +513,6 @@ abstract contract PermissionChecker is Core, Periphery {
             revert NoArrayElementPasses();
         } else if (status == Status.ParameterNotSubsetOfAllowed) {
             revert ParameterNotSubsetOfAllowed();
-        } else if (status == Status.AllowanceExceeded) {
-            revert AllowanceExceeded();
-        } else if (status == Status.ETHAllowanceExceeded) {
-            revert ETHAllowanceExceeded();
-        } else if (status == Status.CallAllowanceExceeded) {
-            revert CallAllowanceExceeded();
         } else if (status == Status.BitmaskOverflow) {
             revert BitmaskOverflow();
         } else {
@@ -569,12 +552,6 @@ abstract contract PermissionChecker is Core, Periphery {
         BitmaskOverflow,
         /// Bitmask not an allowed value
         BitmaskNotAllowed,
-        /// Allowance exceeded
-        AllowanceExceeded,
-        /// ETH Allowance exceeded
-        ETHAllowanceExceeded,
-        /// Call Allowance exceeded
-        CallAllowanceExceeded,
         /// Allowance was double spent
         AllowanceDoubleSpend
     }
@@ -625,15 +602,6 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// only multisend txs with an offset of 32 bytes are allowed
     error UnacceptableMultiSendOffset();
-
-    /// Allowance exceeded
-    error AllowanceExceeded();
-
-    /// Allowance exceeded
-    error ETHAllowanceExceeded();
-
-    /// Allowance exceeded
-    error CallAllowanceExceeded();
 
     /// Bitmask exceeded value length
     error BitmaskOverflow();

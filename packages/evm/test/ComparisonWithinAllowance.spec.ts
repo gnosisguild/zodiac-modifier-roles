@@ -8,8 +8,6 @@ import "@nomiclabs/hardhat-ethers";
 import { Comparison, ExecutionOptions, ParameterType } from "./utils";
 
 describe("Comparison", async () => {
-  const ALLOWANCE_ID = 22;
-
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
   const setup = deployments.createFixture(async () => {
@@ -33,23 +31,26 @@ describe("Comparison", async () => {
 
     await modifier.enableModule(invoker.address);
 
-    async function setAllowance({
-      balance,
-      maxBalance,
-      refillAmount,
-      refillInterval,
-      refillTimestamp,
-    }: {
-      balance: BigNumberish;
-      maxBalance?: BigNumberish;
-      refillAmount: BigNumberish;
-      refillInterval: BigNumberish;
-      refillTimestamp: BigNumberish;
-    }) {
+    async function setAllowance(
+      allowanceId: number,
+      {
+        balance,
+        maxBalance,
+        refillAmount,
+        refillInterval,
+        refillTimestamp,
+      }: {
+        balance: BigNumberish;
+        maxBalance?: BigNumberish;
+        refillAmount: BigNumberish;
+        refillInterval: BigNumberish;
+        refillTimestamp: BigNumberish;
+      }
+    ) {
       await modifier
         .connect(owner)
         .setAllowance(
-          ALLOWANCE_ID,
+          allowanceId,
           balance,
           maxBalance || 0,
           refillAmount,
@@ -58,7 +59,7 @@ describe("Comparison", async () => {
         );
     }
 
-    async function setRole() {
+    async function setRole(allowanceId: number) {
       const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
@@ -85,7 +86,7 @@ describe("Comparison", async () => {
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
+            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
         ExecutionOptions.None
@@ -106,7 +107,7 @@ describe("Comparison", async () => {
       return { invoke, modifier };
     }
 
-    async function setRoleTwoParams() {
+    async function setRoleTwoParams(allowanceId: number) {
       const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithTwoParams")
@@ -133,13 +134,13 @@ describe("Comparison", async () => {
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
+            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
           {
             parent: 0,
             _type: ParameterType.Static,
             comp: Comparison.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [ALLOWANCE_ID]),
+            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
         ExecutionOptions.None
@@ -172,94 +173,120 @@ describe("Comparison", async () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
       const { setAllowance, setRole } = await setup();
 
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 1000,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1001)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(1000)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("passes a check with only from balance and refill available", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 333,
         refillInterval: 1000,
         refillAmount: 100,
         refillTimestamp: timestamp - 60,
       });
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(334)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(334)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(333)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("passes a check balance from available+refill", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 250,
         refillInterval: 500,
         refillAmount: 100,
         refillTimestamp: timestamp - 750,
       });
 
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(351)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(351)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(350)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 250,
         refillInterval: 1000,
         refillAmount: 100,
         refillTimestamp: timestamp - 50,
       });
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(251)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(251)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(250)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
       const interval = 10000;
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 0,
         maxBalance: 1000,
         refillInterval: interval,
         refillAmount: 9999999,
         refillTimestamp: timestamp - interval * 10,
       });
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(1001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(1001)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(1000)).to.not.be.reverted;
     });
 
     it("fails a check with balance from refill but capped by maxBalance", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 0,
         maxBalance: 9000,
         refillInterval: 1000,
         refillAmount: 10000,
         refillTimestamp: timestamp - 5000,
       });
-      const { invoke } = await setRole();
+      const { invoke } = await setRole(allowanceId);
 
-      await expect(invoke(9001)).to.be.revertedWith("AllowanceExceeded()");
+      await expect(invoke(9001)).to.be.revertedWith(
+        `AllowanceExceeded(${allowanceId})`
+      );
       await expect(invoke(9000)).to.not.be.reverted;
     });
   });
@@ -267,45 +294,47 @@ describe("Comparison", async () => {
   describe("WithinAllowance - Track", async () => {
     it("Updates tracking, even with multiple parameters referencing the same limit", async () => {
       const { setAllowance, setRoleTwoParams } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 3000,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
-      const { invoke, modifier } = await setRoleTwoParams();
+      const { invoke, modifier } = await setRoleTwoParams(allowanceId);
 
-      let allowance = await modifier.allowances(ALLOWANCE_ID);
+      let allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3001, 3001)).to.be.revertedWith(
-        "AllowanceExceeded()"
+        `AllowanceExceeded(${allowanceId})`
       );
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(1500, 1500)).to.not.be.reverted;
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(0);
     });
 
     it("Fails at tracking, when multiple parameters referencing the same limit overspend", async () => {
       const { setAllowance, setRoleTwoParams } = await setup();
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 3000,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
-      const { invoke, modifier } = await setRoleTwoParams();
+      const { invoke, modifier } = await setRoleTwoParams(allowanceId);
 
-      let allowance = await modifier.allowances(ALLOWANCE_ID);
+      let allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3000, 1)).to.be.revertedWith(
-        `AllowanceDoubleSpend(${ALLOWANCE_ID})`
+        `AllowanceExceeded(${allowanceId})`
       );
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(3000);
     });
 
@@ -314,22 +343,23 @@ describe("Comparison", async () => {
 
       const interval = 600;
 
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 1,
         refillInterval: interval,
         refillAmount: 0,
         refillTimestamp: 0,
       });
-      const { invoke, modifier } = await setRole();
+      const { invoke, modifier } = await setRole(allowanceId);
 
-      let allowance = await modifier.allowances(ALLOWANCE_ID);
+      let allowance = await modifier.allowances(allowanceId);
       expect(allowance.balance).to.equal(1);
       expect(allowance.refillTimestamp).to.equal(0);
 
       await expect(invoke(0)).to.not.be.reverted;
       const now = timestampNow();
 
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(0);
       expect(now - allowance.refillTimestamp.toNumber()).to.be.lessThanOrEqual(
         interval * 2
@@ -339,17 +369,18 @@ describe("Comparison", async () => {
     it("Does not updates refillTimestamp if interval is zero", async () => {
       const { setAllowance, setRole } = await setup();
 
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 1,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
-      const { invoke, modifier } = await setRole();
+      const { invoke, modifier } = await setRole(allowanceId);
 
       await expect(invoke(0)).to.not.be.reverted;
 
-      const allowance = await modifier.allowances(ALLOWANCE_ID);
+      const allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp).to.equal(0);
     });
 
@@ -359,20 +390,21 @@ describe("Comparison", async () => {
       const interval = 600;
       const initialTimestamp = timestampNow() - 2400;
 
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 1,
         refillInterval: interval,
         refillAmount: 0,
         refillTimestamp: initialTimestamp,
       });
-      const { invoke, modifier } = await setRole();
+      const { invoke, modifier } = await setRole(allowanceId);
 
-      let allowance = await modifier.allowances(ALLOWANCE_ID);
+      let allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp).to.equal(initialTimestamp);
 
       await expect(invoke(0)).to.not.be.reverted;
 
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(
         initialTimestamp
       );
@@ -384,20 +416,21 @@ describe("Comparison", async () => {
       const interval = 600;
       const initialTimestamp = timestampNow() + 1200;
 
-      await setAllowance({
+      const allowanceId = 3344;
+      await setAllowance(allowanceId, {
         balance: 1,
         refillInterval: interval,
         refillAmount: 0,
         refillTimestamp: initialTimestamp,
       });
-      const { invoke, modifier } = await setRole();
+      const { invoke, modifier } = await setRole(allowanceId);
 
-      let allowance = await modifier.allowances(ALLOWANCE_ID);
+      let allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp).to.equal(initialTimestamp);
 
       await expect(invoke(0)).to.not.be.reverted;
 
-      allowance = await modifier.allowances(ALLOWANCE_ID);
+      allowance = await modifier.allowances(allowanceId);
       expect(allowance.refillTimestamp).to.equal(initialTimestamp);
     });
   });

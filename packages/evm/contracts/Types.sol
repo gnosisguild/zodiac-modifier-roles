@@ -57,7 +57,6 @@ struct ParameterConfig {
     ParameterType _type;
     Comparison comp;
     bytes32 compValue;
-    uint256 allowance;
     ParameterConfig[] children;
 }
 struct ParameterPayload {
