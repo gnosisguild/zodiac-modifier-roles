@@ -138,7 +138,9 @@ describe("Comparison", async () => {
 
       expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWith("CallAllowanceExceeded()");
+      await expect(invoke()).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("passes multiple checks from existing balance", async () => {
@@ -165,7 +167,9 @@ describe("Comparison", async () => {
 
       expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWith("CallAllowanceExceeded()");
+      await expect(invoke()).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("passes a check from balance 0 but enough refill pending", async () => {
@@ -183,7 +187,9 @@ describe("Comparison", async () => {
       const { invoke } = await setPermission(allowanceId);
 
       await expect(invoke()).to.not.be.reverted;
-      await expect(invoke()).to.be.revertedWith("CallAllowanceExceeded()");
+      await expect(invoke()).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId})`
+      );
     });
 
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
@@ -198,7 +204,9 @@ describe("Comparison", async () => {
       });
       const { invoke } = await setPermission(allowanceId);
 
-      await expect(invoke()).to.be.revertedWith("CallAllowanceExceeded()");
+      await expect(invoke()).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId})`
+      );
     });
   });
 
@@ -299,10 +307,14 @@ describe("Comparison", async () => {
         "NoMatchingBranch()"
       );
 
-      await expect(execute(value1)).to.be.revertedWith("NoMatchingBranch()");
+      await expect(execute(value1)).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId1})`
+      );
 
       await expect(execute(value2)).not.to.be.reverted;
-      await expect(execute(value1)).to.be.revertedWith("NoMatchingBranch()");
+      await expect(execute(value2)).to.be.revertedWith(
+        `CallAllowanceExceeded(${allowanceId2})`
+      );
     });
   });
 });

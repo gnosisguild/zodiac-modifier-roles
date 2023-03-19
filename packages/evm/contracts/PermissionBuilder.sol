@@ -7,6 +7,13 @@ import "./Topology.sol";
 import "./ScopeConfig.sol";
 
 abstract contract PermissionBuilder is Core {
+    /// Allowance exceeded
+    error AllowanceExceeded(uint16 allowanceId);
+    /// Allowance exceeded
+    error ETHAllowanceExceeded(uint16 allowanceId);
+    /// Allowance exceeded
+    error CallAllowanceExceeded(uint16 allowanceId);
+
     event AllowTarget(
         uint16 role,
         address targetAddress,
@@ -29,8 +36,6 @@ abstract contract PermissionBuilder is Core {
         ParameterConfigFlat[] parameters,
         ExecutionOptions options
     );
-
-    error AllowanceDoubleSpend(uint16 allowanceId);
 
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
@@ -166,15 +171,15 @@ abstract contract PermissionBuilder is Core {
                 allowance,
                 block.timestamp
             );
-            // This was already previously authorized at the checker pass.
-            // However, it is possible that the same limit is used across
-            // different parameters (which is not very common), but it's
-            // something we don't want to restrict. Therefore, we read from
-            // storage again (we don't rely on the allowance value initially
-            // loaded to ParameterConfig). We repeat the accrual math and consider
-            // that if it fails here, then it may be due to a double spend.
+
             if (value > balance) {
-                revert AllowanceDoubleSpend(allowanceId);
+                if (parameter.comp == Comparison.WithinAllowance) {
+                    revert AllowanceExceeded(allowanceId);
+                } else if (parameter.comp == Comparison.ETHWithinAllowance) {
+                    revert ETHAllowanceExceeded(allowanceId);
+                } else {
+                    revert CallAllowanceExceeded(allowanceId);
+                }
             }
             allowances[allowanceId].balance = balance - uint128(value);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
@@ -188,7 +193,7 @@ abstract contract PermissionBuilder is Core {
     function _accruedAllowance(
         Allowance memory allowance,
         uint256 timestamp
-    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
+    ) private pure returns (uint128 balance, uint64 refillTimestamp) {
         if (
             allowance.refillInterval == 0 ||
             timestamp < allowance.refillTimestamp
