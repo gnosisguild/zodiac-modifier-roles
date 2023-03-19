@@ -89,6 +89,6 @@ struct Allowance {
 }
 
 struct Trace {
-    ParameterConfig config;
-    bytes32 value;
+    ParameterConfig condition;
+    uint256 value;
 }
