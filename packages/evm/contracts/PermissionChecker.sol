@@ -21,16 +21,11 @@ abstract contract PermissionChecker is Core, Periphery {
             revert NoMembership();
         }
 
-        /*
-         *
-         * Unoptimized version of
-         * bytes32(abi.encodePacked(to, bytes4(data)))
-         *
-         */
-        bytes32 key = bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> (160));
-
-        address adapter = unwrappers[key];
-        if (adapter == address(0)) {
+        ITransactionUnwrapper adapter = getTransactionUnwrapper(
+            to,
+            bytes4(data)
+        );
+        if (address(adapter) == address(0)) {
             return _singleEntrypoint(role, to, value, data, operation);
         } else {
             return
