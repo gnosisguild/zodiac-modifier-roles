@@ -5,7 +5,7 @@ import "./Types.sol";
 
 library Topology {
     struct TypeTree {
-        ParameterType _type;
+        ParameterType paramType;
         TypeTree[] children;
     }
 
@@ -16,19 +16,19 @@ library Topology {
     }
 
     function childrenBounds(
-        ParameterConfigFlat[] memory parameters
+        ConditionFlat[] memory conditions
     ) internal pure returns (Bounds[] memory result) {
-        uint256 paramCount = parameters.length;
-        assert(paramCount > 0);
+        uint256 count = conditions.length;
+        assert(count > 0);
 
         // parents are breadth-first
-        result = new Bounds[](paramCount);
+        result = new Bounds[](count);
         result[0].start = type(uint256).max;
 
         // first item is the root
-        for (uint256 i = 1; i < paramCount; ) {
+        for (uint256 i = 1; i < count; ) {
             result[i].start = type(uint256).max;
-            Bounds memory parentBounds = result[parameters[i].parent];
+            Bounds memory parentBounds = result[conditions[i].parent];
             if (parentBounds.start == type(uint256).max) {
                 parentBounds.start = i;
             }
@@ -41,14 +41,15 @@ library Topology {
     }
 
     function isInline(TypeTree memory node) internal pure returns (bool) {
-        assert(node._type != ParameterType.None);
+        ParameterType paramType = node.paramType;
+        assert(paramType != ParameterType.None);
 
-        if (node._type == ParameterType.Static) {
+        if (paramType == ParameterType.Static) {
             return true;
         } else if (
-            node._type == ParameterType.Dynamic ||
-            node._type == ParameterType.Array ||
-            node._type == ParameterType.AbiEncoded
+            paramType == ParameterType.Dynamic ||
+            paramType == ParameterType.Array ||
+            paramType == ParameterType.AbiEncoded
         ) {
             return false;
         } else {
@@ -66,26 +67,26 @@ library Topology {
     }
 
     function isInline(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (bool) {
-        ParameterType _type = parameters[index]._type;
+        ParameterType paramType = conditions[index].paramType;
 
-        if (_type == ParameterType.Static) {
+        if (paramType == ParameterType.Static) {
             return true;
         } else if (
-            _type == ParameterType.Dynamic ||
-            _type == ParameterType.Array ||
-            _type == ParameterType.AbiEncoded
+            paramType == ParameterType.Dynamic ||
+            paramType == ParameterType.Array ||
+            paramType == ParameterType.AbiEncoded
         ) {
             return false;
         } else {
-            uint256 length = parameters.length;
+            uint256 length = conditions.length;
             for (uint256 j = index + 1; j < length; ++j) {
-                if (parameters[j].parent != index) {
+                if (conditions[j].parent != index) {
                     continue;
                 }
-                if (!isInline(parameters, j)) {
+                if (!isInline(conditions, j)) {
                     return false;
                 }
             }
@@ -94,20 +95,21 @@ library Topology {
     }
 
     function typeTree(
-        ParameterConfig memory parameter
+        Condition memory condition
     ) internal pure returns (TypeTree memory result) {
         if (
-            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
+            condition.operator == Operator.And ||
+            condition.operator == Operator.Or
         ) {
-            return typeTree(parameter.children[0]);
+            return typeTree(condition.children[0]);
         }
 
-        result._type = parameter._type;
-        if (parameter.children.length > 0) {
-            uint256 length = parameter.children.length;
+        result.paramType = condition.paramType;
+        if (condition.children.length > 0) {
+            uint256 length = condition.children.length;
             result.children = new TypeTree[](length);
             for (uint256 i; i < length; ) {
-                result.children[i] = typeTree(parameter.children[i]);
+                result.children[i] = typeTree(condition.children[i]);
                 unchecked {
                     ++i;
                 }

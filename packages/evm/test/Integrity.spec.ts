@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 import { defaultAbiCoder, solidityPack } from "ethers/lib/utils";
 
 // Through abi.encodePacked() , Solidity supports a non-standard packed mode where:
@@ -67,14 +67,14 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.AbiEncoded,
-              comp: Comparison.Matches,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               compValue: solidityPack(["string"], [MORE_THAN_32_BYTES_TEXT]),
             },
           ],
@@ -90,20 +90,20 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.AbiEncoded,
-              comp: Comparison.Matches,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
-              _type: ParameterType.Array,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Array,
+              operator: Operator.EqualTo,
               compValue: "0x",
             },
             {
               parent: 1,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               compValue: A_32_BYTES_VALUE,
             },
           ],
@@ -112,7 +112,7 @@ describe("Integrity", async () => {
       ).to.be.not.reverted;
     });
 
-    it("checks well formed Or node", async () => {
+    it("checks well formed Or", async () => {
       const { modifier, testContract, owner } =
         await setupRolesWithOwnerAndInvoker();
 
@@ -129,14 +129,14 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.AbiEncoded,
-              comp: Comparison.Matches,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               compValue: ethers.utils.solidityPack(
                 ["string"],
                 [MORE_THAN_32_BYTES_TEXT]
@@ -155,14 +155,14 @@ describe("Integrity", async () => {
           [
             {
               parent: 0,
-              _type: ParameterType.AbiEncoded,
-              comp: Comparison.Matches,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x",
             },
             {
               parent: 0,
-              _type: ParameterType.Static,
-              comp: Comparison.EqualTo,
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
               compValue: defaultAbiCoder.encode(["uint256"], [123]),
             },
           ],
@@ -186,14 +186,14 @@ describe("Integrity", async () => {
         [
           {
             parent: 1,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Tuple,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
         ],
@@ -209,14 +209,14 @@ describe("Integrity", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
           {
             parent: 1,
-            _type: ParameterType.Tuple,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
         ],
@@ -238,26 +238,26 @@ describe("Integrity", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Tuple,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
           {
             parent: 1,
-            _type: ParameterType.Static,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.Static,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.Whatever,
+            paramType: ParameterType.Static,
+            operator: Operator.Whatever,
             compValue: "0x",
           },
         ],

@@ -5,9 +5,9 @@ import hre, { deployments, ethers, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Comparison", async () => {
+describe("Operator", async () => {
   const ROLE_ID = 0;
 
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
@@ -84,14 +84,14 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
@@ -238,20 +238,20 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value]),
           },
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
@@ -279,20 +279,20 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value]),
           },
         ],
@@ -302,7 +302,7 @@ describe("Comparison", async () => {
   });
 
   describe("ETHWithinAllowance - Variants", () => {
-    it("enforces different allowances per variant", async () => {
+    it("enforces different eth allowances per variant", async () => {
       const { owner, invoker, modifier, testContract, setAllowance } =
         await setup();
 
@@ -352,44 +352,44 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.Or,
+            paramType: ParameterType.None,
+            operator: Operator.Or,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 1,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value1]),
           },
           {
             parent: 1,
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
           },
           {
             parent: 2,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value2]),
           },
           {
             parent: 2,
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
           },
         ],

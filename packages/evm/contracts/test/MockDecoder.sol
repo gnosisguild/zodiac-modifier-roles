@@ -21,10 +21,10 @@ contract MockDecoder {
 
     function copyIn(
         IN1 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -32,10 +32,10 @@ contract MockDecoder {
 
     function copyIn(
         IN2 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -43,10 +43,10 @@ contract MockDecoder {
 
     function copyIn(
         IN3 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -54,10 +54,10 @@ contract MockDecoder {
 
     function copyIn(
         IN4 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -65,10 +65,10 @@ contract MockDecoder {
 
     function copyIn(
         IN5 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -76,10 +76,10 @@ contract MockDecoder {
 
     function copyIn(
         IN6 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -87,10 +87,10 @@ contract MockDecoder {
 
     function copyIn(
         IN7 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -98,10 +98,10 @@ contract MockDecoder {
 
     function copyIn(
         IN8 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -109,10 +109,10 @@ contract MockDecoder {
 
     function copyIn(
         IN9 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
-        result.children = new ParameterConfig[](input.children.length);
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
+        result.children = new Condition[](input.children.length);
         for (uint256 i; i < input.children.length; i++) {
             result.children[i] = copyIn(input.children[i]);
         }
@@ -120,9 +120,9 @@ contract MockDecoder {
 
     function copyIn(
         IN10 calldata input
-    ) private pure returns (ParameterConfig memory result) {
-        result._type = input._type;
-        result.comp = input.comp;
+    ) private pure returns (Condition memory result) {
+        result.paramType = input.paramType;
+        result.operator = input.operator;
     }
 
     function copyOut(
@@ -191,62 +191,62 @@ contract MockDecoder {
     }
 
     struct IN1 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN2[] children;
     }
 
     struct IN2 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN3[] children;
     }
 
     struct IN3 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN4[] children;
     }
 
     struct IN4 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN5[] children;
     }
 
     struct IN5 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN6[] children;
     }
 
     struct IN6 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN7[] children;
     }
 
     struct IN7 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN8[] children;
     }
 
     struct IN8 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN9[] children;
     }
 
     struct IN9 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
         IN10[] children;
     }
 
     struct IN10 {
-        ParameterType _type;
-        Comparison comp;
+        ParameterType paramType;
+        Operator operator;
     }
 
     struct PP1 {

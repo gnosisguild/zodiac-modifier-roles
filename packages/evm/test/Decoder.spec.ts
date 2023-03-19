@@ -7,7 +7,7 @@ import { BigNumber } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 
-import { Comparison, ParameterType } from "./utils";
+import { Operator, ParameterType } from "./utils";
 
 const YesRemoveOffset = true;
 const DontRemoveOffset = false;
@@ -35,12 +35,12 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Dynamic,
-          comp: Comparison.EqualTo,
+          paramType: ParameterType.Dynamic,
+          operator: Operator.EqualTo,
           children: [],
         },
       ],
@@ -72,26 +72,26 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Static,
-          comp: 0,
+          paramType: ParameterType.Static,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Dynamic,
-          comp: 0,
+          paramType: ParameterType.Dynamic,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
@@ -140,26 +140,26 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Dynamic,
-          comp: 0,
+          paramType: ParameterType.Dynamic,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Static,
-          comp: 0,
+          paramType: ParameterType.Static,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
@@ -210,22 +210,22 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
         },
-        { _type: ParameterType.Dynamic, comp: 0, children: [] },
-        { _type: ParameterType.Static, comp: 0, children: [] },
+        { paramType: ParameterType.Dynamic, operator: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
       ],
     };
 
@@ -266,9 +266,11 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
-      children: [{ _type: ParameterType.Static, comp: 0, children: [] }],
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        { paramType: ParameterType.Static, operator: 0, children: [] },
+      ],
     };
 
     const result = await decoder.inspect(data, layout);
@@ -292,11 +294,11 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
-        { _type: ParameterType.Static, comp: 0, children: [] },
-        { _type: ParameterType.Static, comp: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
       ],
     };
 
@@ -317,16 +319,16 @@ describe("Decoder library", async () => {
 
     assert(data);
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Dynamic,
-              comp: 0,
+              paramType: ParameterType.Dynamic,
+              operator: 0,
               children: [],
             },
           ],
@@ -373,26 +375,26 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
         },
-        { _type: ParameterType.Static, comp: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
       ],
     };
 
@@ -435,12 +437,12 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
-        { _type: ParameterType.Static, comp: 0, children: [] },
-        { _type: ParameterType.Static, comp: 0, children: [] },
-        { _type: ParameterType.Static, comp: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
+        { paramType: ParameterType.Static, operator: 0, children: [] },
       ],
     };
 
@@ -486,35 +488,35 @@ describe("Decoder library", async () => {
     );
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Dynamic,
-              comp: 0,
+              paramType: ParameterType.Dynamic,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Tuple,
-              comp: 0,
+              paramType: ParameterType.Tuple,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
               ],
@@ -566,60 +568,60 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Dynamic,
-              comp: 0,
+              paramType: ParameterType.Dynamic,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Tuple,
-              comp: 0,
+              paramType: ParameterType.Tuple,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
               ],
             },
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Tuple,
-              comp: 0,
+              paramType: ParameterType.Tuple,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Dynamic,
-                  comp: 0,
+                  paramType: ParameterType.Dynamic,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Array,
-                  comp: 0,
+                  paramType: ParameterType.Array,
+                  operator: 0,
                   children: [
                     {
-                      _type: ParameterType.Static,
-                      comp: 0,
+                      paramType: ParameterType.Static,
+                      operator: 0,
                       children: [],
                     },
                   ],
@@ -707,39 +709,39 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Dynamic,
-              comp: 0,
+              paramType: ParameterType.Dynamic,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Array,
-              comp: 0,
+              paramType: ParameterType.Array,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Tuple,
-                  comp: 0,
+                  paramType: ParameterType.Tuple,
+                  operator: 0,
                   children: [
                     {
-                      _type: ParameterType.Static,
-                      comp: 0,
+                      paramType: ParameterType.Static,
+                      operator: 0,
                       children: [],
                     },
                     {
-                      _type: ParameterType.Static,
-                      comp: 0,
+                      paramType: ParameterType.Static,
+                      operator: 0,
                       children: [],
                     },
                   ],
@@ -793,25 +795,25 @@ describe("Decoder library", async () => {
       ]);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Tuple,
-              comp: 0,
+              paramType: ParameterType.Tuple,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
               ],
@@ -893,34 +895,34 @@ describe("Decoder library", async () => {
       ]);
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Tuple,
-              comp: 0,
+              paramType: ParameterType.Tuple,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Dynamic,
-                  comp: 0,
+                  paramType: ParameterType.Dynamic,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
                 {
-                  _type: ParameterType.Array,
-                  comp: 0,
+                  paramType: ParameterType.Array,
+                  operator: 0,
                   children: [
                     {
-                      _type: ParameterType.Static,
-                      comp: 0,
+                      paramType: ParameterType.Static,
+                      operator: 0,
                       children: [],
                     },
                   ],
@@ -1013,32 +1015,32 @@ describe("Decoder library", async () => {
       );
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Static,
-          comp: 0,
+          paramType: ParameterType.Static,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.AbiEncoded,
-          comp: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
         },
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
@@ -1076,30 +1078,30 @@ describe("Decoder library", async () => {
     });
 
     const nestedLayout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Dynamic,
-              comp: 0,
+              paramType: ParameterType.Dynamic,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Array,
-              comp: 0,
+              paramType: ParameterType.Array,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
               ],
@@ -1110,26 +1112,26 @@ describe("Decoder library", async () => {
     };
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Tuple,
-          comp: 0,
+          paramType: ParameterType.Tuple,
+          operator: 0,
           children: [
             nestedLayout,
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
             {
-              _type: ParameterType.Array,
-              comp: 0,
+              paramType: ParameterType.Array,
+              operator: 0,
               children: [
                 {
-                  _type: ParameterType.Static,
-                  comp: 0,
+                  paramType: ParameterType.Static,
+                  operator: 0,
                   children: [],
                 },
               ],
@@ -1198,26 +1200,26 @@ describe("Decoder library", async () => {
     ]);
 
     const nestedLayout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Dynamic,
-          comp: 0,
+          paramType: ParameterType.Dynamic,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Static,
-          comp: 0,
+          paramType: ParameterType.Static,
+          operator: 0,
           children: [],
         },
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [
             {
-              _type: ParameterType.Static,
-              comp: 0,
+              paramType: ParameterType.Static,
+              operator: 0,
               children: [],
             },
           ],
@@ -1226,12 +1228,12 @@ describe("Decoder library", async () => {
     };
 
     const layout = {
-      _type: ParameterType.AbiEncoded,
-      comp: Comparison.Matches,
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
       children: [
         {
-          _type: ParameterType.Array,
-          comp: 0,
+          paramType: ParameterType.Array,
+          operator: 0,
           children: [nestedLayout],
         },
       ],
@@ -1274,7 +1276,7 @@ describe("Decoder library", async () => {
     ).to.equal(encode(["bool"], [false]));
   });
 
-  describe("unfolding", async () => {
+  describe("TypeTree", async () => {
     it("top level variants get unfolded to its entrypoint form", async () => {
       const { decoder, testEncoder } = await setup();
 
@@ -1285,53 +1287,53 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        _type: ParameterType.None,
-        comp: Comparison.Or,
+        paramType: ParameterType.None,
+        operator: Operator.Or,
         children: [
           {
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             children: [
               {
-                _type: ParameterType.Static,
-                comp: 0,
+                paramType: ParameterType.Static,
+                operator: 0,
                 children: [],
               },
               {
-                _type: ParameterType.Dynamic,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Dynamic,
+                operator: Operator.EqualTo,
                 children: [],
               },
             ],
           },
           {
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             children: [
               {
-                _type: ParameterType.Static,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Static,
+                operator: Operator.EqualTo,
                 children: [],
               },
               {
-                _type: ParameterType.Dynamic,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Dynamic,
+                operator: Operator.EqualTo,
                 children: [],
               },
             ],
           },
           {
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             children: [
               {
-                _type: ParameterType.Static,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Static,
+                operator: Operator.EqualTo,
                 children: [],
               },
               {
-                _type: ParameterType.Dynamic,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Dynamic,
+                operator: Operator.EqualTo,
                 children: [],
               },
             ],
@@ -1341,11 +1343,11 @@ describe("Decoder library", async () => {
 
       // [
       //   {
-      //     _type: ParameterType.Static,
+      //     paramType: ParameterType.Static,
       //     children: [],
       //   },
       //   {
-      //     _type: ParameterType.Dynamic,
+      //     paramType: ParameterType.Dynamic,
       //     children: [],
       //   },
       // ]
@@ -1375,21 +1377,21 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
-            _type: ParameterType.None,
-            comp: Comparison.And,
+            paramType: ParameterType.None,
+            operator: Operator.And,
             children: [
               {
-                _type: ParameterType.Static,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Static,
+                operator: Operator.EqualTo,
                 children: [],
               },
               {
-                _type: ParameterType.Static,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Static,
+                operator: Operator.EqualTo,
                 children: [],
               },
             ],
@@ -1416,45 +1418,45 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
-            _type: ParameterType.Tuple,
-            comp: Comparison.Matches,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Matches,
             children: [
               {
-                _type: ParameterType.Dynamic,
-                comp: Comparison.Whatever,
+                paramType: ParameterType.Dynamic,
+                operator: Operator.Whatever,
                 children: [],
               },
               {
-                _type: ParameterType.Static,
-                comp: Comparison.Whatever,
+                paramType: ParameterType.Static,
+                operator: Operator.Whatever,
                 children: [],
               },
               {
-                _type: ParameterType.None,
-                comp: Comparison.Or,
+                paramType: ParameterType.None,
+                operator: Operator.Or,
                 children: [
                   {
-                    _type: ParameterType.Array,
-                    comp: Comparison.EqualTo,
+                    paramType: ParameterType.Array,
+                    operator: Operator.EqualTo,
                     children: [
                       {
-                        _type: ParameterType.Static,
-                        comp: Comparison.EqualTo,
+                        paramType: ParameterType.Static,
+                        operator: Operator.EqualTo,
                         children: [],
                       },
                     ],
                   },
                   {
-                    _type: ParameterType.Array,
-                    comp: Comparison.EqualTo,
+                    paramType: ParameterType.Array,
+                    operator: Operator.EqualTo,
                     children: [
                       {
-                        _type: ParameterType.Static,
-                        comp: Comparison.EqualTo,
+                        paramType: ParameterType.Static,
+                        operator: Operator.EqualTo,
                         children: [],
                       },
                     ],
@@ -1468,18 +1470,18 @@ describe("Decoder library", async () => {
 
       // [
       //   {
-      //     _type: ParameterType.Tuple,
+      //     paramType: ParameterType.Tuple,
       //     children: [
       //       {
-      //         _type: ParameterType.Dynamic,
+      //         paramType: ParameterType.Dynamic,
       //         children: [],
       //       },
       //       {
-      //         _type: ParameterType.Static,
+      //         paramType: ParameterType.Static,
       //         children: [],
       //       },
       //       {
-      //         _type: ParameterType.Array,
+      //         paramType: ParameterType.Array,
       //         children: [ Static],
       //       },
       //     ],
@@ -1517,39 +1519,39 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
-            _type: ParameterType.Tuple,
-            comp: Comparison.Matches,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Matches,
             children: [
               {
-                _type: ParameterType.Dynamic,
-                comp: Comparison.Whatever,
+                paramType: ParameterType.Dynamic,
+                operator: Operator.Whatever,
                 children: [],
               },
               {
-                _type: ParameterType.Static,
-                comp: Comparison.Whatever,
+                paramType: ParameterType.Static,
+                operator: Operator.Whatever,
                 children: [],
               },
               {
-                _type: ParameterType.Array,
-                comp: Comparison.EqualTo,
+                paramType: ParameterType.Array,
+                operator: Operator.EqualTo,
                 children: [
                   {
-                    _type: ParameterType.None,
-                    comp: Comparison.Or,
+                    paramType: ParameterType.None,
+                    operator: Operator.Or,
                     children: [
                       {
-                        _type: ParameterType.Static,
-                        comp: Comparison.EqualTo,
+                        paramType: ParameterType.Static,
+                        operator: Operator.EqualTo,
                         children: [],
                       },
                       {
-                        _type: ParameterType.Static,
-                        comp: Comparison.EqualTo,
+                        paramType: ParameterType.Static,
+                        operator: Operator.EqualTo,
                         children: [],
                       },
                     ],
@@ -1563,18 +1565,18 @@ describe("Decoder library", async () => {
 
       // [
       //   {
-      //     _type: ParameterType.Tuple,
+      //     paramType: ParameterType.Tuple,
       //     children: [
       //       {
-      //         _type: ParameterType.Dynamic,
+      //         paramType: ParameterType.Dynamic,
       //         children: [],
       //       },
       //       {
-      //         _type: ParameterType.Static,
+      //         paramType: ParameterType.Static,
       //         children: [],
       //       },
       //       {
-      //         _type: ParameterType.Array,
+      //         paramType: ParameterType.Array,
       //         children: [ Static],
       //       },
       //     ],
@@ -1600,7 +1602,7 @@ describe("Decoder library", async () => {
       ).to.equal(encode(["uint256[]"], [[7, 8, 9]], YesRemoveOffset));
     });
 
-    it("extraneous Value inside AbiEncoded gets inspected as None", async () => {
+    it("extraneous Value in AbiEncoded gets inspected as None", async () => {
       const { decoder, testEncoder } = await setup();
       const { data } = await testEncoder.populateTransaction.staticFn(
         "0xeeff3344"
@@ -1608,17 +1610,17 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        _type: ParameterType.AbiEncoded,
-        comp: Comparison.Matches,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
-            _type: ParameterType.None,
-            comp: Comparison.ETHWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.ETHWithinAllowance,
             children: [],
           },
           {
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             children: [],
           },
         ],
@@ -1635,7 +1637,7 @@ describe("Decoder library", async () => {
       expect(staticField.size).to.equal(32);
     });
 
-    it("extraneous Value inside Tuple gets inspected as None", async () => {});
+    it("extraneous Value in Tuple gets inspected as None", async () => {});
   });
 });
 
