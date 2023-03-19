@@ -43,14 +43,16 @@ abstract contract PermissionLoader is Core {
     function _pack(
         ParameterConfigFlat[] memory parameters
     ) private pure returns (bytes memory buffer) {
-        ScopeConfig.Packing[] memory modes = ScopeConfig.calculateModes(
-            parameters
-        );
-        buffer = new bytes(ScopeConfig.bufferSize(modes));
+        buffer = new bytes(ScopeConfig.packedSize(parameters));
 
-        uint256 count = parameters.length;
-        for (uint256 i; i < count; ) {
-            ScopeConfig.packParameter(buffer, i, modes, parameters[i]);
+        uint256 paramCount = parameters.length;
+        uint256 offset = 32 + paramCount * 2;
+        for (uint256 i; i < paramCount; ) {
+            ScopeConfig.packParameter(buffer, i, parameters[i]);
+            if (parameters[i].comp >= Comparison.EqualTo) {
+                ScopeConfig.packCompValue(buffer, offset, parameters[i]);
+                offset += 32;
+            }
 
             unchecked {
                 ++i;
@@ -60,30 +62,35 @@ abstract contract PermissionLoader is Core {
 
     function _unpack(
         bytes memory buffer,
-        uint256 count
+        uint256 paramCount
     ) private pure returns (ParameterConfig memory result) {
         (
-            uint8[] memory parents,
-            ScopeConfig.Packing[] memory modes
-        ) = ScopeConfig.unpackModes(buffer, count);
+            ParameterConfigFlat[] memory parameters,
+            bytes32[] memory compValues
+        ) = ScopeConfig.unpackParameters(buffer, paramCount);
 
-        _unpackParameter(
-            buffer,
+        _unpack(
+            parameters,
+            compValues,
+            Topology.childrenBounds(parameters),
             0,
-            Topology.childrenBounds(parents),
-            modes,
             result
         );
     }
 
-    function _unpackParameter(
-        bytes memory buffer,
-        uint256 index,
+    function _unpack(
+        ParameterConfigFlat[] memory parameters,
+        bytes32[] memory compValues,
         Topology.Bounds[] memory childrenBounds,
-        ScopeConfig.Packing[] memory modes,
+        uint256 index,
         ParameterConfig memory result
     ) private pure {
-        ScopeConfig.unpackParameter(buffer, index, modes, result);
+        ParameterConfigFlat memory parameter = parameters[index];
+        result._type = parameter._type;
+        result.comp = parameter.comp;
+        result.compValue = compValues[index];
+        // result.isHashed = parameter.comp == Comparison.EqualTo;
+
         if (childrenBounds[index].length == 0) {
             return;
         }
@@ -93,11 +100,11 @@ abstract contract PermissionLoader is Core {
 
         result.children = new ParameterConfig[](count);
         for (uint j; j < count; ) {
-            _unpackParameter(
-                buffer,
-                start + j,
+            _unpack(
+                parameters,
+                compValues,
                 childrenBounds,
-                modes,
+                start + j,
                 result.children[j]
             );
 
