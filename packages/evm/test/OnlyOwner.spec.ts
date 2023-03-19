@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import { Comparison, ParameterType } from "./utils";
+import { Operator, ParameterType } from "./utils";
 
 describe("OnlyOwner", async () => {
   const baseSetup = deployments.createFixture(async () => {
@@ -65,7 +65,6 @@ describe("OnlyOwner", async () => {
         .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
     ).to.not.be.reverted;
   });
-
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
@@ -102,8 +101,7 @@ describe("OnlyOwner", async () => {
       modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address)
     ).to.not.be.reverted;
   });
-
-  it("onlyOwner for scopeAllowFunction, simple invoker fails", async () => {
+  it("onlyOwner for allowFunction, simple invoker fails", async () => {
     const { modifier, testContract, owner, invoker, janeDoe } =
       await setupRolesWithOwnerAndInvoker();
 
@@ -174,8 +172,8 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
         ],
@@ -191,8 +189,8 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
         ],

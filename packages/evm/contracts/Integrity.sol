@@ -37,21 +37,21 @@ library Integrity {
 
     error UnsuitableComparisonForTypeNone(uint256 index);
 
-    function validate(ParameterConfigFlat[] memory parameters) internal pure {
-        root(parameters);
-        topology(parameters);
+    function validate(ConditionFlat[] memory conditions) internal pure {
+        root(conditions);
+        topology(conditions);
 
-        for (uint256 i = 0; i < parameters.length; ++i) {
-            content(parameters[i], i);
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            content(conditions[i], i);
         }
     }
 
-    function root(ParameterConfigFlat[] memory parameters) internal pure {
+    function root(ConditionFlat[] memory conditions) internal pure {
         uint256 index;
         uint256 count;
 
-        for (uint256 i; i < parameters.length; ++i) {
-            if (parameters[i].parent == i) {
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].parent == i) {
                 index = i;
                 count++;
             }
@@ -65,20 +65,20 @@ library Integrity {
         }
     }
 
-    function topology(ParameterConfigFlat[] memory parameters) private pure {
-        uint256 length = parameters.length;
+    function topology(ConditionFlat[] memory conditions) private pure {
+        uint256 length = conditions.length;
         // check BFS
         for (uint256 i = 1; i < length; ++i) {
-            if (parameters[i - 1].parent > parameters[i].parent) {
+            if (conditions[i - 1].parent > conditions[i].parent) {
                 revert FlatButNotBFS();
             }
         }
 
         for (uint256 i = 0; i < length; ++i) {
             if (
-                (parameters[i].comp == Comparison.ETHWithinAllowance ||
-                    parameters[i].comp == Comparison.CallWithinAllowance) &&
-                parameters[parameters[i].parent]._type !=
+                (conditions[i].operator == Operator.ETHWithinAllowance ||
+                    conditions[i].operator == Operator.CallWithinAllowance) &&
+                conditions[conditions[i].parent].paramType !=
                 ParameterType.AbiEncoded
             ) {
                 revert UnsuitableParent(i);
@@ -86,18 +86,18 @@ library Integrity {
         }
 
         Topology.Bounds[] memory childrenBounds = Topology.childrenBounds(
-            parameters
+            conditions
         );
 
         // check at least 2 children for relational nodes
-        for (uint256 i = 0; i < parameters.length; i++) {
-            ParameterConfigFlat memory parameter = parameters[i];
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
             if (
-                parameter._type == ParameterType.None &&
-                (parameter.comp == Comparison.Or ||
-                    parameter.comp == Comparison.And)
+                condition.paramType == ParameterType.None &&
+                (condition.operator == Operator.Or ||
+                    condition.operator == Operator.And)
             ) {
-                if (parameter.compValue.length != 0) {
+                if (condition.compValue.length != 0) {
                     revert InvalidComparison();
                 }
 
@@ -107,12 +107,12 @@ library Integrity {
             }
         }
 
-        for (uint256 i = 0; i < parameters.length; i++) {
-            ParameterConfigFlat memory parameter = parameters[i];
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
             if (
-                parameter._type == ParameterType.None &&
-                (parameter.comp == Comparison.Or ||
-                    parameter.comp == Comparison.And)
+                condition.paramType == ParameterType.None &&
+                (condition.operator == Operator.Or ||
+                    condition.operator == Operator.And)
             ) {
                 // checkChildTypeTree(parameters, i, childrenBounds);
             }
@@ -127,51 +127,52 @@ library Integrity {
     }
 
     function content(
-        ParameterConfigFlat memory parameter,
+        ConditionFlat memory condition,
         uint256 index
     ) internal pure {
-        bytes memory compValue = parameter.compValue;
-        Comparison comp = parameter.comp;
-        ParameterType _type = parameter._type;
+        bytes memory compValue = condition.compValue;
+        Operator operator = condition.operator;
+        ParameterType paramType = condition.paramType;
 
         if (
-            _type == ParameterType.None &&
-            !(comp == Comparison.Or ||
-                comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance ||
-                comp == Comparison.CallWithinAllowance)
+            paramType == ParameterType.None &&
+            !(operator == Operator.Or ||
+                operator == Operator.And ||
+                operator == Operator.ETHWithinAllowance ||
+                operator == Operator.CallWithinAllowance)
         ) {
             revert UnsuitableComparison(index);
         }
 
         if (
-            (comp == Comparison.Or ||
-                comp == Comparison.And ||
-                comp == Comparison.ETHWithinAllowance ||
-                comp == Comparison.CallWithinAllowance) &&
-            _type != ParameterType.None
+            (operator == Operator.Or ||
+                operator == Operator.And ||
+                operator == Operator.ETHWithinAllowance ||
+                operator == Operator.CallWithinAllowance) &&
+            paramType != ParameterType.None
         ) {
             revert UnsuitableType(index);
         }
 
         if (
-            (comp == Comparison.GreaterThan || comp == Comparison.LessThan) &&
-            _type != ParameterType.Static
+            (operator == Operator.GreaterThan ||
+                operator == Operator.LessThan) &&
+            paramType != ParameterType.Static
         ) {
             revert UnsuitableRelativeComparison();
         }
 
         if (
-            (comp == Comparison.EqualTo ||
-                comp == Comparison.GreaterThan ||
-                comp == Comparison.LessThan) &&
-            _type == ParameterType.Static &&
+            (operator == Operator.EqualTo ||
+                operator == Operator.GreaterThan ||
+                operator == Operator.LessThan) &&
+            paramType == ParameterType.Static &&
             compValue.length != 32
         ) {
             revert UnsuitableStaticCompValueSize();
         }
 
-        if (comp == Comparison.Bitmask) {
+        if (operator == Operator.Bitmask) {
             if (compValue.length != 32) {
                 revert MalformedBitmask(index);
             }
@@ -179,35 +180,36 @@ library Integrity {
     }
 
     function checkChildTypeTree(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
     ) private pure {
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
-        bytes32 id = typeTreeId(parameters, start, childrenBounds);
+        bytes32 id = typeTreeId(conditions, start, childrenBounds);
         for (uint256 j = start + 1; j < end; ++j) {
-            if (id != typeTreeId(parameters, j, childrenBounds)) {
+            if (id != typeTreeId(conditions, j, childrenBounds)) {
                 revert UnsuitableChildTypeTree(index);
             }
         }
     }
 
     function typeTreeId(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
     ) private pure returns (bytes32) {
         Topology.Bounds memory bounds = childrenBounds[index];
-        ParameterConfigFlat memory parameter = parameters[index];
+        ConditionFlat memory condition = conditions[index];
 
         uint256 childrenCount = bounds.length;
         if (
-            parameter.comp == Comparison.And || parameter.comp == Comparison.Or
+            condition.operator == Operator.And ||
+            condition.operator == Operator.Or
         ) {
             assert(childrenCount >= 2);
-            return typeTreeId(parameters, bounds.start, childrenBounds);
+            return typeTreeId(conditions, bounds.start, childrenBounds);
         }
 
         if (childrenCount > 0) {
@@ -215,12 +217,13 @@ library Integrity {
             uint256 end = bounds.end;
             bytes32[] memory subIds = new bytes32[](childrenCount);
             for (uint256 i = start; i < end; ++i) {
-                subIds[i - start] = typeTreeId(parameters, i, childrenBounds);
+                subIds[i - start] = typeTreeId(conditions, i, childrenBounds);
             }
 
-            return keccak256(abi.encodePacked(parameter._type, "-", subIds));
+            return
+                keccak256(abi.encodePacked(condition.paramType, "-", subIds));
         } else {
-            return bytes32(uint256(parameter._type));
+            return bytes32(uint256(condition.paramType));
         }
     }
 }

@@ -12,44 +12,41 @@ abstract contract PermissionLoader is Core {
     function _store(
         Role storage role,
         bytes32 key,
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) internal override {
-        bytes memory buffer = _pack(parameters);
+        bytes memory buffer = _pack(conditions);
         address pointer = WriteOnce.store(buffer);
-
-        bytes32 value = ScopeConfig.packHeader(
-            parameters.length,
+        role.scopeConfig[key] = ScopeConfig.packHeader(
+            conditions.length,
             false,
             options,
             pointer
         );
-
-        role.scopeConfig[key] = value;
     }
 
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view override returns (ParameterConfig memory result) {
-        bytes32 value = role.scopeConfig[key];
-
-        (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(value);
+    ) internal view override returns (Condition memory result) {
+        (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(
+            role.scopeConfig[key]
+        );
         bytes memory buffer = WriteOnce.load(pointer);
         result = _unpack(buffer, length);
     }
 
     function _pack(
-        ParameterConfigFlat[] memory parameters
+        ConditionFlat[] memory conditions
     ) private pure returns (bytes memory buffer) {
-        buffer = new bytes(ScopeConfig.packedSize(parameters));
+        buffer = new bytes(ScopeConfig.packedSize(conditions));
 
-        uint256 paramCount = parameters.length;
+        uint256 paramCount = conditions.length;
         uint256 offset = 32 + paramCount * 2;
         for (uint256 i; i < paramCount; ) {
-            ScopeConfig.packParameter(buffer, i, parameters[i]);
-            if (parameters[i].comp >= Comparison.EqualTo) {
-                ScopeConfig.packCompValue(buffer, offset, parameters[i]);
+            ScopeConfig.packCondition(buffer, i, conditions[i]);
+            if (conditions[i].operator >= Operator.EqualTo) {
+                ScopeConfig.packCompValue(buffer, offset, conditions[i]);
                 offset += 32;
             }
 
@@ -62,33 +59,32 @@ abstract contract PermissionLoader is Core {
     function _unpack(
         bytes memory buffer,
         uint256 paramCount
-    ) private pure returns (ParameterConfig memory result) {
+    ) private pure returns (Condition memory result) {
         (
-            ParameterConfigFlat[] memory parameters,
+            ConditionFlat[] memory conditions,
             bytes32[] memory compValues
-        ) = ScopeConfig.unpackParameters(buffer, paramCount);
+        ) = ScopeConfig.unpackConditions(buffer, paramCount);
 
         _unpack(
-            parameters,
+            conditions,
             compValues,
-            Topology.childrenBounds(parameters),
+            Topology.childrenBounds(conditions),
             0,
             result
         );
     }
 
     function _unpack(
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         bytes32[] memory compValues,
         Topology.Bounds[] memory childrenBounds,
         uint256 index,
-        ParameterConfig memory result
+        Condition memory result
     ) private pure {
-        ParameterConfigFlat memory parameter = parameters[index];
-        result._type = parameter._type;
-        result.comp = parameter.comp;
+        ConditionFlat memory condition = conditions[index];
+        result.paramType = condition.paramType;
+        result.operator = condition.operator;
         result.compValue = compValues[index];
-        // result.isHashed = parameter.comp == Comparison.EqualTo;
 
         if (childrenBounds[index].length == 0) {
             return;
@@ -97,10 +93,10 @@ abstract contract PermissionLoader is Core {
         uint256 start = childrenBounds[index].start;
         uint256 count = childrenBounds[index].length;
 
-        result.children = new ParameterConfig[](count);
+        result.children = new Condition[](count);
         for (uint j; j < count; ) {
             _unpack(
-                parameters,
+                conditions,
                 compValues,
                 childrenBounds,
                 start + j,

@@ -21,13 +21,13 @@
 //       {
 //         parent: 0,
 //         _type: ParameterType.AbiEncoded,
-//         comp: Comparison.Matches,
+//         comp: Operator.Matches,
 //         compValue: "0x",
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Static,
-//         comp: Comparison.GreaterThan,
+//         comp: Operator.GreaterThan,
 //         compValue: ethers.utils.solidityPack(["uint256"], [1234]),
 //       },
 //     ];
@@ -87,49 +87,49 @@
 //       {
 //         parent: 0,
 //         _type: ParameterType.AbiEncoded,
-//         comp: Comparison.Matches,
+//         comp: Operator.Matches,
 //         compValue: "0x",
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Dynamic,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_3,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Static,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_4,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Dynamic,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_5,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Static,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_6,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Static,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_7,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Dynamic,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_8,
 //       },
 //       {
 //         parent: 0,
 //         _type: ParameterType.Dynamic,
-//         comp: Comparison.EqualTo,
+//         comp: Operator.EqualTo,
 //         compValue: encodedParam_9,
 //       },
 //     ];

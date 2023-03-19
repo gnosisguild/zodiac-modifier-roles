@@ -33,7 +33,7 @@ abstract contract PermissionBuilder is Core {
         uint16 role,
         address targetAddress,
         bytes4 functionSig,
-        ParameterConfigFlat[] parameters,
+        ConditionFlat[] conditions,
         ExecutionOptions options
     );
 
@@ -120,16 +120,16 @@ abstract contract PermissionBuilder is Core {
         uint16 roleId,
         address targetAddress,
         bytes4 selector,
-        ParameterConfigFlat[] memory parameters,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        Integrity.validate(parameters);
-        _removeExtraneousOffsets(parameters);
+        Integrity.validate(conditions);
+        _removeExtraneousOffsets(conditions);
 
         _store(
             roles[roleId],
             _key(targetAddress, selector),
-            parameters,
+            conditions,
             options
         );
 
@@ -137,7 +137,7 @@ abstract contract PermissionBuilder is Core {
             roleId,
             targetAddress,
             selector,
-            parameters,
+            conditions,
             options
         );
     }
@@ -162,10 +162,10 @@ abstract contract PermissionBuilder is Core {
     function _track(Trace[] memory entries) internal {
         uint256 paramCount = entries.length;
         for (uint256 i; i < paramCount; ) {
-            ParameterConfig memory parameter = entries[i].condition;
+            Condition memory condition = entries[i].condition;
             uint256 value = entries[i].value;
 
-            uint16 allowanceId = uint16(uint256(bytes32(parameter.compValue)));
+            uint16 allowanceId = uint16(uint256(bytes32(condition.compValue)));
             Allowance memory allowance = allowances[allowanceId];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
@@ -173,9 +173,9 @@ abstract contract PermissionBuilder is Core {
             );
 
             if (value > balance) {
-                if (parameter.comp == Comparison.WithinAllowance) {
+                if (condition.operator == Operator.WithinAllowance) {
                     revert AllowanceExceeded(allowanceId);
-                } else if (parameter.comp == Comparison.ETHWithinAllowance) {
+                } else if (condition.operator == Operator.ETHWithinAllowance) {
                     revert ETHAllowanceExceeded(allowanceId);
                 } else {
                     revert CallAllowanceExceeded(allowanceId);
@@ -219,27 +219,27 @@ abstract contract PermissionBuilder is Core {
     }
 
     function _removeExtraneousOffsets(
-        ParameterConfigFlat[] memory parameters
-    ) private pure returns (ParameterConfigFlat[] memory) {
-        uint256 paramCount = parameters.length;
-        for (uint256 i; i < paramCount; ) {
+        ConditionFlat[] memory conditions
+    ) private pure returns (ConditionFlat[] memory) {
+        uint256 count = conditions.length;
+        for (uint256 i; i < count; ) {
             if (
-                parameters[i].comp == Comparison.EqualTo &&
-                Topology.isInline(parameters, i) == false
+                conditions[i].operator == Operator.EqualTo &&
+                Topology.isInline(conditions, i) == false
             ) {
-                bytes memory compValue = parameters[i].compValue;
+                bytes memory compValue = conditions[i].compValue;
                 uint256 length = compValue.length;
                 assembly {
                     compValue := add(compValue, 32)
                     mstore(compValue, sub(length, 32))
                 }
-                parameters[i].compValue = compValue;
+                conditions[i].compValue = compValue;
             }
 
             unchecked {
                 ++i;
             }
         }
-        return parameters;
+        return conditions;
     }
 }

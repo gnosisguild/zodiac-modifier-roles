@@ -10,24 +10,58 @@ enum ParameterType {
     AbiEncoded
 }
 
-enum Comparison {
-    Whatever,
-    Matches,
-    And,
-    Or,
-    SubsetOf,
-    ArraySome,
-    ArrayEvery,
-    // comparison types above don't use compValue
-    // ---
-    // comparison types below use compValue
-    EqualTo,
-    GreaterThan,
-    LessThan,
-    Bitmask,
-    WithinAllowance,
-    ETHWithinAllowance,
-    CallWithinAllowance
+enum Operator {
+    // 00:    EMPTY EXPRESSION (default, always passes)
+    //          paramType: Static / Dynamic
+    //          🚫 children
+    //          🚫 compValue
+    /* 00: */ Whatever,
+    // ------------------------------------------------------------
+    // 01-04: BOOLEAN EXPRESSIONS
+    //          paramType: None
+    //          ✅ children
+    //          🚫 compValue
+    /* 01: */ And,
+    /* 02: */ Or,
+    /* 03: */ Xor,
+    /* 04: */ Not,
+    // ------------------------------------------------------------
+    // 05-16: COMPLEX EXPRESSIONS
+    //          paramType: AbiEncoded / Tuple / Array,
+    //          ✅ children
+    //          🚫 compValue
+    /* 05: */ Matches,
+    /* 06: */ ArraySome,
+    /* 07: */ ArrayEvery,
+    /* 08: */ ArraySubset,
+    /* 09: */ _ComplexPlaceholder09,
+    /* 10: */ _ComplexPlaceholder10,
+    /* 11: */ _ComplexPlaceholder11,
+    /* 12: */ _ComplexPlaceholder12,
+    /* 13: */ _ComplexPlaceholder13,
+    /* 14: */ _ComplexPlaceholder14,
+    /* 15: */ _ComplexPlaceholder15,
+    /* 16: */ _ComplexPlaceholder16,
+    // ------------------------------------------------------------
+    // 17-31: COMPARISON EXPRESSIONS
+    //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
+    //          🚫 children
+    //          ✅ compValue
+    /* 17: */ EqualTo,
+    /* 18: */ GreaterThan,
+    /* 19: */ LessThan,
+    /* 20: */ Bitmask,
+    /* 21: */ _ComparisonPlaceholder21,
+    /* 22: */ _ComparisonPlaceholder22,
+    /* 23: */ _ComparisonPlaceholder23,
+    /* 24: */ _ComparisonPlaceholder24,
+    /* 25: */ _ComparisonPlaceholder25,
+    /* 26: */ _ComparisonPlaceholder26,
+    /* 27: */ _ComparisonPlaceholder27,
+    /* 28: */ _ComparisonPlaceholder28,
+    /* 29: */ WithinAllowance,
+    /* 30: */ ETHWithinAllowance,
+    /* 31: */ CallWithinAllowance
 }
 
 enum ExecutionOptions {
@@ -43,21 +77,21 @@ enum Clearance {
     Function
 }
 
-// This struct is a flattened version of ParameterConfig
+// This struct is a flattened version of Condition
 // used for ABI encoding a scope config tree
 // (ABI does not support recursive types)
-struct ParameterConfigFlat {
+struct ConditionFlat {
     uint8 parent;
-    ParameterType _type;
-    Comparison comp;
+    ParameterType paramType;
+    Operator operator;
     bytes compValue;
 }
 
-struct ParameterConfig {
-    ParameterType _type;
-    Comparison comp;
+struct Condition {
+    ParameterType paramType;
+    Operator operator;
     bytes32 compValue;
-    ParameterConfig[] children;
+    Condition[] children;
 }
 struct ParameterPayload {
     uint256 location;
@@ -93,6 +127,6 @@ struct Allowance {
 }
 
 struct Trace {
-    ParameterConfig condition;
+    Condition condition;
     uint256 value;
 }
