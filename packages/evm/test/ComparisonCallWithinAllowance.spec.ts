@@ -296,17 +296,13 @@ describe("Comparison", async () => {
       );
 
       await expect(execute(valueOther)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
+        "NoMatchingBranch()"
       );
 
-      await expect(execute(value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
-      );
+      await expect(execute(value1)).to.be.revertedWith("NoMatchingBranch()");
 
       await expect(execute(value2)).not.to.be.reverted;
-      await expect(execute(value1)).to.be.revertedWith(
-        "ParameterNotOneOfAllowed()"
-      );
+      await expect(execute(value1)).to.be.revertedWith("NoMatchingBranch()");
     });
   });
 });

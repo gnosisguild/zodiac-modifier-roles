@@ -21,11 +21,11 @@ library Topology {
         uint256 paramCount = parameters.length;
         assert(paramCount > 0);
 
+        // parents are breadth-first
         result = new Bounds[](paramCount);
         result[0].start = type(uint256).max;
 
-        // parents are BFS ordered, so we can use this to find the bounds
-        // 0 is the root
+        // first item is the root
         for (uint256 i = 1; i < paramCount; ) {
             result[i].start = type(uint256).max;
             Bounds memory parentBounds = result[parameters[i].parent];
