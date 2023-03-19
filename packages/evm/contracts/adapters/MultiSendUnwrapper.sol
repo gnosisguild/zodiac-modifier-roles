@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Types.sol";
 
-contract MultiSendAdapter is ITransactionUnwrapper {
+contract MultiSendUnwrapper is ITransactionUnwrapper {
     bytes4 private constant SELECTOR = 0x8d80ff0a;
     uint256 private constant OFFSET_START = 68;
 
