@@ -5,9 +5,9 @@ import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Comparison", async () => {
+describe("Operator", async () => {
   const ROLE_ID = 0;
 
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
@@ -78,14 +78,14 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.CallWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.CallWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
           },
         ],
@@ -142,7 +142,6 @@ describe("Comparison", async () => {
         `CallAllowanceExceeded(${allowanceId})`
       );
     });
-
     it("passes multiple checks from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
@@ -171,7 +170,6 @@ describe("Comparison", async () => {
         `CallAllowanceExceeded(${allowanceId})`
       );
     });
-
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
@@ -191,7 +189,6 @@ describe("Comparison", async () => {
         `CallAllowanceExceeded(${allowanceId})`
       );
     });
-
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
@@ -259,44 +256,44 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.None,
-            comp: Comparison.Or,
+            paramType: ParameterType.None,
+            operator: Operator.Or,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 1,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value1]),
           },
           {
             parent: 1,
-            _type: ParameterType.None,
-            comp: Comparison.CallWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.CallWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
           },
           {
             parent: 2,
-            _type: ParameterType.Static,
-            comp: Comparison.EqualTo,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value2]),
           },
           {
             parent: 2,
-            _type: ParameterType.None,
-            comp: Comparison.CallWithinAllowance,
+            paramType: ParameterType.None,
+            operator: Operator.CallWithinAllowance,
             compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
           },
         ],

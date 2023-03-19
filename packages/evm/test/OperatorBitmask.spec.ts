@@ -4,9 +4,9 @@ import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
 
-import { Comparison, ExecutionOptions, ParameterType } from "./utils";
+import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Comparison", async () => {
+describe("Operator", async () => {
   const ROLE_ID = 0;
 
   const setup = deployments.createFixture(async () => {
@@ -47,14 +47,14 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Static,
-            comp: Comparison.Bitmask,
+            paramType: ParameterType.Static,
+            operator: Operator.Bitmask,
             compValue,
           },
         ],
@@ -94,14 +94,14 @@ describe("Comparison", async () => {
         [
           {
             parent: 0,
-            _type: ParameterType.AbiEncoded,
-            comp: Comparison.Matches,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            _type: ParameterType.Dynamic,
-            comp: Comparison.Bitmask,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Bitmask,
             compValue,
           },
         ],
@@ -160,7 +160,6 @@ describe("Comparison", async () => {
           )
         ).to.be.revertedWith("BitmaskNotAllowed()");
       });
-
       it("middle aligned", async () => {
         const { setRole } = await setup();
 

@@ -20,22 +20,22 @@ library ScopeConfig {
     // 8    bits -> parent
     // 3    bits -> type
     // 5    bits -> operator
-    uint256 private constant bytesPerParameter = 2;
+    uint256 private constant bytesPerCondition = 2;
     uint16 private constant offsetParent = 8;
-    uint16 private constant offsetType = 5;
-    uint16 private constant offsetComparison = 0;
+    uint16 private constant offsetParamType = 5;
+    uint16 private constant offsetOperator = 0;
     uint16 private constant maskParent = uint16(0xff << offsetParent);
-    uint16 private constant maskType = uint16(0x07 << offsetType);
-    uint16 private constant maskComparison = uint16(0x1f << offsetComparison);
+    uint16 private constant maskParamType = uint16(0x07 << offsetParamType);
+    uint16 private constant maskOperator = uint16(0x1f << offsetOperator);
 
     function packedSize(
-        ParameterConfigFlat[] memory parameters
+        ConditionFlat[] memory conditions
     ) internal pure returns (uint256 result) {
-        uint256 paramCount = parameters.length;
+        uint256 paramCount = conditions.length;
 
-        result = paramCount * bytesPerParameter;
+        result = paramCount * bytesPerCondition;
         for (uint256 i; i < paramCount; ) {
-            if (parameters[i].comp >= Comparison.EqualTo) {
+            if (conditions[i].operator >= Operator.EqualTo) {
                 result += 32;
             }
 
@@ -79,16 +79,16 @@ library ScopeConfig {
         pointer = address(bytes20(header << 16));
     }
 
-    function packParameter(
+    function packCondition(
         bytes memory buffer,
         uint256 index,
-        ParameterConfigFlat memory parameter
+        ConditionFlat memory condition
     ) internal pure {
-        uint16 bits = (uint16(parameter.parent) << offsetParent) |
-            (uint16(parameter._type) << offsetType) |
-            (uint16(parameter.comp) << offsetComparison);
+        uint16 bits = (uint16(condition.parent) << offsetParent) |
+            (uint16(condition.paramType) << offsetParamType) |
+            (uint16(condition.operator) << offsetOperator);
 
-        uint256 offset = index * bytesPerParameter;
+        uint256 offset = index * bytesPerCondition;
         unchecked {
             buffer[offset] = bytes1(uint8(bits >> 8));
             buffer[offset + 1] = bytes1(uint8(bits));
@@ -98,48 +98,47 @@ library ScopeConfig {
     function packCompValue(
         bytes memory buffer,
         uint256 offset,
-        ParameterConfigFlat memory parameter
+        ConditionFlat memory condition
     ) internal pure {
-        bytes32 word = parameter.comp == Comparison.EqualTo
-            ? keccak256(parameter.compValue)
-            : bytes32(parameter.compValue);
+        bytes32 word = condition.operator == Operator.EqualTo
+            ? keccak256(condition.compValue)
+            : bytes32(condition.compValue);
 
         assembly {
             mstore(add(buffer, offset), word)
         }
     }
 
-    function unpackParameters(
+    function unpackConditions(
         bytes memory buffer,
-        uint256 paramCount
+        uint256 count
     )
         internal
         pure
-        returns (
-            ParameterConfigFlat[] memory result,
-            bytes32[] memory compValues
-        )
+        returns (ConditionFlat[] memory result, bytes32[] memory compValues)
     {
-        result = new ParameterConfigFlat[](paramCount);
-        compValues = new bytes32[](paramCount);
+        result = new ConditionFlat[](count);
+        compValues = new bytes32[](count);
 
         bytes32 word;
-        uint256 paramOffset;
-        uint256 compValueOffset = 32 + paramCount * bytesPerParameter;
-        for (uint256 i; i < paramCount; ) {
-            paramOffset = 32 + i * bytesPerParameter;
+        uint256 offset;
+        uint256 compValueOffset = 32 + count * bytesPerCondition;
+        for (uint256 i; i < count; ) {
+            offset = 32 + i * bytesPerCondition;
             assembly {
-                word := mload(add(buffer, paramOffset))
+                word := mload(add(buffer, offset))
             }
 
             uint16 bits = uint16(bytes2(word));
             result[i].parent = uint8((bits & maskParent) >> offsetParent);
-            result[i]._type = ParameterType((bits & maskType) >> offsetType);
-            result[i].comp = Comparison(
-                (bits & maskComparison) >> offsetComparison
+            result[i].paramType = ParameterType(
+                (bits & maskParamType) >> offsetParamType
+            );
+            result[i].operator = Operator(
+                (bits & maskOperator) >> offsetOperator
             );
 
-            if (result[i].comp >= Comparison.EqualTo) {
+            if (result[i].operator >= Operator.EqualTo) {
                 assembly {
                     word := mload(add(buffer, compValueOffset))
                 }

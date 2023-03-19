@@ -9,7 +9,7 @@ library Decoder {
 
     function inspect(
         bytes calldata data,
-        ParameterConfig memory parameter
+        Condition memory condition
     ) internal pure returns (ParameterPayload memory result) {
         /*
          * In the parameter encoding area, there is a region called the head
@@ -21,7 +21,7 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        result = __block__(data, 4, Topology.typeTree(parameter));
+        result = __block__(data, 4, Topology.typeTree(condition));
         result.location = 0;
         result.size = data.length;
     }
@@ -42,7 +42,7 @@ library Decoder {
         uint256 location,
         Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        ParameterType paramType = node._type;
+        ParameterType paramType = node.paramType;
         assert(paramType != ParameterType.None);
 
         if (paramType == ParameterType.Static) {
@@ -99,7 +99,7 @@ library Decoder {
         uint256 offset;
         for (uint256 i; i < length; ++i) {
             Topology.TypeTree memory part = node.children[i];
-            if (part._type == ParameterType.None) {
+            if (part.paramType == ParameterType.None) {
                 continue;
             }
 
