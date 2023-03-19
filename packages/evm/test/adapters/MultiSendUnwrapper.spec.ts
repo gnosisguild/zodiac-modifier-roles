@@ -15,7 +15,7 @@ enum Operation {
   DelegateCall,
 }
 
-describe("MultiSendAdapter", async () => {
+describe("MultiSendUnwrapper", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
@@ -25,10 +25,10 @@ describe("MultiSendAdapter", async () => {
     const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
     const testEncoder = await TestEncoder.deploy();
 
-    const MultiSendAdapter = await hre.ethers.getContractFactory(
-      "MultiSendAdapter"
+    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+      "MultiSendUnwrapper"
     );
-    const unwrapper = await MultiSendAdapter.deploy();
+    const unwrapper = await MultiSendUnwrapper.deploy();
 
     return {
       multisend,

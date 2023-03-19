@@ -36,10 +36,10 @@ describe("Multi Entrypoint", async () => {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
 
-    const MultiSendAdapter = await hre.ethers.getContractFactory(
-      "MultiSendAdapter"
+    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+      "MultiSendUnwrapper"
     );
-    const adapter = await MultiSendAdapter.deploy();
+    const adapter = await MultiSendUnwrapper.deploy();
 
     await roles
       .connect(owner)
