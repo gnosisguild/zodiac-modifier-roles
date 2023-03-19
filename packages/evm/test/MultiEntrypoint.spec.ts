@@ -43,7 +43,11 @@ describe("Multi Entrypoint", async () => {
 
     await roles
       .connect(owner)
-      .setUnwrapAdapter(multisend.address, "0x8d80ff0a", adapter.address);
+      .setTransactionUnwrapper(
+        multisend.address,
+        "0x8d80ff0a",
+        adapter.address
+      );
 
     await roles.enableModule(invoker.address);
 
@@ -234,7 +238,7 @@ describe("Multi Entrypoint", async () => {
     // removing the unwrap adapter should result in address not Authorized
     await roles
       .connect(owner)
-      .setUnwrapAdapter(
+      .setTransactionUnwrapper(
         multisend.address,
         "0x8d80ff0a",
         "0x0000000000000000000000000000000000000000"
