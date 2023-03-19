@@ -18,15 +18,15 @@ library ScopeConfig {
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // CONDITION:(stored in code at the address kept in header)
     // 8    bits -> parent
-    // 4    bits -> type
-    // 4    bits -> comparison
+    // 3    bits -> type
+    // 5    bits -> operator
     uint256 private constant bytesPerParameter = 2;
     uint16 private constant offsetParent = 8;
-    uint16 private constant offsetType = 4;
+    uint16 private constant offsetType = 5;
     uint16 private constant offsetComparison = 0;
     uint16 private constant maskParent = uint16(0xff << offsetParent);
-    uint16 private constant maskType = uint16(0xf << offsetType);
-    uint16 private constant maskComparison = uint16(0xf << offsetComparison);
+    uint16 private constant maskType = uint16(0x07 << offsetType);
+    uint16 private constant maskComparison = uint16(0x1f << offsetComparison);
 
     function packedSize(
         ParameterConfigFlat[] memory parameters
