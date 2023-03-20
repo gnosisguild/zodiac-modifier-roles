@@ -23,7 +23,7 @@ library ScopeConfig {
     uint256 private constant maskLength = 0xff << offsetLength;
     uint256 private constant maskOptions = 0x3 << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
-    // CONDITION:(stored in code at the address kept in header)
+    // CONDITION (stored in code at the address kept in header)
     // 8    bits -> parent
     // 3    bits -> type
     // 5    bits -> operator

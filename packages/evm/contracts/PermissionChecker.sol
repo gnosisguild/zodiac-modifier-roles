@@ -546,7 +546,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterGreaterThanAllowed,
         /// Parameter value does not match
         ParameterNotAMatch,
-        /// No of the conditions in an OR was not met
+        /// None of the conditions in an OR was met
         NoMatchingBranch,
         /// Array elements do not meet allowed criteria for every element
         NotEveryArrayElementPasses,
