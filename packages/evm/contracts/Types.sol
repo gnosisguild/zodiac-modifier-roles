@@ -21,7 +21,7 @@ enum Operator {
     //          paramType: Static / Dynamic
     //          🚫 children
     //          🚫 compValue
-    /* 00: */ Whatever,
+    /* 00: */ Whatever, // TODO maybe rename to Pass
     // ------------------------------------------------------------
     // 01-04: BOOLEAN EXPRESSIONS
     //          paramType: None
@@ -66,7 +66,7 @@ enum Operator {
     /* 27: */ _ComparisonPlaceholder27,
     /* 28: */ _ComparisonPlaceholder28,
     /* 29: */ WithinAllowance,
-    /* 30: */ ETHWithinAllowance,
+    /* 30: */ ETHWithinAllowance, // TODO ETH looks weird to me, it's not an acronym
     /* 31: */ CallWithinAllowance
 }
 

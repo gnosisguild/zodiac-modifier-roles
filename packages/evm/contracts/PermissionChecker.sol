@@ -546,7 +546,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterGreaterThanAllowed,
         /// Parameter value does not match
         ParameterNotAMatch,
-        /// An order condition was not met
+        /// No of the conditions in an OR was not met
         NoMatchingBranch,
         /// Array elements do not meet allowed criteria for every element
         NotEveryArrayElementPasses,
@@ -557,9 +557,7 @@ abstract contract PermissionChecker is Core, Periphery {
         /// Bitmask exceeded value length
         BitmaskOverflow,
         /// Bitmask not an allowed value
-        BitmaskNotAllowed,
-        /// Allowance was double spent
-        AllowanceDoubleSpend
+        BitmaskNotAllowed
     }
 
     /// Sender is not a member of the role
