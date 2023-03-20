@@ -3,6 +3,11 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Types.sol";
 
+/**
+ * @title Topology - a library that provides helper functions for dealing with
+ * the flat representation of conditions.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ */
 library Topology {
     struct TypeTree {
         ParameterType paramType;

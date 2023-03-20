@@ -8,8 +8,14 @@ import "./Periphery.sol";
 import "./Decoder.sol";
 import "./ScopeConfig.sol";
 
+/**
+ * @title PermissionChecker - a component of the Zodiac Roles Mod that is
+ * responsible for enforcing and authorizing actions performed on behalf of a
+ * role.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ */
 abstract contract PermissionChecker is Core, Periphery {
-    /// @dev Entry point for checking the scope of a transaction.
     function authorize(
         Role storage role,
         address to,

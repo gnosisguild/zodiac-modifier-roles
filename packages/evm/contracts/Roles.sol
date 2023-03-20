@@ -5,6 +5,14 @@ import "./PermissionLoader.sol";
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
 
+/**
+ * @title Zodiac Roles Mod - granular, role-based, access control for your
+ * on-chain avatar accounts (like Safe).
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ * @author Auryn Mcmillan     - <auryn.macmillan@gnosis.pm>
+ * @author Nathan Ginnever    - <nathan.ginnever@gnosis.pm>
+ */
 contract Roles is
     Modifier,
     PermissionLoader,
