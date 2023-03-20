@@ -66,7 +66,7 @@ enum Operator {
     /* 27: */ _ComparisonPlaceholder27,
     /* 28: */ _ComparisonPlaceholder28,
     /* 29: */ WithinAllowance,
-    /* 30: */ ETHWithinAllowance,
+    /* 30: */ EtherWithinAllowance,
     /* 31: */ CallWithinAllowance
 }
 

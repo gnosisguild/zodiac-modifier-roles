@@ -182,7 +182,9 @@ abstract contract PermissionBuilder is Core {
             if (value > balance) {
                 if (condition.operator == Operator.WithinAllowance) {
                     revert AllowanceExceeded(allowanceId);
-                } else if (condition.operator == Operator.ETHWithinAllowance) {
+                } else if (
+                    condition.operator == Operator.EtherWithinAllowance
+                ) {
                     revert ETHAllowanceExceeded(allowanceId);
                 } else {
                     revert CallAllowanceExceeded(allowanceId);
