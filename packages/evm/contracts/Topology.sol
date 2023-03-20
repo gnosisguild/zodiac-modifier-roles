@@ -101,6 +101,7 @@ library Topology {
             condition.operator == Operator.And ||
             condition.operator == Operator.Or
         ) {
+            assert(condition.children.length > 1);
             return typeTree(condition.children[0]);
         }
 
@@ -110,6 +111,36 @@ library Topology {
             result.children = new TypeTree[](length);
             for (uint256 i; i < length; ) {
                 result.children[i] = typeTree(condition.children[i]);
+                unchecked {
+                    ++i;
+                }
+            }
+        }
+    }
+
+    function subTypeTree(
+        ConditionFlat[] memory conditions,
+        uint256 index,
+        Bounds[] memory bounds
+    ) internal pure returns (TypeTree memory result) {
+        ConditionFlat memory condition = conditions[index];
+        if (
+            condition.operator == Operator.And ||
+            condition.operator == Operator.Or
+        ) {
+            assert(bounds[index].length > 1);
+            return subTypeTree(conditions, bounds[index].start, bounds);
+        }
+
+        result.paramType = condition.paramType;
+        if (bounds[index].length > 0) {
+            uint256 start = bounds[index].start;
+            uint256 end = condition.paramType == ParameterType.Array
+                ? bounds[index].start + 1
+                : bounds[index].end;
+            result.children = new TypeTree[](end - start);
+            for (uint256 i = start; i < end; ) {
+                result.children[i - start] = subTypeTree(conditions, i, bounds);
                 unchecked {
                     ++i;
                 }

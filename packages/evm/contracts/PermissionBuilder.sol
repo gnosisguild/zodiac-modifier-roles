@@ -123,7 +123,7 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        Integrity.validate(conditions);
+        Integrity.enforce(conditions);
         _removeExtraneousOffsets(conditions);
 
         _store(
