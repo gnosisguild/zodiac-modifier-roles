@@ -6,6 +6,13 @@ import "./Integrity.sol";
 import "./Topology.sol";
 import "./ScopeConfig.sol";
 
+/**
+ * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
+ * responsible for constructing, managing, granting, and revoking all types
+ * of permission data.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ */
 abstract contract PermissionBuilder is Core {
     /// Allowance exceeded
     error AllowanceExceeded(uint16 allowanceId);

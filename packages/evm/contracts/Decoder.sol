@@ -4,6 +4,11 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 import "./Topology.sol";
 
+/**
+ * @title Decoder - a library that discovers parameter locations in calldata
+ * from a list of conditions.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ */
 library Decoder {
     error CalldataOutOfBounds();
 

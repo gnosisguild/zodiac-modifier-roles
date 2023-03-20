@@ -8,6 +8,13 @@ import "./Core.sol";
 import "./Topology.sol";
 import "./ScopeConfig.sol";
 
+/**
+ * @title PermissionLoader - a component of the Zodiac Roles Mod that handles
+ * the packing, writing, reading, and unpacking of permission data to and from
+ * storage.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ */
 abstract contract PermissionLoader is Core {
     function _store(
         Role storage role,
