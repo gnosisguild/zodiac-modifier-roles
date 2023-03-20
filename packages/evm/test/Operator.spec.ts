@@ -427,7 +427,7 @@ describe("Operator", async () => {
         {
           parent: 0,
           paramType: ParameterType.Dynamic,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
@@ -442,7 +442,7 @@ describe("Operator", async () => {
         {
           parent: 2,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
       ],
@@ -773,7 +773,7 @@ describe("Operator", async () => {
         {
           parent: 0,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
@@ -1988,7 +1988,7 @@ describe("Operator", async () => {
             parent: 3,
 
             paramType: ParameterType.Static,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {

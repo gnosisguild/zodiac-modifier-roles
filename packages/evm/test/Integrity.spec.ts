@@ -42,13 +42,13 @@ describe("Integrity", async () => {
           {
             parent: 1,
             paramType: ParameterType.AbiEncoded,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
             paramType: ParameterType.Tuple,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
         ],
@@ -65,13 +65,13 @@ describe("Integrity", async () => {
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 1,
             paramType: ParameterType.Tuple,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
         ],
@@ -93,25 +93,25 @@ describe("Integrity", async () => {
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
             paramType: ParameterType.Tuple,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 1,
             paramType: ParameterType.Static,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
             paramType: ParameterType.Static,
-            operator: Operator.Whatever,
+            operator: Operator.Pass,
             compValue: "0x",
           },
         ],
@@ -294,53 +294,53 @@ describe("Integrity", async () => {
             {
               parent: 0,
               paramType: ParameterType.AbiEncoded,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 0,
               paramType: ParameterType.Array,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // first element 2
             {
               parent: 1,
               paramType: ParameterType.Tuple,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // second element 3
             {
               parent: 1,
               paramType: ParameterType.Tuple,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // tuple first
             {
               parent: 2,
               paramType: ParameterType.Dynamic,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 2,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // tuple second 8
             {
               parent: 3,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 3,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
           ],
@@ -357,53 +357,53 @@ describe("Integrity", async () => {
             {
               parent: 0,
               paramType: ParameterType.AbiEncoded,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 0,
               paramType: ParameterType.Array,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // first element 2
             {
               parent: 1,
               paramType: ParameterType.Tuple,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // second element 3
             {
               parent: 1,
               paramType: ParameterType.Tuple,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // tuple first
             {
               parent: 2,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 2,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             // tuple second 8
             {
               parent: 3,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 3,
               paramType: ParameterType.Static,
-              operator: Operator.Whatever,
+              operator: Operator.Pass,
               compValue: "0x",
             },
           ],
@@ -418,51 +418,51 @@ describe("Integrity", async () => {
         {
           parent: 0,
           paramType: ParameterType.AbiEncoded,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 0,
           paramType: ParameterType.Array,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         // first element 2
         {
           parent: 1,
           paramType: ParameterType.Tuple,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         // second element 3
         {
           parent: 1,
           paramType: ParameterType.Tuple,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
           paramType: ParameterType.Dynamic,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 3,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 3,
           paramType: ParameterType.Dynamic,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
       ];
@@ -502,51 +502,51 @@ describe("Integrity", async () => {
         {
           parent: 0,
           paramType: ParameterType.AbiEncoded,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 0,
           paramType: ParameterType.Array,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         // first element 2
         {
           parent: 1,
           paramType: ParameterType.Tuple,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         // second element 3
         {
           parent: 1,
           paramType: ParameterType.Tuple,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
           paramType: ParameterType.Dynamic,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 3,
           paramType: ParameterType.Dynamic,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 3,
           paramType: ParameterType.Static,
-          operator: Operator.Whatever,
+          operator: Operator.Pass,
           compValue: "0x",
         },
       ];

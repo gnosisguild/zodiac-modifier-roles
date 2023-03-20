@@ -21,7 +21,7 @@ enum Operator {
     //          paramType: Static / Dynamic
     //          🚫 children
     //          🚫 compValue
-    /* 00: */ Whatever,
+    /* 00: */ Pass,
     // ------------------------------------------------------------
     // 01-04: BOOLEAN EXPRESSIONS
     //          paramType: None
