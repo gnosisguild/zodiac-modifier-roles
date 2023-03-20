@@ -224,8 +224,8 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _bitmask(data, condition, payload);
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload);
-            } else if (operator == Operator.ETHWithinAllowance) {
-                return _ethWithinAllowance(value, condition);
+            } else if (operator == Operator.EtherWithinAllowance) {
+                return _etherWithinAllowance(value, condition);
             } else {
                 assert(operator == Operator.CallWithinAllowance);
                 return _callWithinAllowance(condition);
@@ -470,7 +470,7 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, _trace(Trace({condition: condition, value: value})));
     }
 
-    function _ethWithinAllowance(
+    function _etherWithinAllowance(
         uint256 value,
         Condition memory condition
     ) private pure returns (Status status, Trace[] memory) {

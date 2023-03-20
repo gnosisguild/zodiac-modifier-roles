@@ -1615,7 +1615,7 @@ describe("Decoder library", async () => {
         children: [
           {
             paramType: ParameterType.None,
-            operator: Operator.ETHWithinAllowance,
+            operator: Operator.EtherWithinAllowance,
             children: [],
           },
           {
