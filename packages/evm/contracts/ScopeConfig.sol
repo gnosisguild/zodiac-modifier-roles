@@ -3,6 +3,13 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Types.sol";
 
+/**
+ * @title ScopeConfig a library that provides packing and unpacking functions
+ * for permission conditions. Specifically, it allows packing externally
+ * provided ConditionsFlat[] into a storage-optimized buffer, and later unpack
+ * it into Conditions[] in memory.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ */
 library ScopeConfig {
     // HEADER (stored as a single word in storage)
     // 8   bits  -> length (Condition count)

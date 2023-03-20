@@ -4,6 +4,11 @@ pragma solidity >=0.8.17 <0.9.0;
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./Types.sol";
 
+/**
+ * @title Core is the base contract for the Zodiac Roles Mod, which defines
+ * the common abstract connection points between Builder, Loader, and Checker.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ */
 abstract contract Core is OwnableUpgradeable {
     mapping(uint16 => Role) internal roles;
     mapping(uint16 => Allowance) public allowances;

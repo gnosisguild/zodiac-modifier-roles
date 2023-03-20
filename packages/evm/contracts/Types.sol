@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+/**
+ * @title Types - a file that contains all of the type definitions used throughout
+ * the Zodiac Roles Mod.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ */
 enum ParameterType {
     None,
     Static,

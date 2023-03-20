@@ -4,6 +4,12 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 import "./Topology.sol";
 
+/**
+ * @title Integrity, a library that ensures the provided configuration
+ * conditions meet certain sanity checks and that the data conforms to the
+ * expected data model for the roles modifier.
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ */
 library Integrity {
     error NoRootNode();
 
