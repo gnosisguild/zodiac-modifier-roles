@@ -1,4 +1,7 @@
-# Zodiac Roles Modifier
+**This is the code for the legacy V1 contracts, current version at: [gnosis/zodiac-modifier-roles](https://github.com/gnosis/zodiac-modifier-roles)**
+
+
+# Zodiac Roles Modifier V1
 
 [![Build Status](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-modifier-roles/badge.svg?branch=main&cache_bust=1)](https://coveralls.io/github/gnosis/zodiac-modifier-roles?branch=main)
