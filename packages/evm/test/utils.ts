@@ -123,7 +123,7 @@ export enum Operator {
   //          paramType: Static / Dynamic
   //          🚫 children
   //          🚫 compValue
-  Whatever = 0,
+  /* 00: */ Pass = 0,
   // ------------------------------------------------------------
   // 01-04: BOOLEAN EXPRESSIONS
   //          paramType: None

@@ -1427,12 +1427,12 @@ describe("Decoder library", async () => {
             children: [
               {
                 paramType: ParameterType.Dynamic,
-                operator: Operator.Whatever,
+                operator: Operator.Pass,
                 children: [],
               },
               {
                 paramType: ParameterType.Static,
-                operator: Operator.Whatever,
+                operator: Operator.Pass,
                 children: [],
               },
               {
@@ -1528,12 +1528,12 @@ describe("Decoder library", async () => {
             children: [
               {
                 paramType: ParameterType.Dynamic,
-                operator: Operator.Whatever,
+                operator: Operator.Pass,
                 children: [],
               },
               {
                 paramType: ParameterType.Static,
-                operator: Operator.Whatever,
+                operator: Operator.Pass,
                 children: [],
               },
               {

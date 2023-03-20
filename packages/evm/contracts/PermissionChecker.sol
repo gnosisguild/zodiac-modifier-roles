@@ -201,7 +201,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
-            if (operator == Operator.Whatever) {
+            if (operator == Operator.Pass) {
                 return (Status.Ok, trace);
             } else if (operator == Operator.Matches) {
                 return _matches(value, data, condition, payload);
