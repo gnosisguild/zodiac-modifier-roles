@@ -168,7 +168,7 @@ export enum Operator {
   // /* 27: */ _BinaryPlaceholder27,
   // /* 28: */ _BinaryPlaceholder28,
   /* 29: */ WithinAllowance = 29,
-  /* 30: */ ETHWithinAllowance = 30,
+  /* 30: */ EtherWithinAllowance = 30,
   /* 31: */ CallWithinAllowance = 31,
 }
 

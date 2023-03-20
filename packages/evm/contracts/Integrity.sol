@@ -70,7 +70,7 @@ library Integrity {
 
         for (uint256 i = 0; i < length; ++i) {
             if (
-                (conditions[i].operator == Operator.ETHWithinAllowance ||
+                (conditions[i].operator == Operator.EtherWithinAllowance ||
                     conditions[i].operator == Operator.CallWithinAllowance) &&
                 conditions[conditions[i].parent].paramType !=
                 ParameterType.AbiEncoded
@@ -135,7 +135,7 @@ library Integrity {
             paramType == ParameterType.None &&
             !(operator == Operator.Or ||
                 operator == Operator.And ||
-                operator == Operator.ETHWithinAllowance ||
+                operator == Operator.EtherWithinAllowance ||
                 operator == Operator.CallWithinAllowance)
         ) {
             revert UnsuitableOperator(index);
@@ -144,7 +144,7 @@ library Integrity {
         if (
             (operator == Operator.Or ||
                 operator == Operator.And ||
-                operator == Operator.ETHWithinAllowance ||
+                operator == Operator.EtherWithinAllowance ||
                 operator == Operator.CallWithinAllowance) &&
             paramType != ParameterType.None
         ) {
