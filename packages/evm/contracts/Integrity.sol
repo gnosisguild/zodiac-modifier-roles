@@ -5,39 +5,27 @@ import "./Types.sol";
 import "./Topology.sol";
 
 library Integrity {
-    error NoRootNodeFound();
+    error NoRootNode();
 
-    error MultipleRootNodesFound();
+    error TooManyRootNodes();
 
-    error FlatButNotBFS();
+    error NotBFS();
 
     error UnsuitableParent(uint256 index);
 
-    error UnsuitableComparison(uint256 index);
+    error UnsuitableOperator(uint256 index);
 
-    error UnsuitableType(uint256 index);
+    error UnsuitableParameterType(uint256 index);
 
-    error UnsuitableRelativeComparison();
+    error UnsuitableCompValue(uint256 index);
 
-    error UnsuitableSubsetOfComparison();
+    error UnsuitableSubTypeTree(uint256 index);
 
-    error UnsuitableStaticCompValueSize();
-
-    error UnsuitableChildTypeTree(uint256 index);
-
-    error NoCompValuesProvidedForScope();
-
-    error TooManyCompValuesForScope();
-
-    error InvalidComparison();
-
-    error NotEnoughChildren(uint256 index);
+    error TooLittleChildren(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
-    error UnsuitableComparisonForTypeNone(uint256 index);
-
-    function validate(ConditionFlat[] memory conditions) internal pure {
+    function enforce(ConditionFlat[] memory conditions) internal pure {
         root(conditions);
         topology(conditions);
 
@@ -57,11 +45,11 @@ library Integrity {
             }
         }
         if (count == 0) {
-            revert NoRootNodeFound();
+            revert NoRootNode();
         }
 
         if (count > 1) {
-            revert MultipleRootNodesFound();
+            revert TooManyRootNodes();
         }
     }
 
@@ -70,7 +58,7 @@ library Integrity {
         // check BFS
         for (uint256 i = 1; i < length; ++i) {
             if (conditions[i - 1].parent > conditions[i].parent) {
-                revert FlatButNotBFS();
+                revert NotBFS();
             }
         }
 
@@ -89,20 +77,21 @@ library Integrity {
             conditions
         );
 
-        // check at least 2 children for relational nodes
+        // check at least 2 children for Ar/Or
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                condition.paramType == ParameterType.None &&
                 (condition.operator == Operator.Or ||
                     condition.operator == Operator.And)
             ) {
+                // must be zero
                 if (condition.compValue.length != 0) {
-                    revert InvalidComparison();
+                    revert UnsuitableCompValue(i);
                 }
 
+                // must have at least two children
                 if (childrenBounds[i].length < 2) {
-                    revert NotEnoughChildren(i);
+                    revert TooLittleChildren(i);
                 }
             }
         }
@@ -110,18 +99,20 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                condition.paramType == ParameterType.None &&
                 (condition.operator == Operator.Or ||
                     condition.operator == Operator.And)
             ) {
-                // checkChildTypeTree(parameters, i, childrenBounds);
+                compatibleSubTypeTree(conditions, i, childrenBounds);
+            }
+
+            if (
+                (condition.paramType == ParameterType.Array &&
+                    childrenBounds[i].length > 1)
+            ) {
+                compatibleSubTypeTree(conditions, i, childrenBounds);
             }
         }
 
-        // TODO check that Array and tuple-oneOf nodes are topologically equivalent
-        // TODO a lot more integrity checks
-        // TODO Extraneous can only be child of AbiEncoded or Tuple
-        // TODO CallWithinAllowance must be direct child of AbiEncoded
         // TODO bitmask only for dynamic and static
         // TODO dynamic multiple of 32
     }
@@ -141,7 +132,7 @@ library Integrity {
                 operator == Operator.ETHWithinAllowance ||
                 operator == Operator.CallWithinAllowance)
         ) {
-            revert UnsuitableComparison(index);
+            revert UnsuitableOperator(index);
         }
 
         if (
@@ -151,7 +142,7 @@ library Integrity {
                 operator == Operator.CallWithinAllowance) &&
             paramType != ParameterType.None
         ) {
-            revert UnsuitableType(index);
+            revert UnsuitableParameterType(index);
         }
 
         if (
@@ -159,7 +150,7 @@ library Integrity {
                 operator == Operator.LessThan) &&
             paramType != ParameterType.Static
         ) {
-            revert UnsuitableRelativeComparison();
+            revert UnsuitableParameterType(index);
         }
 
         if (
@@ -169,17 +160,27 @@ library Integrity {
             paramType == ParameterType.Static &&
             compValue.length != 32
         ) {
-            revert UnsuitableStaticCompValueSize();
+            revert UnsuitableCompValue(index);
+        }
+
+        if (operator >= Operator.EqualTo && compValue.length % 32 != 0) {
+            revert UnsuitableCompValue(index);
         }
 
         if (operator == Operator.Bitmask) {
+            if (
+                paramType != ParameterType.Static &&
+                paramType != ParameterType.Dynamic
+            ) {
+                revert UnsuitableParameterType(index);
+            }
             if (compValue.length != 32) {
                 revert MalformedBitmask(index);
             }
         }
     }
 
-    function checkChildTypeTree(
+    function compatibleSubTypeTree(
         ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
@@ -187,43 +188,32 @@ library Integrity {
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
-        bytes32 id = typeTreeId(conditions, start, childrenBounds);
+        bytes32 id = typeTreeId(
+            Topology.subTypeTree(conditions, start, childrenBounds)
+        );
         for (uint256 j = start + 1; j < end; ++j) {
-            if (id != typeTreeId(conditions, j, childrenBounds)) {
-                revert UnsuitableChildTypeTree(index);
+            if (
+                id !=
+                typeTreeId(Topology.subTypeTree(conditions, j, childrenBounds))
+            ) {
+                revert UnsuitableSubTypeTree(index);
             }
         }
     }
 
     function typeTreeId(
-        ConditionFlat[] memory conditions,
-        uint256 index,
-        Topology.Bounds[] memory childrenBounds
+        Topology.TypeTree memory node
     ) private pure returns (bytes32) {
-        Topology.Bounds memory bounds = childrenBounds[index];
-        ConditionFlat memory condition = conditions[index];
-
-        uint256 childrenCount = bounds.length;
-        if (
-            condition.operator == Operator.And ||
-            condition.operator == Operator.Or
-        ) {
-            assert(childrenCount >= 2);
-            return typeTreeId(conditions, bounds.start, childrenBounds);
-        }
-
-        if (childrenCount > 0) {
-            uint256 start = bounds.start;
-            uint256 end = bounds.end;
-            bytes32[] memory subIds = new bytes32[](childrenCount);
-            for (uint256 i = start; i < end; ++i) {
-                subIds[i - start] = typeTreeId(conditions, i, childrenBounds);
+        uint256 childCount = node.children.length;
+        if (childCount > 0) {
+            bytes32[] memory ids = new bytes32[](node.children.length);
+            for (uint256 i = 0; i < childCount; ++i) {
+                ids[i] = typeTreeId(node.children[i]);
             }
 
-            return
-                keccak256(abi.encodePacked(condition.paramType, "-", subIds));
+            return keccak256(abi.encodePacked(node.paramType, "-", ids));
         } else {
-            return bytes32(uint256(condition.paramType));
+            return bytes32(uint256(node.paramType));
         }
     }
 }
