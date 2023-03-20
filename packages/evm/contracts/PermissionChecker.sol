@@ -127,7 +127,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Enum.Operation operation
     ) private view returns (Status, Trace[] memory trace) {
         if (data.length != 0 && data.length < 4) {
-            return (Status.FunctionSignatureTooShort, trace);
+            revert FunctionSignatureTooShort();
         }
 
         TargetAddress storage target = role.targets[targetAddress];
@@ -493,9 +493,7 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function revertWith(Status status) private pure returns (bool) {
-        if (status == Status.FunctionSignatureTooShort) {
-            revert FunctionSignatureTooShort();
-        } else if (status == Status.DelegateCallNotAllowed) {
+        if (status == Status.DelegateCallNotAllowed) {
             revert DelegateCallNotAllowed();
         } else if (status == Status.TargetAddressNotAllowed) {
             revert TargetAddressNotAllowed();
@@ -529,7 +527,6 @@ abstract contract PermissionChecker is Core, Periphery {
 
     enum Status {
         Ok,
-        FunctionSignatureTooShort,
         /// Role not allowed to delegate call to target address
         DelegateCallNotAllowed,
         /// Role not allowed to call target address
@@ -557,9 +554,7 @@ abstract contract PermissionChecker is Core, Periphery {
         /// Bitmask exceeded value length
         BitmaskOverflow,
         /// Bitmask not an allowed value
-        BitmaskNotAllowed,
-        /// Allowance was double spent
-        AllowanceDoubleSpend
+        BitmaskNotAllowed
     }
 
     /// Sender is not a member of the role
