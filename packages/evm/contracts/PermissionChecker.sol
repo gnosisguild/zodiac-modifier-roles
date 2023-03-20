@@ -399,9 +399,16 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status, Trace[] memory trace) {
+        bytes calldata plucked = Decoder.pluck(
+            data,
+            payload.location,
+            payload.size
+        );
         Operator operator = condition.operator;
         bytes32 compValue = condition.compValue;
-        bytes32 value = _pluck(data, condition, payload);
+        bytes32 value = operator == Operator.EqualTo
+            ? keccak256(plucked)
+            : bytes32(plucked);
 
         if (operator == Operator.EqualTo && value != compValue) {
             status = Status.ParameterNotAllowed;
@@ -474,22 +481,6 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition
     ) private pure returns (Status status, Trace[] memory) {
         return (Status.Ok, _trace(Trace({condition: condition, value: 1})));
-    }
-
-    function _pluck(
-        bytes calldata data,
-        Condition memory condition,
-        ParameterPayload memory payload
-    ) private pure returns (bytes32) {
-        bytes calldata value = Decoder.pluck(
-            data,
-            payload.location,
-            payload.size
-        );
-        return
-            condition.operator == Operator.EqualTo
-                ? keccak256(value)
-                : bytes32(value);
     }
 
     function revertWith(Status status) private pure returns (bool) {
