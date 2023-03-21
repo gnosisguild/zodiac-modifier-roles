@@ -43,6 +43,17 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     );
 
+    event SetAllowance(
+        uint16 id,
+        uint128 balance,
+        uint128 maxBalance,
+        uint128 refillAmount,
+        uint64 refillInterval,
+        uint64 refillTimestamp
+    );
+
+    event ConsumeAllowance(uint16 id, uint128 consumed, uint128 newBalance);
+
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
@@ -163,6 +174,14 @@ abstract contract PermissionBuilder is Core {
             balance: balance,
             maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
         });
+        emit SetAllowance(
+            id,
+            balance,
+            maxBalance,
+            refillAmount,
+            refillInterval,
+            refillTimestamp
+        );
     }
 
     function _track(Trace[] memory entries) internal {
@@ -190,6 +209,11 @@ abstract contract PermissionBuilder is Core {
             allowances[allowanceId].balance = balance - uint128(value);
             allowances[allowanceId].refillTimestamp = refillTimestamp;
 
+            emit ConsumeAllowance(
+                allowanceId,
+                uint128(value),
+                balance - uint128(value)
+            );
             unchecked {
                 ++i;
             }
