@@ -3,32 +3,24 @@ import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import { Operator, ParameterType } from "./utils";
+import { ExecutionOptions, Operator, ParameterType } from "./utils";
 
 const ROLE_ID = 123;
-
-const OPTIONS_NONE = 0;
-const OPTIONS_SEND = 1;
-const OPTIONS_BOTH = 3;
 
 describe("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
 
     const [owner] = waffle.provider.getWallets();
     const Modifier = await hre.ethers.getContractFactory("Roles");
 
     const modifier = await Modifier.deploy(
       owner.address,
-      avatar.address,
-      avatar.address
+      owner.address,
+      owner.address
     );
 
     return {
-      Avatar,
-      avatar,
       modifier,
       owner,
     };
@@ -38,10 +30,12 @@ describe("EmitsEvent", async () => {
     const { owner, modifier } = await setup();
 
     await expect(
-      modifier.connect(owner).allowTarget(ROLE_ID, AddressOne, OPTIONS_SEND)
+      modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, AddressOne, ExecutionOptions.Send)
     )
       .to.emit(modifier, "AllowTarget")
-      .withArgs(ROLE_ID, AddressOne, OPTIONS_SEND);
+      .withArgs(ROLE_ID, AddressOne, ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
     const { owner, modifier } = await setup();
@@ -62,7 +56,7 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH)
+        .allowFunction(ROLE_ID, AddressOne, "0x12345678", ExecutionOptions.Both)
     ).to.emit(modifier, "AllowFunction");
   });
   it("RevokeFunction", async () => {
@@ -88,8 +82,14 @@ describe("EmitsEvent", async () => {
             compValue: "0x",
           },
         ],
-        OPTIONS_NONE
+        ExecutionOptions.None
       )
     ).to.emit(modifier, "ScopeFunction");
+  });
+  it("SetAllowance", async () => {
+    const { modifier, owner } = await setup();
+    await expect(modifier.connect(owner).setAllowance(1, 2, 3, 4, 5, 6))
+      .to.emit(modifier, "SetAllowance")
+      .withArgs(1, 2, 3, 4, 5, 6);
   });
 });
