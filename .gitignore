@@ -7,6 +7,7 @@
 **/.history
 **/coverage*
 **/deployments
+**/.yarn/cache
 .devcontainer
 packages/evm/typechain-types
 packages/subgraph/generated
@@ -14,10 +15,9 @@ packages/subgraph/generated
 # To always keep the app, contracts and subgraph in sync on the repo
 packages/app/contracts/abi/*.json
 packages/app/src/contracts
-packages/subgraph/abis/*.json
 
 .idea/
 
-# This will be generated from the themplate on deployment (to support multiple networks)
+# This will be generated from the template on deployment (to support multiple networks)
 packages/subgraph/subgraph.yaml
 .vscode/settings.json

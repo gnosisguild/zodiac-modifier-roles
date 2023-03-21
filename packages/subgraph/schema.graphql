@@ -1,3 +1,66 @@
+enum ParameterType {
+  None
+  Static
+  Dynamic
+  Tuple
+  Array
+  AbiEncoded
+}
+
+enum Operator {
+  # 00:    EMPTY EXPRESSION (default, always passes)
+  #          paramType: Static / Dynamic
+  #          🚫 children
+  #          🚫 compValue
+  Pass # 0
+  # ------------------------------------------------------------
+  # 01-04: BOOLEAN EXPRESSIONS
+  #          paramType: None
+  #          ✅ children
+  #          🚫 compValue
+  And # 1
+  Or # 2
+  Xor # 3
+  Not # 4
+  # ------------------------------------------------------------
+  # 05-16: COMPLEX EXPRESSIONS
+  #          paramType: AbiEncoded / Tuple / Array,
+  #          ✅ children
+  #          🚫 compValue
+  Matches # 5
+  ArraySome # 6
+  ArrayEvery # 7
+  ArraySubset # 8
+  _ComplexPlaceholder09
+  _ComplexPlaceholder10
+  _ComplexPlaceholder11
+  _ComplexPlaceholder12
+  _ComplexPlaceholder13
+  _ComplexPlaceholder14
+  _ComplexPlaceholder15
+  _ComplexPlaceholder16
+  # ------------------------------------------------------------
+  # 17-31: COMPARISON EXPRESSIONS
+  #          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
+  #          🚫 children
+  #          ✅ compValue
+  EqualTo # 17
+  GreaterThan # 18
+  LessThan # 19
+  Bitmask # 20
+  _ComparisonPlaceholder21
+  _ComparisonPlaceholder22
+  _ComparisonPlaceholder23
+  _ComparisonPlaceholder24
+  _ComparisonPlaceholder25
+  _ComparisonPlaceholder26
+  _ComparisonPlaceholder27
+  _ComparisonPlaceholder28
+  WithinAllowance # 29
+  EtherWithinAllowance # 30
+  CallWithinAllowance # 31
+}
+
 enum ExecutionOptions {
   None
   Send
@@ -11,24 +74,21 @@ enum Clearance {
   Function
 }
 
-enum ParameterType {
-  Static
-  Dynamic
-  Dynamic32
-}
-
-enum ParameterComparison {
-  EqualTo
-  GreaterThan
-  LessThan
-  OneOf
+type Allowance @entity {
+  id: ID! # Global unique id for role in subgraph
+  key: String! # Unique within the Roles modifier instance
+  rolesModifier: RolesModifier!
+  refillInterval: Int! # duration of the period in seconds, 0 for one-time allowance
+  refillAmount: Int! # amount that will be replenished "at the start of every period" (replace with: per period)
+  refillTimestamp: Int! # timestamp of the last interval refilled for;
+  maxBalance: Int! # max accrual amount, replenishing stops once the unused allowance hits this value
+  balance: Int! # unused allowance;
 }
 
 type Role @entity {
   id: ID! # Global unique id for role in subgraph
-  name: String!
+  key: String! # Unique within the Roles modifier instance
   rolesModifier: RolesModifier!
-  roleIdInContract: Int! # The role id used to represent this role in context of the role's rolesModifier
   targets: [Target!] @derivedFrom(field: "role")
   members: [RoleAssignment!] @derivedFrom(field: "role")
 }
@@ -44,20 +104,21 @@ type Target @entity {
 
 type Function @entity {
   id: ID!
-  target: Target
+  target: Target!
   sighash: Bytes!
   executionOptions: ExecutionOptions!
   wildcarded: Boolean!
-  parameters: [Parameter!] @derivedFrom(field: "owningFunction")
+  condition: Condition
 }
 
-type Parameter @entity {
-  id: ID!
-  owningFunction: Function!
+type Condition @entity {
+  id: ID! # Derived from hash of the condition, matches the storage address (for conditions without parent)
   index: Int!
-  type: ParameterType!
-  comparison: ParameterComparison!
-  comparisonValue: [Bytes!]! # Will contain only one value except for oneOf where is an array
+  paramType: ParameterType!
+  operator: Operator!
+  compValue: Bytes!
+  parent: Condition
+  children: [Condition!] @derivedFrom(field: "parent")
 }
 
 type Member @entity {
