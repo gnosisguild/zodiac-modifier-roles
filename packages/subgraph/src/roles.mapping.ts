@@ -141,6 +141,4 @@ export function handleRolesModSetup(event: RolesModSetup): void {
 
 export function handleSetDefaultRole(event: SetDefaultRole): void {}
 
-export function handleSetMultisendAddress(event: SetMultisendAddress): void {}
-
 export function handleTargetSet(event: TargetSet): void {}
