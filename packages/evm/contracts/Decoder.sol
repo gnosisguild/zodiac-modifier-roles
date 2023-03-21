@@ -62,7 +62,7 @@ library Decoder {
         } else if (paramType == ParameterType.Tuple) {
             return __block__(data, location, node);
         } else if (paramType == ParameterType.Array) {
-            return __block__(data, location, node);
+            return _array(data, location, node);
         }
     }
 
@@ -71,36 +71,48 @@ library Decoder {
         uint256 location,
         Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        bool isArray = node.paramType == ParameterType.Array;
-        uint256 length = isArray
-            ? uint256(_loadWord(data, location))
-            : node.children.length;
+        uint256 length = node.children.length;
         result.location = location;
         result.children = new ParameterPayload[](length);
 
-        Topology.TypeTree memory part;
-        bool isPartInline;
-        if (isArray) {
-            part = node.children[0];
-            isPartInline = Topology.isInline(part);
-            result.size = 32;
-            location += 32;
-        }
-
         uint256 offset;
         for (uint256 i; i < length; ++i) {
-            if (!isArray) {
-                part = node.children[i];
-                isPartInline = Topology.isInline(part);
-            }
+            Topology.TypeTree memory part = node.children[i];
+            bool isInline = Topology.isInline(part);
 
             result.children[i] = _walk(
                 data,
-                _locationInBlock(data, location, offset, isPartInline),
+                _locationInBlock(data, location, offset, isInline),
                 part
             );
-            result.size += result.children[i].size + (isPartInline ? 0 : 32);
-            offset += isPartInline ? result.children[i].size : 32;
+            result.size += result.children[i].size + (isInline ? 0 : 32);
+            offset += isInline ? result.children[i].size : 32;
+        }
+    }
+
+    function _array(
+        bytes calldata data,
+        uint256 location,
+        Topology.TypeTree memory node
+    ) private pure returns (ParameterPayload memory result) {
+        uint256 length = uint256(_loadWord(data, location));
+
+        result.location = location;
+        result.children = new ParameterPayload[](length);
+        result.size = 32;
+
+        Topology.TypeTree memory part = node.children[0];
+        bool isInline = Topology.isInline(part);
+
+        uint256 offset;
+        for (uint256 i; i < length; ++i) {
+            result.children[i] = _walk(
+                data,
+                _locationInBlock(data, 32 + location, offset, isInline),
+                part
+            );
+            result.size += result.children[i].size + (isInline ? 0 : 32);
+            offset += isInline ? result.children[i].size : 32;
         }
     }
 
@@ -111,7 +123,7 @@ library Decoder {
         bool isInline
     ) private pure returns (uint256) {
         /*
-         * When encoding a block, a segment can be either included inline within
+         * When encoding a block, a part can be either included inline within
          * the block - at the HEAD - or located at an offset relative to the start
          * of the block - at the TAIL.
          */
