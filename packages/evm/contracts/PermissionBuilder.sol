@@ -14,12 +14,11 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
-    /// Allowance exceeded
     error AllowanceExceeded(uint16 allowanceId);
-    /// Allowance exceeded
-    error ETHAllowanceExceeded(uint16 allowanceId);
-    /// Allowance exceeded
+
     error CallAllowanceExceeded(uint16 allowanceId);
+
+    error EtherAllowanceExceeded(uint16 allowanceId);
 
     event AllowTarget(
         uint16 role,
@@ -182,12 +181,10 @@ abstract contract PermissionBuilder is Core {
             if (value > balance) {
                 if (condition.operator == Operator.WithinAllowance) {
                     revert AllowanceExceeded(allowanceId);
-                } else if (
-                    condition.operator == Operator.EtherWithinAllowance
-                ) {
-                    revert ETHAllowanceExceeded(allowanceId);
-                } else {
+                } else if (condition.operator == Operator.CallWithinAllowance) {
                     revert CallAllowanceExceeded(allowanceId);
+                } else {
+                    revert EtherAllowanceExceeded(allowanceId);
                 }
             }
             allowances[allowanceId].balance = balance - uint128(value);
