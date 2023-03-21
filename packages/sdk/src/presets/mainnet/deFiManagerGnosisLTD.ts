@@ -22,10 +22,16 @@ const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 
+// Balancer contracts
+const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
 // Balancer LP Tokens
 const BB_A_USD = "0xA13a9247ea42D743238089903570127DdA72fE44"
 const B_50COW_50GNO = "0x92762B42A06dCDDDc5B7362Cfb01E631c4D44B40"
 const B_80BAL_20WETH = "0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56"
+
+// Balancer Gauges
+const B_50COW_50GNO_GAUGE = "0xA6468eca7633246Dcb24E5599681767D27d1F978"
 
 // Aura contracts
 const BOOSTER_ADDRESS = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
@@ -275,6 +281,134 @@ const preset = {
         //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
         // },
         allow.mainnet.aura.aura_claim_zap["claimRewards"](),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // BALANCER
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Balancer GNO/COW pool
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([GNO, COW], [BALANCER_VAULT]),
+        ...allowErc20Approve([B_50COW_50GNO], [B_50COW_50GNO_GAUGE]),
+
+        // Add Liquidity
+        {
+            targetAddress: BALANCER_VAULT,
+            signature:
+                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+            params: {
+                [0]: staticEqual(
+                    "0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182",
+                    "bytes32"
+                ), // Balancer PoolId
+                [1]: staticEqual(AVATAR),
+                [2]: staticEqual(AVATAR),
+                [3]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of tuple from beginning 128=32*4
+                [4]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+                [5]: staticEqual(
+                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
+                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+                [6]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000140",
+                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+                [8]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of address[] = 2
+                [9]: staticEqual(GNO, "address"),
+                [10]: staticEqual(COW, "address"),
+                [11]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of unit256[] = 2
+                [14]: staticOneOf([
+                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                    "0x0000000000000000000000000000000000000000000000000000000000000060",
+                    "0x0000000000000000000000000000000000000000000000000000000000000040"
+                ],
+                    "bytes32"
+                ), // Length of bytes
+                [15]: staticOneOf([
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "0x0000000000000000000000000000000000000000000000000000000000000001",
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "0x0000000000000000000000000000000000000000000000000000000000000003"
+                ],
+                    "bytes32"
+                ), // Join Kind
+            },
+        },
+
+        // Remove Liquidity
+        {
+            targetAddress: BALANCER_VAULT,
+            signature:
+                "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+            params: {
+                [0]: staticEqual(
+                    "0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182",
+                    "bytes32"
+                ), // Balancer PoolId
+                [1]: staticEqual(AVATAR),
+                [2]: staticEqual(AVATAR),
+                [3]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of tuple from beginning 128=32*4
+                [4]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+                [5]: staticEqual(
+                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
+                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+                [6]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000140",
+                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+                [8]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of address[] = 2
+                [9]: staticEqual(GNO, "address"),
+                [10]: staticEqual(COW, "address"),
+                [11]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of unit256[] = 2
+                [14]: staticOneOf([
+                    "0x0000000000000000000000000000000000000000000000000000000000000060",
+                    "0x0000000000000000000000000000000000000000000000000000000000000040",
+                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                ],
+                    "bytes32"
+                ), // Length of bytes
+                [15]: staticOneOf([
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "0x0000000000000000000000000000000000000000000000000000000000000001",
+                    "0x0000000000000000000000000000000000000000000000000000000000000002"
+                ],
+                    "bytes32"
+                ), // Join Kind
+            },
+        },
+
+        // Stake
+        allow.mainnet.balancer.B_50COW_50GNO_gauge["deposit(uint256)"](),
+
+        // Unstake
+        allow.mainnet.balancer.B_50COW_50GNO_gauge["withdraw(uint256)"](),
+
+        // Claim Rewards
+        allow.mainnet.balancer.B_50COW_50GNO_gauge["claim_rewards()"](),
+
+        // Claim BAL Rewards
+        allow.mainnet.balancer.BAL_minter["mint"](
+            B_50COW_50GNO_GAUGE
+        ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2
