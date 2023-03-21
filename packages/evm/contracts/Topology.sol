@@ -47,8 +47,6 @@ library Topology {
 
     function isInline(TypeTree memory node) internal pure returns (bool) {
         ParameterType paramType = node.paramType;
-        assert(paramType != ParameterType.None);
-
         if (paramType == ParameterType.Static) {
             return true;
         } else if (
@@ -76,7 +74,6 @@ library Topology {
         uint256 index
     ) internal pure returns (bool) {
         ParameterType paramType = conditions[index].paramType;
-
         if (paramType == ParameterType.Static) {
             return true;
         } else if (
