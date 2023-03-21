@@ -145,11 +145,11 @@ describe("Operator", async () => {
       );
 
       await expect(executeSendingETH(initialBalance + 1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(initialBalance)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
 
       expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
@@ -170,11 +170,11 @@ describe("Operator", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(351)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(350)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
     });
 
@@ -191,11 +191,11 @@ describe("Operator", async () => {
       const { executeSendingETH } = await setPermission(allowanceId);
 
       await expect(executeSendingETH(10)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
       await expect(executeSendingETH(9)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded(${allowanceId})`
       );
     });
 
@@ -404,11 +404,11 @@ describe("Operator", async () => {
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId1})`
+        `EtherAllowanceExceeded(${allowanceId1})`
       );
       // Exceed value for Variant2
       await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId2})`
+        `EtherAllowanceExceeded(${allowanceId2})`
       );
 
       // Checks that both allowance balances still remain unchanged
@@ -440,10 +440,10 @@ describe("Operator", async () => {
 
       // check that neither variant can now be executed
       await expect(execute(1, value1)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId1})`
+        `EtherAllowanceExceeded(${allowanceId1})`
       );
       await expect(execute(1, value2)).to.be.revertedWith(
-        `ETHAllowanceExceeded(${allowanceId2})`
+        `EtherAllowanceExceeded(${allowanceId2})`
       );
     });
   });
