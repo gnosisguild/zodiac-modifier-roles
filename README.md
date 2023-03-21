@@ -1,3 +1,6 @@
+**⚠️ This is the code for the yet unaudited v2 contracts, find v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosis/zodiac-modifier-roles-v1)**
+___
+
 # Zodiac Roles Modifier
 
 [![Build Status](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml)
