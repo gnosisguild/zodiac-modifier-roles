@@ -59,42 +59,42 @@ jobs:
         with:
           cidv0: ${{ steps.upload.outputs.hash }}
 
-      - name: Update DNS with new IPFS hash
-        env:
-          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
-          RECORD_DOMAIN: "gnosisguild.org"
-          RECORD_NAME: "_dnslink.roles.dev"
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
-        with:
-          cid: ${{ steps.upload.outputs.hash }}
+      # - name: Update DNS with new IPFS hash
+      #   env:
+      #     CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      #     RECORD_DOMAIN: "gnosisguild.org"
+      #     RECORD_NAME: "_dnslink.roles.dev"
+      #     CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      #   uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
+      #   with:
+      #     cid: ${{ steps.upload.outputs.hash }}
 
       - name: Get IPFS url
         run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"
 
-      - name: Prep graph cli for deployment
-        working-directory: packages/subgraph
-        run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
+      # - name: Prep graph cli for deployment
+      #   working-directory: packages/subgraph
+      #   run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
 
-      - name: Deploy subgraphs
-        working-directory: packages/subgraph
-        env:
-          HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
-          HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
-          HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
-          HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
-          HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
-          HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
-          HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
-          HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
-          # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
-        run: |
-          yarn deploy:arbitrum-one
-          yarn deploy:gnosis-chain
-          yarn deploy:goerli
-          yarn deploy:avalanche
-          yarn deploy:bsc
-          yarn deploy:mainnet
-          yarn deploy:optimism
-          yarn deploy:polygon
-          # yarn deploy:optimism-on-gnosis-chain
+      # - name: Deploy subgraphs
+      #   working-directory: packages/subgraph
+      #   env:
+      #     HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
+      #     HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
+      #     HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
+      #     HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
+      #     HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
+      #     HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
+      #     HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
+      #     HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
+      #     # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
+      #   run: |
+      #     yarn deploy:arbitrum-one
+      #     yarn deploy:gnosis-chain
+      #     yarn deploy:goerli
+      #     yarn deploy:avalanche
+      #     yarn deploy:bsc
+      #     yarn deploy:mainnet
+      #     yarn deploy:optimism
+      #     yarn deploy:polygon
+      #     # yarn deploy:optimism-on-gnosis-chain
