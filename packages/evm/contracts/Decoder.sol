@@ -12,6 +12,12 @@ import "./Topology.sol";
 library Decoder {
     error CalldataOutOfBounds();
 
+    /**
+     * @dev Maps the location and size of parameters in the encoded transaction data.
+     * @param data The encoded transaction data.
+     * @param condition The condition of the parameters.
+     * @return result The mapped location and size of parameters in the encoded transaction data.
+     */
     function inspect(
         bytes calldata data,
         Condition memory condition
@@ -31,6 +37,13 @@ library Decoder {
         result.size = data.length;
     }
 
+    /**
+     * @dev Plucks a slice of bytes from calldata.
+     * @param data The calldata to pluck the slice from.
+     * @param location The starting location of the slice.
+     * @param size The size of the slice.
+     * @return A slice of bytes from calldata.
+     */
     function pluck(
         bytes calldata data,
         uint256 location,
@@ -42,6 +55,14 @@ library Decoder {
         return data[location:location + size];
     }
 
+    /**
+     * @dev Walks through a parameter encoding tree and maps their location and
+     * size within calldata.
+     * @param data The encoded transaction data.
+     * @param location The current offset within the calldata buffer.
+     * @param node The current node being traversed within the parameter tree.
+     * @return result The location and size of the parameter within calldata.
+     */
     function _walk(
         bytes calldata data,
         uint256 location,
@@ -53,9 +74,15 @@ library Decoder {
             result.location = location;
             result.size = 32;
         } else if (paramType == ParameterType.Dynamic) {
+            // If the parameter is a dynamic type, set its location and size
+            // taking into account the length prefix which is a uint256 value
+            // preceding the actual dynamic data.
             result.location = location;
             result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
         } else if (paramType == ParameterType.AbiEncoded) {
+            // If the parameter is ABI-encoded, parse its components and
+            // recursively map their locations and sizes within calldata.
+            // take into accounts the encoded length and the 4 bytes selector
             result = __block__(data, location + 32 + 4, node);
             result.location = 32 + location;
             result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
@@ -66,6 +93,13 @@ library Decoder {
         }
     }
 
+    /**
+     * @dev Recursively walk through the TypeTree to decode a block of parameters.
+     * @param data The encoded transaction data.
+     * @param location The current location of the parameter block being processed.
+     * @param node The current TypeTree node being processed.
+     * @return result The decoded ParameterPayload.
+     */
     function __block__(
         bytes calldata data,
         uint256 location,
@@ -90,6 +124,13 @@ library Decoder {
         }
     }
 
+    /**
+     * @dev Recursively walk through the TypeTree to decode an array parameter.
+     * @param data The encoded transaction data.
+     * @param location The current location of the array block being processed.
+     * @param node The current TypeTree node being processed.
+     * @return result The decoded ParameterPayload.
+     */
     function _array(
         bytes calldata data,
         uint256 location,
@@ -116,17 +157,24 @@ library Decoder {
         }
     }
 
+    /**
+     * @dev Returns the location of a block part, which may be located inline
+     * within the block - at the HEAD - or at an offset relative to the start
+     * of the block - at the TAIL.
+     *
+     * @param data The encoded transaction data.
+     * @param location The location of the block within the calldata buffer.
+     * @param offset The offset of the block part, relative to the start of the block.
+     * @param isInline Whether the block part is located inline within the block.
+     *
+     * @return The location of the block part within the calldata buffer.
+     */
     function _locationInBlock(
         bytes calldata data,
         uint256 location,
         uint256 offset,
         bool isInline
     ) private pure returns (uint256) {
-        /*
-         * When encoding a block, a part can be either included inline within
-         * the block - at the HEAD - or located at an offset relative to the start
-         * of the block - at the TAIL.
-         */
         uint256 headLocation = location + offset;
         if (isInline) {
             return headLocation;
