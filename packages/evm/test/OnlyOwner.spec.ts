@@ -4,171 +4,109 @@ import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { Operator, ParameterType } from "./utils";
 
+const SomeAddress = "0x000000000000000000000000000000000000000f";
+
 describe("OnlyOwner", async () => {
-  const baseSetup = deployments.createFixture(async () => {
+  const setup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
-    const testContract = await TestContract.deploy();
-    return { Avatar, avatar, testContract };
-  });
 
-  const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
-    const base = await baseSetup();
-
-    const [owner, invoker, janeDoe] = waffle.provider.getWallets();
+    const [owner, johnDoe] = waffle.provider.getWallets();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
 
     const modifier = await Modifier.deploy(
       owner.address,
-      base.avatar.address,
-      base.avatar.address
+      avatar.address,
+      avatar.address
     );
 
-    await modifier.enableModule(invoker.address);
-
     return {
-      ...base,
-      Modifier,
       modifier,
       owner,
-      invoker,
-      janeDoe,
+      johnDoe,
     };
   });
 
-  const OPTIONS_NONE = 0;
-
   it("onlyOwner for allowTarget simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
 
     await expect(
-      modifier
-        .connect(invoker)
-        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
+      modifier.connect(johnDoe).allowTarget(ROLE_ID, SomeAddress, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(
-      modifier
-        .connect(janeDoe)
-        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, OPTIONS_NONE)
-    ).to.not.be.reverted;
+    await expect(modifier.connect(owner).allowTarget(ROLE_ID, SomeAddress, 0))
+      .to.not.be.reverted;
   });
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
 
     await expect(
-      modifier.connect(invoker).scopeTarget(ROLE_ID, testContract.address)
+      modifier.connect(johnDoe).scopeTarget(ROLE_ID, SomeAddress)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(
-      modifier.connect(janeDoe).scopeTarget(ROLE_ID, testContract.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address)
-    ).to.not.be.reverted;
+    await expect(modifier.connect(owner).scopeTarget(ROLE_ID, SomeAddress)).to
+      .not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
 
     await expect(
-      modifier.connect(invoker).revokeTarget(ROLE_ID, testContract.address)
+      modifier.connect(johnDoe).revokeTarget(ROLE_ID, SomeAddress)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(
-      modifier.connect(janeDoe).revokeTarget(ROLE_ID, testContract.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address)
-    ).to.not.be.reverted;
+    await expect(modifier.connect(owner).revokeTarget(ROLE_ID, SomeAddress)).to
+      .not.be.reverted;
   });
   it("onlyOwner for allowFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
 
     await expect(
       modifier
-        .connect(invoker)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(janeDoe)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
+        .connect(johnDoe)
+        .allowFunction(ROLE_ID, SomeAddress, "0x00000000", 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, OPTIONS_NONE)
+        .allowFunction(ROLE_ID, SomeAddress, "0x00000000", 0)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker, janeDoe } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
 
     await expect(
       modifier
-        .connect(invoker)
-        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
+        .connect(johnDoe)
+        .revokeFunction(ROLE_ID, SomeAddress, "0x00000000")
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier
-        .connect(janeDoe)
-        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-
-    await expect(
-      modifier
-        .connect(owner)
-        .revokeFunction(ROLE_ID, testContract.address, SELECTOR)
+      modifier.connect(owner).revokeFunction(ROLE_ID, SomeAddress, "0x00000000")
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeFunction, simple invoker fails", async () => {
-    const { modifier, testContract, owner, invoker } =
-      await setupRolesWithOwnerAndInvoker();
+    const { modifier, owner, johnDoe } = await setup();
 
     const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
 
     await expect(
-      modifier.connect(invoker).scopeFunction(
+      modifier.connect(johnDoe).scopeFunction(
         ROLE_ID,
-        testContract.address,
-        SELECTOR,
+        SomeAddress,
+        "0x00000000",
         [
           {
             parent: 0,
@@ -177,15 +115,15 @@ describe("OnlyOwner", async () => {
             compValue: "0x",
           },
         ],
-        OPTIONS_NONE
+        0
       )
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier.connect(owner).scopeFunction(
         ROLE_ID,
-        testContract.address,
-        SELECTOR,
+        SomeAddress,
+        "0x00000000",
         [
           {
             parent: 0,
@@ -194,8 +132,18 @@ describe("OnlyOwner", async () => {
             compValue: "0x",
           },
         ],
-        OPTIONS_NONE
+        0
       )
     ).to.not.be.reverted;
+  });
+  it("onlyOwner for setAllowance, simple invoker fails", async () => {
+    const { modifier, owner, johnDoe } = await setup();
+
+    await expect(
+      modifier.connect(johnDoe).setAllowance(0, 0, 0, 0, 0, 0)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await expect(modifier.connect(owner).setAllowance(0, 0, 0, 0, 0, 0)).to.not
+      .be.reverted;
   });
 });
