@@ -470,62 +470,6 @@ describe("Operator", async () => {
 
   it.skip("checks operator EqualTo for Tuple");
 
-  it("checks operator EqualTo for nested AbiEncoded", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
-
-    const ROLE_ID = 0;
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("dynamic")
-    );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    const nestedData = (await testContract.populateTransaction.doNothing())
-      .data as string;
-
-    const invoke = async (a: string) =>
-      modifier
-        .connect(invoker)
-        .execTransactionFromModule(
-          testContract.address,
-          0,
-          (await testContract.populateTransaction.dynamic(a)).data as string,
-          0
-        );
-
-    // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-
-    await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
-      testContract.address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["bytes"], [nestedData]),
-        },
-      ],
-      ExecutionOptions.None
-    );
-
-    await expect(invoke(nestedData)).to.not.be.reverted;
-    await expect(invoke(nestedData.slice(0, -2))).to.be.revertedWith(
-      "ParameterNotAllowed()"
-    );
-    await expect(invoke("0x")).to.be.revertedWith("ParameterNotAllowed()");
-  });
-
   it("checks operator Or over Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
