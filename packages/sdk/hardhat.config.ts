@@ -7,8 +7,6 @@ import { HardhatUserConfig } from "hardhat/config"
 import type { HttpNetworkUserConfig } from "hardhat/types"
 import yargs from "yargs"
 
-import "./tasks/manageKarpatkeyRoles"
-
 const argv = yargs
   .option("network", {
     type: "string",
@@ -69,7 +67,7 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     },
-    xdai: {
+    gnosis: {
       ...sharedNetworkConfig,
       chainId: 100,
       url: "https://rpc.gnosischain.com/",
