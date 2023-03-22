@@ -4,20 +4,20 @@ import {
   Function,
   Parameter,
   ParameterType,
-  Role,
+  Target,
 } from "../types"
 
 import { Call } from "./types"
 
-export const grantPermissions = (permissions: Role): Call[] => {
+export const grantPermissions = (targets: Target[]): Call[] => {
   const calls: Call[] = []
 
-  permissions.targets.forEach((target) => {
+  targets.forEach((target) => {
     if (target.clearance === Clearance.Target) {
       calls.push({
         call: "allowTarget",
         targetAddress: target.address,
-        options: target.executionOptions,
+        executionOptions: target.executionOptions,
       })
     }
 
@@ -34,7 +34,7 @@ export const grantPermissions = (permissions: Role): Call[] => {
             call: "scopeAllowFunction",
             targetAddress: target.address,
             functionSig: func.selector,
-            options: func.executionOptions,
+            executionOptions: func.executionOptions,
           })
         } else {
           if (func.parameters.length === 0) {
@@ -82,7 +82,7 @@ const scopeFunction = (func: Function, targetAddress: string): Call => {
     call: "scopeFunction",
     targetAddress,
     functionSig: func.selector,
-    options: func.executionOptions,
+    executionOptions: func.executionOptions,
     isParamScoped: params.map(Boolean),
     paramType: params.map((param) => param?.type || ParameterType.Static),
     paramComp: params.map((param) => param?.comparison || Operator.EqualTo) as (

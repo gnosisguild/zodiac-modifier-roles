@@ -2,15 +2,14 @@ import Safe from "@safe-global/safe-core-sdk"
 import {
   EthAdapter,
   MetaTransactionData,
-  OperationType,
 } from "@safe-global/safe-core-sdk-types"
 import EthersAdapter from "@safe-global/safe-ethers-lib"
 import SafeServiceClient from "@safe-global/safe-service-client"
-import { ethers as defaultEthers, PopulatedTransaction, Signer } from "ethers"
+import { ethers as defaultEthers, Signer } from "ethers"
 import { encodeMulti } from "ethers-multisend"
 
 import { encodeCalls, logCall } from "./calls"
-import fetchPermissions from "./fetchPermissions"
+import { fetchRole } from "./fetchRole"
 import patchPermissions from "./patchPermissions"
 import fillPreset from "./presets/fillPreset"
 import { PlaceholderValues, RolePreset } from "./presets/types"
@@ -59,7 +58,7 @@ export const applyPreset = async <P extends RolePreset>(
     currentPermissions,
   } = options
 
-  const transactions = await encodeApplyPreset(
+  const transactionsData = await encodeApplyPreset(
     address,
     roleId,
     preset,
@@ -72,7 +71,11 @@ export const applyPreset = async <P extends RolePreset>(
 
   // batch into multi-send transactions of 75 calls each, to avoid gas limits
   const batches = batchArray(
-    transactions.map(asMetaTransaction),
+    transactionsData.map((data) => ({
+      to: address,
+      data: data,
+      value: "0",
+    })),
     multiSendBatchSize
   )
 
@@ -112,7 +115,7 @@ export const applyPreset = async <P extends RolePreset>(
   }
 
   console.debug(
-    `Executed a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
+    `Executed a total of ${transactionsData.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
   )
 }
 
@@ -139,7 +142,7 @@ export const encodeApplyPreset = async <P extends RolePreset>(
 ) => {
   const currentPermissions =
     options.currentPermissions ||
-    (await fetchPermissions({
+    (await fetchRole({
       address,
       roleId,
       network: options.network,
@@ -147,7 +150,7 @@ export const encodeApplyPreset = async <P extends RolePreset>(
   const nextPermissions = fillPreset(preset, placeholderValues)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
-  return await encodeCalls(address, roleId, calls)
+  return encodeCalls(roleId, calls)
 }
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
@@ -184,7 +187,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
     currentPermissions,
   } = options
 
-  const transactions = await encodeApplyPreset(
+  const transactionsData = await encodeApplyPreset(
     address,
     roleId,
     preset,
@@ -195,11 +198,15 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
     }
   )
   const batches = batchArray(
-    transactions.map(asMetaTransaction),
+    transactionsData.map((data) => ({
+      to: address,
+      data: data,
+      value: "0",
+    })),
     multiSendBatchSize
   )
   console.debug(
-    `Encoded a total of ${transactions.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
+    `Encoded a total of ${transactionsData.length} calls in ${batches.length} multi-send batches of ${multiSendBatchSize}`
   )
   return batches.map((batch) => encodeMulti(batch, multiSendAddress))
 }
@@ -227,7 +234,7 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
 ) => {
   const { network, currentPermissions } = options
 
-  const transactions = await encodeApplyPreset(
+  const transactionsData = await encodeApplyPreset(
     address,
     roleId,
     preset,
@@ -237,7 +244,7 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
       currentPermissions,
     }
   )
-  console.debug(`Encoded a total of ${transactions.length} calls`)
+  console.debug(`Encoded a total of ${transactionsData.length} calls`)
   return {
     version: "1.0",
     chainId: network.toString(10),
@@ -247,22 +254,11 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
       txBuilderVersion: "1.8.0",
     },
     createdAt: Date.now(),
-    transactions: transactions.map((tx) => ({
-      to: tx.to || "",
-      data: tx.data || "",
-      value: tx.value?.toHexString() || "0",
+    transactions: transactionsData.map((data) => ({
+      to: address,
+      data: data,
+      value: "0",
     })),
-  }
-}
-
-const asMetaTransaction = (
-  populatedTransaction: PopulatedTransaction
-): MetaTransactionData => {
-  return {
-    to: populatedTransaction.to || "",
-    data: populatedTransaction.data || "",
-    value: populatedTransaction.value?.toHexString() || "0",
-    operation: OperationType.Call,
   }
 }
 

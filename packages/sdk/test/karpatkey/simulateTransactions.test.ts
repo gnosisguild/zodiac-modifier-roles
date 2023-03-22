@@ -93,19 +93,25 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const placeholderValues = {
       AVATAR: config.AVATAR,
     }
-    const permissionUpdateTransactions = await encodeApplyPreset(
+    const transactionsData = await encodeApplyPreset(
       modifier.address,
       ROLE_ID,
       preset,
       placeholderValues,
       {
-        currentPermissions: { targets: [] },
+        currentPermissions: { key: ROLE_ID, members: [], targets: [] },
         network: 100, // this value won't be used
       }
     )
 
+    const permissionUpdateTransactions = transactionsData.map((data) => ({
+      to: modifier.address,
+      data: data,
+      value: "0",
+    }))
+
     let totalGas = BigNumber.from(0)
-    for (let i = 0; i < permissionUpdateTransactions.length; i++) {
+    for (let i = 0; i < transactionsData.length; i++) {
       totalGas = totalGas.add(
         await owner.estimateGas(permissionUpdateTransactions[i])
       )

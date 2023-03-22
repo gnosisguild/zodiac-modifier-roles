@@ -1,3 +1,5 @@
+import { BigNumber } from "ethers"
+
 import SUBGRAPH from "./subgraph"
 
 export type NetworkId = keyof typeof SUBGRAPH
@@ -67,6 +69,7 @@ export interface Role {
   key: string
   members: string[]
   targets: Target[]
+  allowances: Allowance[]
 }
 
 export interface Target {
@@ -95,4 +98,13 @@ export interface ConditionFlat {
   paramType: ParameterType
   operator: Operator
   compValue?: string
+}
+
+export interface Allowance {
+  key: string
+  refillInterval: number
+  refillAmount: BigNumber
+  refillTimestamp: number
+  maxBalance: BigNumber
+  balance: BigNumber
 }

@@ -40,7 +40,7 @@ const QUERY = `query RolePermissions($id: String) {
   }
 }`
 
-const fetchPermissions = async ({
+export const fetchRole = async ({
   address,
   roleId,
   network,
@@ -64,8 +64,6 @@ const fetchPermissions = async ({
 
   return mapGraphQl(data.role)
 }
-
-export default fetchPermissions
 
 interface GraphQlParameter {
   comparison: "EqualTo" | "GreaterThan" | "LessThan" | "OneOf"
