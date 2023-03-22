@@ -1,4 +1,4 @@
-import { ConditionFlat, ExecutionOptions } from "../types"
+import { Condition, ExecutionOptions } from "../types"
 
 interface AllowTargetCall {
   call: "allowTarget"
@@ -26,7 +26,7 @@ interface ScopeFunctionCall {
   call: "scopeFunction"
   targetAddress: string
   selector: string
-  condition: ConditionFlat[]
+  condition: Condition
   executionOptions: ExecutionOptions
 }
 
