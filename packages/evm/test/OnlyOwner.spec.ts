@@ -140,10 +140,11 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
     await expect(
-      modifier.connect(johnDoe).setAllowance(0, 0, 0, 0, 0, 0)
+      modifier.connect(johnDoe).setAllowance("An Allowance Key", 0, 0, 0, 0, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).setAllowance(0, 0, 0, 0, 0, 0)).to.not
-      .be.reverted;
+    await expect(
+      modifier.connect(owner).setAllowance("An Allowance Key", 0, 0, 0, 0, 0)
+    ).to.not.be.reverted;
   });
 });

@@ -39,7 +39,7 @@ describe("Operator", async () => {
     await modifier.enableModule(invoker.address);
 
     async function setAllowance(
-      allowanceId: number,
+      allowanceKey: string,
       {
         balance,
         maxBalance,
@@ -57,7 +57,7 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .setAllowance(
-          allowanceId,
+          allowanceKey,
           balance,
           maxBalance || 0,
           refillAmount,
@@ -70,7 +70,7 @@ describe("Operator", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    async function setPermission(allowanceId: number) {
+    async function setPermission(allowanceKey: string) {
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("receiveEthAndDoNothing")
       );
@@ -92,7 +92,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -129,73 +129,73 @@ describe("Operator", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
       const initialBalance = 10000;
-      const allowanceId = 1234;
+      const allowanceKey = "ChickenNuggets 4 life!";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: initialBalance,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { executeSendingETH } = await setPermission(allowanceId);
+      const { executeSendingETH } = await setPermission(allowanceKey);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(
         initialBalance
       );
 
       await expect(executeSendingETH(initialBalance + 1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
       await expect(executeSendingETH(initialBalance)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
     });
 
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
+      const allowanceKey = "JazzyGiraffeDancesFunk";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 250,
         refillInterval: 500,
         refillAmount: 100,
         refillTimestamp: timestamp - 750,
       });
 
-      const { executeSendingETH } = await setPermission(allowanceId);
+      const { executeSendingETH } = await setPermission(allowanceKey);
 
       await expect(executeSendingETH(351)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
       await expect(executeSendingETH(350)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
     });
 
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
-      await setAllowance(allowanceId, {
+      const allowanceKey = "Tacos Are Better Than Pizza";
+      await setAllowance(allowanceKey, {
         balance: 9,
         refillInterval: 1000,
         refillAmount: 1,
         refillTimestamp: timestamp - 50,
       });
-      const { executeSendingETH } = await setPermission(allowanceId);
+      const { executeSendingETH } = await setPermission(allowanceKey);
 
       await expect(executeSendingETH(10)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
       await expect(executeSendingETH(9)).to.not.be.reverted;
       await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId})`
+        `EtherAllowanceExceeded("${allowanceKey}")`
       );
     });
 
@@ -207,7 +207,7 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceId = 0;
+      const allowanceKey = "An allowance key";
       const allowanceAmount = 200;
       const value = 666;
       const valueOther = 678;
@@ -225,7 +225,7 @@ describe("Operator", async () => {
           );
       }
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: allowanceAmount,
         refillInterval: 0,
         refillAmount: 0,
@@ -252,7 +252,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -266,7 +266,7 @@ describe("Operator", async () => {
       );
       await expect(execute(allowanceAmount, value)).to.not.be.reverted;
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: allowanceAmount,
         refillInterval: 0,
         refillAmount: 0,
@@ -287,7 +287,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
           },
           {
             parent: 0,
@@ -310,8 +310,8 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceId1 = 0;
-      const allowanceId2 = 1;
+      const allowanceKey1 = "Allowance Key 1";
+      const allowanceKey2 = "Aççpwance 2";
       const allowanceAmount1 = 200;
       const allowanceAmount2 = 100;
       const value1 = 777;
@@ -319,14 +319,14 @@ describe("Operator", async () => {
       const valueOther = 9999;
 
       await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-      await setAllowance(allowanceId1, {
+      await setAllowance(allowanceKey1, {
         balance: allowanceAmount1,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      await setAllowance(allowanceId2, {
+      await setAllowance(allowanceKey2, {
         balance: allowanceAmount2,
         refillInterval: 0,
         refillAmount: 0,
@@ -378,7 +378,7 @@ describe("Operator", async () => {
             parent: 1,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey1]),
           },
           {
             parent: 2,
@@ -390,7 +390,7 @@ describe("Operator", async () => {
             parent: 2,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey2]),
           },
         ],
         ExecutionOptions.Send
@@ -404,18 +404,18 @@ describe("Operator", async () => {
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId1})`
+        `EtherAllowanceExceeded("${allowanceKey1}")`
       );
       // Exceed value for Variant2
       await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId2})`
+        `EtherAllowanceExceeded("${allowanceKey2}")`
       );
 
       // Checks that both allowance balances still remain unchanged
-      expect((await modifier.allowances(allowanceId1)).balance).to.equal(
+      expect((await modifier.allowances(allowanceKey1)).balance).to.equal(
         allowanceAmount1
       );
-      expect((await modifier.allowances(allowanceId2)).balance).to.equal(
+      expect((await modifier.allowances(allowanceKey2)).balance).to.equal(
         allowanceAmount2
       );
 
@@ -424,9 +424,9 @@ describe("Operator", async () => {
        */
       await expect(execute(allowanceAmount1, value1)).to.not.be.reverted;
       // check that allowance 1 is updated to zero
-      expect((await modifier.allowances(allowanceId1)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey1)).balance).to.equal(0);
       // check that allowance 2 remains unchanged
-      expect((await modifier.allowances(allowanceId2)).balance).to.equal(
+      expect((await modifier.allowances(allowanceKey2)).balance).to.equal(
         allowanceAmount2
       );
 
@@ -435,15 +435,15 @@ describe("Operator", async () => {
        */
       await expect(execute(allowanceAmount2, value2)).to.not.be.reverted;
       // check that both balances are now zero
-      expect((await modifier.allowances(allowanceId1)).balance).to.equal(0);
-      expect((await modifier.allowances(allowanceId2)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey1)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey2)).balance).to.equal(0);
 
       // check that neither variant can now be executed
       await expect(execute(1, value1)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId1})`
+        `EtherAllowanceExceeded("${allowanceKey1}")`
       );
       await expect(execute(1, value2)).to.be.revertedWith(
-        `EtherAllowanceExceeded(${allowanceId2})`
+        `EtherAllowanceExceeded("${allowanceKey2}")`
       );
     });
   });
