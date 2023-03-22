@@ -1,33 +1,31 @@
-import { Clearance, Role, Target, Function, Parameter } from "./types"
+import { Clearance, Target, Function, Parameter } from "./types"
 
-// Returns permissions granted by a that are not granted but b
-const diffPermissions = (a: Role, b: Role): Role => {
+/**
+ *  Returns permissions granted by a that are not granted by b
+ */
+const diffPermissions = (a: Target[], b: Target[]): Target[] => {
   // targets in a that are not in b
-  const targetsDiff = a.targets.filter(
-    (targetA) => !b.targets.some((targetB) => targetsEqual(targetA, targetB))
+  const targetsDiff = a.filter(
+    (targetA) => !b.some((targetB) => targetsEqual(targetA, targetB))
   )
 
   // targets that are function-cleared in a and in b
-  const functionClearedOverlap = a.targets.filter(
+  const functionClearedOverlap = a.filter(
     (targetA) =>
       targetA.clearance === Clearance.Function &&
-      b.targets.some((targetB) => targetsEqual(targetA, targetB))
+      b.some((targetB) => targetsEqual(targetA, targetB))
   )
 
   // diff the functions of targets in the overlap
   const functionClearedOverlapDiff = functionClearedOverlap
     .map((targetA) => {
-      const targetB = b.targets.find((targetB) =>
-        targetsEqual(targetA, targetB)
-      )
+      const targetB = b.find((targetB) => targetsEqual(targetA, targetB))
       if (!targetB) throw new Error("invariant violation")
       return diffFunctionClearedTargets(targetA, targetB)
     })
     .filter(isTruthy)
 
-  return {
-    targets: [...targetsDiff, ...functionClearedOverlapDiff],
-  }
+  return [...targetsDiff, ...functionClearedOverlapDiff]
 }
 
 export default diffPermissions

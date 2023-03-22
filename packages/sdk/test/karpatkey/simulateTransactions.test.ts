@@ -1,38 +1,15 @@
 import { BigNumber } from "ethers"
-import { defaultAbiCoder } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-<<<<<<< HEAD
-import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
-import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
-import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
-import balancer1ManagePreset from "../../src/presets/mainnet/deFiManageBalancer1"
-import balancer2ManagePreset from "../../src/presets/mainnet/deFiManageBalancer2"
-import ens1ManagePreset from "../../src/presets/mainnet/deFiManageENS1"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
-import { RolePreset } from "../../src/types"
-import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
-
-import testManageTransactions from "./testTransactions/testManage"
-=======
 import { RolePreset } from "../../src/presets/types"
 
 import balancer1ManagePreset from "./presets/deFiManageBalancer1"
 import ens1ManagePreset from "./presets/deFiManageENS1"
->>>>>>> cda97a9 (clean up sdk presets)
 import balancerManage1Transactions from "./testTransactions/balancer1Manage"
 import ensManage1Transactions from "./testTransactions/ens1Manage"
 
-<<<<<<< HEAD
-=======
 const KARPATKEY_ADDRESSES = {
   BALANCER_1_ETH: {
     AVATAR: "0x0EFcCBb9E2C09Ea29551879bd9Da32362b32fc89",
@@ -54,7 +31,6 @@ const KARPATKEY_ADDRESSES = {
 type Configs = typeof KARPATKEY_ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
->>>>>>> cda97a9 (clean up sdk presets)
 describe("Karpatkey: Simulate Transactions Test", async () => {
   const ROLE_ID = 1
 
@@ -66,7 +42,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const multiSend = await MultiSend.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
-    const avatar = (await Avatar.deploy()) as TestAvatar
+    const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const Permissions = await hre.ethers.getContractFactory("Permissions")
     const permissions = await Permissions.deploy()
@@ -80,7 +56,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles
+    )) as unknown as Roles
 
     await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
@@ -104,7 +80,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     transactions,
   }: {
     preset: RolePreset
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
+    config: Config
     transactions: {
       from: string
       value?: string
@@ -114,38 +90,28 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     }[]
   }) => {
     const { owner, modifier } = await setup()
-<<<<<<< HEAD
-=======
     const placeholderValues = {
       AVATAR: config.AVATAR,
     }
->>>>>>> cda97a9 (clean up sdk presets)
-    const permissionUpdateTransactions = await encodeApplyPreset(
+    const transactionsData = await encodeApplyPreset(
       modifier.address,
       ROLE_ID,
       preset,
+      placeholderValues,
       {
-        [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.AVATAR]
-        ),
-        [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["bytes"],
-          [config.BRIDGED_SAFE]
-        ),
-        [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.BRIDGED_SAFE]
-        ),
-      },
-      {
-        currentPermissions: { targets: [] },
+        currentPermissions: { key: ROLE_ID, members: [], targets: [] },
         network: 100, // this value won't be used
       }
     )
 
+    const permissionUpdateTransactions = transactionsData.map((data) => ({
+      to: modifier.address,
+      data: data,
+      value: "0",
+    }))
+
     let totalGas = BigNumber.from(0)
-    for (let i = 0; i < permissionUpdateTransactions.length; i++) {
+    for (let i = 0; i < transactionsData.length; i++) {
       totalGas = totalGas.add(
         await owner.estimateGas(permissionUpdateTransactions[i])
       )
@@ -193,71 +159,6 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
-<<<<<<< HEAD
-
-  const checkFrom = (
-    txs: { from: string }[],
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
-  ) => {
-    txs.forEach((tx) => {
-      if (tx.from.toLowerCase() !== config.AVATAR.toLowerCase()) {
-        throw new Error(`Transaction from ${tx.from} is not ${config.AVATAR}`)
-      }
-    })
-  }
-
-  describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
-        preset: gnosisChainDeFiManagePreset,
-        transactions: manageGnosisChainTransactions,
-      })
-    })
-  })
-
-  describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
-        preset: gnosisChainDeFiHarvestPreset,
-        transactions: harvestGnosisChainTransactions,
-      })
-    })
-  })
-
-  describe("Mainnet DeFi Manage preset [eth:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
-        preset: mainnetDeFiManagePreset,
-        transactions: manageMainnetTransactions,
-      })
-    })
-  })
-
-  describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
-        preset: mainnetDeFiHarvestPreset,
-        transactions: harvestMainnetTransactions,
-      })
-    })
-  })
-
-  describe("Test Manage preset [test:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.TEST_ETH,
-        preset: testManagePreset,
-        transactions: balancerManage1Transactions,
-      })
-    })
-  })
-
-=======
->>>>>>> cda97a9 (clean up sdk presets)
   describe("Balancer1 Manage  preset [balancer1:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
