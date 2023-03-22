@@ -1,27 +1,22 @@
-import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  Roles,
   AssignRoles,
   AvatarSet,
   ChangedGuard,
   DisabledModule,
   EnabledModule,
-  OwnershipTransferred,
   RolesModSetup,
   SetDefaultRole,
   TargetSet,
 } from "../generated/Roles/Roles"
-import { RolesModifier, Role, Member, RoleAssignment } from "../generated/schema"
+import { RolesModifier, RoleAssignment } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
 import {
-  getFunctionId,
   getMemberId,
   getAssignmentId,
   getOrCreateMember,
   getOrCreateRole,
   getRoleId,
   getRolesModifierId,
-  getTargetId,
 } from "./helpers"
 
 export function handleAssignRoles(event: AssignRoles): void {

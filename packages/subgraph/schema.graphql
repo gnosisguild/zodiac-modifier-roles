@@ -133,7 +133,7 @@ type RolesModifier @entity {
 }
 
 type Allowance @entity {
-  id: ID! # Global unique id for role in subgraph
+  id: ID! # Global unique id
   key: String! # Unique within the Roles modifier instance
   rolesModifier: RolesModifier!
   refillInterval: Int! # duration of the period in seconds, 0 for one-time allowance
@@ -141,4 +141,12 @@ type Allowance @entity {
   refillTimestamp: Int! # timestamp of the last interval refilled for;
   maxBalance: BigInt! # max accrual amount, replenishing stops once the unused allowance hits this value
   balance: BigInt! # unused allowance;
+}
+
+type UnwrapAdapter @entity {
+  id: ID!
+  rolesModifier: RolesModifier!
+  targetAddress: Bytes!
+  selector: Bytes!
+  adapterAddress: Bytes!
 }
