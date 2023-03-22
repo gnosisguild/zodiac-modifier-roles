@@ -17,12 +17,17 @@ import "./ScopeConfig.sol";
  */
 abstract contract PermissionChecker is Core, Periphery {
     function authorize(
-        Role storage role,
+        bytes32 roleKey,
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
     ) internal view returns (Trace[] memory result) {
+        if (roleKey == 0) {
+            revert NoMembership();
+        }
+
+        Role storage role = roles[roleKey];
         if (!role.members[msg.sender]) {
             revert NoMembership();
         }

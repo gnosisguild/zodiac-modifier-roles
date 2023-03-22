@@ -3,7 +3,6 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import { Roles, Roles__factory, TestAvatar } from "../typechain-types";
 
 import {
   buildContractCall,
@@ -18,7 +17,7 @@ const ZeroAddress = "0x0000000000000000000000000000000000000000";
 const FirstAddress = "0x0000000000000000000000000000000000000001";
 
 const ROLE_KEY =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+  "0x000000000000000000000000000000000000000000000000000000000000000f";
 const ROLE_KEY1 =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 const ROLE_KEY2 =
@@ -28,7 +27,7 @@ describe("RolesModifier", async () => {
   const baseSetup = deployments.createFixture(async () => {
     await deployments.fixture();
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = (await Avatar.deploy()) as TestAvatar;
+    const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     return { Avatar, avatar, testContract };
@@ -38,11 +37,11 @@ describe("RolesModifier", async () => {
     const base = await baseSetup();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = (await Modifier.deploy(
+    const modifier = await Modifier.deploy(
       base.avatar.address,
       base.avatar.address,
       base.avatar.address
-    )) as Roles;
+    );
     return { ...base, Modifier, modifier };
   });
 
@@ -354,6 +353,8 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
       await expect(
         modifier
           .connect(invoker)
@@ -379,6 +380,7 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // expect it to succeed, after assigning role
       await expect(
@@ -453,6 +455,7 @@ describe("RolesModifier", async () => {
         await setupRolesWithOwnerAndInvoker();
 
       await modifier.assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.setDefaultRole(invoker.address, ROLE_KEY);
 
       await expect(
         modifier
@@ -868,6 +871,7 @@ describe("RolesModifier", async () => {
         tx_2,
         tx_3,
       } = await txSetup();
+
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
 
@@ -1130,7 +1134,7 @@ describe("RolesModifier", async () => {
           testContract.address,
           0,
           mint.data || "",
-          ROLE_KEY
+          0
         )
       ).to.be.revertedWith(`NotAuthorized("${user1.address}")`);
     });
@@ -1583,6 +1587,7 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // allow calls (but not delegate)
       await modifier
@@ -1630,6 +1635,8 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       await modifier
         .connect(owner)
@@ -1720,6 +1727,8 @@ describe("RolesModifier", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
       await modifier
         .connect(owner)
         .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
@@ -1770,6 +1779,7 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       await modifier
         .connect(owner)
@@ -1804,6 +1814,7 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       await modifier
         .connect(owner)
@@ -1858,6 +1869,8 @@ describe("RolesModifier", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 

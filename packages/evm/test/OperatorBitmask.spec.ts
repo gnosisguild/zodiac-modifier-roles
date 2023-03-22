@@ -7,7 +7,7 @@ import "@nomiclabs/hardhat-ethers";
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
 const ROLE_KEY =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+  "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 describe("Operator", async () => {
   const setup = deployments.createFixture(async () => {
@@ -38,6 +38,8 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // set it to true
       await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -85,6 +87,8 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // set it to true
       await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
