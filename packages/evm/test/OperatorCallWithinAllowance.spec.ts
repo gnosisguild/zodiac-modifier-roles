@@ -33,7 +33,7 @@ describe("Operator", async () => {
     await modifier.enableModule(invoker.address);
 
     async function setAllowance(
-      allowanceId: number,
+      allowanceKey: string,
       {
         balance,
         maxBalance,
@@ -51,7 +51,7 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .setAllowance(
-          allowanceId,
+          allowanceKey,
           balance,
           maxBalance || 0,
           refillAmount,
@@ -64,7 +64,7 @@ describe("Operator", async () => {
       .connect(owner)
       .assignRoles(invoker.address, [ROLE_ID], [true]);
 
-    async function setPermission(allowanceId: number) {
+    async function setPermission(allowanceKey: string) {
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("doNothing")
       );
@@ -86,7 +86,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -121,88 +121,88 @@ describe("Operator", async () => {
     it("passes a check from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceId = 1234;
+      const allowanceKey = "Some key";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(1);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(1);
 
       await expect(invoke()).to.not.be.reverted;
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("passes multiple checks from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceId = 987;
+      const allowanceKey = "Anotha key";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 2,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(2);
-
-      await expect(invoke()).to.not.be.reverted;
-
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(1);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(2);
 
       await expect(invoke()).to.not.be.reverted;
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(1);
+
+      await expect(invoke()).to.not.be.reverted;
+
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
+      const allowanceKey = "1234";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 0,
         refillInterval: 100,
         refillAmount: 1,
         refillTimestamp: timestamp - 150,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
-      await setAllowance(allowanceId, {
+      const allowanceKey = "Bananarama Is The Jam!";
+      await setAllowance(allowanceKey, {
         balance: 0,
         refillInterval: 1000,
         refillAmount: 1,
         refillTimestamp: timestamp,
       });
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
   });
@@ -216,21 +216,21 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceId1 = 0;
-      const allowanceId2 = 1;
+      const allowanceKey1 = "Sparkle Unicorn Rainbow 123";
+      const allowanceKey2 = "WackyZebraPlaysBanjo56";
       const value1 = 100;
       const value2 = 200;
       const valueOther = 9999;
 
       await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-      await setAllowance(allowanceId1, {
+      await setAllowance(allowanceKey1, {
         balance: 0,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      await setAllowance(allowanceId2, {
+      await setAllowance(allowanceKey2, {
         balance: 1,
         refillInterval: 0,
         refillAmount: 0,
@@ -282,7 +282,7 @@ describe("Operator", async () => {
             parent: 1,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey1]),
           },
           {
             parent: 2,
@@ -294,7 +294,7 @@ describe("Operator", async () => {
             parent: 2,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
+            compValue: defaultAbiCoder.encode(["string"], [allowanceKey2]),
           },
         ],
         ExecutionOptions.Send
@@ -305,12 +305,12 @@ describe("Operator", async () => {
       );
 
       await expect(execute(value1)).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId1})`
+        `CallAllowanceExceeded("${allowanceKey1}")`
       );
 
       await expect(execute(value2)).not.to.be.reverted;
       await expect(execute(value2)).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId2})`
+        `CallAllowanceExceeded("${allowanceKey2}")`
       );
     });
   });

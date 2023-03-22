@@ -14,11 +14,13 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
-    error AllowanceExceeded(uint16 allowanceId);
+    error InadequateAllowanceKey(uint256 length);
 
-    error CallAllowanceExceeded(uint16 allowanceId);
+    error AllowanceExceeded(string allowanceKey);
 
-    error EtherAllowanceExceeded(uint16 allowanceId);
+    error CallAllowanceExceeded(string allowanceKey);
+
+    error EtherAllowanceExceeded(string allowanceKey);
 
     event AllowTarget(
         uint16 role,
@@ -38,13 +40,13 @@ abstract contract PermissionBuilder is Core {
     event ScopeFunction(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
+        bytes4 selector,
         ConditionFlat[] conditions,
         ExecutionOptions options
     );
 
     event SetAllowance(
-        uint16 id,
+        string allowanceKey,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
@@ -52,7 +54,11 @@ abstract contract PermissionBuilder is Core {
         uint64 refillTimestamp
     );
 
-    event ConsumeAllowance(uint16 id, uint128 consumed, uint128 newBalance);
+    event ConsumeAllowance(
+        string allowanceKey,
+        uint128 consumed,
+        uint128 newBalance
+    );
 
     /// @dev Allows transactions to a target address.
     /// @param roleId identifier of the role to be modified.
@@ -160,14 +166,18 @@ abstract contract PermissionBuilder is Core {
     }
 
     function setAllowance(
-        uint16 id,
+        string memory allowanceKey,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
         uint64 refillInterval,
         uint64 refillTimestamp
     ) external onlyOwner {
-        allowances[id] = Allowance({
+        bytes memory rawKey = bytes(allowanceKey);
+        if (rawKey.length == 0 || rawKey.length > 32) {
+            revert InadequateAllowanceKey(rawKey.length);
+        }
+        allowances[allowanceKey] = Allowance({
             refillAmount: refillAmount,
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
@@ -175,7 +185,7 @@ abstract contract PermissionBuilder is Core {
             maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
         });
         emit SetAllowance(
-            id,
+            allowanceKey,
             balance,
             maxBalance,
             refillAmount,
@@ -190,8 +200,8 @@ abstract contract PermissionBuilder is Core {
             Condition memory condition = entries[i].condition;
             uint256 value = entries[i].value;
 
-            uint16 allowanceId = uint16(uint256(bytes32(condition.compValue)));
-            Allowance memory allowance = allowances[allowanceId];
+            string memory key = _wordToString(condition.compValue);
+            Allowance memory allowance = allowances[key];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
                 block.timestamp
@@ -199,18 +209,18 @@ abstract contract PermissionBuilder is Core {
 
             if (value > balance) {
                 if (condition.operator == Operator.WithinAllowance) {
-                    revert AllowanceExceeded(allowanceId);
+                    revert AllowanceExceeded(key);
                 } else if (condition.operator == Operator.CallWithinAllowance) {
-                    revert CallAllowanceExceeded(allowanceId);
+                    revert CallAllowanceExceeded(key);
                 } else {
-                    revert EtherAllowanceExceeded(allowanceId);
+                    revert EtherAllowanceExceeded(key);
                 }
             }
-            allowances[allowanceId].balance = balance - uint128(value);
-            allowances[allowanceId].refillTimestamp = refillTimestamp;
+            allowances[key].balance = balance - uint128(value);
+            allowances[key].refillTimestamp = refillTimestamp;
 
             emit ConsumeAllowance(
-                allowanceId,
+                key,
                 uint128(value),
                 balance - uint128(value)
             );
@@ -248,15 +258,33 @@ abstract contract PermissionBuilder is Core {
             allowance.refillInterval;
     }
 
+    /**
+     * @dev removes extraneous leading offsets from the compValue fields
+     * of the conditions array. Its purpose is to provide a consistent API
+     * where every compValue provided to be used in Operations.EqualsTo is to be
+     * produced simply by using abi.encode.
+     *
+     * By removing the leading extraneous offsets this function makes
+     * abi.encode(...) match the output bounds produced by Decoder inspection.
+     * Without it, the compValue fields would need to be modified externally
+     * depending on whether the payload is fully encoded inline or not.
+     *
+     *
+     * Additionally, this function normalizes the compValue fields that will be
+     * stored as allowanceKeys, but removing offset and length.
+     * @param conditions Array of ConditionFlat structs to remove extraneous
+     * offsets from
+     */
     function _removeExtraneousOffsets(
         ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
+    ) private view returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ) {
-            if (
-                conditions[i].operator == Operator.EqualTo &&
-                Topology.isInline(conditions, i) == false
-            ) {
+            Operator operator = conditions[i].operator;
+
+            bool isDynamicEquals = operator == Operator.EqualTo &&
+                Topology.isInline(conditions, i) == false;
+            if (isDynamicEquals) {
                 bytes memory compValue = conditions[i].compValue;
                 uint256 length = compValue.length;
                 assembly {
@@ -266,10 +294,39 @@ abstract contract PermissionBuilder is Core {
                 conditions[i].compValue = compValue;
             }
 
+            bool isAllowance = operator == Operator.WithinAllowance ||
+                operator == Operator.CallWithinAllowance ||
+                operator == Operator.EtherWithinAllowance;
+            if (isAllowance) {
+                bytes memory compValue = conditions[i].compValue;
+                assert(compValue.length == 96);
+
+                assembly {
+                    mstore(add(compValue, 32), 32)
+                    compValue := add(compValue, 64)
+                }
+                conditions[i].compValue = compValue;
+            }
+
             unchecked {
                 ++i;
             }
         }
         return conditions;
+    }
+
+    function _wordToString(
+        bytes32 word
+    ) private returns (string memory result) {
+        bytes32 mask = bytes32(bytes1(0xff));
+        uint256 length;
+        for (; mask != 0 && mask & word != 0; mask >>= 8) {
+            length++;
+        }
+
+        result = string(abi.encodePacked(word));
+        assembly {
+            mstore(result, length)
+        }
     }
 }
