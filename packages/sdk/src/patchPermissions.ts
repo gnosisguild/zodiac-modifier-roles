@@ -1,12 +1,15 @@
+import {
+  grantPermissions,
+  revokePermissions,
+  removeObsoleteCalls,
+  Call,
+} from "./calls"
 import diffPermissions from "./diffPermissions"
-import grantPermissions from "./grantPermissions"
-import removeObsoleteCalls from "./removeObsoleteCalls"
-import revokePermissions from "./revokePermissions"
-import { Call, RolePermissions } from "./types"
+import { Role } from "./types"
 
 const patchPermissions = (
-  currentPermissions: RolePermissions,
-  nextPermissions: RolePermissions
+  currentPermissions: Role,
+  nextPermissions: Role
 ): Call[] => {
   return removeObsoleteCalls([
     ...revokePermissions(diffPermissions(currentPermissions, nextPermissions)),

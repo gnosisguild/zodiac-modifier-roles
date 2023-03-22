@@ -1,11 +1,13 @@
 import { expect } from "chai"
 
 import diffPermissions from "../src/diffPermissions"
-import { Clearance, ExecutionOptions, RolePermissions } from "../src/types"
+import { Clearance, ExecutionOptions, Role } from "../src/types"
 
 describe("diffPermissions", () => {
   it("should correctly diff target-cleared targets", () => {
-    const a: RolePermissions = {
+    const a: Role = {
+      key: "a",
+      members: [],
       targets: [
         {
           address: "0x1",
@@ -22,7 +24,9 @@ describe("diffPermissions", () => {
       ],
     }
 
-    const b: RolePermissions = {
+    const b: Role = {
+      key: "b",
+      members: [],
       targets: [
         {
           address: "0x1",
@@ -62,7 +66,9 @@ describe("diffPermissions", () => {
   })
 
   it("should diff functions based all their properties including parameters", () => {
-    const a: RolePermissions = {
+    const a: Role = {
+      key: "a",
+      members: [],
       targets: [
         {
           address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -70,7 +76,7 @@ describe("diffPermissions", () => {
           executionOptions: 0,
           functions: [
             {
-              sighash: "0x095ea7b3",
+              selector: "0x095ea7b3",
               executionOptions: 0,
               wildcarded: false,
               parameters: [
@@ -89,7 +95,9 @@ describe("diffPermissions", () => {
       ],
     }
 
-    const b: RolePermissions = {
+    const b: Role = {
+      key: "b",
+      members: [],
       targets: [
         {
           address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -97,7 +105,7 @@ describe("diffPermissions", () => {
           executionOptions: 0,
           functions: [
             {
-              sighash: "0x095ea7b3",
+              selector: "0x095ea7b3",
               executionOptions: 0,
               wildcarded: false,
               parameters: [

@@ -2,7 +2,7 @@ import fetch from "node-fetch"
 
 import SUBGRAPH from "./subgraph"
 import {
-  RolePermissions,
+  Role,
   NetworkId,
   Clearance,
   ExecutionOptions,
@@ -10,7 +10,7 @@ import {
   Target,
   ParameterType,
   Parameter,
-  Comparison,
+  Operator,
 } from "./types"
 
 interface Props {
@@ -44,7 +44,7 @@ const fetchPermissions = async ({
   address,
   roleId,
   network,
-}: Props): Promise<RolePermissions> => {
+}: Props): Promise<Role> => {
   const globalRoleId = `${address.toLowerCase()}-ROLE-${roleId}.0`
   const res = await fetch(SUBGRAPH[network], {
     method: "POST",
@@ -76,7 +76,7 @@ interface GraphQlParameter {
 interface GraphQlFunction {
   executionOptions: "None" | "Send" | "DelegateCall" | "Both"
   parameters: GraphQlParameter[]
-  sighash: string
+  selector: string
   wildcarded: boolean
 }
 interface GraphQlTarget {
@@ -86,7 +86,7 @@ interface GraphQlTarget {
   functions: GraphQlFunction[]
 }
 
-const mapGraphQl = (role: { targets: GraphQlTarget[] }): RolePermissions => ({
+const mapGraphQl = (role: { targets: GraphQlTarget[] }): Role => ({
   targets: role.targets.map(
     (target): Target => ({
       address: target.address,
@@ -94,7 +94,7 @@ const mapGraphQl = (role: { targets: GraphQlTarget[] }): RolePermissions => ({
       executionOptions: EXECUTION_OPTIONS_MAPPING[target.executionOptions],
       functions: target.functions.map(
         (func): Function => ({
-          sighash: func.sighash,
+          selector: func.selector,
           executionOptions: EXECUTION_OPTIONS_MAPPING[func.executionOptions],
           wildcarded: func.wildcarded,
           parameters: func.parameters
@@ -116,7 +116,7 @@ const mapGraphQl = (role: { targets: GraphQlTarget[] }): RolePermissions => ({
 })
 
 const isEmptyParamScoping = (param: Parameter) =>
-  param.comparison === Comparison.EqualTo &&
+  param.comparison === Operator.EqualTo &&
   param.comparisonValue.length === 1 &&
   param.comparisonValue[0] === "0x"
 
@@ -140,8 +140,8 @@ const PARAMETER_TYPE_MAPPING = {
 }
 
 const COMPARISON = {
-  EqualTo: Comparison.EqualTo,
-  GreaterThan: Comparison.GreaterThan,
-  LessThan: Comparison.LessThan,
-  OneOf: Comparison.OneOf,
+  EqualTo: Operator.EqualTo,
+  GreaterThan: Operator.GreaterThan,
+  LessThan: Operator.LessThan,
+  OneOf: Operator.OneOf,
 }

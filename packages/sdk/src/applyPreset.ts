@@ -9,14 +9,13 @@ import SafeServiceClient from "@safe-global/safe-service-client"
 import { ethers as defaultEthers, PopulatedTransaction, Signer } from "ethers"
 import { encodeMulti } from "ethers-multisend"
 
-import encodeCalls from "./encodeCalls"
+import { encodeCalls, logCall } from "./calls"
 import fetchPermissions from "./fetchPermissions"
-import logCall from "./logCall"
 import patchPermissions from "./patchPermissions"
 import fillPreset from "./presets/fillPreset"
 import { PlaceholderValues, RolePreset } from "./presets/types"
 import SAFE_TX_SERVICE from "./safeTxService"
-import { RolePermissions, NetworkId } from "./types"
+import { Role, NetworkId } from "./types"
 
 let nonce: number
 
@@ -48,7 +47,7 @@ export const applyPreset = async <P extends RolePreset>(
     network: NetworkId
     ethers?: typeof defaultEthers
     multiSendBatchSize?: number
-    currentPermissions?: RolePermissions
+    currentPermissions?: Role
   }
 ): Promise<void> => {
   const {
@@ -135,7 +134,7 @@ export const encodeApplyPreset = async <P extends RolePreset>(
   placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
-    currentPermissions?: RolePermissions
+    currentPermissions?: Role
   }
 ) => {
   const currentPermissions =
@@ -175,7 +174,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
     network: NetworkId
     multiSendAddress?: string
     multiSendBatchSize?: number
-    currentPermissions?: RolePermissions
+    currentPermissions?: Role
   }
 ): Promise<MetaTransactionData[]> => {
   const {
@@ -223,7 +222,7 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
   placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
-    currentPermissions?: RolePermissions
+    currentPermissions?: Role
   }
 ) => {
   const { network, currentPermissions } = options

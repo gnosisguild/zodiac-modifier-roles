@@ -111,7 +111,7 @@ export type PresetFullyClearedTarget = {
 } & ExecutionOptions
 
 // allows calls to specific functions, optionally with parameter scoping
-export type PresetFunction = ({ sighash: string } | { signature: string }) & {
+export type PresetFunction = ({ selector: string } | { signature: string }) & {
   targetAddress: string
   params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
 } & ExecutionOptions

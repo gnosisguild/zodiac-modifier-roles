@@ -1,14 +1,15 @@
 import {
-  Call,
   Clearance,
-  Comparison,
+  Operator,
   Function,
   Parameter,
   ParameterType,
-  RolePermissions,
-} from "./types"
+  Role,
+} from "../types"
 
-const grantPermissions = (permissions: RolePermissions): Call[] => {
+import { Call } from "./types"
+
+export const grantPermissions = (permissions: Role): Call[] => {
   const calls: Call[] = []
 
   permissions.targets.forEach((target) => {
@@ -32,7 +33,7 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
           calls.push({
             call: "scopeAllowFunction",
             targetAddress: target.address,
-            functionSig: func.sighash,
+            functionSig: func.selector,
             options: func.executionOptions,
           })
         } else {
@@ -43,12 +44,12 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
           calls.push(scopeFunction(func, target.address))
 
           func.parameters
-            .filter((param) => param.comparison === Comparison.OneOf)
+            .filter((param) => param.comparison === Operator.OneOf)
             .forEach((param) => {
               calls.push({
                 call: "scopeParameterAsOneOf",
                 targetAddress: target.address,
-                functionSig: func.sighash,
+                functionSig: func.selector,
                 paramIndex: param.index,
                 type: param.type,
                 value: param.comparisonValue,
@@ -62,13 +63,11 @@ const grantPermissions = (permissions: RolePermissions): Call[] => {
   return calls
 }
 
-export default grantPermissions
-
 const scopeFunction = (func: Function, targetAddress: string): Call => {
   // create an array where parameters are at their actual indices with undefined values filling the gaps
   // we skip over OneOf parameters because they are handled extra
   const paramsSkippingOneOf = func.parameters.map((param) =>
-    param?.comparison !== Comparison.OneOf ? param : undefined
+    param?.comparison !== Operator.OneOf ? param : undefined
   )
   const params: (Parameter | undefined)[] = new Array(
     Math.max(...paramsSkippingOneOf.map((param) => param?.index || 0))
@@ -82,13 +81,15 @@ const scopeFunction = (func: Function, targetAddress: string): Call => {
   return {
     call: "scopeFunction",
     targetAddress,
-    functionSig: func.sighash,
+    functionSig: func.selector,
     options: func.executionOptions,
     isParamScoped: params.map(Boolean),
     paramType: params.map((param) => param?.type || ParameterType.Static),
-    paramComp: params.map(
-      (param) => param?.comparison || Comparison.EqualTo
-    ) as (Comparison.EqualTo | Comparison.GreaterThan | Comparison.LessThan)[],
+    paramComp: params.map((param) => param?.comparison || Operator.EqualTo) as (
+      | Operator.EqualTo
+      | Operator.GreaterThan
+      | Operator.LessThan
+    )[],
     compValue: params.map((param) => param?.comparisonValue[0] || "0x"),
   }
 }

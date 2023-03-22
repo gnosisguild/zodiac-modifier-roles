@@ -1,7 +1,8 @@
 import { expect } from "chai"
 
-import removeObsoleteCalls from "../src/removeObsoleteCalls"
-import { Call, ExecutionOptions } from "../src/types"
+import removeObsoleteCalls from "../src/calls/removeObsoleteCalls"
+import { Call } from "../src/calls/types"
+import { ExecutionOptions } from "../src/types"
 
 describe("removeObsoleteCalls", () => {
   it("should remove function permission updates if later on the entire target is cleared", () => {

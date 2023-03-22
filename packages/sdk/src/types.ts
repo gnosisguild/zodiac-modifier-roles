@@ -63,20 +63,22 @@ export enum Operator {
   CallWithinAllowance = 31,
 }
 
-export interface RolePermissions {
+export interface Role {
+  key: string
+  members: string[]
   targets: Target[]
 }
 
 export interface Target {
   address: string
   clearance: Clearance
-  options: ExecutionOptions
+  executionOptions: ExecutionOptions
   functions: Function[]
 }
 
 export interface Function {
   selector: string
-  options: ExecutionOptions
+  executionOptions: ExecutionOptions
   wildcarded: boolean
   condition?: Condition
 }

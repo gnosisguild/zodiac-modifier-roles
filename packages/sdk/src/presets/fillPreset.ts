@@ -1,38 +1,43 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
+import { Clearance, ExecutionOptions, Role, Comparison } from "../types"
+
+import { execOptions } from "./execOptions"
+import { solidityPackPadded } from "./scopeParam"
 import {
-  Clearance,
-  ExecutionOptions,
-  RolePermissions,
+  PlaceholderValues,
   RolePreset,
   PresetScopeParam,
   PresetFunction,
   PresetAllowEntry,
-  Comparison,
+  Placeholder,
+  ComparisonValue,
 } from "./types"
 
-// Takes a RolePreset, fills in the avatar placeholder, and returns a RolePermissions object
-const fillPreset = (
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>
-): RolePermissions => {
-  preset = mergeFunctionEntries(preset)
+// Takes a RolePreset, fills in the placeholders, and returns a RolePermissions object
+const fillPreset = <P extends RolePreset>(
+  preset: P,
+  placeholderValues: PlaceholderValues<P>
+): Role => {
+  preset = mergeFunctionEntries(preset) as P
   sanityCheck(preset)
 
-  // fill in avatar placeholders and encode comparison values
-  const { allow } = processParams(preset, placeholderValues)
+  const placeholderLookupMap = makePlaceholderLookupMap(
+    preset,
+    placeholderValues
+  )
 
-  const fullyClearedTargets = allow
+  const fullyClearedTargets = preset.allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => ({
       address: entry.targetAddress.toLowerCase(),
       clearance: Clearance.Target,
-      executionOptions: entry.options || ExecutionOptions.None,
+      executionOptions: execOptions(entry),
       functions: [],
     }))
 
   const functionTargets = Object.entries(
-    groupBy(allow.filter(isScoped), (entry) =>
+    groupBy(preset.allow.filter(isScoped), (entry) =>
       entry.targetAddress.toLowerCase()
     )
   ).map(([targetAddress, allowFunctions]) => ({
@@ -40,18 +45,23 @@ const fillPreset = (
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
-      let sighash = "sighash" in allowFunction && allowFunction.sighash
+      let sighash = "sighash" in allowFunction && allowFunction.selector
       if (!sighash)
         sighash =
           "signature" in allowFunction &&
           functionSighash(allowFunction.signature)
       if (!sighash) throw new Error("invariant violation")
 
+      const parameters = processParams(
+        allowFunction.params,
+        placeholderLookupMap
+      )
+
       return {
         sighash,
-        executionOptions: allowFunction.options || ExecutionOptions.None,
-        wildcarded: allowFunction.params.length === 0,
-        parameters: allowFunction.params,
+        executionOptions: execOptions(allowFunction),
+        wildcarded: parameters.length === 0,
+        parameters,
       }
     }),
   }))
@@ -66,47 +76,62 @@ export default fillPreset
 const functionSighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
+const makePlaceholderLookupMap = <P extends RolePreset>(
+  preset: P,
+  placeholderValues: PlaceholderValues<P>
+) => {
+  const map = new Map<Placeholder<any>, any>()
+  for (const [key, placeholder] of Object.entries(preset.placeholders)) {
+    const value = placeholderValues[key]
+    if (value === undefined)
+      throw new Error(`Missing placeholder value for ${key}`)
+    map.set(placeholder, value)
+  }
+  return map
+}
+
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>
-) => ({
-  ...preset,
-  allow: preset.allow.map((entry) => ({
-    ...entry,
-    params:
-      "params" in entry
-        ? Object.entries(entry.params || {})
-            .map(
-              ([key, param]) =>
-                param && {
-                  index: parseInt(key),
-                  type: param.type,
-                  comparison: param.comparison,
-                  comparisonValue: fillPlaceholderValues(
-                    param.value,
-                    placeholderValues
-                  ),
-                }
-            )
-            .filter(Boolean as any as <T>(x: T | undefined) => x is T)
-        : [],
-  })),
-})
+  params:
+    | (PresetScopeParam | undefined)[]
+    | Record<number, PresetScopeParam>
+    | undefined,
+  placeholderLookupMap: Map<Placeholder<any>, any>
+) => {
+  if (!params) return []
+
+  return Object.entries(params || {})
+    .map(
+      ([key, param]) =>
+        param && {
+          index: parseInt(key),
+          type: param.type,
+          comparison: param.comparison,
+          comparisonValue: fillPlaceholderValues(
+            param.value,
+            placeholderLookupMap
+          ),
+        }
+    )
+    .filter(Boolean as any as <T>(x: T | undefined) => x is T)
+}
 
 const fillPlaceholderValues = (
   value: PresetScopeParam["value"],
-  placeholderValues: Record<symbol, string>
+  placeholderLookupMap: Map<Placeholder<any>, any>
 ) => {
-  const mapValue = (value: PresetScopeParam["value"]) => {
-    if (typeof value === "symbol") {
-      if (!placeholderValues[value]) {
-        throw new Error(`Missing placeholder value for ${String(value)}`)
+  const mapValue = (valueOrPlaceholder: ComparisonValue) => {
+    if (valueOrPlaceholder instanceof Placeholder) {
+      const value = placeholderLookupMap.get(valueOrPlaceholder.identity)
+      if (value === undefined) {
+        throw new Error(
+          `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
+        )
       }
-      return placeholderValues[value]
-    } else {
-      return value as string
+      return solidityPackPadded(valueOrPlaceholder.type, value)
     }
+
+    return valueOrPlaceholder
   }
 
   return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
@@ -169,7 +194,7 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
 
 const functionId = (entry: PresetFunction) =>
   `${entry.targetAddress.toLowerCase()}.${
-    "sighash" in entry ? entry.sighash : functionSighash(entry.signature)
+    "sighash" in entry ? entry.selector : functionSighash(entry.signature)
   }`
 
 const mergeFunctionEntries = (preset: RolePreset) => ({
@@ -189,8 +214,8 @@ const mergeFunctionEntries = (preset: RolePreset) => ({
     }
 
     if (
-      (matchingEntry.options || ExecutionOptions.None) !==
-      (entry.options || ExecutionOptions.None)
+      !!matchingEntry.send !== !!entry.send ||
+      !!matchingEntry.delegatecall !== !!entry.delegatecall
     ) {
       // we don't merge if execution options are different
       result.push(entry)
