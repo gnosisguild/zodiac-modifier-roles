@@ -10,7 +10,7 @@ import "./Types.sol";
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
  */
 abstract contract Core is OwnableUpgradeable {
-    mapping(uint16 => Role) internal roles;
+    mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
 
     function _store(

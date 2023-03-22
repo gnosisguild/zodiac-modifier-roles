@@ -5,7 +5,8 @@ import hre, { deployments, waffle } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { ExecutionOptions, Operator, ParameterType } from "./utils";
 
-const ROLE_ID = 123;
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 describe("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
@@ -32,46 +33,51 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, AddressOne, ExecutionOptions.Send)
+        .allowTarget(ROLE_KEY, AddressOne, ExecutionOptions.Send)
     )
       .to.emit(modifier, "AllowTarget")
-      .withArgs(ROLE_ID, AddressOne, ExecutionOptions.Send);
+      .withArgs(ROLE_KEY, AddressOne, ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
     const { owner, modifier } = await setup();
 
-    await expect(modifier.connect(owner).scopeTarget(ROLE_ID, AddressOne))
+    await expect(modifier.connect(owner).scopeTarget(ROLE_KEY, AddressOne))
       .to.emit(modifier, "ScopeTarget")
-      .withArgs(ROLE_ID, AddressOne);
+      .withArgs(ROLE_KEY, AddressOne);
   });
   it("RevokeTarget", async () => {
     const { owner, modifier } = await setup();
 
-    await expect(modifier.connect(owner).revokeTarget(ROLE_ID, AddressOne))
+    await expect(modifier.connect(owner).revokeTarget(ROLE_KEY, AddressOne))
       .to.emit(modifier, "RevokeTarget")
-      .withArgs(ROLE_ID, AddressOne);
+      .withArgs(ROLE_KEY, AddressOne);
   });
   it("AllowFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, AddressOne, "0x12345678", ExecutionOptions.Both)
+        .allowFunction(
+          ROLE_KEY,
+          AddressOne,
+          "0x12345678",
+          ExecutionOptions.Both
+        )
     ).to.emit(modifier, "AllowFunction");
   });
   it("RevokeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
-      modifier.connect(owner).revokeFunction(ROLE_ID, AddressOne, "0x12345678")
+      modifier.connect(owner).revokeFunction(ROLE_KEY, AddressOne, "0x12345678")
     )
       .to.emit(modifier, "RevokeFunction")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678");
+      .withArgs(ROLE_KEY, AddressOne, "0x12345678");
   });
   it("ScopeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         AddressOne,
         "0x12345678",
         [

@@ -6,6 +6,8 @@ import { Operator, ExecutionOptions, ParameterType } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000000";
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 describe("Integrity", async () => {
   const setup = deployments.createFixture(async () => {
@@ -31,11 +33,9 @@ describe("Integrity", async () => {
   it("enforces only one root node", async () => {
     const { modifier, owner } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
       modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         AddressOne,
         "0x00000000",
         [
@@ -58,7 +58,7 @@ describe("Integrity", async () => {
 
     await expect(
       modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         AddressOne,
         "0x00000000",
         [
@@ -83,10 +83,9 @@ describe("Integrity", async () => {
   it("enforces param config in BFS order", async () => {
     const { modifier, owner } = await setup();
 
-    const ROLE_ID = 0;
     await expect(
       modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         AddressOne,
         "0x00000000",
         [
@@ -129,7 +128,7 @@ describe("Integrity", async () => {
 
       await expect(
         modifier.connect(owner).scopeFunction(
-          0,
+          ROLE_KEY,
           AddressOne,
           "0x00000000",
           [
@@ -155,7 +154,7 @@ describe("Integrity", async () => {
 
       await expect(
         modifier.connect(owner).scopeFunction(
-          0,
+          ROLE_KEY,
           AddressOne,
           "0x00000000",
           [
@@ -185,7 +184,7 @@ describe("Integrity", async () => {
       const { modifier, owner } = await setup();
 
       await modifier.connect(owner).scopeFunction(
-        0,
+        ROLE_KEY,
         AddressOne,
         "0x00000000",
         [
@@ -287,7 +286,7 @@ describe("Integrity", async () => {
 
       await expect(
         modifier.connect(owner).scopeFunction(
-          0,
+          ROLE_KEY,
           AddressOne,
           "0x00000000",
           [
@@ -350,7 +349,7 @@ describe("Integrity", async () => {
 
       await expect(
         modifier.connect(owner).scopeFunction(
-          0,
+          ROLE_KEY,
           AddressOne,
           "0x00000000",
           [
@@ -471,7 +470,7 @@ describe("Integrity", async () => {
         modifier
           .connect(owner)
           .scopeFunction(
-            0,
+            ROLE_KEY,
             AddressOne,
             "0x00000000",
             conditions,
@@ -487,7 +486,7 @@ describe("Integrity", async () => {
         modifier
           .connect(owner)
           .scopeFunction(
-            0,
+            ROLE_KEY,
             AddressOne,
             "0x00000000",
             conditions,
@@ -555,7 +554,7 @@ describe("Integrity", async () => {
         modifier
           .connect(owner)
           .scopeFunction(
-            0,
+            ROLE_KEY,
             AddressOne,
             "0x00000000",
             conditions,
@@ -567,7 +566,7 @@ describe("Integrity", async () => {
         modifier
           .connect(owner)
           .scopeFunction(
-            0,
+            ROLE_KEY,
             AddressOne,
             "0x00000000",
             conditions.slice(0, -1),

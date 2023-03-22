@@ -7,6 +7,9 @@ import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
 describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
@@ -60,19 +63,18 @@ describe("Operator", async () => {
     }
 
     async function setRole(allowanceKey: string) {
-      const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
@@ -108,19 +110,18 @@ describe("Operator", async () => {
     }
 
     async function setRoleTwoParams(allowanceKey: string) {
-      const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithTwoParams")
       );
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
