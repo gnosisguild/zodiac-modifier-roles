@@ -31,9 +31,9 @@ export const grantPermissions = (targets: Target[]): Call[] => {
       target.functions.forEach((func) => {
         if (func.wildcarded) {
           calls.push({
-            call: "scopeAllowFunction",
+            call: "allowFunction",
             targetAddress: target.address,
-            functionSig: func.selector,
+            selector: func.selector,
             executionOptions: func.executionOptions,
           })
         } else {
@@ -49,7 +49,7 @@ export const grantPermissions = (targets: Target[]): Call[] => {
               calls.push({
                 call: "scopeParameterAsOneOf",
                 targetAddress: target.address,
-                functionSig: func.selector,
+                selector: func.selector,
                 paramIndex: param.index,
                 type: param.type,
                 value: param.comparisonValue,
@@ -81,7 +81,7 @@ const scopeFunction = (func: Function, targetAddress: string): Call => {
   return {
     call: "scopeFunction",
     targetAddress,
-    functionSig: func.selector,
+    selector: func.selector,
     executionOptions: func.executionOptions,
     isParamScoped: params.map(Boolean),
     paramType: params.map((param) => param?.type || ParameterType.Static),
