@@ -7,9 +7,10 @@ import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Operator", async () => {
-  const ROLE_ID = 0;
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
   const setup = deployments.createFixture(async () => {
@@ -62,7 +63,7 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     async function setPermission(allowanceKey: string) {
       const SELECTOR = testContract.interface.getSighash(
@@ -70,9 +71,9 @@ describe("Operator", async () => {
       );
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
@@ -230,7 +231,7 @@ describe("Operator", async () => {
       const value2 = 200;
       const valueOther = 9999;
 
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await setAllowance(allowanceKey1, {
         balance: 0,
         refillInterval: 0,
@@ -258,7 +259,7 @@ describe("Operator", async () => {
       }
 
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [

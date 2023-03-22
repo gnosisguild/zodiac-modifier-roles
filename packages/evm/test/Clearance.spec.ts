@@ -15,6 +15,9 @@ describe("Clearance", async () => {
     return { Avatar, avatar, testContract, testContractClone };
   });
 
+  const ROLE_KEY =
+    "0x0000000000000000000000000000000000000000000000000000000000000000";
+
   const setupRolesWithOwnerAndInvoker = deployments.createFixture(async () => {
     const base = await baseSetup();
 
@@ -44,12 +47,12 @@ describe("Clearance", async () => {
   it("allows and then disallows a target", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
-    const ROLE_ID = 0;
+
     const { data } = await testContract.populateTransaction.doNothing();
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     await expect(
       modifier
@@ -59,7 +62,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
     await expect(
       modifier
@@ -67,7 +70,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     ).to.not.be.reverted;
 
-    await modifier.connect(owner).revokeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).revokeTarget(ROLE_KEY, testContract.address);
 
     await expect(
       modifier
@@ -80,15 +83,13 @@ describe("Clearance", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
-
-    await modifier
-      .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -114,22 +115,20 @@ describe("Clearance", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
-
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         ExecutionOptions.None
@@ -145,7 +144,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .revokeFunction(ROLE_ID, testContract.address, SELECTOR);
+      .revokeFunction(ROLE_KEY, testContract.address, SELECTOR);
 
     await expect(
       modifier
@@ -157,22 +156,20 @@ describe("Clearance", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
-
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
     );
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         ExecutionOptions.None
@@ -203,18 +200,17 @@ describe("Clearance", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
     );
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -232,12 +228,12 @@ describe("Clearance", async () => {
         )
     ).to.not.be.reverted;
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         ExecutionOptions.None
@@ -270,10 +266,9 @@ describe("Clearance", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -283,12 +278,12 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         ExecutionOptions.None
@@ -318,7 +313,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_ID, testContract.address, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
     await expect(
       modifier
@@ -336,10 +331,9 @@ describe("Clearance", async () => {
     const { modifier, testContract, owner, invoker } =
       await setupRolesWithOwnerAndInvoker();
 
-    const ROLE_ID = 0;
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     const SEL_DONOTHING = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -352,12 +346,12 @@ describe("Clearance", async () => {
     const { data: dataDoEvenLess } =
       await testContract.populateTransaction.doEvenLess();
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SEL_DONOTHING,
         ExecutionOptions.None
@@ -366,7 +360,7 @@ describe("Clearance", async () => {
     await modifier
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SEL_DOEVENLESS,
         ExecutionOptions.None
@@ -396,7 +390,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .revokeFunction(ROLE_ID, testContract.address, SEL_DOEVENLESS);
+      .revokeFunction(ROLE_KEY, testContract.address, SEL_DOEVENLESS);
 
     await expect(
       modifier
