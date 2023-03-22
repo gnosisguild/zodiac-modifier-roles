@@ -7,8 +7,8 @@ import {
   SetAllowance,
   AllowFunction,
 } from "../generated/PermissionBuilder/PermissionBuilder"
-import { Role, Target, RolesModifier, Function, Condition } from "../generated/schema"
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
+import { Target } from "../generated/schema"
+import { log, store } from "@graphprotocol/graph-ts"
 import {
   getFunctionId,
   getOrCreateAllowance,

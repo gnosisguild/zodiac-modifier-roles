@@ -91,7 +91,7 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Adapters
+        - UnwrapAdapter
       abis:
         - name: Periphery
           file: ./abis/Periphery.sol/Periphery.json

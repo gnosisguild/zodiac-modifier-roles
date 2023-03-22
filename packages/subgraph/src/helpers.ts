@@ -1,5 +1,5 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Condition, Member, Allowance } from "../generated/schema"
+import { Function, Role, RolesModifier, Target, Condition, Member, Allowance, UnwrapAdapter } from "../generated/schema"
 import { Clearance, ExecutionOptions, Operator } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
@@ -11,6 +11,8 @@ export const getFunctionId = (targetId: string, selector: Bytes): string => targ
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
 export const getAllowanceId = (allowanceKey: string, rolesModifierId: string): string =>
   rolesModifierId + "-ALLOWANCE-" + allowanceKey
+export const getUnwrapAdapterId = (targetAddress: Address, selector: Bytes, rolesModifierId: string): string =>
+  rolesModifierId + "-ADAPTER-" + targetAddress.toHex() + "." + selector.toHex()
 
 export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: string): Role => {
   let role = Role.load(roleId)
@@ -138,4 +140,27 @@ export const getOrCreateAllowance = (allowanceKey: string, rolesModifierId: stri
     allowance.save()
   }
   return allowance
+}
+
+export const getOrCreateUnwrapAdapter = (
+  targetAddress: Address,
+  selector: Bytes,
+  rolesModifierId: string,
+): UnwrapAdapter => {
+  const id = getUnwrapAdapterId(targetAddress, selector, rolesModifierId)
+  let adapter = UnwrapAdapter.load(id)
+
+  // save adapter the first time we encounter it
+  if (!adapter) {
+    adapter = new UnwrapAdapter(id)
+    adapter.rolesModifier = rolesModifierId
+    adapter.targetAddress = targetAddress
+    adapter.selector = selector
+    adapter.save()
+    log.info("Created new UnwrapAdapter #{}", [id])
+  } else {
+    log.debug("Loaded existing UnwrapAdapter #{}", [id])
+  }
+
+  return adapter
 }
