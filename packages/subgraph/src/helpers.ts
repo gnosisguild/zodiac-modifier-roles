@@ -1,5 +1,5 @@
-import { Address, Bytes, log } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Condition, Member } from "../generated/schema"
+import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
+import { Function, Role, RolesModifier, Target, Condition, Member, Allowance } from "../generated/schema"
 import { Clearance, ExecutionOptions, Operator } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
@@ -7,8 +7,10 @@ export const getRoleId = (roleModifierId: string, roleKey: string): string => ro
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
-export const getFunctionId = (targetId: string, sighash: Bytes): string => targetId + "-FUNCTION-" + sighash.toHex()
+export const getFunctionId = (targetId: string, selector: Bytes): string => targetId + "-FUNCTION-" + selector.toHex()
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
+export const getAllowanceId = (allowanceKey: string, rolesModifierId: string): string =>
+  rolesModifierId + "-ALLOWANCE-" + allowanceKey
 
 export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: string): Role => {
   let role = Role.load(roleId)
@@ -19,9 +21,9 @@ export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: st
     role.key = key
     role.rolesModifier = rolesModifierId
     role.save()
-    log.info("Created new role", [roleId])
+    log.info("Created new role #{}", [roleId])
   } else {
-    log.debug("Loaded existing role", [roleId])
+    log.debug("Loaded existing role #{}", [roleId])
   }
   return role
 }
@@ -41,9 +43,9 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
     target.executionOptions = ExecutionOptions[ExecutionOptions.None]
     target.clearance = Clearance[Clearance.None]
     target.save()
-    log.info("Created new target", [targetId])
+    log.info("Created new target #{}", [targetId])
   } else {
-    log.debug("Loaded existing target", [targetId])
+    log.debug("Loaded existing target #{}", [targetId])
   }
   return target
 }
@@ -53,19 +55,19 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
  *  - executionOptions is None
  *  - wildcarded is false
  */
-export const getOrCreateFunction = (functionId: string, targetId: string, sighash: Bytes): Function => {
+export const getOrCreateFunction = (functionId: string, targetId: string, selector: Bytes): Function => {
   let func = Function.load(functionId)
 
   if (!func) {
     func = new Function(functionId)
     func.target = targetId
-    func.sighash = sighash
+    func.selector = selector
     func.executionOptions = ExecutionOptions[ExecutionOptions.None]
     func.wildcarded = false
     func.save()
-    log.info("Created new function", [functionId])
+    log.info("Created new function #{}", [functionId])
   } else {
-    log.debug("Loaded existing function", [functionId])
+    log.debug("Loaded existing function #{}", [functionId])
   }
 
   return func
@@ -82,9 +84,9 @@ export const getOrCreateCondition = (conditionId: string): Condition => {
     condition = new Condition(conditionId)
     condition.operator = Operator[Operator.Pass]
     condition.save()
-    log.info("Created new condition", [conditionId])
+    log.info("Created new condition #{}", [conditionId])
   } else {
-    log.debug("Loaded existing condition", [conditionId])
+    log.debug("Loaded existing condition #{}", [conditionId])
   }
   return condition
 }
@@ -107,10 +109,33 @@ export const getOrCreateMember = (memberId: string, rolesModifierId: string, mem
 export const getRolesModifier = (rolesModifierId: string): RolesModifier | null => {
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.warning("RolesModifier {} does not exist", [rolesModifierId])
     return null
   }
   return rolesModifier
+}
+
+/**
+ * For created Allowance:
+ *  - balance is 0
+ *  - maxBalance is 0
+ *  - refillAmount is 0
+ *  - refillInterval is 0
+ *  - refillTimestamp is 0
+ */
+export const getOrCreateAllowance = (allowanceKey: string, rolesModifierId: string): Allowance => {
+  const id = getAllowanceId(allowanceKey, rolesModifierId)
+  let allowance = Allowance.load(id)
+  if (!allowance) {
+    allowance = new Allowance(id)
+    allowance.key = allowanceKey
+    allowance.rolesModifier = rolesModifierId
+    allowance.balance = BigInt.fromU32(0)
+    allowance.maxBalance = BigInt.fromU32(0)
+    allowance.refillAmount = BigInt.fromU32(0)
+    allowance.refillInterval = 0
+    allowance.refillTimestamp = 0
+    allowance.save()
+  }
+  return allowance
 }

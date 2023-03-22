@@ -74,17 +74,6 @@ enum Clearance {
   Function
 }
 
-type Allowance @entity {
-  id: ID! # Global unique id for role in subgraph
-  key: String! # Unique within the Roles modifier instance
-  rolesModifier: RolesModifier!
-  refillInterval: Int! # duration of the period in seconds, 0 for one-time allowance
-  refillAmount: Int! # amount that will be replenished "at the start of every period" (replace with: per period)
-  refillTimestamp: Int! # timestamp of the last interval refilled for;
-  maxBalance: Int! # max accrual amount, replenishing stops once the unused allowance hits this value
-  balance: Int! # unused allowance;
-}
-
 type Role @entity {
   id: ID! # Global unique id for role in subgraph
   key: String! # Unique within the Roles modifier instance
@@ -105,7 +94,7 @@ type Target @entity {
 type Function @entity {
   id: ID!
   target: Target!
-  sighash: Bytes!
+  selector: Bytes!
   executionOptions: ExecutionOptions!
   wildcarded: Boolean!
   condition: Condition
@@ -141,4 +130,15 @@ type RolesModifier @entity {
   avatar: Bytes!
   target: Bytes!
   roles: [Role!] @derivedFrom(field: "rolesModifier")
+}
+
+type Allowance @entity {
+  id: ID! # Global unique id for role in subgraph
+  key: String! # Unique within the Roles modifier instance
+  rolesModifier: RolesModifier!
+  refillInterval: Int! # duration of the period in seconds, 0 for one-time allowance
+  refillAmount: BigInt! # amount that will be replenished "at the start of every period" (replace with: per period)
+  refillTimestamp: Int! # timestamp of the last interval refilled for;
+  maxBalance: BigInt! # max accrual amount, replenishing stops once the unused allowance hits this value
+  balance: BigInt! # unused allowance;
 }
