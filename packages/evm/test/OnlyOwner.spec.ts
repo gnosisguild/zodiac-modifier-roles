@@ -29,82 +29,75 @@ describe("OnlyOwner", async () => {
     };
   });
 
+  const ROLE_KEY =
+    "0x0000000000000000000000000000000000000000000000000000000000001111";
+
   it("onlyOwner for allowTarget simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
-      modifier.connect(johnDoe).allowTarget(ROLE_ID, SomeAddress, 0)
+      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).allowTarget(ROLE_ID, SomeAddress, 0))
+    await expect(modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, 0))
       .to.not.be.reverted;
   });
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
-      modifier.connect(johnDoe).scopeTarget(ROLE_ID, SomeAddress)
+      modifier.connect(johnDoe).scopeTarget(ROLE_KEY, SomeAddress)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).scopeTarget(ROLE_ID, SomeAddress)).to
+    await expect(modifier.connect(owner).scopeTarget(ROLE_KEY, SomeAddress)).to
       .not.be.reverted;
   });
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
-      modifier.connect(johnDoe).revokeTarget(ROLE_ID, SomeAddress)
+      modifier.connect(johnDoe).revokeTarget(ROLE_KEY, SomeAddress)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).revokeTarget(ROLE_ID, SomeAddress)).to
+    await expect(modifier.connect(owner).revokeTarget(ROLE_KEY, SomeAddress)).to
       .not.be.reverted;
   });
   it("onlyOwner for allowFunction, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
       modifier
         .connect(johnDoe)
-        .allowFunction(ROLE_ID, SomeAddress, "0x00000000", 0)
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, SomeAddress, "0x00000000", 0)
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0)
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeFunction, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
       modifier
         .connect(johnDoe)
-        .revokeFunction(ROLE_ID, SomeAddress, "0x00000000")
+        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000")
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier.connect(owner).revokeFunction(ROLE_ID, SomeAddress, "0x00000000")
+      modifier
+        .connect(owner)
+        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000")
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeFunction, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await setup();
 
-    const ROLE_ID = 0;
-
     await expect(
       modifier.connect(johnDoe).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         SomeAddress,
         "0x00000000",
         [
@@ -121,7 +114,7 @@ describe("OnlyOwner", async () => {
 
     await expect(
       modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         SomeAddress,
         "0x00000000",
         [

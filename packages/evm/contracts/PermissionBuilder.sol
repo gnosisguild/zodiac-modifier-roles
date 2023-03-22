@@ -21,22 +21,26 @@ abstract contract PermissionBuilder is Core {
     error EtherAllowanceExceeded(bytes32 allowanceKey);
 
     event AllowTarget(
-        uint16 role,
+        bytes32 roleKey,
         address targetAddress,
         ExecutionOptions options
     );
-    event RevokeTarget(uint16 role, address targetAddress);
-    event ScopeTarget(uint16 role, address targetAddress);
+    event RevokeTarget(bytes32 roleKey, address targetAddress);
+    event ScopeTarget(bytes32 roleKey, address targetAddress);
 
     event AllowFunction(
-        uint16 role,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options
     );
-    event RevokeFunction(uint16 role, address targetAddress, bytes4 selector);
+    event RevokeFunction(
+        bytes32 roleKey,
+        address targetAddress,
+        bytes4 selector
+    );
     event ScopeFunction(
-        uint16 role,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ConditionFlat[] conditions,
@@ -59,86 +63,86 @@ abstract contract PermissionBuilder is Core {
     );
 
     /// @dev Allows transactions to a target address.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.Target,
             options
         );
-        emit AllowTarget(roleId, targetAddress, options);
+        emit AllowTarget(roleKey, targetAddress, options);
     }
 
     /// @dev Removes transactions to a target address.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     function revokeTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.None,
             ExecutionOptions.None
         );
-        emit RevokeTarget(roleId, targetAddress);
+        emit RevokeTarget(roleKey, targetAddress);
     }
 
     /// @dev Designates only specific functions can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     function scopeTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.Function,
             ExecutionOptions.None
         );
-        emit ScopeTarget(roleId, targetAddress);
+        emit ScopeTarget(roleKey, targetAddress);
     }
 
     /// @dev Specifies the functions that can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
             .packHeader(0, true, options, address(0));
 
-        emit AllowFunction(roleId, targetAddress, selector, options);
+        emit AllowFunction(roleKey, targetAddress, selector, options);
     }
 
     /// @dev Removes the functions that can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     function revokeFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleId].scopeConfig[_key(targetAddress, selector)];
-        emit RevokeFunction(roleId, targetAddress, selector);
+        delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
+        emit RevokeFunction(roleKey, targetAddress, selector);
     }
 
     /// @dev Defines the values that can be called for a given function for each param.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ConditionFlat[] memory conditions,
@@ -148,14 +152,14 @@ abstract contract PermissionBuilder is Core {
         _removeExtraneousOffsets(conditions);
 
         _store(
-            roles[roleId],
+            roles[roleKey],
             _key(targetAddress, selector),
             conditions,
             options
         );
 
         emit ScopeFunction(
-            roleId,
+            roleKey,
             targetAddress,
             selector,
             conditions,

@@ -41,10 +41,12 @@ describe("Operator", async () => {
     };
   });
 
+  const ROLE_KEY =
+    "0x0000000000000000000000000000000000000000000000000000000000000000";
+
   it("checks operator EqualTo for Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
@@ -62,12 +64,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -94,7 +96,6 @@ describe("Operator", async () => {
   it("checks operator GreaterThan/LessThan for Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
@@ -112,12 +113,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -142,7 +143,7 @@ describe("Operator", async () => {
     await expect(invoke(1235)).to.not.be.reverted;
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -174,7 +175,6 @@ describe("Operator", async () => {
   it("checks operator EqualTo for Dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
@@ -192,13 +192,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -233,7 +233,6 @@ describe("Operator", async () => {
   it("checks operator EqualTo for large Dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic")
     );
@@ -250,17 +249,17 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     const largeDynamic =
       "0xaa000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff";
     const smallDynamic = "0xaa00";
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -289,7 +288,6 @@ describe("Operator", async () => {
   it("checks operator EqualTo for Dynamic - empty buffer", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic")
     );
@@ -306,12 +304,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -338,7 +336,6 @@ describe("Operator", async () => {
   it("checks operator EqualTo for String - empty string", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamicString")
     );
@@ -356,12 +353,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -390,7 +387,6 @@ describe("Operator", async () => {
   it("checks operator EqualTo for Array", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamicDynamic32")
     );
@@ -408,13 +404,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -473,7 +469,6 @@ describe("Operator", async () => {
   it("checks operator Or over Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
@@ -491,13 +486,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -537,7 +532,6 @@ describe("Operator", async () => {
   it("checks operator And over AbiEncoded", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
@@ -555,12 +549,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -612,7 +606,6 @@ describe("Operator", async () => {
   it("checks operator And over Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithSingleParam")
     );
@@ -630,12 +623,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -681,7 +674,6 @@ describe("Operator", async () => {
   it("checks operator Or over Dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("fnWithTwoMixedParams")
     );
@@ -699,12 +691,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -766,7 +758,6 @@ describe("Operator", async () => {
     const addressOne = "0x0000000000000000000000000000000000000123";
     const addressTwo = "0x0000000000000000000000000000000000000cda";
 
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("staticTuple")
     );
@@ -784,12 +775,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -866,7 +857,6 @@ describe("Operator", async () => {
     const address3 = "0x0000000000000000000000000000000000000cda";
 
     const { modifier, testEncoder, owner, invoker } = await setup();
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("arrayStaticTupleItems")
     );
@@ -882,11 +872,11 @@ describe("Operator", async () => {
         );
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1012,7 +1002,6 @@ describe("Operator", async () => {
     const addressOne = "0x0000000000000000000000000000000000000123";
     const addressTwo = "0x0000000000000000000000000000000000000cda";
 
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("staticTuple")
     );
@@ -1030,12 +1019,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1112,7 +1101,6 @@ describe("Operator", async () => {
     const addressOk = "0x0000000000000000000000000000000000000123";
     const addressNok = "0x0000000000000000000000000000000000000cda";
 
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("staticTuple")
     );
@@ -1130,12 +1118,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1177,7 +1165,6 @@ describe("Operator", async () => {
   it("checks a dynamic Tuple comparison", async () => {
     const { modifier, testEncoder, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("dynamicTuple")
     );
@@ -1195,12 +1182,12 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1277,7 +1264,6 @@ describe("Operator", async () => {
     const address3 = "0x0000000000000000000000000000000000000cda";
 
     const { modifier, testEncoder, owner, invoker } = await setup();
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("arrayStaticTupleItems")
     );
@@ -1294,11 +1280,11 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1362,7 +1348,6 @@ describe("Operator", async () => {
     const address2 = "0x0000000000000000000000000000000000000123";
 
     const { modifier, testEncoder, owner, invoker } = await setup();
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("arrayStaticTupleItems")
     );
@@ -1378,11 +1363,11 @@ describe("Operator", async () => {
         );
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1439,7 +1424,6 @@ describe("Operator", async () => {
     const address3 = "0x0000000000000000000000000000000000000cda";
 
     const { modifier, testEncoder, owner, invoker } = await setup();
-    const ROLE_ID = 0;
     const SELECTOR = testEncoder.interface.getSighash(
       testEncoder.interface.getFunction("arrayStaticTupleItems")
     );
@@ -1455,11 +1439,11 @@ describe("Operator", async () => {
         );
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testEncoder.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testEncoder.address,
       SELECTOR,
       [
@@ -1567,7 +1551,6 @@ describe("Operator", async () => {
   it("checks operator ArraySubset with Static as array items", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic32")
     );
@@ -1584,13 +1567,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -1634,7 +1617,6 @@ describe("Operator", async () => {
   it("checks operator ArraySubset  - order does not matter", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic32")
     );
@@ -1651,13 +1633,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -1705,7 +1687,6 @@ describe("Operator", async () => {
   it("checks operator ArraySubset - empty array is not subset", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic32")
     );
@@ -1722,13 +1703,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -1774,7 +1755,6 @@ describe("Operator", async () => {
   it("checks operator ArraySubset - does not allow repetition", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
 
-    const ROLE_ID = 0;
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("dynamic32")
     );
@@ -1791,13 +1771,13 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await modifier.connect(owner).scopeFunction(
-      ROLE_ID,
+      ROLE_KEY,
       testContract.address,
       SELECTOR,
       [
@@ -1847,7 +1827,6 @@ describe("Operator", async () => {
     it("checks a simple 3 way variant", async () => {
       const { modifier, testContract, owner, invoker } = await setup();
 
-      const ROLE_ID = 0;
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithTwoMixedParams")
       );
@@ -1865,12 +1844,12 @@ describe("Operator", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
