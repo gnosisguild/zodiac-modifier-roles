@@ -9,18 +9,11 @@ import {
   OwnershipTransferred,
   RolesModSetup,
   SetDefaultRole,
-  SetMultisendAddress,
   TargetSet,
 } from "../generated/Roles/Roles"
 import { RolesModifier, Role, Member, RoleAssignment } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
 import {
-  CLEARANCE,
-  CLEARANCE__FUNCTION,
-  CLEARANCE__NONE,
-  CLEARANCE__TARGET,
-  EXECUTION_OPTIONS,
-  EXECUTION_OPTIONS__NONE,
   getFunctionId,
   getMemberId,
   getAssignmentId,
@@ -89,9 +82,7 @@ export function handleDisabledModule(event: DisabledModule): void {
 
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.error("A roles modifier with that address does not exist", [rolesModifierId])
     return
   }
 
@@ -108,9 +99,7 @@ export function handleEnabledModule(event: EnabledModule): void {
 
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.error("A roles modifier with that address does not exist", [rolesModifierId])
     return
   }
 

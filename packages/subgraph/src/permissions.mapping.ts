@@ -1,36 +1,18 @@
-import {
-  AllowTarget,
-  ScopeTarget,
-  RevokeTarget,
-  ScopeAllowFunction,
-  ScopeFunction,
-  ScopeFunctionExecutionOptions,
-  ScopeParameter,
-  ScopeParameterAsOneOf,
-  ScopeRevokeFunction,
-} from "../generated/Permissions/Permissions"
-import { Role, Target, RolesModifier, Function, Parameter } from "../generated/schema"
+import { AllowTarget, ScopeTarget, RevokeTarget, ScopeFunction } from "../generated/PermissionBuilder/PermissionBuilder"
+import { Role, Target, RolesModifier, Function, Condition } from "../generated/schema"
 import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
 import {
-  CLEARANCE,
-  CLEARANCE__FUNCTION,
-  CLEARANCE__NONE,
-  CLEARANCE__TARGET,
-  EXECUTION_OPTIONS,
-  EXECUTION_OPTIONS__NONE,
   getFunctionId,
   getOrCreateFunction,
   getOrCreateRole,
   getOrCreateTarget,
-  getParameterId,
+  getConditionId,
   getRoleId,
   getRolesModifier,
   getRolesModifierId,
   getTargetId,
-  PARAMETER_COMPARISON,
-  PARAMETER_COMPARISON__ONE_OF,
-  PARAMETER_TYPE,
 } from "./helpers"
+import { Clearance, ExecutionOptions, Operator, ParameterType } from "./enums"
 
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
@@ -46,8 +28,8 @@ export function handleAllowTarget(event: AllowTarget): void {
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  target.clearance = CLEARANCE[CLEARANCE__TARGET]
+  target.executionOptions = ExecutionOptions[event.params.options]
+  target.clearance = Clearance[Clearance.Target]
   target.save()
 }
 
@@ -66,8 +48,8 @@ export function handleScopeTarget(event: ScopeTarget): void {
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-  target.clearance = CLEARANCE[CLEARANCE__FUNCTION]
+  target.executionOptions = ExecutionOptions[ExecutionOptions.None]
+  target.clearance = Clearance[Clearance.Function]
   target.save()
 }
 
@@ -81,8 +63,8 @@ export function handleRevokeTarget(event: RevokeTarget): void {
   let target = Target.load(targetId)
 
   if (target) {
-    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    target.clearance = Clearance[Clearance.None]
     target.save()
   }
 }
@@ -93,29 +75,31 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
+    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 
   const roleId = getRoleId(rolesModifierId, event.params.role)
   const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  if (!role) {
+    log.error("Roles does not exist: {}", [roleId])
+    return
+  }
 
-  // if target does not exist? create it with clearance and executionOptions set to None
+  // If target does not exist, create it with clearance and executionOptions set to None
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
 
-  // if function does not exist? create it with the info from the event
+  // If function does not exist, create it with executionOptions set to None and wildcarded set to false
   const sighash = event.params.functionSig
   const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  theFunction.wildcarded = false
-  theFunction.save()
+  const func = getOrCreateFunction(functionId, targetId, sighash)
 
   // create new parameter or override old one
-  for (let i = 0; i < event.params.paramType.length; i++) {
-    const paramType = PARAMETER_TYPE[event.params.paramType[i]]
-    const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
+  for (let i = 0; i < event.params.conditions.length; i++) {
+    const paramType = ParameterType[event.params.paramType[i]]
+    const operator = Operator[event.params.operator[i]]
     const compValue = event.params.compValue[i]
 
     const parameterId = getParameterId(functionId, i)
