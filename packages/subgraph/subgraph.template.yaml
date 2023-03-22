@@ -16,6 +16,9 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - RolesModifier
+        - Role
+        - Member
+        - RoleAssignment
       abis:
         - name: Roles
           file: ./abis/Roles.sol/Roles.json
@@ -50,15 +53,12 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - AllowTarget
-        - ScopeTarget
-        - RevokeTarget
-        - ScopeAllowFunction
-        - ScopeFunction
-        - ScopeParameter
-        - ScopeParameterAsOneOf
-        - ScopeRevokeFunction
-        - UnscopeParameter
+        - RolesModifier
+        - Role
+        - Target
+        - Function
+        - Condition
+        - Allowance
       abis:
         - name: PermissionBuilder
           file: ./abis/PermissionBuilder.sol/PermissionBuilder.json
@@ -69,8 +69,14 @@ dataSources:
           handler: handleScopeTarget
         - event: RevokeTarget(uint16,address)
           handler: handleRevokeTarget
+        - event: AllowFunction(uint16,address,bytes4,uint8)
+          handler: handleAllowFunction
         - event: ScopeFunction(uint16,address,bytes4,(uint8,uint8,uint8,bytes)[],uint8)
           handler: handleScopeFunction
+        - event: RevokeFunction(uint16,address,bytes4)
+          handler: handleRevokeFunction
+        - event: SetAllowance(uint16,uint128,uint128,uint128,uint64,uint64)
+          handler: handleSetAllowance
       file: ./src/permissions.mapping.ts
   - kind: ethereum
     name: Periphery

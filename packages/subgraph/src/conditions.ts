@@ -4,12 +4,19 @@ import { Condition } from "../generated/schema"
 import { Operator, ParameterType } from "./enums"
 
 export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]) => {
-  const conditionsArray = new Array<Condition>()
+  assert(conditions.length > 0, "Conditions array is empty")
+
   const rootId = getRootConditionId(conditions)
+  let rootCondition = Condition.load(rootId)
+  if (rootCondition) {
+    // condition is already stored, we can just use it
+    return rootCondition
+  }
+
   for (let i = 0; i < conditions.length; i++) {
-    const id = i === 0 ? rootId : rootId + "-" + i
-    const parentId = i === 0 ? null : rootId + "-" + (conditions[i].parent - 1)
-    assert(i === 0 || parentId != null, "Parent missing")
+    const id = i == 0 ? rootId : rootId + "-" + i
+    const parentId = i == 0 ? null : rootId + "-" + (conditions[i].parent - 1)
+    assert(i == 0 || parentId != null, "Parent missing")
 
     const condition = new Condition(id)
     condition.index = i
@@ -18,9 +25,17 @@ export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]) => 
     condition.paramType = ParameterType[conditions[i].paramType]
     condition.compValue = conditions[i].compValue
     condition.save()
-    conditionsArray.push(condition)
+
+    if (i == 0) {
+      rootCondition = condition
+    }
   }
-  return conditionsArray
+
+  if (!rootCondition) {
+    throw new Error("Root condition is null")
+  }
+
+  return rootCondition
 }
 
 export const ERC2470_SINGLETON_FACTORY_ADDRESS = Address.fromHexString("0xce0042b868300000d44a59004da54a005ffdcf9f")
@@ -71,7 +86,7 @@ const creationCodeFor = (bytecode: Bytes) =>
  * @param initCode The init code of the contract being created
  */
 export const generateAddress2 = function (from: Address, salt: Bytes, initCode: Bytes): Address {
-  assert(salt.length === 32)
+  assert(salt.length == 32)
   return Address.fromUint8Array(
     crypto
       .keccak256(Bytes.fromHexString("0xff").concat(from).concat(salt).concat(crypto.keccak256(initCode)))
