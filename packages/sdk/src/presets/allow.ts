@@ -117,7 +117,7 @@ export const allow: AllowKitMap = Object.keys(sdkGetters).reduce(
   (acc, sdkGetterName) => {
     const network = uncapitalize(sdkGetterName.slice(3, -3))
     acc[network] = mapSdk(
-      ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider(network))
+      ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider())
     )
     return acc
   },
@@ -134,7 +134,7 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
   (acc, sdkGetterName) => {
     const network = uncapitalize(sdkGetterName.slice(3, -3))
     acc[network] = ethSdk[sdkGetterName as SdkGetterName](
-      ethers.getDefaultProvider(network)
+      ethers.getDefaultProvider()
     )
     return acc
   },
