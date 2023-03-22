@@ -107,7 +107,7 @@ contract Roles is
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
         Trace[] memory result = authorize(
-            roles[defaultRoles[msg.sender]],
+            defaultRoles[msg.sender],
             to,
             value,
             data,
@@ -137,7 +137,7 @@ contract Roles is
         returns (bool success, bytes memory returnData)
     {
         Trace[] memory result = authorize(
-            roles[defaultRoles[msg.sender]],
+            defaultRoles[msg.sender],
             to,
             value,
             data,
@@ -165,13 +165,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Trace[] memory result = authorize(
-            roles[roleKey],
-            to,
-            value,
-            data,
-            operation
-        );
+        Trace[] memory result = authorize(roleKey, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -197,13 +191,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Trace[] memory result = authorize(
-            roles[roleKey],
-            to,
-            value,
-            data,
-            operation
-        );
+        Trace[] memory result = authorize(roleKey, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
