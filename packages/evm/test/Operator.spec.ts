@@ -26,8 +26,13 @@ describe("Operator", async () => {
       avatar.address,
       avatar.address
     );
-
     await modifier.enableModule(invoker.address);
+
+    await modifier
+      .connect(owner)
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+    await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     return {
       Avatar,
@@ -42,7 +47,7 @@ describe("Operator", async () => {
   });
 
   const ROLE_KEY =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+    "0x0000000000000000000000000000000000000000000000000000000000000001";
 
   it("checks operator EqualTo for Static", async () => {
     const { modifier, testContract, owner, invoker } = await setup();
@@ -61,10 +66,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -110,10 +111,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -190,10 +187,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
@@ -247,10 +240,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     const largeDynamic =
       "0xaa000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff";
     const smallDynamic = "0xaa00";
@@ -302,10 +291,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
@@ -350,10 +335,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -401,10 +382,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -484,10 +461,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
@@ -546,10 +519,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -621,10 +590,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     await modifier.connect(owner).scopeFunction(
@@ -688,10 +653,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -772,10 +733,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
@@ -870,9 +827,7 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
@@ -1017,10 +972,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
@@ -1116,10 +1067,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
@@ -1179,10 +1126,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
@@ -1278,10 +1221,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
@@ -1361,9 +1300,6 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
@@ -1437,9 +1373,7 @@ describe("Operator", async () => {
             .data as string,
           0
         );
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
     await modifier.connect(owner).scopeFunction(
@@ -1565,10 +1499,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
@@ -1630,10 +1560,6 @@ describe("Operator", async () => {
           (await testContract.populateTransaction.dynamic32(a)).data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
@@ -1701,10 +1627,6 @@ describe("Operator", async () => {
           0
         );
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
@@ -1768,10 +1690,6 @@ describe("Operator", async () => {
           (await testContract.populateTransaction.dynamic32(a)).data as string,
           0
         );
-
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
     // set it to true
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
