@@ -1,15 +1,15 @@
-import { ExecutionOptions } from "../../types"
-import { allowCurvePool } from "../helpers/curve"
-import { allowErc20Approve } from "../helpers/erc20"
-import { allowLido } from "../helpers/lido"
+import { ExecutionOptions } from "../../../types"
+import { allowCurvePool } from "../../helpers/curve"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { allowLido } from "../../helpers/lido"
 import {
   dynamic32Equal,
   dynamicEqual,
   staticEqual,
   subsetOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 //Tokens
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"

@@ -1,15 +1,15 @@
-import { allow } from "../allow"
-import { allowCurvePool } from "../helpers/curve"
-import { allowErc20Approve } from "../helpers/erc20"
-import { allowLido } from "../helpers/lido"
+import { allow } from "../../allow"
+import { allowCurvePool } from "../../helpers/curve"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { allowLido } from "../../helpers/lido"
 import {
   dynamic32Equal,
   dynamicEqual,
   staticEqual,
   subsetOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 //Tokens
 const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"

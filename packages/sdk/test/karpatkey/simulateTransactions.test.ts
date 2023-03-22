@@ -3,17 +3,23 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
+
+import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
 import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
 import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import balancer1ManagePreset from "../../src/presets/mainnet/deFiManageBalancer1"
-import balancer2ManagePreset from "../../src/presets/mainnet/deFiManageBalancer2"
-import ens1ManagePreset from "../../src/presets/mainnet/deFiManageENS1"
+import balancer1ManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer1"
+import balancer2ManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer2"
+import ens1ManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS1"
 import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
 import { RolePreset } from "../../src/presets/types"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
+import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
+import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
+import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
 
+import gnosisRevokeGnosisLTDTransactions from "./testTransactions/gnosisRevokeGnosisLTD"
 import balancerManage1Transactions from "./testTransactions/balancer1Manage"
 import balancerManage2Transactions from "./testTransactions/balancer2Manage"
 import ensManage1Transactions from "./testTransactions/ens1Manage"
@@ -22,8 +28,17 @@ import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
 import manageGnosisChainTransactions from "./testTransactions/gnoManage"
 
-type Configs = typeof KARPATKEY_ADDRESSES
-type Config = Configs["DAO_GNO"]
+interface Config {
+  AVATAR: string
+  MODULE: string
+  MANAGER: string
+  REVOKER: string
+  HARVESTER: string
+  DISASSEMBLER: string
+  SWAPPER: string
+  NETWORK: number
+  BRIDGED_SAFE: string
+}
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
   const ROLE_ID = 1
@@ -108,8 +123,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       await owner.sendTransaction(permissionUpdateTransactions[i])
 
       console.log(
-        `Executed permissions update tx ${i + 1}/${
-          permissionUpdateTransactions.length
+        `Executed permissions update tx ${i + 1}/${permissionUpdateTransactions.length
         }`
       )
     }
@@ -158,10 +172,20 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   }
 
+  describe("Gnosis Chain DeFi Revoke preset [LTD_GNO:revoke]", () => {
+    it("allows executing all listed management transactions from the LTD Safe", async () => {
+      await simulateTransactions({
+        config: GNOSIS_ADDRESSES.GNOSIS_LTD_GNO,
+        preset: gnosisDeFiRevokeGnosisLTDPreset,
+        transactions: gnosisRevokeGnosisLTDTransactions,
+      })
+    })
+  })
+
   describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
+        config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
         preset: gnosisChainDeFiManagePreset,
         transactions: manageGnosisChainTransactions,
       })
@@ -171,7 +195,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
     it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
+        config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
         preset: gnosisChainDeFiHarvestPreset,
         transactions: harvestGnosisChainTransactions,
       })
@@ -181,7 +205,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Mainnet DeFi Manage preset [eth:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
         preset: mainnetDeFiManagePreset,
         transactions: manageMainnetTransactions,
       })
@@ -191,7 +215,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
     it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
+        config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
         preset: mainnetDeFiHarvestPreset,
         transactions: harvestMainnetTransactions,
       })
@@ -211,7 +235,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Balancer1 Manage  preset [balancer1:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
+        config: BALANCER_ADDRESSES.BALANCER_1_ETH,
         preset: balancer1ManagePreset,
         transactions: balancerManage1Transactions,
       })
@@ -221,7 +245,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("Balancer2 Manage preset [balancer2:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.BALANCER_2_ETH,
+        config: BALANCER_ADDRESSES.BALANCER_2_ETH,
         preset: balancer2ManagePreset,
         transactions: balancerManage2Transactions,
       })
@@ -231,7 +255,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   describe("ENS1 Manage preset [ens1:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.ENS_1_ETH,
+        config: ENS_ADDRESSES.ENS_1_ETH,
         preset: ens1ManagePreset,
         transactions: ensManage1Transactions,
       })

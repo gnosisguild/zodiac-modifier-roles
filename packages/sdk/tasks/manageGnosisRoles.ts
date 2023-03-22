@@ -9,13 +9,11 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
-import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
-import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/deFiManageGnosisLTD"
-import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/deFiRevokeGnosisLTD"
-import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/deFiHarvestGnosisLTD"
-import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/deFiDisassembleGnosisLTD"
-import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/deFiSwapGnosisLTD"
+import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
+import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
+import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
+import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiDisassembleGnosisLTD"
+import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
 
 import { NetworkId } from "../src/types"
 
@@ -32,7 +30,7 @@ interface Config {
 }
 
 export const GNOSIS_ADDRESSES = {
-    DAO_GNO: {
+    GNOSIS_DAO_GNO: {
         AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
         MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
         MANAGER: "0xe4387D4e45F65240Daaf5e046d5AE592566a5076",
@@ -54,7 +52,7 @@ export const GNOSIS_ADDRESSES = {
         NETWORK: 100,
         BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
     },
-    DAO_ETH: {
+    GNOSIS_DAO_ETH: {
         AVATAR: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
         MODULE: "",
         MANAGER: "",
@@ -65,7 +63,7 @@ export const GNOSIS_ADDRESSES = {
         NETWORK: 1,
         BRIDGED_SAFE: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
     },
-    LTD_ETH: {
+    GNOSIS_LTD_ETH: {
         AVATAR: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
         MODULE: "",
         MANAGER: "",
@@ -204,7 +202,7 @@ task("assignGnosisSwapRole").setAction(async (taskArgs, hre) => {
 
 
 //-----------------------------------------------------------------------------------------------------------------------------
-// GNOSIS LTD gnosis
+// GNOSIS LTD - Gnosis Chain
 //-----------------------------------------------------------------------------------------------------------------------------
 
 task("encodeApplyPresetManageGnosisLTDgnosis").setAction(

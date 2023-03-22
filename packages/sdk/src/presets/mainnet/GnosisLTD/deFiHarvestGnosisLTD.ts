@@ -1,6 +1,6 @@
-import { allow } from "../allow"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
-import { allowErc20Approve } from "../helpers/erc20"
+import { allow } from "../../allow"
+import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
 import {
     dynamic32Equal,
     dynamic32OneOf,
@@ -9,9 +9,9 @@ import {
     subsetOf,
     dynamicEqual,
     staticOneOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 // Balancer LP Tokens
 const BB_A_USD = "0xA13a9247ea42D743238089903570127DdA72fE44"

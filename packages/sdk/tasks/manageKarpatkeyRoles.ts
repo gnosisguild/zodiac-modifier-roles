@@ -11,103 +11,29 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiHarvestBalancer1Preset from "../src/presets/mainnet/deFiHarvestBalancer1"
-import mainnetDeFiHarvestENS1Preset from "../src/presets/mainnet/deFiHarvestENS1"
-import mainnetDeFiManageBalancer1Preset from "../src/presets/mainnet/deFiManageBalancer1"
-import mainnetDeFiManageBalancer2Preset from "../src/presets/mainnet/deFiManageBalancer2"
-import mainnetDeFiManageENS1Preset from "../src/presets/mainnet/deFiManageENS1"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
-import mainnetDeFiSwapBalancer1Preset from "../src/presets/mainnet/deFiSwapBalancer1"
-import mainnetDeFiSwapENS1Preset from "../src/presets/mainnet/deFiSwapENS1"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
-  DAO_GNO: {
-    AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
-    MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
-    MANAGEMENT: "0xe4387D4e45F65240Daaf5e046d5AE592566a5076",
-    HARVESTERS: [
-      // "0x5eD64f02588C8B75582f2f8eFd7A5521e3F897CC", // Alex
-      // "0x06DAeB1A97972B9A12e171ed1FC86b392Fa3f89A", // Joaco
-      // "0xe9eB7DA58f6B5CE5b0a6cFD778A2fa726203AAD5", // Isabel
-      // "0x65E5017A384B2774374812DC766fC4E026BB23e5", // Ale
-      "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
-    ],
-    SWAPPERS: [] as string[],
-    NETWORK: 100,
-    BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
-  },
-  GNOSIS_LTD_GNO: {
-    AVATAR: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
-    MODULE: "0x494ec5194123487E8A6ba0b6bc96D57e340025e7",
-    MANAGEMENT: "0x9d3660d8304B063964A45766bbeD41F4883eBbA8",
-    REVOKERS: ["0xA8f3eEbA3bDFFC4C38B1ea44044BF23dA35027FB"],
-    HARVESTERS: ["0xf9e666f0a1eE44a7113D7e53EFE089f9BB3C2dBF"],
-    DISASSEMBLERS: ["0x19414ebe07C7Eb0D5463A1E6533f6cF05e26E21e"],
-    SWAPPERS: [],
-    NETWORK: 100,
-    BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
-  },
-  DAO_ETH: {
-    AVATAR: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
-    MODULE: "",
-    MANAGEMENT: "",
-    HARVESTERS: [],
-    SWAPPERS: [],
-    NETWORK: 1,
-    BRIDGED_SAFE: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
-  },
-  LTD_ETH: {
-    AVATAR: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
-    MODULE: "",
-    MANAGEMENT: "",
-    HARVESTERS: [],
-    SWAPPERS: [],
-    NETWORK: 1,
-    BRIDGED_SAFE: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
-  },
   SANTI_TEST_GNO: {
     AVATAR: "0x3AD295402978659427C179Fb30f319bF6a2c8678",
     MODULE: "0x8422d860d48Bc2aFeA8037d3954db31d5d3b4924",
-    MANAGEMENT: "0xa928b0F1582126db08f902066403a3C69D2E7814",
-    HARVESTERS: [],
-    SWAPPERS: [],
+    MANAGER: "0xa928b0F1582126db08f902066403a3C69D2E7814",
+    REVOKER: "",
+    HARVESTER: "",
+    DISASSEMBLER: "",
+    SWAPPER: "",
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
   },
   TEST_ETH: {
     AVATAR: "0xA2372f3C9a26F45b5D69BD513BE0d553Ff9CC617",
     MODULE: "0xeF14e0f66a2e22Bbe85bFA53b3F956354Ce51e62",
-    MANAGEMENT: "0xc5beBC8c253183F35cc7DB7C4216c124d4BA3F76",
-    HARVESTERS: [],
-    SWAPPERS: [],
-    NETWORK: 1,
-    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
-  },
-  BALANCER_1_ETH: {
-    AVATAR: "0x0EFcCBb9E2C09Ea29551879bd9Da32362b32fc89",
-    MODULE: "0xd8dd9164E765bEF903E429c9462E51F0Ea8514F9",
-    MANAGEMENT: "0x60716991aCDA9E990bFB3b1224f1f0fB81538267",
-    HARVESTERS: ["0x19f2ab2c11d818d40b227557d3935ded9e1d201a"],
-    SWAPPERS: ["0x19f2ab2c11d818d40b227557d3935ded9e1d201a"],
-    NETWORK: 1,
-    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
-  },
-  BALANCER_2_ETH: {
-    AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
-    MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86",
-    MANAGEMENT: "0x216071B1B5681D67A75f7eEAF92CEC8262bE29f7",
-    HARVESTERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
-    SWAPPERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
-    NETWORK: 1,
-    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
-  },
-  ENS_1_ETH: {
-    AVATAR: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    MODULE: "0xf20325cf84b72e8BBF8D8984B8f0059B984B390B",
-    MANAGEMENT: "0xb423e0f6E7430fa29500c5cC9bd83D28c8BD8978",
-    HARVESTERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
-    SWAPPERS: ["0x14c2d2d64c4860acf7cf39068eb467d7556197de"],
+    MANAGER: "0xc5beBC8c253183F35cc7DB7C4216c124d4BA3F76",
+    REVOKER: "",
+    HARVESTER: "",
+    DISASSEMBLER: "",
+    SWAPPER: "",
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
@@ -171,7 +97,7 @@ task("setMultisend").setAction(async (taskArgs, hre) => {
 task("assignManagementRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const tx = await roles.assignRoles(config.MANAGEMENT, [1], [true])
+  const tx = await roles.assignRoles(config.MANAGER, [1], [true])
   console.log(JSON.stringify({ to: tx.to, data: tx.data }, null, 2))
   if (dryRun) return
 
@@ -184,7 +110,7 @@ task("assignManagementRole").setAction(async (taskArgs, hre) => {
 task("assignHarvestRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const txData = await addMembers(config.MODULE, 2, config.HARVESTERS)
+  const txData = await addMembers(config.MODULE, 2, [config.HARVESTER])
   console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
   if (dryRun) return
 
@@ -198,7 +124,7 @@ task("assignHarvestRole").setAction(async (taskArgs, hre) => {
 task("assignSwapRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const txData = await addMembers(config.MODULE, 3, config.SWAPPERS)
+  const txData = await addMembers(config.MODULE, 3, [config.SWAPPER])
   console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
   if (dryRun) return
 
@@ -251,153 +177,6 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
   )
   console.log(
     `Transaction builder JSON written to packages/sdk/txDataManageTest.json`
-  )
-})
-
-task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    1,
-    mainnetDeFiManageBalancer1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataManageBalancer1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataManageBalancer1.json`
-  )
-})
-
-task("encodeApplyPresetHarvestBalancer1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    2,
-    mainnetDeFiHarvestBalancer1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataHarvestBalancer1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataHarvestBalancer1.json`
-  )
-})
-
-task("encodeApplyPresetSwapBalancer1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    3,
-    mainnetDeFiSwapBalancer1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataSwapBalancer1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataSwapBalancer1.json`
-  )
-})
-
-task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    1,
-    mainnetDeFiManageBalancer2Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataManageBalancer2.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataManageBalancer2.json`
-  )
-})
-
-task("encodeApplyPresetManageENS1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    1,
-    mainnetDeFiManageENS1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataManageENS1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataManageENS1.json`
-  )
-})
-
-task("encodeApplyPresetHarvestENS1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    2,
-    mainnetDeFiHarvestENS1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataHarvestENS1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataHarvestENS1.json`
-  )
-})
-
-task("encodeApplyPresetSwapENS1").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    3,
-    mainnetDeFiSwapENS1Preset,
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txDataSwapENS1.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/txDataSwapENS1.json`
   )
 })
 

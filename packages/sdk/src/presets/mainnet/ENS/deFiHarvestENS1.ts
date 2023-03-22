@@ -1,15 +1,15 @@
-import { ExecutionOptions } from "../../types"
-import { allowCurvePool } from "../helpers/curve"
-import { allowErc20Approve } from "../helpers/erc20"
-import { allowLido } from "../helpers/lido"
+import { ExecutionOptions } from "../../../types"
+import { allowCurvePool } from "../../helpers/curve"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { allowLido } from "../../helpers/lido"
 import {
   dynamic32Equal,
   dynamicEqual,
   staticEqual,
   subsetOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 //Compound V2 contracts
 const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"

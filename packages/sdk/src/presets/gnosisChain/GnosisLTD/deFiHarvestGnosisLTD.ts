@@ -1,5 +1,5 @@
-import { ZERO_ADDRESS } from "./addresses"
-import { allowErc20Approve } from "../helpers/erc20"
+import { ZERO_ADDRESS } from "../addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
 import {
     dynamic32Equal,
     dynamic32OneOf,
@@ -8,10 +8,10 @@ import {
     subsetOf,
     dynamicEqual,
     staticOneOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
-import { allow } from "../allow"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
+import { allow } from "../../allow"
 
 // SushiSwap contracts
 const MINI_CHEF_V2 = "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3"

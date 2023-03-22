@@ -1,5 +1,5 @@
-import { ZERO_ADDRESS } from "./addresses"
-import { allowErc20Approve } from "../helpers/erc20"
+import { ZERO_ADDRESS } from "../addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
 import {
     dynamic32Equal,
     dynamic32OneOf,
@@ -8,10 +8,10 @@ import {
     subsetOf,
     dynamicEqual,
     staticOneOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
-import { allow } from "../allow"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
+import { allow } from "../../allow"
 
 
 const preset = {

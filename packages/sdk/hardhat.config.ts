@@ -9,6 +9,8 @@ import yargs from "yargs"
 
 import "./tasks/manageKarpatkeyRoles"
 import "./tasks/manageGnosisRoles"
+import "./tasks/manageBalancerRoles"
+import "./tasks/manageEnsRoles"
 
 const argv = yargs
   .option("network", {

@@ -1,6 +1,6 @@
-import { allow, contracts } from "../allow"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
-import { allowErc20Approve } from "../helpers/erc20"
+import { allow, contracts } from "../../allow"
+import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
 import {
   dynamic32Equal,
   dynamic32OneOf,
@@ -9,9 +9,9 @@ import {
   subsetOf,
   dynamicEqual,
   staticOneOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 // Tokens
 const stETH = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"

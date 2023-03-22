@@ -1,15 +1,15 @@
-import { ExecutionOptions } from "../../types"
-import { allowCurvePool } from "../helpers/curve"
-import { allowErc20Approve } from "../helpers/erc20"
-import { allowLido } from "../helpers/lido"
+import { ExecutionOptions } from "../../../types"
+import { allowCurvePool } from "../../helpers/curve"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { allowLido } from "../../helpers/lido"
 import {
   dynamic32Equal,
   dynamicEqual,
   staticEqual,
   subsetOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 
 //AAVE contracts
 const stkAAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
