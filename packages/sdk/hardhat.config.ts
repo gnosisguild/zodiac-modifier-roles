@@ -8,6 +8,7 @@ import type { HttpNetworkUserConfig } from "hardhat/types"
 import yargs from "yargs"
 
 import "./tasks/manageKarpatkeyRoles"
+import "./tasks/manageGnosisRoles"
 
 const argv = yargs
   .option("network", {
