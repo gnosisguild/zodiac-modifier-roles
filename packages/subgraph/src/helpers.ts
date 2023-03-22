@@ -1,45 +1,22 @@
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Parameter, Member } from "../generated/schema"
-export const EXECUTION_OPTIONS = ["None", "Send", "DelegateCall", "Both"]
-export const EXECUTION_OPTIONS__NONE = 0
-export const EXECUTION_OPTIONS__SEND = 1
-export const EXECUTION_OPTIONS__DELEGATE_CALL = 2
-export const execution_options__both = 3
-
-export const CLEARANCE = ["None", "Target", "Function"]
-export const CLEARANCE__NONE = 0
-export const CLEARANCE__TARGET = 1
-export const CLEARANCE__FUNCTION = 2
-
-export const PARAMETER_TYPE = ["Static", "Dynamic", "Dynamic32"]
-export const PARAMETER_TYPE__STATIC = 0
-export const PARAMETER_TYPE__DYNAMIC = 1
-export const PARAMETER_TYPE__DYNAMIC32 = 2
-
-export const PARAMETER_COMPARISON = ["EqualTo", "GreaterThan", "LessThan", "OneOf"]
-export const PARAMETER_COMPARISON__EQUAL_TO = 0
-export const PARAMETER_COMPARISON__GREATER_THAN = 1
-export const PARAMETER_COMPARISON__LESS_THAN = 2
-export const PARAMETER_COMPARISON__ONE_OF = 3
+import { Address, Bytes, log } from "@graphprotocol/graph-ts"
+import { Function, Role, RolesModifier, Target, Condition, Member } from "../generated/schema"
+import { Clearance, ExecutionOptions, Operator } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
-export const getRoleId = (roleModifierId: string, role: number): string => roleModifierId + "-ROLE-" + role.toString()
+export const getRoleId = (roleModifierId: string, roleKey: string): string => roleModifierId + "-ROLE-" + roleKey
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
 export const getFunctionId = (targetId: string, sighash: Bytes): string => targetId + "-FUNCTION-" + sighash.toHex()
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
-export const getParameterId = (functionId: string, parameterIndex: number): string =>
-  functionId + "-PARAMETER-" + parameterIndex.toString()
 
-export const getOrCreateRole = (roleId: string, rolesModifierId: string, roleIdInContract: i32): Role => {
+export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: string): Role => {
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
   if (!role) {
     role = new Role(roleId)
-    role.name = roleIdInContract.toString()
-    role.roleIdInContract = roleIdInContract
+    role.key = key
     role.rolesModifier = rolesModifierId
     role.save()
     log.info("Created new role", [roleId])
@@ -49,11 +26,11 @@ export const getOrCreateRole = (roleId: string, rolesModifierId: string, roleIdI
   return role
 }
 
-/*
-For created Targets:
- - execution options is None.
- - clearance is None.
-*/
+/**
+ * For created Targets:
+ *  - executionOptions is None.
+ *  - clearance is None.
+ */
 export const getOrCreateTarget = (targetId: string, targetAddress: Address, roleId: string): Target => {
   let target = Target.load(targetId)
 
@@ -61,8 +38,8 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
     target = new Target(targetId)
     target.address = targetAddress
     target.role = roleId
-    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    target.clearance = Clearance[Clearance.None]
     target.save()
     log.info("Created new target", [targetId])
   } else {
@@ -71,31 +48,51 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
   return target
 }
 
-/*
-For created Functions:
- - execution options options is None.
- - wildcarded is false.
-*/
+/**
+ * For created Functions:
+ *  - executionOptions is None
+ *  - wildcarded is false
+ */
 export const getOrCreateFunction = (functionId: string, targetId: string, sighash: Bytes): Function => {
-  let theFunction = Function.load(functionId)
+  let func = Function.load(functionId)
 
-  if (!theFunction) {
-    theFunction = new Function(functionId)
-    theFunction.target = targetId
-    theFunction.sighash = sighash
-    theFunction.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    theFunction.wildcarded = false
-    theFunction.save()
+  if (!func) {
+    func = new Function(functionId)
+    func.target = targetId
+    func.sighash = sighash
+    func.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    func.wildcarded = false
+    func.save()
     log.info("Created new function", [functionId])
   } else {
     log.debug("Loaded existing function", [functionId])
   }
-  return theFunction
+
+  return func
 }
-/*
-Fore created Member:
- - enabledAsModule is false
-*/
+
+/**
+ * For created Conditions:
+ *  - operator is Pass
+ */
+export const getOrCreateCondition = (conditionId: string): Condition => {
+  let condition = Condition.load(conditionId)
+
+  if (!condition) {
+    condition = new Condition(conditionId)
+    condition.operator = Operator[Operator.Pass]
+    condition.save()
+    log.info("Created new condition", [conditionId])
+  } else {
+    log.debug("Loaded existing condition", [conditionId])
+  }
+  return condition
+}
+
+/**
+ * For created Member:
+ *  - enabledAsModule is false
+ */
 export const getOrCreateMember = (memberId: string, rolesModifierId: string, memberAddress: Address): Member => {
   let member = Member.load(memberId)
   if (!member) {
