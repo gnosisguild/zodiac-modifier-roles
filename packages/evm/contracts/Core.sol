@@ -11,7 +11,7 @@ import "./Types.sol";
  */
 abstract contract Core is OwnableUpgradeable {
     mapping(uint16 => Role) internal roles;
-    mapping(string => Allowance) public allowances;
+    mapping(bytes32 => Allowance) public allowances;
 
     function _store(
         Role storage role,

@@ -86,7 +86,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.None
@@ -134,13 +134,13 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
           {
             parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.WithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.None
@@ -173,7 +173,8 @@ describe("Operator", async () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
       const { setAllowance, setRole } = await setup();
 
-      const allowanceKey = "Something   ";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
       await setAllowance(allowanceKey, {
         balance: 1000,
         refillInterval: 0,
@@ -196,7 +197,8 @@ describe("Operator", async () => {
     it("passes a check with only from balance and refill available", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
       // more than one byte per char
-      const allowanceKey = "á 中文的东西 a";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 333,
         refillInterval: 1000,
@@ -216,7 +218,8 @@ describe("Operator", async () => {
 
     it("passes a check balance from available+refill", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      const allowanceKey = "BBAL2-34/44";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 250,
         refillInterval: 500,
@@ -237,7 +240,8 @@ describe("Operator", async () => {
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      const allowanceKey = "3344";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 250,
         refillInterval: 1000,
@@ -258,7 +262,8 @@ describe("Operator", async () => {
     it("passes a check with balance from refill and bellow maxBalance", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
       const interval = 10000;
-      const allowanceKey = "5KmDp7p+5ZuG5oiR5rWL5rWL6YeM5rWL";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 0,
         maxBalance: 1000,
@@ -276,7 +281,8 @@ describe("Operator", async () => {
 
     it("fails a check with balance from refill but capped by maxBalance", async () => {
       const { setAllowance, setRole, timestamp } = await setup();
-      const allowanceKey = "elevator pause inflict whisper";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 0,
         maxBalance: 9000,
@@ -296,7 +302,8 @@ describe("Operator", async () => {
   describe("WithinAllowance - Track", async () => {
     it("Updates tracking, even with multiple parameters referencing the same limit", async () => {
       const { setAllowance, setRoleTwoParams } = await setup();
-      const allowanceKey = "c@pT!vate#b0lt^s1ren";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
       await setAllowance(allowanceKey, {
         balance: 3000,
         refillInterval: 0,
@@ -321,7 +328,8 @@ describe("Operator", async () => {
 
     it("Fails at tracking, when multiple parameters referencing the same limit overspend", async () => {
       const { setAllowance, setRoleTwoParams } = await setup();
-      const allowanceKey = "鸡pąpā世界nø";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 3000,
         refillInterval: 0,
@@ -345,7 +353,8 @@ describe("Operator", async () => {
 
       const interval = 600;
 
-      const allowanceKey = "ƁΔʆøḽǫШȦֆ";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: interval,
@@ -371,7 +380,8 @@ describe("Operator", async () => {
     it("Does not updates refillTimestamp if interval is zero", async () => {
       const { setAllowance, setRole } = await setup();
 
-      const allowanceKey = "‡àêåûÿ¡»¿";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: 0,
@@ -392,7 +402,8 @@ describe("Operator", async () => {
       const interval = 600;
       const initialTimestamp = timestampNow() - 2400;
 
-      const allowanceKey = "Some/other/key";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: interval,
@@ -418,7 +429,8 @@ describe("Operator", async () => {
       const interval = 600;
       const initialTimestamp = timestampNow() + 1200;
 
-      const allowanceKey = "Hello World!";
+      const allowanceKey =
+        "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: interval,

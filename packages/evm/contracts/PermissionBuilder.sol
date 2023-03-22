@@ -14,13 +14,11 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
-    error InadequateAllowanceKey(uint256 length);
+    error AllowanceExceeded(bytes32 allowanceKey);
 
-    error AllowanceExceeded(string allowanceKey);
+    error CallAllowanceExceeded(bytes32 allowanceKey);
 
-    error CallAllowanceExceeded(string allowanceKey);
-
-    error EtherAllowanceExceeded(string allowanceKey);
+    error EtherAllowanceExceeded(bytes32 allowanceKey);
 
     event AllowTarget(
         uint16 role,
@@ -46,7 +44,7 @@ abstract contract PermissionBuilder is Core {
     );
 
     event SetAllowance(
-        string allowanceKey,
+        bytes32 allowanceKey,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
@@ -55,7 +53,7 @@ abstract contract PermissionBuilder is Core {
     );
 
     event ConsumeAllowance(
-        string allowanceKey,
+        bytes32 allowanceKey,
         uint128 consumed,
         uint128 newBalance
     );
@@ -166,18 +164,14 @@ abstract contract PermissionBuilder is Core {
     }
 
     function setAllowance(
-        string memory allowanceKey,
+        bytes32 key,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
         uint64 refillInterval,
         uint64 refillTimestamp
     ) external onlyOwner {
-        bytes memory rawKey = bytes(allowanceKey);
-        if (rawKey.length == 0 || rawKey.length > 32) {
-            revert InadequateAllowanceKey(rawKey.length);
-        }
-        allowances[allowanceKey] = Allowance({
+        allowances[key] = Allowance({
             refillAmount: refillAmount,
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
@@ -185,7 +179,7 @@ abstract contract PermissionBuilder is Core {
             maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
         });
         emit SetAllowance(
-            allowanceKey,
+            key,
             balance,
             maxBalance,
             refillAmount,
@@ -197,10 +191,8 @@ abstract contract PermissionBuilder is Core {
     function _track(Trace[] memory entries) internal {
         uint256 paramCount = entries.length;
         for (uint256 i; i < paramCount; ) {
-            Condition memory condition = entries[i].condition;
+            bytes32 key = entries[i].condition.compValue;
             uint256 value = entries[i].value;
-
-            string memory key = _wordToString(condition.compValue);
             Allowance memory allowance = allowances[key];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
@@ -208,9 +200,10 @@ abstract contract PermissionBuilder is Core {
             );
 
             if (value > balance) {
-                if (condition.operator == Operator.WithinAllowance) {
+                Operator operator = entries[i].condition.operator;
+                if (operator == Operator.WithinAllowance) {
                     revert AllowanceExceeded(key);
-                } else if (condition.operator == Operator.CallWithinAllowance) {
+                } else if (operator == Operator.CallWithinAllowance) {
                     revert CallAllowanceExceeded(key);
                 } else {
                     revert EtherAllowanceExceeded(key);
@@ -259,19 +252,16 @@ abstract contract PermissionBuilder is Core {
     }
 
     /**
-     * @dev removes extraneous leading offsets from the compValue fields
-     * of the conditions array. Its purpose is to provide a consistent API
-     * where every compValue provided to be used in Operations.EqualsTo is to be
-     * produced simply by using abi.encode.
+     * @dev This function removes unnecessary offsets from compValue fields of
+     * the `conditions` array. Its purpose is to ensure a consistent API where
+     * every `compValue` provided for use in `Operations.EqualsTo` is obtained
+     * by calling `abi.encode` directly.
      *
      * By removing the leading extraneous offsets this function makes
-     * abi.encode(...) match the output bounds produced by Decoder inspection.
-     * Without it, the compValue fields would need to be modified externally
+     * abi.encode(...) match the output produced by Decoder inspection.
+     * Without it, the encoded fields would need to be patched externally
      * depending on whether the payload is fully encoded inline or not.
      *
-     *
-     * Additionally, this function normalizes the compValue fields that will be
-     * stored as allowanceKeys, but removing offset and length.
      * @param conditions Array of ConditionFlat structs to remove extraneous
      * offsets from
      */
@@ -280,11 +270,10 @@ abstract contract PermissionBuilder is Core {
     ) private view returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ) {
-            Operator operator = conditions[i].operator;
-
-            bool isDynamicEquals = operator == Operator.EqualTo &&
-                Topology.isInline(conditions, i) == false;
-            if (isDynamicEquals) {
+            if (
+                conditions[i].operator == Operator.EqualTo &&
+                Topology.isInline(conditions, i) == false
+            ) {
                 bytes memory compValue = conditions[i].compValue;
                 uint256 length = compValue.length;
                 assembly {
@@ -294,39 +283,10 @@ abstract contract PermissionBuilder is Core {
                 conditions[i].compValue = compValue;
             }
 
-            bool isAllowance = operator == Operator.WithinAllowance ||
-                operator == Operator.CallWithinAllowance ||
-                operator == Operator.EtherWithinAllowance;
-            if (isAllowance) {
-                bytes memory compValue = conditions[i].compValue;
-                assert(compValue.length == 96);
-
-                assembly {
-                    mstore(add(compValue, 32), 32)
-                    compValue := add(compValue, 64)
-                }
-                conditions[i].compValue = compValue;
-            }
-
             unchecked {
                 ++i;
             }
         }
         return conditions;
-    }
-
-    function _wordToString(
-        bytes32 word
-    ) private returns (string memory result) {
-        bytes32 mask = bytes32(bytes1(0xff));
-        uint256 length;
-        for (; mask != 0 && mask & word != 0; mask >>= 8) {
-            length++;
-        }
-
-        result = string(abi.encodePacked(word));
-        assembly {
-            mstore(result, length)
-        }
     }
 }
