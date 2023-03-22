@@ -1,10 +1,12 @@
-import { Call, Clearance, RolePermissions } from "./types"
+import { Clearance, Role } from "../types"
+
+import { Call } from "./types"
 
 // It will apply the most fine-grained revoke:
 //  - call scopeRevokeFunction for each function
 //  - call revokeTarget for each target without any functions
 // Parameters are not taken into account.
-const revokePermissions = (permissions: RolePermissions): Call[] => {
+export const revokePermissions = (permissions: Role): Call[] => {
   const calls: Call[] = []
 
   permissions.targets.forEach((target) => {
@@ -24,7 +26,7 @@ const revokePermissions = (permissions: RolePermissions): Call[] => {
         calls.push({
           call: "scopeRevokeFunction",
           targetAddress: target.address,
-          functionSig: func.sighash,
+          functionSig: func.selector,
         })
       })
     }
@@ -32,5 +34,3 @@ const revokePermissions = (permissions: RolePermissions): Call[] => {
 
   return calls
 }
-
-export default revokePermissions

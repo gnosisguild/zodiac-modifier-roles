@@ -1,6 +1,8 @@
-import { Call, Comparison, ExecutionOptions, Parameter } from "./types"
+import { Operator, ExecutionOptions, Parameter } from "../types"
 
-const logCall = (call: Call, log = console.log) => {
+import { Call } from "./types"
+
+export const logCall = (call: Call, log = console.log) => {
   switch (call.call) {
     case "allowTarget": {
       log(
@@ -27,9 +29,7 @@ const logCall = (call: Call, log = console.log) => {
     case "scopeFunction": {
       const { paramComp, compValue } = call
       const params = call.isParamScoped.map((isParamScoped, i) =>
-        isParamScoped
-          ? `${ComparisonLabel[paramComp[i]]}${compValue[i]}`
-          : "any"
+        isParamScoped ? `${OperatorLabel[paramComp[i]]}${compValue[i]}` : "any"
       )
       log(
         `✅ Allow ${ExecutionOptionLabel[call.options]} to ${
@@ -64,8 +64,6 @@ const logCall = (call: Call, log = console.log) => {
   }
 }
 
-export default logCall
-
 const ExecutionOptionLabel = {
   [ExecutionOptions.None]: "call",
   [ExecutionOptions.DelegateCall]: "call, delegatecall",
@@ -73,8 +71,8 @@ const ExecutionOptionLabel = {
   [ExecutionOptions.Both]: "call, delegatecall, send",
 }
 
-const ComparisonLabel = {
-  [Comparison.EqualTo]: "",
-  [Comparison.GreaterThan]: ">",
-  [Comparison.LessThan]: "<",
+const OperatorLabel = {
+  [Operator.EqualTo]: "",
+  [Operator.GreaterThan]: ">",
+  [Operator.LessThan]: "<",
 }

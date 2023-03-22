@@ -1,11 +1,11 @@
 import { expect } from "chai"
 
 import patchPermissions from "../src/patchPermissions"
-import { RolePermissions } from "../src/types"
+import { Role } from "../src/types"
 
 describe("patchPermissions", () => {
   it("should revoke functions with param scopings", () => {
-    const before: RolePermissions = {
+    const before: Role = {
       targets: [
         {
           address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -13,7 +13,7 @@ describe("patchPermissions", () => {
           executionOptions: 0,
           functions: [
             {
-              sighash: "0x095ea7b3",
+              selector: "0x095ea7b3",
               executionOptions: 0,
               wildcarded: false,
               parameters: [
@@ -32,7 +32,7 @@ describe("patchPermissions", () => {
       ],
     }
 
-    const after: RolePermissions = {
+    const after: Role = {
       targets: [],
     }
 
@@ -46,7 +46,7 @@ describe("patchPermissions", () => {
   })
 
   it("should patch params scoping", () => {
-    const before: RolePermissions = {
+    const before: Role = {
       targets: [
         {
           address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -54,7 +54,7 @@ describe("patchPermissions", () => {
           executionOptions: 0,
           functions: [
             {
-              sighash: "0x095ea7b3",
+              selector: "0x095ea7b3",
               executionOptions: 0,
               wildcarded: false,
               parameters: [
@@ -73,7 +73,7 @@ describe("patchPermissions", () => {
       ],
     }
 
-    const after: RolePermissions = {
+    const after: Role = {
       targets: [
         {
           address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -81,7 +81,7 @@ describe("patchPermissions", () => {
           executionOptions: 0,
           functions: [
             {
-              sighash: "0x095ea7b3",
+              selector: "0x095ea7b3",
               executionOptions: 0,
               wildcarded: false,
               parameters: [

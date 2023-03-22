@@ -1,11 +1,6 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import {
-  Clearance,
-  ExecutionOptions,
-  RolePermissions,
-  Comparison,
-} from "../types"
+import { Clearance, ExecutionOptions, Role, Comparison } from "../types"
 
 import { execOptions } from "./execOptions"
 import { solidityPackPadded } from "./scopeParam"
@@ -23,7 +18,7 @@ import {
 const fillPreset = <P extends RolePreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
-): RolePermissions => {
+): Role => {
   preset = mergeFunctionEntries(preset) as P
   sanityCheck(preset)
 
@@ -50,7 +45,7 @@ const fillPreset = <P extends RolePreset>(
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
-      let sighash = "sighash" in allowFunction && allowFunction.sighash
+      let sighash = "sighash" in allowFunction && allowFunction.selector
       if (!sighash)
         sighash =
           "signature" in allowFunction &&
@@ -199,7 +194,7 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
 
 const functionId = (entry: PresetFunction) =>
   `${entry.targetAddress.toLowerCase()}.${
-    "sighash" in entry ? entry.sighash : functionSighash(entry.signature)
+    "sighash" in entry ? entry.selector : functionSighash(entry.signature)
   }`
 
 const mergeFunctionEntries = (preset: RolePreset) => ({

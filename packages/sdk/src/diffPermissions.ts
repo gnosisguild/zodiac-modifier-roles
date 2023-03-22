@@ -1,16 +1,7 @@
-import {
-  Clearance,
-  RolePermissions,
-  Target,
-  Function,
-  Parameter,
-} from "./types"
+import { Clearance, Role, Target, Function, Parameter } from "./types"
 
 // Returns permissions granted by a that are not granted but b
-const diffPermissions = (
-  a: RolePermissions,
-  b: RolePermissions
-): RolePermissions => {
+const diffPermissions = (a: Role, b: Role): Role => {
   // targets in a that are not in b
   const targetsDiff = a.targets.filter(
     (targetA) => !b.targets.some((targetB) => targetsEqual(targetA, targetB))
@@ -73,7 +64,7 @@ const targetsEqual = (targetA: Target, targetB: Target) =>
   targetA.executionOptions === targetB.executionOptions
 
 const functionsEqual = (functionA: Function, functionB: Function) =>
-  functionA.sighash === functionB.sighash &&
+  functionA.selector === functionB.selector &&
   functionA.wildcarded === functionB.wildcarded &&
   functionA.executionOptions === functionB.executionOptions &&
   functionA.parameters.every((paramA) =>
