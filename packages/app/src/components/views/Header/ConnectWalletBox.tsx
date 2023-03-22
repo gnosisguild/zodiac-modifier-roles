@@ -52,6 +52,7 @@ export const ConnectWalletBox = () => {
         address={address}
         emptyText="No Wallet Connected"
         onClick={walletType !== WalletType.GNOSIS_SAFE ? () => setShowWalletOption(!showWalletOption) : undefined}
+        linkToZodiac={walletType === WalletType.GNOSIS_SAFE}
       />
       {showWalletOption && (
         <Box className={classes.connectWalletBoxMenu}>

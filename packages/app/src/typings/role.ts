@@ -46,9 +46,10 @@ export enum ParamComparison {
 }
 
 export enum ParameterType {
-  STATIC,
-  DYNAMIC,
-  DYNAMIC32,
+  STATIC = "Static",
+  DYNAMIC = "Dynamic",
+  DYNAMIC32 = "Dynamic32",
+  NO_RESTRICTION = "NoRestriction",
 }
 
 export enum ParamNativeType {

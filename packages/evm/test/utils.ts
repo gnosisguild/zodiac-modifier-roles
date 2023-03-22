@@ -108,3 +108,77 @@ export const buildSafeTransaction = (template: {
     nonce: template.nonce,
   };
 };
+
+export enum ParameterType {
+  None = 0,
+  Static,
+  Dynamic,
+  Tuple,
+  Array,
+  AbiEncoded,
+}
+
+export enum Operator {
+  // 00:    EMPTY EXPRESSION (default, always passes)
+  //          paramType: Static / Dynamic
+  //          🚫 children
+  //          🚫 compValue
+  /* 00: */ Pass = 0,
+  // ------------------------------------------------------------
+  // 01-04: BOOLEAN EXPRESSIONS
+  //          paramType: None
+  //          ✅ children
+  //          🚫 compValue
+  /* 01: */ And = 1,
+  /* 02: */ Or = 2,
+  /* 03: */ Xor = 3,
+  /* 04: */ Not = 4,
+  // ------------------------------------------------------------
+  // 05-16: COMPLEX EXPRESSIONS
+  //          paramType: AbiEncoded / Tuple / Array,
+  //          ✅ children
+  //          🚫 compValue
+  /* 05: */ Matches = 5,
+  /* 06: */ ArraySome = 6,
+  /* 07: */ ArrayEvery = 7,
+  /* 08: */ ArraySubset = 8,
+  // /* 09: */ _ComplexPlaceholder09,
+  // /* 10: */ _ComplexPlaceholder10,
+  // /* 11: */ _ComplexPlaceholder11,
+  // /* 12: */ _ComplexPlaceholder12,
+  // /* 13: */ _ComplexPlaceholder13,
+  // /* 14: */ _ComplexPlaceholder14,
+  // /* 15: */ _ComplexPlaceholder15,
+  // /* 16: */ _ComplexPlaceholder16,
+  // ------------------------------------------------------------
+  // 17-31: COMPARISON EXPRESSIONS
+  //          paramType: Static / Dynamic
+  //          🚫 children
+  //          ✅ compValue
+  /* 17: */ EqualTo = 17,
+  /* 18: */ GreaterThan = 18,
+  /* 19: */ LessThan = 19,
+  /* 20: */ Bitmask = 20,
+  // /* 21: */ _BinaryPlaceholder21,
+  // /* 22: */ _BinaryPlaceholder22,
+  // /* 23: */ _BinaryPlaceholder23,
+  // /* 24: */ _BinaryPlaceholder24,
+  // /* 25: */ _BinaryPlaceholder25,
+  // /* 26: */ _BinaryPlaceholder26,
+  // /* 27: */ _BinaryPlaceholder27,
+  // /* 28: */ _BinaryPlaceholder28,
+  /* 29: */ WithinAllowance = 29,
+  /* 30: */ EtherWithinAllowance = 30,
+  /* 31: */ CallWithinAllowance = 31,
+}
+
+export enum ExecutionOptions {
+  None = 0,
+  Send,
+  DelegateCall,
+  Both,
+}
+
+export function removeTrailingOffset(data: string) {
+  return `0x${data.substring(66)}`;
+}

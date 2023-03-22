@@ -25,7 +25,7 @@ contract TestContract {
     event DynamicDynamic32(string, bytes2[]);
 
     event Dynamic(bytes);
-    event Dynamic32(bytes8[]);
+    event Dynamic32(bytes4[]);
 
     error AnError();
 
@@ -64,7 +64,13 @@ contract TestContract {
         emit DoEvenLess();
     }
 
-    function fnWithSingleParam(uint256 p) public {
+    uint16 public aStorageNumber;
+
+    function setAStorageNumber(uint16 value) public {
+        aStorageNumber = value;
+    }
+
+    function fnWithSingleParam(uint256 p) public payable {
         emit FnWithSingleParam(p);
     }
 
@@ -76,11 +82,7 @@ contract TestContract {
         emit FnWithTwoMixedParams(a, s);
     }
 
-    function fnWithThreeParams(
-        uint256 a,
-        uint256 b,
-        uint256 c
-    ) public {
+    function fnWithThreeParams(uint256 a, uint256 b, uint256 c) public {
         emit FnWithThreeParams(a, b, c);
     }
 
@@ -92,9 +94,10 @@ contract TestContract {
         emit EmitTheSender(msg.sender);
     }
 
-    function dynamicDynamic32(string calldata first, bytes2[] calldata second)
-        public
-    {
+    function dynamicDynamic32(
+        string calldata first,
+        bytes2[] calldata second
+    ) public {
         emit DynamicDynamic32(first, second);
     }
 
@@ -102,7 +105,9 @@ contract TestContract {
         emit Dynamic(first);
     }
 
-    function dynamic32(bytes8[] calldata first) public {
+    function dynamic32(bytes4[] calldata first) public {
         emit Dynamic32(first);
     }
+
+    function dynamicString(string memory) public {}
 }

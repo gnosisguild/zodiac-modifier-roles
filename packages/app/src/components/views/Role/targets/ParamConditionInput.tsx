@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
 
 export const ConditionLabel: Record<ParamComparison, string> = {
   [ParamComparison.EQUAL_TO]: "is equal to",
-  [ParamComparison.ONE_OF]: "contains",
+  [ParamComparison.ONE_OF]: "is one of",
   [ParamComparison.GREATER_THAN]: "is greater than",
   [ParamComparison.LESS_THAN]: "is less than",
 }

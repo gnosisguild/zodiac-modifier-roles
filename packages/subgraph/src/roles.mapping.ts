@@ -1,34 +1,22 @@
-import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  Roles,
   AssignRoles,
   AvatarSet,
   ChangedGuard,
   DisabledModule,
   EnabledModule,
-  OwnershipTransferred,
   RolesModSetup,
   SetDefaultRole,
-  SetMultisendAddress,
   TargetSet,
 } from "../generated/Roles/Roles"
-import { RolesModifier, Role, Member, RoleAssignment } from "../generated/schema"
+import { RolesModifier, RoleAssignment } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
 import {
-  CLEARANCE,
-  CLEARANCE__FUNCTION,
-  CLEARANCE__NONE,
-  CLEARANCE__TARGET,
-  EXECUTION_OPTIONS,
-  EXECUTION_OPTIONS__NONE,
-  getFunctionId,
   getMemberId,
   getAssignmentId,
   getOrCreateMember,
   getOrCreateRole,
   getRoleId,
   getRolesModifierId,
-  getTargetId,
 } from "./helpers"
 
 export function handleAssignRoles(event: AssignRoles): void {
@@ -38,9 +26,7 @@ export function handleAssignRoles(event: AssignRoles): void {
 
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.warning("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
@@ -65,12 +51,12 @@ export function handleAssignRoles(event: AssignRoles): void {
         assignment.save()
       } else {
         // nothing to do the member - role relationship does not exist
-        log.info("trying to remove a member from a role it is not a member of", [memberId, roleId])
+        log.warning("Trying to remove member {} from role #{}, but it's not a member", [memberId, roleId])
       }
     } else {
       if (memberOfArray[i]) {
         // adding a member that is already a member
-        log.info("trying to add a member to a role it is already a member of", [memberId, roleId])
+        log.warning("Trying to add member {} to role #{}, but it already is a member", [memberId, roleId])
       } else {
         // removing a member-role relationship
         store.remove("RoleAssignment", assignmentId)
@@ -89,9 +75,7 @@ export function handleDisabledModule(event: DisabledModule): void {
 
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.error("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
@@ -108,9 +92,7 @@ export function handleEnabledModule(event: EnabledModule): void {
 
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.error("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
@@ -134,13 +116,11 @@ export function handleRolesModSetup(event: RolesModSetup): void {
     rolesModifier.target = event.params.target
     rolesModifier.save()
   } else {
-    log.error("RolesModifier already exists", [rolesModifierId])
+    log.error("RolesModifier {} already exists", [rolesModifierId])
     return
   }
 }
 
 export function handleSetDefaultRole(event: SetDefaultRole): void {}
-
-export function handleSetMultisendAddress(event: SetMultisendAddress): void {}
 
 export function handleTargetSet(event: TargetSet): void {}

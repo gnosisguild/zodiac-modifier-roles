@@ -1,50 +1,26 @@
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import hre, { deployments, waffle } from "hardhat";
-import "@nomiclabs/hardhat-ethers";
 
-import { Roles as RolesT } from "../typechain-types";
+import "@nomiclabs/hardhat-ethers";
+import { ExecutionOptions, Operator, ParameterType } from "./utils";
 
 const ROLE_ID = 123;
 
-const COMP_EQUAL = 0;
-
-const OPTIONS_NONE = 0;
-const OPTIONS_SEND = 1;
-const OPTIONS_DELEGATECALL = 2;
-const OPTIONS_BOTH = 3;
-
-const TYPE_STATIC = 0;
-const TYPE_DYNAMIC = 1;
-const TYPE_DYNAMIC32 = 2;
-
-// Pending: https://github.com/EthWorks/Waffle/issues/609
-
-describe.skip("EmitsEvent", async () => {
+describe("EmitsEvent", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
 
     const [owner] = waffle.provider.getWallets();
-
-    const Permissions = await hre.ethers.getContractFactory("Permissions");
-    const permissions = await Permissions.deploy();
-    const Modifier = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Permissions: permissions.address,
-      },
-    });
+    const Modifier = await hre.ethers.getContractFactory("Roles");
 
     const modifier = await Modifier.deploy(
       owner.address,
-      avatar.address,
-      avatar.address
+      owner.address,
+      owner.address
     );
 
     return {
-      Avatar,
-      avatar,
       modifier,
       owner,
     };
@@ -54,10 +30,12 @@ describe.skip("EmitsEvent", async () => {
     const { owner, modifier } = await setup();
 
     await expect(
-      modifier.connect(owner).allowTarget(ROLE_ID, AddressOne, OPTIONS_SEND)
+      modifier
+        .connect(owner)
+        .allowTarget(ROLE_ID, AddressOne, ExecutionOptions.Send)
     )
       .to.emit(modifier, "AllowTarget")
-      .withArgs(ROLE_ID, AddressOne, OPTIONS_SEND);
+      .withArgs(ROLE_ID, AddressOne, ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
     const { owner, modifier } = await setup();
@@ -73,121 +51,45 @@ describe.skip("EmitsEvent", async () => {
       .to.emit(modifier, "RevokeTarget")
       .withArgs(ROLE_ID, AddressOne);
   });
-  it("ScopeAllowFunction", async () => {
+  it("AllowFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
       modifier
         .connect(owner)
-        .scopeAllowFunction(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH)
-    )
-      .to.emit(modifier, "ScopeAllowFunction")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_BOTH);
+        .allowFunction(ROLE_ID, AddressOne, "0x12345678", ExecutionOptions.Both)
+    ).to.emit(modifier, "AllowFunction");
   });
-  it("ScopeRevokeFunction", async () => {
+  it("RevokeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
-      modifier
-        .connect(owner)
-        .scopeRevokeFunction(ROLE_ID, AddressOne, "0x12345678")
+      modifier.connect(owner).revokeFunction(ROLE_ID, AddressOne, "0x12345678")
     )
-      .to.emit(modifier, "ScopeRevokeFunction")
+      .to.emit(modifier, "RevokeFunction")
       .withArgs(ROLE_ID, AddressOne, "0x12345678");
   });
   it("ScopeFunction", async () => {
     const { modifier, owner } = await setup();
     await expect(
-      modifier
-        .connect(owner)
-        .scopeFunction(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          [],
-          [],
-          [],
-          [],
-          OPTIONS_NONE
-        )
-    )
-      .to.emit(modifier, "ScopeFunction")
-      .withArgs(
+      modifier.connect(owner).scopeFunction(
         ROLE_ID,
         AddressOne,
         "0x12345678",
-        [],
-        [],
-        [],
-        [],
-        OPTIONS_NONE
-      );
+        [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+        ],
+        ExecutionOptions.None
+      )
+    ).to.emit(modifier, "ScopeFunction");
   });
-  it("ScopeParameter", async () => {
+  it("SetAllowance", async () => {
     const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeParameter(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          0,
-          TYPE_DYNAMIC,
-          COMP_EQUAL,
-          "0x"
-        )
-    )
-      .to.emit(modifier, "ScopeParameter")
-      .withArgs(
-        ROLE_ID,
-        AddressOne,
-        "0x12345678",
-        0,
-        TYPE_DYNAMIC,
-        COMP_EQUAL,
-        "0x"
-      );
-  });
-  it("ScopeParameterAsOneOf", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeParameterAsOneOf(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          0,
-          TYPE_DYNAMIC,
-          []
-        )
-    )
-      .to.emit(modifier, "ScopeParameterAsOneOf")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0, TYPE_DYNAMIC, []);
-  });
-  it("UnscopeParameter", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .unscopeParameter(ROLE_ID, AddressOne, "0x12345678", 0)
-    )
-      .to.emit(modifier, "UnscopeParameter")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", 0);
-  });
-
-  it("ScopeFunctionExecutionOptions", async () => {
-    const { modifier, owner } = await setup();
-    await expect(
-      modifier
-        .connect(owner)
-        .scopeFunctionExecutionOptions(
-          ROLE_ID,
-          AddressOne,
-          "0x12345678",
-          OPTIONS_SEND
-        )
-    )
-      .to.emit(modifier, "ScopeFunctionExecutionOptions")
-      .withArgs(ROLE_ID, AddressOne, "0x12345678", OPTIONS_SEND);
+    await expect(modifier.connect(owner).setAllowance(1, 2, 3, 4, 5, 6))
+      .to.emit(modifier, "SetAllowance")
+      .withArgs(1, 2, 3, 4, 5, 6);
   });
 });

@@ -1,11 +1,17 @@
 module.exports = {
   skipFiles: [
+    "test/*",
     "test/Mock.sol",
+    "test/MockCompression.sol",
+    "test/MockDecoder.sol",
+    "test/MockScopeConfig.sol",
+    "test/MockTopology.sol",
+    "test/MultiSend.sol",
     "test/TestAvatar.sol",
     "test/TestContract.sol",
-    "test/TestPluckParam.sol",
+    "test/TestEncoder.sol",
     "test/TestFactory.sol",
-    "test/MultiSend.sol"
+    "test/TestGas.sol",
   ],
   mocha: {
     grep: "@skip-on-coverage", // Find everything with this tag

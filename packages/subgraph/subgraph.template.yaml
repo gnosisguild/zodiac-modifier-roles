@@ -15,19 +15,13 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - AssignRoles
-        - AvatarSet
-        - ChangedGuard
-        - DisabledModule
-        - EnabledModule
-        - OwnershipTransferred
-        - RolesModSetup
-        - SetDefaultRole
-        - SetMultisendAddress
-        - TargetSet
+        - RolesModifier
+        - Role
+        - Member
+        - RoleAssignment
       abis:
         - name: Roles
-          file: ./abis/Roles.json
+          file: ./abis/Roles.sol/Roles.json
       eventHandlers:
         - event: AssignRoles(address,uint16[],bool[])
           handler: handleAssignRoles
@@ -43,17 +37,15 @@ dataSources:
           handler: handleRolesModSetup
         - event: SetDefaultRole(address,uint16)
           handler: handleSetDefaultRole
-        - event: SetMultisendAddress(address)
-          handler: handleSetMultisendAddress
         - event: TargetSet(indexed address,indexed address)
           handler: handleTargetSet
       file: ./src/roles.mapping.ts
   - kind: ethereum
-    name: Permissions
+    name: PermissionBuilder
     # prettier-ignore
     network: {{network}}
     source:
-      abi: Permissions
+      abi: PermissionBuilder
       # prettier-ignore
       startBlock: {{startBlock}}
     mapping:
@@ -61,19 +53,15 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - AllowTarget
-        - ScopeTarget
-        - RevokeTarget
-        - ScopeAllowFunction
-        - ScopeFunction
-        - ScopeFunctionExecutionOptions
-        - ScopeParameter
-        - ScopeParameterAsOneOf
-        - ScopeRevokeFunction
-        - UnscopeParameter
+        - RolesModifier
+        - Role
+        - Target
+        - Function
+        - Condition
+        - Allowance
       abis:
-        - name: Permissions
-          file: ./abis/Permissions.json
+        - name: PermissionBuilder
+          file: ./abis/PermissionBuilder.sol/PermissionBuilder.json
       eventHandlers:
         - event: AllowTarget(uint16,address,uint8)
           handler: handleAllowTarget
@@ -81,18 +69,33 @@ dataSources:
           handler: handleScopeTarget
         - event: RevokeTarget(uint16,address)
           handler: handleRevokeTarget
-        - event: ScopeAllowFunction(uint16,address,bytes4,uint8,uint256)
-          handler: handleScopeAllowFunction
-        - event: ScopeFunction(uint16,address,bytes4,bool[],uint8[],uint8[],bytes[],uint8,uint256)
+        - event: AllowFunction(uint16,address,bytes4,uint8)
+          handler: handleAllowFunction
+        - event: ScopeFunction(uint16,address,bytes4,(uint8,uint8,uint8,bytes)[],uint8)
           handler: handleScopeFunction
-        - event: ScopeFunctionExecutionOptions(uint16,address,bytes4,uint8,uint256)
-          handler: handleScopeFunctionExecutionOptions
-        - event: ScopeParameter(uint16,address,bytes4,uint256,uint8,uint8,bytes,uint256)
-          handler: handleScopeParameter
-        - event: ScopeParameterAsOneOf(uint16,address,bytes4,uint256,uint8,bytes[],uint256)
-          handler: handleScopeParameterAsOneOf
-        - event: ScopeRevokeFunction(uint16,address,bytes4,uint256)
-          handler: handleScopeRevokeFunction
-        - event: UnscopeParameter(uint16,address,bytes4,uint256,uint256)
-          handler: handleUnscopeParameter
+        - event: RevokeFunction(uint16,address,bytes4)
+          handler: handleRevokeFunction
+        - event: SetAllowance(uint16,uint128,uint128,uint128,uint64,uint64)
+          handler: handleSetAllowance
       file: ./src/permissions.mapping.ts
+  - kind: ethereum
+    name: Periphery
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: Periphery
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - UnwrapAdapter
+      abis:
+        - name: Periphery
+          file: ./abis/Periphery.sol/Periphery.json
+      eventHandlers:
+        - event: SetUnwrapAdapter(address,bytes4,address)
+          handler: handleSetUnwrapAdapter
+      file: ./src/periphery.mapping.ts

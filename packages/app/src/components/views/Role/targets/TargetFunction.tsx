@@ -5,10 +5,9 @@ import classNames from "classnames"
 import React, { useMemo, useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
-import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { ZodiacPaper } from "zodiac-ui-components"
-import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
+import { ExecutionOptions } from "./ExecutionOptions"
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -80,12 +79,28 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
   const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
 
   const handleExecutionOption = (option: ExecutionOption) => {
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), executionOption: option })
+    let type = functionConditions.type
+    if (type === ConditionType.BLOCKED && option !== ExecutionOption.NONE) {
+      type = ConditionType.WILDCARDED
+    }
+    onChange({
+      ...functionConditions,
+      sighash: Interface.getSighash(func),
+      executionOption: option,
+      type,
+    })
   }
 
   const handleFunctionCheck = (checked: boolean) => {
-    const type = checked ? ConditionType.WILDCARDED : getFunctionConditionType(functionConditions.params)
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), type })
+    const type =
+      checked && functionConditions?.type !== ConditionType.SCOPED ? ConditionType.WILDCARDED : ConditionType.BLOCKED
+
+    return onChange({
+      ...functionConditions,
+      params: [],
+      sighash: Interface.getSighash(func),
+      type,
+    })
   }
 
   const handleOpen = () => setOpen(!open)
@@ -111,10 +126,10 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
 
       <div className={classNames(classes.content, { [classes.hidden]: !open })}>
         <div className={classes.select}>
-          <ExecutionTypeSelect
+          <ExecutionOptions
             value={functionConditions.executionOption}
             onChange={handleExecutionOption}
-            SelectProps={{ disabled: functionConditions.type === ConditionType.BLOCKED }}
+            disabled={functionConditions.type === ConditionType.BLOCKED}
           />
         </div>
 

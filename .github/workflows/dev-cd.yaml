@@ -5,23 +5,23 @@ on:
     branches: main
 
 env:
-  REACT_APP_ETHERSCAN_KEY: ${{ secrets.REACT_APP_ETHERSCAN_KEY }}
-  REACT_APP_POLYGONSCAN_KEY: ${{ secrets.REACT_APP_POLYGONSCAN_KEY }}
-  REACT_APP_ARBISCAN_KEY: ${{ secrets.REACT_APP_ARBISCAN_KEY }}
-  REACT_APP_BSCSCAN_KEY: ${{ secrets.REACT_APP_BSCSCAN_KEY }}
-  REACT_APP_OPTIMISTICSCAN_KEY: ${{ secrets.REACT_APP_OPTIMISTICSCAN_KEY }}
-  REACT_APP_SNOWTRACE_KEY: $${{ secrets.REACT_APP_SNOWTRACE_KEY }}
-  REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
-  REACT_APP_ONBOARD_JS_DAPP_ID: ${{ secrets.REACT_APP_ONBOARD_JS_DAPP_ID }}
-  REACT_APP_SUBGRAPH_BASE_URL: ${{ secrets.REACT_APP_SUBGRAPH_BASE_URL }}
-  REACT_APP_SUBGRAPH_GOERLI: ${{ secrets.REACT_APP_SUBGRAPH_GOERLI }}
-  REACT_APP_SUBGRAPH_GNOSIS_CHAIN: ${{ secrets.REACT_APP_SUBGRAPH_GNOSIS_CHAIN }}
-  REACT_APP_SUBGRAPH_MAINNET: ${{ secrets.REACT_APP_SUBGRAPH_MAINNET }}
-  REACT_APP_SUBGRAPH_POLYGON: ${{ secrets.REACT_APP_SUBGRAPH_POLYGON }}
-  REACT_APP_SUBGRAPH_ARBITRUM: ${{ secrets.REACT_APP_SUBGRAPH_ARBITRUM }}
-  REACT_APP_SUBGRAPH_OPTIMISM: ${{ secrets.REACT_APP_SUBGRAPH_OPTIMISM }}
-  REACT_APP_SUBGRAPH_AVALANCHE: ${{ secrets.REACT_APP_SUBGRAPH_AVALANCHE }}
-  REACT_APP_SUBGRAPH_BSC: ${{ secrets.REACT_APP_SUBGRAPH_BSC }}
+  REACT_APP_ETHERSCAN_KEY: 6RJ8KT4B1S9V7E3CIYECNY7HFW8IPWQ3C4
+  REACT_APP_POLYGONSCAN_KEY: NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ
+  REACT_APP_ARBISCAN_KEY: CSITWCYI9UDAJ7QS92FNVJ2XQP5B23P4J9
+  REACT_APP_BSCSCAN_KEY: AMXEAU3N9P7RJHFSZ7KAJDRY5MFJ1N29D6
+  REACT_APP_OPTIMISTICSCAN_KEY: 6RJ8KT4B1S9V7E3CIYECNY7HFW8IPWQ3C4
+  REACT_APP_SNOWTRACE_KEY: IAST9REKWMIW1QSE2M7K2IKKAZVNQPHC1U
+  REACT_APP_INFURA_KEY: 0de1a96486754f8b98f284d093905198
+  REACT_APP_ONBOARD_JS_DAPP_ID: 30fd8cd4-93a1-4c0e-a463-b5eceb9a3956
+  REACT_APP_SUBGRAPH_BASE_URL: https://api.thegraph.com/subgraphs/name/
+  REACT_APP_SUBGRAPH_GOERLI: jfschwarz/zodiac-roles-mod-goerli
+  REACT_APP_SUBGRAPH_GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod--gnosis-chain'
+  REACT_APP_SUBGRAPH_MAINNET: jfschwarz/zodiac-roles-mod-mainnet
+  REACT_APP_SUBGRAPH_POLYGON: jfschwarz/zodiac-roles-mod-polygon
+  REACT_APP_SUBGRAPH_ARBITRUM: jfschwarz/zodiac-roles-mod-arbitrum
+  REACT_APP_SUBGRAPH_OPTIMISM: jfschwarz/zodiac-roles-mod-optimism
+  REACT_APP_SUBGRAPH_AVALANCHE: jfschwarz/zodiac-roles-mod-avalanche
+  REACT_APP_SUBGRAPH_BSC: jfschwarz/zodiac-roles-mod-bsc
 
 jobs:
   deploy:
@@ -59,42 +59,42 @@ jobs:
         with:
           cidv0: ${{ steps.upload.outputs.hash }}
 
-      - name: Update DNS with new IPFS hash
-        env:
-          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
-          RECORD_DOMAIN: "gnosisguild.org"
-          RECORD_NAME: "_dnslink.roles.dev"
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
-        with:
-          cid: ${{ steps.upload.outputs.hash }}
+      # - name: Update DNS with new IPFS hash
+      #   env:
+      #     CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      #     RECORD_DOMAIN: "gnosisguild.org"
+      #     RECORD_NAME: "_dnslink.roles.dev"
+      #     CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      #   uses: textileio/cloudflare-update-dnslink@0fe7b7a1ffc865db3a4da9773f0f987447ad5848
+      #   with:
+      #     cid: ${{ steps.upload.outputs.hash }}
 
       - name: Get IPFS url
         run: echo "IPFS gateways — https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.dweb.link/ or https://${{ steps.convert_cidv0.outputs.cidv1 }}.ipfs.cf-ipfs.com/"
 
-      - name: Prep graph cli for deployment
-        working-directory: packages/subgraph
-        run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
+      # - name: Prep graph cli for deployment
+      #   working-directory: packages/subgraph
+      #   run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
 
-      - name: Deploy subgraphs
-        working-directory: packages/subgraph
-        env:
-          HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
-          HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
-          HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
-          HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
-          HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
-          HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
-          HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
-          HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
-          # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
-        run: |
-          yarn deploy:arbitrum-one
-          yarn deploy:gnosis-chain
-          yarn deploy:goerli
-          yarn deploy:avalanche
-          yarn deploy:bsc
-          yarn deploy:mainnet
-          yarn deploy:optimism
-          yarn deploy:polygon
-          # yarn deploy:optimism-on-gnosis-chain
+      # - name: Deploy subgraphs
+      #   working-directory: packages/subgraph
+      #   env:
+      #     HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
+      #     HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
+      #     HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
+      #     HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
+      #     HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
+      #     HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
+      #     HOSTED_SERVICE_SUBGRAPH__OPTIMISM: samepant/zodiac-roles-mod-optimism
+      #     HOSTED_SERVICE_SUBGRAPH__POLYGON: samepant/zodiac-roles-mod-polygon
+      #     # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: samepant/zodiac-roles-mod_optimism-on-gnosis-chain
+      #   run: |
+      #     yarn deploy:arbitrum-one
+      #     yarn deploy:gnosis-chain
+      #     yarn deploy:goerli
+      #     yarn deploy:avalanche
+      #     yarn deploy:bsc
+      #     yarn deploy:mainnet
+      #     yarn deploy:optimism
+      #     yarn deploy:polygon
+      #     # yarn deploy:optimism-on-gnosis-chain

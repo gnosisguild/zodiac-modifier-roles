@@ -1,59 +1,40 @@
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Parameter, Member } from "../generated/schema"
-export const EXECUTION_OPTIONS = ["None", "Send", "DelegateCall", "Both"]
-export const EXECUTION_OPTIONS__NONE = 0
-export const EXECUTION_OPTIONS__SEND = 1
-export const EXECUTION_OPTIONS__DELEGATE_CALL = 2
-export const execution_options__both = 3
-
-export const CLEARANCE = ["None", "Target", "Function"]
-export const CLEARANCE__NONE = 0
-export const CLEARANCE__TARGET = 1
-export const CLEARANCE__FUNCTION = 2
-
-export const PARAMETER_TYPE = ["Static", "Dynamic", "Dynamic32"]
-export const PARAMETER_TYPE__STATIC = 0
-export const PARAMETER_TYPE__DYNAMIC = 1
-export const PARAMETER_TYPE__DYNAMIC32 = 2
-
-export const PARAMETER_COMPARISON = ["EqualTo", "GreaterThan", "LessThan", "OneOf"]
-export const PARAMETER_COMPARISON__EQUAL_TO = 0
-export const PARAMETER_COMPARISON__GREATER_THAN = 1
-export const PARAMETER_COMPARISON__LESS_THAN = 2
-export const PARAMETER_COMPARISON__ONE_OF = 3
+import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
+import { Function, Role, RolesModifier, Target, Condition, Member, Allowance, UnwrapAdapter } from "../generated/schema"
+import { Clearance, ExecutionOptions, Operator } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
-export const getRoleId = (roleModifierId: string, role: number): string => roleModifierId + "-ROLE-" + role.toString()
+export const getRoleId = (roleModifierId: string, roleKey: string): string => roleModifierId + "-ROLE-" + roleKey
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
-export const getFunctionId = (targetId: string, sighash: Bytes): string => targetId + "-FUNCTION-" + sighash.toHex()
+export const getFunctionId = (targetId: string, selector: Bytes): string => targetId + "-FUNCTION-" + selector.toHex()
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
-export const getParameterId = (functionId: string, parameterIndex: number): string =>
-  functionId + "-PARAMETER-" + parameterIndex.toString()
+export const getAllowanceId = (allowanceKey: string, rolesModifierId: string): string =>
+  rolesModifierId + "-ALLOWANCE-" + allowanceKey
+export const getUnwrapAdapterId = (targetAddress: Address, selector: Bytes, rolesModifierId: string): string =>
+  rolesModifierId + "-ADAPTER-" + targetAddress.toHex() + "." + selector.toHex()
 
-export const getOrCreateRole = (roleId: string, rolesModifierId: string, roleIdInContract: i32): Role => {
+export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: string): Role => {
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
   if (!role) {
     role = new Role(roleId)
-    role.name = roleIdInContract.toString()
-    role.roleIdInContract = roleIdInContract
+    role.key = key
     role.rolesModifier = rolesModifierId
     role.save()
-    log.info("Created new role", [roleId])
+    log.info("Created new role #{}", [roleId])
   } else {
-    log.debug("Loaded existing role", [roleId])
+    log.debug("Loaded existing role #{}", [roleId])
   }
   return role
 }
 
-/*
-For created Targets:
- - execution options is None.
- - clearance is None.
-*/
+/**
+ * For created Targets:
+ *  - executionOptions is None.
+ *  - clearance is None.
+ */
 export const getOrCreateTarget = (targetId: string, targetAddress: Address, roleId: string): Target => {
   let target = Target.load(targetId)
 
@@ -61,41 +42,61 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
     target = new Target(targetId)
     target.address = targetAddress
     target.role = roleId
-    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    target.clearance = Clearance[Clearance.None]
     target.save()
-    log.info("Created new target", [targetId])
+    log.info("Created new target #{}", [targetId])
   } else {
-    log.debug("Loaded existing target", [targetId])
+    log.debug("Loaded existing target #{}", [targetId])
   }
   return target
 }
 
-/*
-For created Functions:
- - execution options options is None.
- - wildcarded is false.
-*/
-export const getOrCreateFunction = (functionId: string, targetId: string, sighash: Bytes): Function => {
-  let theFunction = Function.load(functionId)
+/**
+ * For created Functions:
+ *  - executionOptions is None
+ *  - wildcarded is false
+ */
+export const getOrCreateFunction = (functionId: string, targetId: string, selector: Bytes): Function => {
+  let func = Function.load(functionId)
 
-  if (!theFunction) {
-    theFunction = new Function(functionId)
-    theFunction.target = targetId
-    theFunction.sighash = sighash
-    theFunction.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    theFunction.wildcarded = false
-    theFunction.save()
-    log.info("Created new function", [functionId])
+  if (!func) {
+    func = new Function(functionId)
+    func.target = targetId
+    func.selector = selector
+    func.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    func.wildcarded = false
+    func.save()
+    log.info("Created new function #{}", [functionId])
   } else {
-    log.debug("Loaded existing function", [functionId])
+    log.debug("Loaded existing function #{}", [functionId])
   }
-  return theFunction
+
+  return func
 }
-/*
-Fore created Member:
- - enabledAsModule is false
-*/
+
+/**
+ * For created Conditions:
+ *  - operator is Pass
+ */
+export const getOrCreateCondition = (conditionId: string): Condition => {
+  let condition = Condition.load(conditionId)
+
+  if (!condition) {
+    condition = new Condition(conditionId)
+    condition.operator = Operator[Operator.Pass]
+    condition.save()
+    log.info("Created new condition #{}", [conditionId])
+  } else {
+    log.debug("Loaded existing condition #{}", [conditionId])
+  }
+  return condition
+}
+
+/**
+ * For created Member:
+ *  - enabledAsModule is false
+ */
 export const getOrCreateMember = (memberId: string, rolesModifierId: string, memberAddress: Address): Member => {
   let member = Member.load(memberId)
   if (!member) {
@@ -110,10 +111,56 @@ export const getOrCreateMember = (memberId: string, rolesModifierId: string, mem
 export const getRolesModifier = (rolesModifierId: string): RolesModifier | null => {
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
+    log.warning("RolesModifier {} does not exist", [rolesModifierId])
     return null
   }
   return rolesModifier
+}
+
+/**
+ * For created Allowance:
+ *  - balance is 0
+ *  - maxBalance is 0
+ *  - refillAmount is 0
+ *  - refillInterval is 0
+ *  - refillTimestamp is 0
+ */
+export const getOrCreateAllowance = (allowanceKey: string, rolesModifierId: string): Allowance => {
+  const id = getAllowanceId(allowanceKey, rolesModifierId)
+  let allowance = Allowance.load(id)
+  if (!allowance) {
+    allowance = new Allowance(id)
+    allowance.key = allowanceKey
+    allowance.rolesModifier = rolesModifierId
+    allowance.balance = BigInt.fromU32(0)
+    allowance.maxBalance = BigInt.fromU32(0)
+    allowance.refillAmount = BigInt.fromU32(0)
+    allowance.refillInterval = 0
+    allowance.refillTimestamp = 0
+    allowance.save()
+  }
+  return allowance
+}
+
+export const getOrCreateUnwrapAdapter = (
+  targetAddress: Address,
+  selector: Bytes,
+  rolesModifierId: string,
+): UnwrapAdapter => {
+  const id = getUnwrapAdapterId(targetAddress, selector, rolesModifierId)
+  let adapter = UnwrapAdapter.load(id)
+
+  // save adapter the first time we encounter it
+  if (!adapter) {
+    adapter = new UnwrapAdapter(id)
+    adapter.rolesModifier = rolesModifierId
+    adapter.targetAddress = targetAddress
+    adapter.selector = selector
+    adapter.save()
+    log.info("Created new UnwrapAdapter #{}", [id])
+  } else {
+    log.debug("Loaded existing UnwrapAdapter #{}", [id])
+  }
+
+  return adapter
 }
