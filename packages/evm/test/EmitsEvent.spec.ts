@@ -88,29 +88,12 @@ describe("EmitsEvent", async () => {
   });
   it("SetAllowance", async () => {
     const { modifier, owner } = await setup();
+    const allowanceKey =
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
     await expect(
-      modifier
-        .connect(owner)
-        .setAllowance("Hey this is a an AllowanceName", 2, 3, 4, 5, 6)
+      modifier.connect(owner).setAllowance(allowanceKey, 2, 3, 4, 5, 6)
     )
       .to.emit(modifier, "SetAllowance")
-      .withArgs("Hey this is a an AllowanceName", 2, 3, 4, 5, 6);
-
-    await expect(
-      modifier
-        .connect(owner)
-        .setAllowance(
-          "Hey this is a an AllowanceName which is a bit 2 long",
-          2,
-          3,
-          4,
-          5,
-          6
-        )
-    ).to.be.revertedWith("InadequateAllowanceKey(52)");
-
-    await expect(
-      modifier.connect(owner).setAllowance("", 2, 3, 4, 5, 6)
-    ).to.be.revertedWith("InadequateAllowanceKey(0)");
+      .withArgs(allowanceKey, 2, 3, 4, 5, 6);
   });
 });

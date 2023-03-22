@@ -86,7 +86,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -121,7 +121,8 @@ describe("Operator", async () => {
     it("passes a check from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceKey = "Some key";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: 1,
@@ -134,7 +135,9 @@ describe("Operator", async () => {
 
       expect((await modifier.allowances(allowanceKey)).balance).to.equal(1);
 
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke())
+        .to.emit(modifier, "ConsumeAllowance")
+        .withArgs(allowanceKey, 1, 0);
 
       expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
@@ -145,7 +148,8 @@ describe("Operator", async () => {
     it("passes multiple checks from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceKey = "Anotha key";
+      const allowanceKey =
+        "0x0000000000000000000000000000ff0000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: 2,
@@ -173,7 +177,8 @@ describe("Operator", async () => {
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceKey = "1234";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: 0,
@@ -192,7 +197,8 @@ describe("Operator", async () => {
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceKey = "Bananarama Is The Jam!";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
       await setAllowance(allowanceKey, {
         balance: 0,
         refillInterval: 1000,
@@ -216,8 +222,10 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceKey1 = "Sparkle Unicorn Rainbow 123";
-      const allowanceKey2 = "WackyZebraPlaysBanjo56";
+      const allowanceKey1 =
+        "0x1000000000000000000000000000000000000000000000000000000000000001";
+      const allowanceKey2 =
+        "0x2000000000000000000000000000000000000000000000000000000000000002";
       const value1 = 100;
       const value2 = 200;
       const valueOther = 9999;
@@ -282,7 +290,7 @@ describe("Operator", async () => {
             parent: 1,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey1]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
@@ -294,7 +302,7 @@ describe("Operator", async () => {
             parent: 2,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey2]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
         ExecutionOptions.Send

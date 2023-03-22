@@ -92,7 +92,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -129,7 +129,8 @@ describe("Operator", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
       const initialBalance = 10000;
-      const allowanceKey = "ChickenNuggets 4 life!";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: initialBalance,
@@ -158,7 +159,8 @@ describe("Operator", async () => {
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceKey = "JazzyGiraffeDancesFunk";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: 250,
@@ -181,7 +183,8 @@ describe("Operator", async () => {
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceKey = "Tacos Are Better Than Pizza";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
       await setAllowance(allowanceKey, {
         balance: 9,
         refillInterval: 1000,
@@ -207,7 +210,8 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceKey = "An allowance key";
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
       const allowanceAmount = 200;
       const value = 666;
       const valueOther = 678;
@@ -252,7 +256,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -287,7 +291,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
           {
             parent: 0,
@@ -310,8 +314,10 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceKey1 = "Allowance Key 1";
-      const allowanceKey2 = "Aççpwance 2";
+      const allowanceKey1 =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      const allowanceKey2 =
+        "0x0000000000000000000000000000000000000000000000000000000000000002";
       const allowanceAmount1 = 200;
       const allowanceAmount2 = 100;
       const value1 = 777;
@@ -378,7 +384,7 @@ describe("Operator", async () => {
             parent: 1,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey1]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
@@ -390,7 +396,7 @@ describe("Operator", async () => {
             parent: 2,
             paramType: ParameterType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: defaultAbiCoder.encode(["string"], [allowanceKey2]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
         ExecutionOptions.Send
