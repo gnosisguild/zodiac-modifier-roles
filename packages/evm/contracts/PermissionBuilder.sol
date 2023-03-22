@@ -38,7 +38,7 @@ abstract contract PermissionBuilder is Core {
     event ScopeFunction(
         uint16 role,
         address targetAddress,
-        bytes4 functionSig,
+        bytes4 selector,
         ConditionFlat[] conditions,
         ExecutionOptions options
     );
