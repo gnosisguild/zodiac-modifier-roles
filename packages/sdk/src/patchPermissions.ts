@@ -4,7 +4,7 @@ import {
   removeObsoleteCalls,
   Call,
 } from "./calls"
-import diffPermissions from "./diffPermissions"
+import { diffPermissions } from "./diffPermissions"
 import { Target } from "./types"
 
 /**

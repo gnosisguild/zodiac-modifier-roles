@@ -1,37 +1,36 @@
-import { Clearance, Target, Function, Parameter } from "./types"
+import { getConditionId } from "./conditions"
+import { Clearance, Target, Function, Condition } from "./types"
 
 /**
  *  Returns permissions granted by a that are not granted by b
  */
-const diffPermissions = (a: Target[], b: Target[]): Target[] => {
+export const diffPermissions = (a: Target[], b: Target[]): Target[] => {
   // targets in a that are not in b
   const targetsDiff = a.filter(
     (targetA) => !b.some((targetB) => targetsEqual(targetA, targetB))
   )
 
-  // targets that are function-cleared in a and in b
-  const functionClearedOverlap = a.filter(
+  // targets that are scoped in a and in b
+  const scopedTargetsOverlap = a.filter(
     (targetA) =>
       targetA.clearance === Clearance.Function &&
       b.some((targetB) => targetsEqual(targetA, targetB))
   )
 
   // diff the functions of targets in the overlap
-  const functionClearedOverlapDiff = functionClearedOverlap
+  const scopedTargetsOverlapDiff = scopedTargetsOverlap
     .map((targetA) => {
       const targetB = b.find((targetB) => targetsEqual(targetA, targetB))
       if (!targetB) throw new Error("invariant violation")
-      return diffFunctionClearedTargets(targetA, targetB)
+      return diffScopedTargets(targetA, targetB)
     })
     .filter(isTruthy)
 
-  return [...targetsDiff, ...functionClearedOverlapDiff]
+  return [...targetsDiff, ...scopedTargetsOverlapDiff]
 }
 
-export default diffPermissions
-
 // Returns a diff of function-cleared targets, and undefined if the targets are equal
-const diffFunctionClearedTargets = (
+const diffScopedTargets = (
   targetA: Target,
   targetB: Target
 ): Target | undefined => {
@@ -65,20 +64,12 @@ const functionsEqual = (functionA: Function, functionB: Function) =>
   functionA.selector === functionB.selector &&
   functionA.wildcarded === functionB.wildcarded &&
   functionA.executionOptions === functionB.executionOptions &&
-  functionA.parameters.every((paramA) =>
-    functionB.parameters.some((paramB) => paramsEqual(paramA, paramB))
-  ) &&
-  functionB.parameters.every((paramB) =>
-    functionA.parameters.some((paramA) => paramsEqual(paramA, paramB))
-  )
+  conditionsEqual(functionA.condition, functionB.condition)
 
-const paramsEqual = (paramA: Parameter, paramB: Parameter) =>
-  paramA.index === paramB.index &&
-  paramA.type === paramB.type &&
-  paramA.comparison === paramB.comparison &&
-  arraysEqual(paramA.comparisonValue, paramB.comparisonValue)
-
-const arraysEqual = (a: string[], b: string[]) =>
-  a.length === b.length && a.every((item) => b.includes(item))
+const conditionsEqual = (conditionA?: Condition, conditionB?: Condition) =>
+  conditionA === conditionB ||
+  (conditionA &&
+    conditionB &&
+    getConditionId(conditionA) === getConditionId(conditionB))
 
 const isTruthy = Boolean as any as <T>(x: T | undefined) => x is T
