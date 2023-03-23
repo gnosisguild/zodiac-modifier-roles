@@ -8,9 +8,10 @@ import {
   keccak256,
 } from "ethers/lib/utils"
 
-import { Condition, ConditionFlat, Operator } from "../types"
+import { Condition, Operator } from "../types"
 
 import { flattenCondition } from "./flattenCondition"
+import { ConditionFlat } from "./types"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
   "0xce0042b868300000d44a59004da54a005ffdcf9f"
