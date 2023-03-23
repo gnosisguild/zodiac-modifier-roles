@@ -1,21 +1,24 @@
-import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
-
-import { Clearance, ExecutionOptions, Target } from "../types"
+import { Clearance, Condition, ExecutionOptions, Target } from "../types"
 
 import { execOptions } from "./execOptions"
+import { mergeFunctionEntries } from "./mergeFunctionEntries"
 import { solidityPackPadded } from "./scopeParam"
 import {
   PlaceholderValues,
   RolePreset,
-  PresetScopeParam,
-  PresetFunction,
-  PresetAllowEntry,
   Placeholder,
   ComparisonValue,
+  PresetCondition,
 } from "./types"
+import { functionId, isScoped, sighash } from "./utils"
 
-// Takes a RolePreset, fills in the placeholders, and returns a the targets list
-const fillPreset = <P extends RolePreset>(
+/**
+ * Processes a RolePreset, filling in the placeholders and returning the final permissions
+ * @param preset the RolePreset to process
+ * @param placeholderValues a map of placeholder keys to the values they should be replaced with
+ * @returns permissions as a list of allowed targets
+ */
+export const fillPreset = <P extends RolePreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
 ): Target[] => {
@@ -36,7 +39,7 @@ const fillPreset = <P extends RolePreset>(
       functions: [],
     }))
 
-  const functionTargets = Object.entries(
+  const functionScopedTargets = Object.entries(
     groupBy(preset.allow.filter(isScoped), (entry) =>
       entry.targetAddress.toLowerCase()
     )
@@ -46,33 +49,26 @@ const fillPreset = <P extends RolePreset>(
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
       let selector = "selector" in allowFunction && allowFunction.selector
-      if (!selector)
+      if (!selector) {
         selector =
-          "signature" in allowFunction &&
-          functionSighash(allowFunction.signature)
+          "signature" in allowFunction && sighash(allowFunction.signature)
+      }
       if (!selector) throw new Error("invariant violation")
-
-      const parameters = processParams(
-        allowFunction.params,
-        placeholderLookupMap
-      )
-
+      const { condition } = allowFunction
       return {
         selector,
         executionOptions: execOptions(allowFunction),
-        wildcarded: parameters.length === 0,
-        parameters,
+        wildcarded: !condition,
+        condition:
+          condition && processCondition(condition, placeholderLookupMap),
       }
     }),
   }))
 
-  return [...fullyClearedTargets, ...functionTargets]
+  return [...fullyClearedTargets, ...functionScopedTargets]
 }
 
 export default fillPreset
-
-const functionSighash = (signature: string): string =>
-  keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
 const makePlaceholderLookupMap = <P extends RolePreset>(
   preset: P,
@@ -88,52 +84,35 @@ const makePlaceholderLookupMap = <P extends RolePreset>(
   return map
 }
 
-// TODO
-// Process the params, filling in the placeholder values and encoding the values
-const processParams = (
-  params:
-    | (PresetScopeParam | undefined)[]
-    | Record<number, PresetScopeParam>
-    | undefined,
+const processCondition = (
+  condition: PresetCondition,
+  placeholderLookupMap: Map<Placeholder<any>, any>
+): Condition => ({
+  paramType: condition.paramType,
+  operator: condition.operator,
+  compValue: fillPlaceholder(condition.compValue, placeholderLookupMap),
+  children: condition.children?.map((child) =>
+    processCondition(child, placeholderLookupMap)
+  ),
+})
+
+const fillPlaceholder = (
+  valueOrPlaceholder: ComparisonValue | undefined,
   placeholderLookupMap: Map<Placeholder<any>, any>
 ) => {
-  if (!params) return []
+  if (valueOrPlaceholder === undefined) return undefined
 
-  return Object.entries(params || {})
-    .map(
-      ([key, param]) =>
-        param && {
-          index: parseInt(key),
-          type: param.type,
-          comparison: param.comparison,
-          comparisonValue: fillPlaceholderValues(
-            param.value,
-            placeholderLookupMap
-          ),
-        }
-    )
-    .filter(Boolean as any as <T>(x: T | undefined) => x is T)
-}
-
-const fillPlaceholderValues = (
-  value: PresetScopeParam["value"],
-  placeholderLookupMap: Map<Placeholder<any>, any>
-) => {
-  const mapValue = (valueOrPlaceholder: ComparisonValue) => {
-    if (valueOrPlaceholder instanceof Placeholder) {
-      const value = placeholderLookupMap.get(valueOrPlaceholder.identity)
-      if (value === undefined) {
-        throw new Error(
-          `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
-        )
-      }
-      return solidityPackPadded(valueOrPlaceholder.type, value)
+  if (valueOrPlaceholder instanceof Placeholder) {
+    const value = placeholderLookupMap.get(valueOrPlaceholder.identity)
+    if (value === undefined) {
+      throw new Error(
+        `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
+      )
     }
-
-    return valueOrPlaceholder
+    return solidityPackPadded(valueOrPlaceholder.type, value)
   }
 
-  return Array.isArray(value) ? value.map(mapValue) : [mapValue(value)]
+  return valueOrPlaceholder
 }
 
 const sanityCheck = (preset: RolePreset) => {
@@ -155,15 +134,12 @@ const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
   ]
   if (intersection.length > 0) {
     throw new Error(
-      `The following addresses appear under allowTargets and allowFunctions: ${intersection.join(
+      `An address can either be fully allowed or scoped to selected functions. The following addresses are both: ${intersection.join(
         ", "
       )}`
     )
   }
 }
-
-const isScoped = (entry: PresetAllowEntry): entry is PresetFunction =>
-  "selector" in entry || "signature" in entry
 
 const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
   const allowFunctions = preset.allow.filter(isScoped).map(functionId)
@@ -178,7 +154,7 @@ const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
 
   if (duplicates.length > 0) {
     throw new Error(
-      `The following functions appear multiple times under allowFunctions: ${duplicates.join(
+      `The following functions appear multiple times and cannot be merged: ${duplicates.join(
         ", "
       )}`
     )
@@ -190,105 +166,3 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
     ;(groups[key(item)] ||= []).push(item)
     return groups
   }, {} as Record<K, T[]>)
-
-const functionId = (entry: PresetFunction) =>
-  `${entry.targetAddress.toLowerCase()}.${
-    "selector" in entry ? entry.selector : functionSighash(entry.signature)
-  }`
-
-const mergeFunctionEntries = (preset: RolePreset) => ({
-  ...preset,
-  allow: preset.allow.reduce((result, entry) => {
-    if (!isScoped(entry)) {
-      result.push(entry)
-      return result
-    }
-
-    const matchingEntry = result
-      .filter(isScoped)
-      .find((existingEntry) => functionId(existingEntry) === functionId(entry))
-    if (!matchingEntry) {
-      result.push(entry)
-      return result
-    }
-
-    if (
-      !!matchingEntry.send !== !!entry.send ||
-      !!matchingEntry.delegatecall !== !!entry.delegatecall
-    ) {
-      // we don't merge if execution options are different
-      result.push(entry)
-      return result
-    }
-
-    const matchingEntryParams = Object.entries(
-      matchingEntry.params || {}
-    ).filter(([, param]) => param !== undefined)
-    const params = Object.entries(entry.params || {}).filter(
-      ([, param]) => param !== undefined
-    )
-
-    if (
-      !arraysEqual(
-        matchingEntryParams.map(([key]) => key),
-        params.map(([key]) => key)
-      )
-    ) {
-      // we don't merge if the entries set constraints on different parameters
-      result.push(entry)
-      return result
-    }
-
-    const mergedParams: Record<number, PresetScopeParam> = {}
-    for (const [key, param] of params) {
-      const [, matchingEntryParam] =
-        matchingEntryParams.find(([matchingKey]) => matchingKey === key) || []
-      if (!matchingEntryParam || !param) throw new Error("invariant violation")
-
-      let mergedParam: PresetScopeParam
-      try {
-        mergedParam = mergeFunctionParam(matchingEntryParam, param)
-      } catch (e) {
-        // we don't merge entries if the params cannot be merged
-        result.push(entry)
-        return result
-      }
-
-      mergedParams[parseInt(key)] = mergedParam
-    }
-
-    // update existing entry to the set of merged params
-    matchingEntry.params = mergedParams
-    return result
-  }, [] as PresetAllowEntry[]),
-})
-
-const mergeFunctionParam = (a: PresetScopeParam, b: PresetScopeParam) => {
-  if (a.type !== b.type) {
-    throw new Error(
-      `Cannot merge parameters of different types: ${a.type} and ${b.type}`
-    )
-  }
-
-  const MERGEABLE_COMPARISONS = [Comparison.EqualTo, Comparison.OneOf]
-  if (!MERGEABLE_COMPARISONS.includes(a.comparison)) {
-    throw new Error(`Cannot merge parameters with comparison ${a.comparison}`)
-  }
-  if (!MERGEABLE_COMPARISONS.includes(b.comparison)) {
-    throw new Error(`Cannot merge parameters with comparison ${b.comparison}`)
-  }
-
-  const aValues = Array.isArray(a.value) ? a.value : [a.value]
-  const bValues = Array.isArray(b.value) ? b.value : [b.value]
-  const mergedValues = [...new Set([...aValues, ...bValues])]
-
-  return {
-    type: a.type,
-    comparison:
-      mergedValues.length === 1 ? Comparison.EqualTo : Comparison.OneOf,
-    value: mergedValues.length === 1 ? mergedValues[0] : mergedValues,
-  }
-}
-
-const arraysEqual = (a: string[], b: string[]) =>
-  a.length === b.length && a.every((aEntry) => b.includes(aEntry))

@@ -113,14 +113,16 @@ export type PresetFullyClearedTarget = {
 // allows calls to specific functions, optionally with parameter scoping
 export type PresetFunction = ({ selector: string } | { signature: string }) & {
   targetAddress: string
-  params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
+  condition?: PresetCondition
 } & ExecutionOptions
 
 export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 
 export type ComparisonValue = string | Placeholder<any>
-export interface PresetScopeParam {
-  type: ParameterType
+
+export interface PresetCondition {
+  paramType: ParameterType
   operator: Operator
-  value: ComparisonValue | ComparisonValue[]
+  compValue?: ComparisonValue
+  children?: PresetCondition[]
 }
