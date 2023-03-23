@@ -14,7 +14,7 @@ import patchPermissions from "./patchPermissions"
 import fillPreset from "./presets/fillPreset"
 import { PlaceholderValues, RolePreset } from "./presets/types"
 import SAFE_TX_SERVICE from "./safeTxService"
-import { Role, NetworkId } from "./types"
+import { NetworkId, Target } from "./types"
 
 let nonce: number
 
@@ -46,7 +46,7 @@ export const applyPreset = async <P extends RolePreset>(
     network: NetworkId
     ethers?: typeof defaultEthers
     multiSendBatchSize?: number
-    currentPermissions?: Role
+    currentPermissions?: Target[]
   }
 ): Promise<void> => {
   const {
@@ -137,18 +137,21 @@ export const encodeApplyPreset = async <P extends RolePreset>(
   placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
-    currentPermissions?: Role
+    currentPermissions?: Target[]
   }
 ) => {
-  const currentPermissions =
-    options.currentPermissions ||
-    (await fetchRole({
+  let currentPermissions = options.currentPermissions
+  if (!currentPermissions) {
+    const role = await fetchRole({
       address,
       roleKey,
       network: options.network,
-    }))
+    })
+    currentPermissions = role.targets
+  }
+
   const nextPermissions = fillPreset(preset, placeholderValues)
-  const calls = patchPermissions(currentPermissions.targets, nextPermissions)
+  const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
   return encodeCalls(roleKey, calls)
 }
@@ -177,7 +180,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
     network: NetworkId
     multiSendAddress?: string
     multiSendBatchSize?: number
-    currentPermissions?: Role
+    currentPermissions?: Target[]
   }
 ): Promise<MetaTransactionData[]> => {
   const {
@@ -229,7 +232,7 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
   placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
-    currentPermissions?: Role
+    currentPermissions?: Target[]
   }
 ) => {
   const { network, currentPermissions } = options

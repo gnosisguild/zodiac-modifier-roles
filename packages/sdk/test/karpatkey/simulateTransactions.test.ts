@@ -109,7 +109,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       preset,
       placeholderValues,
       {
-        currentPermissions: { key: ROLE_KEY, members: [], targets: [] },
+        currentPermissions: [],
         network: 100, // this value won't be used
       }
     )
