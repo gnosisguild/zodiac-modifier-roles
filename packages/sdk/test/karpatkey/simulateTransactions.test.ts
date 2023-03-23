@@ -41,6 +41,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend")
     const multiSend = await MultiSend.deploy()
 
+    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+      "MultiSendUnwrapper"
+    )
+    const multiSendUnwrapper = await MultiSendUnwrapper.deploy()
+
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
     const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
@@ -58,7 +63,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       avatar.address
     )) as unknown as Roles
 
-    await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
+    await modifier.setTransactionUnwrapper(
+      "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+      multiSend.interface.getSighash("multiSend(bytes)"),
+      multiSendUnwrapper.address
+    )
 
     // add ethers default signer to role 1
     const defaultSigner = (await hre.ethers.getSigners())[0]

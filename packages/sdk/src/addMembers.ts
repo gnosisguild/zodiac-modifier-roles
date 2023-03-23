@@ -6,7 +6,9 @@ import { Roles } from "../../evm/typechain-types"
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
 
-// TODO implement members patching
+// TODO implement members diffing/patching instead of this
+// - diffMembers(currentMembers, nextMembers)
+// - patchMembers(currentMembers, nextMembers)
 const addMembers = async (
   rolesContractAddress: string,
   roleId: number,
