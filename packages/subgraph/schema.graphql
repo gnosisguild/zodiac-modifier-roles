@@ -76,7 +76,7 @@ enum Clearance {
 
 type Role @entity {
   id: ID! # Global unique id for role in subgraph
-  key: String! # Unique within the Roles modifier instance
+  key: Bytes! # Unique within the Roles modifier instance (bytes32)
   rolesModifier: RolesModifier!
   targets: [Target!] @derivedFrom(field: "role")
   members: [RoleAssignment!] @derivedFrom(field: "role")
@@ -134,7 +134,7 @@ type RolesModifier @entity {
 
 type Allowance @entity {
   id: ID! # Global unique id
-  key: String! # Unique within the Roles modifier instance
+  key: Bytes! # Unique within the Roles modifier instance (bytes32)
   rolesModifier: RolesModifier!
   refillInterval: Int! # duration of the period in seconds, 0 for one-time allowance
   refillAmount: BigInt! # amount that will be replenished "at the start of every period" (replace with: per period)

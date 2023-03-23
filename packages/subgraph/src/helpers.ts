@@ -3,18 +3,18 @@ import { Function, Role, RolesModifier, Target, Condition, Member, Allowance, Un
 import { Clearance, ExecutionOptions, Operator } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
-export const getRoleId = (roleModifierId: string, roleKey: string): string => roleModifierId + "-ROLE-" + roleKey
+export const getRoleId = (roleModifierId: string, roleKey: Bytes): string => roleModifierId + "-ROLE-" + roleKey.toHex()
 export const getTargetId = (roleId: string, target: Address): string => roleId + "-TARGET-" + target.toHex()
 export const getMemberId = (rolesModifierId: string, member: Address): string =>
   rolesModifierId + "-MEMBER-" + member.toHex()
 export const getFunctionId = (targetId: string, selector: Bytes): string => targetId + "-FUNCTION-" + selector.toHex()
 export const getAssignmentId = (memberId: string, roleId: string): string => memberId + "-" + roleId
-export const getAllowanceId = (allowanceKey: string, rolesModifierId: string): string =>
-  rolesModifierId + "-ALLOWANCE-" + allowanceKey
+export const getAllowanceId = (allowanceKey: Bytes, rolesModifierId: string): string =>
+  rolesModifierId + "-ALLOWANCE-" + allowanceKey.toHex()
 export const getUnwrapAdapterId = (targetAddress: Address, selector: Bytes, rolesModifierId: string): string =>
   rolesModifierId + "-ADAPTER-" + targetAddress.toHex() + "." + selector.toHex()
 
-export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: string): Role => {
+export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: Bytes): Role => {
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
@@ -125,7 +125,7 @@ export const getRolesModifier = (rolesModifierId: string): RolesModifier | null 
  *  - refillInterval is 0
  *  - refillTimestamp is 0
  */
-export const getOrCreateAllowance = (allowanceKey: string, rolesModifierId: string): Allowance => {
+export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: string): Allowance => {
   const id = getAllowanceId(allowanceKey, rolesModifierId)
   let allowance = Allowance.load(id)
   if (!allowance) {
