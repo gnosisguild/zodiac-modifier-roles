@@ -15,7 +15,7 @@ env:
   REACT_APP_ONBOARD_JS_DAPP_ID: 30fd8cd4-93a1-4c0e-a463-b5eceb9a3956
   REACT_APP_SUBGRAPH_BASE_URL: https://api.thegraph.com/subgraphs/name/
   REACT_APP_SUBGRAPH_GOERLI: jfschwarz/zodiac-roles-mod-goerli
-  REACT_APP_SUBGRAPH_GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod--gnosis-chain'
+  REACT_APP_SUBGRAPH_GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod-gnosis-chain
   REACT_APP_SUBGRAPH_MAINNET: jfschwarz/zodiac-roles-mod-mainnet
   REACT_APP_SUBGRAPH_POLYGON: jfschwarz/zodiac-roles-mod-polygon
   REACT_APP_SUBGRAPH_ARBITRUM: jfschwarz/zodiac-roles-mod-arbitrum
