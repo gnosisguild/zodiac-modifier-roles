@@ -23,7 +23,7 @@ dataSources:
         - name: Roles
           file: ./abis/Roles.sol/Roles.json
       eventHandlers:
-        - event: AssignRoles(address,uint16[],bool[])
+        - event: AssignRoles(address,bytes32[],bool[])
           handler: handleAssignRoles
         - event: AvatarSet(indexed address,indexed address)
           handler: handleAvatarSet
@@ -35,7 +35,7 @@ dataSources:
           handler: handleEnabledModule
         - event: RolesModSetup(indexed address,indexed address,indexed address,address)
           handler: handleRolesModSetup
-        - event: SetDefaultRole(address,uint16)
+        - event: SetDefaultRole(address,bytes32)
           handler: handleSetDefaultRole
         - event: TargetSet(indexed address,indexed address)
           handler: handleTargetSet
@@ -63,19 +63,19 @@ dataSources:
         - name: PermissionBuilder
           file: ./abis/PermissionBuilder.sol/PermissionBuilder.json
       eventHandlers:
-        - event: AllowTarget(uint16,address,uint8)
+        - event: AllowTarget(bytes32,address,uint8)
           handler: handleAllowTarget
-        - event: ScopeTarget(uint16,address)
+        - event: ScopeTarget(bytes32,address)
           handler: handleScopeTarget
-        - event: RevokeTarget(uint16,address)
+        - event: RevokeTarget(bytes32,address)
           handler: handleRevokeTarget
-        - event: AllowFunction(uint16,address,bytes4,uint8)
+        - event: AllowFunction(bytes32,address,bytes4,uint8)
           handler: handleAllowFunction
-        - event: ScopeFunction(uint16,address,bytes4,(uint8,uint8,uint8,bytes)[],uint8)
+        - event: ScopeFunction(bytes32,address,bytes4,(uint8,uint8,uint8,bytes)[],uint8)
           handler: handleScopeFunction
-        - event: RevokeFunction(uint16,address,bytes4)
+        - event: RevokeFunction(bytes32,address,bytes4)
           handler: handleRevokeFunction
-        - event: SetAllowance(uint16,uint128,uint128,uint128,uint64,uint64)
+        - event: SetAllowance(bytes32,uint128,uint128,uint128,uint64,uint64)
           handler: handleSetAllowance
       file: ./src/permissions.mapping.ts
   - kind: ethereum
