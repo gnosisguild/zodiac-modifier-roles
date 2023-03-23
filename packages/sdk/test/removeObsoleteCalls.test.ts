@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import removeObsoleteCalls from "../src/calls/removeObsoleteCalls"
+import { removeObsoleteCalls } from "../src/calls"
 import { Call } from "../src/calls/types"
 import { ExecutionOptions } from "../src/types"
 
@@ -8,15 +8,15 @@ describe("removeObsoleteCalls", () => {
   it("should remove function permission updates if later on the entire target is cleared", () => {
     const calls: Call[] = [
       {
-        call: "scopeAllowFunction",
+        call: "allowFunction",
         targetAddress: "0x1",
-        functionSig: "0x12345678",
-        options: ExecutionOptions.None,
+        selector: "0x12345678",
+        executionOptions: ExecutionOptions.None,
       },
       {
         call: "allowTarget",
         targetAddress: "0x1",
-        options: ExecutionOptions.None,
+        executionOptions: ExecutionOptions.None,
       },
     ]
 
@@ -25,7 +25,7 @@ describe("removeObsoleteCalls", () => {
       {
         call: "allowTarget",
         targetAddress: "0x1",
-        options: ExecutionOptions.None,
+        executionOptions: ExecutionOptions.None,
       },
     ])
   })
@@ -33,15 +33,15 @@ describe("removeObsoleteCalls", () => {
   it("should not remove function permission updates if the target will be cleared but then later updated to function scoping", () => {
     const calls: Call[] = [
       {
-        call: "scopeAllowFunction",
+        call: "allowFunction",
         targetAddress: "0x1",
-        functionSig: "0x12345678",
-        options: ExecutionOptions.None,
+        selector: "0x12345678",
+        executionOptions: ExecutionOptions.None,
       },
       {
         call: "allowTarget",
         targetAddress: "0x1",
-        options: ExecutionOptions.None,
+        executionOptions: ExecutionOptions.None,
       },
       {
         call: "scopeTarget",
@@ -52,10 +52,10 @@ describe("removeObsoleteCalls", () => {
     const result = removeObsoleteCalls(calls)
     expect(result).to.deep.equal([
       {
-        call: "scopeAllowFunction",
+        call: "allowFunction",
         targetAddress: "0x1",
-        functionSig: "0x12345678",
-        options: ExecutionOptions.None,
+        selector: "0x12345678",
+        executionOptions: ExecutionOptions.None,
       },
       {
         call: "scopeTarget",

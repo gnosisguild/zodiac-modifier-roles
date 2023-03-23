@@ -68,8 +68,6 @@ export const fillPreset = <P extends RolePreset>(
   return [...fullyClearedTargets, ...functionScopedTargets]
 }
 
-export default fillPreset
-
 const makePlaceholderLookupMap = <P extends RolePreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>

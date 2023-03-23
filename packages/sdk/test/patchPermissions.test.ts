@@ -1,104 +1,74 @@
 import { expect } from "chai"
 
-import patchPermissions from "../src/patchPermissions"
-import { Role } from "../src/types"
+import { patchPermissions } from "../src/patchPermissions"
+import { Operator, ParameterType, Target } from "../src/types"
 
 describe("patchPermissions", () => {
   it("should revoke functions with param scopings", () => {
-    const before: Role = {
-      targets: [
-        {
-          address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-          clearance: 2,
-          executionOptions: 0,
-          functions: [
-            {
-              selector: "0x095ea7b3",
-              executionOptions: 0,
-              wildcarded: false,
-              parameters: [
-                {
-                  index: 0,
-                  type: 0,
-                  comparison: 3,
-                  comparisonValue: [
-                    "0x000000000000000000000000ddcbf776df3de60163066a5dddf2277cb445e0f3",
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    }
-
-    const after: Role = {
-      targets: [],
-    }
+    const before: Target[] = [
+      {
+        address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+        clearance: 2,
+        executionOptions: 0,
+        functions: [
+          {
+            selector: "0x095ea7b3",
+            executionOptions: 0,
+            wildcarded: false,
+          },
+        ],
+      },
+    ]
+    const after: Target[] = []
 
     expect(patchPermissions(before, after)).to.deep.equal([
       {
-        call: "scopeRevokeFunction",
+        call: "revokeFunction",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-        functionSig: "0x095ea7b3",
+        selector: "0x095ea7b3",
       },
     ])
   })
 
   it("should patch params scoping", () => {
-    const before: Role = {
-      targets: [
-        {
-          address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-          clearance: 2,
-          executionOptions: 0,
-          functions: [
-            {
-              selector: "0x095ea7b3",
-              executionOptions: 0,
-              wildcarded: false,
-              parameters: [
-                {
-                  index: 0,
-                  type: 0,
-                  comparison: 3,
-                  comparisonValue: [
-                    "0x000000000000000000000000ddcbf776df3de60163066a5dddf2277cb445e0f3",
-                  ],
-                },
-              ],
+    const before: Target[] = [
+      {
+        address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+        clearance: 2,
+        executionOptions: 0,
+        functions: [
+          {
+            selector: "0x095ea7b3",
+            executionOptions: 0,
+            wildcarded: false,
+            condition: {
+              paramType: ParameterType.None,
+              operator: Operator.Pass,
             },
-          ],
-        },
-      ],
-    }
+          },
+        ],
+      },
+    ]
 
-    const after: Role = {
-      targets: [
-        {
-          address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-          clearance: 2,
-          executionOptions: 0,
-          functions: [
-            {
-              selector: "0x095ea7b3",
-              executionOptions: 0,
-              wildcarded: false,
-              parameters: [
-                {
-                  index: 1,
-                  type: 0,
-                  comparison: 3,
-                  comparisonValue: [
-                    "0x000000000000000000000000ddcbf776df3de60163066a5dddf2277cb445e0f3",
-                  ],
-                },
-              ],
+    const after: Target[] = [
+      {
+        address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+        clearance: 2,
+        executionOptions: 0,
+        functions: [
+          {
+            selector: "0x095ea7b3",
+            executionOptions: 0,
+            wildcarded: false,
+            condition: {
+              paramType: ParameterType.None,
+              operator: Operator.Or,
+              children: [],
             },
-          ],
-        },
-      ],
-    }
+          },
+        ],
+      },
+    ]
 
     expect(patchPermissions(before, after)).to.deep.equal([
       {
@@ -108,22 +78,13 @@ describe("patchPermissions", () => {
       {
         call: "scopeFunction",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-        functionSig: "0x095ea7b3",
-        compValue: [],
-        isParamScoped: [],
+        selector: "0x095ea7b3",
         options: 0,
-        paramComp: [],
-        paramType: [],
-      },
-      {
-        call: "scopeParameterAsOneOf",
-        targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-        functionSig: "0x095ea7b3",
-        paramIndex: 1,
-        type: 0,
-        value: [
-          "0x000000000000000000000000ddcbf776df3de60163066a5dddf2277cb445e0f3",
-        ],
+        condition: {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          children: [],
+        },
       },
     ])
   })
