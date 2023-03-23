@@ -14,37 +14,41 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
-    error AllowanceExceeded(uint16 allowanceId);
+    error AllowanceExceeded(bytes32 allowanceKey);
 
-    error CallAllowanceExceeded(uint16 allowanceId);
+    error CallAllowanceExceeded(bytes32 allowanceKey);
 
-    error EtherAllowanceExceeded(uint16 allowanceId);
+    error EtherAllowanceExceeded(bytes32 allowanceKey);
 
     event AllowTarget(
-        uint16 role,
+        bytes32 roleKey,
         address targetAddress,
         ExecutionOptions options
     );
-    event RevokeTarget(uint16 role, address targetAddress);
-    event ScopeTarget(uint16 role, address targetAddress);
+    event RevokeTarget(bytes32 roleKey, address targetAddress);
+    event ScopeTarget(bytes32 roleKey, address targetAddress);
 
     event AllowFunction(
-        uint16 role,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options
     );
-    event RevokeFunction(uint16 role, address targetAddress, bytes4 selector);
-    event ScopeFunction(
-        uint16 role,
+    event RevokeFunction(
+        bytes32 roleKey,
         address targetAddress,
-        bytes4 functionSig,
+        bytes4 selector
+    );
+    event ScopeFunction(
+        bytes32 roleKey,
+        address targetAddress,
+        bytes4 selector,
         ConditionFlat[] conditions,
         ExecutionOptions options
     );
 
     event SetAllowance(
-        uint16 id,
+        bytes32 allowanceKey,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
@@ -52,89 +56,93 @@ abstract contract PermissionBuilder is Core {
         uint64 refillTimestamp
     );
 
-    event ConsumeAllowance(uint16 id, uint128 consumed, uint128 newBalance);
+    event ConsumeAllowance(
+        bytes32 allowanceKey,
+        uint128 consumed,
+        uint128 newBalance
+    );
 
     /// @dev Allows transactions to a target address.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.Target,
             options
         );
-        emit AllowTarget(roleId, targetAddress, options);
+        emit AllowTarget(roleKey, targetAddress, options);
     }
 
     /// @dev Removes transactions to a target address.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     function revokeTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.None,
             ExecutionOptions.None
         );
-        emit RevokeTarget(roleId, targetAddress);
+        emit RevokeTarget(roleKey, targetAddress);
     }
 
     /// @dev Designates only specific functions can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     function scopeTarget(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleId].targets[targetAddress] = TargetAddress(
+        roles[roleKey].targets[targetAddress] = TargetAddress(
             Clearance.Function,
             ExecutionOptions.None
         );
-        emit ScopeTarget(roleId, targetAddress);
+        emit ScopeTarget(roleKey, targetAddress);
     }
 
     /// @dev Specifies the functions that can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleId].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
             .packHeader(0, true, options, address(0));
 
-        emit AllowFunction(roleId, targetAddress, selector, options);
+        emit AllowFunction(roleKey, targetAddress, selector, options);
     }
 
     /// @dev Removes the functions that can be called.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     function revokeFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleId].scopeConfig[_key(targetAddress, selector)];
-        emit RevokeFunction(roleId, targetAddress, selector);
+        delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
+        emit RevokeFunction(roleKey, targetAddress, selector);
     }
 
     /// @dev Defines the values that can be called for a given function for each param.
-    /// @param roleId identifier of the role to be modified.
+    /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunction(
-        uint16 roleId,
+        bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
         ConditionFlat[] memory conditions,
@@ -144,14 +152,14 @@ abstract contract PermissionBuilder is Core {
         _removeExtraneousOffsets(conditions);
 
         _store(
-            roles[roleId],
+            roles[roleKey],
             _key(targetAddress, selector),
             conditions,
             options
         );
 
         emit ScopeFunction(
-            roleId,
+            roleKey,
             targetAddress,
             selector,
             conditions,
@@ -160,14 +168,14 @@ abstract contract PermissionBuilder is Core {
     }
 
     function setAllowance(
-        uint16 id,
+        bytes32 key,
         uint128 balance,
         uint128 maxBalance,
         uint128 refillAmount,
         uint64 refillInterval,
         uint64 refillTimestamp
     ) external onlyOwner {
-        allowances[id] = Allowance({
+        allowances[key] = Allowance({
             refillAmount: refillAmount,
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
@@ -175,7 +183,7 @@ abstract contract PermissionBuilder is Core {
             maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
         });
         emit SetAllowance(
-            id,
+            key,
             balance,
             maxBalance,
             refillAmount,
@@ -187,30 +195,29 @@ abstract contract PermissionBuilder is Core {
     function _track(Trace[] memory entries) internal {
         uint256 paramCount = entries.length;
         for (uint256 i; i < paramCount; ) {
-            Condition memory condition = entries[i].condition;
+            bytes32 key = entries[i].condition.compValue;
             uint256 value = entries[i].value;
-
-            uint16 allowanceId = uint16(uint256(bytes32(condition.compValue)));
-            Allowance memory allowance = allowances[allowanceId];
+            Allowance memory allowance = allowances[key];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
                 block.timestamp
             );
 
             if (value > balance) {
-                if (condition.operator == Operator.WithinAllowance) {
-                    revert AllowanceExceeded(allowanceId);
-                } else if (condition.operator == Operator.CallWithinAllowance) {
-                    revert CallAllowanceExceeded(allowanceId);
+                Operator operator = entries[i].condition.operator;
+                if (operator == Operator.WithinAllowance) {
+                    revert AllowanceExceeded(key);
+                } else if (operator == Operator.CallWithinAllowance) {
+                    revert CallAllowanceExceeded(key);
                 } else {
-                    revert EtherAllowanceExceeded(allowanceId);
+                    revert EtherAllowanceExceeded(key);
                 }
             }
-            allowances[allowanceId].balance = balance - uint128(value);
-            allowances[allowanceId].refillTimestamp = refillTimestamp;
+            allowances[key].balance = balance - uint128(value);
+            allowances[key].refillTimestamp = refillTimestamp;
 
             emit ConsumeAllowance(
-                allowanceId,
+                key,
                 uint128(value),
                 balance - uint128(value)
             );
@@ -248,9 +255,23 @@ abstract contract PermissionBuilder is Core {
             allowance.refillInterval;
     }
 
+    /**
+     * @dev This function removes unnecessary offsets from compValue fields of
+     * the `conditions` array. Its purpose is to ensure a consistent API where
+     * every `compValue` provided for use in `Operations.EqualsTo` is obtained
+     * by calling `abi.encode` directly.
+     *
+     * By removing the leading extraneous offsets this function makes
+     * abi.encode(...) match the output produced by Decoder inspection.
+     * Without it, the encoded fields would need to be patched externally
+     * depending on whether the payload is fully encoded inline or not.
+     *
+     * @param conditions Array of ConditionFlat structs to remove extraneous
+     * offsets from
+     */
     function _removeExtraneousOffsets(
         ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
+    ) private view returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ) {
             if (

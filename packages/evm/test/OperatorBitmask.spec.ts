@@ -6,9 +6,10 @@ import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Operator", async () => {
-  const ROLE_ID = 0;
+const ROLE_KEY =
+  "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
+describe("Operator", async () => {
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
 
@@ -36,12 +37,14 @@ describe("Operator", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
@@ -83,12 +86,14 @@ describe("Operator", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_ID], [true]);
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [

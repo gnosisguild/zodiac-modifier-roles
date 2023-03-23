@@ -10,7 +10,7 @@ import "./PermissionChecker.sol";
  * on-chain avatar accounts (like Safe).
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
- * @author Auryn Mcmillan     - <auryn.macmillan@gnosis.pm>
+ * @author Auryn Macmillan     - <auryn.macmillan@gnosis.pm>
  * @author Nathan Ginnever    - <nathan.ginnever@gnosis.pm>
  */
 contract Roles is
@@ -19,16 +19,16 @@ contract Roles is
     PermissionBuilder,
     PermissionChecker
 {
-    mapping(address => uint16) public defaultRoles;
+    mapping(address => bytes32) public defaultRoles;
 
-    event AssignRoles(address module, uint16[] roles, bool[] memberOf);
+    event AssignRoles(address module, bytes32[] roleKeys, bool[] memberOf);
     event RolesModSetup(
         address indexed initiator,
         address indexed owner,
         address indexed avatar,
         address target
     );
-    event SetDefaultRole(address module, uint16 defaultRole);
+    event SetDefaultRole(address module, bytes32 defaultRoleKey);
 
     error ArraysDifferentLength();
 
@@ -64,31 +64,34 @@ contract Roles is
 
     /// @dev Assigns and revokes roles to a given module.
     /// @param module Module on which to assign/revoke roles.
-    /// @param _roles Roles to assign/revoke.
-    /// @param memberOf Assign (true) or revoke (false) corresponding _roles.
+    /// @param roleKeys Roles to assign/revoke.
+    /// @param memberOf Assign (true) or revoke (false) corresponding roleKeys.
     function assignRoles(
         address module,
-        uint16[] calldata _roles,
+        bytes32[] calldata roleKeys,
         bool[] calldata memberOf
     ) external onlyOwner {
-        if (_roles.length != memberOf.length) {
+        if (roleKeys.length != memberOf.length) {
             revert ArraysDifferentLength();
         }
-        for (uint16 i; i < _roles.length; ++i) {
-            roles[_roles[i]].members[module] = memberOf[i];
+        for (uint16 i; i < roleKeys.length; ++i) {
+            roles[roleKeys[i]].members[module] = memberOf[i];
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }
-        emit AssignRoles(module, _roles, memberOf);
+        emit AssignRoles(module, roleKeys, memberOf);
     }
 
     /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
     /// @param module Address of the module on which to set default role.
-    /// @param roleId Role to be set as default.
-    function setDefaultRole(address module, uint16 roleId) external onlyOwner {
-        defaultRoles[module] = roleId;
-        emit SetDefaultRole(module, roleId);
+    /// @param roleKey Role to be set as default.
+    function setDefaultRole(
+        address module,
+        bytes32 roleKey
+    ) external onlyOwner {
+        defaultRoles[module] = roleKey;
+        emit SetDefaultRole(module, roleKey);
     }
 
     /// @dev Passes a transaction to the modifier.
@@ -104,7 +107,7 @@ contract Roles is
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
         Trace[] memory result = authorize(
-            roles[defaultRoles[msg.sender]],
+            defaultRoles[msg.sender],
             to,
             value,
             data,
@@ -134,7 +137,7 @@ contract Roles is
         returns (bool success, bytes memory returnData)
     {
         Trace[] memory result = authorize(
-            roles[defaultRoles[msg.sender]],
+            defaultRoles[msg.sender],
             to,
             value,
             data,
@@ -151,7 +154,7 @@ contract Roles is
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param roleId Identifier of the role to assume for this transaction
+    /// @param roleKey Identifier of the role to assume for this transaction
     /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRole(
@@ -159,16 +162,10 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 roleId,
+        bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Trace[] memory result = authorize(
-            roles[roleId],
-            to,
-            value,
-            data,
-            operation
-        );
+        Trace[] memory result = authorize(roleKey, to, value, data, operation);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
@@ -183,7 +180,7 @@ contract Roles is
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
-    /// @param roleId Identifier of the role to assume for this transaction
+    /// @param roleKey Identifier of the role to assume for this transaction
     /// @param shouldRevert Should the function revert on inner execution returning success false?
     /// @notice Can only be called by enabled modules
     function execTransactionWithRoleReturnData(
@@ -191,16 +188,10 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        uint16 roleId,
+        bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Trace[] memory result = authorize(
-            roles[roleId],
-            to,
-            value,
-            data,
-            operation
-        );
+        Trace[] memory result = authorize(roleKey, to, value, data, operation);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();

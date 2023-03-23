@@ -7,9 +7,10 @@ import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
-describe("Operator", async () => {
-  const ROLE_ID = 0;
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000001";
 
+describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
   const setup = deployments.createFixture(async () => {
@@ -33,7 +34,7 @@ describe("Operator", async () => {
     await modifier.enableModule(invoker.address);
 
     async function setAllowance(
-      allowanceId: number,
+      allowanceKey: string,
       {
         balance,
         maxBalance,
@@ -51,7 +52,7 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .setAllowance(
-          allowanceId,
+          allowanceKey,
           balance,
           maxBalance || 0,
           refillAmount,
@@ -62,17 +63,19 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
-    async function setPermission(allowanceId: number) {
+    await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
+    async function setPermission(allowanceKey: string) {
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("doNothing")
       );
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
@@ -86,7 +89,7 @@ describe("Operator", async () => {
             parent: 0,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
         ExecutionOptions.Send
@@ -121,88 +124,94 @@ describe("Operator", async () => {
     it("passes a check from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceId = 1234;
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 1,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(1);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(1);
 
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke())
+        .to.emit(modifier, "ConsumeAllowance")
+        .withArgs(allowanceKey, 1, 0);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("passes multiple checks from existing balance", async () => {
       const { setAllowance, setPermission, modifier } = await setup();
 
-      const allowanceId = 987;
+      const allowanceKey =
+        "0x0000000000000000000000000000ff0000000000000000000000000000000001";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 2,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(2);
-
-      await expect(invoke()).to.not.be.reverted;
-
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(1);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(2);
 
       await expect(invoke()).to.not.be.reverted;
 
-      expect((await modifier.allowances(allowanceId)).balance).to.equal(0);
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(1);
+
+      await expect(invoke()).to.not.be.reverted;
+
+      expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("passes a check from balance 0 but enough refill pending", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-      await setAllowance(allowanceId, {
+      await setAllowance(allowanceKey, {
         balance: 0,
         refillInterval: 100,
         refillAmount: 1,
         refillTimestamp: timestamp - 150,
       });
 
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
       const { setAllowance, setPermission, timestamp } = await setup();
 
-      const allowanceId = 1234;
-      await setAllowance(allowanceId, {
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      await setAllowance(allowanceKey, {
         balance: 0,
         refillInterval: 1000,
         refillAmount: 1,
         refillTimestamp: timestamp,
       });
-      const { invoke } = await setPermission(allowanceId);
+      const { invoke } = await setPermission(allowanceKey);
 
       await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId})`
+        `CallAllowanceExceeded("${allowanceKey}")`
       );
     });
   });
@@ -216,21 +225,23 @@ describe("Operator", async () => {
         testContract.interface.getFunction("fnWithSingleParam")
       );
 
-      const allowanceId1 = 0;
-      const allowanceId2 = 1;
+      const allowanceKey1 =
+        "0x1000000000000000000000000000000000000000000000000000000000000001";
+      const allowanceKey2 =
+        "0x2000000000000000000000000000000000000000000000000000000000000002";
       const value1 = 100;
       const value2 = 200;
       const valueOther = 9999;
 
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
-      await setAllowance(allowanceId1, {
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await setAllowance(allowanceKey1, {
         balance: 0,
         refillInterval: 0,
         refillAmount: 0,
         refillTimestamp: 0,
       });
 
-      await setAllowance(allowanceId2, {
+      await setAllowance(allowanceKey2, {
         balance: 1,
         refillInterval: 0,
         refillAmount: 0,
@@ -250,7 +261,7 @@ describe("Operator", async () => {
       }
 
       await modifier.connect(owner).scopeFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         SELECTOR,
         [
@@ -282,7 +293,7 @@ describe("Operator", async () => {
             parent: 1,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId1]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
@@ -294,7 +305,7 @@ describe("Operator", async () => {
             parent: 2,
             paramType: ParameterType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["uint16"], [allowanceId2]),
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
         ExecutionOptions.Send
@@ -305,12 +316,12 @@ describe("Operator", async () => {
       );
 
       await expect(execute(value1)).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId1})`
+        `CallAllowanceExceeded("${allowanceKey1}")`
       );
 
       await expect(execute(value2)).not.to.be.reverted;
       await expect(execute(value2)).to.be.revertedWith(
-        `CallAllowanceExceeded(${allowanceId2})`
+        `CallAllowanceExceeded("${allowanceKey2}")`
       );
     });
   });

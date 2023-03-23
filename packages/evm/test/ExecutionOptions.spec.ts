@@ -2,14 +2,10 @@ import { expect } from "chai";
 import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-const ROLE_ID = 0;
+import { ExecutionOptions } from "./utils";
 
-enum Options {
-  NONE = 0,
-  SEND = 1,
-  DELEGATE_CALL = 2,
-  BOTH = 3,
-}
+const ROLE_KEY =
+  "0x000000000000000000000000000000000000000000000000000000000000000f";
 
 enum Operation {
   Call = 0,
@@ -37,7 +33,9 @@ describe("ExecutionOptions", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_ID], [true]);
+      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+
+    await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     // fund avatar
     await invoker.sendTransaction({
@@ -68,7 +66,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.NONE);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
         await expect(
           modifier
@@ -82,14 +80,14 @@ describe("ExecutionOptions", async () => {
         ).to.be.revertedWith("SendNotAllowed()");
       });
 
-      it("ExecutionOptions.NONE - FAILS sending eth to fallback", async () => {
+      it("Options.NONE - FAILS sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await setup();
 
         const value = ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.NONE);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
         await expect(
           modifier
@@ -98,7 +96,7 @@ describe("ExecutionOptions", async () => {
         ).to.be.revertedWith("SendNotAllowed()");
       });
 
-      it("ExecutionOptions.SEND - OK sending eth to payable function", async () => {
+      it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await setup();
 
         const value = ethers.utils.parseEther("1");
@@ -108,7 +106,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.SEND);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
 
         await expect(
           modifier
@@ -124,14 +122,14 @@ describe("ExecutionOptions", async () => {
           .withArgs(value);
       });
 
-      it("ExecutionOptions.SEND - OK sending eth to fallback", async () => {
+      it("ExecutionOptions.Send - OK sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await setup();
 
         const value = ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.SEND);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
 
         await expect(
           modifier
@@ -152,7 +150,11 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.DELEGATE_CALL);
+          .allowTarget(
+            ROLE_KEY,
+            testContract.address,
+            ExecutionOptions.DelegateCall
+          );
 
         await expect(
           modifier
@@ -172,7 +174,11 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.DELEGATE_CALL);
+          .allowTarget(
+            ROLE_KEY,
+            testContract.address,
+            ExecutionOptions.DelegateCall
+          );
 
         await expect(
           modifier
@@ -195,7 +201,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.BOTH);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Both);
 
         await expect(
           modifier
@@ -221,7 +227,7 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_ID, testContract.address, Options.BOTH);
+          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Both);
 
         await expect(
           modifier
@@ -253,11 +259,16 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
-          .allowFunction(ROLE_ID, testContract.address, SELECTOR, Options.NONE);
+          .allowFunction(
+            ROLE_KEY,
+            testContract.address,
+            SELECTOR,
+            ExecutionOptions.None
+          );
 
         await expect(
           modifier
@@ -278,15 +289,15 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
           .allowFunction(
-            ROLE_ID,
+            ROLE_KEY,
             testContract.address,
             "0x00000000",
-            Options.NONE
+            ExecutionOptions.None
           );
 
         await expect(
@@ -310,11 +321,16 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
-          .allowFunction(ROLE_ID, testContract.address, SELECTOR, Options.SEND);
+          .allowFunction(
+            ROLE_KEY,
+            testContract.address,
+            SELECTOR,
+            ExecutionOptions.Send
+          );
 
         await expect(
           modifier
@@ -336,15 +352,15 @@ describe("ExecutionOptions", async () => {
         const value = ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
           .allowFunction(
-            ROLE_ID,
+            ROLE_KEY,
             testContract.address,
             "0x00000000",
-            Options.SEND
+            ExecutionOptions.Send
           );
 
         await expect(
@@ -370,15 +386,15 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
           .allowFunction(
-            ROLE_ID,
+            ROLE_KEY,
             testContract.address,
             SELECTOR,
-            Options.DELEGATE_CALL
+            ExecutionOptions.DelegateCall
           );
 
         await expect(
@@ -399,15 +415,15 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
           .allowFunction(
-            ROLE_ID,
+            ROLE_KEY,
             testContract.address,
             "0x00000000",
-            Options.DELEGATE_CALL
+            ExecutionOptions.DelegateCall
           );
 
         await expect(
@@ -431,11 +447,16 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
-          .allowFunction(ROLE_ID, testContract.address, SELECTOR, Options.BOTH);
+          .allowFunction(
+            ROLE_KEY,
+            testContract.address,
+            SELECTOR,
+            ExecutionOptions.Both
+          );
 
         await expect(
           modifier
@@ -457,15 +478,15 @@ describe("ExecutionOptions", async () => {
         const value = ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_ID, testContract.address);
+          .scopeTarget(ROLE_KEY, testContract.address);
 
         await modifier
           .connect(owner)
           .allowFunction(
-            ROLE_ID,
+            ROLE_KEY,
             testContract.address,
             "0x00000000",
-            Options.BOTH
+            ExecutionOptions.Both
           );
 
         await expect(
@@ -487,14 +508,18 @@ describe("ExecutionOptions", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, Options.DELEGATE_CALL);
+        .allowTarget(
+          ROLE_KEY,
+          testContract.address,
+          ExecutionOptions.DelegateCall
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             data as string,
             Operation.DelegateCall
           )
@@ -507,14 +532,14 @@ describe("ExecutionOptions", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_ID, testContract.address, Options.NONE);
+        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             data as string,
             Operation.DelegateCall
           )
@@ -529,18 +554,23 @@ describe("ExecutionOptions", async () => {
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
       await modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, Options.BOTH);
+        .allowFunction(
+          ROLE_KEY,
+          testContract.address,
+          SELECTOR,
+          ExecutionOptions.Both
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             data as string,
             Operation.DelegateCall
           )
@@ -556,18 +586,23 @@ describe("ExecutionOptions", async () => {
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
-      await modifier.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
       await modifier
         .connect(owner)
-        .allowFunction(ROLE_ID, testContract.address, SELECTOR, Options.NONE);
+        .allowFunction(
+          ROLE_KEY,
+          testContract.address,
+          SELECTOR,
+          ExecutionOptions.None
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
-            ROLE_ID,
+            0,
             data as string,
             Operation.DelegateCall
           )

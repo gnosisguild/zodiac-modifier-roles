@@ -12,9 +12,11 @@ enum Operation {
   DelegateCall,
 }
 
+const ROLE_KEY =
+  "0x00000000000000000000000000000000000000000000000000000000000012ff";
+
 describe("Multi Entrypoint", async () => {
   const NEXT_STORAGE_VALUE = 9876;
-  const ROLE_ID = 2345;
 
   const setup = deployments.createFixture(async () => {
     await deployments.fixture();
@@ -51,8 +53,8 @@ describe("Multi Entrypoint", async () => {
 
     await roles.enableModule(invoker.address);
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_ID], [true]);
-    await roles.connect(owner).setDefaultRole(invoker.address, ROLE_ID);
+    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     const multisendCallData = (
       await multisend.populateTransaction.multiSend(
@@ -125,7 +127,7 @@ describe("Multi Entrypoint", async () => {
       multisendCallData,
     } = await setup();
 
-    await roles.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
@@ -151,12 +153,12 @@ describe("Multi Entrypoint", async () => {
       multisendCallData,
     } = await setup();
 
-    await roles.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("doNothing")
@@ -167,7 +169,7 @@ describe("Multi Entrypoint", async () => {
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("doEvenLess")
@@ -192,12 +194,12 @@ describe("Multi Entrypoint", async () => {
   it("succeeds for one transaction", async () => {
     const { owner, invoker, roles, multisend, testContract } = await setup();
 
-    await roles.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("setAStorageNumber")
@@ -265,12 +267,12 @@ describe("Multi Entrypoint", async () => {
       multisendCallData,
     } = await setup();
 
-    await roles.connect(owner).scopeTarget(ROLE_ID, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("doNothing")
@@ -281,7 +283,7 @@ describe("Multi Entrypoint", async () => {
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("doEvenLess")
@@ -292,7 +294,7 @@ describe("Multi Entrypoint", async () => {
     await roles
       .connect(owner)
       .allowFunction(
-        ROLE_ID,
+        ROLE_KEY,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("setAStorageNumber")
