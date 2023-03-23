@@ -13,11 +13,9 @@ import { Target } from "./types"
  * @param next permissions (allowed targets) of the role describing the desired target state
  * @returns The set of calls to make to the Roles modifier owning the role
  */
-const patchPermissions = (current: Target[], next: Target[]): Call[] => {
+export const patchPermissions = (current: Target[], next: Target[]): Call[] => {
   return removeObsoleteCalls([
     ...revokePermissions(diffPermissions(current, next)),
     ...grantPermissions(diffPermissions(next, current)),
   ])
 }
-
-export default patchPermissions

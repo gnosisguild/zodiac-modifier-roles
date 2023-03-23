@@ -10,10 +10,10 @@ import { encodeMulti } from "ethers-multisend"
 
 import { encodeCalls, logCall } from "./calls"
 import { fetchRole } from "./fetchRole"
-import patchPermissions from "./patchPermissions"
-import fillPreset from "./presets/fillPreset"
+import { patchPermissions } from "./patchPermissions"
+import { fillPreset } from "./presets/fillPreset"
 import { PlaceholderValues, RolePreset } from "./presets/types"
-import SAFE_TX_SERVICE from "./safeTxService"
+import { SAFE_TX_SERVICE } from "./safeTxService"
 import { NetworkId, Target } from "./types"
 
 let nonce: number
