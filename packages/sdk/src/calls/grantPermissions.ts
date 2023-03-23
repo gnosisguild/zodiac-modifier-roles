@@ -1,11 +1,4 @@
-import {
-  Clearance,
-  Operator,
-  Function,
-  Parameter,
-  ParameterType,
-  Target,
-} from "../types"
+import { Clearance, Function, Target } from "../types"
 
 import { Call } from "./types"
 
@@ -37,24 +30,7 @@ export const grantPermissions = (targets: Target[]): Call[] => {
             executionOptions: func.executionOptions,
           })
         } else {
-          if (func.parameters.length === 0) {
-            throw new Error("Non-wildcarded function must have parameters")
-          }
-
           calls.push(scopeFunction(func, target.address))
-
-          func.parameters
-            .filter((param) => param.comparison === Operator.OneOf)
-            .forEach((param) => {
-              calls.push({
-                call: "scopeParameterAsOneOf",
-                targetAddress: target.address,
-                selector: func.selector,
-                paramIndex: param.index,
-                type: param.type,
-                value: param.comparisonValue,
-              })
-            })
         }
       })
     }
@@ -64,32 +40,15 @@ export const grantPermissions = (targets: Target[]): Call[] => {
 }
 
 const scopeFunction = (func: Function, targetAddress: string): Call => {
-  // create an array where parameters are at their actual indices with undefined values filling the gaps
-  // we skip over OneOf parameters because they are handled extra
-  const paramsSkippingOneOf = func.parameters.map((param) =>
-    param?.comparison !== Operator.OneOf ? param : undefined
-  )
-  const params: (Parameter | undefined)[] = new Array(
-    Math.max(...paramsSkippingOneOf.map((param) => param?.index || 0))
-  ).fill(undefined)
-  paramsSkippingOneOf.forEach((param) => {
-    if (param) {
-      params[param.index] = param
-    }
-  })
+  if (!func.condition) {
+    throw new Error("Non-wildcarded function must have a condition")
+  }
 
   return {
     call: "scopeFunction",
     targetAddress,
     selector: func.selector,
     executionOptions: func.executionOptions,
-    isParamScoped: params.map(Boolean),
-    paramType: params.map((param) => param?.type || ParameterType.Static),
-    paramComp: params.map((param) => param?.comparison || Operator.EqualTo) as (
-      | Operator.EqualTo
-      | Operator.GreaterThan
-      | Operator.LessThan
-    )[],
-    compValue: params.map((param) => param?.comparisonValue[0] || "0x"),
+    condition: func.condition,
   }
 }
