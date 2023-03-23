@@ -1,4 +1,4 @@
-import fetch from "node-fetch"
+import { formatBytes32String, parseBytes32String } from "ethers/lib/utils"
 
 import SUBGRAPH from "./subgraph"
 import {
@@ -15,7 +15,7 @@ import {
 
 interface Props {
   address: string
-  roleId: number
+  roleKey: string
   network: NetworkId
 }
 
@@ -48,17 +48,21 @@ const QUERY = `
   }
 `
 
+const getRoleId = (address: string, roleKey: string) => {
+  const roleKeyBytes32 = formatBytes32String(roleKey)
+  return `${address.toLowerCase()}-ROLE-${roleKeyBytes32}`
+}
+
 export const fetchRole = async ({
   address,
-  roleId,
+  roleKey,
   network,
 }: Props): Promise<Role> => {
-  const globalRoleId = `${address.toLowerCase()}-ROLE-${roleId}.0`
   const res = await fetch(SUBGRAPH[network], {
     method: "POST",
     body: JSON.stringify({
       query: QUERY,
-      variables: { id: globalRoleId },
+      variables: { id: getRoleId(address, roleKey) },
       operationName: "RolePermissions",
     }),
   })
@@ -67,7 +71,7 @@ export const fetchRole = async ({
     throw new Error(error)
   }
   if (!data || !data.role) {
-    throw new Error(`Role #${roleId} not found`)
+    throw new Error(`Role ${roleKey} not found on ${address}`)
   }
 
   return mapGraphQl(data.role)
@@ -75,6 +79,7 @@ export const fetchRole = async ({
 
 const mapGraphQl = (role: any): Role => ({
   ...role,
+  key: parseBytes32String(role.key),
   targets: role.targets.map(
     (target: any): Target => ({
       address: target.address,

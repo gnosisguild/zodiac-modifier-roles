@@ -37,7 +37,7 @@ export const logCall = (call: Call, log = console.log) => {
       const { targetAddress, selector, executionOptions, condition } = call
       const conditionId = getConditionId(condition)
       log(
-        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${conditionId}}`
+        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${conditionId}`
       )
       break
     }

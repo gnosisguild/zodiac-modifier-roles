@@ -24,7 +24,7 @@ const DEFAULT_BATCH_SIZE = 75
  * Updates a role, setting all permissions of the given preset via the Safe SDK
  *
  * @param address The address of the roles modifier
- * @param roleId ID of the role to update
+ * @param roleKey The key of the role to update
  * @param preset Permissions preset to apply
  * @param placeholderValues Values to fill in for placeholders in the preset
  * @param options.safeAddress The address of the Safe owning the roles modifier
@@ -37,7 +37,7 @@ const DEFAULT_BATCH_SIZE = 75
  */
 export const applyPreset = async <P extends RolePreset>(
   address: string,
-  roleId: number,
+  roleKey: string,
   preset: P,
   placeholderValues: PlaceholderValues<P>,
   options: {
@@ -60,7 +60,7 @@ export const applyPreset = async <P extends RolePreset>(
 
   const transactionsData = await encodeApplyPreset(
     address,
-    roleId,
+    roleKey,
     preset,
     placeholderValues,
     {
@@ -123,7 +123,7 @@ export const applyPreset = async <P extends RolePreset>(
  * Returns a set of populated transactions objects for updating the permissions of the given role.
  *
  * @param address The address of the roles modifier
- * @param roleId ID of the role to update
+ * @param roleKey The key of the role to update
  * @param preset Permissions preset to apply
  * @param placeholderValues Values to fill in for placeholders in the preset
  * @param options.network The network ID where the roles modifier is deployed
@@ -132,7 +132,7 @@ export const applyPreset = async <P extends RolePreset>(
  */
 export const encodeApplyPreset = async <P extends RolePreset>(
   address: string,
-  roleId: number,
+  roleKey: string,
   preset: P,
   placeholderValues: PlaceholderValues<P>,
   options: {
@@ -144,13 +144,13 @@ export const encodeApplyPreset = async <P extends RolePreset>(
     options.currentPermissions ||
     (await fetchRole({
       address,
-      roleId,
+      roleKey,
       network: options.network,
     }))
   const nextPermissions = fillPreset(preset, placeholderValues)
-  const calls = patchPermissions(currentPermissions, nextPermissions)
+  const calls = patchPermissions(currentPermissions.targets, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
-  return encodeCalls(roleId, calls)
+  return encodeCalls(roleKey, calls)
 }
 
 const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
@@ -159,7 +159,7 @@ const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
  * Returns the transactions for updating the permissions of the given role, batching them into multi-send calls.
  *
  * @param address The address of the roles modifier
- * @param roleId ID of the role to update
+ * @param roleKey The key of the role to update
  * @param preset Permissions preset to apply
  * @param placeholderValues Values to fill in for placeholders in the preset
  * @param options.network The network ID where the roles modifier is deployed
@@ -170,7 +170,7 @@ const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
  */
 export const encodeApplyPresetMultisend = async <P extends RolePreset>(
   address: string,
-  roleId: number,
+  roleKey: string,
   preset: P,
   placeholderValues: PlaceholderValues<P>,
   options: {
@@ -189,7 +189,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
 
   const transactionsData = await encodeApplyPreset(
     address,
-    roleId,
+    roleKey,
     preset,
     placeholderValues,
     {
@@ -215,7 +215,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
  * Returns the transactions for updating the permissions of the given role as JSON file that can be uploaded to the Safe Transaction Builder app.
  *
  * @param address The address of the roles modifier
- * @param roleId ID of the role to update
+ * @param roleKey The key of the role to update
  * @param preset Permissions preset to apply
  * @param placeholderValues Values to fill in for placeholders in the preset
  * @param options.network The network ID where the roles modifier is deployed
@@ -224,7 +224,7 @@ export const encodeApplyPresetMultisend = async <P extends RolePreset>(
  */
 export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
   address: string,
-  roleId: number,
+  roleKey: string,
   preset: P,
   placeholderValues: PlaceholderValues<P>,
   options: {
@@ -236,7 +236,7 @@ export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
 
   const transactionsData = await encodeApplyPreset(
     address,
-    roleId,
+    roleKey,
     preset,
     placeholderValues,
     {

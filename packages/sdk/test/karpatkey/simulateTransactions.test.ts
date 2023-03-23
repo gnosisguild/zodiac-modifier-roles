@@ -1,4 +1,5 @@
 import { BigNumber } from "ethers"
+import { formatBytes32String } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
@@ -32,7 +33,7 @@ type Configs = typeof KARPATKEY_ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
-  const ROLE_ID = 1
+  const ROLE_KEY = formatBytes32String("TEST_ROLE")
 
   const setup = deployments.createFixture(async () => {
     await deployments.fixture()
@@ -71,7 +72,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     // add ethers default signer to role 1
     const defaultSigner = (await hre.ethers.getSigners())[0]
-    await modifier.assignRoles(defaultSigner.address, [ROLE_ID], [true])
+    await modifier.assignRoles(defaultSigner.address, [ROLE_KEY], [true])
 
     return {
       owner,
@@ -104,11 +105,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     }
     const transactionsData = await encodeApplyPreset(
       modifier.address,
-      ROLE_ID,
+      ROLE_KEY,
       preset,
       placeholderValues,
       {
-        currentPermissions: { key: ROLE_ID, members: [], targets: [] },
+        currentPermissions: { key: ROLE_KEY, members: [], targets: [] },
         network: 100, // this value won't be used
       }
     )
@@ -147,7 +148,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
           tx.value || "0x00",
           tx.data || "0x00",
           "0",
-          ROLE_ID,
+          ROLE_KEY,
           false
         )
 

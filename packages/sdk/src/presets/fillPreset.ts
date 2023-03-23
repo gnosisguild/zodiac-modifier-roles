@@ -1,6 +1,6 @@
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils"
 
-import { Clearance, ExecutionOptions, Role, Comparison } from "../types"
+import { Clearance, ExecutionOptions, Target } from "../types"
 
 import { execOptions } from "./execOptions"
 import { solidityPackPadded } from "./scopeParam"
@@ -14,11 +14,11 @@ import {
   ComparisonValue,
 } from "./types"
 
-// Takes a RolePreset, fills in the placeholders, and returns a RolePermissions object
+// Takes a RolePreset, fills in the placeholders, and returns a the targets list
 const fillPreset = <P extends RolePreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
-): Role => {
+): Target[] => {
   preset = mergeFunctionEntries(preset) as P
   sanityCheck(preset)
 
@@ -45,12 +45,12 @@ const fillPreset = <P extends RolePreset>(
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
-      let sighash = "sighash" in allowFunction && allowFunction.selector
-      if (!sighash)
-        sighash =
+      let selector = "selector" in allowFunction && allowFunction.selector
+      if (!selector)
+        selector =
           "signature" in allowFunction &&
           functionSighash(allowFunction.signature)
-      if (!sighash) throw new Error("invariant violation")
+      if (!selector) throw new Error("invariant violation")
 
       const parameters = processParams(
         allowFunction.params,
@@ -58,7 +58,7 @@ const fillPreset = <P extends RolePreset>(
       )
 
       return {
-        sighash,
+        selector,
         executionOptions: execOptions(allowFunction),
         wildcarded: parameters.length === 0,
         parameters,
@@ -66,9 +66,7 @@ const fillPreset = <P extends RolePreset>(
     }),
   }))
 
-  return {
-    targets: [...fullyClearedTargets, ...functionTargets],
-  }
+  return [...fullyClearedTargets, ...functionTargets]
 }
 
 export default fillPreset
@@ -90,6 +88,7 @@ const makePlaceholderLookupMap = <P extends RolePreset>(
   return map
 }
 
+// TODO
 // Process the params, filling in the placeholder values and encoding the values
 const processParams = (
   params:
@@ -164,7 +163,7 @@ const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
 }
 
 const isScoped = (entry: PresetAllowEntry): entry is PresetFunction =>
-  "sighash" in entry || "signature" in entry
+  "selector" in entry || "signature" in entry
 
 const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
   const allowFunctions = preset.allow.filter(isScoped).map(functionId)
@@ -194,7 +193,7 @@ const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
 
 const functionId = (entry: PresetFunction) =>
   `${entry.targetAddress.toLowerCase()}.${
-    "sighash" in entry ? entry.selector : functionSighash(entry.signature)
+    "selector" in entry ? entry.selector : functionSighash(entry.signature)
   }`
 
 const mergeFunctionEntries = (preset: RolePreset) => ({

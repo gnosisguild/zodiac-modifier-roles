@@ -1,7 +1,7 @@
 import { BigNumberish } from "ethers"
 import { BytesLike, ParamType } from "ethers/lib/utils"
 
-import { Comparison, ParameterType } from "../types"
+import { Operator, ParameterType } from "../types"
 
 export interface ExecutionOptions {
   send?: boolean
@@ -121,6 +121,6 @@ export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 export type ComparisonValue = string | Placeholder<any>
 export interface PresetScopeParam {
   type: ParameterType
-  comparison: Comparison
+  operator: Operator
   value: ComparisonValue | ComparisonValue[]
 }

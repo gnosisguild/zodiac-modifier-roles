@@ -1,4 +1,5 @@
 import { Contract, PopulatedTransaction } from "ethers"
+import { formatBytes32String } from "ethers/lib/utils"
 import { encodeMulti, MetaTransaction, OperationType } from "ethers-multisend"
 
 import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
@@ -11,7 +12,7 @@ const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
 // - patchMembers(currentMembers, nextMembers)
 const addMembers = async (
   rolesContractAddress: string,
-  roleId: number,
+  roleKey: string,
   members: string[]
 ) => {
   const contract = new Contract(
@@ -22,7 +23,11 @@ const addMembers = async (
     (
       await Promise.all(
         members.map((member) =>
-          contract.populateTransaction.assignRoles(member, [roleId], [true])
+          contract.populateTransaction.assignRoles(
+            member,
+            [formatBytes32String(roleKey)],
+            [true]
+          )
         )
       )
     ).map(asMetaTransaction),
