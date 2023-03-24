@@ -1,9 +1,9 @@
 import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
 import { BigNumberish } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
-import hre, { deployments, ethers, waffle } from "hardhat";
-
-import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
@@ -13,8 +13,7 @@ const ROLE_KEY =
 describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
+  async function setup() {
     const timestamp = timestampNow();
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -23,12 +22,11 @@ describe("Operator", async () => {
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
-
+    const [owner, invoker] = await hre.ethers.getSigners();
     // fund avatar
     await invoker.sendTransaction({
       to: avatar.address,
-      value: ethers.utils.parseEther("1"),
+      value: hre.ethers.utils.parseEther("1"),
     });
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
@@ -125,11 +123,13 @@ describe("Operator", async () => {
       setAllowance,
       setPermission,
     };
-  });
+  }
 
   describe("EtherWithinAllowance - Check", () => {
     it("passes a check from existing balance", async () => {
-      const { setAllowance, setPermission, modifier } = await setup();
+      const { modifier, setAllowance, setPermission } = await loadFixture(
+        setup
+      );
 
       const initialBalance = 10000;
       const allowanceKey =
@@ -148,19 +148,20 @@ describe("Operator", async () => {
         initialBalance
       );
 
-      await expect(executeSendingETH(initialBalance + 1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(initialBalance + 1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(executeSendingETH(initialBalance)).to.not.be.reverted;
-      await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
 
       expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
     });
 
     it("passes a check from balance 0 but enough refill pending", async () => {
-      const { setAllowance, setPermission, timestamp } = await setup();
+      const { modifier, setAllowance, setPermission, timestamp } =
+        await loadFixture(setup);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -174,17 +175,18 @@ describe("Operator", async () => {
 
       const { executeSendingETH } = await setPermission(allowanceKey);
 
-      await expect(executeSendingETH(351)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(351))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(executeSendingETH(350)).to.not.be.reverted;
-      await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
-      const { setAllowance, setPermission, timestamp } = await setup();
+      const { modifier, setAllowance, setPermission, timestamp } =
+        await loadFixture(setup);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -196,18 +198,18 @@ describe("Operator", async () => {
       });
       const { executeSendingETH } = await setPermission(allowanceKey);
 
-      await expect(executeSendingETH(10)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(10))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(executeSendingETH(9)).to.not.be.reverted;
-      await expect(executeSendingETH(1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(executeSendingETH(1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("order doesn't matter", async () => {
       const { owner, invoker, modifier, testContract, setAllowance } =
-        await setup();
+        await loadFixture(setup);
 
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
@@ -268,9 +270,9 @@ describe("Operator", async () => {
       /*
        * First check valueOther which, hits no variant
        */
-      await expect(execute(allowanceAmount, valueOther)).to.be.revertedWith(
-        "ParameterNotAllowed()"
-      );
+      await expect(
+        execute(allowanceAmount, valueOther)
+      ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
       await expect(execute(allowanceAmount, value)).to.not.be.reverted;
 
       await setAllowance(allowanceKey, {
@@ -311,7 +313,7 @@ describe("Operator", async () => {
   describe("EtherWithinAllowance - Variants", () => {
     it("enforces different eth allowances per variant", async () => {
       const { owner, invoker, modifier, testContract, setAllowance } =
-        await setup();
+        await loadFixture(setup);
 
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
@@ -408,17 +410,18 @@ describe("Operator", async () => {
       /*
        * First check valueOther which, hits no variant
        */
-      await expect(execute(1000, valueOther)).to.be.revertedWith(
-        "NoMatchingBranch()"
+      await expect(execute(1000, valueOther)).to.be.revertedWithCustomError(
+        modifier,
+        "NoMatchingBranch"
       );
       // Exceed value for Variant1
-      await expect(execute(allowanceAmount1 + 1, value1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey1}")`
-      );
+      await expect(execute(allowanceAmount1 + 1, value1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey1);
       // Exceed value for Variant2
-      await expect(execute(allowanceAmount2 + 1, value2)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey2}")`
-      );
+      await expect(execute(allowanceAmount2 + 1, value2))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey2);
 
       // Checks that both allowance balances still remain unchanged
       expect((await modifier.allowances(allowanceKey1)).balance).to.equal(
@@ -448,12 +451,12 @@ describe("Operator", async () => {
       expect((await modifier.allowances(allowanceKey2)).balance).to.equal(0);
 
       // check that neither variant can now be executed
-      await expect(execute(1, value1)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey1}")`
-      );
-      await expect(execute(1, value2)).to.be.revertedWith(
-        `EtherAllowanceExceeded("${allowanceKey2}")`
-      );
+      await expect(execute(1, value1))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey1);
+      await expect(execute(1, value2))
+        .to.be.revertedWithCustomError(modifier, `EtherAllowanceExceeded`)
+        .withArgs(allowanceKey2);
     });
   });
 });

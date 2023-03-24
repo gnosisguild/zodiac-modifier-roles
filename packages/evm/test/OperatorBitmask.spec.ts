@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { BigNumber, BigNumberish } from "ethers";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import "@nomiclabs/hardhat-ethers";
+import { BigNumber, BigNumberish } from "ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
@@ -10,16 +10,14 @@ const ROLE_KEY =
   "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 describe("Operator", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-
+  async function setup() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
 
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+    const [owner, invoker] = await hre.ethers.getSigners();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
     const modifier = await Modifier.deploy(
@@ -128,12 +126,12 @@ describe("Operator", async () => {
     }
 
     return { setRole, setRoleDynamic, modifier, owner, testContract };
-  });
+  }
 
   describe("Bitmask", () => {
     describe("Static - Passes", async () => {
       it("left aligned", async () => {
-        const { setRole } = await setup();
+        const { modifier, setRole } = await loadFixture(setup);
 
         const shift = "0000";
         const mask = "ff".padEnd(30, "0");
@@ -163,10 +161,10 @@ describe("Operator", async () => {
               "0x4500000000000000000000000000000000000000000000000000000000000000"
             )
           )
-        ).to.be.revertedWith("BitmaskNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "BitmaskNotAllowed");
       });
       it("middle aligned", async () => {
-        const { setRole } = await setup();
+        const { modifier, setRole } = await loadFixture(setup);
 
         const shift = "000a";
         const mask = "f0f0f0".padEnd(30, "0");
@@ -195,10 +193,10 @@ describe("Operator", async () => {
               "0x000000000000000000001030400000000000000000000000000000ffffffffff"
             )
           )
-        ).to.be.revertedWith("BitmaskNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "BitmaskNotAllowed");
       });
       it("right aligned", async () => {
-        const { setRole } = await setup();
+        const { modifier, setRole } = await loadFixture(setup);
 
         const shift = "001e";
         const mask = "ffff".padEnd(30, "0");
@@ -227,12 +225,12 @@ describe("Operator", async () => {
               "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd"
             )
           )
-        ).to.be.revertedWith("BitmaskNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "BitmaskNotAllowed");
       });
     });
     describe("Static - Fails", async () => {
       it("overflow", async () => {
-        const { setRole } = await setup();
+        const { modifier, setRole } = await loadFixture(setup);
 
         // 30
         const shift = "0020";
@@ -247,13 +245,13 @@ describe("Operator", async () => {
               "0x000000000000000000000000000000000000000000000000000000000000000"
             )
           )
-        ).to.be.revertedWith("BitmaskOverflow()");
+        ).to.be.revertedWithCustomError(modifier, "BitmaskOverflow");
       });
     });
 
     describe("Dynamic - Passes", async () => {
       it("left aligned", async () => {
-        const { setRoleDynamic } = await setup();
+        const { modifier, setRoleDynamic } = await loadFixture(setup);
 
         const shift = "0000";
         const mask = "ff".padEnd(30, "0");
@@ -265,13 +263,17 @@ describe("Operator", async () => {
         await expect(invoke("0x4600ff000000000000000000000000")).to.not.be
           .reverted;
 
-        await expect(invoke("0x45")).to.be.revertedWith("BitmaskNotAllowed()");
-        await expect(invoke("0x45ff0077")).to.be.revertedWith(
-          "BitmaskNotAllowed()"
+        await expect(invoke("0x45")).to.be.revertedWithCustomError(
+          modifier,
+          "BitmaskNotAllowed"
+        );
+        await expect(invoke("0x45ff0077")).to.be.revertedWithCustomError(
+          modifier,
+          "BitmaskNotAllowed"
         );
       });
       it("right aligned", async () => {
-        const { setRoleDynamic } = await setup();
+        const { setRoleDynamic } = await loadFixture(setup);
 
         const shift = "000a";
         const mask = "0000000f".padEnd(30, "0");
@@ -291,7 +293,7 @@ describe("Operator", async () => {
     });
     describe("Dynamic - Fails", async () => {
       it("overflow", async () => {
-        const { setRoleDynamic } = await setup();
+        const { modifier, setRoleDynamic } = await loadFixture(setup);
 
         // 30
         const shift = "0050";
@@ -300,8 +302,9 @@ describe("Operator", async () => {
 
         const { invoke } = await setRoleDynamic(`0x${shift}${mask}${expected}`);
 
-        await expect(invoke("0x0000000000")).to.be.revertedWith(
-          "BitmaskOverflow()"
+        await expect(invoke("0x0000000000")).to.be.revertedWithCustomError(
+          modifier,
+          "BitmaskOverflow"
         );
       });
     });
