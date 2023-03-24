@@ -1,17 +1,10 @@
-import { ExecutionOptions } from "../../types"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
-import { allowErc20Approve } from "../helpers/erc20"
 import {
   dynamic32Equal,
-  dynamic32OneOf,
   staticEqual,
-  dynamicOneOf,
-  subsetOf,
-  dynamicEqual,
   staticOneOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../../src/presets/helpers/basic"
+import { AVATAR } from "../../../src/presets/placeholders"
+import { RolePreset } from "../../../src/presets/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -48,6 +41,8 @@ const STAKEWISE_MERKLE_DIS = "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
 const sETH2 = "0xFe2e637202056d30016725477c5da089Ab0A043A"
 const rETH2 = "0x20BC832ca081b91433ff6c17f85701B6e92486c5"
 const SWISE = "0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2"
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 const preset = {
   network: 1,

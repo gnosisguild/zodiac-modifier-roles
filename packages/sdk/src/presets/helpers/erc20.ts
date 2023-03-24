@@ -2,7 +2,7 @@ import { defaultAbiCoder } from "ethers/lib/utils"
 
 import { Comparison, ParameterType } from "../../types"
 
-import { forAllTargetAddresses, staticEqual } from "./utils"
+import { forAllTargetAddresses, staticEqual } from "./basic"
 
 export const allowErc20Approve = (tokens: string[], spenders: string[]) =>
   forAllTargetAddresses(tokens, {

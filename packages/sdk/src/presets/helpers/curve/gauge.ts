@@ -1,7 +1,7 @@
 import { AVATAR } from "../../placeholders"
 import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
-import { staticEqual } from "../utils"
+import { staticEqual } from "../basic"
 
 import { Pool } from "./types"
 

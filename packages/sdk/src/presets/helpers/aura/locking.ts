@@ -1,4 +1,4 @@
-import { staticEqual } from "../../helpers/utils"
+import { staticEqual } from "../basic"
 import { AVATAR } from "../../placeholders"
 import { PresetAllowEntry } from "../../types"
 import { allowErc20Approve } from "../erc20"
