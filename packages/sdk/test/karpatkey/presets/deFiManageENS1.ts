@@ -1,15 +1,14 @@
-import { ExecutionOptions } from "../../types"
-import { ZERO_ADDRESS } from "../gnosisChain/addresses"
-import { allowErc20Approve } from "../helpers/erc20"
+import { defaultAbiCoder } from "ethers/lib/utils"
 import {
   dynamic32Equal,
-  dynamic32OneOf,
+  arrayOneOf,
   staticEqual,
   staticOneOf,
   subsetOf,
-} from "../helpers/utils"
-import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
+} from "../../../src/presets/helpers/basic"
+import { AVATAR } from "../../../src/presets/placeholders"
+import { RolePreset } from "../../../src/presets/types"
+import { Operator, ParameterType } from "../../../src/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -41,7 +40,6 @@ const LDO = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
 
 //Curve contracts
 const CURVE_stETH_ETH_POOL = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"
-const CURVE_stETH_ETH_LPTOKEN = "0x06325440D014e39736583c165C2963BA99fAf14E"
 const CURVE_stETH_ETH_GAUGE = "0x182B723a58739a9c974cFDB385ceaDb237453c28"
 const CURVE_3POOL = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
 const CRV = "0xD533a949740bb3306d119CC777fa900bA034cd52"
@@ -60,6 +58,8 @@ const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
 //SushiSwap contracts
 const SUSHISWAP_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 const preset = {
   network: 1,
   allow: [
@@ -73,6 +73,11 @@ const preset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
+      condition: {
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(["address"], [ZERO_ADDRESS])
+      }
       params: {
         [0]: staticEqual(ZERO_ADDRESS, "address"),
       },
@@ -381,7 +386,7 @@ const preset = {
       targetAddress: UV3_ROUTER_2,
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
       params: {
-        [2]: dynamic32OneOf(
+        [2]: arrayOneOf(
           [
             [COMP, WETH, USDC],
             [COMP, WETH, DAI],
@@ -636,7 +641,7 @@ const preset = {
       signature:
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
       params: {
-        [2]: dynamic32OneOf(
+        [2]: arrayOneOf(
           [
             [COMP, WETH, USDC],
             [COMP, WETH, DAI],

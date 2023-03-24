@@ -3,7 +3,9 @@ import { BytesLike, ParamType } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../types"
 
-export interface ExecutionOptions {
+export type AbiType = string | ParamType
+
+export interface ExecutionFlags {
   send?: boolean
   delegatecall?: boolean
 }
@@ -12,12 +14,12 @@ type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
 export class Placeholder<T> {
   readonly name: string
-  readonly type: string
+  readonly type: AbiType
   readonly description?: string
 
   private _identity?: Placeholder<T>
 
-  constructor(name: string, type: ParamType | string, description?: string) {
+  constructor(name: string, type: AbiType, description?: string) {
     this.name = name
     this.type = typeof type === "string" ? type : type.format("sighash")
     this.description = description
@@ -108,13 +110,13 @@ export interface RolePreset {
 // allows call to any function on the target addresses
 export type PresetFullyClearedTarget = {
   targetAddress: string
-} & ExecutionOptions
+} & ExecutionFlags
 
 // allows calls to specific functions, optionally with parameter scoping
 export type PresetFunction = ({ selector: string } | { signature: string }) & {
   targetAddress: string
   condition?: PresetCondition
-} & ExecutionOptions
+} & ExecutionFlags
 
 export type PresetAllowEntry = PresetFullyClearedTarget | PresetFunction
 

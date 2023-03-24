@@ -2,7 +2,7 @@ import { ParamType, solidityPack } from "ethers/lib/utils"
 
 import { Comparison, ParameterType as PresetScopeParamType } from "../types"
 
-import { subsetOf } from "./helpers/utils"
+import { subsetOf } from "./helpers/basic"
 import {
   ParamScoping,
   Placeholder,
