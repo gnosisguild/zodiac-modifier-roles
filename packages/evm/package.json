@@ -8,7 +8,8 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat deploy --network",
+    "deploy": "hardhat run deploy --network",
+    "deploy:mastercopy": "hardhat run src/deploy-mastercopy.ts --network",
     "coverage": "hardhat coverage",
     "fmt": "yarn fmt:sol && yarn fmt:ts",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
@@ -37,7 +38,6 @@
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-prettier": "4.2.1",
     "hardhat": "2.13.0",
-    "hardhat-deploy": "0.11.22",
     "hardhat-gas-reporter": "1.0.9",
     "prettier": "2.8.6",
     "prettier-plugin-solidity": "1.1.3",

@@ -5,7 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumberish } from "ethers";
 import { solidityPack } from "ethers/lib/utils";
 
-import { ExecutionOptions } from "./utils";
+import { deployRolesMod, ExecutionOptions } from "./utils";
 
 enum Operation {
   Call = 0,
@@ -26,8 +26,8 @@ async function setup() {
 
   const [owner, invoker] = await hre.ethers.getSigners();
 
-  const Roles = await hre.ethers.getContractFactory("Roles");
-  const roles = await Roles.deploy(
+  const roles = await deployRolesMod(
+    hre,
     owner.address,
     avatar.address,
     avatar.address

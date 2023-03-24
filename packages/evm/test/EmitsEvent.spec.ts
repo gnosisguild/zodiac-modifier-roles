@@ -3,7 +3,12 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ExecutionOptions, Operator, ParameterType } from "./utils";
+import {
+  deployRolesMod,
+  ExecutionOptions,
+  Operator,
+  ParameterType,
+} from "./utils";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -11,8 +16,8 @@ const ROLE_KEY =
 describe("EmitsEvent", async () => {
   async function setup() {
     const [owner] = await hre.ethers.getSigners();
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
+    const modifier = await deployRolesMod(
+      hre,
       owner.address,
       owner.address,
       owner.address

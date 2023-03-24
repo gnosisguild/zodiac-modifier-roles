@@ -6,7 +6,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
 
-import "./src/tasks/setup";
+import "./src/deploy";
 
 const argv = yargs
   .option("network", {
