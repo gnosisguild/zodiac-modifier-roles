@@ -18,8 +18,8 @@ enum ParameterType {
 
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
-    //          paramType: Static / Dynamic
-    //          🚫 children
+    //          paramType: Static / Dynamic / AbiEncoded / Tuple / Array
+    //          ❓ children (optional, used for describing the structure of complex types)
     //          🚫 compValue
     /* 00: */ Pass,
     // ------------------------------------------------------------
@@ -32,7 +32,7 @@ enum Operator {
     /* 03: */ Xor,
     /* 04: */ Not,
     // ------------------------------------------------------------
-    // 05-16: COMPLEX EXPRESSIONS
+    // 05-15: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,
     //          ✅ children
     //          🚫 compValue
@@ -47,16 +47,16 @@ enum Operator {
     /* 13: */ _ComplexPlaceholder13,
     /* 14: */ _ComplexPlaceholder14,
     /* 15: */ _ComplexPlaceholder15,
-    /* 16: */ _ComplexPlaceholder16,
     // ------------------------------------------------------------
-    // 17-31: COMPARISON EXPRESSIONS
+    // 16-31: COMPARISON EXPRESSIONS
     //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
-    //          🚫 children
+    //          ❓ children (optional, used for describing the structure of complex types)
     //          ✅ compValue
-    /* 17: */ EqualTo,
-    /* 18: */ GreaterThan,
-    /* 19: */ LessThan,
-    /* 20: */ Bitmask,
+    /* 16: */ EqualTo,
+    /* 17: */ GreaterThan, // only for paramType: Static (uint)
+    /* 18: */ LessThan,    // only for paramType: Static (uint) 
+    /* 19: */ Bitmask,
+    /* 20: */ _ComparisonPlaceholder20,
     /* 21: */ _ComparisonPlaceholder21,
     /* 22: */ _ComparisonPlaceholder22,
     /* 23: */ _ComparisonPlaceholder23,
@@ -65,7 +65,7 @@ enum Operator {
     /* 26: */ _ComparisonPlaceholder26,
     /* 27: */ _ComparisonPlaceholder27,
     /* 28: */ _ComparisonPlaceholder28,
-    /* 29: */ WithinAllowance,
+    /* 29: */ WithinAllowance,  // only for paramType: Static (uint)
     /* 30: */ EtherWithinAllowance,
     /* 31: */ CallWithinAllowance
 }
