@@ -26,6 +26,13 @@ export class Placeholder<T> {
   }
 
   as(newType: ParamType | string) {
+    if (
+      ParamType.from(newType).format("sighash") ===
+      ParamType.from(this.type).format("sighash")
+    ) {
+      return this
+    }
+
     const result = new Placeholder<T>(this.name, newType, this.description)
     result._identity = this.identity
     return result
