@@ -1,13 +1,8 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
-import {
-  dynamic32Equal,
-  arrayOneOf,
-  staticEqual,
-  staticOneOf,
-  subsetOf,
-} from "../../../src/presets/helpers/basic"
+
+import { equalTo, matches, oneOf, subsetOf } from "../../../src/presets/helpers"
 import { AVATAR } from "../../../src/presets/placeholders"
-import { RolePreset } from "../../../src/presets/types"
+import { PermissionPreset } from "../../../src/presets/types"
 import { Operator, ParameterType } from "../../../src/types"
 
 //Tokens
@@ -73,14 +68,7 @@ const preset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
-      condition: {
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["address"], [ZERO_ADDRESS])
-      }
-      params: {
-        [0]: staticEqual(ZERO_ADDRESS, "address"),
-      },
+      condition: matches([equalTo(ZERO_ADDRESS, "address")], ["address"]),
       send: true,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
@@ -138,16 +126,10 @@ const preset = {
     {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
-      params: {
-        [0]: staticEqual(AVATAR),
-        [1]: subsetOf(
-          [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
-          "address[]",
-          {
-            restrictOrder: true,
-          }
-        ),
-      },
+      condition: matches(
+        [equalTo(AVATAR), subsetOf([cDAI, cUSDC], "address[]")],
+        ["address", "address[]"]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -165,10 +147,10 @@ const preset = {
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
-      params: {
-        [1]: staticEqual(AVATAR),
-        [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
-      },
+      condition: matches(
+        [undefined, equalTo(AVATAR), equalTo([rETH2, SWISE], "address[]")],
+        ["uint256", "address", "address[]", "uint256[]", "bytes32[]"]
+      ),
     },
 
     //The exactInputSingle function is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
@@ -185,13 +167,22 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      //send: true,
-      params: {
-        [0]: staticEqual(WETH, "address"),
-        [1]: staticEqual(sETH2, "address"),
-        [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
-        [9]: staticEqual(AVATAR),
-      },
+      condition: matches(
+        [
+          matches(
+            {
+              token0: equalTo(WETH, "address"),
+              token1: equalTo(sETH2, "address"),
+              fee: equalTo(3000, "uint24"), //3000 represents the 0.3% fee
+              recipient: equalTo(AVATAR),
+            },
+            "(address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline)"
+          ),
+        ],
+        [
+          "(address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256)",
+        ]
+      ),
     },
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
     //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
@@ -202,9 +193,15 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      params: {
-        [0]: staticEqual(424810, "uint256"),
-      },
+      condition: matches(
+        [
+          matches(
+            [equalTo("424810", "uint256")],
+            "(uint256,uint256,uint256,uint256,uint256,uint256)"
+          ),
+        ],
+        ["(uint256,uint256,uint256,uint256,uint256,uint256)"]
+      ),
     },
 
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
@@ -224,9 +221,13 @@ const preset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
-      params: {
-        [1]: staticEqual(AVATAR),
-      },
+      condition: matches(
+        [
+          undefined,
+          matches([equalTo(AVATAR)], "(uint256,address,uint128,uint128)"),
+        ],
+        ["(uint256,address,uint128,uint128)"]
+      ),
     },
 
     //If ETH is collected instead of WETH, one has to call the unwrapWETH9 and sweepToken functions, but we are only allowing for the collecting of WETH.
@@ -276,19 +277,17 @@ const preset = {
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
+      condition: matches([equalTo(AVATAR)], ["address"]),
     },
 
     //Claiming CRV rewards
     {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
-      params: {
-        // [0]: staticEqual(AVATAR),
-        [0]: staticEqual(CURVE_stETH_ETH_GAUGE, "address"),
-      },
+      condition: matches(
+        [equalTo(CURVE_stETH_ETH_GAUGE, "address")],
+        ["address"]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -296,16 +295,6 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //...allowErc20Approve([WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
-
-    //deposiSingle: the (address[],uint256[],bytes,bool) tuple argument represents the request data for joining the pool
-    /* request=(
-          address[] assets,
-          uint256[] maxAmountsIn,
-          bytes userData,
-          bool fromInternalBalance
-    )   
-    */
-    //userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
 
     {
       targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
@@ -702,5 +691,5 @@ const preset = {
     },
   ],
   placeholders: { AVATAR },
-} satisfies RolePreset
+} satisfies PermissionPreset
 export default preset

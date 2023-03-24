@@ -11,6 +11,7 @@ import {
 import { Condition, Operator } from "../types"
 
 import { flattenCondition } from "./flattenCondition"
+import { normalizeCondition } from "./normalizeConditions"
 import { ConditionFlat } from "./types"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
@@ -18,7 +19,7 @@ const ERC2470_SINGLETON_FACTORY_ADDRESS =
 const CREATE2_SALT = "0x00"
 
 export const getConditionId = (condition: Condition) => {
-  const conditions = flattenCondition(condition)
+  const conditions = flattenCondition(normalizeCondition(condition))
   const packed = conditions
     .map((condition) => packCondition(condition))
     .reduce((acc, item) => acc.concat(item), new Bytes(0))

@@ -5,7 +5,7 @@ import { mergeFunctionEntries } from "./mergeFunctionEntries"
 import { solidityPackPadded } from "./scopeParam"
 import {
   PlaceholderValues,
-  RolePreset,
+  PermissionPreset,
   Placeholder,
   ComparisonValue,
   PresetCondition,
@@ -18,7 +18,7 @@ import { functionId, isScoped, sighash } from "./utils"
  * @param placeholderValues a map of placeholder keys to the values they should be replaced with
  * @returns permissions as a list of allowed targets
  */
-export const fillPreset = <P extends RolePreset>(
+export const fillPreset = <P extends PermissionPreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
 ): Target[] => {
@@ -68,7 +68,7 @@ export const fillPreset = <P extends RolePreset>(
   return [...fullyClearedTargets, ...functionScopedTargets]
 }
 
-const makePlaceholderLookupMap = <P extends RolePreset>(
+const makePlaceholderLookupMap = <P extends PermissionPreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
 ) => {
@@ -113,12 +113,12 @@ const fillPlaceholder = (
   return valueOrPlaceholder
 }
 
-const sanityCheck = (preset: RolePreset) => {
+const sanityCheck = (preset: PermissionPreset) => {
   assertNoWildcardScopedIntersection(preset)
   assertNoDuplicateAllowFunction(preset)
 }
 
-const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
+const assertNoWildcardScopedIntersection = (preset: PermissionPreset) => {
   const wildcardTargets = preset.allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => entry.targetAddress)
@@ -139,7 +139,7 @@ const assertNoWildcardScopedIntersection = (preset: RolePreset) => {
   }
 }
 
-const assertNoDuplicateAllowFunction = (preset: RolePreset) => {
+const assertNoDuplicateAllowFunction = (preset: PermissionPreset) => {
   const allowFunctions = preset.allow.filter(isScoped).map(functionId)
 
   const counts = allowFunctions.reduce(

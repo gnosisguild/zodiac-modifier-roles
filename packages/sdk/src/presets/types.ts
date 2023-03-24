@@ -43,7 +43,7 @@ export class Placeholder<T> {
   }
 }
 
-export type PlaceholderValues<P extends RolePreset> = {
+export type PlaceholderValues<P extends PermissionPreset> = {
   [key in keyof P["placeholders"]]: P["placeholders"][key] extends Placeholder<
     infer T
   >
@@ -108,7 +108,7 @@ export type ParamScoping<T> = T extends [...any[]]
   ? PrimitiveParamScoping<T>
   : never
 
-export interface RolePreset {
+export interface PermissionPreset {
   network: number
   allow: PresetAllowEntry[]
   placeholders: { [key: string]: Placeholder<any> }

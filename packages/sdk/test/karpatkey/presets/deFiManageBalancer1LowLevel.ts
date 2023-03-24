@@ -1,10 +1,6 @@
-import {
-  dynamic32Equal,
-  staticEqual,
-  staticOneOf,
-} from "../../../src/presets/helpers/basic"
+import { equalTo, oneOf } from "../../../src/presets/helpers"
 import { AVATAR } from "../../../src/presets/placeholders"
-import { RolePreset } from "../../../src/presets/types"
+import { PermissionPreset } from "../../../src/presets/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -1158,6 +1154,6 @@ const preset = {
     },
   ],
   placeholders: { AVATAR },
-} satisfies RolePreset
+} satisfies PermissionPreset
 
 export default preset

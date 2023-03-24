@@ -4,10 +4,10 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-import { RolePreset } from "../../src/presets/types"
+import { PermissionPreset } from "../../src/presets/types"
 
-import balancer1ManagePreset from "./presets/deFiManageBalancer1"
-import ens1ManagePreset from "./presets/deFiManageENS1"
+import balancer1ManagePreset from "./presets/deFiManageBalancer1LowLevel"
+import ens1ManagePreset from "./presets/deFiManageENS1LowLevel"
 import balancerManage1Transactions from "./testTransactions/balancer1Manage"
 import ensManage1Transactions from "./testTransactions/ens1Manage"
 
@@ -89,7 +89,7 @@ describe.skip("Karpatkey: Simulate Transactions Test", async () => {
     config,
     transactions,
   }: {
-    preset: RolePreset
+    preset: PermissionPreset
     config: Config
     transactions: {
       from: string

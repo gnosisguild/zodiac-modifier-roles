@@ -8,6 +8,11 @@ export const encodeValue = (
   type?: AbiType
 ): string | Placeholder<any> => {
   if (value instanceof Placeholder) {
+    if (value.type !== type) {
+      console.warn(
+        `Placeholder type ${value.type} does not match expected type ${type}, casting the placeholder to the expected type`
+      )
+    }
     return type ? value.as(type) : value
   } else {
     if (!type) {
