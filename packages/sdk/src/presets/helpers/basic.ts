@@ -1,12 +1,69 @@
-import { defaultAbiCoder, ParamType, solidityPack } from "ethers/lib/utils"
+import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../types"
-import {
-  AbiType,
-  Placeholder,
-  PresetAllowEntry,
-  PresetScopeParam,
-} from "../types"
+import { Condition, Operator, ParameterType } from "../../types"
+import { AbiType, Placeholder, PresetCondition } from "../types"
+
+/**
+ * Asserts that the value from calldata is equal to the given value
+ * @param value The reference value to encode or a placeholder
+ * @param type The ABI type
+ */
+function equalTo(value: Placeholder<any>, type?: AbiType): PresetCondition
+function equalTo(value: any, type: AbiType): PresetCondition
+function equalTo(
+  value: Placeholder<any> | any,
+  type?: AbiType
+): PresetCondition {
+  const structure = describeStructure(type || value.type)
+  return {
+    paramType: parameterType(type || value.type),
+    operator: Operator.EqualTo,
+    compValue: encodeValue(value, type),
+    children: structure.children,
+  }
+}
+export { equalTo }
+
+/**
+ * Asserts that the value from calldata is equal to one of the given values
+ * @param values The reference values or placeholders
+ * @param type The ABI type
+ */
+function oneOf(
+  values: (Placeholder<any> | any)[],
+  type: AbiType
+): PresetCondition {
+  return {
+    paramType: ParameterType.None,
+    operator: Operator.Or,
+    children: values.map((value) => equalTo(value, type)),
+  }
+}
+export { oneOf }
+
+/**
+ * Asserts that the array value from calldata only contains elements that are equal to one of the given values.
+ *
+ * Every reference value can only be matched once, so you need to pass an array with multiple copies of the same value if you want to allow multiple occurrences.
+ * @param values The reference values or placeholders
+ * @param type The ABI type (must be an array type)
+ */
+function subsetOf(
+  values: (Placeholder<any> | any)[],
+  type: AbiType
+): PresetCondition {
+  const paramType = ParamType.from(type)
+  if (paramType.baseType !== "array") {
+    throw new Error("subsetOf can only be used with array types")
+  }
+
+  return {
+    paramType: ParameterType.Array,
+    operator: Operator.ArraySubset,
+    children: values.map((value) => equalTo(value, type)),
+  }
+}
+export { subsetOf }
 
 const encodeValue = (value: any, type?: AbiType): string | Placeholder<any> => {
   if (value instanceof Placeholder) {
@@ -19,82 +76,30 @@ const encodeValue = (value: any, type?: AbiType): string | Placeholder<any> => {
   }
 }
 
-/**
- * EqualTo comparison for static length types (uint, int, address, bool, etc.)
- * @param value The value to encode or a placeholder
- * @param type The ABI type
- */
-function staticEqualTo(
-  value: Placeholder<any>,
-  type?: AbiType
-): PresetScopeParam
-function staticEqualTo(value: any, type: AbiType): PresetScopeParam
-function staticEqualTo(
-  value: Placeholder<any> | any,
-  type?: AbiType
-): PresetScopeParam {
-  return {
-    type: ParameterType.Static,
-    operator: Operator.EqualTo,
-    compValue: encodeValue(value, type),
+const parameterType = (type: AbiType): ParameterType => {
+  const paramType = ParamType.from(type)
+  switch (paramType.baseType) {
+    case "tuple":
+      return ParameterType.Tuple
+    case "array":
+      return ParameterType.Array
+    case "string":
+    case "bytes":
+      return ParameterType.Dynamic
+    default:
+      return ParameterType.Static
   }
 }
-export { staticEqualTo }
 
-const isDynamicType = (type: AbiType): boolean => {
-  const stringType = typeof type === "string" ? type : type.format("sighash")
-  return stringType === "string" || stringType === "bytes"
-}
+const describeStructure = (type: AbiType): Condition => {
+  const paramType = ParamType.from(type)
+  const children = paramType.arrayChildren
+    ? [paramType.arrayChildren]
+    : paramType.components
 
-/**
- * EqualTo comparison for dynamic length types (string, bytes)
- * @param value The value to encode or a placeholder
- * @param type The ABI type
- */
-function dynamicEqualTo(
-  value: Placeholder<any>,
-  type?: AbiType
-): PresetScopeParam
-function dynamicEqualTo(value: any, type: AbiType): PresetScopeParam
-function dynamicEqualTo(
-  value: Placeholder<any> | any,
-  type?: AbiType
-): PresetScopeParam {
   return {
-    type: ParameterType.Dynamic,
-    operator: Operator.EqualTo,
-    compValue: encodeValue(value, type),
+    paramType: parameterType(type),
+    operator: Operator.Pass,
+    children: children.length > 0 ? children.map(describeStructure) : undefined,
   }
 }
-export { dynamicEqualTo }
-
-// for any array types
-export const arrayEqualTo = (value: any[], type: string): PresetScopeParam => ({
-  comparison: Comparison.EqualTo,
-  type: ParameterType.Array,
-  value: encodeValue(value, type),
-})
-
-// for any fixed length types
-export const staticOneOf = (value: any[], type?: string): PresetScopeParam => ({
-  comparison: Comparison.OneOf,
-  type: ParameterType.Static,
-  value: value.map((v) => encodeValue(v, type)),
-})
-
-// for string & bytes
-export const dynamicOneOf = (
-  value: any[],
-  type?: string
-): PresetScopeParam => ({
-  comparison: Comparison.OneOf,
-  type: ParameterType.Dynamic,
-  value: value.map((v) => encodeValue(v, type)),
-})
-
-// for any array types
-export const arrayOneOf = (value: any[][], type: string): PresetScopeParam => ({
-  paramType: ParameterType.Array,
-  comparison: Operator.OneOf,
-  value: value.map((v) => encodeValue(v, type)),
-})
