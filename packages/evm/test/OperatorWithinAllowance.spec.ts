@@ -5,7 +5,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumberish } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ExecutionOptions, ParameterType } from "./utils";
+import {
+  Operator,
+  ExecutionOptions,
+  ParameterType,
+  deployRolesMod,
+} from "./utils";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -23,9 +28,8 @@ describe("Operator", async () => {
     const testContract = await TestContract.deploy();
 
     const [owner, invoker] = await hre.ethers.getSigners();
-
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
+    const modifier = await deployRolesMod(
+      hre,
       owner.address,
       avatar.address,
       avatar.address

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { Operator, ParameterType } from "./utils";
+import { deployRolesMod, Operator, ParameterType } from "./utils";
 
 const SomeAddress = "0x000000000000000000000000000000000000000f";
 
@@ -12,9 +12,8 @@ async function setup() {
 
   const [owner, johnDoe] = await hre.ethers.getSigners();
 
-  const Modifier = await hre.ethers.getContractFactory("Roles");
-
-  const modifier = await Modifier.deploy(
+  const modifier = await deployRolesMod(
+    hre,
     owner.address,
     avatar.address,
     avatar.address

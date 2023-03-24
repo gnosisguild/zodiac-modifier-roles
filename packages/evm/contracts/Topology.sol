@@ -22,7 +22,7 @@ library Topology {
 
     function childrenBounds(
         ConditionFlat[] memory conditions
-    ) internal pure returns (Bounds[] memory result) {
+    ) external pure returns (Bounds[] memory result) {
         uint256 count = conditions.length;
         assert(count > 0);
 

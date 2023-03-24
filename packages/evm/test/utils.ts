@@ -1,5 +1,6 @@
 import { AddressZero } from "@ethersproject/constants";
 import { Contract, utils, BigNumber } from "ethers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 export const logGas = async (
   message: string,
@@ -181,4 +182,26 @@ export enum ExecutionOptions {
 
 export function removeTrailingOffset(data: string) {
   return `0x${data.substring(66)}`;
+}
+
+export async function deployRolesMod(
+  hre: HardhatRuntimeEnvironment,
+  owner: string,
+  avatar: string,
+  target: string
+) {
+  const Topology = await hre.ethers.getContractFactory("Topology");
+  const topology = await Topology.deploy();
+
+  const Integrity = await hre.ethers.getContractFactory("Integrity", {
+    libraries: { Topology: topology.address },
+  });
+  const integrity = await Integrity.deploy();
+
+  const Modifier = await hre.ethers.getContractFactory("Roles", {
+    libraries: { Topology: topology.address, Integrity: integrity.address },
+  });
+  const modifier = await Modifier.deploy(owner, avatar, target);
+
+  return modifier;
 }

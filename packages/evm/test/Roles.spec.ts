@@ -10,6 +10,7 @@ import {
   ParameterType,
   ExecutionOptions,
   Operator,
+  deployRolesMod,
 } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
@@ -35,22 +36,22 @@ describe("RolesModifier", async () => {
   async function setupTestWithTestAvatar() {
     const base = await baseSetup();
 
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
+    const modifier = await deployRolesMod(
+      hre,
       base.avatar.address,
       base.avatar.address,
       base.avatar.address
     );
-    return { ...base, Modifier, modifier };
+
+    return { ...base, modifier };
   }
 
   async function setupRolesWithOwnerAndInvoker() {
     const base = await baseSetup();
 
     const [owner, invoker] = await hre.ethers.getSigners();
-
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
+    const modifier = await deployRolesMod(
+      hre,
       owner.address,
       base.avatar.address,
       base.avatar.address
@@ -60,7 +61,6 @@ describe("RolesModifier", async () => {
 
     return {
       ...base,
-      Modifier,
       modifier,
       owner,
       invoker,
@@ -198,8 +198,8 @@ describe("RolesModifier", async () => {
 
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
-      const Modifier = await hre.ethers.getContractFactory("Roles");
-      const modifier = await Modifier.deploy(
+      const modifier = await deployRolesMod(
+        hre,
         user1.address,
         user1.address,
         user1.address

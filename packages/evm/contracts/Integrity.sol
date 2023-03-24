@@ -31,7 +31,7 @@ library Integrity {
 
     error MalformedBitmask(uint256 index);
 
-    function enforce(ConditionFlat[] memory conditions) internal pure {
+    function enforce(ConditionFlat[] memory conditions) external pure {
         root(conditions);
         topology(conditions);
 

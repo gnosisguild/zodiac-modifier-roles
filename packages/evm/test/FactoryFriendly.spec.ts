@@ -1,6 +1,7 @@
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import { AbiCoder } from "ethers/lib/utils";
+
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -13,8 +14,18 @@ describe("Module works with factory", () => {
   async function setup() {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
-    const Modifier = await hre.ethers.getContractFactory("Roles");
 
+    const Topology = await hre.ethers.getContractFactory("Topology");
+    const topology = await Topology.deploy();
+
+    const Integrity = await hre.ethers.getContractFactory("Integrity", {
+      libraries: { Topology: topology.address },
+    });
+    const integrity = await Integrity.deploy();
+
+    const Modifier = await hre.ethers.getContractFactory("Roles", {
+      libraries: { Topology: topology.address, Integrity: integrity.address },
+    });
     const masterCopy = await Modifier.deploy(
       FirstAddress,
       FirstAddress,

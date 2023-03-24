@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ExecutionOptions } from "./utils";
+import { deployRolesMod, ExecutionOptions } from "./utils";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -19,9 +19,8 @@ async function setup() {
   const testContract = await TestContract.deploy();
 
   const [owner, invoker] = await hre.ethers.getSigners();
-
-  const Modifier = await hre.ethers.getContractFactory("Roles");
-  const modifier = await Modifier.deploy(
+  const modifier = await deployRolesMod(
+    hre,
     owner.address,
     avatar.address,
     avatar.address
@@ -45,7 +44,6 @@ async function setup() {
     Avatar,
     avatar,
     testContract,
-    Modifier,
     modifier,
     owner,
     invoker,

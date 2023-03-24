@@ -15,22 +15,33 @@ async function setup() {
 
   const [owner] = await hre.ethers.getSigners();
 
-  const Modifier = await hre.ethers.getContractFactory("Roles");
+  const Topology = await hre.ethers.getContractFactory("Topology");
+  const topology = await Topology.deploy();
+
+  const Integrity = await hre.ethers.getContractFactory("Integrity", {
+    libraries: { Topology: topology.address },
+  });
+  const integrity = await Integrity.deploy();
+
+  const Modifier = await hre.ethers.getContractFactory("Roles", {
+    libraries: { Topology: topology.address, Integrity: integrity.address },
+  });
   const modifier = await Modifier.deploy(
     owner.address,
     avatar.address,
-    avatar.address
+    owner.address
   );
 
   return {
-    modifier,
     owner,
+    integrity,
+    modifier,
   };
 }
 
 describe("Integrity", async () => {
   it("enforces only one root node", async () => {
-    const { modifier, owner } = await loadFixture(setup);
+    const { modifier, owner, integrity } = await loadFixture(setup);
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -53,7 +64,7 @@ describe("Integrity", async () => {
         ],
         ExecutionOptions.None
       )
-    ).to.be.revertedWithCustomError(modifier, "NoRootNode");
+    ).to.be.revertedWithCustomError(integrity, "NoRootNode");
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -76,11 +87,11 @@ describe("Integrity", async () => {
         ],
         ExecutionOptions.None
       )
-    ).to.be.revertedWithCustomError(modifier, "TooManyRootNodes");
+    ).to.be.revertedWithCustomError(integrity, "TooManyRootNodes");
   });
 
   it("enforces param config in BFS order", async () => {
-    const { modifier, owner } = await loadFixture(setup);
+    const { modifier, integrity, owner } = await loadFixture(setup);
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -115,7 +126,7 @@ describe("Integrity", async () => {
         ],
         ExecutionOptions.None
       )
-    ).to.be.revertedWithCustomError(modifier, "NotBFS");
+    ).to.be.revertedWithCustomError(integrity, "NotBFS");
   });
 
   describe("Enforces Parameter Size constraints", () => {
@@ -123,7 +134,7 @@ describe("Integrity", async () => {
       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
 
     it("static node has correct compValue size", async () => {
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, integrity, owner } = await loadFixture(setup);
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -149,7 +160,7 @@ describe("Integrity", async () => {
           ],
           ExecutionOptions.None
         )
-      ).to.be.revertedWithCustomError(modifier, "UnsuitableCompValue");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableCompValue");
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -180,7 +191,7 @@ describe("Integrity", async () => {
 
   describe("Enforces compatible childTypeTree for And/Or operators", () => {
     it.skip("detects array type mismatch", async () => {
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, integrity, owner } = await loadFixture(setup);
 
       await modifier.connect(owner).scopeFunction(
         ROLE_KEY,
@@ -281,7 +292,7 @@ describe("Integrity", async () => {
 
   describe("Enforces compatible childTypeTree for Array nodes", () => {
     it("detects array type mismatch", async () => {
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, integrity, owner } = await loadFixture(setup);
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -344,7 +355,7 @@ describe("Integrity", async () => {
           ],
           ExecutionOptions.None
         )
-      ).to.be.revertedWithCustomError(modifier, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -410,7 +421,7 @@ describe("Integrity", async () => {
       ).to.not.be.reverted;
     });
     it("detects array type mismatch - order counts", async () => {
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, integrity, owner } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -475,7 +486,7 @@ describe("Integrity", async () => {
             conditions,
             ExecutionOptions.None
           )
-      ).to.be.revertedWithCustomError(modifier, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
 
       // swap
       conditions[6].paramType = ParameterType.Dynamic;
@@ -494,7 +505,7 @@ describe("Integrity", async () => {
       ).to.not.be.reverted;
     });
     it("detects array type mismatch - length mismatch", async () => {
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, integrity, owner } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -571,7 +582,7 @@ describe("Integrity", async () => {
             conditions.slice(0, -1),
             ExecutionOptions.None
           )
-      ).to.be.revertedWithCustomError(modifier, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
     });
   });
 });
