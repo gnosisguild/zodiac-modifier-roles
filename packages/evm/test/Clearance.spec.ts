@@ -1,22 +1,21 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import "@nomiclabs/hardhat-ethers";
 import { ExecutionOptions } from "./utils";
 
 describe("Clearance", async () => {
   const ROLE_KEY =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
+  async function setup() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractClone = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+    const [owner, invoker] = await hre.ethers.getSigners();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
     const modifier = await Modifier.deploy(
@@ -39,10 +38,10 @@ describe("Clearance", async () => {
       owner,
       invoker,
     };
-  });
+  }
 
   it("allows and then disallows a target", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+    const { modifier, testContract, invoker, owner } = await loadFixture(setup);
 
     const { data } = await testContract.populateTransaction.doNothing();
 
@@ -50,7 +49,7 @@ describe("Clearance", async () => {
       modifier
         .connect(invoker)
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
-    ).to.be.revertedWith("TargetAddressNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
 
     await modifier
       .connect(owner)
@@ -68,12 +67,12 @@ describe("Clearance", async () => {
       modifier
         .connect(invoker)
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
-    ).to.be.revertedWith("TargetAddressNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
   });
 
   it("allowing a target does not allow other targets", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
-      await setup();
+      await loadFixture(setup);
 
     await modifier
       .connect(owner)
@@ -100,11 +99,11 @@ describe("Clearance", async () => {
           data as string,
           0
         )
-    ).to.be.revertedWith("TargetAddressNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
   });
 
   it("allows and then disallows a function", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+    const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -137,11 +136,11 @@ describe("Clearance", async () => {
       modifier
         .connect(invoker)
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "FunctionNotAllowed");
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
-      await setup();
+      await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -177,10 +176,10 @@ describe("Clearance", async () => {
           data as string,
           0
         )
-    ).to.be.revertedWith("TargetAddressNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
   });
   it("allowing a function tightens a previously allowed target", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+    const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -237,11 +236,11 @@ describe("Clearance", async () => {
           dataDoEvenLess as string,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "FunctionNotAllowed");
   });
 
   it("allowing a target loosens a previously allowed function", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+    const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -282,7 +281,7 @@ describe("Clearance", async () => {
           dataDoEvenLess as string,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed()");
+    ).to.be.revertedWithCustomError(modifier, "FunctionNotAllowed");
 
     await modifier
       .connect(owner)
@@ -301,7 +300,7 @@ describe("Clearance", async () => {
   });
 
   it("disallowing one function does not impact other function allowances", async () => {
-    const { modifier, testContract, owner, invoker } = await setup();
+    const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SEL_DONOTHING = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
@@ -380,6 +379,6 @@ describe("Clearance", async () => {
           dataDoEvenLess as string,
           0
         )
-    ).to.be.revertedWith("FunctionNotAllowed");
+    ).to.be.revertedWithCustomError(modifier, "FunctionNotAllowed");
   });
 });

@@ -1,9 +1,9 @@
 import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
 import { BigNumberish } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
-import hre, { deployments, waffle } from "hardhat";
-
-import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
@@ -13,8 +13,7 @@ const ROLE_KEY =
 describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
+  async function setup() {
     const timestamp = timestampNow();
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -23,7 +22,7 @@ describe("Operator", async () => {
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+    const [owner, invoker] = await hre.ethers.getSigners();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
     const modifier = await Modifier.deploy(
@@ -118,11 +117,13 @@ describe("Operator", async () => {
       setAllowance,
       setPermission,
     };
-  });
+  }
 
   describe("CallWithinAllowance - Check", () => {
     it("passes a check from existing balance", async () => {
-      const { setAllowance, setPermission, modifier } = await setup();
+      const { setAllowance, setPermission, modifier } = await loadFixture(
+        setup
+      );
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -144,12 +145,14 @@ describe("Operator", async () => {
 
       expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
     it("passes multiple checks from existing balance", async () => {
-      const { setAllowance, setPermission, modifier } = await setup();
+      const { setAllowance, setPermission, modifier } = await loadFixture(
+        setup
+      );
 
       const allowanceKey =
         "0x0000000000000000000000000000ff0000000000000000000000000000000001";
@@ -173,32 +176,34 @@ describe("Operator", async () => {
 
       expect((await modifier.allowances(allowanceKey)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
     it("passes a check from balance 0 but enough refill pending", async () => {
-      const { setAllowance, setPermission, timestamp } = await setup();
+      const { modifier, setAllowance, setPermission, timestamp } =
+        await setup();
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       await setAllowance(allowanceKey, {
         balance: 0,
-        refillInterval: 100,
+        refillInterval: 1000,
         refillAmount: 1,
-        refillTimestamp: timestamp - 150,
+        refillTimestamp: timestamp - 1010,
       });
 
       const { invoke } = await setPermission(allowanceKey);
 
       await expect(invoke()).to.not.be.reverted;
-      await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
     it("fails a check, insufficient balance and not enough elapsed for next refill", async () => {
-      const { setAllowance, setPermission, timestamp } = await setup();
+      const { modifier, setAllowance, setPermission, timestamp } =
+        await loadFixture(setup);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -210,16 +215,16 @@ describe("Operator", async () => {
       });
       const { invoke } = await setPermission(allowanceKey);
 
-      await expect(invoke()).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
   });
 
   describe("CallWithinAllowance - Variants", () => {
     it("enforces different call allowances per variant", async () => {
       const { owner, invoker, modifier, testContract, setAllowance } =
-        await setup();
+        await loadFixture(setup);
 
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("fnWithSingleParam")
@@ -311,18 +316,19 @@ describe("Operator", async () => {
         ExecutionOptions.Send
       );
 
-      await expect(execute(valueOther)).to.be.revertedWith(
-        "NoMatchingBranch()"
+      await expect(execute(valueOther)).to.be.revertedWithCustomError(
+        modifier,
+        "NoMatchingBranch"
       );
 
-      await expect(execute(value1)).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey1}")`
-      );
+      await expect(execute(value1))
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey1);
 
       await expect(execute(value2)).not.to.be.reverted;
-      await expect(execute(value2)).to.be.revertedWith(
-        `CallAllowanceExceeded("${allowanceKey2}")`
-      );
+      await expect(execute(value2))
+        .to.be.revertedWithCustomError(modifier, `CallAllowanceExceeded`)
+        .withArgs(allowanceKey2);
     });
   });
 });

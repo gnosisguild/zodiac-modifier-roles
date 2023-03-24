@@ -1,12 +1,9 @@
 import { expect } from "chai";
-import "@nomiclabs/hardhat-ethers";
-import hre, { deployments } from "hardhat";
+import hre from "hardhat";
 import { ExecutionOptions } from "./utils";
 
 describe("ScopeConfig library", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-
+  async function setup() {
     const MockScopeConfig = await hre.ethers.getContractFactory(
       "MockScopeConfig"
     );
@@ -15,7 +12,7 @@ describe("ScopeConfig library", async () => {
     return {
       ScopeConfig,
     };
-  });
+  }
 
   it("packs/unpack Header", async () => {
     const { ScopeConfig } = await setup();

@@ -1,14 +1,11 @@
 import assert from "assert";
-
-import "@nomiclabs/hardhat-ethers";
+import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { expect } from "chai";
 import { BigNumberish } from "ethers";
 import { getAddress, solidityPack } from "ethers/lib/utils";
-import hre, { deployments } from "hardhat";
-
-import { UnwrappedTransactionStructOutput } from "../../typechain-types/contracts/adapters/MultiSendAdapter";
 
 enum Operation {
   Call = 0,
@@ -16,9 +13,7 @@ enum Operation {
 }
 
 describe("MultiSendUnwrapper", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-
+  async function setup() {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
 
@@ -35,10 +30,10 @@ describe("MultiSendUnwrapper", async () => {
       testEncoder,
       unwrapper,
     };
-  });
+  }
 
   it("reverts if wrong selector used", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
       await testEncoder.populateTransaction.simple(1);
@@ -79,7 +74,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if header offset incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
       await testEncoder.populateTransaction.simple(1);
@@ -122,7 +117,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if value not zero", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     assert(txData);
@@ -145,7 +140,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if operation not delegate call", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
@@ -167,7 +162,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if no transaction encoded", async () => {
-    const { unwrapper, multisend } = await setup();
+    const { unwrapper, multisend } = await loadFixture(setup);
 
     const { data } = await multisend.populateTransaction.multiSend("0x");
 
@@ -178,7 +173,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("unwraps a single transaction", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
@@ -213,7 +208,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("unwraps multiple transactions", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: txData1 } = await testEncoder.populateTransaction.simple(1);
     const { data: txData2 } = await testEncoder.staticDynamicDynamic32(
@@ -266,7 +261,7 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if inner transaction operation incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await setup();
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     let { data } = await multisend.populateTransaction.multiSend(
@@ -320,7 +315,7 @@ const multisendPayload = (txs: MetaTransaction[]): string => {
   );
 };
 
-function location(result: UnwrappedTransactionStructOutput) {
+function location(result: any) {
   const offset = result.dataOffset.toNumber();
   const length = result.dataLength.toNumber();
   const left = offset * 2;

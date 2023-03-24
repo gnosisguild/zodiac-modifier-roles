@@ -1,15 +1,11 @@
-import "@typechain/hardhat";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-etherscan";
-import "solidity-coverage";
-import "hardhat-deploy";
+import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-gas-reporter";
-import "hardhat-contract-sizer";
+
 import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
+
 import "./src/tasks/setup";
 
 const argv = yargs

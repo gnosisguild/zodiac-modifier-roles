@@ -1,9 +1,9 @@
 import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
 import { BigNumberish } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
-import hre, { deployments, waffle } from "hardhat";
-
-import "@nomiclabs/hardhat-ethers";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 
@@ -13,8 +13,7 @@ const ROLE_KEY =
 describe("Operator", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
+  async function setup() {
     const timestamp = timestampNow();
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -23,7 +22,7 @@ describe("Operator", async () => {
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+    const [owner, invoker] = await hre.ethers.getSigners();
 
     const Modifier = await hre.ethers.getContractFactory("Roles");
     const modifier = await Modifier.deploy(
@@ -167,16 +166,17 @@ describe("Operator", async () => {
     }
 
     return {
+      modifier,
       timestamp,
       setAllowance,
       setRole,
       setRoleTwoParams,
     };
-  });
+  }
 
   describe("WithinAllowance - Check", () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
-      const { setAllowance, setRole } = await setup();
+      const { modifier, setAllowance, setRole } = await loadFixture(setup);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -189,18 +189,20 @@ describe("Operator", async () => {
 
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(1001)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1001))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
 
       await expect(invoke(1000)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("passes a check with only from balance and refill available", async () => {
-      const { setAllowance, setRole, timestamp } = await setup();
+      const { modifier, setAllowance, setRole, timestamp } = await loadFixture(
+        setup
+      );
       // more than one byte per char
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -212,17 +214,20 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(334)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
+      await expect(invoke(334)).to.be.revertedWithCustomError(
+        modifier,
+        `AllowanceExceeded`
       );
       await expect(invoke(333)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("passes a check balance from available+refill", async () => {
-      const { setAllowance, setRole, timestamp } = await setup();
+      const { modifier, setAllowance, setRole, timestamp } = await loadFixture(
+        setup
+      );
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
@@ -234,17 +239,19 @@ describe("Operator", async () => {
 
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(351)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(351))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(invoke(350)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
-      const { setAllowance, setRole, timestamp } = await setup();
+      const { modifier, setAllowance, setRole, timestamp } = await loadFixture(
+        setup
+      );
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
@@ -255,17 +262,19 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(251)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(251))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(invoke(250)).to.not.be.reverted;
-      await expect(invoke(1)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
     });
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
-      const { setAllowance, setRole, timestamp } = await setup();
+      const { modifier, setAllowance, setRole, timestamp } = await loadFixture(
+        setup
+      );
       const interval = 10000;
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -278,14 +287,16 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(1001)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(1001))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(invoke(1000)).to.not.be.reverted;
     });
 
     it("fails a check with balance from refill but capped by maxBalance", async () => {
-      const { setAllowance, setRole, timestamp } = await setup();
+      const { modifier, setAllowance, setRole, timestamp } = await loadFixture(
+        setup
+      );
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
@@ -297,16 +308,16 @@ describe("Operator", async () => {
       });
       const { invoke } = await setRole(allowanceKey);
 
-      await expect(invoke(9001)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
-      );
+      await expect(invoke(9001))
+        .to.be.revertedWithCustomError(modifier, `AllowanceExceeded`)
+        .withArgs(allowanceKey);
       await expect(invoke(9000)).to.not.be.reverted;
     });
   });
 
   describe("WithinAllowance - Track", async () => {
     it("Updates tracking, even with multiple parameters referencing the same limit", async () => {
-      const { setAllowance, setRoleTwoParams } = await setup();
+      const { setAllowance, setRoleTwoParams } = await loadFixture(setup);
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
       await setAllowance(allowanceKey, {
@@ -320,8 +331,9 @@ describe("Operator", async () => {
       let allowance = await modifier.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
-      await expect(invoke(3001, 3001)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
+      await expect(invoke(3001, 3001)).to.be.revertedWithCustomError(
+        modifier,
+        `AllowanceExceeded`
       );
       allowance = await modifier.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
@@ -332,7 +344,7 @@ describe("Operator", async () => {
     });
 
     it("Fails at tracking, when multiple parameters referencing the same limit overspend", async () => {
-      const { setAllowance, setRoleTwoParams } = await setup();
+      const { setAllowance, setRoleTwoParams } = await loadFixture(setup);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
       await setAllowance(allowanceKey, {
@@ -346,15 +358,16 @@ describe("Operator", async () => {
       let allowance = await modifier.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
-      await expect(invoke(3000, 1)).to.be.revertedWith(
-        `AllowanceExceeded("${allowanceKey}")`
+      await expect(invoke(3000, 1)).to.be.revertedWithCustomError(
+        modifier,
+        `AllowanceExceeded`
       );
       allowance = await modifier.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
 
     it("Updates refillTimestamp starting from zero", async () => {
-      const { setAllowance, setRole } = await setup();
+      const { setAllowance, setRole } = await loadFixture(setup);
 
       const interval = 600;
 
@@ -383,7 +396,7 @@ describe("Operator", async () => {
     });
 
     it("Does not updates refillTimestamp if interval is zero", async () => {
-      const { setAllowance, setRole } = await setup();
+      const { setAllowance, setRole } = await loadFixture(setup);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -402,7 +415,7 @@ describe("Operator", async () => {
     });
 
     it("Updates refillTimestamp from past timestamp", async () => {
-      const { setAllowance, setRole } = await setup();
+      const { setAllowance, setRole } = await loadFixture(setup);
 
       const interval = 600;
       const initialTimestamp = timestampNow() - 2400;
@@ -429,7 +442,7 @@ describe("Operator", async () => {
     });
 
     it("Does not update refillTimestamp from future timestamp", async () => {
-      const { setAllowance, setRole } = await setup();
+      const { setAllowance, setRole } = await loadFixture(setup);
 
       const interval = 600;
       const initialTimestamp = timestampNow() + 1200;
