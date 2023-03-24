@@ -3,7 +3,7 @@ import { ParamType } from "ethers/lib/utils"
 import { Operator, ParameterType } from "../../types"
 import { AbiType, PresetCondition } from "../types"
 
-import { parameterType } from "./utils"
+import { describeStructure, parameterType } from "./utils"
 
 type RecordOrArray<T> = { [name: string]: T } | T[]
 
@@ -60,6 +60,7 @@ function matches(
     ),
   }
 }
+
 export { matches }
 
 const coerceTypes = (typeOrTypes: AbiType | AbiType[]): ParamType[] => {
