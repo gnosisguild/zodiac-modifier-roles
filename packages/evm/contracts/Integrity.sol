@@ -132,6 +132,13 @@ library Integrity {
             ) {
                 revert UnsuitableChildrenCount(i);
             }
+
+            if (
+                condition.operator == Operator.ArraySubset &&
+                childrenBounds[i].length == 0
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
         }
 
         // TODO bitmask only for dynamic and static
