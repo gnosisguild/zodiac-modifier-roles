@@ -80,6 +80,12 @@ describe("Operator - Nor", async () => {
       scopeFunction([
         {
           parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
           paramType: ParameterType.None,
           operator: Operator.Nor,
           compValue: "0x",
