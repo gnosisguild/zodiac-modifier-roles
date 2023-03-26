@@ -35,8 +35,7 @@ It also offers various sanity checks and normalizations for conditions.
 
 A permission preset is a parametrized set of permissions. It can be applied to different roles, filling in the specific parameter values for the placeholders in conditions.
 
-On this layer, the sdk offers [low-level helper functions](src/presets/helpers) for defining conditions in presets.
-These helper functions are useful for defining permissions without typing support.
+On this layer, the sdk offers [low-level helper functions](src/presets/helpers) for defining conditions, relying on user-provided ABIs for contract function parameters.
 
 **Example:**
 
@@ -53,7 +52,7 @@ These helper functions are useful for defining permissions without typing suppor
 On the highest layer of abstraction users can generate "allow kits" for contracts they want to set permissions on.
 An allow kit offers helper functions designed for defining permissions on specific contracts, fully supported by the type system.
 
-Users just provide addresses of contracts they wish to set permissions on. Powered by [eth-sdk](https://github.com/dethcrypto/eth-sdk) adn [TypeChain](https://github.com/dethcrypto/TypeChain), ABIs will be automatically downloaded from Etherscan to generate type-safe allow functions.
+Users just provide addresses of contracts they wish to set permissions on. Powered by [eth-sdk](https://github.com/dethcrypto/eth-sdk) and [TypeChain](https://github.com/dethcrypto/TypeChain), ABIs will be automatically downloaded from block explorers to generate type-safe helper functions for granting permissions.
 
 **Example:**
 

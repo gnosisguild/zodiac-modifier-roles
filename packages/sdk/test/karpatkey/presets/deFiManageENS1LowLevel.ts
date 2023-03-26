@@ -300,14 +300,23 @@ const preset = {
       targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(AURA_BALANCER_stETH_VAULT, "address"),
-        [1]: staticEqual(WETH, "address"),
-        [3]: staticEqual(
-          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-          "bytes32"
-        ), //pool ID
-      },
+      condition: matches(
+        {
+          rewardPoolAddress: equalTo(AURA_BALANCER_stETH_VAULT, "address"),
+          inputToken: equalTo(WETH, "address"),
+          balancerPoolId: equalTo(
+            "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+            "bytes32"
+          ),
+        },
+        [
+          "address rewardPoolAddress",
+          "address inputToken",
+          "uint256 inputAmount",
+          "bytes32 balancerPoolId",
+          // "(address[] assets, uint256[] maxAmountsIn, bytes userData, bool fromInternalBalance)",
+        ]
+      ),
     },
 
     //withdrawAndUnwrap: the bool argument specifies whether rewards are claimed when withdrawing
@@ -339,14 +348,17 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", //pool ID
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-      },
+      condition: matches(
+        {
+          poolId: equalTo(
+            "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+            "bytes32"
+          ),
+          sender: equalTo(AVATAR),
+          recipient: equalTo(AVATAR),
+        },
+        ["bytes32 poolId", "address sender", "address recipient"]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -374,55 +386,71 @@ const preset = {
     {
       targetAddress: UV3_ROUTER_2,
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
-      params: {
-        [2]: arrayOneOf(
-          [
-            [COMP, WETH, USDC],
-            [COMP, WETH, DAI],
-            [COMP, WETH],
-            [CRV, WETH, USDC],
-            [CRV, WETH, DAI],
-            [CRV, WETH],
-            [LDO, WETH, USDC],
-            [LDO, WETH, DAI],
-            [LDO, WETH],
-            [WETH, USDC],
-            [WETH, DAI],
-            [WETH, USDT],
-            [USDC, WETH],
-            [USDC, USDT],
-            [USDC, WETH, USDT],
-            [USDC, DAI],
-            [USDC, WETH, DAI],
-            [DAI, WETH],
-            [DAI, USDC],
-            [DAI, WETH, USDC],
-            [DAI, USDT],
-            [DAI, WETH, USDT],
-            [USDT, WETH],
-            [USDT, USDC],
-            [USDT, WETH, USDC],
-            [USDT, DAI],
-            [USDT, WETH, DAI],
-          ],
-          "address[]"
-        ),
-        [3]: staticEqual(AVATAR),
-      },
+      condition: matches(
+        {
+          path: oneOf(
+            [
+              [COMP, WETH, USDC],
+              [COMP, WETH, DAI],
+              [COMP, WETH],
+              [CRV, WETH, USDC],
+              [CRV, WETH, DAI],
+              [CRV, WETH],
+              [LDO, WETH, USDC],
+              [LDO, WETH, DAI],
+              [LDO, WETH],
+              [WETH, USDC],
+              [WETH, DAI],
+              [WETH, USDT],
+              [USDC, WETH],
+              [USDC, USDT],
+              [USDC, WETH, USDT],
+              [USDC, DAI],
+              [USDC, WETH, DAI],
+              [DAI, WETH],
+              [DAI, USDC],
+              [DAI, WETH, USDC],
+              [DAI, USDT],
+              [DAI, WETH, USDT],
+              [USDT, WETH],
+              [USDT, USDC],
+              [USDT, WETH, USDC],
+              [USDT, DAI],
+              [USDT, WETH, DAI],
+            ],
+            "address[]"
+          ),
+          to: equalTo(AVATAR),
+        },
+        [
+          "uint256 amountIn",
+          "uint256 amountOutMin",
+          "address[] path",
+          "address to",
+        ]
+      ),
     },
 
     {
       targetAddress: UV3_ROUTER_2,
       signature:
         "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticOneOf(
-          [COMP, WETH, rETH2, sETH2, SWISE, CRV, LDO, USDC, DAI, USDT],
-          "address"
-        ),
-        [1]: staticOneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
-        [3]: staticEqual(AVATAR),
-      },
+      condition: matches(
+        [
+          matches(
+            {
+              tokenIn: oneOf(
+                [COMP, WETH, rETH2, sETH2, SWISE, CRV, LDO, USDC, DAI, USDT],
+                "address"
+              ),
+              tokenOut: oneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
+              recipient: equalTo(AVATAR),
+            },
+            "(address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 deadline, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)"
+          ),
+        ],
+        ["(address,address,uint24,address,uint256,uint256,uint160)"]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
