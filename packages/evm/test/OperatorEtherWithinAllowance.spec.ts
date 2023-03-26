@@ -416,7 +416,7 @@ describe("Operator", async () => {
        */
       await expect(execute(1000, valueOther)).to.be.revertedWithCustomError(
         modifier,
-        "NoMatchingBranch"
+        "OrViolation"
       );
       // Exceed value for Variant1
       await expect(execute(allowanceAmount1 + 1, value1))

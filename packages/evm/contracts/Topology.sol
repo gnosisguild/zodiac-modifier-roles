@@ -100,10 +100,10 @@ library Topology {
         Condition memory condition
     ) internal pure returns (TypeTree memory result) {
         if (
-            condition.operator == Operator.And ||
-            condition.operator == Operator.Or
+            condition.operator >= Operator.And &&
+            condition.operator <= Operator.Xor
         ) {
-            assert(condition.children.length > 1);
+            assert(condition.children.length > 0);
             return typeTree(condition.children[0]);
         }
 

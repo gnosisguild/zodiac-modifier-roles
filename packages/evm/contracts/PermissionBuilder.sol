@@ -271,7 +271,7 @@ abstract contract PermissionBuilder is Core {
      */
     function _removeExtraneousOffsets(
         ConditionFlat[] memory conditions
-    ) private view returns (ConditionFlat[] memory) {
+    ) private pure returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ) {
             if (
