@@ -12,7 +12,7 @@ import {
 } from "../utils";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
 
-describe.only("Operator - Or", async () => {
+describe("Operator - Or", async () => {
   const ROLE_KEY =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
 
