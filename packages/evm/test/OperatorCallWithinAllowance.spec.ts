@@ -323,7 +323,7 @@ describe("Operator", async () => {
 
       await expect(execute(valueOther)).to.be.revertedWithCustomError(
         modifier,
-        "NoMatchingBranch"
+        "OrViolation"
       );
 
       await expect(execute(value1))

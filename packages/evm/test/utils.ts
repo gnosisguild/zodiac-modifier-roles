@@ -126,14 +126,14 @@ export enum Operator {
   //          🚫 compValue
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: BOOLEAN EXPRESSIONS
+  // 01-04: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   /* 01: */ And = 1,
   /* 02: */ Or = 2,
-  /* 03: */ Xor = 3,
-  /* 04: */ Not = 4,
+  /* 03: */ Nor = 3,
+  /* 04: */ Xor = 4,
   // ------------------------------------------------------------
   // 05-16: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,

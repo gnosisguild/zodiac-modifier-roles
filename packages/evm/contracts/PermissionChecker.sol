@@ -9,9 +9,9 @@ import "./Decoder.sol";
 import "./ScopeConfig.sol";
 
 /**
- * @title PermissionChecker - a component of the Zodiac Roles Mod that is
- * responsible for enforcing and authorizing actions performed on behalf of a
- * role.
+ * @title PermissionChecker - a component of Zodiac Roles Mod responsible
+ * for enforcing and authorizing actions performed on behalf of a role.
+ *
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
@@ -23,6 +23,8 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Enum.Operation operation
     ) internal view returns (Trace[] memory result) {
+        // We never authorize the zero role, as it could clash with the
+        // unassigned default role
         if (roleKey == 0) {
             revert NoMembership();
         }
@@ -202,7 +204,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload
-    ) internal pure returns (Status, Trace[] memory trace) {
+    ) private pure returns (Status, Trace[] memory trace) {
         Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
@@ -214,6 +216,8 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _and(value, data, condition, payload);
             } else if (operator == Operator.Or) {
                 return _or(value, data, condition, payload);
+            } else if (operator == Operator.Nor) {
+                return _nor(value, data, condition, payload);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(value, data, condition, payload);
             } else if (operator == Operator.ArrayEvery) {
@@ -311,7 +315,25 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.NoMatchingBranch, _trace());
+        return (Status.OrViolation, _trace());
+    }
+
+    function _nor(
+        uint256 value,
+        bytes calldata data,
+        Condition memory condition,
+        ParameterPayload memory payload
+    ) private pure returns (Status status, Trace[] memory trace) {
+        for (uint256 i; i < condition.children.length; ) {
+            (status, ) = _walk(value, data, condition.children[i], payload);
+            if (status == Status.Ok) {
+                return (Status.NorViolation, trace);
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return (Status.Ok, trace);
     }
 
     function _arrayEvery(
@@ -495,6 +517,12 @@ abstract contract PermissionChecker is Core, Periphery {
             revert TargetAddressNotAllowed();
         } else if (status == Status.FunctionNotAllowed) {
             revert FunctionNotAllowed();
+        } else if (status == Status.OrViolation) {
+            revert OrViolation();
+        } else if (status == Status.NorViolation) {
+            revert NorViolation();
+        } else if (status == Status.XorViolation) {
+            revert XorViolation();
         } else if (status == Status.SendNotAllowed) {
             revert SendNotAllowed();
         } else if (status == Status.ParameterNotAllowed) {
@@ -505,8 +533,6 @@ abstract contract PermissionChecker is Core, Periphery {
             revert ParameterGreaterThanAllowed();
         } else if (status == Status.ParameterNotAMatch) {
             revert ParameterNotAMatch();
-        } else if (status == Status.NoMatchingBranch) {
-            revert NoMatchingBranch();
         } else if (status == Status.NotEveryArrayElementPasses) {
             revert NotEveryArrayElementPasses();
         } else if (status == Status.NoArrayElementPasses) {
@@ -531,6 +557,12 @@ abstract contract PermissionChecker is Core, Periphery {
         FunctionNotAllowed,
         /// Role not allowed to send to target address
         SendNotAllowed,
+        /// Or conition not met
+        OrViolation,
+        /// Nor conition not met
+        NorViolation,
+        /// Xor conition not met
+        XorViolation,
         /// Parameter value is not equal to allowed
         ParameterNotAllowed,
         /// Parameter value less than allowed
@@ -539,8 +571,6 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterGreaterThanAllowed,
         /// Parameter value does not match
         ParameterNotAMatch,
-        /// An order condition was not met
-        NoMatchingBranch,
         /// Array elements do not meet allowed criteria for every element
         NotEveryArrayElementPasses,
         /// Array elements do not meet allowed criteria for at least one element
@@ -574,6 +604,12 @@ abstract contract PermissionChecker is Core, Periphery {
     /// Role not allowed to call this function on target address
     error FunctionNotAllowed();
 
+    error OrViolation();
+
+    error NorViolation();
+
+    error XorViolation();
+
     /// Parameter value not one of allowed
     error ParameterNotAllowed();
 
@@ -585,8 +621,6 @@ abstract contract PermissionChecker is Core, Periphery {
 
     /// Parameter value does not match specified condition
     error ParameterNotAMatch();
-
-    error NoMatchingBranch();
 
     /// Array elements do not meet allowed criteria for every element
     error NotEveryArrayElementPasses();

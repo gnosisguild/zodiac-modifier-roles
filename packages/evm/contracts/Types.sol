@@ -23,14 +23,14 @@ enum Operator {
     //          🚫 compValue
     /* 00: */ Pass,
     // ------------------------------------------------------------
-    // 01-04: BOOLEAN EXPRESSIONS
+    // 01-04: LOGICAL EXPRESSIONS
     //          paramType: None
     //          ✅ children
     //          🚫 compValue
     /* 01: */ And,
     /* 02: */ Or,
-    /* 03: */ Xor,
-    /* 04: */ Not,
+    /* 03: */ Nor,
+    /* 04: */ Xor,
     // ------------------------------------------------------------
     // 05-16: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,

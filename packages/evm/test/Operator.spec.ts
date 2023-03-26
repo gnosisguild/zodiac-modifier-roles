@@ -518,7 +518,7 @@ describe("Operator", async () => {
     await expect(invoke(22)).to.not.be.reverted;
     await expect(invoke(33)).to.be.revertedWithCustomError(
       modifier,
-      "NoMatchingBranch"
+      "OrViolation"
     );
   });
 
@@ -734,7 +734,7 @@ describe("Operator", async () => {
 
     await expect(invoke(false, "Something else")).to.be.revertedWithCustomError(
       modifier,
-      "NoMatchingBranch"
+      "OrViolation"
     );
   });
 
@@ -826,11 +826,11 @@ describe("Operator", async () => {
 
     await expect(
       invoke({ a: 22222, b: addressOne })
-    ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+    ).to.be.revertedWithCustomError(modifier, "OrViolation");
 
     await expect(
       invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-    ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+    ).to.be.revertedWithCustomError(modifier, "OrViolation");
   });
 
   it("checks operator Or over Array", async () => {
@@ -969,13 +969,13 @@ describe("Operator", async () => {
         { a: 123456, b: address1 },
         { a: 111111, b: address2 },
       ])
-    ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+    ).to.be.revertedWithCustomError(modifier, "OrViolation");
 
     await expect(invoke([{ a: 123121212, b: address3 }])).to.not.be.reverted;
 
     await expect(invoke([])).to.be.revertedWithCustomError(
       modifier,
-      "NoMatchingBranch"
+      "OrViolation"
     );
   });
 
@@ -1067,11 +1067,11 @@ describe("Operator", async () => {
 
     await expect(
       invoke({ a: 22222, b: addressOne })
-    ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+    ).to.be.revertedWithCustomError(modifier, "OrViolation");
 
     await expect(
       invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-    ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+    ).to.be.revertedWithCustomError(modifier, "OrViolation");
   });
 
   it("checks a static Tuple comparison", async () => {
@@ -1880,14 +1880,14 @@ describe("Operator", async () => {
       // wrong first argument
       await expect(
         invoke(false, "Good Morning!")
-      ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+      ).to.be.revertedWithCustomError(modifier, "OrViolation");
       // fixing the first argument
       await expect(invoke(true, "Good Morning!")).to.not.be.reverted;
       await expect(invoke(true, "Third String")).to.not.be.reverted;
 
       await expect(
         invoke(false, "Something else")
-      ).to.be.revertedWithCustomError(modifier, "NoMatchingBranch");
+      ).to.be.revertedWithCustomError(modifier, "OrViolation");
     });
   });
 });

@@ -27,7 +27,7 @@ library Integrity {
 
     error UnsuitableSubTypeTree(uint256 index);
 
-    error TooLittleChildren(uint256 index);
+    error NotEnoughChildren(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
@@ -83,21 +83,25 @@ library Integrity {
             conditions
         );
 
-        // check at least 2 children for Ar/Or
+        // check at least 1 child for Logical
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                (condition.operator == Operator.Or ||
-                    condition.operator == Operator.And)
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor)
             ) {
+                // must be zero
+                if (condition.paramType != ParameterType.None) {
+                    revert UnsuitableParameterType(i);
+                }
                 // must be zero
                 if (condition.compValue.length != 0) {
                     revert UnsuitableCompValue(i);
                 }
 
                 // must have at least two children
-                if (childrenBounds[i].length < 2) {
-                    revert TooLittleChildren(i);
+                if (childrenBounds[i].length == 0) {
+                    revert NotEnoughChildren(i);
                 }
             }
         }
@@ -105,8 +109,8 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                (condition.operator == Operator.Or ||
-                    condition.operator == Operator.And)
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor)
             ) {
                 compatibleSubTypeTree(conditions, i, childrenBounds);
             }
@@ -131,23 +135,19 @@ library Integrity {
         Operator operator = condition.operator;
         ParameterType paramType = condition.paramType;
 
+        bool isComparison = operator >= Operator.EqualTo &&
+            operator <= Operator.LessThan;
+        bool isLogical = operator >= Operator.And && operator <= Operator.Xor;
+        bool isMetaAllowance = operator == Operator.EtherWithinAllowance ||
+            operator == Operator.CallWithinAllowance;
+
         if (
-            paramType == ParameterType.None &&
-            !(operator == Operator.Or ||
-                operator == Operator.And ||
-                operator == Operator.EtherWithinAllowance ||
-                operator == Operator.CallWithinAllowance)
+            paramType == ParameterType.None && !(isLogical || isMetaAllowance)
         ) {
             revert UnsuitableOperator(index);
         }
 
-        if (
-            (operator == Operator.Or ||
-                operator == Operator.And ||
-                operator == Operator.EtherWithinAllowance ||
-                operator == Operator.CallWithinAllowance) &&
-            paramType != ParameterType.None
-        ) {
+        if ((isLogical || isMetaAllowance) && paramType != ParameterType.None) {
             revert UnsuitableParameterType(index);
         }
 
@@ -160,10 +160,8 @@ library Integrity {
         }
 
         if (
-            (operator == Operator.EqualTo ||
-                operator == Operator.GreaterThan ||
-                operator == Operator.LessThan) &&
             paramType == ParameterType.Static &&
+            isComparison &&
             compValue.length != 32
         ) {
             revert UnsuitableCompValue(index);
