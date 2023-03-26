@@ -1,18 +1,19 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
-import { scopeParam } from "./scopeParam"
+import { scopeParam } from "../presets/scopeParam"
 import {
   PresetFullyClearedTarget,
   PresetFunction,
-  ExecutionOptions,
-  TupleScopings,
-} from "./types"
+  ExecutionFlags,
+} from "../presets/types"
+
+import { TupleScopings } from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
 ) => void
-  ? [...params: TupleScopings<I>, options?: ExecutionOptions]
+  ? [...params: TupleScopings<I>, options?: ExecutionFlags]
   : []
 
 const makeAllowFunction = <
@@ -30,7 +31,7 @@ const makeAllowFunction = <
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
     const paramScopings = args.slice(0, functionInputs.length) as any[]
-    const options = (args[functionInputs.length] || {}) as ExecutionOptions
+    const options = (args[functionInputs.length] || {}) as ExecutionFlags
     return {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
@@ -51,14 +52,14 @@ type AllowFunctions<C extends BaseContract> = {
   ) => PresetFunction
 }
 type AllowContract<C extends BaseContract> = {
-  [EVERYTHING]: (options?: ExecutionOptions) => PresetFullyClearedTarget
+  [EVERYTHING]: (options?: ExecutionFlags) => PresetFullyClearedTarget
 } & AllowFunctions<C>
 
 const makeAllowContract = <C extends BaseContract>(
   contract: C
 ): AllowContract<C> => {
   const allowEverything = (
-    options?: ExecutionOptions
+    options?: ExecutionFlags
   ): PresetFullyClearedTarget => {
     return {
       targetAddress: contract.address,
