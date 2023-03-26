@@ -27,7 +27,7 @@ library Integrity {
 
     error UnsuitableSubTypeTree(uint256 index);
 
-    error NotEnoughChildren(uint256 index);
+    error UnsuitableChildrenCount(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
@@ -101,7 +101,7 @@ library Integrity {
 
                 // must have at least two children
                 if (childrenBounds[i].length == 0) {
-                    revert NotEnoughChildren(i);
+                    revert UnsuitableChildrenCount(i);
                 }
             }
         }
@@ -120,6 +120,17 @@ library Integrity {
                     childrenBounds[i].length > 1)
             ) {
                 compatibleSubTypeTree(conditions, i, childrenBounds);
+            }
+        }
+
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
+            if (
+                (condition.operator == Operator.ArraySome ||
+                    condition.operator == Operator.ArrayEvery) &&
+                childrenBounds[i].length != 1
+            ) {
+                revert UnsuitableChildrenCount(i);
             }
         }
 
