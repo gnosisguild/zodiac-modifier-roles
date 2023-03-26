@@ -171,6 +171,15 @@ library Integrity {
             revert UnsuitableCompValue(index);
         }
 
+        if (
+            operator == Operator.Matches &&
+            !(paramType == ParameterType.Tuple ||
+                paramType == ParameterType.Array ||
+                paramType == ParameterType.AbiEncoded)
+        ) {
+            revert UnsuitableParameterType(index);
+        }
+
         if (operator == Operator.Bitmask) {
             if (
                 paramType != ParameterType.Static &&

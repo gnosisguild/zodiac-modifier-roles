@@ -110,4 +110,17 @@ contract TestContract {
     }
 
     function dynamicString(string memory) public {}
+
+    function oneParamStatic(uint256) public {}
+
+    function twoParamsStatic(uint256 a, uint256 b) public {}
+
+    struct StaticTuple {
+        uint256 a;
+        bool b;
+    }
+
+    function oneParamStaticTuple(StaticTuple calldata) public {}
+
+    function oneParamArrayOfStatic(uint256[] calldata) public {}
 }
