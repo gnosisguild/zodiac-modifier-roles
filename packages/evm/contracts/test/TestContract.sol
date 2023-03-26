@@ -123,4 +123,6 @@ contract TestContract {
     function oneParamStaticTuple(StaticTuple calldata) public {}
 
     function oneParamArrayOfStatic(uint256[] calldata) public {}
+
+    function oneParamArrayOfStaticTuple(StaticTuple[] calldata) public {}
 }
