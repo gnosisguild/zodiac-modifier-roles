@@ -207,17 +207,24 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private pure returns (Status, Trace[] memory trace) {
         Operator operator = condition.operator;
 
+        // try most common upfront
+        if (operator == Operator.Pass) {
+            return (Status.Ok, trace);
+        } else if (operator == Operator.EqualTo) {
+            return _compare(data, condition, payload);
+        } else if (operator == Operator.Matches) {
+            return _matches(value, data, condition, payload);
+        }
+
         if (operator < Operator.EqualTo) {
-            if (operator == Operator.Pass) {
-                return (Status.Ok, trace);
-            } else if (operator == Operator.Matches) {
-                return _matches(value, data, condition, payload);
-            } else if (operator == Operator.And) {
+            if (operator == Operator.And) {
                 return _and(value, data, condition, payload);
             } else if (operator == Operator.Or) {
                 return _or(value, data, condition, payload);
             } else if (operator == Operator.Nor) {
                 return _nor(value, data, condition, payload);
+            } else if (operator == Operator.Xor) {
+                return _xor(value, data, condition, payload);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(value, data, condition, payload);
             } else if (operator == Operator.ArrayEvery) {
@@ -336,28 +343,31 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, trace);
     }
 
-    function _arrayEvery(
+    function _xor(
         uint256 value,
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
-        for (uint256 i; i < payload.children.length; ) {
-            (Status status, Trace[] memory more) = _walk(
+        uint256 okCount;
+        for (uint256 i; i < condition.children.length; ) {
+            (Status status, Trace[] memory current) = _walk(
                 value,
                 data,
-                condition.children[0],
-                payload.children[i]
+                condition.children[i],
+                payload
             );
-            if (status != Status.Ok) {
-                return (Status.NotEveryArrayElementPasses, _trace());
+            if (status == Status.Ok) {
+                okCount = okCount + 1;
+                trace = current;
             }
-            trace = _trace(trace, more);
             unchecked {
                 ++i;
             }
         }
-        return (Status.Ok, trace);
+
+        return
+            okCount == 1 ? (Status.Ok, trace) : (Status.XorViolation, _trace());
     }
 
     function _arraySome(
@@ -381,6 +391,30 @@ abstract contract PermissionChecker is Core, Periphery {
             }
         }
         return (Status.NoArrayElementPasses, _trace());
+    }
+
+    function _arrayEvery(
+        uint256 value,
+        bytes calldata data,
+        Condition memory condition,
+        ParameterPayload memory payload
+    ) private pure returns (Status, Trace[] memory trace) {
+        for (uint256 i; i < payload.children.length; ) {
+            (Status status, Trace[] memory more) = _walk(
+                value,
+                data,
+                condition.children[0],
+                payload.children[i]
+            );
+            if (status != Status.Ok) {
+                return (Status.NotEveryArrayElementPasses, _trace());
+            }
+            trace = _trace(trace, more);
+            unchecked {
+                ++i;
+            }
+        }
+        return (Status.Ok, trace);
     }
 
     function _arraySubset(
