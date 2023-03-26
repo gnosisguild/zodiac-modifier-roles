@@ -80,6 +80,12 @@ describe("Operator - Xor", async () => {
       scopeFunction([
         {
           parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
           paramType: ParameterType.None,
           operator: Operator.Xor,
           compValue: "0x",
@@ -174,5 +180,5 @@ describe("Operator - Xor", async () => {
     );
   });
 
-  it.skip("Tracks the yielded trace");
+  it.skip("Tracks the resulting trace");
 });
