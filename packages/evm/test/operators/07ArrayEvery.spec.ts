@@ -127,6 +127,4 @@ describe("Operator - ArrayEvery", async () => {
       ])
     ).to.be.revertedWithCustomError(roles, "NotEveryArrayElementPasses");
   });
-
-  it.skip("Tracks the resulting trace");
 });

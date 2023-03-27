@@ -170,8 +170,8 @@ library Integrity {
         }
 
         if (
-            (operator == Operator.GreaterThan ||
-                operator == Operator.LessThan) &&
+            operator >= Operator.GreaterThan &&
+            operator <= Operator.SignedIntLessThan &&
             paramType != ParameterType.Static
         ) {
             revert UnsuitableParameterType(index);

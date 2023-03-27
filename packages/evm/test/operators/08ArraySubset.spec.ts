@@ -261,6 +261,4 @@ describe("Operator - ArraySubset", async () => {
       "ParameterNotSubsetOfAllowed"
     );
   });
-
-  it.skip("Tracks the resulting trace");
 });
