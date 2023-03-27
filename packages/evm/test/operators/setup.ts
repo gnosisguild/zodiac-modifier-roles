@@ -6,7 +6,7 @@ import { deployRolesMod, ExecutionOptions } from "../utils";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
 import { TestContract } from "../../typechain-types/contracts/test/";
 
-async function baseSetup(
+export async function baseSetup(
   functioName:
     | "oneParamStatic"
     | "twoParamsStatic"
@@ -23,6 +23,7 @@ async function baseSetup(
     | "oneParamBytes"
     | "oneParamString"
     | "oneParamAddress"
+    | "receiveEthAndDoNothing"
 ) {
   const ROLE_KEY =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -52,7 +53,10 @@ async function baseSetup(
 
   await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
-  async function scopeFunction(conditions: ConditionFlatStruct[]) {
+  async function scopeFunction(
+    conditions: ConditionFlatStruct[],
+    options: ExecutionOptions = ExecutionOptions.None
+  ) {
     await roles
       .connect(owner)
       .scopeFunction(
@@ -60,13 +64,14 @@ async function baseSetup(
         testContract.address,
         SELECTOR,
         conditions,
-        ExecutionOptions.None
+        options
       );
   }
 
   return {
     owner,
     invoker,
+    avatar,
     roles,
     testContract,
     scopeFunction,
