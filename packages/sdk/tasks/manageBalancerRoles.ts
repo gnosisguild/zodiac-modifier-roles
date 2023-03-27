@@ -9,11 +9,11 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import mainnetDeFiManageBalancer1Preset from "../src/presets/mainnet/Balancer/deFiManageBalancer1"
-import mainnetDeFiHarvestBalancer1Preset from "../src/presets/mainnet/Balancer/deFiHarvestBalancer1"
-import mainnetDeFiSwapBalancer1Preset from "../src/presets/mainnet/Balancer/deFiSwapBalancer1"
+import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/Balancer/deFiManageBalancer"
+import mainnetDeFiHarvestBalancerPreset from "../src/presets/mainnet/Balancer/deFiHarvestBalancer"
+import mainnetDeFiSwapBalancerPreset from "../src/presets/mainnet/Balancer/deFiSwapBalancer"
 
-import mainnetDeFiManageBalancer2Preset from "../src/presets/mainnet/Balancer/deFiManageBalancer2"
+import mainnetDeFiManageBalancerAlternativePreset from "../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
 
 import { NetworkId } from "../src/types"
 
@@ -30,7 +30,7 @@ interface Config {
 }
 
 export const BALANCER_ADDRESSES = {
-    BALANCER_1_ETH: {
+    BALANCER_ETH: {
         AVATAR: "0x0EFcCBb9E2C09Ea29551879bd9Da32362b32fc89",
         MODULE: "0xd8dd9164E765bEF903E429c9462E51F0Ea8514F9",
         MANAGER: "0x60716991aCDA9E990bFB3b1224f1f0fB81538267",
@@ -41,7 +41,7 @@ export const BALANCER_ADDRESSES = {
         NETWORK: 1,
         BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
     },
-    BALANCER_2_ETH: {
+    BALANCER_ALTERNATIVE_ETH: {
         AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
         MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86",
         MANAGER: "0x216071B1B5681D67A75f7eEAF92CEC8262bE29f7",
@@ -179,15 +179,15 @@ task("assignBalancerSwapRole").setAction(async (taskArgs, hre) => {
 })
 
 //-----------------------------------------------------------------------------------------------------------------------------
-// BALANCER 1 - Mainnet
+// BALANCER - Mainnet
 //-----------------------------------------------------------------------------------------------------------------------------
 
-task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         1,
-        mainnetDeFiManageBalancer1Preset,
+        mainnetDeFiManageBalancerPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -195,21 +195,21 @@ task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataManageBalancer1.json"),
+        path.join(__dirname, "..", "txDataManageBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataManageBalancer1.json`
+        `Transaction builder JSON written to packages/sdk/txDataManageBalancer.json`
     )
 })
 
-// task("encodeApplyPresetRevokeBalancer1").setAction(
+// task("encodeApplyPresetRevokeBalancer").setAction(
 //     async (taskArgs, hre) => {
 //         const { config } = await processArgs(taskArgs, hre)
 //         const txBatches = await encodeApplyPresetTxBuilder(
 //             config.MODULE,
 //             2,
-//             mainnetDeFiRevokeBalancer1Preset,
+//             mainnetDeFiRevokeBalancerPreset,
 //             { AVATAR: config.AVATAR },
 //             {
 //                 network: config.NETWORK as NetworkId,
@@ -217,21 +217,21 @@ task("encodeApplyPresetManageBalancer1").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataRevokeBalancer1.json"),
+//             path.join(__dirname, "..", "txDataRevokeBalancer.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataRevokeBalancer1.json`
+//             `Transaction builder JSON written to packages/sdk/txDataRevokeBalancer.json`
 //         )
 //     }
 // )
 
-task("encodeApplyPresetHarvestBalancer1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetHarvestBalancer").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         3,
-        mainnetDeFiHarvestBalancer1Preset,
+        mainnetDeFiHarvestBalancerPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -239,21 +239,21 @@ task("encodeApplyPresetHarvestBalancer1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataHarvestBalancer1.json"),
+        path.join(__dirname, "..", "txDataHarvestBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataHarvestBalancer1.json`
+        `Transaction builder JSON written to packages/sdk/txDataHarvestBalancer.json`
     )
 })
 
-// task("encodeApplyPresetDisassembleBalancer1").setAction(
+// task("encodeApplyPresetDisassembleBalancer").setAction(
 //     async (taskArgs, hre) => {
 //         const { config } = await processArgs(taskArgs, hre)
 //         const txBatches = await encodeApplyPresetTxBuilder(
 //             config.MODULE,
 //             4,
-//             mainnetDeFiDisassembleBalancer1Preset,
+//             mainnetDeFiDisassembleBalancerPreset,
 //             { AVATAR: config.AVATAR },
 //             {
 //                 network: config.NETWORK as NetworkId,
@@ -261,21 +261,21 @@ task("encodeApplyPresetHarvestBalancer1").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataDisassembleBalancer1.json"),
+//             path.join(__dirname, "..", "txDataDisassembleBalancer.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataDisassembleBalancer1.json`
+//             `Transaction builder JSON written to packages/sdk/txDataDisassembleBalancer.json`
 //         )
 //     }
 // )
 
-task("encodeApplyPresetSwapBalancer1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetSwapBalancer").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         5,
-        mainnetDeFiSwapBalancer1Preset,
+        mainnetDeFiSwapBalancerPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -283,24 +283,24 @@ task("encodeApplyPresetSwapBalancer1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataSwapBalancer1.json"),
+        path.join(__dirname, "..", "txDataSwapBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataSwapBalancer1.json`
+        `Transaction builder JSON written to packages/sdk/txDataSwapBalancer.json`
     )
 })
 
 //-----------------------------------------------------------------------------------------------------------------------------
-// BALANCER 2 - Mainnet
+// BALANCER Alternative - Mainnet
 //-----------------------------------------------------------------------------------------------------------------------------
 
-task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetManageBalancerAlternative").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         1,
-        mainnetDeFiManageBalancer2Preset,
+        mainnetDeFiManageBalancerAlternativePreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -308,11 +308,11 @@ task("encodeApplyPresetManageBalancer2").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataManageBalancer2.json"),
+        path.join(__dirname, "..", "txDataManageBalancerAlternative.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataManageBalancer2.json`
+        `Transaction builder JSON written to packages/sdk/txDataManageBalancerAlternative.json`
     )
 })
 

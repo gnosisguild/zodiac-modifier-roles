@@ -31,6 +31,7 @@ export default defineConfig({
       },
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        relayer_library: "0xd02992266BB6a6324A3aB8B62FeCBc9a3C58d1F9",
         B_stETH_stable_gauge: "0xcD4722B7c24C29e0413BDCd9e51404B4539D14aE",
         B_auraBAL_stable_gauge: "0x0312AA8D0BA4a1969Fddb382235870bF55f7f242",
         B_rETH_stable_gauge: "0x79eF6103A513951a3b25743DB509E267685726B7",
@@ -39,6 +40,7 @@ export default defineConfig({
         B_50WSTETH_50LDO_gauge: "0x95201b61ef19c867da0d093df20021e1a559452c",
         B_50WETH_50AURA_gauge: "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00",
         B_50COW_50WETH_gauge: "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5",
+        bb_a_USD_gauge: "0xa6325e799d266632D347e41265a69aF111b05403",
         BAL_minter: "0x239e55f427d44c3cc793f49bfb507ebe76638a2b",
         fee_distributor: "0xD3cf852898b21fc233251427c2DC93d3d604F3BB",
         veBAL: "0xC128a9954e6c874eA3d62ce62B468bA073093F25"

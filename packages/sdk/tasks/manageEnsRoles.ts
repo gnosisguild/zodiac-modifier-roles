@@ -9,9 +9,9 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import mainnetDeFiManageENS1Preset from "../src/presets/mainnet/ENS/deFiManageENS1"
-import mainnetDeFiHarvestENS1Preset from "../src/presets/mainnet/ENS/deFiHarvestENS1"
-import mainnetDeFiSwapENS1Preset from "../src/presets/mainnet/ENS/deFiSwapENS1"
+import mainnetDeFiManageENS1Preset from "../src/presets/mainnet/ENS/deFiManageENS"
+import mainnetDeFiHarvestENS1Preset from "../src/presets/mainnet/ENS/deFiHarvestENS"
+import mainnetDeFiSwapENS1Preset from "../src/presets/mainnet/ENS/deFiSwapENS"
 
 import { NetworkId } from "../src/types"
 
@@ -28,7 +28,7 @@ interface Config {
 }
 
 export const ENS_ADDRESSES = {
-    ENS_1_ETH: {
+    ENS_ETH: {
         AVATAR: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
         MODULE: "0xf20325cf84b72e8BBF8D8984B8f0059B984B390B",
         MANAGER: "0xb423e0f6E7430fa29500c5cC9bd83D28c8BD8978",
