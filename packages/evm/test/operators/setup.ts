@@ -65,6 +65,7 @@ async function baseSetup(
   }
 
   return {
+    owner,
     invoker,
     roles,
     testContract,
@@ -73,9 +74,8 @@ async function baseSetup(
 }
 
 export async function setupOneParamStatic() {
-  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
-    "oneParamStatic"
-  );
+  const { owner, invoker, roles, testContract, scopeFunction } =
+    await baseSetup("oneParamStatic");
 
   async function invoke(a: BigNumberish) {
     return roles
@@ -90,15 +90,15 @@ export async function setupOneParamStatic() {
   }
 
   return {
+    owner,
     roles,
     scopeFunction,
     invoke,
   };
 }
 export async function setupTwoParamsStatic() {
-  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
-    "twoParamsStatic"
-  );
+  const { owner, invoker, roles, testContract, scopeFunction } =
+    await baseSetup("twoParamsStatic");
 
   async function invoke(a: number, b: number) {
     return roles
@@ -113,6 +113,7 @@ export async function setupTwoParamsStatic() {
   }
 
   return {
+    owner,
     roles,
     scopeFunction,
     invoke,
