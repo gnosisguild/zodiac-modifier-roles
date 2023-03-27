@@ -10,12 +10,12 @@ import {
   ExecutionOptions,
   ParameterType,
   deployRolesMod,
-} from "./utils";
+} from "../utils";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-describe("Operator", async () => {
+describe("Operator - WithinAllowance", async () => {
   const timestampNow = () => Math.floor(new Date().getTime() / 1000);
 
   async function setup() {
