@@ -134,7 +134,7 @@ library Integrity {
             }
 
             if (
-                condition.operator == Operator.ArraySubset &&
+                condition.paramType == ParameterType.Array &&
                 childrenBounds[i].length == 0
             ) {
                 revert UnsuitableChildrenCount(i);
