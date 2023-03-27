@@ -111,7 +111,7 @@ contract TestContract {
 
     function dynamicString(string memory) public {}
 
-    function oneParamStatic(uint256) public {}
+    function oneParamStatic(uint256) public payable {}
 
     function oneParamUintWord(uint256) public {}
 
