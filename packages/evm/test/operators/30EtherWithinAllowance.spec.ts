@@ -149,7 +149,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
     });
 
-    it("fail - from balance 0 but enough refill pending", async () => {
+    it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, sendEthAndDoNothing } =
         await loadFixture(setup);
 
