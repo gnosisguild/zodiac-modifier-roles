@@ -540,6 +540,9 @@ abstract contract PermissionChecker is Core, Periphery {
 
         bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
         bytes32 mask = (compValue << 16) & rinse;
+        // while its necessary to apply the rinse to the mask its not strictly
+        // necessary to do so for the expected value, since we get remaining
+        // 15 bytes anyway (shifting the word by 17 bytes)
         bytes32 expected = (compValue << (16 + 15 * 8)) & rinse;
         bytes32 slice = bytes32(value[shift:]);
 

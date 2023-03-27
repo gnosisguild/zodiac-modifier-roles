@@ -1,4 +1,5 @@
 import hre from "hardhat";
+import { BigNumberish } from "ethers";
 
 import { deployRolesMod, ExecutionOptions } from "../utils";
 
@@ -76,7 +77,7 @@ export async function setupOneParamStatic() {
     "oneParamStatic"
   );
 
-  async function invoke(a: number) {
+  async function invoke(a: BigNumberish) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
