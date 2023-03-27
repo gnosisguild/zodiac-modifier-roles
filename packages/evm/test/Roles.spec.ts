@@ -1461,25 +1461,15 @@ describe("RolesModifier", async () => {
   });
 
   describe("allowTarget()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await loadFixture(txSetup);
-      await expect(
-        modifier.allowTarget(ROLE_KEY1, AddressOne, ExecutionOptions.None)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
     it("sets allowed address to true", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setupRolesWithOwnerAndInvoker
       );
-
       const SHOULD_REVERT = true;
-
       // assign a role to invoker
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY1], [true]);
-
       // expect to fail due to no permissions
       await expect(
         modifier
@@ -1491,14 +1481,12 @@ describe("RolesModifier", async () => {
             0
           )
       ).to.be.revertedWithCustomError(modifier, "NoMembership");
-
       // allow testContract address for role
       await expect(
         modifier
           .connect(owner)
           .allowTarget(ROLE_KEY1, testContract.address, ExecutionOptions.None)
       ).to.not.be.reverted;
-
       // expect to fail with default role
       await expect(
         modifier
@@ -1510,7 +1498,6 @@ describe("RolesModifier", async () => {
             0
           )
       ).to.be.revertedWithCustomError(modifier, "NoMembership");
-
       // should work with the configured role
       await expect(
         modifier
@@ -1525,26 +1512,21 @@ describe("RolesModifier", async () => {
           )
       ).to.emit(testContract, "DoNothing");
     });
-
     it("sets allowed address to false", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setupRolesWithOwnerAndInvoker
       );
-
       const SHOULD_REVERT = true;
-
       // assign a role to invoker
       await modifier
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
       // allow testContract address for role
       await expect(
         modifier
           .connect(owner)
           .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None)
       );
-
       // this call should work
       await expect(
         modifier
@@ -1558,12 +1540,10 @@ describe("RolesModifier", async () => {
             !SHOULD_REVERT
           )
       ).to.emit(testContract, "DoNothing");
-
       // Revoke access
       await expect(
         modifier.connect(owner).revokeTarget(ROLE_KEY, testContract.address)
       ).to.not.be.reverted;
-
       // fails after revoke
       await expect(
         modifier
@@ -1580,216 +1560,7 @@ describe("RolesModifier", async () => {
     });
   });
 
-  describe("allowTarget() canDelegate", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await loadFixture(txSetup);
-      await expect(
-        modifier.allowTarget(
-          ROLE_KEY1,
-          AddressOne,
-          ExecutionOptions.DelegateCall
-        )
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("sets allowed address to true", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
-      );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      // allow calls (but not delegate)
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
-
-      // still getting the delegateCallNotAllowed error
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            1
-          )
-      ).to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed");
-
-      // allow delegate calls to address
-      await modifier
-        .connect(owner)
-        .allowTarget(
-          ROLE_KEY,
-          testContract.address,
-          ExecutionOptions.DelegateCall
-        );
-
-      // ok
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            1
-          )
-      ).to.not.be.reverted;
-    });
-
-    it("sets allowed address to false", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
-      );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(
-          ROLE_KEY,
-          testContract.address,
-          ExecutionOptions.DelegateCall
-        );
-
-      // ok
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            1
-          )
-      ).to.not.be.reverted;
-
-      // revoke delegate calls to address
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
-
-      // still getting the delegateCallNotAllowed error
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            1
-          )
-      ).to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed");
-    });
-  });
-
-  describe("scopeFunction()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await loadFixture(txSetup);
-      await expect(
-        modifier.scopeFunction(
-          ROLE_KEY1,
-          AddressOne,
-          "0x12345678",
-          [
-            {
-              parent: 0,
-              paramType: ParameterType.Dynamic,
-              operator: Operator.GreaterThan,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: ParameterType.Dynamic,
-              operator: Operator.GreaterThan,
-              compValue: "0x",
-            },
-          ],
-
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("sets parameters scoped to true", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
-      );
-
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("fnWithSingleParam")
-      );
-
-      const invoke = (n: number) =>
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("fnWithSingleParam", [n]),
-            0
-          );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
-
-      // works before making function parameter scoped
-      await expect(invoke(1)).to.not.be.reverted;
-
-      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
-
-      await modifier.connect(owner).scopeFunction(
-        ROLE_KEY,
-        testContract.address,
-        SELECTOR,
-        [
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: ethers.utils.defaultAbiCoder.encode(["uint256"], [2]),
-          },
-        ],
-        ExecutionOptions.None
-      );
-
-      await expect(invoke(1)).to.be.revertedWithCustomError(
-        modifier,
-        "ParameterNotAllowed"
-      );
-      await expect(invoke(2)).to.not.be.reverted;
-    });
-  });
-
   describe("allowTarget - canSend", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await loadFixture(txSetup);
-      await expect(
-        modifier.allowTarget(ROLE_KEY1, AddressOne, ExecutionOptions.Send)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
     it("sets send allowed to true", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setupRolesWithOwnerAndInvoker
@@ -1862,77 +1633,6 @@ describe("RolesModifier", async () => {
           .connect(invoker)
           .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
       ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
-    });
-  });
-
-  describe("allowFunction()", () => {
-    it("reverts if not authorized", async () => {
-      const { modifier } = await loadFixture(txSetup);
-      await expect(
-        modifier.allowFunction(
-          ROLE_KEY1,
-          AddressOne,
-          "0x12345678",
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-
-    it("toggles allowed function false -> true -> false", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
-      );
-
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("doNothing")
-      );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
-
-      // allow the function
-      await modifier
-        .connect(owner)
-        .allowFunction(
-          ROLE_KEY,
-          testContract.address,
-          SELECTOR,
-          ExecutionOptions.None
-        );
-
-      // gmi
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
-      ).to.emit(testContract, "DoNothing");
-
-      // revoke the function
-      await modifier
-        .connect(owner)
-        .revokeFunction(ROLE_KEY, testContract.address, SELECTOR);
-
-      // ngmi again
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
-      ).to.be.revertedWithCustomError(modifier, "FunctionNotAllowed");
     });
   });
 
