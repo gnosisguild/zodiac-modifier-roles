@@ -44,7 +44,6 @@ const config: HardhatUserConfig = {
   paths: {
     artifacts: "build/artifacts",
     cache: "build/cache",
-    deploy: "src/deploy",
     sources: "contracts",
   },
   solidity: {
@@ -81,8 +80,8 @@ const config: HardhatUserConfig = {
       url: "https://rpc-mainnet.maticvigil.com",
     },
   },
-  namedAccounts: {
-    deployer: 0,
+  gasReporter: {
+    enabled: true,
   },
   mocha: {
     timeout: 2000000,

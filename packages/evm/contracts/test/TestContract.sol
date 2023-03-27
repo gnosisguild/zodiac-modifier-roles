@@ -113,7 +113,21 @@ contract TestContract {
 
     function oneParamStatic(uint256) public {}
 
-    function twoParamsStatic(uint256 a, uint256 b) public {}
+    function oneParamUintWord(uint256) public {}
+
+    function oneParamUintSmall(uint8) public {}
+
+    function oneParamIntWord(int256) public {}
+
+    function oneParamIntSmall(int8) public {}
+
+    function oneParamBytesWord(bytes32) public {}
+
+    function oneParamBytesSmall(bytes1) public {}
+
+    function oneParamBytes(bytes calldata) public {}
+
+    function oneParamString(string calldata) public {}
 
     struct StaticTuple {
         uint256 a;
@@ -122,7 +136,16 @@ contract TestContract {
 
     function oneParamStaticTuple(StaticTuple calldata) public {}
 
+    struct DynamicTuple {
+        uint256 a;
+        bytes b;
+    }
+
+    function oneParamDynamicTuple(DynamicTuple calldata) public {}
+
     function oneParamArrayOfStatic(uint256[] calldata) public {}
 
     function oneParamArrayOfStaticTuple(StaticTuple[] calldata) public {}
+
+    function twoParamsStatic(uint256 a, uint256 b) public {}
 }
