@@ -129,6 +129,8 @@ contract TestContract {
 
     function oneParamString(string calldata) public {}
 
+    function oneParamAddress(address) public {}
+
     struct StaticTuple {
         uint256 a;
         bool b;

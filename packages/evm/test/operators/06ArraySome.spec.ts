@@ -118,6 +118,4 @@ describe("Operator - ArraySome", async () => {
       "NoArrayElementPasses"
     );
   });
-
-  it.skip("Tracks the resulting trace");
 });

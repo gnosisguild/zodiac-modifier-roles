@@ -236,6 +236,8 @@ abstract contract PermissionChecker is Core, Periphery {
         } else {
             if (operator <= Operator.LessThan) {
                 return _compare(data, condition, payload);
+            } else if (operator <= Operator.SignedIntLessThan) {
+                return _compareSignedInt(data, condition, payload);
             } else if (operator == Operator.Bitmask) {
                 return _bitmask(data, condition, payload);
             } else if (operator == Operator.WithinAllowance) {
@@ -476,6 +478,33 @@ abstract contract PermissionChecker is Core, Periphery {
         } else if (operator == Operator.GreaterThan && value <= compValue) {
             status = Status.ParameterLessThanAllowed;
         } else if (operator == Operator.LessThan && value >= compValue) {
+            status = Status.ParameterGreaterThanAllowed;
+        } else {
+            status = Status.Ok;
+        }
+
+        return (status, trace);
+    }
+
+    function _compareSignedInt(
+        bytes calldata data,
+        Condition memory condition,
+        ParameterPayload memory payload
+    ) private pure returns (Status status, Trace[] memory trace) {
+        bytes calldata plucked = Decoder.pluck(
+            data,
+            payload.location,
+            payload.size
+        );
+        Operator operator = condition.operator;
+        int256 compValue = int256(uint256(condition.compValue));
+        int256 value = int256(uint256(bytes32(plucked)));
+
+        if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
+            status = Status.ParameterLessThanAllowed;
+        } else if (
+            operator == Operator.SignedIntLessThan && value >= compValue
+        ) {
             status = Status.ParameterGreaterThanAllowed;
         } else {
             status = Status.Ok;

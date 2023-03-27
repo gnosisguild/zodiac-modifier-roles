@@ -450,6 +450,4 @@ describe("Operator - EqualTo", async () => {
 
     await expect(invoke({ a: 100, b: "0xbadfed" })).to.not.be.reverted;
   });
-
-  it.skip("Tracks the resulting trace");
 });

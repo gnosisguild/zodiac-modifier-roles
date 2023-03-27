@@ -21,6 +21,7 @@ async function baseSetup(
     | "oneParamBytesSmall"
     | "oneParamBytes"
     | "oneParamString"
+    | "oneParamAddress"
 ) {
   const ROLE_KEY =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -381,6 +382,29 @@ export async function setupOneParamString() {
         testContract.address,
         0,
         (await testContract.populateTransaction.oneParamString(a))
+          .data as string,
+        0
+      );
+  }
+
+  return {
+    roles,
+    scopeFunction,
+    invoke,
+  };
+}
+export async function setupOneParamAddress() {
+  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
+    "oneParamAddress"
+  );
+
+  async function invoke(a: string) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (await testContract.populateTransaction.oneParamAddress(a))
           .data as string,
         0
       );
