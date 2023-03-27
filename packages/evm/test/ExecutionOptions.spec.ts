@@ -51,9 +51,9 @@ async function setup() {
 }
 
 describe("ExecutionOptions", async () => {
-  describe("sending eth", () => {
-    describe("Target Allowed - aka Clearance.Target", () => {
-      it("ExecutionOptions.NONE - FAILS sending eth to payable function", async () => {
+  describe("send", () => {
+    describe("Target Allowed - Clearance.Target", () => {
+      it("ExecutionOptions.None - Fails sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -78,8 +78,7 @@ describe("ExecutionOptions", async () => {
             )
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
-      it("Options.NONE - FAILS sending eth to fallback", async () => {
+      it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -96,7 +95,6 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -124,7 +122,6 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Send - OK sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -144,8 +141,7 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
       });
-
-      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to payable function", async () => {
+      it("ExecutionOptions.DelegateCall - Fails sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -174,7 +170,7 @@ describe("ExecutionOptions", async () => {
             )
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
+      it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -200,7 +196,7 @@ describe("ExecutionOptions", async () => {
             )
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-      it("ExecutionOptions.BOTH - OK sending ETH to payable function", async () => {
+      it("ExecutionOptions.Both - OK sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -227,8 +223,7 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
-      it("ExecutionOptions.BOTH - OK sending ETH to fallback function", async () => {
+      it("ExecutionOptions.Both - OK sending ETH to fallback function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
@@ -257,7 +252,7 @@ describe("ExecutionOptions", async () => {
       });
     });
 
-    describe("Target Scoped - aka Clearance.FUNCTION", () => {
+    describe("Target Scoped - Clearance.Function", () => {
       it("ExecutionOptions.None - Fails sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -296,7 +291,6 @@ describe("ExecutionOptions", async () => {
             )
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -323,7 +317,6 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -364,7 +357,6 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Send - OK sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -392,7 +384,6 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
       });
-
       it("ExecutionOptions.DelegateCall - Fails sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -457,7 +448,6 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Both - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -498,7 +488,6 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Both - OK sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
@@ -611,7 +600,6 @@ describe("ExecutionOptions", async () => {
           )
       ).not.to.be.reverted;
     });
-
     it("Target Scoped - cannot delegatecall", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
