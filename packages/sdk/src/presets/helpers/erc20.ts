@@ -1,6 +1,6 @@
 import { Placeholder } from "../types"
 
-import { equalTo, oneOf } from "./basic"
+import { equalTo, oneOf } from "./comparisons"
 import { forAll } from "./batch"
 import { matches } from "./matches"
 

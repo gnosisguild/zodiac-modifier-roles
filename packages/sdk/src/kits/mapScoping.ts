@@ -3,7 +3,8 @@ import { ParamType } from "ethers/lib/utils"
 
 import { PresetCondition } from "../presets/types"
 
-import { eq, matches } from "./conditions"
+import { eq } from "./comparisons"
+import { matches } from "./matches"
 import { ConditionFunction, Scoping } from "./types"
 
 /**
