@@ -11,80 +11,105 @@ type RecordOrArray<T> = { [name: string]: T } | T[]
  * Matches a tuple or array against a structure of conditions.
  *
  * Throws if the type is not a tuple or array. Throws if the structure of conditions is incompatible with the type.
- * @param structure The structure of conditions
+ * @param structure The conditions on the tuple or array elements
  * @param type The ABI type describing the tuple or array
  */
-function matches(
+export function matches(
   structure: RecordOrArray<PresetCondition | undefined>,
-  type: AbiType
-): PresetCondition
+  abiType: AbiType
+): PresetCondition {
+  const type = ParamType.from(abiType)
+  if (type.baseType !== "tuple" && type.baseType !== "array") {
+    throw new Error("The type for matching must be a tuple or array")
+  }
+
+  let arrayStructure: (PresetCondition | undefined)[]
+  if (Array.isArray(structure)) {
+    arrayStructure = structure
+  } else if (type.baseType === "tuple") {
+    arrayStructure = type.components.map((type) => structure[type.name])
+  } else {
+    throw new Error("The structure for matching an array must be an array")
+  }
+
+  // sanity checks
+  assertValidStructureLength(arrayStructure, type)
+  assertValidStructureKeys(structure, type)
+  assertCompatibleParamTypes(arrayStructure, type)
+
+  return {
+    paramType: parameterType(type),
+    operator: Operator.Matches,
+    children: arrayStructure.map(
+      (condition, index) =>
+        condition ||
+        describeStructure(
+          type.baseType === "tuple"
+            ? type.components[index]
+            : type.arrayChildren
+        )
+    ),
+  }
+}
 
 /**
  * Matches ABI encoded data (calldata or bytes type values) against a structure of conditions.
  *
  * Throws if the structure of conditions is incompatible with the types.
- * @param structure The structure of conditions
+ * @param structure The conditions on the individual ABI encoded values
  * @param types The ABI types describing the encoding
  */
-function matches(
-  structure: RecordOrArray<PresetCondition | undefined>,
-  types: AbiType[]
-): PresetCondition
-
-function matches(
-  structure: RecordOrArray<PresetCondition | undefined>,
-  typeOrTypes: AbiType | AbiType[]
+export function matchesAbi(
+  structure: (PresetCondition | undefined)[],
+  abiTypes: AbiType[]
 ): PresetCondition {
-  const types = coerceTypes(typeOrTypes)
-  const arrayStructure = Array.isArray(structure)
-    ? structure
-    : types.map((type) => structure[type.name])
-  const isMatchOnArray =
-    !Array.isArray(typeOrTypes) &&
-    ParamType.from(typeOrTypes).baseType === "array"
+  const types = abiTypes.map((type) => ParamType.from(type))
 
   // sanity checks
-  if (!isMatchOnArray && arrayStructure.length > types.length) {
-    throw new Error("The conditions structure has too many elements")
-  }
   assertValidStructureKeys(structure, types)
-  assertCompatibleParamTypes(arrayStructure, types)
+  assertCompatibleParamTypes(structure, types)
 
   return {
-    paramType: Array.isArray(typeOrTypes)
-      ? ParameterType.AbiEncoded
-      : parameterType(typeOrTypes),
+    paramType: ParameterType.AbiEncoded,
     operator: Operator.Matches,
-    children: arrayStructure.map(
+    children: structure.map(
       (condition, index) => condition || describeStructure(types[index])
     ),
   }
 }
 
-export { matches }
+const assertValidStructureLength = (
+  arrayStructure: (PresetCondition | undefined)[],
+  typeOrTypes: ParamType | ParamType[]
+) => {
+  const expectedLength = Array.isArray(typeOrTypes)
+    ? typeOrTypes.length
+    : typeOrTypes.arrayLength
+  if (expectedLength <= 0) return
 
-const coerceTypes = (typeOrTypes: AbiType | AbiType[]): ParamType[] => {
-  if (Array.isArray(typeOrTypes)) {
-    return typeOrTypes.map((type) => ParamType.from(type))
-  } else {
-    const type = ParamType.from(typeOrTypes)
-    if (type.baseType !== "tuple" && type.baseType !== "array") {
-      throw new Error("The type for matching must be a tuple or array")
-    }
-    return type.baseType !== "tuple" ? type.components : [type.arrayChildren]
+  if (arrayStructure.length > expectedLength) {
+    throw new Error(
+      `The conditions structure has too many elements (expected length: ${expectedLength}, conditions length: ${arrayStructure.length})`
+    )
   }
 }
 
 const assertValidStructureKeys = (
   structure: RecordOrArray<PresetCondition | undefined>,
-  types: ParamType[]
+  typeOrTypes: ParamType | ParamType[]
 ) => {
-  const unusedStructureKeys = Array.isArray(structure)
-    ? []
-    : arrayDiff(
-        Object.keys(structure),
-        types.map((type) => type.name)
-      )
+  if (Array.isArray(structure)) return
+  if (!Array.isArray(typeOrTypes) && typeOrTypes.baseType !== "tuple") return
+
+  const types = Array.isArray(typeOrTypes)
+    ? typeOrTypes
+    : typeOrTypes.components
+
+  const unusedStructureKeys = arrayDiff(
+    Object.keys(structure),
+    types.map((type) => type.name)
+  )
+
   if (unusedStructureKeys.length > 0) {
     throw new Error(
       `The conditions structure has unknown keys: ${unusedStructureKeys.join(
@@ -96,13 +121,14 @@ const assertValidStructureKeys = (
 
 const assertCompatibleParamTypes = (
   arrayStructure: (PresetCondition | undefined)[],
-  types: ParamType[]
+  typeOrTypes: ParamType | ParamType[]
 ) => {
   arrayStructure.forEach((condition, index) => {
     if (!condition) return
-    const expectedType = parameterType(types[index])
+    const type = Array.isArray(typeOrTypes) ? typeOrTypes[index] : typeOrTypes
+    const expectedType = parameterType(type)
     if (condition.paramType !== expectedType) {
-      const fieldReference = `'${types[index].name}'` || `at index ${index}`
+      const fieldReference = `'${type.name}'` || `at index ${index}`
       throw new Error(
         `Condition for field ${fieldReference} has wrong paramType ${
           ParameterType[condition.paramType]
