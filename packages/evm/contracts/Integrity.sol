@@ -148,7 +148,6 @@ library Integrity {
             }
         }
 
-        // TODO bitmask only for dynamic and static
         // TODO dynamic multiple of 32
     }
 
