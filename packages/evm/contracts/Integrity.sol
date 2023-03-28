@@ -220,12 +220,12 @@ library Integrity {
         uint256 end = childrenBounds[index].end;
 
         bytes32 id = typeTreeId(
-            Topology.subTypeTree(conditions, start, childrenBounds)
+            Topology.typeTree(conditions, start, childrenBounds)
         );
         for (uint256 j = start + 1; j < end; ++j) {
             if (
                 id !=
-                typeTreeId(Topology.subTypeTree(conditions, j, childrenBounds))
+                typeTreeId(Topology.typeTree(conditions, j, childrenBounds))
             ) {
                 revert UnsuitableSubTypeTree(index);
             }
