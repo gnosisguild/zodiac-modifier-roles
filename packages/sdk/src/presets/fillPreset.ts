@@ -1,8 +1,9 @@
+import { defaultAbiCoder } from "ethers/lib/utils"
+
 import { Clearance, Condition, ExecutionOptions, Target } from "../types"
 
 import { execOptions } from "./execOptions"
 import { mergeFunctionEntries } from "./mergeFunctionEntries"
-import { solidityPackPadded } from "./scopeParam"
 import {
   PlaceholderValues,
   PermissionPreset,
@@ -107,7 +108,7 @@ const fillPlaceholder = (
         `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
       )
     }
-    return solidityPackPadded(valueOrPlaceholder.type, value)
+    return defaultAbiCoder.encode([valueOrPlaceholder.type], [value])
   }
 
   return valueOrPlaceholder
