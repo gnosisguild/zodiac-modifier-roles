@@ -138,31 +138,3 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
   },
   {} as any
 )
-
-const or = <T>(...branches: ParamCondition<T>[]): ConditionFunction<T> => {
-  const result = (abiTypeOrTypes) => ({
-    paramType: ParameterType.None,
-    operator: Operator.Or,
-    children: [],
-  })
-  return result
-}
-
-const gt = <T extends BigNumberish>(compValue: T): ConditionFunction<T> => {
-  const result = (abiTypeOrTypes) => ({
-    paramType: ParameterType.Static,
-    operator: Operator.GreaterThan,
-    compValue: compValue,
-    children: [],
-  })
-
-  return result
-}
-
-allow.mainnet.compound.comptroller.mintVerify(
-  undefined,
-  gt("12"),
-  or(gt("123"), gt("456")),
-  undefined,
-  { delegatecall: true }
-)
