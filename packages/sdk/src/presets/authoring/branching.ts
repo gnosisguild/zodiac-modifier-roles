@@ -1,8 +1,8 @@
 import { ParamType } from "ethers/lib/utils"
 
-import { ParameterType, Operator } from "../types"
+import { Operator, ParameterType } from "../../types"
 
-import { mapScoping } from "./mapScoping"
+import { mapScoping } from "./matches"
 import { ConditionFunction, Scoping } from "./types"
 
 // export type BranchCondition<T> = (

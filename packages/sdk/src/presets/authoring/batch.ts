@@ -14,6 +14,6 @@ export const forAll = (
 ): PresetAllowEntry[] => {
   const allowArray = Array.isArray(allow) ? allow : [allow]
   return targetAddresses.flatMap((targetAddress) =>
-    allowArray.map((allow) => ({ targetAddress, ...allow }))
+    allowArray.map((allow) => ({ ...allow, targetAddress }))
   )
 }
