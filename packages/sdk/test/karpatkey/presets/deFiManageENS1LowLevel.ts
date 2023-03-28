@@ -1,6 +1,6 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { equalTo, matches, oneOf, subsetOf } from "../../../src/presets/helpers"
+import { eq, matches, oneOf, subsetOf } from "../../../src/presets/helpers"
 import { AVATAR } from "../../../src/presets/placeholders"
 import { PermissionPreset } from "../../../src/presets/types"
 import { Operator, ParameterType } from "../../../src/types"
@@ -68,7 +68,7 @@ const preset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
-      condition: matches([equalTo(ZERO_ADDRESS, "address")], ["address"]),
+      condition: matches([eq(ZERO_ADDRESS, "address")], ["address"]),
       send: true,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
@@ -127,7 +127,7 @@ const preset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       condition: matches(
-        [equalTo(AVATAR), subsetOf([cDAI, cUSDC], "address[]")],
+        [eq(AVATAR), subsetOf([cDAI, cUSDC], "address[]")],
         ["address", "address[]"]
       ),
     },
@@ -148,7 +148,7 @@ const preset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       condition: matches(
-        [undefined, equalTo(AVATAR), equalTo([rETH2, SWISE], "address[]")],
+        [undefined, eq(AVATAR), eq([rETH2, SWISE], "address[]")],
         ["uint256", "address", "address[]", "uint256[]", "bytes32[]"]
       ),
     },
@@ -171,10 +171,10 @@ const preset = {
         [
           matches(
             {
-              token0: equalTo(WETH, "address"),
-              token1: equalTo(sETH2, "address"),
-              fee: equalTo(3000, "uint24"), //3000 represents the 0.3% fee
-              recipient: equalTo(AVATAR),
+              token0: eq(WETH, "address"),
+              token1: eq(sETH2, "address"),
+              fee: eq(3000, "uint24"), //3000 represents the 0.3% fee
+              recipient: eq(AVATAR),
             },
             "(address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline)"
           ),
@@ -196,7 +196,7 @@ const preset = {
       condition: matches(
         [
           matches(
-            [equalTo("424810", "uint256")],
+            [eq("424810", "uint256")],
             "(uint256,uint256,uint256,uint256,uint256,uint256)"
           ),
         ],
@@ -222,10 +222,7 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       condition: matches(
-        [
-          undefined,
-          matches([equalTo(AVATAR)], "(uint256,address,uint128,uint128)"),
-        ],
+        [undefined, matches([eq(AVATAR)], "(uint256,address,uint128,uint128)")],
         ["(uint256,address,uint128,uint128)"]
       ),
     },
@@ -277,17 +274,14 @@ const preset = {
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
-      condition: matches([equalTo(AVATAR)], ["address"]),
+      condition: matches([eq(AVATAR)], ["address"]),
     },
 
     //Claiming CRV rewards
     {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
-      condition: matches(
-        [equalTo(CURVE_stETH_ETH_GAUGE, "address")],
-        ["address"]
-      ),
+      condition: matches([eq(CURVE_stETH_ETH_GAUGE, "address")], ["address"]),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -302,9 +296,9 @@ const preset = {
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       condition: matches(
         {
-          rewardPoolAddress: equalTo(AURA_BALANCER_stETH_VAULT, "address"),
-          inputToken: equalTo(WETH, "address"),
-          balancerPoolId: equalTo(
+          rewardPoolAddress: eq(AURA_BALANCER_stETH_VAULT, "address"),
+          inputToken: eq(WETH, "address"),
+          balancerPoolId: eq(
             "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
             "bytes32"
           ),
@@ -350,12 +344,12 @@ const preset = {
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       condition: matches(
         {
-          poolId: equalTo(
+          poolId: eq(
             "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
             "bytes32"
           ),
-          sender: equalTo(AVATAR),
-          recipient: equalTo(AVATAR),
+          sender: eq(AVATAR),
+          recipient: eq(AVATAR),
         },
         ["bytes32 poolId", "address sender", "address recipient"]
       ),
@@ -420,7 +414,7 @@ const preset = {
             ],
             "address[]"
           ),
-          to: equalTo(AVATAR),
+          to: eq(AVATAR),
         },
         [
           "uint256 amountIn",
@@ -444,7 +438,7 @@ const preset = {
                 "address"
               ),
               tokenOut: oneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
-              recipient: equalTo(AVATAR),
+              recipient: eq(AVATAR),
             },
             "(address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 deadline, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)"
           ),

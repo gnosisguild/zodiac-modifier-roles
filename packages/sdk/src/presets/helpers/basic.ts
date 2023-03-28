@@ -10,12 +10,9 @@ import { describeStructure, parameterType, encodeValue } from "./utils"
  * @param value The reference value to encode or a placeholder
  * @param type The ABI type
  */
-function equalTo(value: Placeholder<any>, type?: AbiType): PresetCondition
-function equalTo(value: any, type: AbiType): PresetCondition
-function equalTo(
-  value: Placeholder<any> | any,
-  type?: AbiType
-): PresetCondition {
+function eq(value: Placeholder<any>, type?: AbiType): PresetCondition
+function eq(value: any, type: AbiType): PresetCondition
+function eq(value: Placeholder<any> | any, type?: AbiType): PresetCondition {
   const structure = describeStructure(type || value.type)
   return {
     paramType: parameterType(type || value.type),
@@ -24,7 +21,7 @@ function equalTo(
     children: structure.children,
   }
 }
-export { equalTo }
+export { eq }
 
 /**
  * Asserts that the value from calldata is equal to one of the given values
@@ -38,7 +35,7 @@ function oneOf(
   return {
     paramType: ParameterType.None,
     operator: Operator.Or,
-    children: values.map((value) => equalTo(value, type)),
+    children: values.map((value) => eq(value, type)),
   }
 }
 export { oneOf }
@@ -62,7 +59,7 @@ function subsetOf(
   return {
     paramType: ParameterType.Array,
     operator: Operator.ArraySubset,
-    children: values.map((value) => equalTo(value, type)),
+    children: values.map((value) => eq(value, type)),
   }
 }
 export { subsetOf }
