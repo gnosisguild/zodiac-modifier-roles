@@ -1,6 +1,13 @@
 import { BigNumberish, BytesLike } from "ethers"
+import { ParamType } from "ethers/lib/utils"
 
-import { Placeholder } from "../presets/types"
+import { Placeholder, PresetCondition } from "../presets/types"
+
+export type ConditionFunction<_T> = (abiType: ParamType) => PresetCondition
+
+export type NestedRecordOrArray<T> =
+  | { [name: string]: T | NestedRecordOrArray<T> }
+  | (T | NestedRecordOrArray<T>)[]
 
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
@@ -14,47 +21,35 @@ type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
 type PrimitiveParamScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>
-  | { oneOf: (T | Placeholder<T>)[] }
-
-type BigNumberishParamScoping<T extends BigNumberish> =
-  | T
-  | Placeholder<T>
-  | { oneOf: (T | Placeholder<T>)[] }
-  | { greaterThan: T | Placeholder<T> }
-  | { lessThan: T | Placeholder<T> }
+  | ConditionFunction<T>
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
 type ArrayParamScoping<T extends PrimitiveValue[]> =
   | (ArrayElement<T> | Placeholder<ArrayElement<T>>)[]
-  | { oneOf: (ArrayElement<T> | Placeholder<ArrayElement<T>>)[][] }
-  | {
-      subsetOf: (ArrayElement<T> | Placeholder<ArrayElement<T>>)[]
-      includeEmpty?: boolean
-      restrictOrder?: boolean
-    }
+  | ConditionFunction<T>
 
-export type TupleScopings<Params extends [...any[]]> = {
+export type TupleScoping<Params extends [...any[]]> = {
   [Index in keyof Params]?: UnwrapPromise<Params[Index]> extends PrimitiveValue
     ? PrimitiveParamScoping<UnwrapPromise<Params[Index]>>
     : UnwrapPromise<Params[Index]> extends PrimitiveValue[]
     ? ArrayParamScoping<UnwrapPromise<Params[Index]>>
-    : StructScopings<UnwrapPromise<Params[Index]>>
-} // TODO what about fixed-length arrays/tuple params? What scoping options shall be available for them?
+    : StructScoping<UnwrapPromise<Params[Index]>>
+}
 
-export type StructScopings<Struct extends { [key: string]: any }> = {
+export type StructScoping<Struct extends { [key: string]: any }> = {
   [Key in keyof Struct]?: UnwrapPromise<Struct[Key]> extends PrimitiveValue
     ? PrimitiveParamScoping<UnwrapPromise<Struct[Key]>>
     : UnwrapPromise<Struct[Key]> extends PrimitiveValue[]
     ? ArrayParamScoping<UnwrapPromise<Struct[Key]>>
-    : StructScopings<UnwrapPromise<Struct[Key]>>
+    : StructScoping<UnwrapPromise<Struct[Key]>>
 }
 
-export type ParamScoping<T> = T extends [...any[]]
-  ? TupleScopings<any>
+export type Scoping<T> = T extends [...any[]]
+  ? TupleScoping<T>
   : T extends { [key: string]: any }
-  ? StructScopings<T>
+  ? StructScoping<T>
   : T extends PrimitiveValue[]
   ? ArrayParamScoping<T>
   : T extends PrimitiveValue
