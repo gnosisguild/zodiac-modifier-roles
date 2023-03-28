@@ -1,14 +1,18 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
+import { Condition } from "../../types"
 import {
   PresetFullyClearedTarget,
   PresetFunction,
   ExecutionFlags,
 } from "../types"
 
-import { matchesAbi } from "./matches"
-import { TupleScoping } from "./types"
+import { every } from "./array"
+import { or } from "./branching"
+import { eq } from "./comparisons"
+import { matches, matchesAbi } from "./matches"
+import { ConditionFunction, TupleScoping } from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
@@ -136,4 +140,13 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
     return acc
   },
   {} as any
+)
+// const test = every<number[]>(0)
+allow.mainnet.balancer.vault.batchSwap(
+  undefined,
+  or([{}], every({})),
+  or(),
+  or({ fromInternalBalance: true }),
+  or(),
+  or()
 )

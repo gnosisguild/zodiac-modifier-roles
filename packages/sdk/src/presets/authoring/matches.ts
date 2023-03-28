@@ -22,6 +22,12 @@ import { describeStructure, parameterType } from "./utils"
 export const matches =
   <S extends TupleScoping<any> | StructScoping<any>>(scoping: S) =>
   (abiType: ParamType) => {
+    // The type system allows for nesting matches(matches()).
+    // While using this in practice would not make too much sense, we must make sure it's valid nonetheless.
+    if (typeof scoping === "function") {
+      return scoping(abiType)
+    }
+
     let conditions: (PresetCondition | undefined)[]
     if (Array.isArray(scoping)) {
       // scoping is an array (TupleScoping)
