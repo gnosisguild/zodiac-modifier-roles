@@ -1,19 +1,20 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
-import { BaseContract, ethers } from "ethers"
+import { BaseContract, BigNumberish, ethers } from "ethers"
 
-import { scopeParam } from "../presets/scopeParam"
 import {
   PresetFullyClearedTarget,
   PresetFunction,
   ExecutionFlags,
 } from "../presets/types"
+import { Operator, ParameterType } from "../types"
 
-import { TupleScopings } from "./types"
+import { matchesAbi } from "./conditions"
+import { ConditionFunction, TupleScoping } from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
 ) => void
-  ? [...params: TupleScopings<I>, options?: ExecutionFlags]
+  ? [...params: TupleScoping<I>, options?: ExecutionFlags]
   : []
 
 const makeAllowFunction = <
@@ -30,16 +31,12 @@ const makeAllowFunction = <
   return (
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
-    const paramScopings = args.slice(0, functionInputs.length) as any[]
+    const conditionStructures = args.slice(0, functionInputs.length) as any[]
     const options = (args[functionInputs.length] || {}) as ExecutionFlags
     return {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
-      params: paramScopings.some(Boolean)
-        ? paramScopings.flatMap((ps, index) =>
-            scopeParam(ps, functionInputs[index])
-          )
-        : undefined,
+      condition: matchesAbi(conditionStructures, functionInputs)(),
       ...options,
     }
   }
@@ -140,4 +137,32 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
     return acc
   },
   {} as any
+)
+
+const or = <T>(...branches: ParamCondition<T>[]): ConditionFunction<T> => {
+  const result = (abiTypeOrTypes) => ({
+    paramType: ParameterType.None,
+    operator: Operator.Or,
+    children: [],
+  })
+  return result
+}
+
+const gt = <T extends BigNumberish>(compValue: T): ConditionFunction<T> => {
+  const result = (abiTypeOrTypes) => ({
+    paramType: ParameterType.Static,
+    operator: Operator.GreaterThan,
+    compValue: compValue,
+    children: [],
+  })
+
+  return result
+}
+
+allow.mainnet.compound.comptroller.mintVerify(
+  undefined,
+  gt("12"),
+  or(gt("123"), gt("456")),
+  undefined,
+  { delegatecall: true }
 )
