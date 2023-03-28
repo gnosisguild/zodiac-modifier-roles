@@ -10,7 +10,7 @@ import { ConditionFunction, Scoping } from "./types"
 // ) => ConditionFunction<T>
 
 export const or =
-  <T>(...branches: Scoping<T>[]): ConditionFunction<T> =>
+  <T>(...branches: [...Scoping<T>[]]): ConditionFunction<T> =>
   (abiType: ParamType) => ({
     paramType: ParameterType.None,
     operator: Operator.Or,
