@@ -45,7 +45,7 @@ On this layer, the sdk offers [low-level helper functions](src/presets/helpers) 
 {
   targetAddress: '0x182B723a58739a9c974cFDB385ceaDb237453c28',
   signature: "claim_rewards(address)",
-  condition: matches([equalTo(AVATAR)], ["address"]),
+  condition: matchesAbi([AVATAR], ["address"]),
 }
 ```
 

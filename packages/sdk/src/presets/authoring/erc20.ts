@@ -1,8 +1,8 @@
 import { Placeholder } from "../types"
 
-import { equalTo, oneOf } from "./comparisons"
 import { forAll } from "./batch"
-import { matches } from "./matches"
+import { or } from "./branching"
+import { inputsMatch } from "./matches"
 
 export const allowErc20Approve = (
   tokens: string[],
@@ -10,13 +10,9 @@ export const allowErc20Approve = (
 ) =>
   forAll(tokens, {
     signature: "approve(address,uint256)",
-    condition: matches(
-      [
-        spenders.length === 1
-          ? equalTo(spenders[0], "address")
-          : oneOf(spenders, "address"),
-      ],
-      ["address"]
+    condition: inputsMatch(
+      [spenders.length === 1 ? spenders[0] : or(...spenders)],
+      ["address", "uint256"]
     ),
   })
 
@@ -26,13 +22,8 @@ export const allowErc20Revoke = (
 ) =>
   forAll(tokens, {
     signature: "approve(address,uint256)",
-    condition: matches(
-      [
-        spenders.length === 1
-          ? equalTo(spenders[0], "address")
-          : oneOf(spenders, "address"),
-        equalTo(0, "uint256"),
-      ],
+    condition: inputsMatch(
+      [spenders.length === 1 ? spenders[0] : or(...spenders), 0],
       ["address", "uint256"]
     ),
   })
@@ -40,12 +31,8 @@ export const allowErc20Revoke = (
 export const allowErc20Transfer = (tokens: string[], recipients: string[]) =>
   forAll(tokens, {
     signature: "transfer(address,uint256)",
-    condition: matches(
-      [
-        recipients.length === 1
-          ? equalTo(recipients[0], "address")
-          : oneOf(recipients, "address"),
-      ],
+    condition: inputsMatch(
+      [recipients.length === 1 ? recipients[0] : or(...recipients)],
       ["address"]
     ),
   })

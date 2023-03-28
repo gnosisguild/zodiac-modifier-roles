@@ -1,7 +1,7 @@
 import { BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
 
-import { Placeholder, PresetCondition } from "../presets/types"
+import { Placeholder, PresetCondition } from "../types"
 
 export type ConditionFunction<_T> = (abiType: ParamType) => PresetCondition
 
