@@ -1,20 +1,12 @@
-import { BigNumber, BigNumberish } from "ethers"
 import { ParamType } from "ethers/lib/utils"
 
 import * as l2 from "../presets/helpers"
-import { encodeValue } from "../presets/helpers/utils"
-import { Placeholder, PresetCondition } from "../presets/types"
-import { Operator, ParameterType } from "../types"
+import { PresetCondition } from "../presets/types"
 
 import { mapScoping } from "./mapScoping"
-import {
-  ConditionFunction,
-  Scoping,
-  StructScoping,
-  TupleScoping,
-} from "./types"
+import { StructScoping, TupleScoping } from "./types"
 
-// build layer 3 (typed allow kit) conditions helpers based on layer 2 (permission preset condition helpers)
+// build layer 3 (typed allow kit) matches helpers based on layer 2 (permission preset condition helpers)
 
 export const matches =
   <S extends TupleScoping<any> | StructScoping<any>>(scoping: S) =>
@@ -83,62 +75,3 @@ export const matchesAbi =
     )
     return l2.matchesAbi(conditions, abiTypes)
   }
-
-export const eq =
-  <T>(value: T | Placeholder<T>) =>
-  (abiType: ParamType) => {
-    return l2.eq(value, abiType)
-  }
-
-// move this to layer 2
-export const gt =
-  <T extends BigNumberish>(value: T | Placeholder<T>) =>
-  (abiType: ParamType) => {
-    if (!abiType.type.startsWith("uint") || !abiType.type.startsWith("int")) {
-      console.warn(
-        `Using a gt/gte condition on non-numeric type ${abiType.type}, bytes will be interpreted as a uint256`
-      )
-    }
-    return {
-      paramType: ParameterType.Static,
-      operator: Operator.GreaterThan,
-      // operator: abiType.type.startsWith("int")
-      //   ? Operator.IntGreaterThan
-      //   : Operator.UintGreaterThan,
-      compValue: encodeValue(value, abiType),
-    }
-  }
-export const gte = <T extends BigNumberish>(value: T | Placeholder<T>) =>
-  gt(BigNumber.from(value).sub(1))
-
-export const lt =
-  <T extends BigNumberish>(value: T | Placeholder<T>) =>
-  (abiType: ParamType) => {
-    if (!abiType.type.startsWith("uint") || !abiType.type.startsWith("int")) {
-      console.warn(
-        `Using a lt/lte condition on non-numeric type ${abiType.type}, bytes will be interpreted as a uint256`
-      )
-    }
-    return {
-      paramType: ParameterType.Static,
-      operator: Operator.LessThan,
-      // operator: abiType.type.startsWith("int")
-      //   ? Operator.IntGreaterThan
-      //   : Operator.UintGreaterThan,
-      compValue: encodeValue(value, abiType),
-    }
-  }
-export const lte = <T extends BigNumberish>(value: T | Placeholder<T>) =>
-  lt(BigNumber.from(value).add(1))
-
-// export type BranchCondition<T> = (
-//   branches: Scoping<T>[]
-// ) => ConditionFunction<T>
-
-export const or =
-  <T>(...branches: Scoping<T>[]): ConditionFunction<T> =>
-  (abiType: ParamType) => ({
-    paramType: ParameterType.None,
-    operator: Operator.Or,
-    children: branches.map((branch) => mapScoping(branch, abiType)),
-  })

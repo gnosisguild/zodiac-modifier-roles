@@ -1,15 +1,14 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
-import { BaseContract, BigNumberish, ethers } from "ethers"
+import { BaseContract, ethers } from "ethers"
 
 import {
   PresetFullyClearedTarget,
   PresetFunction,
   ExecutionFlags,
 } from "../presets/types"
-import { Operator, ParameterType } from "../types"
 
-import { matchesAbi } from "./conditions"
-import { ConditionFunction, TupleScoping } from "./types"
+import { matchesAbi } from "./matches"
+import { TupleScoping } from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
