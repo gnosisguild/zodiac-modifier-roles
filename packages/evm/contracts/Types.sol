@@ -53,21 +53,21 @@ enum Operator {
     //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
     //          🚫 children
     //          ✅ compValue
-    /* 17: */ EqualTo,
-    /* 18: */ GreaterThan,
-    /* 19: */ LessThan,
-    /* 20: */ SignedIntGreaterThan,
-    /* 21: */ SignedIntLessThan,
-    /* 22: */ Bitmask,
+    /* 17: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+    /* 18: */ GreaterThan, // paramType: Static
+    /* 19: */ LessThan, // paramType: Static
+    /* 20: */ SignedIntGreaterThan, // paramType: Static
+    /* 21: */ SignedIntLessThan, // paramType: Static
+    /* 22: */ Bitmask, // paramType: Static / Dynamic
     /* 23: */ _ComparisonPlaceholder23,
     /* 24: */ _ComparisonPlaceholder24,
     /* 25: */ _ComparisonPlaceholder25,
     /* 26: */ _ComparisonPlaceholder26,
     /* 27: */ _ComparisonPlaceholder27,
     /* 28: */ _ComparisonPlaceholder28,
-    /* 29: */ WithinAllowance,
-    /* 30: */ EtherWithinAllowance,
-    /* 31: */ CallWithinAllowance
+    /* 29: */ WithinAllowance, // paramType: Static
+    /* 30: */ EtherWithinAllowance, // paramType: None
+    /* 31: */ CallWithinAllowance // paramType: None
 }
 
 enum ExecutionOptions {
