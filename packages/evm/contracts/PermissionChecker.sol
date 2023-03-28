@@ -426,10 +426,12 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload
     ) private pure returns (Status, Trace[] memory trace) {
         ParameterPayload[] memory payloads = payload.children;
-        if (payloads.length == 0) {
+        Condition[] memory conditions = condition.children;
+        assert(conditions.length <= 256);
+
+        if (payloads.length == 0 || payloads.length > conditions.length) {
             return (Status.ParameterNotSubsetOfAllowed, trace);
         }
-        Condition[] memory conditions = condition.children;
 
         uint256 taken;
         for (uint256 i; i < payloads.length; ++i) {

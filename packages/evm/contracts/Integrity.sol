@@ -90,16 +90,17 @@ library Integrity {
                 (condition.operator >= Operator.And &&
                     condition.operator <= Operator.Xor)
             ) {
-                // must be zero
+                // must have Type None
                 if (condition.paramType != ParameterType.None) {
                     revert UnsuitableParameterType(i);
                 }
-                // must be zero
+
+                // must have no compValue
                 if (condition.compValue.length != 0) {
                     revert UnsuitableCompValue(i);
                 }
 
-                // must have at least two children
+                // must have at least one child
                 if (childrenBounds[i].length == 0) {
                     revert UnsuitableChildrenCount(i);
                 }
@@ -126,6 +127,12 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
+                condition.paramType == ParameterType.Array &&
+                childrenBounds[i].length == 0
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+            if (
                 (condition.operator == Operator.ArraySome ||
                     condition.operator == Operator.ArrayEvery) &&
                 childrenBounds[i].length != 1
@@ -134,8 +141,8 @@ library Integrity {
             }
 
             if (
-                condition.paramType == ParameterType.Array &&
-                childrenBounds[i].length == 0
+                condition.operator == Operator.ArraySubset &&
+                childrenBounds[i].length > 256
             ) {
                 revert UnsuitableChildrenCount(i);
             }
