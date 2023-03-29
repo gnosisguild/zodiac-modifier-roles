@@ -9,7 +9,7 @@ import {
   ConditionFunction,
   Scoping,
   StructScoping,
-  TupleScoping,
+  TupleScopings,
 } from "./types"
 import { describeStructure, parameterType } from "./utils"
 
@@ -20,7 +20,7 @@ import { describeStructure, parameterType } from "./utils"
  * @param scoping The conditions on the tuple or array elements
  */
 export const matches =
-  <S extends TupleScoping<any> | StructScoping<any>>(scoping: S) =>
+  <S extends TupleScopings<any> | StructScoping<any>>(scoping: S) =>
   (abiType: ParamType) => {
     // The type system allows for nesting matches(matches()).
     // While using this in practice would not make too much sense, we must make sure it's valid nonetheless.
@@ -30,7 +30,7 @@ export const matches =
 
     let conditions: (PresetCondition | undefined)[]
     if (Array.isArray(scoping)) {
-      // scoping is an array (TupleScoping)
+      // scoping is an array (TupleScopings)
 
       // supported for tuple and array types
       if (abiType.baseType !== "tuple" && abiType.baseType !== "array") {
@@ -87,7 +87,7 @@ export const matches =
   }
 
 export const matchesAbi =
-  <S extends TupleScoping<any>>(scoping: S, abiTypes: ParamType[]) =>
+  <S extends TupleScopings<any>>(scoping: S, abiTypes: ParamType[]) =>
   (abiType?: ParamType) => {
     // only supported at the top level or for bytes type params
     if (abiType && abiType.name !== "bytes") {
@@ -120,7 +120,7 @@ export const matchesAbi =
  * @param abiTypes The ABI types of the function inputs
  **/
 export const inputsMatch = (
-  scoping: TupleScoping<any>,
+  scoping: TupleScopings<any>,
   abiTypes: AbiType[]
 ) => {
   return matchesAbi(
@@ -178,7 +178,7 @@ const assertValidConditionsLength = (
 }
 
 const assertValidConditionsKeys = (
-  structure: TupleScoping<any> | StructScoping<any>,
+  structure: TupleScopings<any> | StructScoping<any>,
   typeOrTypes: ParamType | ParamType[]
 ) => {
   if (Array.isArray(structure)) return
