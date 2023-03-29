@@ -5,12 +5,14 @@ import { Operator, ParameterType } from "../../types"
 import { mapScoping } from "./matches"
 import { ConditionFunction, Scoping } from "./types"
 
-// export type BranchCondition<T> = (
-//   branches: Scoping<T>[]
-// ) => ConditionFunction<T>
+type BranchCondition<S, T> = (
+  ...branches: [...Scoping<S>[]]
+) => ConditionFunction<S extends T ? T : S>
 
 export const or =
-  <T>(...branches: [...Scoping<T>[]]): ConditionFunction<T> =>
+  <S, T>(
+    ...branches: [...Scoping<S>[]]
+  ): ConditionFunction<S extends T ? T : S> =>
   (abiType: ParamType) => ({
     paramType: ParameterType.None,
     operator: Operator.Or,

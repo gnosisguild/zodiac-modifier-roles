@@ -11495,6 +11495,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"type-fest@npm:^3.7.1":
+  version: 3.7.1
+  resolution: "type-fest@npm:3.7.1"
+  checksum: a694e0d62a06a60dec0f57e2e681d2e8d301992a3abd515fcc2f8f135ca12aa4f7d4aab24532ee781e4fb7735d6cfbd127ff0337b13cdbca6ff32b74d091c403
+  languageName: node
+  linkType: hard
+
 "type-is@npm:~1.6.18":
   version: 1.6.18
   resolution: "type-is@npm:1.6.18"
@@ -12827,6 +12834,7 @@ __metadata:
     prettier: ^2.8.4
     rimraf: ^3.0.2
     ts-node: ^10.8.0
+    type-fest: ^3.7.1
     typechain: ^8.1.1
     typescript: ^4.9.4
     yargs: ^16.1.1

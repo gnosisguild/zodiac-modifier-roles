@@ -1,5 +1,6 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
+import { RequireAtLeastOne } from "type-fest"
 
 import { Placeholder, PresetCondition } from "../types"
 
@@ -15,7 +16,7 @@ export type NestedRecordOrArray<T> =
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
 type PromiseOrValue<T> = T | Promise<T>
-type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
+export type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
   ? U[]
   : T extends PromiseOrValue<infer V>
   ? V
@@ -42,13 +43,13 @@ export type TupleScoping<Params extends [...any[]]> = {
 }
 
 export type StructScoping<Struct extends { [key: string]: any }> =
-  | {
+  | RequireAtLeastOne<{
       [Key in keyof Struct]?: UnwrapPromise<Struct[Key]> extends PrimitiveValue
         ? PrimitiveParamScoping<UnwrapPromise<Struct[Key]>>
         : UnwrapPromise<Struct[Key]> extends unknown[]
         ? ArrayParamScoping<UnwrapPromise<Struct[Key]>>
         : StructScoping<UnwrapPromise<Struct[Key]>>
-    }
+    }>
   | ConditionFunction<Struct>
 
 export type Scoping<T> = T extends [...unknown[]]

@@ -1,6 +1,6 @@
 import { Placeholder } from "../types"
 
-import { forAll } from "./batch"
+import { forAll } from "./batching"
 import { or } from "./branching"
 import { inputsMatch } from "./matches"
 

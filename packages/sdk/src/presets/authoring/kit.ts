@@ -144,9 +144,9 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
 // const test = every<number[]>(0)
 allow.mainnet.balancer.vault.batchSwap(
   undefined,
-  or([{}], every({})),
+  or([]),
   or(),
-  or({ fromInternalBalance: true }),
+  or({ sender: "0x00" }, { recipient: "0x00" }),
   or(),
   or()
 )
