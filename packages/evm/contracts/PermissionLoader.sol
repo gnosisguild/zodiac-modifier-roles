@@ -2,11 +2,13 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
-import "./WriteOnce.sol";
 
 import "./Core.sol";
-import "./Topology.sol";
+
+import "./Consumptions.sol";
 import "./ScopeConfig.sol";
+import "./Topology.sol";
+import "./WriteOnce.sol";
 
 /**
  * @title PermissionLoader - a component of the Zodiac Roles Mod that handles
@@ -35,12 +37,25 @@ abstract contract PermissionLoader is Core {
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view override returns (Condition memory result) {
+    )
+        internal
+        view
+        override
+        returns (Condition memory condition, Consumption[] memory consumptions)
+    {
         (uint256 length, , , address pointer) = ScopeConfig.unpackHeader(
             role.scopeConfig[key]
         );
         bytes memory buffer = WriteOnce.load(pointer);
-        result = _unpack(buffer, length);
+
+        (condition, consumptions) = _unpack(buffer, length);
+
+        for (uint256 i; i < consumptions.length; ++i) {
+            (consumptions[i].balance, ) = _accruedAllowance(
+                allowances[consumptions[i].allowanceKey],
+                block.timestamp
+            );
+        }
     }
 
     function _pack(
@@ -66,22 +81,24 @@ abstract contract PermissionLoader is Core {
     function _unpack(
         bytes memory buffer,
         uint256 paramCount
-    ) private pure returns (Condition memory result) {
+    ) private view returns (Condition memory result, Consumption[] memory) {
         (
             ConditionFlat[] memory conditions,
             bytes32[] memory compValues
         ) = ScopeConfig.unpackConditions(buffer, paramCount);
 
-        _unpack(
+        _unpackCondition(
             conditions,
             compValues,
             Topology.childrenBounds(conditions),
             0,
             result
         );
+
+        return (result, _unpackConsumptions(conditions, compValues));
     }
 
-    function _unpack(
+    function _unpackCondition(
         ConditionFlat[] memory conditions,
         bytes32[] memory compValues,
         Topology.Bounds[] memory childrenBounds,
@@ -102,7 +119,7 @@ abstract contract PermissionLoader is Core {
 
         result.children = new Condition[](count);
         for (uint j; j < count; ) {
-            _unpack(
+            _unpackCondition(
                 conditions,
                 compValues,
                 childrenBounds,
@@ -112,6 +129,42 @@ abstract contract PermissionLoader is Core {
 
             unchecked {
                 ++j;
+            }
+        }
+    }
+
+    function _unpackConsumptions(
+        ConditionFlat[] memory conditions,
+        bytes32[] memory compValues
+    ) private view returns (Consumption[] memory result) {
+        uint256 maxAllowanceCount;
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].operator >= Operator.WithinAllowance) {
+                ++maxAllowanceCount;
+            }
+        }
+
+        if (maxAllowanceCount == 0) {
+            return result;
+        }
+
+        result = new Consumption[](maxAllowanceCount);
+
+        uint256 insert;
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].operator < Operator.WithinAllowance) {
+                continue;
+            }
+            bytes32 allowanceKey = compValues[i];
+            if (!Consumptions.contains(result, allowanceKey)) {
+                result[insert].allowanceKey = allowanceKey;
+                insert++;
+            }
+        }
+
+        if (insert < maxAllowanceCount) {
+            assembly {
+                mstore(result, insert)
             }
         }
     }

@@ -132,7 +132,8 @@ struct Allowance {
     uint64 refillTimestamp;
 }
 
-struct Trace {
-    Condition condition;
-    uint256 value;
+struct Consumption {
+    bytes32 allowanceKey;
+    uint128 balance;
+    uint128 consumed;
 }

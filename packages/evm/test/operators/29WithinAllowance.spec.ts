@@ -67,14 +67,16 @@ describe("Operator - WithinAllowance", async () => {
         },
       ]);
 
-      await expect(invoke(1001))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1001)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
 
       await expect(invoke(1000)).to.not.be.reverted;
-      await expect(invoke(1))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
     });
 
     it("passes a check with only from balance and refill configured", async () => {
@@ -113,9 +115,10 @@ describe("Operator - WithinAllowance", async () => {
         `AllowanceExceeded`
       );
       await expect(invoke(333)).to.not.be.reverted;
-      await expect(invoke(1))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
     });
 
     it("passes a check balance from available+refill", async () => {
@@ -149,13 +152,16 @@ describe("Operator - WithinAllowance", async () => {
         refillTimestamp: timestamp - 750,
       });
 
-      await expect(invoke(351))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(351)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
+
       await expect(invoke(350)).to.not.be.reverted;
-      await expect(invoke(1))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
     });
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
@@ -188,13 +194,16 @@ describe("Operator - WithinAllowance", async () => {
         refillTimestamp: timestamp - 50,
       });
 
-      await expect(invoke(251))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(251)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
+
       await expect(invoke(250)).to.not.be.reverted;
-      await expect(invoke(1))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
     });
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
@@ -230,9 +239,11 @@ describe("Operator - WithinAllowance", async () => {
         refillTimestamp: timestamp - interval * 10,
       });
 
-      await expect(invoke(1001))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(1001)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
+
       await expect(invoke(1000)).to.not.be.reverted;
     });
 
@@ -267,9 +278,11 @@ describe("Operator - WithinAllowance", async () => {
         refillTimestamp: timestamp - 5000,
       });
 
-      await expect(invoke(9001))
-        .to.be.revertedWithCustomError(roles, `AllowanceExceeded`)
-        .withArgs(allowanceKey);
+      await expect(invoke(9001)).to.be.revertedWithCustomError(
+        roles,
+        `AllowanceExceeded`
+      );
+
       await expect(invoke(9000)).to.not.be.reverted;
     });
   });
