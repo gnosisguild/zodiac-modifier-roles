@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./PermissionLoader.sol";
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
+import "./PermissionLoader.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
@@ -15,9 +15,9 @@ import "./PermissionChecker.sol";
  */
 contract Roles is
     Modifier,
-    PermissionLoader,
     PermissionBuilder,
-    PermissionChecker
+    PermissionChecker,
+    PermissionLoader
 {
     mapping(address => bytes32) public defaultRoles;
 
@@ -106,7 +106,7 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        Trace[] memory result = authorize(
+        Consumption[] memory trace = authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -115,7 +115,7 @@ contract Roles is
         );
         success = exec(to, value, data, operation);
         if (success) {
-            _track(result);
+            _track(trace);
         }
     }
 
@@ -136,7 +136,7 @@ contract Roles is
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        Trace[] memory result = authorize(
+        Consumption[] memory trace = authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -145,7 +145,7 @@ contract Roles is
         );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (success) {
-            _track(result);
+            _track(trace);
         }
     }
 
@@ -165,13 +165,19 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Trace[] memory result = authorize(roleKey, to, value, data, operation);
+        Consumption[] memory trace = authorize(
+            roleKey,
+            to,
+            value,
+            data,
+            operation
+        );
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _track(result);
+            _track(trace);
         }
     }
 
@@ -191,13 +197,19 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Trace[] memory result = authorize(roleKey, to, value, data, operation);
+        Consumption[] memory trace = authorize(
+            roleKey,
+            to,
+            value,
+            data,
+            operation
+        );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _track(result);
+            _track(trace);
         }
     }
 }
