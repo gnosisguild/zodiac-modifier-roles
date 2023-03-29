@@ -16,13 +16,21 @@ export type NestedRecordOrArray<T> =
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
 type PromiseOrValue<T> = T | Promise<T>
-export type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
-  ? U[]
-  : T extends PromiseOrValue<infer V>
-  ? V
-  : T
+// export type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
+//   ? U[]
+//   : T extends PromiseOrValue<infer V>
+//   ? V
+//   : T
 
-type PrimitiveParamScoping<T extends PrimitiveValue> =
+// type DeepAwaited<T> = Awaited<T> extends PrimitiveValue
+//   ? Awaited<T>
+//   : Awaited<T> extends { [key: string | number]: any }
+//   ? {
+//       [Key in keyof Awaited<T>]?: DeepAwaited<Awaited<T>[Key]>
+//     }
+//   : Awaited<T>
+
+type PrimitiveScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>
   | ConditionFunction<T>
@@ -30,39 +38,36 @@ type PrimitiveParamScoping<T extends PrimitiveValue> =
 export type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
-type ArrayParamScoping<T extends any[]> =
-  | (ArrayElement<T> | Placeholder<ArrayElement<T>>)[]
-  | ConditionFunction<T>
-
-export type TupleScoping<Params extends [...any[]]> = {
-  [Index in keyof Params]?: UnwrapPromise<Params[Index]> extends PrimitiveValue
-    ? PrimitiveParamScoping<UnwrapPromise<Params[Index]>>
-    : UnwrapPromise<Params[Index]> extends any[]
-    ? ArrayParamScoping<UnwrapPromise<Params[Index]>>
-    : StructScoping<UnwrapPromise<Params[Index]>>
-}
+export type ArrayScoping<T extends any[]> =
+  | (Awaited<ArrayElement<T>> | Placeholder<Awaited<ArrayElement<T>>>)[]
+  | ConditionFunction<Awaited<ArrayElement<T>>[]>
 
 export type StructScoping<Struct extends { [key: string]: any }> =
   | RequireAtLeastOne<{
-      [Key in keyof Struct]?: UnwrapPromise<Struct[Key]> extends PrimitiveValue
-        ? PrimitiveParamScoping<UnwrapPromise<Struct[Key]>>
-        : UnwrapPromise<Struct[Key]> extends unknown[]
-        ? ArrayParamScoping<UnwrapPromise<Struct[Key]>>
-        : StructScoping<UnwrapPromise<Struct[Key]>>
+      [Key in keyof Struct]?: Awaited<Struct[Key]> extends PrimitiveValue
+        ? PrimitiveScoping<Awaited<Struct[Key]>>
+        : Awaited<Struct[Key]> extends unknown[]
+        ? ArrayScoping<Awaited<Struct[Key]>>
+        : StructScoping<Awaited<Struct[Key]>>
     }>
   | ConditionFunction<Struct>
 
-export type Scoping<T> = T extends [...unknown[]]
-  ? TupleScoping<T>
+export type Scoping<T> = T extends any[]
+  ? ArrayScoping<T>
   : T extends { [key: string]: any }
   ? StructScoping<T>
-  : T extends PrimitiveValue[]
-  ? ArrayParamScoping<T>
   : T extends PrimitiveValue
-  ? PrimitiveParamScoping<T>
+  ? PrimitiveScoping<T>
   : never
 
-type ScopingBN = Scoping<BigNumberish>
+export type TupleScopings<Params extends [...any[]]> = {
+  [Index in keyof Params]?: Awaited<Params[Index]> extends PrimitiveValue
+    ? PrimitiveScoping<Awaited<Params[Index]>>
+    : Awaited<Params[Index]> extends any[]
+    ? ArrayScoping<Awaited<Params[Index]>>
+    : StructScoping<Awaited<Params[Index]>>
+}
 
-type Test<T> = T extends { [key: string]: any } ? boolean : string
-type R = Test<BigNumberish> // TODO interesting how in TS ternaries both branches can be taken at once
+type T1 = [...any[]] extends { [key: string]: any } ? true : false // not the other way around!
+type T2 = any[] extends [...any[]] ? true : false // goes both ways
+type T3 = [...any[], any] extends any[] ? true : false // not the other way around!

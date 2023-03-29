@@ -12,12 +12,12 @@ import { every } from "./array"
 import { or } from "./branching"
 import { eq } from "./comparisons"
 import { matches, matchesAbi } from "./matches"
-import { ConditionFunction, TupleScoping } from "./types"
+import { ConditionFunction, TupleScopings } from "./types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
 ) => void
-  ? [...params: TupleScoping<I>, options?: ExecutionFlags]
+  ? [...params: TupleScopings<I>, options?: ExecutionFlags]
   : []
 
 const makeAllowFunction = <
@@ -144,8 +144,8 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
 // const test = every<number[]>(0)
 allow.mainnet.balancer.vault.batchSwap(
   undefined,
-  or([]),
-  or(1),
+  or(),
+  or(),
   or({ fromInternalBalance: true }),
   or(),
   or()
