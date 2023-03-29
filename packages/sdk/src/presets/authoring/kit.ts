@@ -146,7 +146,7 @@ allow.mainnet.balancer.vault.batchSwap(
   undefined,
   or(),
   or(),
-  or({ recipient: "0x00" }, { fromInternalBalance: true as boolean }), // TODO
+  or({ recipient: "0x00" }, { fromInternalBalance: true }), // TODO
   or([1, 2], [2, 3]),
   or()
 )
