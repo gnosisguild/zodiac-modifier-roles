@@ -1,6 +1,7 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { eq, matches, oneOf, subsetOf } from "../../../src/presets/helpers"
+import { inputsMatch } from "../../../src/presets/authoring"
+import * as c from "../../../src/presets/authoring/conditions"
 import { AVATAR } from "../../../src/presets/placeholders"
 import { PermissionPreset } from "../../../src/presets/types"
 import { Operator, ParameterType } from "../../../src/types"
@@ -68,7 +69,7 @@ const preset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
-      condition: matches([eq(ZERO_ADDRESS, "address")], ["address"]),
+      condition: inputsMatch([ZERO_ADDRESS], ["address"]),
       send: true,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
@@ -126,8 +127,8 @@ const preset = {
     {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
-      condition: matches(
-        [eq(AVATAR), subsetOf([cDAI, cUSDC], "address[]")],
+      condition: inputsMatch(
+        [AVATAR, c.subset([cDAI, cUSDC])],
         ["address", "address[]"]
       ),
     },
@@ -147,8 +148,8 @@ const preset = {
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
-      condition: matches(
-        [undefined, eq(AVATAR), eq([rETH2, SWISE], "address[]")],
+      condition: inputsMatch(
+        [undefined, AVATAR, [rETH2, SWISE]],
         ["uint256", "address", "address[]", "uint256[]", "bytes32[]"]
       ),
     },
@@ -167,20 +168,17 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      condition: matches(
+      condition: inputsMatch(
         [
-          matches(
-            {
-              token0: eq(WETH, "address"),
-              token1: eq(sETH2, "address"),
-              fee: eq(3000, "uint24"), //3000 represents the 0.3% fee
-              recipient: eq(AVATAR),
-            },
-            "(address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline)"
-          ),
+          {
+            token0: WETH,
+            token1: sETH2,
+            fee: 3000, //3000 represents the 0.3% fee
+            recipient: AVATAR,
+          },
         ],
         [
-          "(address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256)",
+          "(address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline)",
         ]
       ),
     },

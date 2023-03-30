@@ -2,7 +2,7 @@ import { Placeholder } from "../types"
 
 import { forAll } from "./batching"
 import { or } from "./conditions/branching"
-import { inputsMatch } from "./conditions/matches"
+import { inputsMatch } from "./inputsMatch"
 
 export const allowErc20Approve = (
   tokens: string[],

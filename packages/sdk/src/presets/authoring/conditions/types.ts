@@ -37,6 +37,12 @@ export type StructScoping<Struct extends { [key: string]: any }> =
     }>
   | ConditionFunction<Struct>
 
+/**
+ * A scoping is one of the following:
+ * - a primitive, BigNumber, or array value, or a placeholder – will be used for an equality check
+ * - an object – will be used as a matching pattern
+ * - a condition function
+ */
 export type Scoping<T> = T extends PrimitiveValue
   ? PrimitiveScoping<T>
   : T extends any[]
