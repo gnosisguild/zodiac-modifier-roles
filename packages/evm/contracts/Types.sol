@@ -19,8 +19,8 @@ enum ParameterType {
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
     //          paramType: Static / Dynamic / Tuple / Array
-    //          🚫 children
     //          ❓ children (only for paramType: Tuple / Array to describe their structure)
+    //          🚫 compValue
     /* 00: */ Pass,
     // ------------------------------------------------------------
     // 01-04: LOGICAL EXPRESSIONS
@@ -47,18 +47,18 @@ enum Operator {
     /* 13: */ _ComplexPlaceholder13,
     /* 14: */ _ComplexPlaceholder14,
     /* 15: */ _ComplexPlaceholder15,
-    /* 16: */ _ComplexPlaceholder16,
     // ------------------------------------------------------------
-    // 17-31: COMPARISON EXPRESSIONS
+    // 16-31: COMPARISON EXPRESSIONS
     //          paramType: Static / Dynamic / Tuple / Array
     //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          ✅ compValue
-    /* 17: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
-    /* 18: */ GreaterThan, // paramType: Static
-    /* 19: */ LessThan, // paramType: Static
-    /* 20: */ SignedIntGreaterThan, // paramType: Static
-    /* 21: */ SignedIntLessThan, // paramType: Static
-    /* 22: */ Bitmask, // paramType: Static / Dynamic
+    /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+    /* 17: */ GreaterThan, // paramType: Static
+    /* 18: */ LessThan, // paramType: Static
+    /* 19: */ SignedIntGreaterThan, // paramType: Static
+    /* 20: */ SignedIntLessThan, // paramType: Static
+    /* 21: */ Bitmask, // paramType: Static / Dynamic
+    /* 22: */ _ComparisonPlaceholder22,
     /* 23: */ _ComparisonPlaceholder23,
     /* 24: */ _ComparisonPlaceholder24,
     /* 25: */ _ComparisonPlaceholder25,
