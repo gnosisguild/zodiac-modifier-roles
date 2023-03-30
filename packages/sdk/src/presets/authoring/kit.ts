@@ -1,5 +1,5 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
-import { BaseContract, BigNumber, BigNumberish, ethers } from "ethers"
+import { BaseContract, BigNumber, ethers } from "ethers"
 
 import {
   PresetFullyClearedTarget,
@@ -9,9 +9,10 @@ import {
 
 import { every } from "./conditions/array"
 import { or } from "./conditions/branching"
-import { eq } from "./conditions/comparison"
 import { matches, matchesAbi } from "./conditions/matches"
 import { ConditionFunction, TupleScopings } from "./conditions/types"
+
+// In this file, we define a derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
@@ -33,18 +34,22 @@ const makeAllowFunction = <
   return (
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
-    const conditionStructures = args.slice(0, functionInputs.length) as any[]
+    const scopings = args.slice(0, functionInputs.length) as any[]
     const options = (args[functionInputs.length] || {}) as ExecutionFlags
     return {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
-      condition: matchesAbi(conditionStructures, functionInputs)(),
+      condition:
+        scopings.length > 0
+          ? matchesAbi(scopings, functionInputs)()
+          : undefined,
       ...options,
     }
   }
 }
 
 export const EVERYTHING = Symbol("EVERYTHING")
+
 type AllowFunctions<C extends BaseContract> = {
   [key in keyof C["functions"]]: (
     ...args: MapParams<Parameters<C["functions"][key]>>
@@ -143,7 +148,11 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
 
 allow.mainnet.balancer.vault.batchSwap(
   or(BigNumber.from("123"), 2, 1),
-  or(),
+  or(
+    every({ amount: BigNumber.from("123") }),
+    [],
+    every({ amount: BigNumber.from("123") })
+  ),
   or(),
   or({ recipient: "0x00" }, { fromInternalBalance: true }),
   or([1, 2], ["2", 3], [1]),
