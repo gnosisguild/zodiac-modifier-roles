@@ -10,16 +10,7 @@ async function run() {
   const [signer] = await hre.ethers.getSigners();
   const deployer = hre.ethers.provider.getSigner(signer.address);
 
-  const Topology = await hre.ethers.getContractFactory("Topology");
-  const topologyLibraryAddress = await deployMastercopyWithInitData(
-    deployer,
-    Topology.bytecode,
-    SaltZero
-  );
-
-  const Integrity = await hre.ethers.getContractFactory("Integrity", {
-    libraries: { Topology: topologyLibraryAddress },
-  });
+  const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrityLibraryAddress = await deployMastercopyWithInitData(
     deployer,
     Integrity.bytecode,
@@ -28,7 +19,6 @@ async function run() {
 
   const Roles = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Topology: topologyLibraryAddress,
       Integrity: integrityLibraryAddress,
     },
   });
