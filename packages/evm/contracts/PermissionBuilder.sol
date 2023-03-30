@@ -193,24 +193,37 @@ abstract contract PermissionBuilder is Core {
         );
     }
 
-    function _track(Consumption[] memory trace) internal {
-        uint256 paramCount = trace.length;
+    /**
+     * @dev Flushes the consumption of allowances back into storage.
+     * @param consumptions The array of consumption structs containing
+     * information about allowances and consumed amounts.
+     */
+    function _flush(Consumption[] memory consumptions) internal {
+        uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
-            bytes32 key = trace[i].allowanceKey;
-            uint128 consumed = trace[i].consumed;
+            // Get the allowance key and consumed value for the current allowance.
+            bytes32 key = consumptions[i].allowanceKey;
+            uint128 consumed = consumptions[i].consumed;
+
+            // Retrieve the allowance and calculate its current updated balance
+            // and next refill timestamp.
             Allowance memory allowance = allowances[key];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
                 block.timestamp
             );
 
-            assert(balance == trace[i].balance);
+            // Ensure match with what happened in the PermissionChecker pass.
+            assert(balance == consumptions[i].balance);
             assert(consumed <= balance);
 
+            // Flush
             allowances[key].balance = balance - consumed;
             allowances[key].refillTimestamp = refillTimestamp;
 
+            // Emit an event to signal the total consumed amount.
             emit ConsumeAllowance(key, consumed, balance - consumed);
+
             unchecked {
                 ++i;
             }

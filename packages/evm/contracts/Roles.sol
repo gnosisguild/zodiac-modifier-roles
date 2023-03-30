@@ -106,7 +106,7 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -115,7 +115,7 @@ contract Roles is
         );
         success = exec(to, value, data, operation);
         if (success) {
-            _track(trace);
+            _flush(consumptions);
         }
     }
 
@@ -136,7 +136,7 @@ contract Roles is
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
             value,
@@ -145,7 +145,7 @@ contract Roles is
         );
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (success) {
-            _track(trace);
+            _flush(consumptions);
         }
     }
 
@@ -165,7 +165,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
             value,
@@ -177,7 +177,7 @@ contract Roles is
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _track(trace);
+            _flush(consumptions);
         }
     }
 
@@ -197,7 +197,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
             value,
@@ -209,7 +209,7 @@ contract Roles is
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _track(trace);
+            _flush(consumptions);
         }
     }
 }
