@@ -5,7 +5,7 @@ import { Condition } from "../types"
 // - flatten nested OR conditions
 // - remove redundant conditions (empty AND/OR, trailing PASS conditions)
 // - enforce a canonical order for children (e.g. AND/OR conditions should be sorted by their hash)
-// -
+// - maybe: bool formula minimization, for example move OR conditions as far down as possible, e.g.: or(and(a, b), and(a, c)) -> and(a, or(b, c))
 export const normalizeCondition = (condition: Condition) => {
   return condition
 }

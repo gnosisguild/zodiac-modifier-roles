@@ -6,8 +6,8 @@ import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import { PermissionPreset } from "../../src/presets/types"
 
-import balancer1ManagePreset from "./presets/deFiManageBalancer1LowLevel"
-import ens1ManagePreset from "./presets/deFiManageENS1LowLevel"
+import balancer1ManagePreset from "./presets/deFiManageBalancer1TypedKit"
+import ens1ManagePreset from "./presets/deFiManageENS1Untyped"
 import balancerManage1Transactions from "./testTransactions/balancer1Manage"
 import ensManage1Transactions from "./testTransactions/ens1Manage"
 
