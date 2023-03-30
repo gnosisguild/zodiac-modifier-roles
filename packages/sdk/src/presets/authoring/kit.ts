@@ -1,5 +1,5 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
-import { BaseContract, ethers } from "ethers"
+import { BaseContract, BigNumber, BigNumberish, ethers } from "ethers"
 
 import { Condition } from "../../types"
 import {
@@ -143,10 +143,10 @@ export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
 )
 
 allow.mainnet.balancer.vault.batchSwap(
-  undefined,
+  or(BigNumber.from("123"), 2, 1),
   or(),
   or(),
-  or({ recipient: "0x00" }, { fromInternalBalance: true }), // TODO
-  or([1, 2], [2, 3]),
+  or({ recipient: "0x00" }, { fromInternalBalance: true }),
+  or([1, 2], ["2", 3], [1]),
   or()
 )
