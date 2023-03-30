@@ -1,10 +1,7 @@
-import { defaultAbiCoder } from "ethers/lib/utils"
-
 import { inputsMatch } from "../../../src/presets/authoring"
 import * as c from "../../../src/presets/authoring/conditions"
 import { AVATAR } from "../../../src/presets/placeholders"
 import { PermissionPreset } from "../../../src/presets/types"
-import { Operator, ParameterType } from "../../../src/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -468,22 +465,28 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
-          "bytes32"
-        ), //WETH-AURA pool ID
-        [9]: staticEqual(AURA, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          {
+            poolId:
+              "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274", //WETH-AURA pool ID
+            assetIn: AURA,
+            assetOut: WETH,
+          },
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
     //Swap BAL for WETH
@@ -492,22 +495,28 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
-          "bytes32"
-        ), //BAL-WETH pool ID
-        [9]: staticEqual(BAL, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          {
+            poolId:
+              "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014", //BAL-WETH pool ID
+            assetIn: BAL,
+            assetOut: WETH,
+          },
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
     //Swap WETH for DAI
@@ -516,22 +525,28 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
-          "bytes32"
-        ), //WETH-DAI pool ID
-        [9]: staticEqual(WETH, "address"), //Asset in
-        [10]: staticEqual(DAI, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          {
+            poolId:
+              "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a", //WETH-DAI pool ID
+            assetIn: WETH,
+            assetOut: DAI,
+          },
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
     //Swap WETH for USDC
@@ -540,22 +555,28 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
-          "bytes32"
-        ), //USDC-WETH pool ID
-        [9]: staticEqual(WETH, "address"), //Asset in
-        [10]: staticEqual(USDC, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          {
+            poolId:
+              "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019", //USDC-WETH pool ID
+            assetIn: WETH,
+            assetOut: USDC,
+          },
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
     //Swap COMP for WETH
@@ -564,70 +585,66 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
-          "bytes32"
-        ), //COMP-WETH pool ID
-        [9]: staticEqual(COMP, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          {
+            poolId:
+              "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021", //COMP-WETH pool ID
+            assetIn: COMP,
+            assetOut: WETH,
+          },
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
-    //Swap wstETH for WETH
+    //Swap wstETH for WETH and vice versa
     //...allowErc20Approve([wstETH], [BALANCER_VAULT]),
     {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-          "bytes32"
-        ), //wstETH-WETH pool ID
-        [9]: staticEqual(wstETH, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
-      },
-    },
-
-    //Swap WETH for wstETH
-    //...allowErc20Approve([WETH], [BALANCER_VAULT]),
-    {
-      targetAddress: BALANCER_VAULT,
-      signature:
-        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      params: {
-        [0]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ),
-        [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
-        [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
-        [7]: staticEqual(
-          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-          "bytes32"
-        ), //wstETH-WETH pool ID
-        [9]: staticEqual(WETH, "address"), //Asset in
-        [10]: staticEqual(wstETH, "address"), //Asset out
-      },
+      condition: inputsMatch(
+        [
+          c.or(
+            {
+              poolId:
+                "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", //wstETH-WETH pool ID
+              assetIn: wstETH,
+              assetOut: WETH,
+            },
+            {
+              poolId:
+                "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", //wstETH-WETH pool ID
+              assetIn: WETH,
+              assetOut: wstETH,
+            }
+          ),
+          {
+            sender: AVATAR,
+            fromInternalBalance: false,
+            recipient: AVATAR,
+            toInternalBalance: false,
+          },
+        ],
+        [
+          "(bytes32 poolId, uint8 kind, address assetIn, address assetOut, uint256 amount, bytes userData)",
+          "(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance)",
+          "uint256",
+          "uint256",
+        ]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -643,9 +660,11 @@ const preset = {
       targetAddress: SUSHISWAP_ROUTER,
       signature:
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      params: {
-        [2]: arrayOneOf(
-          [
+      condition: inputsMatch(
+        [
+          undefined,
+          undefined,
+          c.or(
             [COMP, WETH, USDC],
             [COMP, WETH, DAI],
             [COMP, WETH],
@@ -675,12 +694,12 @@ const preset = {
             [DAI, WETH, USDC],
             [DAI, USDC],
             [DAI, WETH, USDT],
-            [DAI, USDT],
-          ],
-          "address[]"
-        ),
-        [3]: staticEqual(AVATAR),
-      },
+            [DAI, USDT]
+          ),
+          AVATAR,
+        ],
+        ["uint256", "uint256", "address[]", "address", "uint256"]
+      ),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
