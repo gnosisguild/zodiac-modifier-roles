@@ -49,7 +49,6 @@ library Consumptions {
         for (uint256 i; i < c1.length; ++i) {
             result[i].allowanceKey = c1[i].allowanceKey;
             result[i].balance = c1[i].balance;
-            result[i].consumed = c1[i].consumed;
         }
 
         uint256 resultLength = c1.length;
@@ -62,7 +61,6 @@ library Consumptions {
 
             result[index].allowanceKey = c2[i].allowanceKey;
             result[index].balance = c2[i].balance;
-            result[index].consumed += c2[i].consumed;
         }
 
         if (resultLength < result.length) {
