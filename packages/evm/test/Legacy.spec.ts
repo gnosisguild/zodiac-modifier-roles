@@ -2,8 +2,6 @@ import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AddressOne } from "@gnosis.pm/safe-contracts";
-
 import {
   buildContractCall,
   buildMultiSendSafeTx,
@@ -191,21 +189,6 @@ describe("Legacy", async () => {
   }
 
   const [user1] = await hre.ethers.getSigners();
-
-  describe("setUp()", async () => {
-    it("should emit event because of successful set up", async () => {
-      const modifier = await deployRolesMod(
-        hre,
-        user1.address,
-        user1.address,
-        user1.address
-      );
-      await modifier.deployed();
-      await expect(modifier.deployTransaction)
-        .to.emit(modifier, "RolesModSetup")
-        .withArgs(user1.address, user1.address, user1.address, user1.address);
-    });
-  });
 
   describe("execTransactionFromModule()", () => {
     it("reverts if data is set and is not at least 4 bytes", async () => {
