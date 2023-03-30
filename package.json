@@ -32,7 +32,6 @@
   },
   "author": "",
   "license": "LGPL-3.0+",
-  "dependencies": {},
   "devDependencies": {
     "husky": "5.1.3"
   }
