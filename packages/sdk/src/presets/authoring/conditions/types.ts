@@ -2,7 +2,7 @@ import { BigNumber, BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
 import { RequireAtLeastOne } from "type-fest"
 
-import { Placeholder, PresetCondition } from "../types"
+import { Placeholder, PresetCondition } from "../../types"
 
 export type ConditionFunction<T> = (
   abiType: ParamType,

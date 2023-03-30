@@ -1,8 +1,8 @@
 import { Placeholder } from "../types"
 
 import { forAll } from "./batching"
-import { or } from "./branching"
-import { inputsMatch } from "./matches"
+import { or } from "./conditions/branching"
+import { inputsMatch } from "./conditions/matches"
 
 export const allowErc20Approve = (
   tokens: string[],

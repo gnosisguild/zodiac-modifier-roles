@@ -1,12 +1,12 @@
 import { BigNumber, BigNumberish, BytesLike } from "ethers"
 
-import { or } from "../src/presets/authoring/branching"
+import { or } from "../src/presets/authoring/conditions/branching"
 import {
   ConditionFunction,
   Scoping,
   StructScoping,
   ArrayScoping,
-} from "../src/presets/authoring/types"
+} from "../src/presets/authoring/conditions/types"
 
 // These are tests of the typing system, not the runtime behavior.
 // There's nothing to run here, but the code should not have any TypeScript errors.

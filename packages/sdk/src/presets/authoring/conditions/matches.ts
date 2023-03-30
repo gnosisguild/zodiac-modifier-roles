@@ -1,10 +1,10 @@
 import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
 import { ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../types"
-import { AbiType, PresetCondition } from "../types"
+import { Operator, ParameterType } from "../../../types"
+import { AbiType, PresetCondition } from "../../types"
 
-import { eq } from "./comparisons"
+import { eq } from "./comparison"
 import {
   ConditionFunction,
   Scoping,

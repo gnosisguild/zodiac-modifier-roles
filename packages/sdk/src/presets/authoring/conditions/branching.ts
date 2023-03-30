@@ -1,6 +1,6 @@
 import { ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../types"
+import { Operator, ParameterType } from "../../../types"
 
 import { mapScoping } from "./matches"
 import { ConditionFunction, Scoping } from "./types"
