@@ -9,6 +9,7 @@ import {
   ExecutionOptions,
   ParameterType,
   deployRolesMod,
+  PermissionCheckerStatus,
 } from "./utils";
 
 describe("Operator", async () => {
@@ -106,10 +107,9 @@ describe("Operator", async () => {
 
     await expect(invoke(11)).to.not.be.reverted;
     await expect(invoke(22)).to.not.be.reverted;
-    await expect(invoke(33)).to.be.revertedWithCustomError(
-      modifier,
-      "OrViolation"
-    );
+    await expect(invoke(33))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("checks operator And over AbiEncoded", async () => {
@@ -171,15 +171,13 @@ describe("Operator", async () => {
       ExecutionOptions.None
     );
 
-    await expect(invoke(60000)).to.be.revertedWithCustomError(
-      modifier,
-      "ParameterGreaterThanAllowed"
-    );
+    await expect(invoke(60000))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
 
-    await expect(invoke(30000)).to.be.revertedWithCustomError(
-      modifier,
-      "ParameterLessThanAllowed"
-    );
+    await expect(invoke(30000))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
 
     await expect(invoke(45000)).to.not.be.reverted;
   });
@@ -237,15 +235,13 @@ describe("Operator", async () => {
       ExecutionOptions.None
     );
 
-    await expect(invoke(60000)).to.be.revertedWithCustomError(
-      modifier,
-      "ParameterGreaterThanAllowed"
-    );
+    await expect(invoke(60000))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
 
-    await expect(invoke(30000)).to.be.revertedWithCustomError(
-      modifier,
-      "ParameterLessThanAllowed"
-    );
+    await expect(invoke(30000))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
 
     await expect(invoke(45000)).to.not.be.reverted;
   });
@@ -322,10 +318,9 @@ describe("Operator", async () => {
     await expect(invoke(true, "Third String")).to.not.be.reverted;
     await expect(invoke(false, "Third String")).to.not.be.reverted;
 
-    await expect(invoke(false, "Something else")).to.be.revertedWithCustomError(
-      modifier,
-      "OrViolation"
-    );
+    await expect(invoke(false, "Something else"))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("checks operator Or over Tuple", async () => {
@@ -414,13 +409,15 @@ describe("Operator", async () => {
 
     await expect(invoke({ a: 22222, b: addressTwo })).to.not.be.reverted;
 
-    await expect(
-      invoke({ a: 22222, b: addressOne })
-    ).to.be.revertedWithCustomError(modifier, "OrViolation");
+    await expect(invoke({ a: 22222, b: addressOne }))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
 
     await expect(
       invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-    ).to.be.revertedWithCustomError(modifier, "OrViolation");
+    )
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("checks operator Or over Array", async () => {
@@ -559,14 +556,15 @@ describe("Operator", async () => {
         { a: 123456, b: address1 },
         { a: 111111, b: address2 },
       ])
-    ).to.be.revertedWithCustomError(modifier, "OrViolation");
+    )
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
 
     await expect(invoke([{ a: 123121212, b: address3 }])).to.not.be.reverted;
 
-    await expect(invoke([])).to.be.revertedWithCustomError(
-      modifier,
-      "OrViolation"
-    );
+    await expect(invoke([]))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("checks operator Or over static Tuple", async () => {
@@ -655,13 +653,15 @@ describe("Operator", async () => {
 
     await expect(invoke({ a: 22222, b: addressTwo })).to.not.be.reverted;
 
-    await expect(
-      invoke({ a: 22222, b: addressOne })
-    ).to.be.revertedWithCustomError(modifier, "OrViolation");
+    await expect(invoke({ a: 22222, b: addressOne }))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
 
     await expect(
       invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
-    ).to.be.revertedWithCustomError(modifier, "OrViolation");
+    )
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("checks a static Tuple comparison", async () => {
@@ -720,9 +720,9 @@ describe("Operator", async () => {
       ExecutionOptions.None
     );
 
-    await expect(
-      invoke({ a: 345, b: addressNok })
-    ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
+    await expect(invoke({ a: 345, b: addressNok }))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
 
     await expect(invoke({ a: 345, b: addressOk })).to.not.be;
   });
@@ -804,9 +804,9 @@ describe("Operator", async () => {
       ExecutionOptions.None
     );
 
-    await expect(
-      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7] })
-    ).to.be.revertedWithCustomError(modifier, "ParameterNotAMatch");
+    await expect(invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7] }))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch);
 
     await expect(
       invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] })
@@ -926,16 +926,17 @@ describe("Operator", async () => {
         { a: 233, b: address3 },
       ])
     ).to.not.be.reverted;
-    await expect(invoke([])).to.be.revertedWithCustomError(
-      modifier,
-      "ParameterNotAMatch"
-    );
+    await expect(invoke([]))
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch);
     await expect(
       invoke([
         { a: 123, b: address1 },
         { a: 333, b: address2 },
       ])
-    ).to.be.revertedWithCustomError(modifier, "ParameterNotAMatch");
+    )
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch);
 
     await expect(
       invoke([
@@ -943,7 +944,9 @@ describe("Operator", async () => {
         { a: 333, b: address2 },
         { a: 233, b: address2 },
       ])
-    ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
+    )
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
   });
 
   it.skip("checks an array with a static tuple inside");
@@ -1055,16 +1058,17 @@ describe("Operator", async () => {
 
       await expect(invoke(true, "First String")).to.not.be.reverted;
       // wrong first argument
-      await expect(
-        invoke(false, "Good Morning!")
-      ).to.be.revertedWithCustomError(modifier, "OrViolation");
+      await expect(invoke(false, "Good Morning!"))
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation);
+
       // fixing the first argument
       await expect(invoke(true, "Good Morning!")).to.not.be.reverted;
       await expect(invoke(true, "Third String")).to.not.be.reverted;
 
-      await expect(
-        invoke(false, "Something else")
-      ).to.be.revertedWithCustomError(modifier, "OrViolation");
+      await expect(invoke(false, "Something else"))
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation);
     });
   });
 });

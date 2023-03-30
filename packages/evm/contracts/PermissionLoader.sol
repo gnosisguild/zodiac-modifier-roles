@@ -83,7 +83,7 @@ abstract contract PermissionLoader is Core {
         uint256 paramCount
     )
         private
-        view
+        pure
         returns (Condition memory result, Consumption[] memory consumptions)
     {
         (

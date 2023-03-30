@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
 import { setupOneParamArrayOfStatic } from "./setup";
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 
 describe("Operator - ArraySubset", async () => {
   it("can't set up an ArraySubset with no children", async () => {
@@ -111,10 +111,9 @@ describe("Operator - ArraySubset", async () => {
       },
     ]);
 
-    await expect(invoke([123, 1, 4567])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotSubsetOfAllowed"
-    );
+    await expect(invoke([123, 1, 4567]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotSubsetOfAllowed);
 
     await expect(invoke([123, 4567])).to.not.be.reverted;
   });
@@ -163,10 +162,9 @@ describe("Operator - ArraySubset", async () => {
 
     await expect(invoke([2, 1])).to.not.be.reverted;
 
-    await expect(invoke([3, 2, 1, 4])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotSubsetOfAllowed"
-    );
+    await expect(invoke([3, 2, 1, 4]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotSubsetOfAllowed);
   });
 
   it("evaluates operator ArraySubset - empty array is not subset", async () => {
@@ -201,10 +199,9 @@ describe("Operator - ArraySubset", async () => {
       },
     ]);
 
-    await expect(invoke([])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotSubsetOfAllowed"
-    );
+    await expect(invoke([]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotSubsetOfAllowed);
   });
 
   it("evaluates operator ArraySubset - does not allow repetition", async () => {
@@ -251,14 +248,12 @@ describe("Operator - ArraySubset", async () => {
 
     await expect(invoke([2, 1])).to.not.be.reverted;
 
-    await expect(invoke([3, 3])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotSubsetOfAllowed"
-    );
+    await expect(invoke([3, 3]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotSubsetOfAllowed);
 
-    await expect(invoke([3, 2, 1, 3])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotSubsetOfAllowed"
-    );
+    await expect(invoke([3, 2, 1, 3]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotSubsetOfAllowed);
   });
 });

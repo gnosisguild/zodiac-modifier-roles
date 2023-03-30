@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Or", async () => {
@@ -55,7 +55,9 @@ describe("Operator - Or", async () => {
 
     await expect(invoke(1)).to.not.be.reverted;
 
-    await expect(invoke(2)).to.be.revertedWithCustomError(roles, "OrViolation");
+    await expect(invoke(2))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it("evaluates an Or with multiple children", async () => {
@@ -90,21 +92,21 @@ describe("Operator - Or", async () => {
       },
     ]);
 
-    await expect(invoke(1)).to.be.revertedWithCustomError(roles, "OrViolation");
+    await expect(invoke(1))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
 
     await expect(invoke(15)).to.not.be.reverted;
 
-    await expect(invoke(20)).to.be.revertedWithCustomError(
-      roles,
-      "OrViolation"
-    );
+    await expect(invoke(20))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
 
     await expect(invoke(30)).to.not.be.reverted;
 
-    await expect(invoke(100)).to.be.revertedWithCustomError(
-      roles,
-      "OrViolation"
-    );
+    await expect(invoke(100))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.OrViolation);
   });
 
   it.skip("Tracks the resulting trace");

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Pass", async () => {

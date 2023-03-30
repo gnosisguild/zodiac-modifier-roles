@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   ParameterType,
   deployRolesMod,
+  PermissionCheckerStatus,
 } from "../utils";
 
 const ROLE_KEY =
@@ -135,10 +136,9 @@ describe("Operator - CallWithinAllowance", async () => {
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWithCustomError(
-        roles,
-        `CallAllowanceExceeded`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
     });
     it("success - multiple checks from existing balance", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -163,10 +163,9 @@ describe("Operator - CallWithinAllowance", async () => {
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
-      await expect(invoke()).to.be.revertedWithCustomError(
-        roles,
-        `CallAllowanceExceeded`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
     });
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -183,10 +182,9 @@ describe("Operator - CallWithinAllowance", async () => {
       });
 
       await expect(invoke()).to.not.be.reverted;
-      await expect(invoke()).to.be.revertedWithCustomError(
-        roles,
-        `CallAllowanceExceeded`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -202,10 +200,9 @@ describe("Operator - CallWithinAllowance", async () => {
         refillTimestamp: timestamp,
       });
 
-      await expect(invoke()).to.be.revertedWithCustomError(
-        roles,
-        `CallAllowanceExceeded`
-      );
+      await expect(invoke())
+        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
     });
   });
 
@@ -306,21 +303,18 @@ describe("Operator - CallWithinAllowance", async () => {
         ExecutionOptions.None
       );
 
-      await expect(invoke(valueOther)).to.be.revertedWithCustomError(
-        roles,
-        "OrViolation"
-      );
+      await expect(invoke(valueOther))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation);
 
-      await expect(invoke(value1)).to.be.revertedWithCustomError(
-        roles,
-        `OrViolation`
-      );
+      await expect(invoke(value1))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation);
 
       await expect(invoke(value2)).not.to.be.reverted;
-      await expect(invoke(value2)).to.be.revertedWithCustomError(
-        roles,
-        `OrViolation`
-      );
+      await expect(invoke(value2))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation);
     });
   });
 });

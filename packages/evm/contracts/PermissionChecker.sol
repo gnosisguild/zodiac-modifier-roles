@@ -72,7 +72,7 @@ abstract contract PermissionChecker is Core, Periphery {
             result
         );
         if (status != Status.Ok) {
-            revertWith(status);
+            revert ConditionViolation(status);
         }
         return result;
     }
@@ -103,7 +103,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     result
                 );
                 if (status != Status.Ok) {
-                    revertWith(status);
+                    revert ConditionViolation(status);
                 }
                 unchecked {
                     ++i;
@@ -653,49 +653,6 @@ abstract contract PermissionChecker is Core, Periphery {
         return (Status.Ok, consumptions);
     }
 
-    function revertWith(Status status) private pure returns (bool) {
-        if (status == Status.DelegateCallNotAllowed) {
-            revert DelegateCallNotAllowed();
-        } else if (status == Status.TargetAddressNotAllowed) {
-            revert TargetAddressNotAllowed();
-        } else if (status == Status.FunctionNotAllowed) {
-            revert FunctionNotAllowed();
-        } else if (status == Status.OrViolation) {
-            revert OrViolation();
-        } else if (status == Status.NorViolation) {
-            revert NorViolation();
-        } else if (status == Status.XorViolation) {
-            revert XorViolation();
-        } else if (status == Status.SendNotAllowed) {
-            revert SendNotAllowed();
-        } else if (status == Status.ParameterNotAllowed) {
-            revert ParameterNotAllowed();
-        } else if (status == Status.ParameterLessThanAllowed) {
-            revert ParameterLessThanAllowed();
-        } else if (status == Status.ParameterGreaterThanAllowed) {
-            revert ParameterGreaterThanAllowed();
-        } else if (status == Status.ParameterNotAMatch) {
-            revert ParameterNotAMatch();
-        } else if (status == Status.NotEveryArrayElementPasses) {
-            revert NotEveryArrayElementPasses();
-        } else if (status == Status.NoArrayElementPasses) {
-            revert NoArrayElementPasses();
-        } else if (status == Status.ParameterNotSubsetOfAllowed) {
-            revert ParameterNotSubsetOfAllowed();
-        } else if (status == Status.BitmaskOverflow) {
-            revert BitmaskOverflow();
-        } else if (status == Status.BitmaskNotAllowed) {
-            revert BitmaskNotAllowed();
-        } else if (status == Status.AllowanceExceeded) {
-            revert AllowanceExceeded();
-        } else if (status == Status.CallAllowanceExceeded) {
-            revert CallAllowanceExceeded();
-        } else {
-            assert(status == Status.EtherAllowanceExceeded);
-            revert EtherAllowanceExceeded();
-        }
-    }
-
     enum Status {
         Ok,
         /// Role not allowed to delegate call to target address
@@ -730,11 +687,8 @@ abstract contract PermissionChecker is Core, Periphery {
         BitmaskOverflow,
         /// Bitmask not an allowed value
         BitmaskNotAllowed,
-        /// TODO
         AllowanceExceeded,
-        /// TODO
         CallAllowanceExceeded,
-        /// TODO
         EtherAllowanceExceeded
     }
 
@@ -747,59 +701,7 @@ abstract contract PermissionChecker is Core, Periphery {
     /// Calldata unwrapping failed
     error MalformedMultiEntrypoint();
 
-    /// Role not allowed to delegate call to target address
-    error DelegateCallNotAllowed();
-
-    /// Role not allowed to call target address
-    error TargetAddressNotAllowed();
-
-    /// Role not allowed to send to target address
-    error SendNotAllowed();
-
-    /// Role not allowed to call this function on target address
-    error FunctionNotAllowed();
-
-    error OrViolation();
-
-    error NorViolation();
-
-    error XorViolation();
-
-    /// Parameter value not one of allowed
-    error ParameterNotAllowed();
-
-    /// Parameter value less than minimum
-    error ParameterLessThanAllowed();
-
-    /// Parameter value greater than maximum
-    error ParameterGreaterThanAllowed();
-
-    /// Parameter value does not match specified condition
-    error ParameterNotAMatch();
-
-    /// Array elements do not meet allowed criteria for every element
-    error NotEveryArrayElementPasses();
-
-    /// Array elements do not meet allowed criteria for at least one element
-    error NoArrayElementPasses();
-
-    /// Parameter value not a subset of allowed values
-    error ParameterNotSubsetOfAllowed();
-
-    /// only multisend txs with an offset of 32 bytes are allowed
-    error UnacceptableMultiSendOffset();
-
-    /// Bitmask exceeded value length
-    error BitmaskOverflow();
-
-    /// Bitmask not an allowed value
-    error BitmaskNotAllowed();
-
-    error AllowanceExceeded();
-
-    error CallAllowanceExceeded();
-
-    error EtherAllowanceExceeded();
+    error ConditionViolation(Status);
 
     function _find(
         Consumption[] memory consumptions,
