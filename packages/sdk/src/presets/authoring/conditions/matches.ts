@@ -87,7 +87,7 @@ export const matches =
   }
 
 export const matchesAbi =
-  <S extends TupleScopings<any>>(scoping: S, abiTypes: ParamType[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: ParamType[]) =>
   (abiType?: ParamType) => {
     // only supported at the top level or for bytes type params
     if (abiType && abiType.name !== "bytes") {
@@ -98,7 +98,7 @@ export const matchesAbi =
 
     // map scoping items to conditions
     const conditions: (PresetCondition | undefined)[] = abiTypes.map(
-      (type, index) => mapScoping(scoping[index], type)
+      (type, index) => mapScoping(scopings[index], type)
     )
 
     // sanity checks

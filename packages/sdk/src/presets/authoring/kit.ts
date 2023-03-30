@@ -9,8 +9,8 @@ import {
 
 import { every } from "./conditions/array"
 import { or } from "./conditions/branching"
-import { matches, matchesAbi } from "./conditions/matches"
-import { ConditionFunction, TupleScopings } from "./conditions/types"
+import { matchesAbi } from "./conditions/matches"
+import { TupleScopings } from "./conditions/types"
 
 // In this file, we define a derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 

@@ -11,11 +11,11 @@ import { TupleScopings } from "./conditions/types"
  * @param abiTypes The ABI types of the function inputs
  **/
 export const inputsMatch = (
-  scoping: TupleScopings<any>,
+  scopings: TupleScopings<any>,
   abiTypes: AbiType[]
 ) => {
   return matchesAbi(
-    scoping,
+    scopings,
     abiTypes.map((abiType) => ParamType.from(abiType))
   )()
 }
