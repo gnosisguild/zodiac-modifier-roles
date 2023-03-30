@@ -1,7 +1,7 @@
 import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
 
-import { ParameterType, Condition, Operator } from "../../types"
-import { AbiType, Placeholder } from "../types"
+import { ParameterType, Condition, Operator } from "../../../types"
+import { AbiType, Placeholder } from "../../types"
 
 export const encodeValue = (
   value: any,

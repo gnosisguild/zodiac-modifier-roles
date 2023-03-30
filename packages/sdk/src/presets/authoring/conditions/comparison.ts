@@ -1,7 +1,7 @@
 import { ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../types"
-import { Placeholder } from "../types"
+import { Operator, ParameterType } from "../../../types"
+import { Placeholder } from "../../types"
 
 import { describeStructure, parameterType, encodeValue } from "./utils"
 

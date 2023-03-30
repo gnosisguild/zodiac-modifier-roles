@@ -1,18 +1,17 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, BigNumber, BigNumberish, ethers } from "ethers"
 
-import { Condition } from "../../types"
 import {
   PresetFullyClearedTarget,
   PresetFunction,
   ExecutionFlags,
 } from "../types"
 
-import { every } from "./array"
-import { or } from "./branching"
-import { eq } from "./comparisons"
-import { matches, matchesAbi } from "./matches"
-import { ConditionFunction, TupleScopings } from "./types"
+import { every } from "./conditions/array"
+import { or } from "./conditions/branching"
+import { eq } from "./conditions/comparison"
+import { matches, matchesAbi } from "./conditions/matches"
+import { ConditionFunction, TupleScopings } from "./conditions/types"
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
