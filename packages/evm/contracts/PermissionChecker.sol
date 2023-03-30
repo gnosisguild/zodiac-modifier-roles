@@ -18,7 +18,7 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionChecker is Core, Periphery {
-    function authorize(
+    function _authorize(
         bytes32 roleKey,
         address to,
         uint256 value,
@@ -609,7 +609,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value = uint256(
             bytes32(Decoder.pluck(data, payload.location, payload.size))
         );
-        return __allowance(value, condition, consumptions);
+        return __consume(value, condition, consumptions);
     }
 
     function _etherWithinAllowance(
@@ -617,7 +617,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
-        (status, result) = __allowance(value, condition, consumptions);
+        (status, result) = __consume(value, condition, consumptions);
         return (
             status == Status.Ok ? Status.Ok : Status.EtherAllowanceExceeded,
             result
@@ -628,14 +628,14 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
-        (status, result) = __allowance(1, condition, consumptions);
+        (status, result) = __consume(1, condition, consumptions);
         return (
             status == Status.Ok ? Status.Ok : Status.CallAllowanceExceeded,
             result
         );
     }
 
-    function __allowance(
+    function __consume(
         uint256 value,
         Condition memory condition,
         Consumption[] memory consumptions
