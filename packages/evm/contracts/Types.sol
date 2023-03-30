@@ -18,19 +18,19 @@ enum ParameterType {
 
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
-    //          paramType: Static / Dynamic
+    //          paramType: Static / Dynamic / Tuple / Array
     //          🚫 children
-    //          🚫 compValue
+    //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     /* 00: */ Pass,
     // ------------------------------------------------------------
-    // 01-04: BOOLEAN EXPRESSIONS
+    // 01-04: LOGICAL EXPRESSIONS
     //          paramType: None
     //          ✅ children
     //          🚫 compValue
     /* 01: */ And,
     /* 02: */ Or,
-    /* 03: */ Xor,
-    /* 04: */ Not,
+    /* 03: */ Nor,
+    /* 04: */ Xor,
     // ------------------------------------------------------------
     // 05-16: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,
@@ -50,24 +50,24 @@ enum Operator {
     /* 16: */ _ComplexPlaceholder16,
     // ------------------------------------------------------------
     // 17-31: COMPARISON EXPRESSIONS
-    //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
-    //          🚫 children
+    //          paramType: Static / Dynamic / Tuple / Array
+    //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          ✅ compValue
-    /* 17: */ EqualTo,
-    /* 18: */ GreaterThan,
-    /* 19: */ LessThan,
-    /* 20: */ Bitmask,
-    /* 21: */ _ComparisonPlaceholder21,
-    /* 22: */ _ComparisonPlaceholder22,
+    /* 17: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+    /* 18: */ GreaterThan, // paramType: Static
+    /* 19: */ LessThan, // paramType: Static
+    /* 20: */ SignedIntGreaterThan, // paramType: Static
+    /* 21: */ SignedIntLessThan, // paramType: Static
+    /* 22: */ Bitmask, // paramType: Static / Dynamic
     /* 23: */ _ComparisonPlaceholder23,
     /* 24: */ _ComparisonPlaceholder24,
     /* 25: */ _ComparisonPlaceholder25,
     /* 26: */ _ComparisonPlaceholder26,
     /* 27: */ _ComparisonPlaceholder27,
     /* 28: */ _ComparisonPlaceholder28,
-    /* 29: */ WithinAllowance,
-    /* 30: */ EtherWithinAllowance,
-    /* 31: */ CallWithinAllowance
+    /* 29: */ WithinAllowance, // paramType: Static
+    /* 30: */ EtherWithinAllowance, // paramType: None
+    /* 31: */ CallWithinAllowance // paramType: None
 }
 
 enum ExecutionOptions {
@@ -132,7 +132,8 @@ struct Allowance {
     uint64 refillTimestamp;
 }
 
-struct Trace {
-    Condition condition;
-    uint256 value;
+struct Consumption {
+    bytes32 allowanceKey;
+    uint128 balance;
+    uint128 consumed;
 }

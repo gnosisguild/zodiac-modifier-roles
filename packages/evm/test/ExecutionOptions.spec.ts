@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
-import "@nomiclabs/hardhat-ethers";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ExecutionOptions } from "./utils";
+import { deployRolesMod, ExecutionOptions } from "./utils";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -12,54 +12,53 @@ enum Operation {
   DelegateCall,
 }
 
-describe("ExecutionOptions", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
-    const testContract = await TestContract.deploy();
+async function setup() {
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const testContract = await TestContract.deploy();
 
-    const [owner, invoker] = waffle.provider.getWallets();
+  const [owner, invoker] = await hre.ethers.getSigners();
+  const modifier = await deployRolesMod(
+    hre,
+    owner.address,
+    avatar.address,
+    avatar.address
+  );
 
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-    const modifier = await Modifier.deploy(
-      owner.address,
-      avatar.address,
-      avatar.address
-    );
+  await modifier.enableModule(invoker.address);
 
-    await modifier.enableModule(invoker.address);
+  await modifier
+    .connect(owner)
+    .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+  await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
-    await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-    // fund avatar
-    await invoker.sendTransaction({
-      to: avatar.address,
-      value: ethers.utils.parseEther("10"),
-    });
-
-    return {
-      Avatar,
-      avatar,
-      testContract,
-      Modifier,
-      modifier,
-      owner,
-      invoker,
-    };
+  // fund avatar
+  await invoker.sendTransaction({
+    to: avatar.address,
+    value: hre.ethers.utils.parseEther("10"),
   });
 
-  describe("sending eth", () => {
-    describe("Target Allowed - aka Clearance.Target", () => {
-      it("ExecutionOptions.NONE - FAILS sending eth to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+  return {
+    Avatar,
+    avatar,
+    testContract,
+    modifier,
+    owner,
+    invoker,
+  };
+}
 
-        const value = ethers.utils.parseEther("1");
+describe("ExecutionOptions", async () => {
+  describe("send", () => {
+    describe("Target Allowed - Clearance.Target", () => {
+      it("ExecutionOptions.None - Fails sending eth to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
+
+        const value = hre.ethers.utils.parseEther("1");
 
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
@@ -77,13 +76,14 @@ describe("ExecutionOptions", async () => {
               data as string,
               0
             )
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
+      it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-      it("Options.NONE - FAILS sending eth to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
-
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
@@ -93,13 +93,14 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(testContract.address, value, "0x", 0)
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
@@ -121,11 +122,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Send - OK sending eth to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
@@ -139,11 +141,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
       });
+      it("ExecutionOptions.DelegateCall - Fails sending ETH to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
-
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
@@ -165,12 +168,14 @@ describe("ExecutionOptions", async () => {
               data as string,
               0
             )
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-      it("ExecutionOptions.DELEGATECALL - FAILS sending ETH to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+      it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
@@ -189,12 +194,14 @@ describe("ExecutionOptions", async () => {
               "0x",
               Operation.Call
             )
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-      it("ExecutionOptions.BOTH - OK sending ETH to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+      it("ExecutionOptions.Both - OK sending ETH to payable function", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
@@ -216,11 +223,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
+      it("ExecutionOptions.Both - OK sending ETH to fallback function", async () => {
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-      it("ExecutionOptions.BOTH - OK sending ETH to fallback function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
-
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const { data } =
           await testContract.populateTransaction.receiveEthAndDoNothing();
@@ -244,11 +252,13 @@ describe("ExecutionOptions", async () => {
       });
     });
 
-    describe("Target Scoped - aka Clearance.FUNCTION", () => {
+    describe("Target Scoped - Clearance.Function", () => {
       it("ExecutionOptions.None - Fails sending eth to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const SELECTOR = testContract.interface.getSighash(
           testContract.interface.getFunction("receiveEthAndDoNothing")
@@ -279,13 +289,14 @@ describe("ExecutionOptions", async () => {
               data as string,
               Operation.Call
             )
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
@@ -304,13 +315,14 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(testContract.address, value, "0x", 0)
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1.123");
+        const value = hre.ethers.utils.parseEther("1.123");
 
         const SELECTOR = testContract.interface.getSighash(
           testContract.interface.getFunction("receiveEthAndDoNothing")
@@ -345,11 +357,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Send - OK sending eth to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1.123");
+        const value = hre.ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
           .scopeTarget(ROLE_KEY, testContract.address);
@@ -371,11 +384,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
       });
-
       it("ExecutionOptions.DelegateCall - Fails sending ETH to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         const SELECTOR = testContract.interface.getSighash(
           testContract.interface.getFunction("receiveEthAndDoNothing")
@@ -406,12 +420,14 @@ describe("ExecutionOptions", async () => {
               data as string,
               Operation.Call
             )
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1");
+        const value = hre.ethers.utils.parseEther("1");
 
         await modifier
           .connect(owner)
@@ -430,13 +446,14 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(testContract.address, value, "0x", 0)
-        ).to.be.revertedWith("SendNotAllowed()");
+        ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
       });
-
       it("ExecutionOptions.Both - OK sending eth to payable function", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1.123");
+        const value = hre.ethers.utils.parseEther("1.123");
 
         const SELECTOR = testContract.interface.getSighash(
           testContract.interface.getFunction("receiveEthAndDoNothing")
@@ -471,11 +488,12 @@ describe("ExecutionOptions", async () => {
           .to.be.emit(testContract, "ReceiveEthAndDoNothing")
           .withArgs(value);
       });
-
       it("ExecutionOptions.Both - OK sending eth to fallback", async () => {
-        const { modifier, testContract, owner, invoker } = await setup();
+        const { modifier, testContract, owner, invoker } = await loadFixture(
+          setup
+        );
 
-        const value = ethers.utils.parseEther("1.123");
+        const value = hre.ethers.utils.parseEther("1.123");
         await modifier
           .connect(owner)
           .scopeTarget(ROLE_KEY, testContract.address);
@@ -502,7 +520,9 @@ describe("ExecutionOptions", async () => {
 
   describe("delegatecall", () => {
     it("Target Allowed - can delegatecall", async () => {
-      const { modifier, testContract, owner, invoker } = await setup();
+      const { modifier, testContract, owner, invoker } = await loadFixture(
+        setup
+      );
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
@@ -526,7 +546,9 @@ describe("ExecutionOptions", async () => {
       ).to.not.be.reverted;
     });
     it("Target Allowed - cannot delegatecall", async () => {
-      const { modifier, testContract, owner, invoker } = await setup();
+      const { modifier, testContract, owner, invoker } = await loadFixture(
+        setup
+      );
 
       const { data } = await testContract.populateTransaction.emitTheSender();
 
@@ -543,10 +565,12 @@ describe("ExecutionOptions", async () => {
             data as string,
             Operation.DelegateCall
           )
-      ).to.be.revertedWith("DelegateCallNotAllowed()");
+      ).to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed");
     });
     it("Target Scoped - can delegatecall", async () => {
-      const { modifier, testContract, owner, invoker } = await setup();
+      const { modifier, testContract, owner, invoker } = await loadFixture(
+        setup
+      );
 
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("emitTheSender")
@@ -576,9 +600,10 @@ describe("ExecutionOptions", async () => {
           )
       ).not.to.be.reverted;
     });
-
     it("Target Scoped - cannot delegatecall", async () => {
-      const { modifier, testContract, owner, invoker } = await setup();
+      const { modifier, testContract, owner, invoker } = await loadFixture(
+        setup
+      );
 
       const SELECTOR = testContract.interface.getSighash(
         testContract.interface.getFunction("emitTheSender")
@@ -606,7 +631,7 @@ describe("ExecutionOptions", async () => {
             data as string,
             Operation.DelegateCall
           )
-      ).to.be.revertedWith("DelegateCallNotAllowed()");
+      ).to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed");
     });
   });
 });

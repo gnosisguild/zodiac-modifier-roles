@@ -1,5 +1,6 @@
 import { AddressZero } from "@ethersproject/constants";
 import { Contract, utils, BigNumber } from "ethers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 export const logGas = async (
   message: string,
@@ -125,14 +126,14 @@ export enum Operator {
   //          🚫 compValue
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: BOOLEAN EXPRESSIONS
+  // 01-04: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   /* 01: */ And = 1,
   /* 02: */ Or = 2,
-  /* 03: */ Xor = 3,
-  /* 04: */ Not = 4,
+  /* 03: */ Nor = 3,
+  /* 04: */ Xor = 4,
   // ------------------------------------------------------------
   // 05-16: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
@@ -158,9 +159,9 @@ export enum Operator {
   /* 17: */ EqualTo = 17,
   /* 18: */ GreaterThan = 18,
   /* 19: */ LessThan = 19,
-  /* 20: */ Bitmask = 20,
-  // /* 21: */ _BinaryPlaceholder21,
-  // /* 22: */ _BinaryPlaceholder22,
+  /* 20: */ SignedIntGreaterThan = 20,
+  /* 21: */ SignedIntLessThan = 21,
+  /* 22: */ Bitmask = 22,
   // /* 23: */ _BinaryPlaceholder23,
   // /* 24: */ _BinaryPlaceholder24,
   // /* 25: */ _BinaryPlaceholder25,
@@ -181,4 +182,33 @@ export enum ExecutionOptions {
 
 export function removeTrailingOffset(data: string) {
   return `0x${data.substring(66)}`;
+}
+
+export async function deployRolesMod(
+  hre: HardhatRuntimeEnvironment,
+  owner: string,
+  avatar: string,
+  target: string
+) {
+  const Consumptions = await hre.ethers.getContractFactory("Consumptions");
+  const consumptions = await Consumptions.deploy();
+
+  const Topology = await hre.ethers.getContractFactory("Topology");
+  const topology = await Topology.deploy();
+
+  const Integrity = await hre.ethers.getContractFactory("Integrity", {
+    libraries: { Topology: topology.address },
+  });
+  const integrity = await Integrity.deploy();
+
+  const Modifier = await hre.ethers.getContractFactory("Roles", {
+    libraries: {
+      Consumptions: consumptions.address,
+      Topology: topology.address,
+      Integrity: integrity.address,
+    },
+  });
+  const modifier = await Modifier.deploy(owner, avatar, target);
+
+  return modifier;
 }

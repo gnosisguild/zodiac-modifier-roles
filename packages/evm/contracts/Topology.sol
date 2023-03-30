@@ -22,7 +22,7 @@ library Topology {
 
     function childrenBounds(
         ConditionFlat[] memory conditions
-    ) internal pure returns (Bounds[] memory result) {
+    ) external pure returns (Bounds[] memory result) {
         uint256 count = conditions.length;
         assert(count > 0);
 
@@ -100,16 +100,18 @@ library Topology {
         Condition memory condition
     ) internal pure returns (TypeTree memory result) {
         if (
-            condition.operator == Operator.And ||
-            condition.operator == Operator.Or
+            condition.operator >= Operator.And &&
+            condition.operator <= Operator.Xor
         ) {
-            assert(condition.children.length > 1);
+            assert(condition.children.length > 0);
             return typeTree(condition.children[0]);
         }
 
         result.paramType = condition.paramType;
         if (condition.children.length > 0) {
-            uint256 length = condition.children.length;
+            uint256 length = condition.paramType == ParameterType.Array
+                ? 1
+                : condition.children.length;
             result.children = new TypeTree[](length);
             for (uint256 i; i < length; ) {
                 result.children[i] = typeTree(condition.children[i]);
@@ -120,18 +122,18 @@ library Topology {
         }
     }
 
-    function subTypeTree(
+    function typeTree(
         ConditionFlat[] memory conditions,
         uint256 index,
         Bounds[] memory bounds
     ) internal pure returns (TypeTree memory result) {
         ConditionFlat memory condition = conditions[index];
         if (
-            condition.operator == Operator.And ||
-            condition.operator == Operator.Or
+            condition.operator >= Operator.And &&
+            condition.operator <= Operator.Xor
         ) {
-            assert(bounds[index].length > 1);
-            return subTypeTree(conditions, bounds[index].start, bounds);
+            assert(bounds[index].length > 0);
+            return typeTree(conditions, bounds[index].start, bounds);
         }
 
         result.paramType = condition.paramType;
@@ -142,7 +144,7 @@ library Topology {
                 : bounds[index].end;
             result.children = new TypeTree[](end - start);
             for (uint256 i = start; i < end; ) {
-                result.children[i - start] = subTypeTree(conditions, i, bounds);
+                result.children[i - start] = typeTree(conditions, i, bounds);
                 unchecked {
                     ++i;
                 }

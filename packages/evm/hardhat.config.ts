@@ -1,16 +1,14 @@
-import "@typechain/hardhat";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-etherscan";
-import "solidity-coverage";
-import "hardhat-deploy";
-import "hardhat-gas-reporter";
+import "@nomicfoundation/hardhat-toolbox";
+
 import "hardhat-contract-sizer";
+import "hardhat-gas-reporter";
+
 import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
-import "./src/tasks/setup";
+
+import "./src/deploy";
 
 const argv = yargs
   .option("network", {
@@ -46,7 +44,6 @@ const config: HardhatUserConfig = {
   paths: {
     artifacts: "build/artifacts",
     cache: "build/cache",
-    deploy: "src/deploy",
     sources: "contracts",
   },
   solidity: {
@@ -83,8 +80,8 @@ const config: HardhatUserConfig = {
       url: "https://rpc-mainnet.maticvigil.com",
     },
   },
-  namedAccounts: {
-    deployer: 0,
+  gasReporter: {
+    enabled: true,
   },
   mocha: {
     timeout: 2000000,

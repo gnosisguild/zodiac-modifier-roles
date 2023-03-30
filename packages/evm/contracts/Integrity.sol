@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Types.sol";
 import "./Topology.sol";
 
 /**
@@ -27,11 +26,11 @@ library Integrity {
 
     error UnsuitableSubTypeTree(uint256 index);
 
-    error TooLittleChildren(uint256 index);
+    error UnsuitableChildrenCount(uint256 index);
 
     error MalformedBitmask(uint256 index);
 
-    function enforce(ConditionFlat[] memory conditions) internal pure {
+    function enforce(ConditionFlat[] memory conditions) external pure {
         root(conditions);
         topology(conditions);
 
@@ -83,21 +82,26 @@ library Integrity {
             conditions
         );
 
-        // check at least 2 children for Ar/Or
+        // check at least 1 child for Logical
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                (condition.operator == Operator.Or ||
-                    condition.operator == Operator.And)
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor)
             ) {
-                // must be zero
+                // must have Type None
+                if (condition.paramType != ParameterType.None) {
+                    revert UnsuitableParameterType(i);
+                }
+
+                // must have no compValue
                 if (condition.compValue.length != 0) {
                     revert UnsuitableCompValue(i);
                 }
 
-                // must have at least two children
-                if (childrenBounds[i].length < 2) {
-                    revert TooLittleChildren(i);
+                // must have at least one child
+                if (childrenBounds[i].length == 0) {
+                    revert UnsuitableChildrenCount(i);
                 }
             }
         }
@@ -105,8 +109,8 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                (condition.operator == Operator.Or ||
-                    condition.operator == Operator.And)
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor)
             ) {
                 compatibleSubTypeTree(conditions, i, childrenBounds);
             }
@@ -119,7 +123,30 @@ library Integrity {
             }
         }
 
-        // TODO bitmask only for dynamic and static
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
+            if (
+                condition.paramType == ParameterType.Array &&
+                childrenBounds[i].length == 0
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+            if (
+                (condition.operator == Operator.ArraySome ||
+                    condition.operator == Operator.ArrayEvery) &&
+                childrenBounds[i].length != 1
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+
+            if (
+                condition.operator == Operator.ArraySubset &&
+                childrenBounds[i].length > 256
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+        }
+
         // TODO dynamic multiple of 32
     }
 
@@ -131,39 +158,33 @@ library Integrity {
         Operator operator = condition.operator;
         ParameterType paramType = condition.paramType;
 
+        bool isComparison = operator >= Operator.EqualTo &&
+            operator <= Operator.LessThan;
+        bool isLogical = operator >= Operator.And && operator <= Operator.Xor;
+        bool isMetaAllowance = operator == Operator.EtherWithinAllowance ||
+            operator == Operator.CallWithinAllowance;
+
         if (
-            paramType == ParameterType.None &&
-            !(operator == Operator.Or ||
-                operator == Operator.And ||
-                operator == Operator.EtherWithinAllowance ||
-                operator == Operator.CallWithinAllowance)
+            paramType == ParameterType.None && !(isLogical || isMetaAllowance)
         ) {
             revert UnsuitableOperator(index);
         }
 
-        if (
-            (operator == Operator.Or ||
-                operator == Operator.And ||
-                operator == Operator.EtherWithinAllowance ||
-                operator == Operator.CallWithinAllowance) &&
-            paramType != ParameterType.None
-        ) {
+        if ((isLogical || isMetaAllowance) && paramType != ParameterType.None) {
             revert UnsuitableParameterType(index);
         }
 
         if (
-            (operator == Operator.GreaterThan ||
-                operator == Operator.LessThan) &&
+            operator >= Operator.GreaterThan &&
+            operator <= Operator.SignedIntLessThan &&
             paramType != ParameterType.Static
         ) {
             revert UnsuitableParameterType(index);
         }
 
         if (
-            (operator == Operator.EqualTo ||
-                operator == Operator.GreaterThan ||
-                operator == Operator.LessThan) &&
             paramType == ParameterType.Static &&
+            isComparison &&
             compValue.length != 32
         ) {
             revert UnsuitableCompValue(index);
@@ -171,6 +192,15 @@ library Integrity {
 
         if (operator >= Operator.EqualTo && compValue.length % 32 != 0) {
             revert UnsuitableCompValue(index);
+        }
+
+        if (
+            operator == Operator.Matches &&
+            !(paramType == ParameterType.Tuple ||
+                paramType == ParameterType.Array ||
+                paramType == ParameterType.AbiEncoded)
+        ) {
+            revert UnsuitableParameterType(index);
         }
 
         if (operator == Operator.Bitmask) {
@@ -195,12 +225,12 @@ library Integrity {
         uint256 end = childrenBounds[index].end;
 
         bytes32 id = typeTreeId(
-            Topology.subTypeTree(conditions, start, childrenBounds)
+            Topology.typeTree(conditions, start, childrenBounds)
         );
         for (uint256 j = start + 1; j < end; ++j) {
             if (
                 id !=
-                typeTreeId(Topology.subTypeTree(conditions, j, childrenBounds))
+                typeTreeId(Topology.typeTree(conditions, j, childrenBounds))
             ) {
                 revert UnsuitableSubTypeTree(index);
             }

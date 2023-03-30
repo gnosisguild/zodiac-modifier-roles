@@ -1,21 +1,23 @@
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import "@nomiclabs/hardhat-ethers";
-import { ExecutionOptions, Operator, ParameterType } from "./utils";
+import {
+  deployRolesMod,
+  ExecutionOptions,
+  Operator,
+  ParameterType,
+} from "./utils";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 describe("EmitsEvent", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-
-    const [owner] = waffle.provider.getWallets();
-    const Modifier = await hre.ethers.getContractFactory("Roles");
-
-    const modifier = await Modifier.deploy(
+  async function setup() {
+    const [owner] = await hre.ethers.getSigners();
+    const modifier = await deployRolesMod(
+      hre,
       owner.address,
       owner.address,
       owner.address
@@ -25,10 +27,10 @@ describe("EmitsEvent", async () => {
       modifier,
       owner,
     };
-  });
+  }
 
   it("AllowTarget", async () => {
-    const { owner, modifier } = await setup();
+    const { owner, modifier } = await loadFixture(setup);
 
     await expect(
       modifier
@@ -39,21 +41,21 @@ describe("EmitsEvent", async () => {
       .withArgs(ROLE_KEY, AddressOne, ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
-    const { owner, modifier } = await setup();
+    const { owner, modifier } = await loadFixture(setup);
 
     await expect(modifier.connect(owner).scopeTarget(ROLE_KEY, AddressOne))
       .to.emit(modifier, "ScopeTarget")
       .withArgs(ROLE_KEY, AddressOne);
   });
   it("RevokeTarget", async () => {
-    const { owner, modifier } = await setup();
+    const { owner, modifier } = await loadFixture(setup);
 
     await expect(modifier.connect(owner).revokeTarget(ROLE_KEY, AddressOne))
       .to.emit(modifier, "RevokeTarget")
       .withArgs(ROLE_KEY, AddressOne);
   });
   it("AllowFunction", async () => {
-    const { modifier, owner } = await setup();
+    const { modifier, owner } = await loadFixture(setup);
     await expect(
       modifier
         .connect(owner)
@@ -66,7 +68,7 @@ describe("EmitsEvent", async () => {
     ).to.emit(modifier, "AllowFunction");
   });
   it("RevokeFunction", async () => {
-    const { modifier, owner } = await setup();
+    const { modifier, owner } = await loadFixture(setup);
     await expect(
       modifier.connect(owner).revokeFunction(ROLE_KEY, AddressOne, "0x12345678")
     )
@@ -74,7 +76,7 @@ describe("EmitsEvent", async () => {
       .withArgs(ROLE_KEY, AddressOne, "0x12345678");
   });
   it("ScopeFunction", async () => {
-    const { modifier, owner } = await setup();
+    const { modifier, owner } = await loadFixture(setup);
     await expect(
       modifier.connect(owner).scopeFunction(
         ROLE_KEY,
@@ -93,7 +95,7 @@ describe("EmitsEvent", async () => {
     ).to.emit(modifier, "ScopeFunction");
   });
   it("SetAllowance", async () => {
-    const { modifier, owner } = await setup();
+    const { modifier, owner } = await loadFixture(setup);
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000000";
     await expect(

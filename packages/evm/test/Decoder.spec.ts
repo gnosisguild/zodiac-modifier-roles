@@ -1,11 +1,11 @@
-import "@nomiclabs/hardhat-ethers";
+import hre from "hardhat";
 import assert from "assert";
+import { expect } from "chai";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
-import hre, { deployments } from "hardhat";
 
 import { Operator, ParameterType } from "./utils";
 
@@ -13,9 +13,7 @@ const YesRemoveOffset = true;
 const DontRemoveOffset = false;
 
 describe("Decoder library", async () => {
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture();
-
+  async function setup() {
     const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
     const testEncoder = await TestEncoder.deploy();
 
@@ -26,10 +24,10 @@ describe("Decoder library", async () => {
       testEncoder,
       decoder,
     };
-  });
+  }
 
   it("plucks (dynamic) empty buffer from encoded caldata", async () => {
-    const { testEncoder, decoder } = await setup();
+    const { testEncoder, decoder } = await loadFixture(setup);
 
     const { data } = await testEncoder.populateTransaction.dynamic("0x");
     assert(data);
@@ -59,7 +57,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks (static, dynamic, dynamic32) non nested parameters from encoded calldata", async () => {
-    const { testEncoder, decoder } = await setup();
+    const { testEncoder, decoder } = await loadFixture(setup);
 
     // (address,bytes,uint32[])
 
@@ -126,7 +124,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks (dynamic, static, dynamic32) non nested parameters from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // (bytes,bool,bytes2[])
 
@@ -196,7 +194,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks (dynamic32, dynamic, static) non nested parameters from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // (bytes2[],string,uint32)
 
@@ -257,7 +255,7 @@ describe("Decoder library", async () => {
   });
 
   it("pluck fails if calldata is too short", async () => {
-    const { testEncoder, decoder } = await setup();
+    const { testEncoder, decoder } = await loadFixture(setup);
 
     const { data } = await testEncoder.populateTransaction.staticFn(
       "0xaabbccdd"
@@ -281,11 +279,11 @@ describe("Decoder library", async () => {
         result.children[0].location,
         result.children[0].size
       )
-    ).to.be.revertedWith("CalldataOutOfBounds()");
+    ).to.be.revertedWithCustomError(decoder, "CalldataOutOfBounds");
   });
 
   it("pluck fails with param scoped out of bounds", async () => {
-    const { testEncoder, decoder } = await setup();
+    const { testEncoder, decoder } = await loadFixture(setup);
 
     const { data } = await testEncoder.populateTransaction.staticFn(
       "0xaabbccdd"
@@ -306,11 +304,11 @@ describe("Decoder library", async () => {
 
     await expect(
       decoder.pluck(data, result.children[1].location, result.children[1].size)
-    ).to.be.revertedWith("CalldataOutOfBounds()");
+    ).to.be.revertedWithCustomError(decoder, "CalldataOutOfBounds");
   });
 
   it("plucks dynamicTuple from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))
     const { data } = await testEncoder.populateTransaction._dynamicTuple({
@@ -362,7 +360,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks staticTuple (explicitly) from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const { data } = await testEncoder.populateTransaction.staticTuple(
       {
@@ -424,7 +422,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks staticTuple (implicitly) from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const { data } = await testEncoder.populateTransaction.staticTuple(
       {
@@ -468,7 +466,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks dynamicTupleWithNestedStaticTuple from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
     const { data } =
@@ -544,7 +542,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks dynamicTupleWithNestedDynamicTuple from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const value1 = "0xbadfed";
     const value2 = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
@@ -694,7 +692,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks dynamicTupleWithNestedArray from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const dynamicValue = "0x0badbeef";
 
@@ -779,7 +777,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks arrayStaticTupleItems from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // function arrayStaticTupleItems(tuple(uint256 a, address b)[])
     const { data } =
@@ -877,7 +875,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks arrayDynamicTupleItems from encoded calldata", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     // function arrayDynamicTupleItems(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32)[])
     const { data } =
@@ -998,7 +996,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks AbiEncoded from top level param", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const number = 123456789;
     const address = "0x0000000000000000000000000000000000000001";
@@ -1062,7 +1060,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks nested AbiEncoded from within a tuple", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const { data: nestedData } =
       await testEncoder.populateTransaction.dynamicTuple({
@@ -1176,7 +1174,7 @@ describe("Decoder library", async () => {
   });
 
   it("plucks nested AbiEncoded from within an array", async () => {
-    const { decoder, testEncoder } = await setup();
+    const { decoder, testEncoder } = await loadFixture(setup);
 
     const { data: nestedData1 } =
       await testEncoder.populateTransaction.dynamicStaticDynamic32(
@@ -1278,7 +1276,7 @@ describe("Decoder library", async () => {
 
   describe("TypeTree", async () => {
     it("top level variants get unfolded to its entrypoint form", async () => {
-      const { decoder, testEncoder } = await setup();
+      const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data } = await testEncoder.populateTransaction.staticDynamic(
         123,
@@ -1368,7 +1366,7 @@ describe("Decoder library", async () => {
     });
 
     it("And gets unfolded from Static top level", async () => {
-      const { decoder, testEncoder } = await setup();
+      const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data } = await testEncoder.populateTransaction.staticFn(
         "0xeeff3344"
@@ -1407,7 +1405,7 @@ describe("Decoder library", async () => {
     });
 
     it("nested Or gets unfolded from Tuple", async () => {
-      const { decoder, testEncoder } = await setup();
+      const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data } = await testEncoder.populateTransaction.dynamicTuple({
         dynamic: "0xaabb",
@@ -1508,7 +1506,7 @@ describe("Decoder library", async () => {
     });
 
     it("nested Or gets unfolded from Array", async () => {
-      const { decoder, testEncoder } = await setup();
+      const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data } = await testEncoder.populateTransaction.dynamicTuple({
         dynamic: "0xaabb",
@@ -1603,7 +1601,7 @@ describe("Decoder library", async () => {
     });
 
     it("extraneous Value in AbiEncoded gets inspected as None", async () => {
-      const { decoder, testEncoder } = await setup();
+      const { decoder, testEncoder } = await loadFixture(setup);
       const { data } = await testEncoder.populateTransaction.staticFn(
         "0xeeff3344"
       );

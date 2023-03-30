@@ -14,12 +14,7 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
-    error AllowanceExceeded(bytes32 allowanceKey);
-
-    error CallAllowanceExceeded(bytes32 allowanceKey);
-
-    error EtherAllowanceExceeded(bytes32 allowanceKey);
-
+    error UnsuitableMaxBalanceForAllowance();
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
@@ -175,12 +170,18 @@ abstract contract PermissionBuilder is Core {
         uint64 refillInterval,
         uint64 refillTimestamp
     ) external onlyOwner {
+        maxBalance = maxBalance > 0 ? maxBalance : type(uint128).max;
+
+        if (balance > maxBalance) {
+            revert UnsuitableMaxBalanceForAllowance();
+        }
+
         allowances[key] = Allowance({
             refillAmount: refillAmount,
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
             balance: balance,
-            maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
+            maxBalance: maxBalance
         });
         emit SetAllowance(
             key,
@@ -192,35 +193,24 @@ abstract contract PermissionBuilder is Core {
         );
     }
 
-    function _track(Trace[] memory entries) internal {
-        uint256 paramCount = entries.length;
+    function _track(Consumption[] memory trace) internal {
+        uint256 paramCount = trace.length;
         for (uint256 i; i < paramCount; ) {
-            bytes32 key = entries[i].condition.compValue;
-            uint256 value = entries[i].value;
+            bytes32 key = trace[i].allowanceKey;
+            uint128 consumed = trace[i].consumed;
             Allowance memory allowance = allowances[key];
             (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                 allowance,
                 block.timestamp
             );
 
-            if (value > balance) {
-                Operator operator = entries[i].condition.operator;
-                if (operator == Operator.WithinAllowance) {
-                    revert AllowanceExceeded(key);
-                } else if (operator == Operator.CallWithinAllowance) {
-                    revert CallAllowanceExceeded(key);
-                } else {
-                    revert EtherAllowanceExceeded(key);
-                }
-            }
-            allowances[key].balance = balance - uint128(value);
+            assert(balance == trace[i].balance);
+            assert(consumed <= balance);
+
+            allowances[key].balance = balance - consumed;
             allowances[key].refillTimestamp = refillTimestamp;
 
-            emit ConsumeAllowance(
-                key,
-                uint128(value),
-                balance - uint128(value)
-            );
+            emit ConsumeAllowance(key, consumed, balance - consumed);
             unchecked {
                 ++i;
             }
@@ -230,10 +220,10 @@ abstract contract PermissionBuilder is Core {
     function _accruedAllowance(
         Allowance memory allowance,
         uint256 timestamp
-    ) private pure returns (uint128 balance, uint64 refillTimestamp) {
+    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
         if (
             allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp
+            timestamp < allowance.refillTimestamp + allowance.refillInterval
         ) {
             return (allowance.balance, allowance.refillTimestamp);
         }
@@ -271,7 +261,7 @@ abstract contract PermissionBuilder is Core {
      */
     function _removeExtraneousOffsets(
         ConditionFlat[] memory conditions
-    ) private view returns (ConditionFlat[] memory) {
+    ) private pure returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ) {
             if (
