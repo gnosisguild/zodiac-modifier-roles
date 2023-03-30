@@ -191,14 +191,11 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      condition: matches(
+      condition: inputsMatch(
+        [{ tokenId: 424810 }],
         [
-          matches(
-            [eq("424810", "uint256")],
-            "(uint256,uint256,uint256,uint256,uint256,uint256)"
-          ),
-        ],
-        ["(uint256,uint256,uint256,uint256,uint256,uint256)"]
+          "(uint256 tokenId, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, uint256 deadline)",
+        ]
       ),
     },
 
@@ -219,8 +216,8 @@ const preset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
-      condition: matches(
-        [undefined, matches([eq(AVATAR)], "(uint256,address,uint128,uint128)")],
+      condition: inputsMatch(
+        [c.matches([undefined, AVATAR])],
         ["(uint256,address,uint128,uint128)"]
       ),
     },
@@ -272,14 +269,14 @@ const preset = {
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
-      condition: matches([eq(AVATAR)], ["address"]),
+      condition: inputsMatch([AVATAR], ["address"]),
     },
 
     //Claiming CRV rewards
     {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
-      condition: matches([eq(CURVE_stETH_ETH_GAUGE, "address")], ["address"]),
+      condition: inputsMatch([CURVE_stETH_ETH_GAUGE], ["address"]),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -292,20 +289,18 @@ const preset = {
       targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
-      condition: matches(
-        {
-          rewardPoolAddress: eq(AURA_BALANCER_stETH_VAULT, "address"),
-          inputToken: eq(WETH, "address"),
-          balancerPoolId: eq(
-            "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-            "bytes32"
-          ),
-        },
+      condition: inputsMatch(
         [
-          "address rewardPoolAddress",
-          "address inputToken",
-          "uint256 inputAmount",
-          "bytes32 balancerPoolId",
+          AURA_BALANCER_stETH_VAULT, // rewardPoolAddress
+          WETH, // inputToken
+          undefined, // inputAmount
+          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", // balancerPoolId
+        ],
+        [
+          "address",
+          "address",
+          "uint256",
+          "bytes32",
           // "(address[] assets, uint256[] maxAmountsIn, bytes userData, bool fromInternalBalance)",
         ]
       ),
@@ -340,16 +335,13 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      condition: matches(
-        {
-          poolId: eq(
-            "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-            "bytes32"
-          ),
-          sender: eq(AVATAR),
-          recipient: eq(AVATAR),
-        },
-        ["bytes32 poolId", "address sender", "address recipient"]
+      condition: inputsMatch(
+        [
+          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", // poolId
+          AVATAR, // sender
+          AVATAR, // recipient
+        ],
+        ["bytes32", "address", "address"]
       ),
     },
 
@@ -378,48 +370,43 @@ const preset = {
     {
       targetAddress: UV3_ROUTER_2,
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
-      condition: matches(
-        {
-          path: oneOf(
-            [
-              [COMP, WETH, USDC],
-              [COMP, WETH, DAI],
-              [COMP, WETH],
-              [CRV, WETH, USDC],
-              [CRV, WETH, DAI],
-              [CRV, WETH],
-              [LDO, WETH, USDC],
-              [LDO, WETH, DAI],
-              [LDO, WETH],
-              [WETH, USDC],
-              [WETH, DAI],
-              [WETH, USDT],
-              [USDC, WETH],
-              [USDC, USDT],
-              [USDC, WETH, USDT],
-              [USDC, DAI],
-              [USDC, WETH, DAI],
-              [DAI, WETH],
-              [DAI, USDC],
-              [DAI, WETH, USDC],
-              [DAI, USDT],
-              [DAI, WETH, USDT],
-              [USDT, WETH],
-              [USDT, USDC],
-              [USDT, WETH, USDC],
-              [USDT, DAI],
-              [USDT, WETH, DAI],
-            ],
-            "address[]"
-          ),
-          to: eq(AVATAR),
-        },
+      condition: inputsMatch(
         [
-          "uint256 amountIn",
-          "uint256 amountOutMin",
-          "address[] path",
-          "address to",
-        ]
+          undefined, // amountIn
+          undefined, // amountOutMin
+          // path
+          c.or(
+            [COMP, WETH, USDC],
+            [COMP, WETH, DAI],
+            [COMP, WETH],
+            [CRV, WETH, USDC],
+            [CRV, WETH, DAI],
+            [CRV, WETH],
+            [LDO, WETH, USDC],
+            [LDO, WETH, DAI],
+            [LDO, WETH],
+            [WETH, USDC],
+            [WETH, DAI],
+            [WETH, USDT],
+            [USDC, WETH],
+            [USDC, USDT],
+            [USDC, WETH, USDT],
+            [USDC, DAI],
+            [USDC, WETH, DAI],
+            [DAI, WETH],
+            [DAI, USDC],
+            [DAI, WETH, USDC],
+            [DAI, USDT],
+            [DAI, WETH, USDT],
+            [USDT, WETH],
+            [USDT, USDC],
+            [USDT, WETH, USDC],
+            [USDT, DAI],
+            [USDT, WETH, DAI]
+          ),
+          AVATAR, // to
+        ],
+        ["uint256", "uint256", "address[]", "address"]
       ),
     },
 
@@ -427,21 +414,28 @@ const preset = {
       targetAddress: UV3_ROUTER_2,
       signature:
         "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      condition: matches(
+      condition: inputsMatch(
         [
-          matches(
-            {
-              tokenIn: oneOf(
-                [COMP, WETH, rETH2, sETH2, SWISE, CRV, LDO, USDC, DAI, USDT],
-                "address"
-              ),
-              tokenOut: oneOf([WETH, USDC, DAI, USDT, sETH2], "address"),
-              recipient: eq(AVATAR),
-            },
-            "(address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 deadline, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)"
-          ),
+          {
+            tokenIn: c.or(
+              COMP,
+              WETH,
+              rETH2,
+              sETH2,
+              SWISE,
+              CRV,
+              LDO,
+              USDC,
+              DAI,
+              USDT
+            ),
+            tokenOut: c.or(WETH, USDC, DAI, USDT, sETH2),
+            recipient: AVATAR,
+          },
         ],
-        ["(address,address,uint24,address,uint256,uint256,uint160)"]
+        [
+          "(address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 deadline, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)",
+        ]
       ),
     },
 
