@@ -18,9 +18,9 @@ enum ParameterType {
 
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
-    //          paramType: Static / Dynamic
+    //          paramType: Static / Dynamic / Tuple / Array
     //          🚫 children
-    //          🚫 compValue
+    //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     /* 00: */ Pass,
     // ------------------------------------------------------------
     // 01-04: LOGICAL EXPRESSIONS
@@ -50,8 +50,8 @@ enum Operator {
     /* 16: */ _ComplexPlaceholder16,
     // ------------------------------------------------------------
     // 17-31: COMPARISON EXPRESSIONS
-    //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
-    //          🚫 children
+    //          paramType: Static / Dynamic / Tuple / Array
+    //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          ✅ compValue
     /* 17: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
     /* 18: */ GreaterThan, // paramType: Static
