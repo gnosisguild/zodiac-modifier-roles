@@ -14,6 +14,7 @@ import "./ScopeConfig.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
  */
 abstract contract PermissionBuilder is Core {
+    error UnsuitableMaxBalanceForAllowance();
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
@@ -169,12 +170,18 @@ abstract contract PermissionBuilder is Core {
         uint64 refillInterval,
         uint64 refillTimestamp
     ) external onlyOwner {
+        maxBalance = maxBalance > 0 ? maxBalance : type(uint128).max;
+
+        if (balance > maxBalance) {
+            revert UnsuitableMaxBalanceForAllowance();
+        }
+
         allowances[key] = Allowance({
             refillAmount: refillAmount,
             refillInterval: refillInterval,
             refillTimestamp: refillTimestamp,
             balance: balance,
-            maxBalance: maxBalance > 0 ? maxBalance : type(uint128).max
+            maxBalance: maxBalance
         });
         emit SetAllowance(
             key,
@@ -216,7 +223,7 @@ abstract contract PermissionBuilder is Core {
     ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
         if (
             allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp
+            timestamp < allowance.refillTimestamp + allowance.refillInterval
         ) {
             return (allowance.balance, allowance.refillTimestamp);
         }
