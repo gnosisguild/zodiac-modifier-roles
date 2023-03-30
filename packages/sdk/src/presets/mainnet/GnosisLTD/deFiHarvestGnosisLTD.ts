@@ -17,7 +17,7 @@ import { RolePreset } from "../../types"
 const BB_A_USD = "0xA13a9247ea42D743238089903570127DdA72fE44"
 
 // Aura contracts
-const BOOSTER_ADDRESS = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
+const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
 
 const aurabb_a_USD_REWARDER = "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B"
 
@@ -88,14 +88,14 @@ const preset = {
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
-        // General Rewards Claiming
+        // Aura - General Rewards Claiming
         //---------------------------------------------------------------------------------------------------------------------------------
         // {
         //   targetAddress: AURA_CLAIM_ZAP,
         //   signature:
         //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
         // },
-        allow.mainnet.aura.aura_claim_zap["claimRewards"](),
+        allow.mainnet.aura.claim_zap["claimRewards"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2

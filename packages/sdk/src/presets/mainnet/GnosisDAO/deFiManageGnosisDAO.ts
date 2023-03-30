@@ -1,5 +1,5 @@
 import { allow, contracts } from "../../allow"
-import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
+import { ZERO_ADDRESS, E_ADDRESS } from "../../gnosisChain/addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
 import {
   dynamic32Equal,
@@ -10,20 +10,28 @@ import {
   dynamicEqual,
   staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 // Tokens
-const stETH = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
-const wstETH = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
-const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
-const rETH = "0xae78736Cd615f374D3085123A210448E74Fc6393"
-const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
-const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
-const LDO = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
 const AURA = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
+const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
+const CRV = "0xD533a949740bb3306d119CC777fa900bA034cd52"
+const CVX = "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B"
+const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
+const LDO = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
+const rETH = "0xae78736Cd615f374D3085123A210448E74Fc6393"
+const stETH = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+const wstETH = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+
+//Compound V2 contracts
+const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
+const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
+const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
 
 // Balancer contracts
 const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
@@ -52,10 +60,9 @@ const B_50WSTETH_50LDO_GAUGE = "0x95201b61ef19c867da0d093df20021e1a559452c"
 const B_50WETH_50AURA_GAUGE = "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00"
 const B_50COW_50WETH_GAUGE = "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5"
 
-
 // Aura contracts
-const BOOSTER_ADDRESS = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-const REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS =
+const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
+const AURA_REWARD_POOL_DEPOSIT_WRAPPER =
   "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
 
 const auraB_stETH_STABLE_REWARDER = "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528"
@@ -68,6 +75,7 @@ const aura50WSTETH_50LDO_REWARDER = "0x6c3f6C327DE4aE51a2DfAaF3431b3c508ec8D3EB"
 const aura50WETH_50AURA_REWARDER = "0x712CC5BeD99aA06fC4D5FB50Aea3750fA5161D0f"
 const aura50COW_50WETH_REWARDER = "0x228054e9c056F024FC724F515A2a8764Ae175ED6"
 
+const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
 const auraBAL_STAKING_REWARDER = "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2"
 const B_80BAL_20WETH_DEPOSITOR = "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827"
 const BAL_DEPOSITOR = "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
@@ -76,6 +84,41 @@ const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
 const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
+
+// Curve contracts
+const CRV_MINTER = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
+const CURVE_STAKE_DEPOSIT_ZAP = "0x271fbE8aB7f1fB262f81C77Ea5303F03DA9d3d6A"
+
+const steCRV = "0x06325440D014e39736583c165C2963BA99fAf14E"
+const CURVE_stETH_ETH_POOL = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"
+const CURVE_stETH_ETH_GAUGE = "0x182B723a58739a9c974cFDB385ceaDb237453c28"
+
+const crvcDAIcUSDC = "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2"
+const CURVE_cDAIcUSDC_POOL = "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56"
+const CURVE_cDAIcUSDC_GAUGE = "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575"
+const CURVE_cDAIcUSDC_ZAP = "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06"
+
+// Convex contracts
+const CONVEX_BOOSTER = "0xF403C135812408BFbE8713b5A23a04b3D48AAE31"
+
+const CONVEX_SNAPSHOT_DELEGATION = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
+
+const CRV_DEPOSITOR = "0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae"
+const cvxCRV = "0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7"
+const stkCvxCrv = "0xaa0C3f5F7DFD688C6E646F66CD2a6B66ACdbE434"
+
+const cvxRewardPool = "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332"
+
+const vlCVX = "0x72a19342e8F1838460eBFCCEf09F6585e32db86E"
+
+const cvxsteCRV = "0x9518c9063eB0262D791f38d8d6Eb0aca33c63ed0"
+const cvxsteCRV_REWARDER = "0x0A760466E1B4621579a82a39CB56Dda2F4E70f03"
+const cvxcDAIcUSDC = "0x32512Bee3848bfcBb7bEAf647aa697a100f3b706"
+const cvxcDAIcUSDC_REWARDER = "0xf34DFF761145FF0B05e917811d488B441F33a968"
+
+// OmniBridge contracts
+const OMNI_BRIDGE = "0x88ad09518695c6c3712AC10a214bE5109a655671"
+
 
 const preset = {
   network: 1,
@@ -113,11 +156,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_stETH_STABLE], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([wstETH, WETH], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_stETH_STABLE], [AURA_BOOSTER]),
+    ...allowErc20Approve([wstETH, WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(29, "uint256"), // Aura poolId
@@ -127,7 +170,7 @@ const preset = {
       29), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -185,11 +228,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura B-80BAL-20WETH/auraBAL
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_auraBAL_STABLE], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([B_80BAL_20WETH, auraBAL], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_auraBAL_STABLE], [AURA_BOOSTER]),
+    ...allowErc20Approve([B_80BAL_20WETH, auraBAL], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(1, "uint256"), // Aura poolId
@@ -199,7 +242,7 @@ const preset = {
       1), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -257,11 +300,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura rETH/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_rETH_STABLE], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([rETH, WETH], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_rETH_STABLE], [AURA_BOOSTER]),
+    ...allowErc20Approve([rETH, WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(15, "uint256"), // Aura poolId
@@ -271,7 +314,7 @@ const preset = {
       15), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -329,11 +372,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura GNO/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_80GNO_20WETH], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([GNO, WETH], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_80GNO_20WETH], [AURA_BOOSTER]),
+    ...allowErc20Approve([GNO, WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(33, "uint256"), // Aura poolId
@@ -343,7 +386,7 @@ const preset = {
       33), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -401,11 +444,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura GNO/COW
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_50COW_50GNO], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([GNO, COW], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_50COW_50GNO], [AURA_BOOSTER]),
+    ...allowErc20Approve([GNO, COW], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(3, "uint256"), // Aura poolId
@@ -415,7 +458,7 @@ const preset = {
       3), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -473,11 +516,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura LDO/wstETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_50WSTETH_50LDO], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([LDO, wstETH], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_50WSTETH_50LDO], [AURA_BOOSTER]),
+    ...allowErc20Approve([LDO, wstETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(20, "uint256"), // Aura poolId
@@ -487,7 +530,7 @@ const preset = {
       20), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -545,11 +588,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura WETH/AURA
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_50WETH_50AURA], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([WETH, AURA], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_50WETH_50AURA], [AURA_BOOSTER]),
+    ...allowErc20Approve([WETH, AURA], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(0, "uint256"), // Aura poolId
@@ -559,7 +602,7 @@ const preset = {
       0), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -617,11 +660,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura WETH/COW
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([B_50COW_50WETH], [BOOSTER_ADDRESS]),
-    ...allowErc20Approve([WETH, COW], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+    ...allowErc20Approve([B_50COW_50WETH], [AURA_BOOSTER]),
+    ...allowErc20Approve([WETH, COW], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
     // {
-    //   targetAddress: BOOSTER_ADDRESS,
+    //   targetAddress: AURA_BOOSTER,
     //   signature: "deposit(uint256,uint256,bool)",
     //   params: {
     //     [0]: staticEqual(4, "uint256"), // Aura poolId
@@ -631,7 +674,7 @@ const preset = {
       4), // Aura poolId
 
     {
-      targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+      targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
@@ -796,14 +839,14 @@ const preset = {
     allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // General Rewards Claiming
+    // Aura - General Rewards Claiming
     //---------------------------------------------------------------------------------------------------------------------------------
     // {
     //   targetAddress: AURA_CLAIM_ZAP,
     //   signature:
     //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
     // },
-    allow.mainnet.aura.aura_claim_zap["claimRewards"](),
+    allow.mainnet.aura.claim_zap["claimRewards"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // BALANCER
@@ -1941,8 +1984,420 @@ const preset = {
     allow.mainnet.balancer.fee_distributor["claimTokens"](
       AVATAR
     ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // CONVEX
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - ETH/stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([steCRV], [CONVEX_BOOSTER]),
+    ...allowErc20Approve([cvxsteCRV], [cvxsteCRV_REWARDER]),
+
+    // Deposit
+    allow.mainnet.convex.booster["depositAll"](
+      25 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+    ),
+    allow.mainnet.convex.booster["deposit"](
+      25 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+    ),
+
+    // Withdraw
+    allow.mainnet.convex.booster["withdraw"](
+      25 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+    ),
+
+    // Stake
+    allow.mainnet.convex.cvxsteCRV_rewarder["stake"](),
+
+    // Unstake
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+
+    // Unstake and Withdraw
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+
+    // Claim Rewards
+    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - cDAI/cUSDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([crvcDAIcUSDC], [CONVEX_BOOSTER]),
+    ...allowErc20Approve([cvxcDAIcUSDC], [cvxcDAIcUSDC_REWARDER]),
+
+    // Deposit
+    allow.mainnet.convex.booster["depositAll"](
+      0 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+    ),
+    allow.mainnet.convex.booster["deposit"](
+      0 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+    ),
+
+    // Withdraw
+    allow.mainnet.convex.booster["withdraw"](
+      0 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+    ),
+
+    // Stake
+    allow.mainnet.convex.cvxsteCRV_rewarder["stake"](),
+
+    // Unstake
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+
+    // Unstake and Withdraw
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+
+    // Claim Rewards
+    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Convert CRV to cvxCRV and Stake cvxCRV
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([CRV], [CRV_DEPOSITOR]),
+    ...allowErc20Approve([cvxCRV], [stkCvxCrv]),
+
+    // Convert CRV to cvxCRV
+    allow.mainnet.convex.crv_depositor["deposit(uint256,bool)"](),
+
+    // Stake cvxCRV
+    allow.mainnet.convex.stkCvxCrv["stake"](
+      undefined,
+      AVATAR
+    ),
+
+    // Convert CRV to cvxCRV and Stake cvxCRV
+    allow.mainnet.convex.crv_depositor["deposit(uint256,bool,address)"](
+      undefined,
+      undefined,
+      stkCvxCrv
+    ),
+
+    // Unstake cvxCRV
+    allow.mainnet.convex.stkCvxCrv["withdraw"](),
+
+    // Set Rewards Preferences
+    allow.mainnet.convex.stkCvxCrv["setRewardWeight"](),
+
+    // Claim Rewards
+    allow.mainnet.convex.stkCvxCrv["getReward(address)"](
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Stake CVX
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([CVX], [cvxRewardPool]),
+
+    // Stake CVX
+    allow.mainnet.convex.cvxRewardPool["stake"](),
+
+    // Unstake CVX
+    allow.mainnet.convex.cvxRewardPool["withdraw"](),
+
+    // Claim Rewards
+    allow.mainnet.convex.cvxRewardPool["getReward(bool)"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Lock CVX
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([CVX], [vlCVX]),
+
+    // Lock CVX
+    allow.mainnet.convex.vlCVX["lock"](
+      AVATAR
+    ),
+
+    // Process Expired Locks (Withdraw = False or Relock = True)
+    allow.mainnet.convex.vlCVX["processExpiredLocks"](),
+
+    // Claim Rewards
+    allow.mainnet.convex.vlCVX["getReward(address,bool)"](
+      AVATAR
+    ),
+
+    // // Clear Delegate
+    // allow.mainnet.convex.snapshot_delegation["clearDelegate"](),
+
+    // // Set Delegate
+    // allow.mainnet.convex.snapshot_delegation["setDelegate"](
+    //   undefined,
+    //   undefined, // Set delegate/s
+    // ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - General Rewards Claiming
+    //---------------------------------------------------------------------------------------------------------------------------------
+    allow.mainnet.convex.claim_zap["claimRewards"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // CURVE
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Curve - ETH/stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([stETH], [CURVE_stETH_ETH_POOL]),
+    ...allowErc20Approve([steCRV], [CURVE_stETH_ETH_GAUGE]),
+    ...allowErc20Approve([stETH], [CURVE_STAKE_DEPOSIT_ZAP]),
+
+    // Add Liquidity
+    allow.mainnet.curve.steth_eth_pool["add_liquidity"](
+      undefined,
+      undefined,
+      {
+        send: true
+      }
+    ),
+
+    // Remove Liquidity
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity"](),
+
+    // Removing Liquidity of One Coin
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity_one_coin"](),
+
+    // Removing Liquidity Imbalance
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity_imbalance"](),
+
+    // Stake
+    allow.mainnet.curve.steth_eth_gauge["deposit(uint256)"](),
+
+    // Unstake
+    allow.mainnet.curve.steth_eth_gauge["withdraw"](),
+
+    // Claim LDO Rewards
+    allow.mainnet.curve.steth_eth_gauge["claim_rewards()"](),
+
+    //Claim CRV Rewards
+    allow.mainnet.curve.crv_minter["mint"](
+      CURVE_stETH_ETH_GAUGE
+    ),
+
+    // Deposit and Stake using a special ZAP
+    allow.mainnet.curve.steth_eth_gauge["set_approve_deposit"](
+      CURVE_STAKE_DEPOSIT_ZAP
+    ),
+
+    // Using ETH
+    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+      CURVE_stETH_ETH_POOL,
+      steCRV,
+      CURVE_stETH_ETH_GAUGE,
+      2,
+      [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+      undefined,
+      undefined,
+      undefined,
+      ZERO_ADDRESS,
+      {
+        send: true
+      }
+    ),
+
+    // Not using ETH
+    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+      CURVE_stETH_ETH_POOL,
+      steCRV,
+      CURVE_stETH_ETH_GAUGE,
+      2,
+      [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+      undefined,
+      undefined,
+      undefined,
+      ZERO_ADDRESS,
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Curve - cDAI/cUSDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([cDAI, cUSDC], [CURVE_cDAIcUSDC_POOL]),
+    ...allowErc20Approve([crvcDAIcUSDC], [CURVE_cDAIcUSDC_GAUGE]),
+    ...allowErc20Approve([DAI, USDC], [CURVE_cDAIcUSDC_ZAP]),
+
+    // Add Liquidity
+    allow.mainnet.curve.cDAIcUSDC_pool["add_liquidity"](),
+
+    // Add Liquidity (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["add_liquidity"](),
+
+    // Remove Liquidity
+    allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity"](),
+
+    // Remove Liquidity (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity"](),
+
+    // Removing Liquidity Imbalance
+    allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity_imbalance"](),
+
+    // Removing Liquidity Imbalance (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_imbalance"](),
+
+    // Removing Liquidity of One Coin (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+
+    // Exchange
+    allow.mainnet.curve.cDAIcUSDC_pool["exchange"](),
+
+    // Exchange Underlying
+    allow.mainnet.curve.cDAIcUSDC_pool["exchange_underlying"](),
+
+    // Stake
+    allow.mainnet.curve.cDAIcUSDC_gauge["deposit(uint256)"](),
+
+    // Unstake
+    allow.mainnet.curve.cDAIcUSDC_gauge["withdraw"](),
+
+    //Claim CRV Rewards - This pool gauge does not grant any rewards
+    allow.mainnet.curve.crv_minter["mint"](
+      CURVE_cDAIcUSDC_GAUGE
+    ),
+
+    // Deposit and Stake using a special ZAP
+    allow.mainnet.curve.cDAIcUSDC_gauge["set_approve_deposit"](
+      CURVE_STAKE_DEPOSIT_ZAP
+    ),
+
+    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+      {
+        oneOf: [CURVE_cDAIcUSDC_POOL, CURVE_cDAIcUSDC_ZAP]
+      },
+      crvcDAIcUSDC,
+      CURVE_cDAIcUSDC_GAUGE,
+      2,
+      {
+        oneOf: [
+          [DAI, USDC, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+          [cUSDC, cDAI, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        ]
+      },
+      undefined,
+      undefined,
+      undefined,
+      ZERO_ADDRESS
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - USDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([USDC], [cUSDC]),
+
+    // Deposit
+    allow.mainnet.compound.cUSDC["mint"](),
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    allow.mainnet.compound.cUSDC["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+
+    // Use as Collateral
+    // We are only allowing to call this function with one single token address, since it's the way the UI does it
+    {
+      targetAddress: COMPTROLLER,
+      signature: "enterMarkets(address[])",
+      params: {
+        [0]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // // Offset of address[] from beginning of tuple 64=32*2
+        [1]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of address[] = 1
+        [2]: staticEqual(cUSDC, "address"),
+      },
+    },
+
+    // Stop using as Collateral
+    allow.mainnet.compound.comptroller["exitMarket"](
+      cUSDC
+    ),
+
+    // Borrow specified amount of underlying asset (uint256)
+    allow.mainnet.compound.cUSDC["borrow"](),
+
+    // Repay specified borrowed amount of underlying asset (uint256)
+    allow.mainnet.compound.cUSDC["repayBorrow"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - DAI
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([DAI], [cDAI]),
+
+    // Deposit
+    allow.mainnet.compound.cDAI["mint"](),
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    allow.mainnet.compound.cDAI["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    allow.mainnet.compound.cDAI["redeemUnderlying"](),
+
+    // Use as Collateral
+    // We are only allowing to call this function with one single token address, since it's the way the UI does it
+    {
+      targetAddress: COMPTROLLER,
+      signature: "enterMarkets(address[])",
+      params: {
+        [0]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // // Offset of address[] from beginning of tuple 64=32*2
+        [1]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of address[] = 1
+        [2]: staticEqual(cDAI, "address"),
+      },
+    },
+
+    // Stop using as Collateral
+    allow.mainnet.compound.comptroller["exitMarket"](
+      cDAI
+    ),
+
+    // Borrow specified amount of underlying asset (uint256)
+    allow.mainnet.compound.cDAI["borrow"](),
+
+    // Repay specified borrowed amount of underlying asset (uint256)
+    allow.mainnet.compound.cDAI["repayBorrow"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - Claiming of rewards
+    //---------------------------------------------------------------------------------------------------------------------------------
+    allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+      AVATAR,
+      {
+        subsetOf: [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+        restrictOrder: true,
+      }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // OMNI BRIDGE
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),
+    // {
+    //   targetAddress: OMNI_BRIDGE,
+    //   signature: "relayTokens(address,address,uint256)",
+    //   params: {
+    //     [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
+    //   },
+    // },
+    allow.mainnet.omnibridge["relayTokens(address,address,uint256)"](
+      undefined,
+      OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN
+    )
   ],
-  placeholders: { AVATAR },
+  placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset
 
 export default preset

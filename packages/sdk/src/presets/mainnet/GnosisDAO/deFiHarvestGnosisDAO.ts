@@ -148,14 +148,14 @@ const preset = {
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // General Rewards Claiming
+    // Aura - General Rewards Claiming
     //---------------------------------------------------------------------------------------------------------------------------------
     // {
     //   targetAddress: AURA_CLAIM_ZAP,
     //   signature:
     //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
     // },
-    allow.mainnet.aura.aura_claim_zap["claimRewards"](),
+    allow.mainnet.aura.claim_zap["claimRewards"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // BALANCER

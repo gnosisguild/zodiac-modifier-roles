@@ -10,17 +10,16 @@ import {
     dynamicEqual,
     staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 // Tokens
-const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
-const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
-const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 const AURA = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
 const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
-const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
+const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 
 // Balancer contracts
@@ -41,13 +40,14 @@ const B_50COW_50GNO_GAUGE = "0xA6468eca7633246Dcb24E5599681767D27d1F978"
 const bb_a_USD_GAUGE = "0xa6325e799d266632D347e41265a69aF111b05403"
 
 // Aura contracts
-const BOOSTER_ADDRESS = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-const REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS =
+const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
+const AURA_REWARD_POOL_DEPOSIT_WRAPPER =
     "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
 
 const aurabb_a_USD_REWARDER = "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B"
 const aura50COW_50GNO_REWARDER = "0x6256518aE9a97C408a03AAF1A244989Ce6B937F6"
 
+const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
 const auraBAL_STAKING_REWARDER = "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2"
 const B_80BAL_20WETH_DEPOSITOR = "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827"
 const BAL_DEPOSITOR = "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
@@ -57,10 +57,13 @@ const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
 
 const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
 
-//Compound V2 contracts
+// Compound V2 contracts
 const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
 const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
 const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
+
+// OmniBridge contracts
+const OMNI_BRIDGE = "0x88ad09518695c6c3712AC10a214bE5109a655671"
 
 
 const preset = {
@@ -74,10 +77,10 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura bb-aUSDT/bb-a-USDC/bb-a-DAI (Boosted Pool)
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([bb_a_USD], [BOOSTER_ADDRESS]),
+        ...allowErc20Approve([bb_a_USD], [AURA_BOOSTER]),
 
         // {
-        //     targetAddress: BOOSTER_ADDRESS,
+        //     targetAddress: AURA_BOOSTER,
         //     signature: "deposit(uint256,uint256,bool)",
         //     params: {
         //         [0]: staticEqual(2, "uint256"), // Aura poolId
@@ -101,11 +104,11 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura GNO/COW
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([B_50COW_50GNO], [BOOSTER_ADDRESS]),
-        ...allowErc20Approve([GNO, COW], [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]),
+        ...allowErc20Approve([B_50COW_50GNO], [AURA_BOOSTER]),
+        ...allowErc20Approve([GNO, COW], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
 
         // {
-        //     targetAddress: BOOSTER_ADDRESS,
+        //     targetAddress: AURA_BOOSTER,
         //     signature: "deposit(uint256,uint256,bool)",
         //     params: {
         //         [0]: staticEqual(3, "uint256"), // Aura poolId
@@ -115,7 +118,7 @@ const preset = {
             3), // Aura poolId
 
         {
-            targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+            targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
             signature:
                 "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
             params: {
@@ -280,14 +283,14 @@ const preset = {
         allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
-        // General Rewards Claiming
+        // Aura - General Rewards Claiming
         //---------------------------------------------------------------------------------------------------------------------------------
         // {
         //   targetAddress: AURA_CLAIM_ZAP,
         //   signature:
         //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
         // },
-        allow.mainnet.aura.aura_claim_zap["claimRewards"](),
+        allow.mainnet.aura.claim_zap["claimRewards"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // BALANCER
@@ -811,9 +814,25 @@ const preset = {
                 subsetOf: [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
                 restrictOrder: true,
             }
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // OMNI BRIDGE
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([GNO, COW], [OMNI_BRIDGE]),
+        // {
+        //     targetAddress: OMNI_BRIDGE,
+        //     signature: "relayTokens(address,address,uint256)",
+        //     params: {
+        //         [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
+        //     },
+        // },
+        allow.mainnet.omnibridge["relayTokens(address,address,uint256)"](
+            undefined,
+            OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN
         )
     ],
-    placeholders: { AVATAR },
+    placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset
 
 export default preset

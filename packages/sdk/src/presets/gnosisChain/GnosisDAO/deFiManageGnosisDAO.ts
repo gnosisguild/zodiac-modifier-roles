@@ -9,57 +9,71 @@ import {
     dynamicEqual,
     staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
+import { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 import { send } from "process"
 
 // Tokens
-const GNO = "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb"
-const sGNO = "0xA4eF9Da5BA71Cc0D2e5E877a910A37eC43420445"
-const rGNO = "0x6aC78efae880282396a335CA2F79863A1e6831D4"
+const AGVE = "0x3a97704a1b25F08aa230ae53B352e2e72ef52843"
+const BER = "0x05698e7346ea67cfb088f64ad8962b18137d17c0"
+const COW = "0x177127622c4A00F3d409B75571e12cB3c8973d3c"
+const CRV = "0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd"
+const EURe = "0xcB444e90D8198415266c6a2724b7900fb12FC56E"
 const FLX = "0xD87eaA26dCfB0C0A6160cCf8c8a01BEB1C15fB00"
 const GIV = "0x4f4F9b8D5B4d0Dc10506e5551B0513B61fD59e75"
-const WATER = "0x4291f029b9e7acb02d49428458cf6fceac545f81"
+const GNO = "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb"
+const MAI = "0x3F56e0c36d275367b8C502090EDF38289b3dEa0d"
 const QI = "0xdFA46478F9e5EA86d57387849598dbFB2e964b02"
-const BER = "0x05698e7346ea67cfb088f64ad8962b18137d17c0"
-const WETH = "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1"
-const wstETH = "0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6"
-const WBTC = "0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252"
-const x3CRV = "0x1337BedC9D22ecbe766dF105c9623922A27963EC"
-const CRV = "0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd"
-const WXDAI = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d"
+const rGNO = "0x6aC78efae880282396a335CA2F79863A1e6831D4"
+const sGNO = "0xA4eF9Da5BA71Cc0D2e5E877a910A37eC43420445"
+const SUSHI = "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE"
+const stkAGVE = "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221"
 const USDC = "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83"
 const USDT = "0x4ECaBa5870353805a9F068101A40E0f32ed605C6"
-const SUSHI = "0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE"
-const AGVE = "0x3a97704a1b25F08aa230ae53B352e2e72ef52843"
-const stkAGVE = "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221"
+const WBTC = "0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252"
+const WETH = "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1"
+const wstETH = "0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6"
+const WXDAI = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d"
+const x3CRV = "0x1337BedC9D22ecbe766dF105c9623922A27963EC"
 
 // SushiSwap contracts
-const SLP_SUSHI_GNO = "0xF38c5b39F29600765849cA38712F302b1522C9B8"
-const SLP_WETH_wstETH = "0xE6B448c0345bF6AA52ea3A5f17aabd0e58F23912"
 const SUSHISWAP_ROUTER = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"
 const MINI_CHEF_V2 = "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3"
+const SLP_SUSHI_GNO = "0xF38c5b39F29600765849cA38712F302b1522C9B8"
+const SLP_WETH_GNO = "0x15f9EEdeEBD121FBb238a8A0caE38f4b4A07A585"
+const SLP_WETH_wstETH = "0xE6B448c0345bF6AA52ea3A5f17aabd0e58F23912"
 
 // Curve contracts
-const sgnoCRV_LP_POOL = "0xBdF4488Dcf7165788D438b62B4C8A333879B7078"
-const sgnoCRV_GAUGE = "0x2686d5E477d1AaA58BF8cE598fA95d97985c7Fb1"
+const STAKE_DEPOSIT_ZAP = "0xB7De33440B7171159a9718CBE748086cecDd9685"
+const crvEUReUSD_LP = "0x0CA1C1eC4EBf3CC67a9f545fF90a3795b318cA4a"
+const crvEUReUSD_POOL = "0x056C6C5e684CeC248635eD86033378Cc444459B0"
+const crvEUReUSD_GAUGE = "0xd91770E868c7471a9585d1819143063A40c54D00"
+const crvEUReUSD_ZAP = "0xE3FFF29d4DC930EBb787FeCd49Ee5963DADf60b6"
 const crv3crypto_POOL = "0x5633E00994896D0F472926050eCb32E38bef3e65"
 const crv3crypto_LP = "0x02E7e2dd3BA409148A49D5cc9a9034D2f884F245"
 const crv3crypto_GAUGE = "0x3f7693797352A321f8D532A8B297F91DD31898D8"
 const crv3crypto_ZAP = "0xF182926A64C0A19234E7E1FCDfE772aA7A1CA351"
+const MAIx3CRV_LP_POOL = "0xA64D8025ddA09bCE94DA2cF2DC175d1831e2dF76"
+const MAIx3CRV_GAUGE = "0xa6DF868420232698c1D0bF9Aa8677D4873307A6a"
+const FACTORY_METAPOOLS_ZAP = "0x87C067fAc25f123554a0E76596BF28cFa37fD5E9"
 const rgnoCRV_LP_POOL = "0x5D7309a01B727d6769153fCB1dF5587858d53B9C"
 const rgnoCRV_GAUGE = "0x9509A9D5C55793858FE8b1C00a99e012a7AF4aaB"
-const STAKE_DEPOSIT_ZAP = "0xB7De33440B7171159a9718CBE748086cecDd9685"
+const sgnoCRV_LP_POOL = "0xBdF4488Dcf7165788D438b62B4C8A333879B7078"
+const sgnoCRV_GAUGE = "0x2686d5E477d1AaA58BF8cE598fA95d97985c7Fb1"
+const x3CRV_LP = "0x1337BedC9D22ecbe766dF105c9623922A27963EC"
+const x3CRV_POOL = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"
+const x3CRV_GAUGE = "0xB721Cc32160Ab0da2614CC6aB16eD822Aeebc101"
 
 // Honeyswap contracts
 const HONEYSWAP_ROUTER = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77"
 // const HONEYSWAP_MULTI_WITHDRAWER = "0x53f224f83b2B2365caf4178f52C234dA1ecF392f"
-const HLP_WETH_GNO = "0x28Dbd35fD79f48bfA9444D330D14683e7101d817"
+const HLP_COW_GNO = "0x6a43be8A3daBf8a0A7B56773F536266aE932a451"
+const HLP_CRV_GNO = "0xac16c751f4c719a7ad54081a32ab0488b56f0ef4"
+const HLP_GIV_GNO = "0x5Aa67e24BA8A3fbDc553e308d02377E03cE9e94F"
 const HLP_GNO_FLX = "0xF0376d1faFD1ff2F1367546da622ba8F26829D7A"
 const HLP_GNO_WXDAI = "0x321704900D52F44180068cAA73778d5cD60695A6"
-const HLP_GIV_GNO = "0x5Aa67e24BA8A3fbDc553e308d02377E03cE9e94F"
-const HLP_WATER_GNO = "0x3b74c893F62424d1C96Ce060332fd626eEaa875C"
+const HLP_WETH_GNO = "0x28Dbd35fD79f48bfA9444D330D14683e7101d817"
 
 // Swapr contracts
 const SWAPR_ROUTER = "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0"
@@ -121,6 +135,9 @@ const bb_ag_USD_GAUGE = "0x266C15970AEEeCc254117b1C366E26718Ad02cEE"
 const agUSD_agWETH_agWBTC_GAUGE = "0xc04672a31C5ba04912BAD418631f9b45E73619EF"
 const B_50bbagGNO_50bbagUSD_GAUGE = "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
 
+// OmniBridge contracts
+const OMNI_BRIDGE = "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d"
+
 
 const preset = {
     network: 100,
@@ -129,6 +146,281 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve
         //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve 3pool
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([USDC, USDT, WXDAI], [x3CRV_POOL]),
+        ...allowErc20Approve([x3CRV_LP], [x3CRV_GAUGE]),
+        ...allowErc20Approve([WXDAI, USDC, USDT], [STAKE_DEPOSIT_ZAP]),
+
+        // Add Liquidity
+        // {
+        //     targetAddress: x3CRV_POOL,
+        //     signature: "add_liquidity(uint256[3],uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_pool["add_liquidity"](),
+
+        // Remove Liquidity
+        // {
+        //     targetAddress: x3CRV_POOL,
+        //     signature: "remove_liquidity(uint256,uint256[3])",
+        // },
+        allow.gnosis.curve.x3CRV_pool["remove_liquidity"](),
+
+        // Remove Liquidity of One Coin
+        // {
+        //     targetAddress: x3CRV_POOL,
+        //     signature: "remove_liquidity_one_coin(uint256,int128,uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_pool["remove_liquidity_one_coin"](),
+
+        // Remove Liquidity Imbalance
+        // {
+        //     targetAddress: x3CRV_POOL,
+        //     signature: "remove_liquidity_imbalance(uint256[3],uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_pool["remove_liquidity_imbalance"](),
+
+        // Exchange
+        // {
+        //     targetAddress: x3CRV_POOL,
+        //     signature: "exchange(int128,int128,uint256,uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_pool["exchange"](),
+
+        // Stake
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "deposit(uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_gauge["deposit(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "deposit(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.x3CRV_gauge["deposit(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Unstake
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "withdraw(uint256)",
+        // },
+        allow.gnosis.curve.x3CRV_gauge["withdraw(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "withdraw(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.x3CRV_gauge["withdraw(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Claim Rewards
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "claim_rewards()",
+        // },
+        allow.gnosis.curve.x3CRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            x3CRV_GAUGE
+        ),
+
+        // Deposit and Stake using a special ZAP
+        // {
+        //     targetAddress: STAKE_DEPOSIT_ZAP,
+        //     signature: "deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)",
+        //     params: {
+        //         [0]: staticEqual(x3CRV_POOL, "address"),
+        //         [1]: staticEqual(x3CRV_LP, "address"),
+        //         [2]: staticEqual(x3CRV_GAUGE, "address"),
+        //         [3]: staticEqual(3, "uint256"),
+        //         [4]: staticEqual([
+        //             [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS]
+        //         ],
+        //             "address[5]"),
+        //         [8]: staticEqual(ZERO_ADDRESS, "address"),
+        //     },
+        // },
+        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+            x3CRV_POOL,
+            x3CRV_LP,
+            x3CRV_GAUGE,
+            3,
+            [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS],
+            undefined,
+            undefined,
+            undefined,
+            ZERO_ADDRESS
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve EURe/x3CRV
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([EURe, x3CRV], [crvEUReUSD_POOL]),
+        ...allowErc20Approve([crvEUReUSD_LP], [crvEUReUSD_GAUGE]),
+        ...allowErc20Approve([EURe, WXDAI, USDC, USDT], [crvEUReUSD_ZAP]),
+        ...allowErc20Approve([EURe, x3CRV, WXDAI, USDC, USDT], [STAKE_DEPOSIT_ZAP]),
+
+        // Add Liquidity
+        // {
+        //     targetAddress: crvEUReUSD_POOL,
+        //     signature: "add_liquidity(uint256[2],uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_pool["add_liquidity(uint256[2],uint256,address)"](),
+
+        // Add Liquidity (Underlying, using ZAP)
+        // {
+        //     targetAddress: crvEUReUSD_ZAP,
+        //     signature: "add_liquidity(uint256[4],uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_zap["add_liquidity(uint256[4],uint256)"](),
+
+        // Remove Liquidity
+        // {
+        //     targetAddress: crvEUReUSD_POOL,
+        //     signature: "remove_liquidity(uint256,uint256[2])",
+        // },
+        allow.gnosis.curve.crvEUReUSD_pool["remove_liquidity(uint256,uint256[2])"](),
+
+        // Remove Liquidity (Underlying, using ZAP)
+        // {
+        //     targetAddress: crvEUReUSD_ZAP,
+        //     signature: "remove_liquidity(uint256,uint256[4])",
+        // },
+        allow.gnosis.curve.crvEUReUSD_zap["remove_liquidity(uint256,uint256[4])"](),
+
+        // Remove Liquidity of One Coin
+        // {
+        //     targetAddress: crvEUReUSD_POOL,
+        //     signature: "remove_liquidity_one_coin(uint256,uint256,uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_pool["remove_liquidity_one_coin(uint256,uint256,uint256)"](),
+
+        // Remove Liquidity of One Coin (Underlying, using ZAP)
+        // {
+        //     targetAddress: crvEUReUSD_ZAP,
+        //     signature: "remove_liquidity_one_coin(uint256,uint256,uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_zap["remove_liquidity_one_coin(uint256,uint256,uint256)"](),
+
+        // Exchange
+        // {
+        //     targetAddress: crvEUReUSD_POOL,
+        //     signature: "exchange(uint256,uint256,uint256,uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_pool["exchange(uint256,uint256,uint256,uint256)"](),
+
+        // Exchange (Underlying, using ZAP)
+        // {
+        //     targetAddress: crvEUReUSD_ZAP,
+        //     signature: "exchange_underlying(uint256,uint256,uint256,uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_zap["exchange_underlying(uint256,uint256,uint256,uint256)"](),
+
+        // Stake
+        // {
+        //     targetAddress: crvEUReUSD_GAUGE,
+        //     signature: "deposit(uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["deposit(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: crvEUReUSD_GAUGE,
+        //     signature: "deposit(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["deposit(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Unstake
+        // {
+        //     targetAddress: crvEUReUSD_GAUGE,
+        //     signature: "withdraw(uint256)",
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["withdraw(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: crvEUReUSD_GAUGE,
+        //     signature: "withdraw(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["withdraw(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Claim Rewards
+        // {
+        //     targetAddress: crvEUReUSD_GAUGE,
+        //     signature: "claim_rewards()",
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            crvEUReUSD_GAUGE
+        ),
+
+        // Deposit and Stake using a special ZAP
+        // {
+        //     targetAddress: STAKE_DEPOSIT_ZAP,
+        //     signature: "deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)",
+        //     params: {
+        //         [0]: staticOneOf([crvEUReUSD_POOL, crvEUReUSD_ZAP], "address"),
+        //         [1]: staticEqual(crvEUReUSD_LP, "address"),
+        //         [2]: staticEqual(crvEUReUSD_GAUGE, "address"),
+        //         [3]: staticOneOf([2, 4], "uint256"),
+        //         [4]: staticOneOf([
+        //             [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]],
+        //             "address[5]"),
+        //         [8]: staticEqual(ZERO_ADDRESS, "address"),
+        //     },
+        // },
+        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+            {
+                oneOf: [crvEUReUSD_POOL, crvEUReUSD_ZAP]
+            },
+            crvEUReUSD_LP,
+            crvEUReUSD_GAUGE,
+            {
+                oneOf: [2, 4]
+            },
+            {
+                oneOf: [
+                    [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]
+                ]
+            },
+            undefined,
+            undefined,
+            undefined,
+            ZERO_ADDRESS
+        ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve sGNO/GNO
@@ -170,6 +462,11 @@ const preset = {
         // Claim Rewards
         allow.gnosis.curve.sgnoCRV_gauge["claim_rewards()"](),
 
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            sgnoCRV_GAUGE
+        ),
+
         // Deposit and Stake using a special ZAP
         allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
             sgnoCRV_LP_POOL,
@@ -193,15 +490,28 @@ const preset = {
         // Add Liquidity
         allow.gnosis.curve.crv3crypto_pool["add_liquidity"](),
 
+        // Add Liquidity (Underlying, using ZAP)
+        allow.gnosis.curve.crv3crypto_zap["add_liquidity(uint256[5],uint256)"](),
+
         // Remove Liquidity
         allow.gnosis.curve.crv3crypto_pool["remove_liquidity"](),
+
+        // Remove Liquidity (Underlying, using ZAP)
+        allow.gnosis.curve.crv3crypto_zap["remove_liquidity(uint256,uint256[5])"](),
 
         // Remove Liquidity of One Coin
         allow.gnosis.curve.crv3crypto_pool["remove_liquidity_one_coin"](),
 
+        // Remove Liquidity of One Coin (Underlying, using ZAP)
+        allow.gnosis.curve.crv3crypto_zap["remove_liquidity_one_coin(uint256,uint256,uint256)"](),
+
         // Exchange
         allow.gnosis.curve.crv3crypto_pool["exchange(uint256,uint256,uint256,uint256)"](),
+        // NO EVIDENCE OF BEING USED
         allow.gnosis.curve.crv3crypto_pool["exchange(uint256,uint256,uint256,uint256,bool)"](),
+
+        // Exchange (Underlying, using ZAP)
+        allow.gnosis.curve.crv3crypto_zap["exchange_underlying(uint256,uint256,uint256,uint256)"](),
 
         // Stake
         allow.gnosis.curve.crv3crypto_gauge["deposit(uint256)"](),
@@ -222,25 +532,32 @@ const preset = {
         // Claim Rewards
         allow.gnosis.curve.crv3crypto_gauge["claim_rewards()"](),
 
-        // Deposit and Stake using a special ZAP
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            crv3crypto_POOL,
-            crv3crypto_LP,
-            crv3crypto_GAUGE,
-            {
-                oneOf: [3, 5]
-            },
-            {
-                oneOf: [
-                    [x3CRV, WBTC, WETH, ZERO_ADDRESS, ZERO_ADDRESS],
-                    [WXDAI, USDC, USDT, WBTC, WETH]
-                ]
-            },
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            crv3crypto_GAUGE
         ),
+
+        // // Deposit and Stake using a special ZAP - DOES NOT HAVE THIS OPTION THROUGH THE UI
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     {
+        //         oneOf: [crv3crypto_POOL, crv3crypto_ZAP]
+        //     },
+        //     crv3crypto_LP,
+        //     crv3crypto_GAUGE,
+        //     {
+        //         oneOf: [3, 5]
+        //     },
+        //     {
+        //         oneOf: [
+        //             [x3CRV, WBTC, WETH, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [WXDAI, USDC, USDT, WBTC, WETH]
+        //         ]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve rGNO/sGNO
@@ -282,6 +599,11 @@ const preset = {
         // Claim Rewards
         allow.gnosis.curve.rgnoCRV_gauge["claim_rewards()"](),
 
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            rgnoCRV_GAUGE
+        ),
+
         // // Deposit and Stake using a special ZAP
         allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
             rgnoCRV_LP_POOL,
@@ -296,23 +618,173 @@ const preset = {
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve MAI/x3CRV
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([MAI, x3CRV], [MAIx3CRV_LP_POOL]),
+        ...allowErc20Approve([MAIx3CRV_LP_POOL], [MAIx3CRV_GAUGE]),
+        ...allowErc20Approve([MAI, WXDAI, USDC, USDT], [FACTORY_METAPOOLS_ZAP]),
+        ...allowErc20Approve([MAI, x3CRV, WXDAI, USDC, USDT], [STAKE_DEPOSIT_ZAP]),
+
+        // Add Liquidity
+        // {
+        //     targetAddress: MAIx3CRV_LP_POOL,
+        //     signature: "add_liquidity(uint256[2],uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_lp_pool["add_liquidity(uint256[2],uint256)"](),
+
+        // Add Liquidity (Underlying, using ZAP)
+        // {
+        //     targetAddress: FACTORY_METAPOOLS_ZAP,
+        //     signature: "add_liquidity(address,uint256[4],uint256)",
+        // },
+        allow.gnosis.curve.factory_metapools_zap["add_liquidity(address,uint256[4],uint256)"](
+            MAIx3CRV_LP_POOL
+        ),
+
+        // Remove Liquidity
+        // {
+        //     targetAddress: MAIx3CRV_LP_POOL,
+        //     signature: "remove_liquidity(uint256,uint256[2])",
+        // },
+        allow.gnosis.curve.MAIx3CRV_lp_pool["remove_liquidity(uint256,uint256[2])"](),
+
+        // Remove Liquidity (Underlying, using ZAP)
+        // {
+        //     targetAddress: FACTORY_METAPOOLS_ZAP,
+        //     signature: "remove_liquidity(address,uint256,uint256[4])",
+        // },
+        allow.gnosis.curve.factory_metapools_zap["remove_liquidity(address,uint256,uint256[4])"](),
+
+        // Remove Liquidity of One Coin
+        // {
+        //     targetAddress: MAIx3CRV_LP_POOL,
+        //     signature: "remove_liquidity_one_coin(uint256,int128,uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_lp_pool["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+
+        // Remove Liquidity of One Coin (Underlying, using ZAP)
+        // {
+        //     targetAddress: FACTORY_METAPOOLS_ZAP,
+        //     signature: "remove_liquidity_one_coin(address,uint256,int128,uint256)",
+        // },
+        allow.gnosis.curve.factory_metapools_zap["remove_liquidity_one_coin(address,uint256,int128,uint256)"](),
+
+        // Exchange
+        // {
+        //     targetAddress: MAIx3CRV_LP_POOL,
+        //     signature: "exchange(int128,int128,uint256,uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_lp_pool["exchange(int128,int128,uint256,uint256)"](),
+
+        // Exchange Underlying
+        // {
+        //     targetAddress: MAIx3CRV_LP_POOL,
+        //     signature: "exchange_underlying(int128,int128,uint256,uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_lp_pool["exchange_underlying(int128,int128,uint256,uint256)"](),
+
+        // Stake
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "deposit(uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_gauge["deposit(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "deposit(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.crvEUReUSD_gauge["deposit(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Unstake
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "withdraw(uint256)",
+        // },
+        allow.gnosis.curve.MAIx3CRV_gauge["withdraw(uint256)"](),
+
+        // NO EVIDENCE OF BEING USED
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "withdraw(uint256,address,bool)",
+        //     params: {
+        //         [1]: staticEqual(AVATAR),
+        //     },
+        // },
+        allow.gnosis.curve.MAIx3CRV_gauge["withdraw(uint256,address,bool)"](
+            undefined,
+            AVATAR
+        ),
+
+        // Claim Rewards
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "claim_rewards()",
+        // },
+        allow.gnosis.curve.MAIx3CRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            MAIx3CRV_GAUGE
+        ),
+
+        // Deposit and Stake using a special ZAP
+        // {
+        //     targetAddress: STAKE_DEPOSIT_ZAP,
+        //     signature: "deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)",
+        //     params: {
+        //         [0]: staticOneOf([MAIx3CRV_LP_POOL, FACTORY_METAPOOLS_ZAP], "address"),
+        //         [1]: staticEqual(MAIx3CRV_LP_POOL, "address"),
+        //         [2]: staticEqual(MAIx3CRV_GAUGE, "address"),
+        //         [3]: staticOneOf([2, 4], "uint256"),
+        //         [4]: staticOneOf([
+        //             [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]],
+        //             "address[5]"),
+        //         [8]: staticEqual(ZERO_ADDRESS, "address"),
+        //     },
+        // },
+        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+            {
+                oneOf: [MAIx3CRV_LP_POOL, FACTORY_METAPOOLS_ZAP]
+            },
+            MAIx3CRV_LP_POOL,
+            MAIx3CRV_GAUGE,
+            {
+                oneOf: [2, 4]
+            },
+            {
+                oneOf: [
+                    [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]
+                ]
+            },
+            undefined,
+            undefined,
+            undefined,
+            ZERO_ADDRESS
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
         // Honeyswap
         //---------------------------------------------------------------------------------------------------------------------------------
-
         //---------------------------------------------------------------------------------------------------------------------------------
-        // Honeyswap WETH/GNO
+        // Honeyswap
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WETH, GNO], [HONEYSWAP_ROUTER]),
-        ...allowErc20Approve([HLP_WETH_GNO], [HONEYSWAP_ROUTER]),
+        ...allowErc20Approve([COW, CRV, FLX, GNO, GIV, WETH, WXDAI], [HONEYSWAP_ROUTER]),
+        ...allowErc20Approve([HLP_CRV_GNO, HLP_COW_GNO, HLP_GIV_GNO, HLP_GNO_FLX, HLP_GNO_WXDAI, HLP_WETH_GNO], [HONEYSWAP_ROUTER]),
 
         // Add Liquidity
         allow.gnosis.honeyswap.router["addLiquidity"](
-            {
-                oneOf: [WETH, GNO]
-            },
-            {
-                oneOf: [WETH, GNO]
-            },
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -322,54 +794,180 @@ const preset = {
 
         // Remove Liquidity
         allow.gnosis.honeyswap.router["removeLiquidity"](
-            WETH,
-            GNO,
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
             AVATAR
         ),
 
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Honeyswap WETH/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([WETH, GNO], [HONEYSWAP_ROUTER]),
+        // ...allowErc20Approve([HLP_WETH_GNO], [HONEYSWAP_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.honeyswap.router["addLiquidity"](
+        //     {
+        //         oneOf: [WETH, GNO]
+        //     },
+        //     {
+        //         oneOf: [WETH, GNO]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.honeyswap.router["removeLiquidity"](
+        //     WETH,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Honeyswap GNO/FLX
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([GNO, FLX], [HONEYSWAP_ROUTER]),
+        // ...allowErc20Approve([HLP_GNO_FLX], [HONEYSWAP_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.honeyswap.router["addLiquidity"](
+        //     {
+        //         oneOf: [GNO, FLX]
+        //     },
+        //     {
+        //         oneOf: [GNO, FLX]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.honeyswap.router["removeLiquidity"](
+        //     GNO,
+        //     FLX,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Honeyswap GNO/WXDAI
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([GNO, WXDAI], [HONEYSWAP_ROUTER]),
+        // ...allowErc20Approve([HLP_GNO_WXDAI], [HONEYSWAP_ROUTER]),
+
+        // // Add Liquidity using XDAI
+        // allow.gnosis.honeyswap.router["addLiquidityETH"](
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR,
+        //     undefined,
+        //     {
+        //         send: true
+        //     }
+        // ),
+
+        // // Add Liquidity using WXDAI
+        // allow.gnosis.honeyswap.router["addLiquidity"](
+        //     {
+        //         oneOf: [GNO, WXDAI]
+        //     },
+        //     {
+        //         oneOf: [GNO, WXDAI]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity using XDAI
+        // allow.gnosis.honeyswap.router["removeLiquidityETH"](
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity using WXDAI
+        // allow.gnosis.honeyswap.router["removeLiquidity"](
+        //     GNO,
+        //     WXDAI,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Honeyswap GIV/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([GIV, GNO], [HONEYSWAP_ROUTER]),
+        // ...allowErc20Approve([HLP_GIV_GNO], [HONEYSWAP_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.honeyswap.router["addLiquidity"](
+        //     {
+        //         oneOf: [GIV, GNO]
+        //     },
+        //     {
+        //         oneOf: [GIV, GNO]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.honeyswap.router["removeLiquidity"](
+        //     GIV,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
         //---------------------------------------------------------------------------------------------------------------------------------
-        // Honeyswap GNO/FLX
+        // Swapr
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GNO, FLX], [HONEYSWAP_ROUTER]),
-        ...allowErc20Approve([HLP_GNO_FLX], [HONEYSWAP_ROUTER]),
+        ...allowErc20Approve([BER, CRV, GNO, QI, WETH, WXDAI], [SWAPR_ROUTER]),
+        ...allowErc20Approve([DXS_BER_GNO, DXS_CRV_GNO, DXS_GNO_QI, DXS_GNO_WXDAI, DXS_WETH_GNO], [SWAPR_ROUTER]),
 
         // Add Liquidity
-        allow.gnosis.honeyswap.router["addLiquidity"](
-            {
-                oneOf: [GNO, FLX]
-            },
-            {
-                oneOf: [GNO, FLX]
-            },
+        allow.gnosis.swapr.router["addLiquidity"](
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
             undefined,
             AVATAR
         ),
-
-        // Remove Liquidity
-        allow.gnosis.honeyswap.router["removeLiquidity"](
-            GNO,
-            FLX,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Honeyswap GNO/WXDAI
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GNO, WXDAI], [HONEYSWAP_ROUTER]),
-        ...allowErc20Approve([HLP_GNO_WXDAI], [HONEYSWAP_ROUTER]),
 
         // Add Liquidity using XDAI
-        allow.gnosis.honeyswap.router["addLiquidityETH"](
-            GNO,
+        allow.gnosis.swapr.router["addLiquidityETH"](
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -380,131 +978,10 @@ const preset = {
             }
         ),
 
-        // Add Liquidity using WXDAI
-        allow.gnosis.honeyswap.router["addLiquidity"](
-            {
-                oneOf: [GNO, WXDAI]
-            },
-            {
-                oneOf: [GNO, WXDAI]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        // Remove Liquidity using XDAI
-        allow.gnosis.honeyswap.router["removeLiquidityETH"](
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        // Remove Liquidity using WXDAI
-        allow.gnosis.honeyswap.router["removeLiquidity"](
-            GNO,
-            WXDAI,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Honeyswap GIV/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GIV, GNO], [HONEYSWAP_ROUTER]),
-        ...allowErc20Approve([HLP_GIV_GNO], [HONEYSWAP_ROUTER]),
-
-        // Add Liquidity
-        allow.gnosis.honeyswap.router["addLiquidity"](
-            {
-                oneOf: [GIV, GNO]
-            },
-            {
-                oneOf: [GIV, GNO]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        // Remove Liquidity
-        allow.gnosis.honeyswap.router["removeLiquidity"](
-            GIV,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Honeyswap WATER/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WATER, GNO], [HONEYSWAP_ROUTER]),
-        ...allowErc20Approve([HLP_WATER_GNO], [HONEYSWAP_ROUTER]),
-
-        // Add Liquidity
-        allow.gnosis.honeyswap.router["addLiquidity"](
-            {
-                oneOf: [WATER, GNO]
-            },
-            {
-                oneOf: [WATER, GNO]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        // Remove Liquidity
-        allow.gnosis.honeyswap.router["removeLiquidity"](
-            WATER,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr
-        //---------------------------------------------------------------------------------------------------------------------------------
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr WETH/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WETH, GNO], [SWAPR_ROUTER]),
-        ...allowErc20Approve([DXS_WETH_GNO], [SWAPR_ROUTER]),
-
-        // Add Liquidity
-        allow.gnosis.swapr.router["addLiquidity"](
-            {
-                oneOf: [WETH, GNO]
-            },
-            {
-                oneOf: [WETH, GNO]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
         // Remove Liquidity
         allow.gnosis.swapr.router["removeLiquidity"](
-            WETH,
-            GNO,
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -512,41 +989,7 @@ const preset = {
         ),
 
         allow.gnosis.swapr.router["removeLiquidityWithPermit"](
-            WETH,
-            GNO,
             undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr GNO/WXDAI
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GNO, WXDAI], [SWAPR_ROUTER]),
-        ...allowErc20Approve([DXS_GNO_WXDAI], [SWAPR_ROUTER]),
-
-        // Add Liquidity using XDAI
-        allow.gnosis.swapr.router["addLiquidityETH"](
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR,
-            undefined,
-            {
-                send: true
-            }
-        ),
-
-        // Add Liquidity using WXDAI
-        allow.gnosis.swapr.router["addLiquidity"](
-            {
-                oneOf: [GNO, WXDAI]
-            },
-            {
-                oneOf: [GNO, WXDAI]
-            },
             undefined,
             undefined,
             undefined,
@@ -556,7 +999,7 @@ const preset = {
 
         // Remove Liquidity using XDAI
         allow.gnosis.swapr.router["removeLiquidityETH"](
-            GNO,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -564,46 +1007,6 @@ const preset = {
         ),
 
         allow.gnosis.swapr.router["removeLiquidityETHWithPermit"](
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        // Remove Liquidity using WXDAI
-        allow.gnosis.swapr.router["removeLiquidity"](
-            GNO,
-            WXDAI,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        allow.gnosis.swapr.router["removeLiquidityWithPermit"](
-            GNO,
-            WXDAI,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr CRV/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([CRV, GNO], [SWAPR_ROUTER]),
-        ...allowErc20Approve([DXS_CRV_GNO], [SWAPR_ROUTER]),
-
-        // Add Liquidity
-        allow.gnosis.swapr.router["addLiquidity"](
-            {
-                oneOf: [CRV, GNO]
-            },
-            {
-                oneOf: [CRV, GNO]
-            },
             undefined,
             undefined,
             undefined,
@@ -611,119 +1014,245 @@ const preset = {
             AVATAR
         ),
 
-        // Remove Liquidity
-        allow.gnosis.swapr.router["removeLiquidity"](
-            CRV,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Swapr WETH/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([WETH, GNO], [SWAPR_ROUTER]),
+        // ...allowErc20Approve([DXS_WETH_GNO], [SWAPR_ROUTER]),
 
-        allow.gnosis.swapr.router["removeLiquidityWithPermit"](
-            CRV,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // // Add Liquidity
+        // allow.gnosis.swapr.router["addLiquidity"](
+        //     {
+        //         oneOf: [WETH, GNO]
+        //     },
+        //     {
+        //         oneOf: [WETH, GNO]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr GNO/QI
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GNO, QI], [SWAPR_ROUTER]),
-        ...allowErc20Approve([DXS_GNO_QI], [SWAPR_ROUTER]),
+        // // Remove Liquidity
+        // allow.gnosis.swapr.router["removeLiquidity"](
+        //     WETH,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        // Add Liquidity
-        allow.gnosis.swapr.router["addLiquidity"](
-            {
-                oneOf: [GNO, QI]
-            },
-            {
-                oneOf: [GNO, QI]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // allow.gnosis.swapr.router["removeLiquidityWithPermit"](
+        //     WETH,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        // Remove Liquidity
-        allow.gnosis.swapr.router["removeLiquidity"](
-            GNO,
-            QI,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Swapr GNO/WXDAI
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([GNO, WXDAI], [SWAPR_ROUTER]),
+        // ...allowErc20Approve([DXS_GNO_WXDAI], [SWAPR_ROUTER]),
 
-        allow.gnosis.swapr.router["removeLiquidityWithPermit"](
-            GNO,
-            QI,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // // Add Liquidity using XDAI
+        // allow.gnosis.swapr.router["addLiquidityETH"](
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR,
+        //     undefined,
+        //     {
+        //         send: true
+        //     }
+        // ),
 
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Swapr BER/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([BER, GNO], [SWAPR_ROUTER]),
-        ...allowErc20Approve([DXS_BER_GNO], [SWAPR_ROUTER]),
+        // // Add Liquidity using WXDAI
+        // allow.gnosis.swapr.router["addLiquidity"](
+        //     {
+        //         oneOf: [GNO, WXDAI]
+        //     },
+        //     {
+        //         oneOf: [GNO, WXDAI]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        // Add Liquidity
-        allow.gnosis.swapr.router["addLiquidity"](
-            {
-                oneOf: [BER, GNO]
-            },
-            {
-                oneOf: [BER, GNO]
-            },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // // Remove Liquidity using XDAI
+        // allow.gnosis.swapr.router["removeLiquidityETH"](
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        // Remove Liquidity
-        allow.gnosis.swapr.router["removeLiquidity"](
-            BER,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // allow.gnosis.swapr.router["removeLiquidityETHWithPermit"](
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
-        allow.gnosis.swapr.router["removeLiquidityWithPermit"](
-            BER,
-            GNO,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // // Remove Liquidity using WXDAI
+        // allow.gnosis.swapr.router["removeLiquidity"](
+        //     GNO,
+        //     WXDAI,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // allow.gnosis.swapr.router["removeLiquidityWithPermit"](
+        //     GNO,
+        //     WXDAI,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Swapr CRV/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([CRV, GNO], [SWAPR_ROUTER]),
+        // ...allowErc20Approve([DXS_CRV_GNO], [SWAPR_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.swapr.router["addLiquidity"](
+        //     {
+        //         oneOf: [CRV, GNO]
+        //     },
+        //     {
+        //         oneOf: [CRV, GNO]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.swapr.router["removeLiquidity"](
+        //     CRV,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // allow.gnosis.swapr.router["removeLiquidityWithPermit"](
+        //     CRV,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Swapr GNO/QI
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([GNO, QI], [SWAPR_ROUTER]),
+        // ...allowErc20Approve([DXS_GNO_QI], [SWAPR_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.swapr.router["addLiquidity"](
+        //     {
+        //         oneOf: [GNO, QI]
+        //     },
+        //     {
+        //         oneOf: [GNO, QI]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.swapr.router["removeLiquidity"](
+        //     GNO,
+        //     QI,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // allow.gnosis.swapr.router["removeLiquidityWithPermit"](
+        //     GNO,
+        //     QI,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // Swapr BER/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([BER, GNO], [SWAPR_ROUTER]),
+        // ...allowErc20Approve([DXS_BER_GNO], [SWAPR_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.swapr.router["addLiquidity"](
+        //     {
+        //         oneOf: [BER, GNO]
+        //     },
+        //     {
+        //         oneOf: [BER, GNO]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.swapr.router["removeLiquidity"](
+        //     BER,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // allow.gnosis.swapr.router["removeLiquidityWithPermit"](
+        //     BER,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // SushiSwap
         //---------------------------------------------------------------------------------------------------------------------------------
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // SushiSwap SUSHI/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([SUSHI, GNO], [SUSHISWAP_ROUTER]),
-        ...allowErc20Approve([SLP_SUSHI_GNO], [SUSHISWAP_ROUTER]),
+        ...allowErc20Approve([GNO, SUSHI, WETH, wstETH], [SUSHISWAP_ROUTER]),
+        ...allowErc20Approve([SLP_SUSHI_GNO, SLP_WETH_GNO, SLP_WETH_wstETH], [SUSHISWAP_ROUTER]),
 
         // Add Liquidity
         allow.gnosis.sushiswap.router["addLiquidity"](
-            SUSHI,
-            GNO,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -734,18 +1263,17 @@ const preset = {
 
         // Remove Liquidity
         allow.gnosis.sushiswap.router["removeLiquidity"](
-            SUSHI,
-            GNO,
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
             AVATAR
         ),
 
-        // Remove Liquidity
         allow.gnosis.sushiswap.router["removeLiquidityWithPermit"](
-            SUSHI,
-            GNO,
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -754,61 +1282,118 @@ const preset = {
 
         // Stake
         allow.gnosis.sushiswap.minichef_v2["deposit"](
-            10,
+            undefined,
             undefined,
             AVATAR
         ),
 
         // Unstake and Claim Rewards
         allow.gnosis.sushiswap.minichef_v2["withdrawAndHarvest"](
-            10,
+            undefined,
             undefined,
             AVATAR
         ),
 
         // Claim Rewards
         allow.gnosis.sushiswap.minichef_v2["harvest"](
-            10,
-            AVATAR
-        ),
-
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // SushiSwap WETH/wstETH
-        //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WETH, wstETH], [SUSHISWAP_ROUTER]),
-        ...allowErc20Approve([SLP_WETH_wstETH], [SUSHISWAP_ROUTER]),
-
-        // Add Liquidity
-        allow.gnosis.sushiswap.router["addLiquidity"](
-            WETH,
-            wstETH,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
             undefined,
             AVATAR
         ),
 
-        // Remove Liquidity
-        allow.gnosis.sushiswap.router["removeLiquidity"](
-            WETH,
-            wstETH,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // SushiSwap SUSHI/GNO
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([SUSHI, GNO], [SUSHISWAP_ROUTER]),
+        // ...allowErc20Approve([SLP_SUSHI_GNO], [SUSHISWAP_ROUTER]),
 
-        // Remove Liquidity
-        allow.gnosis.sushiswap.router["removeLiquidityWithPermit"](
-            WETH,
-            wstETH,
-            undefined,
-            undefined,
-            undefined,
-            AVATAR
-        ),
+        // // Add Liquidity
+        // allow.gnosis.sushiswap.router["addLiquidity"](
+        //     SUSHI,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.sushiswap.router["removeLiquidity"](
+        //     SUSHI,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.sushiswap.router["removeLiquidityWithPermit"](
+        //     SUSHI,
+        //     GNO,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Stake
+        // allow.gnosis.sushiswap.minichef_v2["deposit"](
+        //     10,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Unstake and Claim Rewards
+        // allow.gnosis.sushiswap.minichef_v2["withdrawAndHarvest"](
+        //     10,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Claim Rewards
+        // allow.gnosis.sushiswap.minichef_v2["harvest"](
+        //     10,
+        //     AVATAR
+        // ),
+
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // // SushiSwap WETH/wstETH
+        // //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([WETH, wstETH], [SUSHISWAP_ROUTER]),
+        // ...allowErc20Approve([SLP_WETH_wstETH], [SUSHISWAP_ROUTER]),
+
+        // // Add Liquidity
+        // allow.gnosis.sushiswap.router["addLiquidity"](
+        //     WETH,
+        //     wstETH,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.sushiswap.router["removeLiquidity"](
+        //     WETH,
+        //     wstETH,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
+
+        // // Remove Liquidity
+        // allow.gnosis.sushiswap.router["removeLiquidityWithPermit"](
+        //     WETH,
+        //     wstETH,
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     AVATAR
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Agave
@@ -2249,8 +2834,24 @@ const preset = {
             B_50bbagGNO_50bbagUSD_GAUGE,
             AVATAR
         ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // OMNI BRIDGE
+        //---------------------------------------------------------------------------------------------------------------------------------
+        ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),
+        // {
+        //     targetAddress: OMNI_BRIDGE,
+        //     signature: "relayTokens(address,address,uint256)",
+        //     params: {
+        //         [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_MAINNET),
+        //     },
+        // },
+        allow.gnosis.omnibridge["relayTokens(address,address,uint256)"](
+            undefined,
+            OMNI_BRIDGE_RECIPIENT_MAINNET
+        ),
     ],
-    placeholders: { AVATAR },
+    placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET },
 } satisfies RolePreset
 
 export default preset

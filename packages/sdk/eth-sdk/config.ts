@@ -64,10 +64,31 @@ export default defineConfig({
         aurabb_a_USD_rewarder: "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B",
         aura_locker: "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC",
         snapshot_delegate_registry: "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",
-        aura_claim_zap: "0x623B83755a39B12161A63748f3f595A530917Ab2",
+        claim_zap: "0x623B83755a39B12161A63748f3f595A530917Ab2",
         B_80BAL_20WETH_depositor: "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827",
         BAL_depositor: "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
       },
+      convex: {
+        booster: "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
+        snapshot_delegation: "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",
+        crv_depositor: "0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae",
+        stkCvxCrv: "0xaa0C3f5F7DFD688C6E646F66CD2a6B66ACdbE434",
+        cvxRewardPool: "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332",
+        vlCVX: "0x72a19342e8F1838460eBFCCEf09F6585e32db86E",
+        cvxsteCRV_rewarder: "0x0A760466E1B4621579a82a39CB56Dda2F4E70f03",
+        cvxcDAIcUSDC_rewarder: "0xf34DFF761145FF0B05e917811d488B441F33a968",
+        claim_zap: "0x3f29cb4111cbda8081642da1f75b3c12decf2516"
+      },
+      curve: {
+        crv_minter: "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",
+        stake_deposit_zap: "0x271fbE8aB7f1fB262f81C77Ea5303F03DA9d3d6A",
+        steth_eth_pool: "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+        steth_eth_gauge: "0x182B723a58739a9c974cFDB385ceaDb237453c28",
+        cDAIcUSDC_pool: "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
+        cDAIcUSDC_gauge: "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
+        cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06"
+      },
+      omnibridge: "0x88ad09518695c6c3712AC10a214bE5109a655671"
     },
     gnosis: {
       sushiswap: {
@@ -81,11 +102,16 @@ export default defineConfig({
         sgnoCRV_lp_pool: "0xBdF4488Dcf7165788D438b62B4C8A333879B7078",
         sgnoCRV_gauge: "0x2686d5E477d1AaA58BF8cE598fA95d97985c7Fb1",
         crv3crypto_pool: "0x5633E00994896D0F472926050eCb32E38bef3e65",
-        crv3crypto_lp: "0x02E7e2dd3BA409148A49D5cc9a9034D2f884F245",
         crv3crypto_gauge: "0x3f7693797352A321f8D532A8B297F91DD31898D8",
         crv3crypto_zap: "0xF182926A64C0A19234E7E1FCDfE772aA7A1CA351",
         rgnoCRV_lp_pool: "0x5D7309a01B727d6769153fCB1dF5587858d53B9C",
         rgnoCRV_gauge: "0x9509A9D5C55793858FE8b1C00a99e012a7AF4aaB",
+        x3CRV_pool: "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
+        x3CRV_gauge: "0xB721Cc32160Ab0da2614CC6aB16eD822Aeebc101",
+        MAIx3CRV_lp_pool: "0xA64D8025ddA09bCE94DA2cF2DC175d1831e2dF76",
+        MAIx3CRV_gauge: "0xa6DF868420232698c1D0bF9Aa8677D4873307A6a",
+        factory_metapools_zap: "0x87C067fAc25f123554a0E76596BF28cFa37fD5E9",
+        crv_minter: "0xabC000d88f23Bb45525E447528DBF656A9D55bf5",
         stake_deposit_zap: "0xB7De33440B7171159a9718CBE748086cecDd9685"
       },
       realt: {
@@ -114,7 +140,8 @@ export default defineConfig({
         bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
         agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
         B_50bbagGNO_50bbagUSD_gauge: "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
-      }
+      },
+      omnibridge: "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d"
     },
   },
 })

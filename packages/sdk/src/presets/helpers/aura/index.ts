@@ -4,8 +4,8 @@ import { allowErc20Approve } from "../erc20"
 import pools from "./pools"
 import { Pool } from "./types"
 
-const BOOSTER_ADDRESS = "0x7818A1DA7BD1E64c199029E86Ba244a9798eEE10"
-const REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS =
+const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
+const AURA_REWARD_POOL_DEPOSIT_WRAPPER =
   "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
 
 const findPool = (name: Pool["name"]) => {
@@ -20,9 +20,9 @@ export const allowAuraPool = (name: Pool["name"]): PresetAllowEntry[] => {
   const pool = findPool(name)
 
   const result: PresetAllowEntry[] = [
-    ...allowErc20Approve([pool.token], [BOOSTER_ADDRESS]),
+    ...allowErc20Approve([pool.token], [AURA_BOOSTER]),
     {
-      targetAddress: BOOSTER_ADDRESS,
+      targetAddress: AURA_BOOSTER,
       signature: "deposit(uint256,uint256,bool)",
     },
     {
@@ -40,10 +40,10 @@ export const allowAuraPool = (name: Pool["name"]): PresetAllowEntry[] => {
     result.push(
       ...allowErc20Approve(
         [...pool.tokens],
-        [REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS]
+        [AURA_REWARD_POOL_DEPOSIT_WRAPPER]
       ),
       {
-        targetAddress: REWARD_POOL_DEPOSIT_WRAPPER_ADDRESS,
+        targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
         signature:
           "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       }
