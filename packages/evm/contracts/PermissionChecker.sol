@@ -643,12 +643,10 @@ abstract contract PermissionChecker is Core, Periphery {
         (uint256 index, bool found) = _find(consumptions, condition.compValue);
         assert(found == true);
 
-        if (
-            value + consumptions[index].consumed > consumptions[index].balance
-        ) {
+        if (value > consumptions[index].balance) {
             return (Status.AllowanceExceeded, consumptions);
         }
-        consumptions[index].consumed += uint128(value);
+        consumptions[index].balance -= uint128(value);
 
         return (Status.Ok, consumptions);
     }
@@ -729,7 +727,6 @@ abstract contract PermissionChecker is Core, Periphery {
         for (uint256 i; i < length; ++i) {
             result[i].allowanceKey = consumptions[i].allowanceKey;
             result[i].balance = consumptions[i].balance;
-            result[i].consumed = consumptions[i].consumed;
         }
     }
 }

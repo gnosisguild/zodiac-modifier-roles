@@ -201,9 +201,8 @@ abstract contract PermissionBuilder is Core {
     function _flush(Consumption[] memory consumptions) internal {
         uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
-            // Get the allowance key and consumed value for the current allowance.
             bytes32 key = consumptions[i].allowanceKey;
-            uint128 consumed = consumptions[i].consumed;
+            uint128 nextBalance = consumptions[i].balance;
 
             // Retrieve the allowance and calculate its current updated balance
             // and next refill timestamp.
@@ -212,17 +211,14 @@ abstract contract PermissionBuilder is Core {
                 allowance,
                 block.timestamp
             );
-
-            // Ensure match with what happened in the PermissionChecker pass.
-            assert(balance == consumptions[i].balance);
-            assert(consumed <= balance);
+            assert(balance >= nextBalance);
 
             // Flush
-            allowances[key].balance = balance - consumed;
+            allowances[key].balance = nextBalance;
             allowances[key].refillTimestamp = refillTimestamp;
 
             // Emit an event to signal the total consumed amount.
-            emit ConsumeAllowance(key, consumed, balance - consumed);
+            emit ConsumeAllowance(key, balance - nextBalance, nextBalance);
 
             unchecked {
                 ++i;
