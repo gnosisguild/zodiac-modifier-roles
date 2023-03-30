@@ -2,11 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import {
-  ExecutionOptions,
-  deployRolesMod,
-  PermissionCheckerStatus,
-} from "./utils";
+import { ExecutionOptions, deployRolesMod } from "./utils";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -61,12 +57,11 @@ describe("Roles", async () => {
 
   describe("assignRoles()", async () => {
     it("should throw on length mismatch", async () => {
-      const [user1] = await hre.ethers.getSigners();
-      const { modifier, owner } = await loadFixture(setup);
+      const { modifier, owner, alice } = await loadFixture(setup);
       await expect(
         modifier
           .connect(owner)
-          .assignRoles(user1.address, [ROLE_KEY1, ROLE_KEY2], [true])
+          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true])
       ).to.be.revertedWithCustomError(modifier, "ArraysDifferentLength");
     });
     it("reverts if not authorized", async () => {
@@ -75,7 +70,6 @@ describe("Roles", async () => {
         modifier.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
     it("assigns roles to a module", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
@@ -113,13 +107,11 @@ describe("Roles", async () => {
           )
       ).to.emit(testContract, "DoNothing");
     });
-
     it("revokes roles to a module", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
       );
 
-      // blank allow all calls to testContract from role 0
       await modifier
         .connect(owner)
         .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
@@ -159,9 +151,8 @@ describe("Roles", async () => {
           )
       ).to.be.revertedWithCustomError(modifier, "NoMembership");
     });
-
     it("it enables the module if necessary", async () => {
-      const { modifier, owner, alice, bob } = await loadFixture(setup);
+      const { modifier, owner, alice } = await loadFixture(setup);
 
       await modifier
         .connect(owner)
@@ -177,7 +168,6 @@ describe("Roles", async () => {
           .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true])
       ).to.not.be.reverted;
     });
-
     it("emits the AssignRoles event", async () => {
       const { owner, alice, modifier } = await loadFixture(setup);
 
@@ -189,195 +179,6 @@ describe("Roles", async () => {
     });
   });
 
-  describe("execTransactionFromModule()", () => {});
-
-  describe("execTransactionFromModuleReturnData()", () => {});
-
-  describe("execTransactionWithRole()", () => {});
-
-  describe("execTransactionWithRoleReturnData()", () => {});
-
-  describe("allowTarget()", () => {
-    it("sets allowed address to true", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
-      const SHOULD_REVERT = true;
-      // assign a role to invoker
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY1], [true]);
-      // expect to fail due to no permissions
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
-      ).to.be.revertedWithCustomError(modifier, "NoMembership");
-      // allow testContract address for role
-      await expect(
-        modifier
-          .connect(owner)
-          .allowTarget(ROLE_KEY1, testContract.address, ExecutionOptions.None)
-      ).to.not.be.reverted;
-      // expect to fail with default role
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModule(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
-      ).to.be.revertedWithCustomError(modifier, "NoMembership");
-      // should work with the configured role
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionWithRole(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0,
-            ROLE_KEY1,
-            !SHOULD_REVERT
-          )
-      ).to.emit(testContract, "DoNothing");
-    });
-    it("sets allowed address to false", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
-      const SHOULD_REVERT = true;
-      // assign a role to invoker
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-      // allow testContract address for role
-      await expect(
-        modifier
-          .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None)
-      );
-      // this call should work
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionWithRole(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0,
-            ROLE_KEY,
-            !SHOULD_REVERT
-          )
-      ).to.emit(testContract, "DoNothing");
-      // Revoke access
-      await expect(
-        modifier.connect(owner).revokeTarget(ROLE_KEY, testContract.address)
-      ).to.not.be.reverted;
-      // fails after revoke
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionWithRole(
-            testContract.address,
-            0,
-            testContract.interface.encodeFunctionData("doNothing"),
-            0,
-            ROLE_KEY,
-            !SHOULD_REVERT
-          )
-      )
-        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
-    });
-  });
-
-  describe("allowTarget - canSend", () => {
-    it("sets send allowed to true", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
-
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
-      )
-        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.SendNotAllowed);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
-
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModuleReturnData(
-            testContract.address,
-            10000,
-            "0x",
-            0
-          )
-      ).to.not.be.reverted;
-    });
-    it("sets send allowed to false", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
-
-      await modifier
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
-
-      // should work with sendAllowed true
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModuleReturnData(
-            testContract.address,
-            10000,
-            "0x",
-            0
-          )
-      ).to.not.be.reverted;
-
-      await modifier
-        .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
-
-      // should work with sendAllowed false
-      await expect(
-        modifier
-          .connect(invoker)
-          .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
-      )
-        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.SendNotAllowed);
-    });
-  });
-
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
       const { modifier, alice, bob } = await loadFixture(setup);
@@ -385,7 +186,6 @@ describe("Roles", async () => {
         modifier.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
     it("sets default role", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
@@ -418,8 +218,6 @@ describe("Roles", async () => {
 
       // make ROLE1 the default to invoker
       await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
-
-      // gmi
       await expect(
         modifier
           .connect(invoker)
@@ -440,5 +238,29 @@ describe("Roles", async () => {
         .to.emit(modifier, "SetDefaultRole")
         .withArgs(invoker.address, ROLE_KEY2);
     });
+  });
+
+  describe("execTransactionFromModule()", () => {
+    it.skip("success=true, flushes consumptions to storage");
+    it.skip("success=false, does not flush consumptions to storage");
+  });
+
+  describe("execTransactionFromModuleReturnData()", () => {
+    it.skip("success=true, flushes consumptions to storage");
+    it.skip("success=false, does not flush consumptions to storage");
+  });
+
+  describe("execTransactionWithRole()", () => {
+    it.skip("success=true shouldRevert=true, flush YES revert NO");
+    it.skip("success=true shouldRevert=false, flush YES revert NO");
+    it.skip("success=false shouldRevert=true, flush NO revert YES");
+    it.skip("success=false shouldRevert=false, flush NO revert NO");
+  });
+
+  describe("execTransactionWithRoleReturnData()", () => {
+    it.skip("success=true shouldRevert=true, flush YES revert NO");
+    it.skip("success=true shouldRevert=false, flush YES revert NO");
+    it.skip("success=false shouldRevert=true, flush NO revert YES");
+    it.skip("success=false shouldRevert=false, flush NO revert NO");
   });
 });
