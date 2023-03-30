@@ -9,10 +9,25 @@ import "./Types.sol";
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
  */
 library Consumptions {
+    function clone(
+        Consumption[] memory consumptions
+    ) internal pure returns (Consumption[] memory result) {
+        if (consumptions.length == 0) {
+            return result;
+        }
+
+        uint256 length = consumptions.length;
+        result = new Consumption[](length);
+        for (uint256 i; i < length; ++i) {
+            result[i].allowanceKey = consumptions[i].allowanceKey;
+            result[i].balance = consumptions[i].balance;
+        }
+    }
+
     function find(
         Consumption[] memory consumptions,
         bytes32 key
-    ) public pure returns (uint256, bool) {
+    ) internal pure returns (uint256, bool) {
         uint256 length = consumptions.length;
         for (uint256 i; i < length; ++i) {
             if (consumptions[i].allowanceKey == key) {
@@ -26,7 +41,7 @@ library Consumptions {
     function contains(
         Consumption[] memory consumptions,
         bytes32 key
-    ) external pure returns (bool) {
+    ) internal pure returns (bool) {
         uint256 length = consumptions.length;
         for (uint256 i; i < length; ++i) {
             if (consumptions[i].allowanceKey == key) {
@@ -40,7 +55,7 @@ library Consumptions {
     function merge(
         Consumption[] memory c1,
         Consumption[] memory c2
-    ) external pure returns (Consumption[] memory result) {
+    ) internal pure returns (Consumption[] memory result) {
         if (c1.length == 0) return c2;
         if (c2.length == 0) return c1;
 

@@ -286,7 +286,7 @@ abstract contract PermissionChecker is Core, Periphery {
             return (Status.ParameterNotAMatch, consumptions);
         }
 
-        Consumption[] memory result = _clone(consumptions);
+        Consumption[] memory result = Consumptions.clone(consumptions);
         for (uint256 i; i < condition.children.length; ) {
             Status status;
             (status, result) = _walk(
@@ -314,7 +314,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory) {
-        Consumption[] memory result = _clone(consumptions);
+        Consumption[] memory result = Consumptions.clone(consumptions);
 
         for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
@@ -347,7 +347,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(consumptions)
+                Consumptions.clone(consumptions)
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -372,7 +372,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(consumptions)
+                Consumptions.clone(consumptions)
             );
             if (status == Status.Ok) {
                 return (Status.NorViolation, consumptions);
@@ -398,7 +398,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(consumptions)
+                Consumptions.clone(consumptions)
             );
             if (status == Status.Ok) {
                 result = temp;
@@ -428,7 +428,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[0],
                 payload.children[i],
-                _clone(consumptions)
+                Consumptions.clone(consumptions)
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -447,7 +447,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
-        result = _clone(consumptions);
+        result = Consumptions.clone(consumptions);
         for (uint256 i; i < payload.children.length; ) {
             (status, result) = _walk(
                 value,
@@ -495,7 +495,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     data,
                     condition.children[j],
                     payload.children[i],
-                    _clone(result)
+                    Consumptions.clone(result)
                 );
                 if (status == Status.Ok) {
                     found = true;
@@ -640,7 +640,10 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory) {
-        (uint256 index, bool found) = _find(consumptions, condition.compValue);
+        (uint256 index, bool found) = Consumptions.find(
+            consumptions,
+            condition.compValue
+        );
         assert(found == true);
 
         if (value > consumptions[index].balance) {
@@ -700,33 +703,4 @@ abstract contract PermissionChecker is Core, Periphery {
     error MalformedMultiEntrypoint();
 
     error ConditionViolation(Status);
-
-    function _find(
-        Consumption[] memory consumptions,
-        bytes32 key
-    ) private pure returns (uint256, bool) {
-        uint256 length = consumptions.length;
-        for (uint256 i; i < length; ++i) {
-            if (consumptions[i].allowanceKey == key) {
-                return (i, true);
-            }
-        }
-
-        return (0, false);
-    }
-
-    function _clone(
-        Consumption[] memory consumptions
-    ) private pure returns (Consumption[] memory result) {
-        if (consumptions.length == 0) {
-            return result;
-        }
-
-        uint256 length = consumptions.length;
-        result = new Consumption[](length);
-        for (uint256 i; i < length; ++i) {
-            result[i].allowanceKey = consumptions[i].allowanceKey;
-            result[i].balance = consumptions[i].balance;
-        }
-    }
 }

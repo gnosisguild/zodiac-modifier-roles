@@ -1,6 +1,6 @@
 import hre from "hardhat";
 import { deployMastercopyWithInitData } from "@gnosis.pm/zodiac";
-import { concat, defaultAbiCoder, solidityPack } from "ethers/lib/utils";
+import { defaultAbiCoder } from "ethers/lib/utils";
 
 const SaltZero =
   "0x0000000000000000000000000000000000000000000000000000000000000000";

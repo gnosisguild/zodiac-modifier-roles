@@ -232,21 +232,11 @@ export async function deployRolesMod(
   avatar: string,
   target: string
 ) {
-  const Consumptions = await hre.ethers.getContractFactory("Consumptions");
-  const consumptions = await Consumptions.deploy();
-
-  const Topology = await hre.ethers.getContractFactory("Topology");
-  const topology = await Topology.deploy();
-
-  const Integrity = await hre.ethers.getContractFactory("Integrity", {
-    libraries: { Topology: topology.address },
-  });
+  const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Consumptions: consumptions.address,
-      Topology: topology.address,
       Integrity: integrity.address,
     },
   });
