@@ -122,7 +122,11 @@ library ScopeConfig {
     )
         internal
         pure
-        returns (ConditionFlat[] memory result, bytes32[] memory compValues)
+        returns (
+            ConditionFlat[] memory result,
+            bytes32[] memory compValues,
+            uint256 allowanceCount
+        )
     {
         result = new ConditionFlat[](count);
         compValues = new bytes32[](count);
@@ -152,6 +156,9 @@ library ScopeConfig {
                 }
                 compValues[i] = word;
                 compValueOffset += 32;
+                if (condition.operator >= Operator.WithinAllowance) {
+                    ++allowanceCount;
+                }
             }
 
             unchecked {

@@ -81,10 +81,15 @@ abstract contract PermissionLoader is Core {
     function _unpack(
         bytes memory buffer,
         uint256 paramCount
-    ) private view returns (Condition memory result, Consumption[] memory) {
+    )
+        private
+        view
+        returns (Condition memory result, Consumption[] memory consumptions)
+    {
         (
             ConditionFlat[] memory conditions,
-            bytes32[] memory compValues
+            bytes32[] memory compValues,
+            uint256 allowanceCount
         ) = ScopeConfig.unpackConditions(buffer, paramCount);
 
         _unpackCondition(
@@ -95,7 +100,12 @@ abstract contract PermissionLoader is Core {
             result
         );
 
-        return (result, _unpackConsumptions(conditions, compValues));
+        return (
+            result,
+            allowanceCount > 0
+                ? _unpackConsumptions(conditions, compValues, allowanceCount)
+                : consumptions
+        );
     }
 
     function _unpackCondition(
@@ -135,19 +145,9 @@ abstract contract PermissionLoader is Core {
 
     function _unpackConsumptions(
         ConditionFlat[] memory conditions,
-        bytes32[] memory compValues
-    ) private view returns (Consumption[] memory result) {
-        uint256 maxAllowanceCount;
-        for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].operator >= Operator.WithinAllowance) {
-                ++maxAllowanceCount;
-            }
-        }
-
-        if (maxAllowanceCount == 0) {
-            return result;
-        }
-
+        bytes32[] memory compValues,
+        uint256 maxAllowanceCount
+    ) private pure returns (Consumption[] memory result) {
         result = new Consumption[](maxAllowanceCount);
 
         uint256 insert;
