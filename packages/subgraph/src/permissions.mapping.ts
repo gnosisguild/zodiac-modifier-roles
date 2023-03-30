@@ -33,8 +33,8 @@ export function handleAllowTarget(event: AllowTarget): void {
   }
 
   // Make sure the role exists
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -57,8 +57,8 @@ export function handleScopeTarget(event: ScopeTarget): void {
   }
 
   // Make sure the role exists
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -74,7 +74,7 @@ export function handleRevokeTarget(event: RevokeTarget): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
 
   const targetId = getTargetId(roleId, targetAddress)
   let target = Target.load(targetId)
@@ -99,8 +99,8 @@ export function handleAllowFunction(event: AllowFunction): void {
   }
 
   // Make sure the role exists
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   // Make sure the target exists
   const targetAddress = event.params.targetAddress
@@ -126,8 +126,8 @@ export function handleScopeFunction(event: ScopeFunction): void {
   }
 
   // Make sure the role exists
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   // Make sure the target exists
   const targetAddress = event.params.targetAddress
@@ -135,7 +135,7 @@ export function handleScopeFunction(event: ScopeFunction): void {
   getOrCreateTarget(targetId, targetAddress, roleId)
 
   // If function does not exist, create it with executionOptions set to None and wildcarded set to false
-  const selector = event.params.functionSig
+  const selector = event.params.selector
   const functionId = getFunctionId(targetId, selector)
   const func = getOrCreateFunction(functionId, targetId, selector)
 
@@ -152,7 +152,7 @@ export function handleRevokeFunction(event: RevokeFunction): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
 
   const targetId = getTargetId(roleId, targetAddress)
   const functionId = getFunctionId(targetId, event.params.selector)
@@ -170,7 +170,7 @@ export function handleSetAllowance(event: SetAllowance): void {
     return
   }
 
-  const allowance = getOrCreateAllowance(rolesModifierId, event.params.key)
+  const allowance = getOrCreateAllowance(event.params.allowanceKey, rolesModifierId)
   allowance.balance = event.params.balance
   allowance.maxBalance = event.params.balance
   allowance.refillAmount = event.params.refillAmount

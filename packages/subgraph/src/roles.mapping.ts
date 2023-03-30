@@ -34,12 +34,12 @@ export function handleAssignRoles(event: AssignRoles): void {
   const memberId = getMemberId(rolesModifierId, memberAddress)
   const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
 
-  const rolesArray = event.params.roles
+  const roleKeys = event.params.roleKeys
   const memberOfArray = event.params.memberOf
 
-  for (let i = 0; i < rolesArray.length; i++) {
-    const roleId = getRoleId(rolesModifierId, rolesArray[i])
-    const role = getOrCreateRole(roleId, rolesModifierId, rolesArray[i])
+  for (let i = 0; i < roleKeys.length; i++) {
+    const roleId = getRoleId(rolesModifierId, roleKeys[i])
+    const role = getOrCreateRole(roleId, rolesModifierId, roleKeys[i])
     const assignmentId = getAssignmentId(memberId, roleId)
     let assignment = RoleAssignment.load(assignmentId)
     if (!assignment) {
