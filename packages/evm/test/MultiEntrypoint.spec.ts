@@ -5,7 +5,11 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumberish } from "ethers";
 import { solidityPack } from "ethers/lib/utils";
 
-import { deployRolesMod, ExecutionOptions } from "./utils";
+import {
+  deployRolesMod,
+  ExecutionOptions,
+  PermissionCheckerStatus,
+} from "./utils";
 
 enum Operation {
   Call = 0,
@@ -134,7 +138,9 @@ describe("Multi Entrypoint", async () => {
           multisendCallData,
           Operation.DelegateCall
         )
-    ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -182,7 +188,9 @@ describe("Multi Entrypoint", async () => {
           multisendCallData,
           Operation.DelegateCall
         )
-    ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -250,7 +258,9 @@ describe("Multi Entrypoint", async () => {
           multisendCallData,
           Operation.DelegateCall
         )
-    ).to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed");
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
   });
 
   it("succeeds for multiple transactions", async () => {

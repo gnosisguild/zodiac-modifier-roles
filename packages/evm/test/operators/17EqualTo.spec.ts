@@ -3,7 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import {
   setupOneParamArrayOfStatic,
   setupOneParamBytes,
@@ -38,10 +38,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke(321)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(321))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(123)).to.not.be.reverted;
   });
 
@@ -65,10 +64,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke(128)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(128))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(50)).to.not.be.reverted;
   });
 
@@ -92,10 +90,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke(5555)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(5555))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(-5555)).to.not.be.reverted;
   });
 
@@ -119,10 +116,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke(55)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(55))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(-55)).to.not.be.reverted;
   });
 
@@ -150,10 +146,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke(otherValue)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(otherValue))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(value)).to.not.be.reverted;
   });
 
@@ -177,10 +172,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("0xa2")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("0xa2"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke("0xa1")).to.not.be.reverted;
   });
 
@@ -204,10 +198,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("Good morning!")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("Good morning!"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke("Hello World!")).to.not.be.reverted;
   });
 
@@ -231,10 +224,9 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("Good morning!")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("Good morning!"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke("")).to.not.be.reverted;
   });
 
@@ -260,15 +252,13 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke(""))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
 
-    await expect(invoke("Good morning!")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("Good morning!"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(value)).to.not.be.reverted;
   });
 
@@ -292,14 +282,12 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("0x")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
-    await expect(invoke("0xdeadbeef")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("0x"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+    await expect(invoke("0xdeadbeef"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke("0xbadfed")).to.not.be.reverted;
   });
 
@@ -326,14 +314,12 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("0x")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
-    await expect(invoke("0xdeadbeef")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("0x"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+    await expect(invoke("0xdeadbeef"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke(largeValue)).to.not.be.reverted;
   });
 
@@ -357,14 +343,12 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke("0x00")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
-    await expect(invoke("0xdeadbeef")).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke("0x00"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+    await expect(invoke("0xdeadbeef"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke("0x")).to.not.be.reverted;
   });
 
@@ -394,14 +378,12 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke([])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
-    await expect(invoke([4, 5, 6, 7])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
+    await expect(invoke([]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+    await expect(invoke([4, 5, 6, 7]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     await expect(invoke([4, 5, 6])).to.not.be.reverted;
   });
 
@@ -440,13 +422,12 @@ describe("Operator - EqualTo", async () => {
       },
     ]);
 
-    await expect(invoke({ a: 100, b: "0xff" })).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAllowed"
-    );
-    await expect(
-      invoke({ a: 10, b: "0xbadfed" })
-    ).to.be.revertedWithCustomError(roles, "ParameterNotAllowed");
+    await expect(invoke({ a: 100, b: "0xff" }))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+    await expect(invoke({ a: 10, b: "0xbadfed" }))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
 
     await expect(invoke({ a: 100, b: "0xbadfed" })).to.not.be.reverted;
   });

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Xor", async () => {
@@ -53,10 +53,9 @@ describe("Operator - Xor", async () => {
       },
     ]);
 
-    await expect(invoke(99)).to.be.revertedWithCustomError(
-      roles,
-      "XorViolation"
-    );
+    await expect(invoke(99))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.XorViolation);
 
     await expect(invoke(100)).to.not.be.reverted;
   });
@@ -99,22 +98,19 @@ describe("Operator - Xor", async () => {
       },
     ]);
 
-    await expect(invoke(6)).to.be.revertedWithCustomError(
-      roles,
-      "XorViolation"
-    );
+    await expect(invoke(6))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.XorViolation);
 
     await expect(invoke(7)).to.not.be.reverted;
 
-    await expect(invoke(88)).to.be.revertedWithCustomError(
-      roles,
-      "XorViolation"
-    );
+    await expect(invoke(88))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.XorViolation);
 
-    await expect(invoke(999)).to.be.revertedWithCustomError(
-      roles,
-      "XorViolation"
-    );
+    await expect(invoke(999))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.XorViolation);
   });
 
   it.skip("Tracks the resulting trace");

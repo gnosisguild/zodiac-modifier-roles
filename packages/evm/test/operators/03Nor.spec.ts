@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType } from "../utils";
+import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Nor", async () => {
@@ -53,10 +53,9 @@ describe("Operator - Nor", async () => {
       },
     ]);
 
-    await expect(invoke(100)).to.be.revertedWithCustomError(
-      roles,
-      "NorViolation"
-    );
+    await expect(invoke(100))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.NorViolation);
 
     await expect(invoke(1000)).to.not.be.reverted;
   });
@@ -99,20 +98,17 @@ describe("Operator - Nor", async () => {
       },
     ]);
 
-    await expect(invoke(6)).to.be.revertedWithCustomError(
-      roles,
-      "NorViolation"
-    );
+    await expect(invoke(6))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.NorViolation);
 
-    await expect(invoke(77)).to.be.revertedWithCustomError(
-      roles,
-      "NorViolation"
-    );
+    await expect(invoke(77))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.NorViolation);
 
-    await expect(invoke(888)).to.be.revertedWithCustomError(
-      roles,
-      "NorViolation"
-    );
+    await expect(invoke(888))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.NorViolation);
 
     await expect(invoke(1000)).to.not.be.reverted;
   });

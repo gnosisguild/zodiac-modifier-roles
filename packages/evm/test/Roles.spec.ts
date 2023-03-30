@@ -11,11 +11,9 @@ import {
   ExecutionOptions,
   Operator,
   deployRolesMod,
+  PermissionCheckerStatus,
 } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
-
-const ZeroAddress = "0x0000000000000000000000000000000000000000";
-const FirstAddress = "0x0000000000000000000000000000000000000001";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -24,7 +22,7 @@ const ROLE_KEY1 =
 const ROLE_KEY2 =
   "0x0000000000000000000000000000000000000000000000000000000000000002";
 
-describe("RolesModifier", async () => {
+describe("Roles", async () => {
   async function baseSetup() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
@@ -427,7 +425,9 @@ describe("RolesModifier", async () => {
           mint.data || "",
           0
         )
-      ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
     });
 
     it("executes a call to an allowed target", async () => {
@@ -530,7 +530,9 @@ describe("RolesModifier", async () => {
           mint.data || "",
           0
         )
-      ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     });
 
     it("executes a call with allowed value parameter", async () => {
@@ -708,7 +710,9 @@ describe("RolesModifier", async () => {
           dynamic.data || "",
           0
         )
-      ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     });
 
     it("executes a call with allowed dynamic parameter", async () => {
@@ -855,7 +859,9 @@ describe("RolesModifier", async () => {
           multiTx.data,
           1
         )
-      ).to.be.revertedWithCustomError(modifier, "ParameterNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
     });
 
     it.skip("reverts if multisend tx data offset is not 32 bytes", async () => {
@@ -1081,7 +1087,9 @@ describe("RolesModifier", async () => {
           mint.data || "",
           0
         )
-      ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
     });
 
     it("executes a call to an allowed target", async () => {
@@ -1458,7 +1466,9 @@ describe("RolesModifier", async () => {
             ROLE_KEY,
             !SHOULD_REVERT
           )
-      ).to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
     });
   });
 
@@ -1481,7 +1491,9 @@ describe("RolesModifier", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
-      ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.SendNotAllowed);
 
       await modifier
         .connect(owner)
@@ -1534,7 +1546,9 @@ describe("RolesModifier", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModuleReturnData(testContract.address, 1, "0x", 0)
-      ).to.be.revertedWithCustomError(modifier, "SendNotAllowed");
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.SendNotAllowed);
     });
   });
 
