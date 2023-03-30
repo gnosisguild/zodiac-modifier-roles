@@ -6,7 +6,7 @@ import { Placeholder, PresetCondition } from "../types"
 
 export type ConditionFunction<T> = (
   abiType: ParamType,
-  _?: T // we must use the generic to make TS check on it
+  _?: T // we must use the generic to make TS check on it (see: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-type-inference-work-on-this-interface-interface-foot--)
 ) => PresetCondition
 
 export type NestedRecordOrArray<T> =
@@ -14,21 +14,6 @@ export type NestedRecordOrArray<T> =
   | (T | NestedRecordOrArray<T>)[]
 
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
-
-type PromiseOrValue<T> = T | Promise<T>
-// export type UnwrapPromise<T> = T extends PromiseOrValue<infer U>[]
-//   ? U[]
-//   : T extends PromiseOrValue<infer V>
-//   ? V
-//   : T
-
-// type DeepAwaited<T> = Awaited<T> extends PrimitiveValue
-//   ? Awaited<T>
-//   : Awaited<T> extends { [key: string | number]: any }
-//   ? {
-//       [Key in keyof Awaited<T>]?: DeepAwaited<Awaited<T>[Key]>
-//     }
-//   : Awaited<T>
 
 type PrimitiveScoping<T extends PrimitiveValue> =
   | T
@@ -52,13 +37,13 @@ export type StructScoping<Struct extends { [key: string]: any }> =
     }>
   | ConditionFunction<Struct>
 
-export type Scoping<T> = T extends any[]
+export type Scoping<T> = T extends PrimitiveValue
+  ? PrimitiveScoping<T>
+  : T extends any[]
   ? ArrayScoping<T>
   : T extends { [key: string]: any }
   ? StructScoping<T>
-  : T extends PrimitiveValue
-  ? PrimitiveScoping<T>
-  : never
+  : unknown // it resolves to this if T is any (for example when using scoping functions outside of the typed context)
 
 export type TupleScopings<Params extends [...any[]]> = {
   [Index in keyof Params]?: Awaited<Params[Index]> extends PrimitiveValue
@@ -67,7 +52,3 @@ export type TupleScopings<Params extends [...any[]]> = {
     ? ArrayScoping<Awaited<Params[Index]>>
     : StructScoping<Awaited<Params[Index]>>
 }
-
-type T1 = [...any[]] extends { [key: string]: any } ? true : false // not the other way around!
-type T2 = any[] extends [...any[]] ? true : false // goes both ways
-type T3 = [...any[], any] extends any[] ? true : false // not the other way around!
