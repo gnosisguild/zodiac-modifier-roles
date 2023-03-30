@@ -20,7 +20,7 @@ import {
   getRolesModifierId,
   getTargetId,
 } from "./helpers"
-import { Clearance, ExecutionOptions, Operator, ParameterType } from "./enums"
+import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys, Operator, ParameterType } from "./enums"
 import { storeConditions } from "./conditions"
 
 export function handleAllowTarget(event: AllowTarget): void {
@@ -39,8 +39,8 @@ export function handleAllowTarget(event: AllowTarget): void {
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = ExecutionOptions[event.params.options]
-  target.clearance = Clearance[Clearance.Target]
+  target.executionOptions = ExecutionOptionsKeys[event.params.options]
+  target.clearance = ClearanceKeys[Clearance.Target]
   target.save()
 
   log.info("Permission has been granted to call any function of target {}", [targetId])
@@ -63,8 +63,8 @@ export function handleScopeTarget(event: ScopeTarget): void {
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = ExecutionOptions[ExecutionOptions.None]
-  target.clearance = Clearance[Clearance.Function]
+  target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
+  target.clearance = ClearanceKeys[Clearance.Function]
   target.save()
 
   log.info("Target {} has been set to scoped", [targetId])
@@ -80,8 +80,8 @@ export function handleRevokeTarget(event: RevokeTarget): void {
   let target = Target.load(targetId)
 
   if (target) {
-    target.executionOptions = ExecutionOptions[ExecutionOptions.None]
-    target.clearance = Clearance[Clearance.None]
+    target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
+    target.clearance = ClearanceKeys[Clearance.None]
     target.save()
   } else {
     log.warning("Target does not exist: {}", [targetId])
@@ -110,7 +110,7 @@ export function handleAllowFunction(event: AllowFunction): void {
   const functionId = getFunctionId(targetId, event.params.selector)
   const func = getOrCreateFunction(functionId, targetId, event.params.selector)
   func.wildcarded = true
-  func.executionOptions = ExecutionOptions[event.params.options]
+  func.executionOptions = ExecutionOptionsKeys[event.params.options]
   func.condition = null
   func.save()
 

@@ -1,6 +1,6 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
 import { Function, Role, RolesModifier, Target, Condition, Member, Allowance, UnwrapAdapter } from "../generated/schema"
-import { Clearance, ExecutionOptions, Operator } from "./enums"
+import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys, Operator, OperatorKeys } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
 export const getRoleId = (roleModifierId: string, roleKey: Bytes): string => roleModifierId + "-ROLE-" + roleKey.toHex()
@@ -42,8 +42,8 @@ export const getOrCreateTarget = (targetId: string, targetAddress: Address, role
     target = new Target(targetId)
     target.address = targetAddress
     target.role = roleId
-    target.executionOptions = ExecutionOptions[ExecutionOptions.None]
-    target.clearance = Clearance[Clearance.None]
+    target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
+    target.clearance = ClearanceKeys[Clearance.None]
     target.save()
     log.info("Created new target #{}", [targetId])
   } else {
@@ -64,7 +64,7 @@ export const getOrCreateFunction = (functionId: string, targetId: string, select
     func = new Function(functionId)
     func.target = targetId
     func.selector = selector
-    func.executionOptions = ExecutionOptions[ExecutionOptions.None]
+    func.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
     func.wildcarded = false
     func.save()
     log.info("Created new function #{}", [functionId])
@@ -84,7 +84,7 @@ export const getOrCreateCondition = (conditionId: string): Condition => {
 
   if (!condition) {
     condition = new Condition(conditionId)
-    condition.operator = Operator[Operator.Pass]
+    condition.operator = OperatorKeys[Operator.Pass]
     condition.save()
     log.info("Created new condition #{}", [conditionId])
   } else {

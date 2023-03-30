@@ -1,3 +1,4 @@
+import { log } from "@graphprotocol/graph-ts"
 import { SetUnwrapAdapter } from "../generated/Periphery/Periphery"
 import { getOrCreateUnwrapAdapter, getRolesModifierId } from "./helpers"
 
