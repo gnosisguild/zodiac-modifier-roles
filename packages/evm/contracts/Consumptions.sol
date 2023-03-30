@@ -14,13 +14,9 @@ library Consumptions {
         bytes32 key
     ) public pure returns (uint256, bool) {
         uint256 length = consumptions.length;
-        for (uint256 i; i < length; ) {
+        for (uint256 i; i < length; ++i) {
             if (consumptions[i].allowanceKey == key) {
                 return (i, true);
-            }
-
-            unchecked {
-                ++i;
             }
         }
 
@@ -32,13 +28,9 @@ library Consumptions {
         bytes32 key
     ) external pure returns (bool) {
         uint256 length = consumptions.length;
-        for (uint256 i; i < length; ) {
+        for (uint256 i; i < length; ++i) {
             if (consumptions[i].allowanceKey == key) {
                 return true;
-            }
-
-            unchecked {
-                ++i;
             }
         }
 

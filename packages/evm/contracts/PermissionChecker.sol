@@ -61,13 +61,20 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) private view returns (Consumption[] memory trace) {
+    ) private view returns (Consumption[] memory result) {
         Status status;
-        (status, trace) = _transaction(role, to, value, data, operation, trace);
+        (status, result) = _transaction(
+            role,
+            to,
+            value,
+            data,
+            operation,
+            result
+        );
         if (status != Status.Ok) {
             revertWith(status);
         }
-        return trace;
+        return result;
     }
 
     function _multiEntrypoint(
@@ -83,10 +90,16 @@ abstract contract PermissionChecker is Core, Periphery {
         ) {
             for (uint256 i; i < transactions.length; ) {
                 Status status;
+
+                UnwrappedTransaction memory transaction = transactions[i];
+                uint256 left = transaction.dataOffset;
+                uint256 right = left + transaction.dataLength;
                 (status, result) = _transaction(
                     role,
-                    data,
-                    transactions[i],
+                    transaction.to,
+                    transaction.value,
+                    data[left:right],
+                    transaction.operation,
                     result
                 );
                 if (status != Status.Ok) {
@@ -99,24 +112,6 @@ abstract contract PermissionChecker is Core, Periphery {
         } catch {
             revert MalformedMultiEntrypoint();
         }
-    }
-
-    function _transaction(
-        Role storage role,
-        bytes calldata data,
-        UnwrappedTransaction memory transaction,
-        Consumption[] memory consumptions
-    ) private view returns (Status, Consumption[] memory) {
-        return
-            _transaction(
-                role,
-                transaction.to,
-                transaction.value,
-                data[transaction.dataOffset:transaction.dataOffset +
-                    transaction.dataLength],
-                transaction.operation,
-                consumptions
-            );
     }
 
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.
@@ -132,7 +127,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private view returns (Status, Consumption[] memory) {
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
@@ -141,12 +136,15 @@ abstract contract PermissionChecker is Core, Periphery {
         TargetAddress storage target = role.targets[targetAddress];
 
         if (target.clearance == Clearance.Target) {
-            return (_executionOptions(value, operation, target.options), trace);
+            return (
+                _executionOptions(value, operation, target.options),
+                consumptions
+            );
         } else if (target.clearance == Clearance.Function) {
             bytes32 key = _key(targetAddress, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
-                return (Status.FunctionNotAllowed, trace);
+                return (Status.FunctionNotAllowed, consumptions);
             }
 
             (, bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
@@ -154,15 +152,16 @@ abstract contract PermissionChecker is Core, Periphery {
 
             Status status = _executionOptions(value, operation, options);
             if (status != Status.Ok) {
-                return (status, trace);
+                return (status, consumptions);
             }
 
             if (isWildcarded) {
-                return (Status.Ok, trace);
+                return (Status.Ok, consumptions);
             }
-            return _walk(role, key, value, data, trace);
+
+            return _scopedFunction(role, key, value, data, consumptions);
         } else {
-            return (Status.TargetAddressNotAllowed, trace);
+            return (Status.TargetAddressNotAllowed, consumptions);
         }
     }
 
@@ -196,17 +195,17 @@ abstract contract PermissionChecker is Core, Periphery {
         return Status.Ok;
     }
 
-    function _walk(
+    function _scopedFunction(
         Role storage role,
         bytes32 key,
         uint256 value,
         bytes calldata data,
-        Consumption[] memory trace
+        Consumption[] memory prevConsumptions
     ) private view returns (Status, Consumption[] memory) {
-        (Condition memory condition, Consumption[] memory nextTrace) = _load(
-            role,
-            key
-        );
+        (
+            Condition memory condition,
+            Consumption[] memory currConsumptions
+        ) = _load(role, key);
         ParameterPayload memory payload = Decoder.inspect(data, condition);
 
         return
@@ -215,7 +214,11 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition,
                 payload,
-                Consumptions.merge(trace, nextTrace)
+                // merge should be avoided at its an external library
+                // and will trigger a full memory copy as it steps to it
+                prevConsumptions.length == 0
+                    ? currConsumptions
+                    : Consumptions.merge(prevConsumptions, currConsumptions)
             );
     }
 
@@ -224,50 +227,50 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory c
     ) private pure returns (Status, Consumption[] memory) {
         Operator operator = condition.operator;
 
         // try most common upfront
         if (operator == Operator.Pass) {
-            return (Status.Ok, trace);
+            return (Status.Ok, c);
         } else if (operator == Operator.EqualTo) {
-            return (_compare(data, condition, payload), trace);
+            return (_compare(data, condition, payload), c);
         } else if (operator == Operator.Matches) {
-            return _matches(value, data, condition, payload, trace);
+            return _matches(value, data, condition, payload, c);
         }
 
         if (operator < Operator.EqualTo) {
             if (operator == Operator.And) {
-                return _and(value, data, condition, payload, trace);
+                return _and(value, data, condition, payload, c);
             } else if (operator == Operator.Or) {
-                return _or(value, data, condition, payload, trace);
+                return _or(value, data, condition, payload, c);
             } else if (operator == Operator.Nor) {
-                return _nor(value, data, condition, payload, trace);
+                return _nor(value, data, condition, payload, c);
             } else if (operator == Operator.Xor) {
-                return _xor(value, data, condition, payload, trace);
+                return _xor(value, data, condition, payload, c);
             } else if (operator == Operator.ArraySome) {
-                return _arraySome(value, data, condition, payload, trace);
+                return _arraySome(value, data, condition, payload, c);
             } else if (operator == Operator.ArrayEvery) {
-                return _arrayEvery(value, data, condition, payload, trace);
+                return _arrayEvery(value, data, condition, payload, c);
             } else {
                 assert(operator == Operator.ArraySubset);
-                return _arraySubset(value, data, condition, payload, trace);
+                return _arraySubset(value, data, condition, payload, c);
             }
         } else {
             if (operator <= Operator.LessThan) {
-                return (_compare(data, condition, payload), trace);
+                return (_compare(data, condition, payload), c);
             } else if (operator <= Operator.SignedIntLessThan) {
-                return (_compareSignedInt(data, condition, payload), trace);
+                return (_compareSignedInt(data, condition, payload), c);
             } else if (operator == Operator.Bitmask) {
-                return (_bitmask(data, condition, payload), trace);
+                return (_bitmask(data, condition, payload), c);
             } else if (operator == Operator.WithinAllowance) {
-                return _withinAllowance(data, condition, payload, trace);
+                return _withinAllowance(data, condition, payload, c);
             } else if (operator == Operator.EtherWithinAllowance) {
-                return _etherWithinAllowance(value, condition, trace);
+                return _etherWithinAllowance(value, condition, c);
             } else {
                 assert(operator == Operator.CallWithinAllowance);
-                return _callWithinAllowance(condition, trace);
+                return _callWithinAllowance(condition, c);
             }
         }
     }
@@ -277,13 +280,13 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status, Consumption[] memory) {
         if (condition.children.length != payload.children.length) {
-            return (Status.ParameterNotAMatch, trace);
+            return (Status.ParameterNotAMatch, consumptions);
         }
 
-        Consumption[] memory result = _clone(trace);
+        Consumption[] memory result = _clone(consumptions);
         for (uint256 i; i < condition.children.length; ) {
             Status status;
             (status, result) = _walk(
@@ -294,7 +297,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 result
             );
             if (status != Status.Ok) {
-                return (status, trace);
+                return (status, consumptions);
             }
             unchecked {
                 ++i;
@@ -309,9 +312,10 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory) {
-        Consumption[] memory result = _clone(trace);
+        Consumption[] memory result = _clone(consumptions);
+
         for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
                 value,
@@ -321,7 +325,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 result
             );
             if (status != Status.Ok) {
-                return (status, trace);
+                return (status, consumptions);
             }
             unchecked {
                 ++i;
@@ -335,7 +339,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
         for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
@@ -343,7 +347,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(trace)
+                _clone(consumptions)
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -352,7 +356,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.OrViolation, trace);
+        return (Status.OrViolation, consumptions);
     }
 
     function _nor(
@@ -360,7 +364,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory) {
         for (uint256 i; i < condition.children.length; ) {
             (status, ) = _walk(
@@ -368,16 +372,16 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(trace)
+                _clone(consumptions)
             );
             if (status == Status.Ok) {
-                return (Status.NorViolation, trace);
+                return (Status.NorViolation, consumptions);
             }
             unchecked {
                 ++i;
             }
         }
-        return (Status.Ok, trace);
+        return (Status.Ok, consumptions);
     }
 
     function _xor(
@@ -385,8 +389,8 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
-    ) private pure returns (Status status, Consumption[] memory result) {
+        Consumption[] memory consumptions
+    ) private pure returns (Status, Consumption[] memory result) {
         uint256 okCount;
         for (uint256 i; i < condition.children.length; ) {
             (Status status, Consumption[] memory temp) = _walk(
@@ -394,7 +398,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                _clone(trace)
+                _clone(consumptions)
             );
             if (status == Status.Ok) {
                 result = temp;
@@ -406,7 +410,9 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         return
-            okCount == 1 ? (Status.Ok, result) : (Status.XorViolation, trace);
+            okCount == 1
+                ? (Status.Ok, result)
+                : (Status.XorViolation, consumptions);
     }
 
     function _arraySome(
@@ -414,7 +420,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
         for (uint256 i; i < payload.children.length; ) {
             (status, result) = _walk(
@@ -422,7 +428,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[0],
                 payload.children[i],
-                _clone(trace)
+                _clone(consumptions)
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -431,7 +437,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.NoArrayElementPasses, trace);
+        return (Status.NoArrayElementPasses, consumptions);
     }
 
     function _arrayEvery(
@@ -439,9 +445,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory result) {
-        result = _clone(trace);
+        result = _clone(consumptions);
         for (uint256 i; i < payload.children.length; ) {
             (status, result) = _walk(
                 value,
@@ -451,7 +457,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 result
             );
             if (status != Status.Ok) {
-                return (Status.NotEveryArrayElementPasses, trace);
+                return (Status.NotEveryArrayElementPasses, consumptions);
             }
             unchecked {
                 ++i;
@@ -465,13 +471,11 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload,
-        Consumption[] memory trace
+        Consumption[] memory consumptions
     ) private pure returns (Status, Consumption[] memory result) {
-        // ParameterPayload[] memory payloads = payload.children;
-        // Condition[] memory conditions = condition.children;
         assert(condition.children.length <= 256);
 
-        result = trace;
+        result = consumptions;
 
         if (
             payload.children.length == 0 ||
@@ -501,7 +505,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 }
             }
             if (!found) {
-                return (Status.ParameterNotSubsetOfAllowed, trace);
+                return (Status.ParameterNotSubsetOfAllowed, consumptions);
             }
         }
         return (Status.Ok, result);
@@ -636,10 +640,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Consumption[] memory) {
-        (uint256 index, bool found) = Consumptions.find(
-            consumptions,
-            condition.compValue
-        );
+        (uint256 index, bool found) = _find(consumptions, condition.compValue);
         assert(found == true);
 
         if (
@@ -799,6 +800,20 @@ abstract contract PermissionChecker is Core, Periphery {
     error CallAllowanceExceeded();
 
     error EtherAllowanceExceeded();
+
+    function _find(
+        Consumption[] memory consumptions,
+        bytes32 key
+    ) private pure returns (uint256, bool) {
+        uint256 length = consumptions.length;
+        for (uint256 i; i < length; ++i) {
+            if (consumptions[i].allowanceKey == key) {
+                return (i, true);
+            }
+        }
+
+        return (0, false);
+    }
 
     function _clone(
         Consumption[] memory consumptions
