@@ -178,6 +178,7 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
+            //currentPermissions: { targets: [] }
         }
     )
 

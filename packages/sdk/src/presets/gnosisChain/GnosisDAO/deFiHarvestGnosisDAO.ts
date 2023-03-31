@@ -130,26 +130,26 @@ const preset = {
         // Agave - Claim Rewards (General)
         //---------------------------------------------------------------------------------------------------------------------------------
         allow.gnosis.agave.incentives_controller["claimRewards"](
-            {
-                subsetOf: [
-                    agave.agUSDC,
-                    agave.variableDebtUSDC,
-                    agave.agWXDAI,
-                    agave.variableDebtWXDAI,
-                    agave.agLINK,
-                    agave.variableDebtLINK,
-                    agave.agGNO,
-                    agave.variableDebtGNO,
-                    agave.agWBTC,
-                    agave.variableDebtWBTC,
-                    agave.agWETH,
-                    agave.variableDebtWETH,
-                    agave.agFOX,
-                    agave.variableDebtFOX,
-                    agave.agUSDT,
-                    agave.variableDebtUSDT,
-                ]
-            },
+            [
+                agave.agUSDC,
+                agave.variableDebtUSDC,
+                agave.agWXDAI,
+                agave.variableDebtWXDAI,
+                agave.agLINK,
+                agave.variableDebtLINK,
+                agave.agGNO,
+                agave.variableDebtGNO,
+                agave.agWBTC,
+                agave.variableDebtWBTC,
+                agave.agWETH,
+                agave.variableDebtWETH,
+                agave.agFOX,
+                agave.variableDebtFOX,
+                agave.agUSDT,
+                agave.variableDebtUSDT,
+                agave.agEURe,
+                agave.variableDebtEURe
+            ],
             AVATAR
         ),
 
