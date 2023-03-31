@@ -3,7 +3,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { ConsumptionStructOutput } from "../typechain-types/contracts/Consumptions";
 
-describe.only("Consumptions library", async () => {
+describe("Consumptions library", async () => {
   async function setup() {
     const MockConsumptions = await hre.ethers.getContractFactory(
       "MockConsumptions"
