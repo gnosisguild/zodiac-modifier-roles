@@ -236,13 +236,9 @@ abstract contract PermissionBuilder is Core {
         uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
             bytes32 key = consumptions[i].allowanceKey;
-            uint128 consumed = consumptions[i].consumed;
+            uint128 balance = consumptions[i].balance;
 
-            assert(
-                allowances[key].balance + consumed <= allowances[key].maxBalance
-            );
-            // Flush
-            allowances[key].balance += consumed;
+            allowances[key].balance = balance;
 
             unchecked {
                 ++i;
