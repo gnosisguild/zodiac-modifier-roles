@@ -188,8 +188,6 @@ describe("Legacy", async () => {
     };
   }
 
-  const [user1] = await hre.ethers.getSigners();
-
   describe("execTransactionFromModule()", () => {
     it("reverts if data is set and is not at least 4 bytes", async () => {
       const { modifier, testContract, invoker } = await loadFixture(
@@ -210,6 +208,8 @@ describe("Legacy", async () => {
       const { modifier, testContract, owner } = await loadFixture(
         setupRolesWithOwnerAndInvoker
       );
+
+      const [user1] = await hre.ethers.getSigners();
 
       await modifier
         .connect(owner)
@@ -234,6 +234,7 @@ describe("Legacy", async () => {
 
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -274,6 +275,7 @@ describe("Legacy", async () => {
 
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -313,6 +315,7 @@ describe("Legacy", async () => {
     it("reverts if value parameter is not allowed", async () => {
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -378,7 +381,7 @@ describe("Legacy", async () => {
     });
 
     it("executes a call with allowed value parameter", async () => {
-      const user1 = (await hre.ethers.getSigners())[0];
+      const [user1] = await hre.ethers.getSigners();
 
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
@@ -457,6 +460,7 @@ describe("Legacy", async () => {
         encodedParam_8,
         encodedParam_9,
       } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -560,6 +564,7 @@ describe("Legacy", async () => {
     it("executes a call with allowed dynamic parameter", async () => {
       const { avatar, modifier, testContract, parameterConfig_9 } =
         await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -622,6 +627,7 @@ describe("Legacy", async () => {
         tx_2,
         tx_3,
       } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
 
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
@@ -715,6 +721,7 @@ describe("Legacy", async () => {
         encodedParam_2,
         tx_1,
       } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
 
@@ -792,6 +799,7 @@ describe("Legacy", async () => {
         tx_2,
         tx_3,
       } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
 
@@ -870,6 +878,7 @@ describe("Legacy", async () => {
   describe("execTransactionFromModuleReturnData()", () => {
     it("reverts if called from module not assigned any role", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const allowTargetAddress = await modifier.populateTransaction.allowTarget(
         ROLE_KEY1,
         testContract.address,
@@ -896,6 +905,7 @@ describe("Legacy", async () => {
 
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -936,6 +946,7 @@ describe("Legacy", async () => {
 
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
@@ -1041,6 +1052,7 @@ describe("Legacy", async () => {
       const { modifier, testContract, invoker } = await loadFixture(
         setupRolesWithOwnerAndInvoker
       );
+      const [user1] = await hre.ethers.getSigners();
 
       const SHOULD_REVERT = true;
 
@@ -1137,6 +1149,7 @@ describe("Legacy", async () => {
         tx_2,
         tx_3,
       } = await loadFixture(txSetup);
+      const [user1] = await hre.ethers.getSigners();
 
       const SHOULD_REVERT = true;
 
