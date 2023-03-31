@@ -1,69 +1,18 @@
 import { allow } from "../../allow"
-import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
+import {
+    AURA, auraBAL, BAL, COW, DAI, GNO, USDC, USDT,
+    OMNI_BRIDGE,
+    aura,
+    balancer,
+    compound_v2
+} from "../addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
 import {
-    dynamic32Equal,
-    dynamic32OneOf,
     staticEqual,
-    dynamicOneOf,
-    subsetOf,
-    dynamicEqual,
     staticOneOf,
 } from "../../helpers/utils"
 import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
-
-// Tokens
-const AURA = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
-const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
-const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
-const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
-const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-
-// Balancer contracts
-const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-const BALANCER_RELAYER = "0x2536dfeecb7a0397cf98edada8486254533b1afa"
-const BALANCER_RELAYER_LIBRARY = "0xd02992266BB6a6324A3aB8B62FeCBc9a3C58d1F9"
-
-// Balancer LP Tokens
-const bb_a_USD = "0xA13a9247ea42D743238089903570127DdA72fE44"
-const B_50COW_50GNO = "0x92762B42A06dCDDDc5B7362Cfb01E631c4D44B40"
-const B_80BAL_20WETH = "0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56"
-const bb_a_DAI = "0xae37D54Ae477268B9997d4161B96b8200755935c"
-const bb_a_USDT = "0x2F4eb100552ef93840d5aDC30560E5513DFfFACb"
-const bb_a_USDC = "0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83"
-
-// Balancer Gauges
-const B_50COW_50GNO_GAUGE = "0xA6468eca7633246Dcb24E5599681767D27d1F978"
-const bb_a_USD_GAUGE = "0xa6325e799d266632D347e41265a69aF111b05403"
-
-// Aura contracts
-const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-const AURA_REWARD_POOL_DEPOSIT_WRAPPER =
-    "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
-
-const aurabb_a_USD_REWARDER = "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B"
-const aura50COW_50GNO_REWARDER = "0x6256518aE9a97C408a03AAF1A244989Ce6B937F6"
-
-const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
-const auraBAL_STAKING_REWARDER = "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2"
-const B_80BAL_20WETH_DEPOSITOR = "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827"
-const BAL_DEPOSITOR = "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
-
-const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
-const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
-
-const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
-
-// Compound V2 contracts
-const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
-const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
-const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
-
-// OmniBridge contracts
-const OMNI_BRIDGE = "0x88ad09518695c6c3712AC10a214bE5109a655671"
 
 
 const preset = {
@@ -77,7 +26,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura bb-aUSDT/bb-a-USDC/bb-a-DAI (Boosted Pool)
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([bb_a_USD], [AURA_BOOSTER]),
+        ...allowErc20Approve([balancer.bb_a_USD], [aura.BOOSTER]),
 
         // {
         //     targetAddress: AURA_BOOSTER,
@@ -104,8 +53,8 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura GNO/COW
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([B_50COW_50GNO], [AURA_BOOSTER]),
-        ...allowErc20Approve([GNO, COW], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
+        ...allowErc20Approve([balancer.B_50COW_50GNO], [aura.BOOSTER]),
+        ...allowErc20Approve([GNO, COW], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
         // {
         //     targetAddress: AURA_BOOSTER,
@@ -118,11 +67,11 @@ const preset = {
             3), // Aura poolId
 
         {
-            targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
+            targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
             signature:
                 "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
             params: {
-                [0]: staticEqual(aura50COW_50GNO_REWARDER, "address"),
+                [0]: staticEqual(aura.aura50COW_50GNO_REWARDER, "address"),
                 [1]: staticOneOf([GNO, COW], "address"),
                 [3]: staticEqual(
                     "0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182",
@@ -178,7 +127,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
 
         // Using auraBAL
-        ...allowErc20Approve([auraBAL], [auraBAL_STAKING_REWARDER]),
+        ...allowErc20Approve([auraBAL], [aura.auraBAL_STAKING_REWARDER]),
 
         // {
         //   targetAddress: auraBAL_STAKING_REWARDER,
@@ -193,7 +142,7 @@ const preset = {
         allow.mainnet.aura.auraBAL_staking_rewarder["withdraw"](),
 
         // Using 80BAL-20WETH
-        ...allowErc20Approve([B_80BAL_20WETH], [B_80BAL_20WETH_DEPOSITOR]),
+        ...allowErc20Approve([balancer.B_80BAL_20WETH], [aura.B_80BAL_20WETH_DEPOSITOR]),
 
         // {
         //   targetAddress: B_80BAL_20WETH_DEPOSITOR,
@@ -205,11 +154,11 @@ const preset = {
         allow.mainnet.aura.B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
             undefined,
             undefined,
-            auraBAL_STAKING_REWARDER,
+            aura.auraBAL_STAKING_REWARDER,
         ),
 
         // Using BAL
-        ...allowErc20Approve([BAL], [BAL_DEPOSITOR]),
+        ...allowErc20Approve([BAL], [aura.BAL_DEPOSITOR]),
 
         // {
         //   targetAddress: BAL_DEPOSITOR,
@@ -222,7 +171,7 @@ const preset = {
             undefined,
             undefined,
             undefined,
-            auraBAL_STAKING_REWARDER,
+            aura.auraBAL_STAKING_REWARDER,
         ),
 
         // Claiming auraBAL Staking Rewards
@@ -235,7 +184,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Locking AURA
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([AURA], [AURA_LOCKER]),
+        ...allowErc20Approve([AURA], [aura.AURA_LOCKER]),
 
         // Locking AURA
         // {
@@ -298,20 +247,20 @@ const preset = {
 
         // Relayer Approval (this is done only once per wallet)
         allow.mainnet.balancer.relayer_library["setRelayerApproval"](
-            BALANCER_RELAYER
+            balancer.RELAYER
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer Boosted Aave USD
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([bb_a_USD], [bb_a_USD_GAUGE]),
-        ...allowErc20Approve([DAI, USDT, USDC], [BALANCER_VAULT]),
+        ...allowErc20Approve([balancer.bb_a_USD], [balancer.bb_a_USD_GAUGE]),
+        ...allowErc20Approve([DAI, USDT, USDC], [balancer.VAULT]),
 
         // Swap DAI for bb_a_DAI (for both, join and exit pool)
         // Swap USDT for bb_a_USDT (for both, join and exit pool)
         // Swap USDC for bb_a_USDC (for both, join and exit pool)
         {
-            targetAddress: BALANCER_RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER_LIBRARY,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -320,12 +269,12 @@ const preset = {
                     "bytes32"), // Offset of the tuple from beginning 288=32*9
                 [1]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // sender
                 [3]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // recipient
                 [9]: staticOneOf([
@@ -339,20 +288,20 @@ const preset = {
                     "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
                 [11]: staticOneOf([
                     DAI,
-                    bb_a_DAI,
+                    balancer.bb_a_DAI,
                     USDT,
-                    bb_a_USDT,
+                    balancer.bb_a_USDT,
                     USDC,
-                    bb_a_USDC
+                    balancer.bb_a_USDC
                 ],
                     "address"), // assetIn
                 [12]: staticOneOf([
                     DAI,
-                    bb_a_DAI,
+                    balancer.bb_a_DAI,
                     USDT,
-                    bb_a_USDT,
+                    balancer.bb_a_USDT,
                     USDC,
-                    bb_a_USDC
+                    balancer.bb_a_USDC
                 ],
                     "address"), // assetOut
                 [14]: staticEqual(
@@ -372,7 +321,7 @@ const preset = {
 
         // Add Liquidity
         {
-            targetAddress: BALANCER_RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER_LIBRARY,
             signature:
                 "joinPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),uint256,uint256)",
             params: {
@@ -386,12 +335,12 @@ const preset = {
                 ), // bytes (userData)
                 [2]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // sender
                 [3]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // recipient
                 [4]: staticEqual(
@@ -410,10 +359,10 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
                 ), // Length of address[] = 4
-                [12]: staticEqual(bb_a_USDT, "address"),
-                [13]: staticEqual(bb_a_USDC, "address"),
-                [14]: staticEqual(bb_a_USD, "address"),
-                [15]: staticEqual(bb_a_DAI, "address"),
+                [12]: staticEqual(balancer.bb_a_USDT, "address"),
+                [13]: staticEqual(balancer.bb_a_USDC, "address"),
+                [14]: staticEqual(balancer.bb_a_USD, "address"),
+                [15]: staticEqual(balancer.bb_a_DAI, "address"),
                 [16]: staticEqual(
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
@@ -439,7 +388,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: BALANCER_RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER_LIBRARY,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {
@@ -453,12 +402,12 @@ const preset = {
                 ), // bytes (userData)
                 [2]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // sender
                 [3]: staticOneOf([
                     AVATAR,
-                    BALANCER_RELAYER,
+                    balancer.RELAYER,
                 ],
                     "address"), // recipient
                 [4]: staticEqual(
@@ -480,10 +429,10 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
                 ), // Length of address[] = 4
-                [11]: staticEqual(bb_a_USDT, "address"),
-                [12]: staticEqual(bb_a_USDC, "address"),
-                [13]: staticEqual(bb_a_USD, "address"),
-                [14]: staticEqual(bb_a_DAI, "address"),
+                [11]: staticEqual(balancer.bb_a_USDT, "address"),
+                [12]: staticEqual(balancer.bb_a_USDC, "address"),
+                [13]: staticEqual(balancer.bb_a_USD, "address"),
+                [14]: staticEqual(balancer.bb_a_DAI, "address"),
                 [15]: staticEqual(
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
@@ -520,18 +469,18 @@ const preset = {
 
         // Claim BAL Rewards
         allow.mainnet.balancer.BAL_minter["mint"](
-            bb_a_USD_GAUGE
+            balancer.bb_a_USD_GAUGE
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer GNO/COW pool
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([GNO, COW], [BALANCER_VAULT]),
-        ...allowErc20Approve([B_50COW_50GNO], [B_50COW_50GNO_GAUGE]),
+        ...allowErc20Approve([GNO, COW], [balancer.VAULT]),
+        ...allowErc20Approve([balancer.B_50COW_50GNO], [balancer.B_50COW_50GNO_GAUGE]),
 
         // Add Liquidity
         {
-            targetAddress: BALANCER_VAULT,
+            targetAddress: balancer.VAULT,
             signature:
                 "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
             params: {
@@ -584,7 +533,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: BALANCER_VAULT,
+            targetAddress: balancer.VAULT,
             signature:
                 "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
             params: {
@@ -644,7 +593,7 @@ const preset = {
 
         // Claim BAL Rewards
         allow.mainnet.balancer.BAL_minter["mint"](
-            B_50COW_50GNO_GAUGE
+            balancer.B_50COW_50GNO_GAUGE
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
@@ -654,7 +603,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - USDC
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([USDC], [cUSDC]),
+        ...allowErc20Approve([USDC], [compound_v2.cUSDC]),
 
         // Deposit
         // {
@@ -680,7 +629,7 @@ const preset = {
         // Use as Collateral
         // We are only allowing to call this function with one single token address, since it's the way the UI does it
         {
-            targetAddress: COMPTROLLER,
+            targetAddress: compound_v2.COMPTROLLER,
             signature: "enterMarkets(address[])",
             params: {
                 [0]: staticEqual(
@@ -691,7 +640,7 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000001",
                     "bytes32"
                 ), // Length of address[] = 1
-                [2]: staticEqual(cUSDC, "address"),
+                [2]: staticEqual(compound_v2.cUSDC, "address"),
             },
         },
 
@@ -704,7 +653,7 @@ const preset = {
         //     },
         // },
         allow.mainnet.compound.comptroller["exitMarket"](
-            cUSDC
+            compound_v2.cUSDC
         ),
 
         // Borrow specified amount of underlying asset (uint256)
@@ -724,7 +673,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - DAI
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([DAI], [cDAI]),
+        ...allowErc20Approve([DAI], [compound_v2.cDAI]),
 
         // Deposit
         // {
@@ -750,7 +699,7 @@ const preset = {
         // Use as Collateral
         // We are only allowing to call this function with one single token address, since it's the way the UI does it
         {
-            targetAddress: COMPTROLLER,
+            targetAddress: compound_v2.COMPTROLLER,
             signature: "enterMarkets(address[])",
             params: {
                 [0]: staticEqual(
@@ -761,7 +710,7 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000001",
                     "bytes32"
                 ), // Length of address[] = 1
-                [2]: staticEqual(cDAI, "address"),
+                [2]: staticEqual(compound_v2.cDAI, "address"),
             },
         },
 
@@ -774,7 +723,7 @@ const preset = {
         //     },
         // },
         allow.mainnet.compound.comptroller["exitMarket"](
-            cDAI
+            compound_v2.cDAI
         ),
 
         // Borrow specified amount of underlying asset (uint256)
@@ -811,7 +760,7 @@ const preset = {
         allow.mainnet.compound.comptroller["claimComp(address,address[])"](
             AVATAR,
             {
-                subsetOf: [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+                subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
                 restrictOrder: true,
             }
         ),
@@ -832,7 +781,7 @@ const preset = {
             OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN
         )
     ],
-    placeholders: { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN },
+    placeholders: { AVATAR },
 } satisfies RolePreset
 
 export default preset

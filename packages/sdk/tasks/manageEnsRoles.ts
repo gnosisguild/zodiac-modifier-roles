@@ -9,9 +9,9 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import mainnetDeFiManageENS1Preset from "../src/presets/mainnet/ENS/deFiManageENS"
-import mainnetDeFiHarvestENS1Preset from "../src/presets/mainnet/ENS/deFiHarvestENS"
-import mainnetDeFiSwapENS1Preset from "../src/presets/mainnet/ENS/deFiSwapENS"
+import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS"
+import mainnetDeFiHarvestENSPreset from "../src/presets/mainnet/ENS/deFiHarvestENS"
+import mainnetDeFiSwapENSPreset from "../src/presets/mainnet/ENS/deFiSwapENS"
 
 import { NetworkId } from "../src/types"
 
@@ -45,7 +45,7 @@ const task = (name: string) =>
     baseTask(name)
         .addParam(
             "safe",
-            "one of: 'DAO_GNO' (DAO Safe on Gnosis Chain), 'LTD_GNO' (Limited Safe on Gnosis Chain)",
+            "one of: 'ENS_ETH'",
             undefined,
             types.string
         )
@@ -166,15 +166,15 @@ task("assignEnsSwapRole").setAction(async (taskArgs, hre) => {
 })
 
 //-----------------------------------------------------------------------------------------------------------------------------
-// ENS 1 - Mainnet
+// ENS - Mainnet
 //-----------------------------------------------------------------------------------------------------------------------------
 
-task("encodeApplyPresetManageENS1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         1,
-        mainnetDeFiManageENS1Preset,
+        mainnetDeFiManageENSPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -182,21 +182,21 @@ task("encodeApplyPresetManageENS1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataManageENS1.json"),
+        path.join(__dirname, "..", "txDataManageENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataManageENS1.json`
+        `Transaction builder JSON written to packages/sdk/txDataManageENS.json`
     )
 })
 
-// task("encodeApplyPresetRevokeENS1").setAction(
+// task("encodeApplyPresetRevokeENS").setAction(
 //     async (taskArgs, hre) => {
 //         const { config } = await processArgs(taskArgs, hre)
 //         const txBatches = await encodeApplyPresetTxBuilder(
 //             config.MODULE,
 //             2,
-//             mainnetDeFiRevokeENS1Preset,
+//             mainnetDeFiRevokeENSPreset,
 //             { AVATAR: config.AVATAR },
 //             {
 //                 network: config.NETWORK as NetworkId,
@@ -204,21 +204,21 @@ task("encodeApplyPresetManageENS1").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataRevokeENS1.json"),
+//             path.join(__dirname, "..", "txDataRevokeENS.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataRevokeENS1.json`
+//             `Transaction builder JSON written to packages/sdk/txDataRevokeENS.json`
 //         )
 //     }
 // )
 
-task("encodeApplyPresetHarvestENS1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         3,
-        mainnetDeFiHarvestENS1Preset,
+        mainnetDeFiHarvestENSPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -226,21 +226,21 @@ task("encodeApplyPresetHarvestENS1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataHarvestENS1.json"),
+        path.join(__dirname, "..", "txDataHarvestENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataHarvestENS1.json`
+        `Transaction builder JSON written to packages/sdk/txDataHarvestENS.json`
     )
 })
 
-// task("encodeApplyPresetDisassembleENS1").setAction(
+// task("encodeApplyPresetDisassembleENS").setAction(
 //     async (taskArgs, hre) => {
 //         const { config } = await processArgs(taskArgs, hre)
 //         const txBatches = await encodeApplyPresetTxBuilder(
 //             config.MODULE,
 //             4,
-//             mainnetDeFiDisassembleENS1Preset,
+//             mainnetDeFiDisassembleENSPreset,
 //             { AVATAR: config.AVATAR },
 //             {
 //                 network: config.NETWORK as NetworkId,
@@ -248,21 +248,21 @@ task("encodeApplyPresetHarvestENS1").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataDisassembleENS1.json"),
+//             path.join(__dirname, "..", "txDataDisassembleENS.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataDisassembleENS1.json`
+//             `Transaction builder JSON written to packages/sdk/txDataDisassembleENS.json`
 //         )
 //     }
 // )
 
-task("encodeApplyPresetSwapENS1").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetSwapENS").setAction(async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
         config.MODULE,
         5,
-        mainnetDeFiSwapENS1Preset,
+        mainnetDeFiSwapENSPreset,
         { AVATAR: config.AVATAR },
         {
             network: config.NETWORK as NetworkId,
@@ -270,10 +270,10 @@ task("encodeApplyPresetSwapENS1").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataSwapENS1.json"),
+        path.join(__dirname, "..", "txDataSwapENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataSwapENS1.json`
+        `Transaction builder JSON written to packages/sdk/txDataSwapENS.json`
     )
 })

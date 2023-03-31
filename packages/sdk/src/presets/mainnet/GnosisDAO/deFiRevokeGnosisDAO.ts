@@ -1,0 +1,29 @@
+import {
+    AAVE, aETHc, AURA, auraBAL, BAL, BOB, COMP, COW, CREAM, CRV,
+    CVX, DAI, ENS, FIS, FLX, FRAX, FXS, GEN, GIV, GNO,
+    GTC, HND, ICHI, IDLE, INST, LDO, LUSD, NODE, PNK, RAD,
+    RAI, RDN, rETH, rETH2, RPL, SAFE, sETH2, stETH, sUSD, SUSHI,
+    SWISE, SWPR, SYMM, UNCX, USDC, USDP, USDT, WBTC, WETH, wstETH,
+    x3CRV
+} from "../addresses"
+import { allowErc20Revoke } from "../../helpers/erc20"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
+
+
+const preset = {
+    network: 1,
+    allow: [
+        ...allowErc20Revoke([
+            AAVE, aETHc, AURA, auraBAL, BAL, BOB, COMP, COW, CREAM, CRV,
+            CVX, DAI, ENS, FIS, FLX, FRAX, FXS, GEN, GIV, GNO,
+            GTC, HND, ICHI, IDLE, INST, LDO, LUSD, NODE, PNK, RAD,
+            RAI, RDN, rETH, rETH2, RPL, SAFE, sETH2, stETH, sUSD, SUSHI,
+            SWISE, SWPR, SYMM, UNCX, USDC, USDP, USDT, WBTC, WETH, wstETH,
+            x3CRV
+        ])
+    ],
+    placeholders: { AVATAR },
+} satisfies RolePreset
+
+export default preset

@@ -1,80 +1,16 @@
-import { allow, contracts } from "../../allow"
-import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
+import { allow } from "../../allow"
 import {
-  dynamic32Equal,
-  dynamic32OneOf,
+  ZERO_ADDRESS, AURA, auraBAL, BAL, COW, WETH, GNO, LDO, wstETH,
+  balancer,
+  compound_v2,
+} from "../addresses"
+import {
   staticEqual,
-  dynamicOneOf,
-  subsetOf,
-  dynamicEqual,
   staticOneOf,
 } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
 
-// Tokens
-const wstETH = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
-const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-const auraBAL = "0x616e8BfA43F920657B3497DBf40D6b1A02D4608d"
-const rETH = "0xae78736Cd615f374D3085123A210448E74Fc6393"
-const GNO = "0x6810e776880C02933D47DB1b9fc05908e5386b96"
-const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
-const LDO = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
-const AURA = "0xC0c293ce456fF0ED870ADd98a0828Dd4d2903DBF"
-const BAL = "0xba100000625a3754423978a60c9317c58a424e3D"
-
-// Balancer contracts
-const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-const BAL_MINTER = "0x239e55f427d44c3cc793f49bfb507ebe76638a2b"
-const FEE_DISTRIBUTOR = "0xD3cf852898b21fc233251427c2DC93d3d604F3BB"
-const veBAL = "0xC128a9954e6c874eA3d62ce62B468bA073093F25"
-
-// Balancer LP Tokens
-const B_stETH_STABLE = "0x32296969Ef14EB0c6d29669C550D4a0449130230"
-const B_auraBAL_STABLE = "0x3dd0843A028C86e0b760b1A76929d1C5Ef93a2dd"
-const B_rETH_STABLE = "0x1E19CF2D73a72Ef1332C882F20534B6519Be0276"
-const B_80GNO_20WETH = "0xF4C0DD9B82DA36C07605df83c8a416F11724d88b"
-const B_50COW_50GNO = "0x92762B42A06dCDDDc5B7362Cfb01E631c4D44B40"
-const B_50WSTETH_50LDO = "0x5f1f4E50ba51D723F12385a8a9606afc3A0555f5"
-const B_50WETH_50AURA = "0xCfCA23cA9CA720B6E98E3Eb9B6aa0fFC4a5C08B9"
-const B_50COW_50WETH = "0xde8C195Aa41C11a0c4787372deFBbDdAa31306D2"
-const B_80BAL_20WETH = "0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56"
-
-// Balancer Gauges
-const B_stETH_STABLE_GAUGE = "0xcD4722B7c24C29e0413BDCd9e51404B4539D14aE"
-const B_auraBAL_STABLE_GAUGE = "0x0312AA8D0BA4a1969Fddb382235870bF55f7f242"
-const B_rETH_STABLE_GAUGE = "0x79eF6103A513951a3b25743DB509E267685726B7"
-const B_80GNO_20WETH_GAUGE = "0xCB664132622f29943f67FA56CCfD1e24CC8B4995"
-const B_50COW_50GNO_GAUGE = "0xA6468eca7633246Dcb24E5599681767D27d1F978"
-const B_50WSTETH_50LDO_GAUGE = "0x95201b61ef19c867da0d093df20021e1a559452c"
-const B_50WETH_50AURA_GAUGE = "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00"
-const B_50COW_50WETH_GAUGE = "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5"
-
-
-// Aura contracts
-const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-const AURA_REWARD_POOL_DEPOSIT_WRAPPER =
-  "0xB188b1CB84Fb0bA13cb9ee1292769F903A9feC59"
-
-const auraB_stETH_STABLE_REWARDER = "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528"
-const auraB_auraBAL_STABLE_REWARDER =
-  "0xACAdA51C320947E7ed1a0D0F6b939b0FF465E4c2"
-const auraB_rETH_STABLE_REWARDER = "0x001B78CEC62DcFdc660E06A91Eb1bC966541d758"
-const auraB_80GNO_20WETH_REWARDER = "0xD3780729035c5b302f76ced0E7F74cF0Fb7c739a"
-const aura50COW_50GNO_REWARDER = "0x6256518aE9a97C408a03AAF1A244989Ce6B937F6"
-const aura50WSTETH_50LDO_REWARDER = "0x6c3f6C327DE4aE51a2DfAaF3431b3c508ec8D3EB"
-const aura50WETH_50AURA_REWARDER = "0x712CC5BeD99aA06fC4D5FB50Aea3750fA5161D0f"
-const aura50COW_50WETH_REWARDER = "0x228054e9c056F024FC724F515A2a8764Ae175ED6"
-
-const auraBAL_STAKING_REWARDER = "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2"
-const B_80BAL_20WETH_DEPOSITOR = "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827"
-const BAL_DEPOSITOR = "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
-
-const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
-const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
-
-const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
 
 const preset = {
   network: 1,
@@ -195,7 +131,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -251,8 +187,9 @@ const preset = {
     // Balancer B-80BAL-20WETH/auraBAL pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
+    // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -278,7 +215,7 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of address[] = 2
-        [9]: staticEqual(B_80BAL_20WETH, "address"),
+        [9]: staticEqual(balancer.B_80BAL_20WETH, "address"),
         [10]: staticEqual(auraBAL, "address"),
         [11]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
@@ -310,7 +247,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -368,7 +305,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -426,7 +363,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -484,7 +421,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -542,7 +479,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -600,7 +537,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -658,7 +595,7 @@ const preset = {
 
     // Remove Liquidity
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
@@ -709,6 +646,143 @@ const preset = {
 
     // Unlock
     allow.mainnet.balancer.veBAL["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // CONVEX
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - ETH/stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Withdraw
+    allow.mainnet.convex.booster["withdraw"](
+      25 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+    ),
+
+    // Unstake
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+
+    // Unstake and Withdraw
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - cDAI/cUSDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Withdraw
+    allow.mainnet.convex.booster["withdraw"](
+      0 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+    ),
+
+    // Unstake
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+
+    // Unstake and Withdraw
+    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Convert CRV to cvxCRV and Stake cvxCRV
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Unstake cvxCRV
+    allow.mainnet.convex.stkCvxCrv["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Stake CVX
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Unstake CVX
+    allow.mainnet.convex.cvxRewardPool["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Convex - Lock CVX
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Process Expired Locks (Withdraw = False or Relock = True)
+    allow.mainnet.convex.vlCVX["processExpiredLocks"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // CURVE
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Curve - ETH/stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Remove Liquidity
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity"](),
+
+    // Removing Liquidity of One Coin
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity_one_coin"](),
+
+    // Removing Liquidity Imbalance
+    allow.mainnet.curve.steth_eth_pool["remove_liquidity_imbalance"](),
+
+    // Unstake
+    allow.mainnet.curve.steth_eth_gauge["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Curve - cDAI/cUSDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Remove Liquidity
+    allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity"](),
+
+    // Remove Liquidity (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity"](),
+
+    // Removing Liquidity Imbalance
+    allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity_imbalance"](),
+
+    // Removing Liquidity Imbalance (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_imbalance"](),
+
+    // Removing Liquidity of One Coin (Underlying, using ZAP)
+    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+
+    // Unstake
+    allow.mainnet.curve.cDAIcUSDC_gauge["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - USDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    allow.mainnet.compound.cUSDC["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+
+    // Stop using as Collateral
+    allow.mainnet.compound.comptroller["exitMarket"](
+      compound_v2.cUSDC
+    ),
+
+    // Repay specified borrowed amount of underlying asset (uint256)
+    allow.mainnet.compound.cUSDC["repayBorrow"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - DAI
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    allow.mainnet.compound.cDAI["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    allow.mainnet.compound.cDAI["redeemUnderlying"](),
+
+    // Stop using as Collateral
+    allow.mainnet.compound.comptroller["exitMarket"](
+      compound_v2.cDAI
+    ),
+
+    // Repay specified borrowed amount of underlying asset (uint256)
+    allow.mainnet.compound.cDAI["repayBorrow"](),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset

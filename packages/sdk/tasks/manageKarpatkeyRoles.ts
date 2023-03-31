@@ -9,8 +9,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
-import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
+// import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
+// import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import { NetworkId } from "../src/types"
 
@@ -135,28 +135,6 @@ task("assignSwapRole").setAction(async (taskArgs, hre) => {
   console.log("Done.")
 })
 
-task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    1,
-    gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
-    {
-      OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
-      AVATAR: config.AVATAR,
-    },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
-
-  writeFileSync(
-    path.join(__dirname, "..", "txData.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
-})
-
 task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
@@ -180,21 +158,43 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
   )
 })
 
-task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
-  const { config } = await processArgs(taskArgs, hre)
-  const txBatches = await encodeApplyPresetTxBuilder(
-    config.MODULE,
-    2,
-    gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
-    { AVATAR: config.AVATAR },
-    {
-      network: config.NETWORK as NetworkId,
-    }
-  )
+// task("encodeApplyPresetManage").setAction(async (taskArgs, hre) => {
+//   const { config } = await processArgs(taskArgs, hre)
+//   const txBatches = await encodeApplyPresetTxBuilder(
+//     config.MODULE,
+//     1,
+//     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
+//     {
+//       OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+//       AVATAR: config.AVATAR,
+//     },
+//     {
+//       network: config.NETWORK as NetworkId,
+//     }
+//   )
 
-  writeFileSync(
-    path.join(__dirname, "..", "txData.json"),
-    JSON.stringify(txBatches, undefined, 2)
-  )
-  console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
-})
+//   writeFileSync(
+//     path.join(__dirname, "..", "txData.json"),
+//     JSON.stringify(txBatches, undefined, 2)
+//   )
+//   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+// })
+
+// task("encodeApplyPresetHarvest").setAction(async (taskArgs, hre) => {
+//   const { config } = await processArgs(taskArgs, hre)
+//   const txBatches = await encodeApplyPresetTxBuilder(
+//     config.MODULE,
+//     2,
+//     gnosisChainDeFiHarvestPreset, // TODO use mainnetDeFiHarvestPreset if on mainnet
+//     { AVATAR: config.AVATAR },
+//     {
+//       network: config.NETWORK as NetworkId,
+//     }
+//   )
+
+//   writeFileSync(
+//     path.join(__dirname, "..", "txData.json"),
+//     JSON.stringify(txBatches, undefined, 2)
+//   )
+//   console.log(`Transaction builder JSON written to packages/sdk/txData.json`)
+// })

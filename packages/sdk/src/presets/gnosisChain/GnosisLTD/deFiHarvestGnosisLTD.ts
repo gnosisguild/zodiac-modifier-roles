@@ -1,23 +1,9 @@
-import { ZERO_ADDRESS } from "../addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
 import {
-    dynamic32Equal,
-    dynamic32OneOf,
-    staticEqual,
-    dynamicOneOf,
-    subsetOf,
-    dynamicEqual,
-    staticOneOf,
-} from "../../helpers/utils"
+    curve
+} from "../addresses"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
-
-// SushiSwap contracts
-const MINI_CHEF_V2 = "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3"
-
-// Curve contracts
-const crvEUReUSD_GAUGE = "0xd91770E868c7471a9585d1819143063A40c54D00"
 
 
 const preset = {
@@ -28,27 +14,31 @@ const preset = {
         // SushiSwap
         //---------------------------------------------------------------------------------------------------------------------------------
 
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // SushiSwap WETH/GNO
-        //---------------------------------------------------------------------------------------------------------------------------------
-
         // Claim Rewards
-        // {
-        //     targetAddress: MINI_CHEF_V2,
-        //     signature: "harvest(uint256,address)",
-        //     params: {
-        //         [0]: staticEqual(9, "uint256"), // SushiSwap poolId
-        //         [1]: staticEqual(AVATAR),
-        //     },
-        // },
         allow.gnosis.sushiswap.minichef_v2["harvest"](
-            9,
+            undefined,
             AVATAR
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve
         //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve 3pool
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        // {
+        //     targetAddress: x3CRV_GAUGE,
+        //     signature: "claim_rewards()",
+        // },
+        allow.gnosis.curve.x3CRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.x3CRV_GAUGE
+        ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve EURe/x3CRV
@@ -60,6 +50,63 @@ const preset = {
         //     signature: "claim_rewards()",
         // },
         allow.gnosis.curve.crvEUReUSD_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.crvEUReUSD_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve sGNO/GNO
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        allow.gnosis.curve.sgnoCRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.sgnoCRV_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve tricrypto
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        allow.gnosis.curve.crv3crypto_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.crv3crypto_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve rGNO/sGNO
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        allow.gnosis.curve.rgnoCRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.rgnoCRV_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve MAI/x3CRV
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        // {
+        //     targetAddress: MAIx3CRV_GAUGE,
+        //     signature: "claim_rewards()",
+        // },
+        allow.gnosis.curve.MAIx3CRV_gauge["claim_rewards()"](),
+
+        // Claim CRV
+        allow.gnosis.curve.crv_minter["mint"](
+            curve.MAIx3CRV_GAUGE
+        ),
     ],
     placeholders: { AVATAR },
 } satisfies RolePreset

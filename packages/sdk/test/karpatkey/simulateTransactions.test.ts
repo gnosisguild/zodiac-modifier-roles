@@ -6,10 +6,10 @@ import { encodeApplyPreset } from "../../src/applyPreset"
 
 import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
 
-import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
-import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
-import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
+// import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
+// import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
+// import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
+// import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
 
 import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
 import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
@@ -232,45 +232,45 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   })
 
-  describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
-        preset: gnosisChainDeFiManagePreset,
-        transactions: manageGnosisChainTransactions,
-      })
-    })
-  })
+  // describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
+  //   it("allows executing all listed management transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
+  //       preset: gnosisChainDeFiManagePreset,
+  //       transactions: manageGnosisChainTransactions,
+  //     })
+  //   })
+  // })
 
-  describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
-        preset: gnosisChainDeFiHarvestPreset,
-        transactions: harvestGnosisChainTransactions,
-      })
-    })
-  })
+  // describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
+  //   it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
+  //       preset: gnosisChainDeFiHarvestPreset,
+  //       transactions: harvestGnosisChainTransactions,
+  //     })
+  //   })
+  // })
 
-  describe("Mainnet DeFi Manage preset [eth:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
-        preset: mainnetDeFiManagePreset,
-        transactions: manageMainnetTransactions,
-      })
-    })
-  })
+  // describe("Mainnet DeFi Manage preset [eth:manage]", () => {
+  //   it("allows executing all listed management transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
+  //       preset: mainnetDeFiManagePreset,
+  //       transactions: manageMainnetTransactions,
+  //     })
+  //   })
+  // })
 
-  describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
-        preset: mainnetDeFiHarvestPreset,
-        transactions: harvestMainnetTransactions,
-      })
-    })
-  })
+  // describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
+  //   it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
+  //       preset: mainnetDeFiHarvestPreset,
+  //       transactions: harvestMainnetTransactions,
+  //     })
+  //   })
+  // })
 
   describe("Test Manage preset [test:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {

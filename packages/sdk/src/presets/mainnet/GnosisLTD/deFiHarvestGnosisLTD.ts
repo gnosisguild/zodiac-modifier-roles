@@ -1,37 +1,10 @@
 import { allow } from "../../allow"
-import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
 import {
-    dynamic32Equal,
-    dynamic32OneOf,
-    staticEqual,
-    dynamicOneOf,
-    subsetOf,
-    dynamicEqual,
-    staticOneOf,
-} from "../../helpers/utils"
+    balancer,
+    compound_v2
+} from "../addresses"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-
-// Balancer LP Tokens
-const BB_A_USD = "0xA13a9247ea42D743238089903570127DdA72fE44"
-
-// Aura contracts
-const AURA_BOOSTER = "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234"
-
-const aurabb_a_USD_REWARDER = "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B"
-
-const auraBAL_STAKING_REWARDER = "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2"
-
-const AURA_LOCKER = "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC"
-const SNAPSHOT_DELEGATE_REGISTRY = "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
-
-const AURA_CLAIM_ZAP = "0x623B83755a39B12161A63748f3f595A530917Ab2"
-
-//Compound V2 contracts
-const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
-const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
-const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
 
 
 const preset = {
@@ -42,9 +15,6 @@ const preset = {
         // AURA
         //---------------------------------------------------------------------------------------------------------------------------------
 
-        //---------------------------------------------------------------------------------------------------------------------------------
-        // Aura bb-aUSDT/bb-a-USDC/bb-a-DAI (Boosted Pool)
-        //---------------------------------------------------------------------------------------------------------------------------------
         // {
         //     targetAddress: aurabb_a_USD_REWARDER,
         //     signature: "getReward()",
@@ -54,6 +24,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura GNO/COW
         //---------------------------------------------------------------------------------------------------------------------------------
+
         // {
         //     targetAddress: aura50COW_50GNO_REWARDER,
         //     signature: "getReward()",
@@ -98,6 +69,34 @@ const preset = {
         allow.mainnet.aura.claim_zap["claimRewards"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
+        // BALANCER
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Balancer Boosted Aave USD
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        allow.mainnet.balancer.bb_a_USD_gauge["claim_rewards()"](),
+
+        // Claim BAL Rewards
+        allow.mainnet.balancer.BAL_minter["mint"](
+            balancer.bb_a_USD_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Balancer GNO/COW pool
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Claim Rewards
+        allow.mainnet.balancer.B_50COW_50GNO_gauge["claim_rewards()"](),
+
+        // Claim BAL Rewards
+        allow.mainnet.balancer.BAL_minter["mint"](
+            balancer.B_50COW_50GNO_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2
         //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -121,10 +120,10 @@ const preset = {
         allow.mainnet.compound.comptroller["claimComp(address,address[])"](
             AVATAR,
             {
-                subsetOf: [cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+                subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
                 restrictOrder: true,
             }
-        )
+        ),
     ],
     placeholders: { AVATAR },
 } satisfies RolePreset

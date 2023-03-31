@@ -58,7 +58,7 @@ const task = (name: string) =>
     baseTask(name)
         .addParam(
             "safe",
-            "one of: 'DAO_GNO' (DAO Safe on Gnosis Chain), 'LTD_GNO' (Limited Safe on Gnosis Chain)",
+            "one of: 'BALANCER_ETH', 'BALANCER_ALTERNATIVE_ETH'",
             undefined,
             types.string
         )

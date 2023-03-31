@@ -9,6 +9,29 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
+
+// GnosisDAO in Gnosis Chain
+import mainnetDeFiManageGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiManageGnosisDAO"
+import mainnetDeFiRevokeGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiRevokeGnosisDAO"
+import mainnetDeFiHarvestGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiHarvestGnosisDAO"
+import mainnetDeFiDisassembleGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiDisassembleGnosisDAO"
+import mainnetDeFiSwapGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiSwapGnosisDAO"
+
+// GnosisLTD in Gnosis Chain
+import mainnetDeFiManageGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiManageGnosisLTD"
+import mainnetDeFiRevokeGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiRevokeGnosisLTD"
+import mainnetDeFiHarvestGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiHarvestGnosisLTD"
+import mainnetDeFiDisassembleGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiDisassembleGnosisLTD"
+import mainnetDeFiSwapGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiSwapGnosisLTD"
+
+// GnosisDAO in Gnosis Chain
+import gnosisDeFiManageGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiManageGnosisDAO"
+import gnosisDeFiRevokeGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiRevokeGnosisDAO"
+import gnosisDeFiHarvestGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiHarvestGnosisDAO"
+import gnosisDeFiDisassembleGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiDisassembleGnosisDAO"
+import gnosisDeFiSwapGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiSwapGnosisDAO"
+
+// GnosisLTD in Gnosis Chain
 import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
 import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
 import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
@@ -200,6 +223,362 @@ task("assignGnosisSwapRole").setAction(async (taskArgs, hre) => {
     console.log("Done.")
 })
 
+//-----------------------------------------------------------------------------------------------------------------------------
+// GNOSIS DAO - Mainnet
+//-----------------------------------------------------------------------------------------------------------------------------
+
+task("encodeApplyPresetManageGnosisDAOmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            1,
+            mainnetDeFiManageGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataManageGnosisDAOmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataManageGnosisDAOmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetRevokeGnosisDAOmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            2,
+            mainnetDeFiRevokeGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataRevokeGnosisDAOmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisDAOmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetHarvestGnosisDAOmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            3,
+            mainnetDeFiHarvestGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataHarvestGnosisDAOmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisDAOmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetDisassembleGnosisDAOmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            4,
+            mainnetDeFiDisassembleGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataDisassembleGnosisDAOmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisDAOmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetSwapGnosisDAOmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            5,
+            mainnetDeFiSwapGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataSwapGnosisDAOmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisDAOmainnet.json`
+        )
+    }
+)
+
+//-----------------------------------------------------------------------------------------------------------------------------
+// GNOSIS LTD - Mainnet
+//-----------------------------------------------------------------------------------------------------------------------------
+
+task("encodeApplyPresetManageGnosisLTDmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            1,
+            mainnetDeFiManageGnosisLTDPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataManageGnosisLTDmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataManageGnosisLTDmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetRevokeGnosisLTDmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            2,
+            mainnetDeFiRevokeGnosisLTDPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataRevokeGnosisLTDmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisLTDmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetHarvestGnosisLTDmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            3,
+            mainnetDeFiHarvestGnosisLTDPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataHarvestGnosisLTDmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisLTDmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetDisassembleGnosisLTDmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            4,
+            mainnetDeFiDisassembleGnosisLTDPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataDisassembleGnosisLTDmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisLTDmainnet.json`
+        )
+    }
+)
+
+task("encodeApplyPresetSwapGnosisLTDmainnet").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            5,
+            mainnetDeFiSwapGnosisLTDPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataSwapGnosisLTDmainnet.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisLTDmainnet.json`
+        )
+    }
+)
+
+//-----------------------------------------------------------------------------------------------------------------------------
+// GNOSIS DAO - Gnosis Chain
+//-----------------------------------------------------------------------------------------------------------------------------
+
+task("encodeApplyPresetManageGnosisDAOgnosis").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            1,
+            gnosisDeFiManageGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataManageGnosisDAOgnosis.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataManageGnosisDAOgnosis.json`
+        )
+    }
+)
+
+task("encodeApplyPresetRevokeGnosisDAOgnosis").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            2,
+            gnosisDeFiRevokeGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataRevokeGnosisDAOgnosis.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisDAOgnosis.json`
+        )
+    }
+)
+
+task("encodeApplyPresetHarvestGnosisDAOgnosis").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            3,
+            gnosisDeFiHarvestGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataHarvestGnosisDAOgnosis.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisDAOgnosis.json`
+        )
+    }
+)
+
+task("encodeApplyPresetDisassembleGnosisDAOgnosis").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            4,
+            gnosisDeFiDisassembleGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataDisassembleGnosisDAOgnosis.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisDAOgnosis.json`
+        )
+    }
+)
+
+task("encodeApplyPresetSwapGnosisDAOgnosis").setAction(
+    async (taskArgs, hre) => {
+        const { config } = await processArgs(taskArgs, hre)
+        const txBatches = await encodeApplyPresetTxBuilder(
+            config.MODULE,
+            5,
+            gnosisDeFiSwapGnosisDAOPreset,
+            { AVATAR: config.AVATAR },
+            {
+                network: config.NETWORK as NetworkId,
+            }
+        )
+
+        writeFileSync(
+            path.join(__dirname, "..", "txDataSwapGnosisDAOgnosis.json"),
+            JSON.stringify(txBatches, undefined, 2)
+        )
+        console.log(
+            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisDAOgnosis.json`
+        )
+    }
+)
 
 //-----------------------------------------------------------------------------------------------------------------------------
 // GNOSIS LTD - Gnosis Chain
