@@ -1,5 +1,6 @@
 import { AddressZero } from "@ethersproject/constants";
-import { Contract, utils, BigNumber } from "ethers";
+import { Contract, utils, BigNumber, BigNumberish } from "ethers";
+import { solidityPack } from "ethers/lib/utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 export const logGas = async (
@@ -19,7 +20,7 @@ export const logGas = async (
 
 export interface MetaTransaction {
   to: string;
-  value: string | number | BigNumber;
+  value: BigNumberish;
   data: string;
   operation: number;
 }
@@ -244,3 +245,17 @@ export async function deployRolesMod(
 
   return modifier;
 }
+
+export const multisendPayload = (txs: MetaTransaction[]): string => {
+  return (
+    "0x" +
+    txs
+      .map((tx) =>
+        solidityPack(
+          ["uint8", "address", "uint256", "uint256", "bytes"],
+          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
+        ).slice(2)
+      )
+      .join("")
+  );
+};
