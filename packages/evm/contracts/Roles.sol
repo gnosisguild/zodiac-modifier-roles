@@ -113,11 +113,9 @@ contract Roles is
             data,
             operation
         );
-        _flush(consumptions);
+        _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
-        if (!success) {
-            _unflush(consumptions);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -144,11 +142,9 @@ contract Roles is
             data,
             operation
         );
-        _flush(consumptions);
+        _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
-        if (!success) {
-            _unflush(consumptions);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -174,14 +170,12 @@ contract Roles is
             data,
             operation
         );
-        _flush(consumptions);
+        _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (!success) {
-            _unflush(consumptions);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -207,13 +201,11 @@ contract Roles is
             data,
             operation
         );
-        _flush(consumptions);
+        _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (!success) {
-            _unflush(consumptions);
-        }
+        _flushCommit(consumptions, success);
     }
 }

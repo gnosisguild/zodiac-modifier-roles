@@ -198,7 +198,7 @@ abstract contract PermissionBuilder is Core {
      * @param consumptions The array of consumption structs containing
      * information about allowances and consumed amounts.
      */
-    function _flush(Consumption[] memory consumptions) internal {
+    function _flushPrepare(Consumption[] memory consumptions) internal {
         uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
             bytes32 key = consumptions[i].allowanceKey;
@@ -227,19 +227,23 @@ abstract contract PermissionBuilder is Core {
         }
     }
 
-    /**
-     * @dev Flushes the consumption of allowances back into storage.
-     * @param consumptions The array of consumption structs containing
-     * information about allowances and consumed amounts.
-     */
-    function _unflush(Consumption[] memory consumptions) internal {
+    function _flushCommit(
+        Consumption[] memory consumptions,
+        bool success
+    ) internal {
         uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
-            bytes32 key = consumptions[i].allowanceKey;
-            uint128 balance = consumptions[i].balance;
-
-            allowances[key].balance = balance;
-
+            Consumption memory consumption = consumptions[i];
+            bytes32 key = consumption.allowanceKey;
+            if (success) {
+                emit ConsumeAllowance(
+                    key,
+                    consumption.consumed,
+                    consumption.balance - consumption.consumed
+                );
+            } else {
+                allowances[key].balance = consumption.balance;
+            }
             unchecked {
                 ++i;
             }
