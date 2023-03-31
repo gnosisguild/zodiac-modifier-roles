@@ -63,6 +63,7 @@ describe("Legacy", async () => {
 
   async function txSetup() {
     const baseAvatar = await setupTestWithTestAvatar();
+    const [user1] = await hre.ethers.getSigners();
     const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
       ["address"],
       [user1.address]
