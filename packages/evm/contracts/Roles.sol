@@ -113,9 +113,10 @@ contract Roles is
             data,
             operation
         );
+        _flush(consumptions);
         success = exec(to, value, data, operation);
-        if (success) {
-            _flush(consumptions);
+        if (!success) {
+            _unflush(consumptions);
         }
     }
 
@@ -143,9 +144,10 @@ contract Roles is
             data,
             operation
         );
+        _flush(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
-        if (success) {
-            _flush(consumptions);
+        if (!success) {
+            _unflush(consumptions);
         }
     }
 
@@ -172,12 +174,13 @@ contract Roles is
             data,
             operation
         );
+        _flush(consumptions);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (success) {
-            _flush(consumptions);
+        if (!success) {
+            _unflush(consumptions);
         }
     }
 
@@ -204,12 +207,13 @@ contract Roles is
             data,
             operation
         );
+        _flush(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (success) {
-            _flush(consumptions);
+        if (!success) {
+            _unflush(consumptions);
         }
     }
 }

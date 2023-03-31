@@ -21,6 +21,7 @@ library Consumptions {
         for (uint256 i; i < length; ++i) {
             result[i].allowanceKey = consumptions[i].allowanceKey;
             result[i].balance = consumptions[i].balance;
+            result[i].consumed = consumptions[i].consumed;
         }
     }
 
@@ -64,13 +65,18 @@ library Consumptions {
         for (uint256 i; i < c1.length; ++i) {
             result[i].allowanceKey = c1[i].allowanceKey;
             result[i].balance = c1[i].balance;
+            result[i].consumed = c1[i].consumed;
         }
 
         uint256 resultLength = c1.length;
         for (uint256 i; i < c2.length; ++i) {
-            if (!contains(result, c2[i].allowanceKey)) {
+            (uint256 index, bool found) = find(result, c2[i].allowanceKey);
+            if (found) {
+                result[index].consumed += c2[i].consumed;
+            } else {
                 result[resultLength].allowanceKey = c2[i].allowanceKey;
                 result[resultLength].balance = c2[i].balance;
+                result[resultLength].consumed = c2[i].consumed;
                 resultLength++;
             }
         }

@@ -202,7 +202,7 @@ abstract contract PermissionBuilder is Core {
         uint256 paramCount = consumptions.length;
         for (uint256 i; i < paramCount; ) {
             bytes32 key = consumptions[i].allowanceKey;
-            uint128 nextBalance = consumptions[i].balance;
+            uint128 consumed = consumptions[i].consumed;
 
             // Retrieve the allowance and calculate its current updated balance
             // and next refill timestamp.
@@ -211,14 +211,38 @@ abstract contract PermissionBuilder is Core {
                 allowance,
                 block.timestamp
             );
-            assert(balance >= nextBalance);
+            assert(balance == consumptions[i].balance);
+            assert(consumed <= balance);
 
             // Flush
-            allowances[key].balance = nextBalance;
+            allowances[key].balance = balance - consumed;
             allowances[key].refillTimestamp = refillTimestamp;
 
             // Emit an event to signal the total consumed amount.
-            emit ConsumeAllowance(key, balance - nextBalance, nextBalance);
+            emit ConsumeAllowance(key, consumed, balance - consumed);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev Flushes the consumption of allowances back into storage.
+     * @param consumptions The array of consumption structs containing
+     * information about allowances and consumed amounts.
+     */
+    function _unflush(Consumption[] memory consumptions) internal {
+        uint256 paramCount = consumptions.length;
+        for (uint256 i; i < paramCount; ) {
+            bytes32 key = consumptions[i].allowanceKey;
+            uint128 consumed = consumptions[i].consumed;
+
+            assert(
+                allowances[key].balance + consumed <= allowances[key].maxBalance
+            );
+            // Flush
+            allowances[key].balance += consumed;
 
             unchecked {
                 ++i;

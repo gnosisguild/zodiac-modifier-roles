@@ -646,10 +646,12 @@ abstract contract PermissionChecker is Core, Periphery {
         );
         assert(found == true);
 
-        if (value > consumptions[index].balance) {
+        if (
+            value + consumptions[index].consumed > consumptions[index].balance
+        ) {
             return (Status.AllowanceExceeded, consumptions);
         }
-        consumptions[index].balance -= uint128(value);
+        consumptions[index].consumed += uint128(value);
 
         return (Status.Ok, consumptions);
     }
