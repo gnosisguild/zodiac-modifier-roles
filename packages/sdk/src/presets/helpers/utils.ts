@@ -115,6 +115,11 @@ export const subsetOf = (
   type: string,
   options: Options = {}
 ): PresetScopeParam => {
+  if (values.length > 5) {
+    // the number of subsets explodes quickly, so we limit it to 5 which means (2^5)-1 = 31 with restrictOrder, and 5! / (5-5)! = 120 without
+    throw new Error("too many values")
+  }
+
   if (!type.endsWith("[]")) {
     throw new Error("type must be an array type")
   }
