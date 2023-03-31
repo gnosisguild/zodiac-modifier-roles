@@ -17,14 +17,16 @@ export default defineConfig({
         stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
       },
-      uniswap: {
-        nftPositions: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      uniswapv3: {
+        positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+        router_2: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
       },
       compound: {
         comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b",
         cometRewards: "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
         cUSDC: "0x39AA39c021dfbaE8faC545936693aC917d5E7563",
-        cDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
+        cDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+        cAAVE: "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
       },
       aave: {
         stkAave: "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
@@ -86,8 +88,17 @@ export default defineConfig({
         steth_eth_gauge: "0x182B723a58739a9c974cFDB385ceaDb237453c28",
         cDAIcUSDC_pool: "0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56",
         cDAIcUSDC_gauge: "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
-        cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06"
+        cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06",
+        x3CRV_pool: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
       },
+      stakewise: {
+        eth2_staking: "0xC874b064f465bdD6411D45734b56fac750Cda29A",
+        merkle_distributor: "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
+      },
+      sushiswap: {
+        router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+      },
+      weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       omnibridge: "0x88ad09518695c6c3712AC10a214bE5109a655671"
     },
     gnosis: {

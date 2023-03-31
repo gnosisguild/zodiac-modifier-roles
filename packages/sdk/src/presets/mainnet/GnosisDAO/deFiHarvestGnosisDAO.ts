@@ -313,7 +313,7 @@ const preset = {
     // Claim LDO Rewards
     allow.mainnet.curve.steth_eth_gauge["claim_rewards()"](),
 
-    //Claim CRV Rewards
+    // Claim CRV Rewards
     allow.mainnet.curve.crv_minter["mint"](
       curve.stETH_ETH_GAUGE
     ),
@@ -322,7 +322,7 @@ const preset = {
     // Curve - cDAI/cUSDC
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    //Claim CRV Rewards - This pool gauge does not grant any rewards
+    // Claim CRV Rewards - This pool gauge does not grant any rewards
     allow.mainnet.curve.crv_minter["mint"](
       curve.cDAIcUSDC_GAUGE
     ),
