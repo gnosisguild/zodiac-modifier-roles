@@ -68,14 +68,11 @@ library Consumptions {
 
         uint256 resultLength = c1.length;
         for (uint256 i; i < c2.length; ++i) {
-            (uint256 index, bool found) = find(result, c2[i].allowanceKey);
-            if (!found) {
-                index = resultLength;
+            if (!contains(result, c2[i].allowanceKey)) {
+                result[resultLength].allowanceKey = c2[i].allowanceKey;
+                result[resultLength].balance = c2[i].balance;
                 resultLength++;
             }
-
-            result[index].allowanceKey = c2[i].allowanceKey;
-            result[index].balance = c2[i].balance;
         }
 
         if (resultLength < result.length) {

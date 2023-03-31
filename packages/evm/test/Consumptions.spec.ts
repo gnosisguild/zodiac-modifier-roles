@@ -22,7 +22,7 @@ describe("Consumptions library", async () => {
       const c1 = [
         {
           allowanceKey: "0xff".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ];
 
@@ -37,7 +37,7 @@ describe("Consumptions library", async () => {
       const c2 = [
         {
           allowanceKey: "0xff".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ];
 
@@ -52,13 +52,13 @@ describe("Consumptions library", async () => {
       const c1 = [
         {
           allowanceKey: "0xa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ];
       const c2 = [
         {
           allowanceKey: "0xb".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
       ];
 
@@ -67,11 +67,11 @@ describe("Consumptions library", async () => {
       expect(filter(result)).to.deep.equal([
         {
           allowanceKey: "0xa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xb".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
       ]);
     });
@@ -82,21 +82,21 @@ describe("Consumptions library", async () => {
       const c1 = [
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ];
       const c2 = [
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
       ];
 
@@ -105,11 +105,11 @@ describe("Consumptions library", async () => {
       expect(filter(result)).to.deep.equal([
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ]);
     });
@@ -120,25 +120,25 @@ describe("Consumptions library", async () => {
       const c1 = [
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xdd".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
       ];
       const c2 = [
         {
           allowanceKey: "0xcc".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
       ];
 
@@ -147,19 +147,19 @@ describe("Consumptions library", async () => {
       expect(filter(result)).to.deep.equal([
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xdd".padEnd(66, "0"),
-          balance: 0,
+          balance: 1,
         },
         {
           allowanceKey: "0xcc".padEnd(66, "0"),
-          balance: 0,
+          balance: 2,
         },
       ]);
     });
