@@ -1,7 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+interface ISingletonFactory {
+    function deploy(
+        bytes memory initCode,
+        bytes32 salt
+    ) external returns (address);
+}
+
 library WriteOnce {
+    address public constant SINGLETON_FACTORY =
+        0xce0042B868300000d44A59004Da54A005ffdcf9f;
+
+    bytes32 public constant SALT =
+        0xbadfed0000000000000000000000000000000000000000000000000000badfed;
+
     /**
     @notice Stores `_data` and returns `pointer` as key for later retrieval
     @dev The pointer is a contract address with `_data` as code
@@ -9,16 +22,27 @@ library WriteOnce {
     @return pointer Pointer to the written `data`
   */
     function store(bytes memory data) internal returns (address pointer) {
-        // Append 00 to data so contract can't be called
-        // Build init code
-        bytes memory code = creationCodeFor(data);
+        bytes memory creationBytecode = creationBytecodeFor(data);
+        address calculatedAddress = addressFor(creationBytecode);
 
-        // Deploy contract using create
+        uint256 size;
         assembly {
-            pointer := create(0, add(code, 32), mload(code))
+            size := extcodesize(calculatedAddress)
         }
 
-        assert(pointer != address(0));
+        address actualAddress;
+        if (size == 0) {
+            actualAddress = ISingletonFactory(SINGLETON_FACTORY).deploy(
+                creationBytecode,
+                SALT
+            );
+        } else {
+            actualAddress = calculatedAddress;
+        }
+
+        assert(calculatedAddress == actualAddress);
+
+        pointer = calculatedAddress;
     }
 
     /**
@@ -28,35 +52,50 @@ library WriteOnce {
     @return data read from `pointer` contract
   */
     function load(address pointer) internal view returns (bytes memory) {
-        return codeAt(pointer, 1);
+        return runtimeBytecodeAt(pointer);
     }
 
-    function codeAt(
-        address pointer,
-        uint256 start
+    function runtimeBytecodeAt(
+        address pointer
     ) private view returns (bytes memory result) {
+        // jump over the 00
+        uint256 skip = 1;
         unchecked {
             uint256 size;
             assembly {
-                size := sub(extcodesize(pointer), start)
+                size := extcodesize(pointer)
             }
-            assert(size > 0);
+            assert(size > 1);
 
-            result = new bytes(size);
-
+            result = new bytes(size - skip);
             assembly {
-                extcodecopy(pointer, add(result, 0x20), start, size)
+                extcodecopy(pointer, add(result, 0x20), skip, size)
             }
         }
     }
 
+    function addressFor(
+        bytes memory creationBytecode
+    ) private pure returns (address) {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0xff),
+                SINGLETON_FACTORY,
+                SALT,
+                keccak256(creationBytecode)
+            )
+        );
+        // get the right most 20 bytes
+        return address(uint160(uint256(hash)));
+    }
+
     /**
-    @notice Generate a creation code that results on a contract with `_code` as bytecode
-    @param code The returning value of the resulting `creationCode`
-    @return creationCode (constructor) for new contract
-  */
-    function creationCodeFor(
-        bytes memory code
+    @notice Generate a creation code that results on a contract with `data` as bytecode
+    @param data sdsd
+    @return creationBytecode (constructor) for new contract
+    */
+    function creationBytecodeFor(
+        bytes memory data
     ) private pure returns (bytes memory) {
         /*
       0x00    0x63         0x63XXXXXX  PUSH4 _code.length  size
@@ -72,10 +111,11 @@ library WriteOnce {
         return
             abi.encodePacked(
                 hex"63",
-                uint32(code.length + 1),
+                uint32(data.length + 1),
                 hex"80_60_0E_60_00_39_60_00_F3",
+                // Append 00 to data so contract can't be called
                 hex"00",
-                code
+                data
             );
     }
 }

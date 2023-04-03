@@ -3,6 +3,8 @@ import { Contract, utils, BigNumber, BigNumberish } from "ethers";
 import { solidityPack } from "ethers/lib/utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
+import { getSingletonFactory } from "@gnosis.pm/zodiac/dist/src/factory/singletonFactory";
+
 export const logGas = async (
   message: string,
   tx: Promise<any>
@@ -233,6 +235,8 @@ export async function deployRolesMod(
   avatar: string,
   target: string
 ) {
+  await getSingletonFactory(hre.ethers.provider.getSigner());
+
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
