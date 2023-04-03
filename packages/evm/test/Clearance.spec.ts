@@ -147,8 +147,11 @@ describe("Clearance", async () => {
         .connect(invoker)
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        SELECTOR.padEnd(66, "0")
+      );
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
@@ -195,8 +198,11 @@ describe("Clearance", async () => {
   it("allowing a function tightens a previously allowed target", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
+    const selectorDoNothing = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
+    );
+    const selectorDoEvenLess = testContract.interface.getSighash(
+      testContract.interface.getFunction("doEvenLess")
     );
 
     await modifier
@@ -226,7 +232,7 @@ describe("Clearance", async () => {
       .allowFunction(
         ROLE_KEY,
         testContract.address,
-        SELECTOR,
+        selectorDoNothing,
         ExecutionOptions.None
       );
 
@@ -251,15 +257,21 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selectorDoEvenLess.padEnd(66, "0")
+      );
   });
 
   it("allowing a target loosens a previously allowed function", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
+    const SELECTOR1 = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
+    );
+    const SELECTOR2 = testContract.interface.getSighash(
+      testContract.interface.getFunction("doEvenLess")
     );
     const { data: dataDoNothing } =
       await testContract.populateTransaction.doNothing();
@@ -273,7 +285,7 @@ describe("Clearance", async () => {
       .allowFunction(
         ROLE_KEY,
         testContract.address,
-        SELECTOR,
+        SELECTOR1,
         ExecutionOptions.None
       );
 
@@ -298,8 +310,11 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        SELECTOR2.padEnd(66, "0")
+      );
 
     await modifier
       .connect(owner)
@@ -320,10 +335,10 @@ describe("Clearance", async () => {
   it("disallowing one function does not impact other function allowances", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SEL_DONOTHING = testContract.interface.getSighash(
+    const selector1 = testContract.interface.getSighash(
       testContract.interface.getFunction("doNothing")
     );
-    const SEL_DOEVENLESS = testContract.interface.getSighash(
+    const selector2 = testContract.interface.getSighash(
       testContract.interface.getFunction("doEvenLess")
     );
     const { data: dataDoNothing } =
@@ -338,7 +353,7 @@ describe("Clearance", async () => {
       .allowFunction(
         ROLE_KEY,
         testContract.address,
-        SEL_DONOTHING,
+        selector1,
         ExecutionOptions.None
       );
 
@@ -347,7 +362,7 @@ describe("Clearance", async () => {
       .allowFunction(
         ROLE_KEY,
         testContract.address,
-        SEL_DOEVENLESS,
+        selector2,
         ExecutionOptions.None
       );
 
@@ -375,7 +390,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .revokeFunction(ROLE_KEY, testContract.address, SEL_DOEVENLESS);
+      .revokeFunction(ROLE_KEY, testContract.address, selector2);
 
     await expect(
       modifier
@@ -398,7 +413,10 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selector2.padEnd(66, "0")
+      );
   });
 });
