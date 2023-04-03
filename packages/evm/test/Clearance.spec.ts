@@ -147,11 +147,8 @@ describe("Clearance", async () => {
         .connect(invoker)
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
@@ -257,11 +254,8 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selectorDoEvenLess.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
   });
 
   it("allowing a target loosens a previously allowed function", async () => {
@@ -310,11 +304,8 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR2.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
 
     await modifier
       .connect(owner)
@@ -413,10 +404,7 @@ describe("Clearance", async () => {
           0
         )
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector2.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
   });
 });

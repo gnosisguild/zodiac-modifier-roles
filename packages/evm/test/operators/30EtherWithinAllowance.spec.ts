@@ -140,13 +140,13 @@ describe("Operator - EtherWithinAllowance", async () => {
       );
 
       await expect(sendEthAndDoNothing(initialBalance + 1))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
 
       await expect(sendEthAndDoNothing(initialBalance)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
     });
@@ -165,13 +165,13 @@ describe("Operator - EtherWithinAllowance", async () => {
       });
 
       await expect(sendEthAndDoNothing(351))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
 
       await expect(sendEthAndDoNothing(350)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
     });
 
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
@@ -188,13 +188,13 @@ describe("Operator - EtherWithinAllowance", async () => {
       });
 
       await expect(sendEthAndDoNothing(10))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
 
       await expect(sendEthAndDoNothing(9)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
-        .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
     });
   });
 

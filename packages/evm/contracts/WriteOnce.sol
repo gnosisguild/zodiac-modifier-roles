@@ -58,18 +58,18 @@ library WriteOnce {
     function runtimeBytecodeAt(
         address pointer
     ) private view returns (bytes memory result) {
-        // jump over the 00
-        uint256 skip = 1;
         unchecked {
+            // jump over the 00
+            uint256 offset = 1;
             uint256 size;
             assembly {
                 size := extcodesize(pointer)
             }
             assert(size > 1);
 
-            result = new bytes(size - skip);
+            result = new bytes(size - offset);
             assembly {
-                extcodecopy(pointer, add(result, 0x20), skip, size)
+                extcodecopy(pointer, add(result, 0x20), offset, size)
             }
         }
     }
@@ -91,7 +91,7 @@ library WriteOnce {
 
     /**
     @notice Generate a creation code that results on a contract with `data` as bytecode
-    @param data sdsd
+    @param data the buffer to be stored
     @return creationBytecode (constructor) for new contract
     */
     function creationBytecodeFor(
