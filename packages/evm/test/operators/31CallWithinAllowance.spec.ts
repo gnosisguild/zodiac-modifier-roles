@@ -137,8 +137,8 @@ describe("Operator - CallWithinAllowance", async () => {
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke())
-        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .to.be.revertedWithCustomError(roles, `ConditionViolationWithInfo`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - multiple checks from existing balance", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -164,8 +164,8 @@ describe("Operator - CallWithinAllowance", async () => {
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       await expect(invoke())
-        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .to.be.revertedWithCustomError(roles, `ConditionViolationWithInfo`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -183,8 +183,8 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke())
-        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .to.be.revertedWithCustomError(roles, `ConditionViolationWithInfo`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -201,8 +201,8 @@ describe("Operator - CallWithinAllowance", async () => {
       });
 
       await expect(invoke())
-        .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .to.be.revertedWithCustomError(roles, `ConditionViolationWithInfo`)
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
 
