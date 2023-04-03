@@ -3,7 +3,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
+import {
+  BYTES32_ZERO,
+  Operator,
+  ParameterType,
+  PermissionCheckerStatus,
+} from "../utils";
 import { setupOneParamIntSmall, setupOneParamIntWord } from "./setup";
 
 describe("Operator - SignedIntLessThan", async () => {
@@ -29,11 +34,17 @@ describe("Operator - SignedIntLessThan", async () => {
 
     await expect(invoke(1001))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(999)).to.not.be.reverted;
 
@@ -64,15 +75,24 @@ describe("Operator - SignedIntLessThan", async () => {
 
     await expect(invoke(1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(0))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(-1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(-1001)).to.not.be.reverted;
   });
@@ -99,11 +119,17 @@ describe("Operator - SignedIntLessThan", async () => {
 
     await expect(invoke(51))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(49)).to.not.be.reverted;
 
@@ -134,15 +160,24 @@ describe("Operator - SignedIntLessThan", async () => {
 
     await expect(invoke(1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(0))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(-99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed);
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
 
     await expect(invoke(-100)).to.not.be.reverted;
 

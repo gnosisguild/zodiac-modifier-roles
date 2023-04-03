@@ -10,6 +10,7 @@ import {
   Operator,
   deployRolesMod,
   PermissionCheckerStatus,
+  BYTES32_ZERO,
 } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
@@ -271,7 +272,10 @@ describe("Legacy", async () => {
         )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+        .withArgs(
+          PermissionCheckerStatus.TargetAddressNotAllowed,
+          BYTES32_ZERO
+        );
     });
 
     it("executes a call to an allowed target", async () => {
@@ -378,7 +382,7 @@ describe("Legacy", async () => {
         )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     });
 
     it("executes a call with allowed value parameter", async () => {
@@ -559,7 +563,7 @@ describe("Legacy", async () => {
         )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     });
 
     it("executes a call with allowed dynamic parameter", async () => {
@@ -710,7 +714,7 @@ describe("Legacy", async () => {
         )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     });
 
     it.skip("reverts if multisend tx data offset is not 32 bytes", async () => {
@@ -942,7 +946,10 @@ describe("Legacy", async () => {
         )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+        .withArgs(
+          PermissionCheckerStatus.TargetAddressNotAllowed,
+          BYTES32_ZERO
+        );
     });
 
     it("executes a call to an allowed target", async () => {

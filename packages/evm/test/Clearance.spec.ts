@@ -3,6 +3,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
+  BYTES32_ZERO,
   deployRolesMod,
   ExecutionOptions,
   PermissionCheckerStatus,
@@ -55,7 +56,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
 
     await modifier
       .connect(owner)
@@ -75,7 +76,7 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
   });
 
   it("allowing a target does not allow other targets", async () => {
@@ -109,7 +110,7 @@ describe("Clearance", async () => {
         )
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
   });
 
   it("allows and then disallows a function", async () => {
@@ -148,7 +149,10 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContract.address, 0, data as string, 0)
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        SELECTOR.padEnd(66, "0")
+      );
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
@@ -190,7 +194,7 @@ describe("Clearance", async () => {
         )
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
   });
   it("allowing a function tightens a previously allowed target", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
@@ -255,7 +259,10 @@ describe("Clearance", async () => {
         )
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selectorDoEvenLess.padEnd(66, "0")
+      );
   });
 
   it("allowing a target loosens a previously allowed function", async () => {
@@ -305,7 +312,10 @@ describe("Clearance", async () => {
         )
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        SELECTOR2.padEnd(66, "0")
+      );
 
     await modifier
       .connect(owner)
@@ -405,6 +415,9 @@ describe("Clearance", async () => {
         )
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selector2.padEnd(66, "0")
+      );
   });
 });
