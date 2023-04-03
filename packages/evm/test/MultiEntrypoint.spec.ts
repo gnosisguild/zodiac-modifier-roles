@@ -126,10 +126,6 @@ describe("Multi Entrypoint", async () => {
       multisendCallData,
     } = await loadFixture(setup);
 
-    const selector = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
     await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
@@ -142,11 +138,8 @@ describe("Multi Entrypoint", async () => {
           Operation.DelegateCall
         )
     )
-      .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -159,10 +152,6 @@ describe("Multi Entrypoint", async () => {
       testContract,
       multisendCallData,
     } = await loadFixture(setup);
-
-    const selector = testContract.interface.getSighash(
-      testContract.interface.getFunction("setAStorageNumber")
-    );
 
     await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
 
@@ -199,11 +188,8 @@ describe("Multi Entrypoint", async () => {
           Operation.DelegateCall
         )
     )
-      .to.be.revertedWithCustomError(roles, "ConditionViolationWithInfo")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0")
-      );
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
