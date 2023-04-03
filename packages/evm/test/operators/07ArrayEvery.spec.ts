@@ -4,7 +4,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
 import { setupOneParamArrayOfStaticTuple } from "./setup";
-import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
+import {
+  BYTES32_ZERO,
+  Operator,
+  ParameterType,
+  PermissionCheckerStatus,
+} from "../utils";
 
 describe("Operator - ArrayEvery", async () => {
   it("can't set up more than one child rule for ArrayEvery", async () => {
@@ -120,7 +125,10 @@ describe("Operator - ArrayEvery", async () => {
       ])
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.NotEveryArrayElementPasses);
+      .withArgs(
+        PermissionCheckerStatus.NotEveryArrayElementPasses,
+        BYTES32_ZERO
+      );
 
     await expect(
       invoke([
@@ -129,6 +137,9 @@ describe("Operator - ArrayEvery", async () => {
       ])
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.NotEveryArrayElementPasses);
+      .withArgs(
+        PermissionCheckerStatus.NotEveryArrayElementPasses,
+        BYTES32_ZERO
+      );
   });
 });

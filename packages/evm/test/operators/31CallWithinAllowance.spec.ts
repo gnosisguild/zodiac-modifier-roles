@@ -11,6 +11,7 @@ import {
   ParameterType,
   deployRolesMod,
   PermissionCheckerStatus,
+  BYTES32_ZERO,
 } from "../utils";
 
 const ROLE_KEY =
@@ -138,7 +139,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - multiple checks from existing balance", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -165,7 +166,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -184,7 +185,7 @@ describe("Operator - CallWithinAllowance", async () => {
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
@@ -202,7 +203,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
 
@@ -305,16 +306,16 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke(valueOther))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       await expect(invoke(value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       await expect(invoke(value2)).not.to.be.reverted;
       await expect(invoke(value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
     });
   });
 });

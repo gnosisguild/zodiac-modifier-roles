@@ -3,7 +3,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BigNumber } from "ethers";
 
-import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
+import {
+  BYTES32_ZERO,
+  Operator,
+  ParameterType,
+  PermissionCheckerStatus,
+} from "../utils";
 import { setupOneParamBytes, setupOneParamStatic } from "./setup";
 
 describe("Operator - Bitmask", async () => {
@@ -57,7 +62,7 @@ describe("Operator - Bitmask", async () => {
         )
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed);
+        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
     });
 
     it("middle aligned", async () => {
@@ -108,7 +113,7 @@ describe("Operator - Bitmask", async () => {
         )
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed);
+        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
     });
     it("right aligned", async () => {
       const { roles, scopeFunction, invoke } = await loadFixture(
@@ -157,7 +162,7 @@ describe("Operator - Bitmask", async () => {
         )
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed);
+        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
     });
   });
   describe("Static - Fails", async () => {
@@ -194,7 +199,7 @@ describe("Operator - Bitmask", async () => {
         )
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskOverflow);
+        .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
     });
   });
 
@@ -229,10 +234,10 @@ describe("Operator - Bitmask", async () => {
 
       await expect(invoke("0x45"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed);
+        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
       await expect(invoke("0x45ff0077"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed);
+        .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
     });
     it("right aligned", async () => {
       const { scopeFunction, invoke } = await loadFixture(setupOneParamBytes);
@@ -292,7 +297,7 @@ describe("Operator - Bitmask", async () => {
 
       await expect(invoke("0x0000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.BitmaskOverflow);
+        .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
     });
   });
 

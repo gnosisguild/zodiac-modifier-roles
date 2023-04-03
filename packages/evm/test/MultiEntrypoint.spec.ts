@@ -6,6 +6,7 @@ import { BigNumberish } from "ethers";
 import { solidityPack } from "ethers/lib/utils";
 
 import {
+  BYTES32_ZERO,
   deployRolesMod,
   ExecutionOptions,
   PermissionCheckerStatus,
@@ -126,6 +127,10 @@ describe("Multi Entrypoint", async () => {
       multisendCallData,
     } = await loadFixture(setup);
 
+    const selector = testContract.interface.getSighash(
+      testContract.interface.getFunction("doNothing")
+    );
+
     await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
@@ -139,7 +144,10 @@ describe("Multi Entrypoint", async () => {
         )
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selector.padEnd(66, "0")
+      );
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -177,6 +185,10 @@ describe("Multi Entrypoint", async () => {
         ExecutionOptions.None
       );
 
+    const selector = testContract.interface.getSighash(
+      testContract.interface.getFunction("setAStorageNumber")
+    );
+
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
       roles
@@ -189,7 +201,10 @@ describe("Multi Entrypoint", async () => {
         )
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.FunctionNotAllowed);
+      .withArgs(
+        PermissionCheckerStatus.FunctionNotAllowed,
+        selector.padEnd(66, "0")
+      );
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -259,7 +274,7 @@ describe("Multi Entrypoint", async () => {
         )
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
   });
 
   it("succeeds for multiple transactions", async () => {

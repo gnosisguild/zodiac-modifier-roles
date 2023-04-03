@@ -3,6 +3,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
+  BYTES32_ZERO,
   deployRolesMod,
   ExecutionOptions,
   PermissionCheckerStatus,
@@ -82,7 +83,7 @@ describe("ExecutionOptions", async () => {
             )
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -101,7 +102,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -178,7 +179,7 @@ describe("ExecutionOptions", async () => {
             )
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -206,7 +207,7 @@ describe("ExecutionOptions", async () => {
             )
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.Both - OK sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -303,7 +304,7 @@ describe("ExecutionOptions", async () => {
             )
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -331,7 +332,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -438,7 +439,7 @@ describe("ExecutionOptions", async () => {
             )
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -466,7 +467,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContract.address, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
       });
       it("ExecutionOptions.Both - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -587,7 +588,7 @@ describe("ExecutionOptions", async () => {
           )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed);
+        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, BYTES32_ZERO);
     });
     it("Target Scoped - can delegatecall", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
@@ -655,7 +656,7 @@ describe("ExecutionOptions", async () => {
           )
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed);
+        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, BYTES32_ZERO);
     });
   });
 });

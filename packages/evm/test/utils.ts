@@ -263,3 +263,6 @@ export const multisendPayload = (txs: MetaTransaction[]): string => {
       .join("")
   );
 };
+
+export const BYTES32_ZERO =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";

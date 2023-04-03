@@ -11,6 +11,7 @@ import {
   ParameterType,
   deployRolesMod,
   PermissionCheckerStatus,
+  BYTES32_ZERO,
 } from "../utils";
 
 const ROLE_KEY =
@@ -141,12 +142,12 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       await expect(sendEthAndDoNothing(initialBalance + 1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
 
       await expect(sendEthAndDoNothing(initialBalance)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
     });
@@ -166,12 +167,12 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       await expect(sendEthAndDoNothing(351))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
 
       await expect(sendEthAndDoNothing(350)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
 
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
@@ -189,12 +190,12 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       await expect(sendEthAndDoNothing(10))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
 
       await expect(sendEthAndDoNothing(9)).to.not.be.reverted;
       await expect(sendEthAndDoNothing(1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
   });
 
@@ -301,17 +302,17 @@ describe("Operator - EtherWithinAllowance", async () => {
        */
       await expect(invoke(1000, valueOther))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       // Exceed value for Variant1
       await expect(invoke(allowanceAmount1 + 1, value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       // Exceed value for Variant2
       await expect(invoke(allowanceAmount2 + 1, value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       // Checks that both allowance balances still remain unchanged
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -343,11 +344,11 @@ describe("Operator - EtherWithinAllowance", async () => {
       // check that neither variant can now be invoked
       await expect(invoke(1, value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
       await expect(invoke(1, value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation);
+        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
     });
   });
 });

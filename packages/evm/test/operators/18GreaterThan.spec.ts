@@ -3,7 +3,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
+import {
+  BYTES32_ZERO,
+  Operator,
+  ParameterType,
+  PermissionCheckerStatus,
+} from "../utils";
 import {
   setupOneParamAddress,
   setupOneParamUintSmall,
@@ -33,10 +38,10 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(999))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(1001)).to.not.be.reverted;
   });
 
@@ -62,10 +67,10 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(49))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(51)).to.not.be.reverted;
   });
 
@@ -93,10 +98,10 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(address))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke("0x000000000000000000000000000000000000000e"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke("0x000000000000000000000000000000000000001f")).to.not.be
       .reverted;
   });

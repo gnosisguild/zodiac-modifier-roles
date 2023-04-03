@@ -69,12 +69,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(1000)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("passes a check with only from balance and refill configured", async () => {
@@ -110,11 +110,11 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(334))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
       await expect(invoke(333)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("passes a check balance from available+refill", async () => {
@@ -150,12 +150,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(351))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(350)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
@@ -190,12 +190,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(251))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(250)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("passes a check with balance from refill and bellow maxBalance", async () => {
@@ -233,7 +233,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(1000)).to.not.be.reverted;
     });
@@ -271,7 +271,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(9001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(9000)).to.not.be.reverted;
     });
@@ -319,7 +319,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(3001, 3001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
@@ -368,7 +368,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(3000, 1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
