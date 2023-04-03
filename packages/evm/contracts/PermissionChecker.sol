@@ -306,10 +306,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status, Result memory) {
-        Result memory result = Result({
-            consumptions: Consumptions.clone(consumptions),
-            info: 0
-        });
+        Result memory result = Result({consumptions: consumptions, info: 0});
 
         if (condition.children.length != payload.children.length) {
             return (Status.ParameterNotAMatch, result);
@@ -325,7 +322,10 @@ abstract contract PermissionChecker is Core, Periphery {
                 result.consumptions
             );
             if (status != Status.Ok) {
-                return (status, result);
+                return (
+                    status,
+                    Result({consumptions: consumptions, info: result.info})
+                );
             }
             unchecked {
                 ++i;
@@ -342,10 +342,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Result memory) {
-        Result memory result = Result({
-            consumptions: Consumptions.clone(consumptions),
-            info: 0
-        });
+        Result memory result = Result({consumptions: consumptions, info: 0});
 
         for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
@@ -356,7 +353,10 @@ abstract contract PermissionChecker is Core, Periphery {
                 result.consumptions
             );
             if (status != Status.Ok) {
-                return (status, result);
+                return (
+                    status,
+                    Result({consumptions: consumptions, info: result.info})
+                );
             }
             unchecked {
                 ++i;
@@ -378,7 +378,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                Consumptions.clone(consumptions)
+                consumptions
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -400,25 +400,26 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory) {
-        Result memory result = Result({consumptions: consumptions, info: 0});
-
+    ) private pure returns (Status status, Result memory result) {
         for (uint256 i; i < condition.children.length; ) {
             (status, ) = _walk(
                 value,
                 data,
                 condition.children[i],
                 payload,
-                Consumptions.clone(consumptions)
+                consumptions
             );
             if (status == Status.Ok) {
-                return (Status.NorViolation, result);
+                return (
+                    Status.NorViolation,
+                    Result({consumptions: consumptions, info: 0})
+                );
             }
             unchecked {
                 ++i;
             }
         }
-        return (Status.Ok, result);
+        return (Status.Ok, Result({consumptions: consumptions, info: 0}));
     }
 
     function _xor(
@@ -435,7 +436,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 payload,
-                Consumptions.clone(consumptions)
+                consumptions
             );
             if (status == Status.Ok) {
                 result = temp;
@@ -468,7 +469,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[0],
                 payload.children[i],
-                Consumptions.clone(consumptions)
+                consumptions
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -490,10 +491,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status status, Result memory result) {
-        result = Result({
-            consumptions: Consumptions.clone(consumptions),
-            info: 0
-        });
+        result = Result({consumptions: consumptions, info: 0});
         for (uint256 i; i < payload.children.length; ) {
             (status, result) = _walk(
                 value,
@@ -544,7 +542,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     data,
                     condition.children[j],
                     payload.children[i],
-                    Consumptions.clone(result.consumptions)
+                    result.consumptions
                 );
                 if (status == Status.Ok) {
                     found = true;
@@ -709,6 +707,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 })
             );
         } else {
+            consumptions = Consumptions.clone(consumptions);
             consumptions[index].consumed += uint128(value);
             return (Status.Ok, Result({consumptions: consumptions, info: 0}));
         }
