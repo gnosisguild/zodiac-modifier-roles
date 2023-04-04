@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Types.sol";
+import "../Types.sol";
 
 /**
- * @title ScopeConfig a library that provides packing and unpacking functions
- * for permission conditions. Specifically, it allows packing externally
- * provided ConditionsFlat[] into a storage-optimized buffer, and later unpack
- * it into Conditions[] in memory.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @title BufferPacker a library that provides packing functions for permission
+ * conditions. It allows packing externally provided ConditionsFlat[] into a
+ * storage-optimized buffer
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
-library ScopeConfig {
+library BufferPacker {
     // HEADER (stored as a single word in storage)
     // 8   bits  -> length (Condition count)
     // 2   bits  -> options (ExecutionOptions)
@@ -62,26 +61,6 @@ library ScopeConfig {
         result |= bytes32(bytes20(pointer)) >> 16;
     }
 
-    function unpackHeader(
-        bytes32 header
-    )
-        internal
-        pure
-        returns (
-            uint256 length,
-            bool isWildcarded,
-            ExecutionOptions options,
-            address pointer
-        )
-    {
-        length = (uint256(header) & maskLength) >> offsetLength;
-        isWildcarded = uint256(header) & maskIsWildcarded != 0;
-        options = ExecutionOptions(
-            (uint256(header) & maskOptions) >> offsetOptions
-        );
-        pointer = address(bytes20(header << 16));
-    }
-
     function packCondition(
         bytes memory buffer,
         uint256 index,
@@ -107,54 +86,6 @@ library ScopeConfig {
 
         assembly {
             mstore(add(buffer, offset), word)
-        }
-    }
-
-    function unpack(
-        bytes memory buffer,
-        uint256 count
-    )
-        internal
-        pure
-        returns (
-            ConditionFlat[] memory result,
-            bytes32[] memory compValues,
-            uint256 allowanceCount
-        )
-    {
-        result = new ConditionFlat[](count);
-        compValues = new bytes32[](count);
-
-        unchecked {
-            uint256 compValueOffset = 32 + count * bytesPerCondition;
-            for (uint256 i; i < count; ++i) {
-                bytes32 word;
-                uint256 offset = 32 + i * bytesPerCondition;
-                assembly {
-                    word := mload(add(buffer, offset))
-                }
-                uint16 bits = uint16(bytes2(word));
-
-                ConditionFlat memory condition = result[i];
-                condition.parent = uint8((bits & maskParent) >> offsetParent);
-                condition.paramType = ParameterType(
-                    (bits & maskParamType) >> offsetParamType
-                );
-                condition.operator = Operator(
-                    (bits & maskOperator) >> offsetOperator
-                );
-
-                if (condition.operator >= Operator.EqualTo) {
-                    assembly {
-                        word := mload(add(buffer, compValueOffset))
-                    }
-                    compValues[i] = word;
-                    compValueOffset += 32;
-                    if (condition.operator >= Operator.WithinAllowance) {
-                        ++allowanceCount;
-                    }
-                }
-            }
         }
     }
 }

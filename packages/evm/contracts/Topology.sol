@@ -6,7 +6,7 @@ import "./Types.sol";
 /**
  * @title Topology - a library that provides helper functions for dealing with
  * the flat representation of conditions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Topology {
     struct TypeTree {
@@ -59,35 +59,6 @@ library Topology {
             unchecked {
                 for (uint256 i; i < length; ++i) {
                     if (!isInline(node.children[i])) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-    }
-
-    function isInline(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        ParameterType paramType = conditions[index].paramType;
-        if (paramType == ParameterType.Static) {
-            return true;
-        } else if (
-            paramType == ParameterType.Dynamic ||
-            paramType == ParameterType.Array ||
-            paramType == ParameterType.AbiEncoded
-        ) {
-            return false;
-        } else {
-            uint256 length = conditions.length;
-            unchecked {
-                for (uint256 j = index + 1; j < length; ++j) {
-                    if (conditions[j].parent != index) {
-                        continue;
-                    }
-                    if (!isInline(conditions, j)) {
                         return false;
                     }
                 }

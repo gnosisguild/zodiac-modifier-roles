@@ -7,7 +7,7 @@ import "./Topology.sol";
  * @title Integrity, a library that ensures the provided configuration
  * conditions meet certain sanity checks and that the data conforms to the
  * expected data model for the roles modifier.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Integrity {
     error NoRootNode();

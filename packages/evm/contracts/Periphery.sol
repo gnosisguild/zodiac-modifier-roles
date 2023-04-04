@@ -7,7 +7,7 @@ import "./adapters/Types.sol";
 /**
  * @title Periphery - a coordinating component that facilitates plug-and-play
  * functionality for the Zodiac Roles Mod through the use of adapters.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 abstract contract Periphery is OwnableUpgradeable {
     event SetUnwrapAdapter(

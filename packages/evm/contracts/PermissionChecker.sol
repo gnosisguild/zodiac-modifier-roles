@@ -3,19 +3,19 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+import "./Consumptions.sol";
 import "./Core.sol";
+import "./Decoder.sol";
 import "./Periphery.sol";
 
-import "./Consumptions.sol";
-import "./Decoder.sol";
-import "./ScopeConfig.sol";
+import "./packers/PermissionUnpacker.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
  *
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionChecker is Core, Periphery {
     function _authorize(
@@ -142,7 +142,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             }
 
-            (, bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
+            (, bool isWildcarded, ExecutionOptions options, ) = BufferUnpacker
                 .unpackHeader(header);
 
             Status status = _executionOptions(value, operation, options);
