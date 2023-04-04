@@ -3,15 +3,15 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Core.sol";
 import "./Integrity.sol";
-import "./Topology.sol";
-import "./ScopeConfig.sol";
+
+import "./packers/PermissionPacker.sol";
 
 /**
  * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
  * responsible for constructing, managing, granting, and revoking all types
  * of permission data.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionBuilder is Core {
     error UnsuitableMaxBalanceForAllowance();
@@ -112,7 +112,7 @@ abstract contract PermissionBuilder is Core {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = BufferPacker
             .packHeader(0, true, options, address(0));
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
@@ -144,7 +144,6 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     ) external onlyOwner {
         Integrity.enforce(conditions);
-        _removeExtraneousOffsets(conditions);
 
         _store(
             roles[roleKey],
@@ -273,40 +272,5 @@ abstract contract PermissionBuilder is Core {
             allowance.refillTimestamp +
             elapsedIntervals *
             allowance.refillInterval;
-    }
-
-    /**
-     * @dev This function removes unnecessary offsets from compValue fields of
-     * the `conditions` array. Its purpose is to ensure a consistent API where
-     * every `compValue` provided for use in `Operations.EqualsTo` is obtained
-     * by calling `abi.encode` directly.
-     *
-     * By removing the leading extraneous offsets this function makes
-     * abi.encode(...) match the output produced by Decoder inspection.
-     * Without it, the encoded fields would need to be patched externally
-     * depending on whether the payload is fully encoded inline or not.
-     *
-     * @param conditions Array of ConditionFlat structs to remove extraneous
-     * offsets from
-     */
-    function _removeExtraneousOffsets(
-        ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
-        uint256 count = conditions.length;
-        for (uint256 i; i < count; ++i) {
-            if (
-                conditions[i].operator == Operator.EqualTo &&
-                Topology.isInline(conditions, i) == false
-            ) {
-                bytes memory compValue = conditions[i].compValue;
-                uint256 length = compValue.length;
-                assembly {
-                    compValue := add(compValue, 32)
-                    mstore(compValue, sub(length, 32))
-                }
-                conditions[i].compValue = compValue;
-            }
-        }
-        return conditions;
     }
 }

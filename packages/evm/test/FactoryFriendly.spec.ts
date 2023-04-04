@@ -14,6 +14,10 @@ describe("Module works with factory", () => {
   async function setup() {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
+    const PermissionPacker = await hre.ethers.getContractFactory(
+      "PermissionPacker"
+    );
+    const permissionPacker = await PermissionPacker.deploy();
 
     const Integrity = await hre.ethers.getContractFactory("Integrity");
     const integrity = await Integrity.deploy();
@@ -21,6 +25,7 @@ describe("Module works with factory", () => {
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
         Integrity: integrity.address,
+        PermissionPacker: permissionPacker.address,
       },
     });
     const masterCopy = await Modifier.deploy(

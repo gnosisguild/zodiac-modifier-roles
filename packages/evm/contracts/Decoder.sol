@@ -6,7 +6,7 @@ import "./Topology.sol";
 /**
  * @title Decoder - a library that discovers parameter locations in calldata
  * from a list of conditions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Decoder {
     error CalldataOutOfBounds();

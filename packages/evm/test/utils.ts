@@ -242,9 +242,15 @@ export async function deployRolesMod(
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
+  const PermissionPacker = await hre.ethers.getContractFactory(
+    "PermissionPacker"
+  );
+  const permissionPacker = await PermissionPacker.deploy();
+
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
       Integrity: integrity.address,
+      PermissionPacker: permissionPacker.address,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);
