@@ -645,7 +645,6 @@ abstract contract PermissionChecker is Core, Periphery {
         // 12 bytes on the right
         bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
 
-        //try (this doesn't work) {
         (bool success, bytes32 info) = adapter.check(
             value,
             data,
@@ -657,12 +656,6 @@ abstract contract PermissionChecker is Core, Periphery {
             success ? Status.Ok : Status.CustomConditionViolation,
             Result({consumptions: consumptions, info: info})
         );
-        // } catch {
-        //     return (
-        //         Status.CustomConditionMalformed,
-        //         Result({consumptions: consumptions, info: 0})
-        //     );
-        // }
     }
 
     function _withinAllowance(
@@ -767,7 +760,6 @@ abstract contract PermissionChecker is Core, Periphery {
         BitmaskOverflow,
         /// Bitmask not an allowed value
         BitmaskNotAllowed,
-        CustomConditionMalformed,
         CustomConditionViolation,
         AllowanceExceeded,
         CallAllowanceExceeded,
