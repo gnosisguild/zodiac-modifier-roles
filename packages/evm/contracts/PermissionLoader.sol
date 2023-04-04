@@ -90,7 +90,7 @@ abstract contract PermissionLoader is Core {
             ConditionFlat[] memory conditions,
             bytes32[] memory compValues,
             uint256 allowanceCount
-        ) = ScopeConfig.unpackConditions(buffer, paramCount);
+        ) = ScopeConfig.unpack(buffer, paramCount);
 
         _unpackCondition(
             conditions,

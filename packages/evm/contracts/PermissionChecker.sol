@@ -681,8 +681,6 @@ abstract contract PermissionChecker is Core, Periphery {
         // }
     }
 
-    function _huh() public pure {}
-
     function _withinAllowance(
         bytes calldata data,
         Condition memory condition,
