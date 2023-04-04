@@ -59,7 +59,7 @@ enum Operator {
     /* 20: */ SignedIntGreaterThan, // paramType: Static
     /* 21: */ SignedIntLessThan, // paramType: Static
     /* 22: */ Bitmask, // paramType: Static / Dynamic
-    /* 23: */ _ComparisonPlaceholder23,
+    /* 23: */ Custom, // paramType: Static / Dynamic / Tuple / Array
     /* 24: */ _ComparisonPlaceholder24,
     /* 25: */ _ComparisonPlaceholder25,
     /* 26: */ _ComparisonPlaceholder26,

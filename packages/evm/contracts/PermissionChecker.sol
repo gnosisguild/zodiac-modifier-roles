@@ -284,6 +284,8 @@ abstract contract PermissionChecker is Core, Periphery {
                     _bitmask(data, condition, payload),
                     Result({consumptions: consumptions, info: 0})
                 );
+            } else if (operator == Operator.Custom) {
+                return _custom(value, data, condition, payload, consumptions);
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload, consumptions);
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -645,6 +647,42 @@ abstract contract PermissionChecker is Core, Periphery {
             (slice & mask) == expected ? Status.Ok : Status.BitmaskNotAllowed;
     }
 
+    function _custom(
+        uint256 value,
+        bytes calldata data,
+        Condition memory condition,
+        ParameterPayload memory payload,
+        Consumption[] memory consumptions
+    ) private pure returns (Status status, Result memory) {
+        // 20 bytes on the left
+        ICustomCondition adapter = ICustomCondition(
+            address(bytes20(condition.compValue))
+        );
+        // 12 bytes on the right
+        bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
+
+        //try (this doesn't work) {
+        (bool success, bytes32 info) = adapter.check(
+            value,
+            data,
+            payload.location,
+            payload.size,
+            extra
+        );
+        return (
+            success ? Status.Ok : Status.CustomConditionViolation,
+            Result({consumptions: consumptions, info: info})
+        );
+        // } catch {
+        //     return (
+        //         Status.CustomConditionMalformed,
+        //         Result({consumptions: consumptions, info: 0})
+        //     );
+        // }
+    }
+
+    function _huh() public pure {}
+
     function _withinAllowance(
         bytes calldata data,
         Condition memory condition,
@@ -747,6 +785,8 @@ abstract contract PermissionChecker is Core, Periphery {
         BitmaskOverflow,
         /// Bitmask not an allowed value
         BitmaskNotAllowed,
+        CustomConditionMalformed,
+        CustomConditionViolation,
         AllowanceExceeded,
         CallAllowanceExceeded,
         EtherAllowanceExceeded

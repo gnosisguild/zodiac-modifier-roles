@@ -165,12 +165,12 @@ export enum Operator {
   /* 20: */ SignedIntGreaterThan = 20,
   /* 21: */ SignedIntLessThan = 21,
   /* 22: */ Bitmask = 22,
-  // /* 23: */ _BinaryPlaceholder23,
-  // /* 24: */ _BinaryPlaceholder24,
-  // /* 25: */ _BinaryPlaceholder25,
-  // /* 26: */ _BinaryPlaceholder26,
-  // /* 27: */ _BinaryPlaceholder27,
-  // /* 28: */ _BinaryPlaceholder28,
+  /* 23: */ Custom = 23,
+  /* 24: */ _BinaryPlaceholder24,
+  /* 25: */ _BinaryPlaceholder25,
+  /* 26: */ _BinaryPlaceholder26,
+  /* 27: */ _BinaryPlaceholder27,
+  /* 28: */ _BinaryPlaceholder28,
   /* 29: */ WithinAllowance = 29,
   /* 30: */ EtherWithinAllowance = 30,
   /* 31: */ CallWithinAllowance = 31,
@@ -217,6 +217,8 @@ export enum PermissionCheckerStatus {
   BitmaskOverflow,
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
+  CustomConditionMalformed,
+  CustomConditionViolation,
   /// TODO
   AllowanceExceeded,
   /// TODO

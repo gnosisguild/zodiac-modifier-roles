@@ -20,3 +20,13 @@ interface ITransactionUnwrapper {
         Enum.Operation operation
     ) external view returns (UnwrappedTransaction[] memory result);
 }
+
+interface ICustomCondition {
+    function check(
+        uint256 value,
+        bytes calldata data,
+        uint256 location,
+        uint256 size,
+        bytes12 extra
+    ) external pure returns (bool success, bytes32 reason);
+}
