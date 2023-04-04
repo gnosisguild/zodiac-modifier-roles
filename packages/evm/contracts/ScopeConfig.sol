@@ -116,7 +116,7 @@ library ScopeConfig {
         }
     }
 
-    function unpackConditions(
+    function unpack(
         bytes memory buffer,
         uint256 count
     )
@@ -131,11 +131,10 @@ library ScopeConfig {
         result = new ConditionFlat[](count);
         compValues = new bytes32[](count);
 
-        bytes32 word;
-        uint256 offset;
         uint256 compValueOffset = 32 + count * bytesPerCondition;
         for (uint256 i; i < count; ) {
-            offset = 32 + i * bytesPerCondition;
+            bytes32 word;
+            uint256 offset = 32 + i * bytesPerCondition;
             assembly {
                 word := mload(add(buffer, offset))
             }
