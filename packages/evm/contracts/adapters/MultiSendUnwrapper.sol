@@ -96,12 +96,12 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
             result[i].value = uint256(bytes32(data[offset:]));
             offset += 32;
 
-            uint256 length = uint256(bytes32(data[offset:]));
+            uint256 size = uint256(bytes32(data[offset:]));
             offset += 32;
 
-            result[i].dataOffset = offset;
-            result[i].dataLength = length;
-            offset += length;
+            result[i].dataLocation = offset;
+            result[i].dataSize = size;
+            offset += size;
 
             unchecked {
                 ++i;

@@ -200,29 +200,27 @@ abstract contract PermissionBuilder is Core {
      */
     function _flushPrepare(Consumption[] memory consumptions) internal {
         uint256 paramCount = consumptions.length;
-        for (uint256 i; i < paramCount; ) {
-            bytes32 key = consumptions[i].allowanceKey;
-            uint128 consumed = consumptions[i].consumed;
+        unchecked {
+            for (uint256 i; i < paramCount; ++i) {
+                bytes32 key = consumptions[i].allowanceKey;
+                uint128 consumed = consumptions[i].consumed;
 
-            // Retrieve the allowance and calculate its current updated balance
-            // and next refill timestamp.
-            Allowance memory allowance = allowances[key];
-            (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
-                allowance,
-                block.timestamp
-            );
-            assert(balance == consumptions[i].balance);
-            assert(consumed <= balance);
+                // Retrieve the allowance and calculate its current updated balance
+                // and next refill timestamp.
+                Allowance memory allowance = allowances[key];
+                (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
+                    allowance,
+                    block.timestamp
+                );
+                assert(balance == consumptions[i].balance);
+                assert(consumed <= balance);
 
-            // Flush
-            allowances[key].balance = balance - consumed;
-            allowances[key].refillTimestamp = refillTimestamp;
+                // Flush
+                allowances[key].balance = balance - consumed;
+                allowances[key].refillTimestamp = refillTimestamp;
 
-            // Emit an event to signal the total consumed amount.
-            emit ConsumeAllowance(key, consumed, balance - consumed);
-
-            unchecked {
-                ++i;
+                // Emit an event to signal the total consumed amount.
+                emit ConsumeAllowance(key, consumed, balance - consumed);
             }
         }
     }
@@ -232,20 +230,19 @@ abstract contract PermissionBuilder is Core {
         bool success
     ) internal {
         uint256 paramCount = consumptions.length;
-        for (uint256 i; i < paramCount; ) {
-            Consumption memory consumption = consumptions[i];
-            bytes32 key = consumption.allowanceKey;
-            if (success) {
-                emit ConsumeAllowance(
-                    key,
-                    consumption.consumed,
-                    consumption.balance - consumption.consumed
-                );
-            } else {
-                allowances[key].balance = consumption.balance;
-            }
-            unchecked {
-                ++i;
+        unchecked {
+            for (uint256 i; i < paramCount; ++i) {
+                Consumption memory consumption = consumptions[i];
+                bytes32 key = consumption.allowanceKey;
+                if (success) {
+                    emit ConsumeAllowance(
+                        key,
+                        consumption.consumed,
+                        consumption.balance - consumption.consumed
+                    );
+                } else {
+                    allowances[key].balance = consumption.balance;
+                }
             }
         }
     }
@@ -296,7 +293,7 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions
     ) private pure returns (ConditionFlat[] memory) {
         uint256 count = conditions.length;
-        for (uint256 i; i < count; ) {
+        for (uint256 i; i < count; ++i) {
             if (
                 conditions[i].operator == Operator.EqualTo &&
                 Topology.isInline(conditions, i) == false
@@ -308,10 +305,6 @@ abstract contract PermissionBuilder is Core {
                     mstore(compValue, sub(length, 32))
                 }
                 conditions[i].compValue = compValue;
-            }
-
-            unchecked {
-                ++i;
             }
         }
         return conditions;

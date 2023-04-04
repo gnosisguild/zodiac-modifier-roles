@@ -316,8 +316,8 @@ const multisendPayload = (txs: MetaTransaction[]): string => {
 };
 
 function location(result: any) {
-  const offset = result.dataOffset.toNumber();
-  const length = result.dataLength.toNumber();
+  const offset = result.dataLocation.toNumber();
+  const length = result.dataSize.toNumber();
   const left = offset * 2;
   const right = (offset + length) * 2;
 

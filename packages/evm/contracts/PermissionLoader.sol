@@ -50,11 +50,13 @@ abstract contract PermissionLoader is Core {
 
         (condition, consumptions) = _unpack(buffer, length);
 
-        for (uint256 i; i < consumptions.length; ++i) {
-            (consumptions[i].balance, ) = _accruedAllowance(
-                allowances[consumptions[i].allowanceKey],
-                block.timestamp
-            );
+        unchecked {
+            for (uint256 i; i < consumptions.length; ++i) {
+                (consumptions[i].balance, ) = _accruedAllowance(
+                    allowances[consumptions[i].allowanceKey],
+                    block.timestamp
+                );
+            }
         }
     }
 
@@ -65,15 +67,11 @@ abstract contract PermissionLoader is Core {
 
         uint256 paramCount = conditions.length;
         uint256 offset = 32 + paramCount * 2;
-        for (uint256 i; i < paramCount; ) {
+        for (uint256 i; i < paramCount; ++i) {
             ScopeConfig.packCondition(buffer, i, conditions[i]);
             if (conditions[i].operator >= Operator.EqualTo) {
                 ScopeConfig.packCompValue(buffer, offset, conditions[i]);
                 offset += 32;
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
@@ -115,30 +113,28 @@ abstract contract PermissionLoader is Core {
         uint256 index,
         Condition memory result
     ) private pure {
-        ConditionFlat memory condition = conditions[index];
-        result.paramType = condition.paramType;
-        result.operator = condition.operator;
-        result.compValue = compValues[index];
+        unchecked {
+            ConditionFlat memory condition = conditions[index];
+            result.paramType = condition.paramType;
+            result.operator = condition.operator;
+            result.compValue = compValues[index];
 
-        if (childrenBounds[index].length == 0) {
-            return;
-        }
+            if (childrenBounds[index].length == 0) {
+                return;
+            }
 
-        uint256 start = childrenBounds[index].start;
-        uint256 count = childrenBounds[index].length;
+            uint256 start = childrenBounds[index].start;
+            uint256 count = childrenBounds[index].length;
 
-        result.children = new Condition[](count);
-        for (uint j; j < count; ) {
-            _unpackCondition(
-                conditions,
-                compValues,
-                childrenBounds,
-                start + j,
-                result.children[j]
-            );
-
-            unchecked {
-                ++j;
+            result.children = new Condition[](count);
+            for (uint j; j < count; ++j) {
+                _unpackCondition(
+                    conditions,
+                    compValues,
+                    childrenBounds,
+                    start + j,
+                    result.children[j]
+                );
             }
         }
     }
@@ -151,20 +147,23 @@ abstract contract PermissionLoader is Core {
         result = new Consumption[](maxAllowanceCount);
 
         uint256 insert;
-        for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].operator < Operator.WithinAllowance) {
-                continue;
-            }
-            bytes32 allowanceKey = compValues[i];
-            if (!Consumptions.contains(result, allowanceKey)) {
-                result[insert].allowanceKey = allowanceKey;
-                insert++;
-            }
-        }
+        unchecked {
+            for (uint256 i; i < conditions.length; ++i) {
+                if (conditions[i].operator < Operator.WithinAllowance) {
+                    continue;
+                }
 
-        if (insert < maxAllowanceCount) {
-            assembly {
-                mstore(result, insert)
+                (, bool contains) = Consumptions.find(result, compValues[i]);
+                if (!contains) {
+                    result[insert].allowanceKey = compValues[i];
+                    insert++;
+                }
+            }
+
+            if (insert < maxAllowanceCount) {
+                assembly {
+                    mstore(result, insert)
+                }
             }
         }
     }
