@@ -8,8 +8,8 @@ struct UnwrappedTransaction {
     address to;
     uint256 value;
     // We wanna deal in calldata slices. We return location, let invoker slice
-    uint256 dataOffset;
-    uint256 dataLength;
+    uint256 dataLocation;
+    uint256 dataSize;
 }
 
 interface ITransactionUnwrapper {

@@ -41,13 +41,9 @@ library ScopeConfig {
         uint256 paramCount = conditions.length;
 
         result = paramCount * bytesPerCondition;
-        for (uint256 i; i < paramCount; ) {
+        for (uint256 i; i < paramCount; ++i) {
             if (conditions[i].operator >= Operator.EqualTo) {
                 result += 32;
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
@@ -96,10 +92,8 @@ library ScopeConfig {
             (uint16(condition.operator) << offsetOperator);
 
         uint256 offset = index * bytesPerCondition;
-        unchecked {
-            buffer[offset] = bytes1(uint8(bits >> 8));
-            buffer[offset + 1] = bytes1(uint8(bits));
-        }
+        buffer[offset] = bytes1(uint8(bits >> 8));
+        buffer[offset + 1] = bytes1(uint8(bits));
     }
 
     function packCompValue(
@@ -131,37 +125,35 @@ library ScopeConfig {
         result = new ConditionFlat[](count);
         compValues = new bytes32[](count);
 
-        uint256 compValueOffset = 32 + count * bytesPerCondition;
-        for (uint256 i; i < count; ) {
-            bytes32 word;
-            uint256 offset = 32 + i * bytesPerCondition;
-            assembly {
-                word := mload(add(buffer, offset))
-            }
-            uint16 bits = uint16(bytes2(word));
-
-            ConditionFlat memory condition = result[i];
-            condition.parent = uint8((bits & maskParent) >> offsetParent);
-            condition.paramType = ParameterType(
-                (bits & maskParamType) >> offsetParamType
-            );
-            condition.operator = Operator(
-                (bits & maskOperator) >> offsetOperator
-            );
-
-            if (condition.operator >= Operator.EqualTo) {
+        unchecked {
+            uint256 compValueOffset = 32 + count * bytesPerCondition;
+            for (uint256 i; i < count; ++i) {
+                bytes32 word;
+                uint256 offset = 32 + i * bytesPerCondition;
                 assembly {
-                    word := mload(add(buffer, compValueOffset))
+                    word := mload(add(buffer, offset))
                 }
-                compValues[i] = word;
-                compValueOffset += 32;
-                if (condition.operator >= Operator.WithinAllowance) {
-                    ++allowanceCount;
-                }
-            }
+                uint16 bits = uint16(bytes2(word));
 
-            unchecked {
-                ++i;
+                ConditionFlat memory condition = result[i];
+                condition.parent = uint8((bits & maskParent) >> offsetParent);
+                condition.paramType = ParameterType(
+                    (bits & maskParamType) >> offsetParamType
+                );
+                condition.operator = Operator(
+                    (bits & maskOperator) >> offsetOperator
+                );
+
+                if (condition.operator >= Operator.EqualTo) {
+                    assembly {
+                        word := mload(add(buffer, compValueOffset))
+                    }
+                    compValues[i] = word;
+                    compValueOffset += 32;
+                    if (condition.operator >= Operator.WithinAllowance) {
+                        ++allowanceCount;
+                    }
+                }
             }
         }
     }

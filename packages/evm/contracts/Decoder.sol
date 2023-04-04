@@ -109,17 +109,19 @@ library Decoder {
         result.children = new ParameterPayload[](length);
 
         uint256 offset;
-        for (uint256 i; i < length; ++i) {
-            Topology.TypeTree memory part = node.children[i];
-            bool isInline = Topology.isInline(part);
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                Topology.TypeTree memory part = node.children[i];
+                bool isInline = Topology.isInline(part);
 
-            result.children[i] = _walk(
-                data,
-                _locationInBlock(data, location, offset, isInline),
-                part
-            );
-            result.size += result.children[i].size + (isInline ? 0 : 32);
-            offset += isInline ? result.children[i].size : 32;
+                result.children[i] = _walk(
+                    data,
+                    _locationInBlock(data, location, offset, isInline),
+                    part
+                );
+                result.size += result.children[i].size + (isInline ? 0 : 32);
+                offset += isInline ? result.children[i].size : 32;
+            }
         }
     }
 
@@ -145,14 +147,16 @@ library Decoder {
         bool isInline = Topology.isInline(part);
 
         uint256 offset;
-        for (uint256 i; i < length; ++i) {
-            result.children[i] = _walk(
-                data,
-                _locationInBlock(data, 32 + location, offset, isInline),
-                part
-            );
-            result.size += result.children[i].size + (isInline ? 0 : 32);
-            offset += isInline ? result.children[i].size : 32;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                result.children[i] = _walk(
+                    data,
+                    _locationInBlock(data, 32 + location, offset, isInline),
+                    part
+                );
+                result.size += result.children[i].size + (isInline ? 0 : 32);
+                offset += isInline ? result.children[i].size : 32;
+            }
         }
     }
 
@@ -186,10 +190,6 @@ library Decoder {
         bytes calldata data,
         uint256 offset
     ) private pure returns (bytes32 result) {
-        if (data.length < offset) {
-            revert CalldataOutOfBounds();
-        }
-
         assembly {
             result := calldataload(add(data.offset, offset))
         }

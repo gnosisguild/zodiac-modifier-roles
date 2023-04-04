@@ -39,20 +39,6 @@ library Consumptions {
         return (0, false);
     }
 
-    function contains(
-        Consumption[] memory consumptions,
-        bytes32 key
-    ) internal pure returns (bool) {
-        uint256 length = consumptions.length;
-        for (uint256 i; i < length; ++i) {
-            if (consumptions[i].allowanceKey == key) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function merge(
         Consumption[] memory c1,
         Consumption[] memory c2
