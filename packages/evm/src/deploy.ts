@@ -21,6 +21,11 @@ task("deploy", "Deploys a Roles modifier")
       const [signer] = await hre.ethers.getSigners();
       const deployer = hre.ethers.provider.getSigner(signer.address);
 
+      const Packer = await hre.ethers.getContractFactory("Packer");
+      const packer = await Packer.connect(deployer).deploy();
+      await packer.deployed();
+      console.log("Library Packer:", packer.address);
+
       const Integrity = await hre.ethers.getContractFactory("Integrity");
       const integrity = await Integrity.connect(deployer).deploy();
       await integrity.deployed();
@@ -29,6 +34,7 @@ task("deploy", "Deploys a Roles modifier")
       const Roles = await hre.ethers.getContractFactory("Roles", {
         libraries: {
           Integrity: integrity.address,
+          Packer: packer.address,
         },
       });
 

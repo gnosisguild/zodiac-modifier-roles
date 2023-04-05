@@ -39,22 +39,13 @@ describe("Operator - EqualToAvatar", async () => {
 
     await expect(invoke(alice.address))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.ParameterNotEqualToAvatar,
-        BYTES32_ZERO
-      );
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(bob.address))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.ParameterNotEqualToAvatar,
-        BYTES32_ZERO
-      );
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
 
     await expect(invoke(charlie.address))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.ParameterNotEqualToAvatar,
-        BYTES32_ZERO
-      );
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
 });
