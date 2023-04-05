@@ -8,7 +8,7 @@ import "./Core.sol";
 import "./Decoder.sol";
 import "./Periphery.sol";
 
-import "./packers/PermissionUnpacker.sol";
+import "./packers/BufferPacker.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
@@ -227,7 +227,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status, Result memory) {
+    ) private pure returns (Status, Result memory) {
         Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
@@ -275,11 +275,6 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             } else if (operator == Operator.Custom) {
                 return _custom(value, data, condition, payload, consumptions);
-            } else if (operator == Operator.EqualToAvatar) {
-                return (
-                    _equalToAvatar(data, payload),
-                    Result({consumptions: consumptions, info: 0})
-                );
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload, consumptions);
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -297,7 +292,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory) {
+    ) private pure returns (Status status, Result memory) {
         Result memory result = Result({consumptions: consumptions, info: 0});
 
         if (condition.children.length != payload.children.length) {
@@ -331,7 +326,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
         result = Result({consumptions: consumptions, info: 0});
 
         unchecked {
@@ -360,7 +355,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
                 (status, result) = _walk(
@@ -388,7 +383,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
                 (status, ) = _walk(
@@ -415,7 +410,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status, Result memory result) {
+    ) private pure returns (Status, Result memory result) {
         uint256 okCount;
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
@@ -448,7 +443,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
         unchecked {
             for (uint256 i; i < payload.children.length; ++i) {
                 (status, result) = _walk(
@@ -475,7 +470,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
         result = Result({consumptions: consumptions, info: 0});
         unchecked {
             for (uint256 i; i < payload.children.length; ++i) {
@@ -503,7 +498,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private view returns (Status, Result memory result) {
+    ) private pure returns (Status, Result memory result) {
         assert(condition.children.length <= 256);
 
         result = Result({consumptions: consumptions, info: 0});
@@ -653,17 +648,6 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
-    function _equalToAvatar(
-        bytes calldata data,
-        ParameterPayload memory payload
-    ) private view returns (Status) {
-        address value = address(
-            uint160(uint256(Decoder.word(data, payload.location)))
-        );
-
-        return avatar == value ? Status.Ok : Status.ParameterNotEqualToAvatar;
-    }
-
     function _withinAllowance(
         bytes calldata data,
         Condition memory condition,
@@ -765,7 +749,6 @@ abstract contract PermissionChecker is Core, Periphery {
         /// Bitmask not an allowed value
         BitmaskNotAllowed,
         CustomConditionViolation,
-        ParameterNotEqualToAvatar,
         AllowanceExceeded,
         CallAllowanceExceeded,
         EtherAllowanceExceeded

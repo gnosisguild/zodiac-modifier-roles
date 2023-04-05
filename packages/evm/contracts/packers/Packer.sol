@@ -6,11 +6,11 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./BufferPacker.sol";
 
 /**
- * @title PermissionPacker - a library that coordinates the process of packing
+ * @title Packer - a library that coordinates the process of packing
  * conditions into a storage optimized buffer.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
-library PermissionPacker {
+library Packer {
     function pack(
         ConditionFlat[] memory conditions
     ) external pure returns (bytes memory buffer) {
@@ -18,9 +18,9 @@ library PermissionPacker {
 
         buffer = new bytes(BufferPacker.packedSize(conditions));
 
-        uint256 paramCount = conditions.length;
-        uint256 offset = 32 + paramCount * 2;
-        for (uint256 i; i < paramCount; ++i) {
+        uint256 count = conditions.length;
+        uint256 offset = 32 + count * 2;
+        for (uint256 i; i < count; ++i) {
             BufferPacker.packCondition(buffer, i, conditions[i]);
             if (conditions[i].operator >= Operator.EqualTo) {
                 BufferPacker.packCompValue(buffer, offset, conditions[i]);

@@ -17,10 +17,8 @@ async function setup() {
 
   const [owner] = await hre.ethers.getSigners();
 
-  const PermissionPacker = await hre.ethers.getContractFactory(
-    "PermissionPacker"
-  );
-  const permissionPacker = await PermissionPacker.deploy();
+  const Packer = await hre.ethers.getContractFactory("Packer");
+  const packer = await Packer.deploy();
 
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
@@ -28,7 +26,7 @@ async function setup() {
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
       Integrity: integrity.address,
-      PermissionPacker: permissionPacker.address,
+      Packer: packer.address,
     },
   });
   const modifier = await Modifier.deploy(

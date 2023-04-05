@@ -153,7 +153,7 @@ export enum Operator {
   /* 13: */ _ComplexPlaceholder13,
   /* 14: */ _ComplexPlaceholder14,
   /* 15: */ _ComplexPlaceholder15,
-  /* 16: */ _ComplexPlaceholder16,
+  /* 16: */ EqualToAvatar = 16,
   // ------------------------------------------------------------
   // 17-31: COMPARISON EXPRESSIONS
   //          paramType: Static / Dynamic
@@ -166,7 +166,7 @@ export enum Operator {
   /* 21: */ SignedIntLessThan = 21,
   /* 22: */ Bitmask = 22,
   /* 23: */ Custom = 23,
-  /* 24: */ EqualToAvatar = 24,
+  /* 24: */ _BinaryPlaceholder24,
   /* 25: */ _BinaryPlaceholder25,
   /* 26: */ _BinaryPlaceholder26,
   /* 27: */ _BinaryPlaceholder27,
@@ -218,7 +218,6 @@ export enum PermissionCheckerStatus {
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
   CustomConditionViolation,
-  ParameterNotEqualToAvatar,
   /// TODO
   AllowanceExceeded,
   /// TODO
@@ -242,15 +241,13 @@ export async function deployRolesMod(
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
-  const PermissionPacker = await hre.ethers.getContractFactory(
-    "PermissionPacker"
-  );
-  const permissionPacker = await PermissionPacker.deploy();
+  const Packer = await hre.ethers.getContractFactory("Packer");
+  const packer = await Packer.deploy();
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
       Integrity: integrity.address,
-      PermissionPacker: permissionPacker.address,
+      Packer: packer.address,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);

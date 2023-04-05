@@ -119,7 +119,8 @@ library BufferPacker {
         returns (
             ConditionFlat[] memory result,
             bytes32[] memory compValues,
-            uint256 allowanceCount
+            bool hasAvatar,
+            bool hasAllowance
         )
     {
         result = new ConditionFlat[](count);
@@ -138,22 +139,25 @@ library BufferPacker {
 
                 uint16 bits = uint16(bytes2(word));
                 ConditionFlat memory condition = result[i];
+                Operator operator = Operator(bits & maskOperator);
                 condition.parent = uint8((bits & maskParent) >> offsetParent);
                 condition.paramType = ParameterType(
                     (bits & maskParamType) >> offsetParamType
                 );
-                condition.operator = Operator(bits & maskOperator);
+                condition.operator = operator;
 
-                if (condition.operator >= Operator.EqualTo) {
+                if (operator >= Operator.EqualTo) {
                     assembly {
                         word := mload(add(buffer, compValueOffset))
                     }
                     compValueOffset += 32;
-
                     compValues[i] = word;
-                    if (condition.operator >= Operator.WithinAllowance) {
-                        ++allowanceCount;
-                    }
+
+                    hasAllowance =
+                        hasAllowance ||
+                        operator >= Operator.WithinAllowance;
+                } else {
+                    hasAvatar = hasAvatar || operator == Operator.EqualToAvatar;
                 }
             }
         }

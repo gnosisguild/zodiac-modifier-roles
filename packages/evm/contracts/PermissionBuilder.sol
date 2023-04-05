@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Core.sol";
 import "./Integrity.sol";
 
-import "./packers/PermissionPacker.sol";
+import "./packers/BufferPacker.sol";
 
 /**
  * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
