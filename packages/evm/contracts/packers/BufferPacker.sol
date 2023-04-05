@@ -52,10 +52,11 @@ library BufferPacker {
         uint256 paramCount,
         ExecutionOptions options,
         address pointer
-    ) internal pure returns (bytes32 result) {
-        result |= bytes32(paramCount << offsetParamCount);
-        result |= bytes32(uint256(options)) << offsetOptions;
-        result |= bytes32(bytes20(pointer)) >> (12 * 8);
+    ) internal pure returns (bytes32) {
+        return
+            bytes32(paramCount << offsetParamCount) |
+            (bytes32(uint256(options)) << offsetOptions) |
+            bytes32(uint256(uint160(pointer)));
     }
 
     function packHeaderAsWildcarded(
@@ -72,7 +73,6 @@ library BufferPacker {
         paramCount = (uint256(header) & maskParamCount) >> offsetParamCount;
 
         pointer = address(bytes20(uint160(uint256(header))));
-        pointer = address(bytes20(header << (12 * 8)));
     }
 
     function unpackOptions(
@@ -89,13 +89,12 @@ library BufferPacker {
         uint256 index,
         ConditionFlat memory condition
     ) internal pure {
-        uint16 bits = (uint16(condition.parent) << offsetParent) |
-            (uint16(condition.paramType) << offsetParamType) |
-            (uint16(condition.operator << offsetOperator));
-
         uint256 offset = index * bytesPerCondition;
-        buffer[offset] = bytes1(uint8(bits >> 8));
-        buffer[offset + 1] = bytes1(uint8(bits));
+        buffer[offset] = bytes1(condition.parent);
+        buffer[offset + 1] = bytes1(
+            (uint8(condition.paramType) << uint8(offsetParamType)) |
+                uint8(condition.operator)
+        );
     }
 
     function packCompValue(
@@ -128,15 +127,17 @@ library BufferPacker {
         compValues = new bytes32[](paramCount);
 
         unchecked {
+            bytes32 word;
+            uint256 offset = 32;
             uint256 compValueOffset = 32 + paramCount * bytesPerCondition;
+
             for (uint256 i; i < paramCount; ++i) {
-                bytes32 word;
-                uint256 offset = 32 + i * bytesPerCondition;
                 assembly {
                     word := mload(add(buffer, offset))
                 }
-                uint16 bits = uint16(bytes2(word));
+                offset += bytesPerCondition;
 
+                uint16 bits = uint16(bytes2(word));
                 ConditionFlat memory condition = result[i];
                 condition.parent = uint8((bits & maskParent) >> offsetParent);
                 condition.paramType = ParameterType(
@@ -148,8 +149,9 @@ library BufferPacker {
                     assembly {
                         word := mload(add(buffer, compValueOffset))
                     }
-                    compValues[i] = word;
                     compValueOffset += 32;
+
+                    compValues[i] = word;
                     if (condition.operator >= Operator.WithinAllowance) {
                         ++allowanceCount;
                     }
