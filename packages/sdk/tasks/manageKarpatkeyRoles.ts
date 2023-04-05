@@ -165,7 +165,7 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
 //     1,
 //     gnosisChainDeFiManagePreset, // TODO use mainnetDeFiManagePreset if on mainnet
 //     {
-//       OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+//       BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
 //       AVATAR: config.AVATAR,
 //     },
 //     {

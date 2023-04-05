@@ -137,8 +137,8 @@
 
 //     const placeholderValues = {
 //       AVATAR: config.AVATAR,
-//       OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
-//       OMNI_BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+//       BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
+//       BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
 //     }
 //     const transactions = await encodeApplyPreset(
 //       modifier.address,

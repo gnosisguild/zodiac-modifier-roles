@@ -4,7 +4,7 @@ import {
   compound_v2,
   curve
 } from "../addresses"
-import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 

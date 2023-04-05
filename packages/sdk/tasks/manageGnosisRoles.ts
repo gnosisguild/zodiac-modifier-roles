@@ -39,6 +39,7 @@ import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/Gno
 import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
 
 import { NetworkId } from "../src/types"
+import { AVATAR } from "../src/presets/placeholders"
 
 interface Config {
     AVATAR: string
@@ -57,9 +58,9 @@ export const GNOSIS_ADDRESSES = {
         AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
         MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
         MANAGER: "0xe4387D4e45F65240Daaf5e046d5AE592566a5076",
-        REVOKER: "",
-        HARVESTER: "0x360FEAD0fA5cC741bF12cF5A0cC43059BC340e7e", // Santi/Bot
-        DISASSEMBLER: "",
+        REVOKER: "0x3E93B731364A31BdEFaA7B96F4ae48e5F058cD41",
+        HARVESTER: "0x4f767b852782C2e2e17CF2150051F622b8892F77",
+        DISASSEMBLER: "0x23bE4206Ae8bC9aC9cF6F7E99749C896ef75022f",
         SWAPPER: "",
         NETWORK: 100,
         BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
@@ -234,7 +235,7 @@ task("encodeApplyPresetManageGnosisDAOmainnet").setAction(
             config.MODULE,
             1,
             mainnetDeFiManageGnosisDAOPreset,
-            { AVATAR: config.AVATAR },
+            { AVATAR: config.AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE },
             {
                 network: config.NETWORK as NetworkId,
             }
@@ -353,7 +354,7 @@ task("encodeApplyPresetManageGnosisLTDmainnet").setAction(
             config.MODULE,
             1,
             mainnetDeFiManageGnosisLTDPreset,
-            { AVATAR: config.AVATAR },
+            { AVATAR: config.AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE },
             {
                 network: config.NETWORK as NetworkId,
             }
@@ -472,7 +473,7 @@ task("encodeApplyPresetManageGnosisDAOgnosis").setAction(
             config.MODULE,
             1,
             gnosisDeFiManageGnosisDAOPreset,
-            { AVATAR: config.AVATAR },
+            { AVATAR: config.AVATAR, BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE },
             {
                 network: config.NETWORK as NetworkId,
             }
@@ -591,7 +592,7 @@ task("encodeApplyPresetManageGnosisLTDgnosis").setAction(
             config.MODULE,
             1,
             gnosisDeFiManageGnosisLTDPreset,
-            { AVATAR: config.AVATAR },
+            { AVATAR: config.AVATAR, BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE },
             {
                 network: config.NETWORK as NetworkId,
             }

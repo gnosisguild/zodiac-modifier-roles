@@ -3,8 +3,8 @@ import { defineConfig } from "@dethcrypto/eth-sdk"
 export default defineConfig({
   etherscanURLs: {
     mainnet: "https://api.etherscan.io/api",
-    gnosis: "https://api.gnosisscan.io/api"
-    //gnosis: "https://blockscout.com/xdai/mainnet/api"
+    //gnosis: "https://api.gnosisscan.io/api"
+    gnosis: "https://blockscout.com/xdai/mainnet/api"
   },
   rpc: {
     mainnet: "https://eth-mainnet.g.alchemy.com/v2/twj7sBzB1_Njwoejwj0EFM-_x-TKJkZb",
@@ -152,7 +152,8 @@ export default defineConfig({
         agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
         B_50bbagGNO_50bbagUSD_gauge: "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
       },
-      omnibridge: "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d"
+      omnibridge: "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d",
+      xdai_bridge: "0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6"
     },
   },
 })

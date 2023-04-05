@@ -1,7 +1,6 @@
 import {
-    ZERO_ADDRESS, AGVE, BER, COW, CRV, EURe, FLX, GIV, GNO,
-    MAI, QI, rGNO, sGNO, SUSHI, USDC,
-    USDT, WBTC, WETH, wstETH, WXDAI, x3CRV,
+    ZERO_ADDRESS, AAVE, AGVE, BAL, BER, COMP, COW, CRV, EURe, FLX, GIV, GNO, IDLE, MAI, MKR, NODE, PNK, QI, RAI,
+    rGNO, sGNO, SUSHI, SWPR, SYMM, UNCX, USDC, USDP, USDT, WBTC, WETH, wstETH, WXDAI, x3CRV,
     OMNI_BRIDGE,
     agave,
     balancer,
@@ -15,7 +14,7 @@ import {
     staticEqual,
     staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../../placeholders"
+import { AVATAR, BRIDGE_RECIPIENT_MAINNET } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 
@@ -138,17 +137,17 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.x3CRV_POOL,
-            curve.x3CRV_LP,
-            curve.x3CRV_GAUGE,
-            3,
-            [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.x3CRV_POOL,
+        //     curve.x3CRV_LP,
+        //     curve.x3CRV_GAUGE,
+        //     3,
+        //     [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve EURe/x3CRV
@@ -282,26 +281,26 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            {
-                oneOf: [curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP]
-            },
-            curve.crvEUReUSD_LP,
-            curve.crvEUReUSD_GAUGE,
-            {
-                oneOf: [2, 4]
-            },
-            {
-                oneOf: [
-                    [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-                    [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]
-                ]
-            },
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     {
+        //         oneOf: [curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP]
+        //     },
+        //     curve.crvEUReUSD_LP,
+        //     curve.crvEUReUSD_GAUGE,
+        //     {
+        //         oneOf: [2, 4]
+        //     },
+        //     {
+        //         oneOf: [
+        //             [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]
+        //         ]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve sGNO/GNO
@@ -348,18 +347,18 @@ const preset = {
             curve.sgnoCRV_GAUGE
         ),
 
-        // Deposit and Stake using a special ZAP
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.sgnoCRV_LP_POOL,
-            curve.sgnoCRV_LP_POOL,
-            curve.sgnoCRV_GAUGE,
-            2,
-            [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // // Deposit and Stake using a special ZAP
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.sgnoCRV_LP_POOL,
+        //     curve.sgnoCRV_LP_POOL,
+        //     curve.sgnoCRV_GAUGE,
+        //     2,
+        //     [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve tricrypto
@@ -486,17 +485,17 @@ const preset = {
         ),
 
         // // Deposit and Stake using a special ZAP
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.rgnoCRV_LP_POOL,
-            curve.rgnoCRV_LP_POOL,
-            curve.rgnoCRV_GAUGE,
-            2,
-            [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.rgnoCRV_LP_POOL,
+        //     curve.rgnoCRV_LP_POOL,
+        //     curve.rgnoCRV_GAUGE,
+        //     2,
+        //     [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve MAI/x3CRV
@@ -632,19 +631,54 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     {
+        //         oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP]
+        //     },
+        //     curve.MAIx3CRV_LP_POOL,
+        //     curve.MAIx3CRV_GAUGE,
+        //     {
+        //         oneOf: [2, 4]
+        //     },
+        //     {
+        //         oneOf: [
+        //             [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]
+        //         ]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve - Deposit and Stake using a special ZAP
+        //---------------------------------------------------------------------------------------------------------------------------------
+
         allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
             {
-                oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP]
+                oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP, curve.rgnoCRV_LP_POOL, curve.sgnoCRV_LP_POOL,
+                curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP, curve.x3CRV_POOL]
             },
-            curve.MAIx3CRV_LP_POOL,
-            curve.MAIx3CRV_GAUGE,
             {
-                oneOf: [2, 4]
+                oneOf: [curve.MAIx3CRV_LP_POOL, curve.rgnoCRV_LP_POOL, curve.sgnoCRV_LP_POOL, curve.crvEUReUSD_LP, curve.x3CRV_LP]
+            },
+            {
+                oneOf: [curve.MAIx3CRV_GAUGE, curve.rgnoCRV_GAUGE, curve.sgnoCRV_GAUGE, curve.crvEUReUSD_GAUGE, curve.x3CRV_GAUGE],
+            },
+            {
+                oneOf: [2, 3, 4]
             },
             {
                 oneOf: [
                     [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-                    [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]
+                    [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS],
+                    [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS],
+                    [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS]
                 ]
             },
             undefined,
@@ -1443,117 +1477,117 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer Boosted Agave GNO/WETH
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([balancer.bb_ag_WETH, balancer.bb_ag_GNO], [balancer.VAULT]),
+        // ...allowErc20Approve([balancer.bb_ag_WETH, balancer.bb_ag_GNO], [balancer.VAULT]),
         ...allowErc20Approve([balancer.B_50bbagGNO_50bbagWETH], [balancer.B_50bbagGNO_50bbagWETH_GAUGE]),
 
         // joinPool: 0x1c6455b9e8e7cfb9a5fb81a765683be78649af98081c1c2ddec9c80ea18866ef
 
-        // Add Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xf48f01dcb2cbb3ee1f6aab0e742c2d3941039d56000200000000000000000012",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000140",
-                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of address[] = 2
-                [9]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [10]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [11]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [14]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [15]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Add Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xf48f01dcb2cbb3ee1f6aab0e742c2d3941039d56000200000000000000000012",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of address[] = 2
+        //         [9]: staticEqual(balancer.bb_ag_WETH, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_GNO, "address"),
+        //         [11]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 2
+        //         [14]: staticOneOf([
+        //             "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040"
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [15]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
-        // Remove Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xf48f01dcb2cbb3ee1f6aab0e742c2d3941039d56000200000000000000000012",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000140",
-                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of address[] = 2
-                [9]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [10]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [11]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [14]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [15]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Remove Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xf48f01dcb2cbb3ee1f6aab0e742c2d3941039d56000200000000000000000012",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of address[] = 2
+        //         [9]: staticEqual(balancer.bb_ag_WETH, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_GNO, "address"),
+        //         [11]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 2
+        //         [14]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [15]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
-        // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY 
-
+        // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY
+        // Adding and removing tokens in different amounts
         ...allowErc20Approve([WETH, GNO], [balancer.VAULT]),
 
         // Swap WETH for bb_ag_WETH (for both, join and exit pool) / Swap GNO for bb_ag_GNO (for both, join and exit pool)
@@ -1639,28 +1673,28 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000002",
                     "bytes32"
                 ), // Length of address[] = 2
-                [12]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [13]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [14]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [17]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [18]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
+                // [12]: staticEqual(balancer.bb_ag_WETH, "address"),
+                // [13]: staticEqual(balancer.bb_ag_GNO, "address"),
+                // [14]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "bytes32"
+                // ), // Length of unit256[] = 2
+                // [17]: staticOneOf([
+                //     "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [18]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
             },
         },
 
@@ -1699,30 +1733,30 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000002",
                     "bytes32"
                 ), // Length of address[] = 2
-                [11]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [12]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [13]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [16]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [17]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-                [20]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "bytes32"
-                ), // Length of (uint256,uint256)[] = 1
+                // [11]: staticEqual(balancer.bb_ag_WETH, "address"),
+                // [12]: staticEqual(balancer.bb_ag_GNO, "address"),
+                // [13]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "bytes32"
+                // ), // Length of unit256[] = 2
+                // [16]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000c0"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [17]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
+                // [20]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "bytes32"
+                // ), // Length of (uint256,uint256)[] = 1
             },
         },
 
@@ -1744,122 +1778,122 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer Boosted Agave USD
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([balancer.bb_ag_WXDAI, balancer.bb_ag_USDT, balancer.bb_ag_USDC, balancer.bb_ag_USD], [balancer.VAULT]),
+        // ...allowErc20Approve([balancer.bb_ag_WXDAI, balancer.bb_ag_USDT, balancer.bb_ag_USDC, balancer.bb_ag_USD], [balancer.VAULT]),
         ...allowErc20Approve([balancer.bb_ag_USD], [balancer.bb_ag_USD_GAUGE]),
 
         // IMPORTANT: see txn hash 0x43f480c5e0de4c4e91e92620d1d484b22c0742fbf418d8bb878c05c78151a2bc
         // joinPool: 0x65a7e204e5598d193ac24a2477166482a7147b59b84fba798e2c9700fdd2d7e3
 
-        // Add Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000120",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 288=32*9
-                [6]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000001c0",
-                    "bytes32"), // Offset of bytes from beginning of tuple 448=32*14
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of address[] = 4
-                [9]: staticEqual(balancer.bb_ag_WXDAI, "address"),
-                [10]: staticEqual(balancer.bb_ag_USDT, "address"),
-                [11]: staticEqual(balancer.bb_ag_USDC, "address"),
-                [12]: staticEqual(balancer.bb_ag_USD, "address"),
-                [13]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of unit256[] = 4
-                [18]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000100",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [19]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Add Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000120",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 288=32*9
+        //         [6]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000001c0",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 448=32*14
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //             "bytes32"
+        //         ), // Length of address[] = 4
+        //         [9]: staticEqual(balancer.bb_ag_WXDAI, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_USDT, "address"),
+        //         [11]: staticEqual(balancer.bb_ag_USDC, "address"),
+        //         [12]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [13]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 4
+        //         [18]: staticOneOf([
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040"
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [19]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
-        // Remove Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000120",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 288=32*9
-                [6]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000001c0",
-                    "bytes32"), // Offset of bytes from beginning of tuple 448=32*14
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of address[] = 4
-                [9]: staticEqual(balancer.bb_ag_WXDAI, "address"),
-                [10]: staticEqual(balancer.bb_ag_USDT, "address"),
-                [11]: staticEqual(balancer.bb_ag_USDC, "address"),
-                [12]: staticEqual(balancer.bb_ag_USD, "address"),
-                [13]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of unit256[] = 4
-                [18]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x0000000000000000000000000000000000000000000000000000000000000100",
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [19]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Remove Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000120",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 288=32*9
+        //         [6]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000001c0",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 448=32*14
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //             "bytes32"
+        //         ), // Length of address[] = 4
+        //         [9]: staticEqual(balancer.bb_ag_WXDAI, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_USDT, "address"),
+        //         [11]: staticEqual(balancer.bb_ag_USDC, "address"),
+        //         [12]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [13]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 4
+        //         [18]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [19]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
         // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY 
-
+        // Adding and removing tokens in different amounts
         ...allowErc20Approve([WXDAI, USDT, USDC], [balancer.VAULT]),
 
         // Swap WXDAI for bb_ag_WXDAI (for both, join and exit pool)
@@ -1965,30 +1999,30 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
                 ), // Length of address[] = 4
-                [12]: staticEqual(balancer.bb_ag_WXDAI, "address"),
-                [13]: staticEqual(balancer.bb_ag_USDT, "address"),
-                [14]: staticEqual(balancer.bb_ag_USDC, "address"),
-                [15]: staticEqual(balancer.bb_ag_USD, "address"),
-                [16]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of unit256[] = 4
-                [21]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000100",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [22]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
+                // [12]: staticEqual(balancer.bb_ag_WXDAI, "address"),
+                // [13]: staticEqual(balancer.bb_ag_USDT, "address"),
+                // [14]: staticEqual(balancer.bb_ag_USDC, "address"),
+                // [15]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [16]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000004",
+                //     "bytes32"
+                // ), // Length of unit256[] = 4
+                // [21]: staticOneOf([
+                //     "0x00000000000000000000000000000000000000000000000000000000000000e0",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000100",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [22]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
             },
         },
 
@@ -2035,33 +2069,124 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000004",
                     "bytes32"
                 ), // Length of address[] = 4
-                [11]: staticEqual(balancer.bb_ag_WXDAI, "address"),
-                [12]: staticEqual(balancer.bb_ag_USDT, "address"),
-                [13]: staticEqual(balancer.bb_ag_USDC, "address"),
-                [14]: staticEqual(balancer.bb_ag_USD, "address"),
-                [15]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000004",
-                    "bytes32"
-                ), // Length of unit256[] = 4
-                [20]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x0000000000000000000000000000000000000000000000000000000000000100"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [21]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-                [24]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "bytes32"
-                ), // Length of (uint256,uint256)[] = 1
+                // [11]: staticEqual(balancer.bb_ag_WXDAI, "address"),
+                // [12]: staticEqual(balancer.bb_ag_USDT, "address"),
+                // [13]: staticEqual(balancer.bb_ag_USDC, "address"),
+                // [14]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [15]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000004",
+                //     "bytes32"
+                // ), // Length of unit256[] = 4
+                // [20]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000100"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [21]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
+                // [24]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "bytes32"
+                // ), // Length of (uint256,uint256)[] = 1
             },
+        },
+
+        // Adding and removing single tokens (batchSwap)
+        {
+            targetAddress: balancer.VAULT,
+            signature:
+                "batchSwap(uint8,(bytes32,uint256,uint256,uint256,bytes)[],address[],(address,bool,address,bool),int256[],uint256)",
+            params: {
+                [0]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+                [1]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000120",
+                    "bytes32"), // Offset of the first tuple from beginning of tuple 288=32*9
+                [2]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000300",
+                    "bytes32"), // Offset of the address[] from beginning 768=32*24
+                [3]: staticEqual(AVATAR),
+                [5]: staticEqual(AVATAR),
+                [7]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000380",
+                    "bytes32"), // Offset of the int256[] from beginning 896=32*28
+                [9]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of (bytes32,uint256,uint256,uint256,bytes)[] = 2
+                [10]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000040",
+                    "bytes32"
+                ), // Offset of the first element of the tuple from beginning of tuple 64=32*2
+                [11]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000100",
+                    "bytes32"
+                ), // Offset of the second element of the tuple from beginning of tuple 256=32*8
+                [12]: staticOneOf([
+                    "0x41211bba6d37f5a74b22e667533f080c7c7f3f1300000000000000000000000b", // bb_ag_WXDAI (Add Liquidity)
+                    "0xd16f72b02da5f51231fde542a8b9e2777a478c8800000000000000000000000f", // bb_ag_USDT (Add Liquidity)
+                    "0xe7f88d7d4ef2eb18fcf9dd7216ba7da1c46f3dd600000000000000000000000a", // bb_ag_USDC (Add Liquidity)
+                    "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010" // bb_ag_USD (Remove Liquidity)
+                ],
+                    "bytes32"), // Balancer PoolId
+                [16]: staticEqual(
+                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                    "bytes32"
+                ), // Offset of the bytes from the beggining of the first element 160=32*5
+                [17]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "bytes32"), // userData of the first element - for all current Balancer pools this can be left empty
+                [18]: staticOneOf([
+                    "0x41211bba6d37f5a74b22e667533f080c7c7f3f1300000000000000000000000b", // bb_ag_WXDAI (Remove Liquidity)
+                    "0xd16f72b02da5f51231fde542a8b9e2777a478c8800000000000000000000000f", // bb_ag_USDT (Remove Liquidity)
+                    "0xe7f88d7d4ef2eb18fcf9dd7216ba7da1c46f3dd600000000000000000000000a", // bb_ag_USDC (Remove Liquidity)
+                    "0xfedb19ec000d38d92af4b21436870f115db22725000000000000000000000010" // bb_ag_USD (Add Liquidity)
+                ],
+                    "bytes32"), // Balancer PoolId
+                [22]: staticEqual(
+                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                    "bytes32"
+                ), // Offset of the bytes from the beggining of the second element 160=32*5
+                [23]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "bytes32"), // userData of the second element - for all current Balancer pools this can be left empty
+                [24]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000003",
+                    "bytes32"
+                ), // Length of address[] = 3
+                [25]: staticOneOf([
+                    WXDAI, // Add Liquidity
+                    USDT, // Add Liquidity
+                    USDC, // Add Liquidity
+                    balancer.bb_ag_USD, // Remove Liquidity
+                ],
+                    "address"), // assetIn
+                [26]: staticOneOf([
+                    balancer.bb_ag_WXDAI,
+                    balancer.bb_ag_USDT,
+                    balancer.bb_ag_USDC,
+                ],
+                    "address"),
+                [27]: staticOneOf([
+                    WXDAI, // Remove Liquidity
+                    USDT, // Remove Liquidity
+                    USDC, // Remove Liquidity
+                    balancer.bb_ag_USD, // Add Liquidity
+                ],
+                    "address"), // assetOut
+                [28]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000003",
+                    "bytes32"
+                ), // Length of int256[] = 3
+            }
         },
 
         // Stake
@@ -2082,119 +2207,119 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer Boosted Agave WETH/WBTC/USD
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([balancer.bb_ag_WETH, balancer.bb_ag_WBTC, balancer.bb_ag_USD], [balancer.VAULT]),
+        // ...allowErc20Approve([balancer.bb_ag_WETH, balancer.bb_ag_WBTC, balancer.bb_ag_USD], [balancer.VAULT]),
         ...allowErc20Approve([balancer.agUSD_agWETH_agWBTC], [balancer.agUSD_agWETH_agWBTC_GAUGE]),
 
         // joinPool: 0x5303ea3fc917d430148c5e5aeee39e62f65ee17da29741824212201d8f1a6690
 
-        // Add Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0x66f33ae36dd80327744207a48122f874634b3ada000100000000000000000013",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000100",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 256=32*8
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000180",
-                    "bytes32"), // Offset of bytes from beginning of tuple 384=32*12
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of address[] = 3
-                [9]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [10]: staticEqual(balancer.bb_ag_WBTC, "address"),
-                [11]: staticEqual(balancer.bb_ag_USD, "address"),
-                [12]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of unit256[] = 3
-                [16]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [17]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Add Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0x66f33ae36dd80327744207a48122f874634b3ada000100000000000000000013",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 256=32*8
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000180",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 384=32*12
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of address[] = 3
+        //         [9]: staticEqual(balancer.bb_ag_WETH, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_WBTC, "address"),
+        //         [11]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [12]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 3
+        //         [16]: staticOneOf([
+        //             "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040"
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [17]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
-        // Remove Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0x66f33ae36dd80327744207a48122f874634b3ada000100000000000000000013",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000100",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 256=32*8
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000180",
-                    "bytes32"), // Offset of bytes from beginning of tuple 384=32*12
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of address[] = 3
-                [9]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [10]: staticEqual(balancer.bb_ag_WBTC, "address"),
-                [11]: staticEqual(balancer.bb_ag_USD, "address"),
-                [12]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of unit256[] = 3
-                [16]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [17]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Remove Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0x66f33ae36dd80327744207a48122f874634b3ada000100000000000000000013",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 256=32*8
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000180",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 384=32*12
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of address[] = 3
+        //         [9]: staticEqual(balancer.bb_ag_WETH, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_WBTC, "address"),
+        //         [11]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [12]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 3
+        //         [16]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [17]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
         // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY 
-
+        // Adding and removing tokens in different amounts
         ...allowErc20Approve([WETH, WBTC, WXDAI, USDT, USDC], [balancer.VAULT]),
 
         // Swap WETH for bb_ag_WETH (for both, join and exit pool)
@@ -2299,29 +2424,29 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000003",
                     "bytes32"
                 ), // Length of address[] = 3
-                [12]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [13]: staticEqual(balancer.bb_ag_WBTC, "address"),
-                [14]: staticEqual(balancer.bb_ag_USD, "address"),
-                [15]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of unit256[] = 3
-                [19]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [20]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
+                // [12]: staticEqual(balancer.bb_ag_WETH, "address"),
+                // [13]: staticEqual(balancer.bb_ag_WBTC, "address"),
+                // [14]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [15]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003",
+                //     "bytes32"
+                // ), // Length of unit256[] = 3
+                // [19]: staticOneOf([
+                //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000e0",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [20]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
             },
         },
 
@@ -2360,31 +2485,31 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000003",
                     "bytes32"
                 ), // Length of address[] = 3
-                [11]: staticEqual(balancer.bb_ag_WETH, "address"),
-                [12]: staticEqual(balancer.bb_ag_WBTC, "address"),
-                [13]: staticEqual(balancer.bb_ag_USD, "address"),
-                [14]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000003",
-                    "bytes32"
-                ), // Length of unit256[] = 3
-                [18]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [19]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-                [22]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "bytes32"
-                ), // Length of (uint256,uint256)[] = 1
+                // [11]: staticEqual(balancer.bb_ag_WETH, "address"),
+                // [12]: staticEqual(balancer.bb_ag_WBTC, "address"),
+                // [13]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [14]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003",
+                //     "bytes32"
+                // ), // Length of unit256[] = 3
+                // [18]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000e0"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [19]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
+                // [22]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "bytes32"
+                // ), // Length of (uint256,uint256)[] = 1
             },
         },
 
@@ -2406,118 +2531,118 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer Boosted Agave GNO/USD
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([balancer.bb_ag_USD, balancer.bb_ag_GNO], [balancer.VAULT]),
+        // ...allowErc20Approve([balancer.bb_ag_USD, balancer.bb_ag_GNO], [balancer.VAULT]),
         ...allowErc20Approve([balancer.B_50bbagGNO_50bbagUSD], [balancer.B_50bbagGNO_50bbagUSD_GAUGE]),
 
         // joinPool: 0x85dbb47bd035476bf1c8490a466796250bc998dfcd45909fdf2aa4d4a3039776
         // exitPool: 0x1ecd4d82bbe457cdf319a138b0201338996751969b3685aeb451d1bfe84fe9b2
 
-        // Add Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xb973ca96a3f0d61045f53255e319aedb6ed49240000200000000000000000011",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000140",
-                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of address[] = 2
-                [9]: staticEqual(balancer.bb_ag_USD, "address"),
-                [10]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [11]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [14]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [15]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Add Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xb973ca96a3f0d61045f53255e319aedb6ed49240000200000000000000000011",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of address[] = 2
+        //         [9]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_GNO, "address"),
+        //         [11]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 2
+        //         [14]: staticOneOf([
+        //             "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040"
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [15]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
-        // Remove Liquidity
-        {
-            targetAddress: balancer.VAULT,
-            signature:
-                "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-            params: {
-                [0]: staticEqual(
-                    "0xb973ca96a3f0d61045f53255e319aedb6ed49240000200000000000000000011",
-                    "bytes32"
-                ), // Balancer PoolId
-                [1]: staticEqual(AVATAR),
-                [2]: staticEqual(AVATAR),
-                [3]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of tuple from beginning 128=32*4
-                [4]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000080",
-                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-                [5]: staticEqual(
-                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
-                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-                [6]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000140",
-                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-                [8]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of address[] = 2
-                [9]: staticEqual(balancer.bb_ag_USD, "address"),
-                [10]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [11]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [14]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [15]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-            },
-        },
+        // // Remove Liquidity
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0xb973ca96a3f0d61045f53255e319aedb6ed49240000200000000000000000011",
+        //             "bytes32"
+        //         ), // Balancer PoolId
+        //         [1]: staticEqual(AVATAR),
+        //         [2]: staticEqual(AVATAR),
+        //         [3]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of tuple from beginning 128=32*4
+        //         [4]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //             "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        //         [5]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //             "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        //         [6]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //             "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        //         [8]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of address[] = 2
+        //         [9]: staticEqual(balancer.bb_ag_USD, "address"),
+        //         [10]: staticEqual(balancer.bb_ag_GNO, "address"),
+        //         [11]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of unit256[] = 2
+        //         [14]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //             "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //         ],
+        //             "bytes32"
+        //         ), // Length of bytes
+        //         [15]: staticOneOf([
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002"
+        //         ],
+        //             "bytes32"
+        //         ), // Join Kind
+        //     },
+        // },
 
         // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY 
-
+        // Adding and removing tokens in different amounts
         ...allowErc20Approve([GNO, WXDAI, USDT, USDC], [balancer.VAULT]),
 
         // Swap GNO for bb_ag_GNO (for both, join and exit pool)
@@ -2616,28 +2741,28 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000002",
                     "bytes32"
                 ), // Length of address[] = 2
-                [12]: staticEqual(balancer.bb_ag_USD, "address"),
-                [13]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [14]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [17]: staticOneOf([
-                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [18]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000000000000000000000000000003"
-                ],
-                    "bytes32"
-                ), // Join Kind
+                // [12]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [13]: staticEqual(balancer.bb_ag_GNO, "address"),
+                // [14]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "bytes32"
+                // ), // Length of unit256[] = 2
+                // [17]: staticOneOf([
+                //     "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [18]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000003"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
             },
         },
 
@@ -2676,30 +2801,30 @@ const preset = {
                     "0x0000000000000000000000000000000000000000000000000000000000000002",
                     "bytes32"
                 ), // Length of address[] = 2
-                [11]: staticEqual(balancer.bb_ag_USD, "address"),
-                [12]: staticEqual(balancer.bb_ag_GNO, "address"),
-                [13]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000002",
-                    "bytes32"
-                ), // Length of unit256[] = 2
-                [16]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000060",
-                    "0x0000000000000000000000000000000000000000000000000000000000000040",
-                    "0x00000000000000000000000000000000000000000000000000000000000000c0"
-                ],
-                    "bytes32"
-                ), // Length of bytes
-                [17]: staticOneOf([
-                    "0x0000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000000000000000000000000000002"
-                ],
-                    "bytes32"
-                ), // Join Kind
-                [20]: staticEqual(
-                    "0x0000000000000000000000000000000000000000000000000000000000000001",
-                    "bytes32"
-                ), // Length of (uint256,uint256)[] = 1
+                // [11]: staticEqual(balancer.bb_ag_USD, "address"),
+                // [12]: staticEqual(balancer.bb_ag_GNO, "address"),
+                // [13]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+                //     "bytes32"
+                // ), // Length of unit256[] = 2
+                // [16]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+                //     "0x00000000000000000000000000000000000000000000000000000000000000c0"
+                // ],
+                //     "bytes32"
+                // ), // Length of bytes
+                // [17]: staticOneOf([
+                //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "0x0000000000000000000000000000000000000000000000000000000000000002"
+                // ],
+                //     "bytes32"
+                // ), // Join Kind
+                // [20]: staticEqual(
+                //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+                //     "bytes32"
+                // ), // Length of (uint256,uint256)[] = 1
             },
         },
 
@@ -2721,20 +2846,33 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // OMNI BRIDGE
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),
+        // TO DO: ADD CLAIMING OF BRIDGED TOKENS
+        ...allowErc20Approve([AAVE, BAL, COMP, COW, CRV, FLX, GIV, GNO, IDLE, MKR, NODE, PNK, RAI,
+            SUSHI, SWPR, SYMM, UNCX, USDC, USDP, USDT, WBTC, WETH, wstETH], [OMNI_BRIDGE]),
         // {
         //     targetAddress: OMNI_BRIDGE,
         //     signature: "relayTokens(address,address,uint256)",
         //     params: {
-        //         [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_MAINNET),
+        //         [1]: staticEqual(BRIDGE_RECIPIENT_MAINNET),
         //     },
         // },
         allow.gnosis.omnibridge["relayTokens(address,address,uint256)"](
             undefined,
-            OMNI_BRIDGE_RECIPIENT_MAINNET
+            BRIDGE_RECIPIENT_MAINNET
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // xDAI BRIDGE
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        allow.gnosis.xdai_bridge["relayTokens"](
+            BRIDGE_RECIPIENT_MAINNET,
+            {
+                send: true
+            }
         ),
     ],
-    placeholders: { AVATAR },
+    placeholders: { AVATAR, BRIDGE_RECIPIENT_MAINNET },
 } satisfies RolePreset
 
 export default preset

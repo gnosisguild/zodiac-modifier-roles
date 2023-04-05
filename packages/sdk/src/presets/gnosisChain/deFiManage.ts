@@ -4,7 +4,7 @@
 //   forAllTargetAddresses,
 //   staticEqual,
 // } from "../helpers/utils"
-// import { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../placeholders"
+// import { AVATAR, BRIDGE_RECIPIENT_MAINNET } from "../placeholders"
 // import { RolePreset } from "../types"
 
 // import {
@@ -99,7 +99,7 @@
 //       targetAddress: OMNI_BRIDGE,
 //       signature: "transferAndCall(address,uint256,bytes)",
 //       params: {
-//         [2]: dynamicEqual(OMNI_BRIDGE_RECIPIENT_MAINNET.as("bytes")),
+//         [2]: dynamicEqual(BRIDGE_RECIPIENT_MAINNET.as("bytes")),
 //       },
 //     },
 //     // <-- OmniBridge
@@ -275,7 +275,7 @@
 //   ],
 //   placeholders: {
 //     AVATAR,
-//     OMNI_BRIDGE_RECIPIENT_MAINNET,
+//     BRIDGE_RECIPIENT_MAINNET,
 //   },
 // } satisfies RolePreset
 

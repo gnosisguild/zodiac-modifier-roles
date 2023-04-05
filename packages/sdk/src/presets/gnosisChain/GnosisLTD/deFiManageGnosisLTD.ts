@@ -1,6 +1,6 @@
 import {
-    ZERO_ADDRESS, COW, CRV, EURe, FLX, GIV, GNO, MAI, rGNO,
-    sGNO, SUSHI, USDC, USDT, WBTC, WETH, wstETH, WXDAI, x3CRV,
+    ZERO_ADDRESS, AAVE, BAL, COW, CRV, EURe, FLX, GIV, GNO, MAI, MKR, NODE, rGNO,
+    sGNO, SUSHI, USDC, USDP, USDT, WBTC, WETH, wstETH, WXDAI, x3CRV,
     OMNI_BRIDGE,
     curve,
     honeyswap,
@@ -8,7 +8,7 @@ import {
     sushiswap,
 } from "../addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
-import { AVATAR, OMNI_BRIDGE_RECIPIENT_MAINNET } from "../../placeholders"
+import { AVATAR, BRIDGE_RECIPIENT_MAINNET } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 
@@ -295,17 +295,17 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.x3CRV_POOL,
-            curve.x3CRV_LP,
-            curve.x3CRV_GAUGE,
-            3,
-            [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.x3CRV_POOL,
+        //     curve.x3CRV_LP,
+        //     curve.x3CRV_GAUGE,
+        //     3,
+        //     [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve EURe/x3CRV
@@ -439,26 +439,26 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            {
-                oneOf: [curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP]
-            },
-            curve.crvEUReUSD_LP,
-            curve.crvEUReUSD_GAUGE,
-            {
-                oneOf: [2, 4]
-            },
-            {
-                oneOf: [
-                    [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-                    [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]
-                ]
-            },
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     {
+        //         oneOf: [curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP]
+        //     },
+        //     curve.crvEUReUSD_LP,
+        //     curve.crvEUReUSD_GAUGE,
+        //     {
+        //         oneOf: [2, 4]
+        //     },
+        //     {
+        //         oneOf: [
+        //             [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS]
+        //         ]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve sGNO/GNO
@@ -505,18 +505,18 @@ const preset = {
             curve.sgnoCRV_GAUGE
         ),
 
-        // Deposit and Stake using a special ZAP
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.sgnoCRV_LP_POOL,
-            curve.sgnoCRV_LP_POOL,
-            curve.sgnoCRV_GAUGE,
-            2,
-            [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // // Deposit and Stake using a special ZAP
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.sgnoCRV_LP_POOL,
+        //     curve.sgnoCRV_LP_POOL,
+        //     curve.sgnoCRV_GAUGE,
+        //     2,
+        //     [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve tricrypto
@@ -643,17 +643,17 @@ const preset = {
         ),
 
         // // Deposit and Stake using a special ZAP
-        allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.rgnoCRV_LP_POOL,
-            curve.rgnoCRV_LP_POOL,
-            curve.rgnoCRV_GAUGE,
-            2,
-            [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS
-        ),
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     curve.rgnoCRV_LP_POOL,
+        //     curve.rgnoCRV_LP_POOL,
+        //     curve.rgnoCRV_GAUGE,
+        //     2,
+        //     [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve MAI/x3CRV
@@ -789,19 +789,54 @@ const preset = {
         //         [8]: staticEqual(ZERO_ADDRESS, "address"),
         //     },
         // },
+        // allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+        //     {
+        //         oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP]
+        //     },
+        //     curve.MAIx3CRV_LP_POOL,
+        //     curve.MAIx3CRV_GAUGE,
+        //     {
+        //         oneOf: [2, 4]
+        //     },
+        //     {
+        //         oneOf: [
+        //             [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+        //             [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]
+        //         ]
+        //     },
+        //     undefined,
+        //     undefined,
+        //     undefined,
+        //     ZERO_ADDRESS
+        // ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve - Deposit and Stake using a special ZAP
+        //---------------------------------------------------------------------------------------------------------------------------------
+
         allow.gnosis.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
             {
-                oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP]
+                oneOf: [curve.MAIx3CRV_LP_POOL, curve.FACTORY_METAPOOLS_ZAP, curve.rgnoCRV_LP_POOL, curve.sgnoCRV_LP_POOL,
+                curve.crvEUReUSD_POOL, curve.crvEUReUSD_ZAP, curve.x3CRV_POOL]
             },
-            curve.MAIx3CRV_LP_POOL,
-            curve.MAIx3CRV_GAUGE,
             {
-                oneOf: [2, 4]
+                oneOf: [curve.MAIx3CRV_LP_POOL, curve.rgnoCRV_LP_POOL, curve.sgnoCRV_LP_POOL, curve.crvEUReUSD_LP, curve.x3CRV_LP]
+            },
+            {
+                oneOf: [curve.MAIx3CRV_GAUGE, curve.rgnoCRV_GAUGE, curve.sgnoCRV_GAUGE, curve.crvEUReUSD_GAUGE, curve.x3CRV_GAUGE],
+            },
+            {
+                oneOf: [2, 3, 4]
             },
             {
                 oneOf: [
                     [MAI, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-                    [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS]
+                    [MAI, WXDAI, USDC, USDT, ZERO_ADDRESS],
+                    [rGNO, sGNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [sGNO, GNO, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [EURe, x3CRV, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [EURe, WXDAI, USDC, USDT, ZERO_ADDRESS],
+                    [WXDAI, USDC, USDT, ZERO_ADDRESS, ZERO_ADDRESS]
                 ]
             },
             undefined,
@@ -1085,20 +1120,32 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // OMNI BRIDGE
         //---------------------------------------------------------------------------------------------------------------------------------
-        ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),
+        // TO DO: ADD CLAIMING OF BRIDGED TOKENS
+        ...allowErc20Approve([AAVE, BAL, COW, CRV, EURe, GNO, MKR, NODE, SUSHI, USDC, USDP, USDT, WETH], [OMNI_BRIDGE]),
         // {
         //     targetAddress: OMNI_BRIDGE,
         //     signature: "relayTokens(address,address,uint256)",
         //     params: {
-        //         [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_MAINNET),
+        //         [1]: staticEqual(BRIDGE_RECIPIENT_MAINNET),
         //     },
         // },
         allow.gnosis.omnibridge["relayTokens(address,address,uint256)"](
             undefined,
-            OMNI_BRIDGE_RECIPIENT_MAINNET
+            BRIDGE_RECIPIENT_MAINNET
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // xDAI BRIDGE
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        allow.gnosis.xdai_bridge["relayTokens"](
+            BRIDGE_RECIPIENT_MAINNET,
+            {
+                send: true
+            }
         ),
     ],
-    placeholders: { AVATAR },
+    placeholders: { AVATAR, BRIDGE_RECIPIENT_MAINNET },
 } satisfies RolePreset
 
 export default preset

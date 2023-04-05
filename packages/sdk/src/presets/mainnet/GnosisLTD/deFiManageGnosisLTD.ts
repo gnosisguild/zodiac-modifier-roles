@@ -11,7 +11,7 @@ import {
     staticEqual,
     staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 
@@ -256,6 +256,8 @@ const preset = {
         ...allowErc20Approve([balancer.bb_a_USD], [balancer.bb_a_USD_GAUGE]),
         ...allowErc20Approve([DAI, USDT, USDC], [balancer.VAULT]),
 
+        // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY 
+        // Adding and removing tokens in different amounts
         // Swap DAI for bb_a_DAI (for both, join and exit pool)
         // Swap USDT for bb_a_USDT (for both, join and exit pool)
         // Swap USDC for bb_a_USDC (for both, join and exit pool)
@@ -457,6 +459,98 @@ const preset = {
                 ), // Length of (uint256,uint256)[] = 1
             },
         },
+
+        // WE CAN'T WHITELIST THIS FUNCTIONS BECAUSE WE DON'T KNOW HOW THE SWAPS WILL BE ROUTED
+        // // Adding and removing single tokens (batchSwap)
+        // {
+        //     targetAddress: balancer.VAULT,
+        //     signature:
+        //         "batchSwap(uint8,(bytes32,uint256,uint256,uint256,bytes)[],address[],(address,bool,address,bool),int256[],uint256)",
+        //     params: {
+        //         [0]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        //         [1]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000120",
+        //             "bytes32"), // Offset of the first tuple from beginning of tuple 288=32*9
+        //         [2]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000300",
+        //             "bytes32"), // Offset of the address[] from beginning 768=32*24
+        //         [3]: staticEqual(AVATAR),
+        //         [5]: staticEqual(AVATAR),
+        //         [7]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000380",
+        //             "bytes32"), // Offset of the int256[] from beginning 896=32*28
+        //         [9]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //             "bytes32"
+        //         ), // Length of (bytes32,uint256,uint256,uint256,bytes)[] = 2
+        //         [10]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //             "bytes32"
+        //         ), // Offset of the first element of the tuple from beginning of tuple 64=32*2
+        //         [11]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //             "bytes32"
+        //         ), // Offset of the second element of the tuple from beginning of tuple 256=32*8
+        //         [12]: staticOneOf([
+        //             "0xae37d54ae477268b9997d4161b96b8200755935c000000000000000000000337", // bb_a_DAI (Add Liquidity)
+        //             "0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334", // bb_a_USDT (Add Liquidity)
+        //             "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336", // bb_a_USDC (Add Liquidity)
+        //             "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d" // bb_a_USD (Remove Liquidity)
+        //         ],
+        //             "bytes32"), // Balancer PoolId
+        //         [16]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //             "bytes32"
+        //         ), // Offset of the bytes from the beggining of the first element 160=32*5
+        //         [17]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "bytes32"), // userData of the first element - for all current Balancer pools this can be left empty
+        //         [18]: staticOneOf([
+        //             "0xae37d54ae477268b9997d4161b96b8200755935c000000000000000000000337", // bb_a_DAI (Remove Liquidity)
+        //             "0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334", // bb_a_USDT (Remove Liquidity)
+        //             "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336", // bb_a_USDC (Remove Liquidity)
+        //             "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d" // bb_a_USD (Add Liquidity)
+        //         ],
+        //             "bytes32"), // Balancer PoolId
+        //         [22]: staticEqual(
+        //             "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //             "bytes32"
+        //         ), // Offset of the bytes from the beggining of the second element 160=32*5
+        //         [23]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //             "bytes32"), // userData of the second element - for all current Balancer pools this can be left empty
+        //         [24]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of address[] = 3
+        //         [25]: staticOneOf([
+        //             DAI, // Add Liquidity
+        //             USDT, // Add Liquidity
+        //             USDC, // Add Liquidity
+        //             balancer.bb_a_USD, // Remove Liquidity
+        //         ],
+        //             "address"), // assetIn
+        //         [26]: staticOneOf([
+        //             balancer.bb_a_DAI,
+        //             balancer.bb_a_USDT,
+        //             balancer.bb_a_USDC,
+        //         ],
+        //             "address"),
+        //         [27]: staticOneOf([
+        //             DAI, // Remove Liquidity
+        //             USDT, // Remove Liquidity
+        //             USDC, // Remove Liquidity
+        //             balancer.bb_a_USD, // Add Liquidity
+        //         ],
+        //             "address"), // assetOut
+        //         [28]: staticEqual(
+        //             "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //             "bytes32"
+        //         ), // Length of int256[] = 3
+        //     }
+        // },
 
         // Stake
         allow.mainnet.balancer.bb_a_USD_gauge["deposit(uint256)"](),
@@ -773,15 +867,15 @@ const preset = {
         //     targetAddress: OMNI_BRIDGE,
         //     signature: "relayTokens(address,address,uint256)",
         //     params: {
-        //         [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
+        //         [1]: staticEqual(BRIDGE_RECIPIENT_GNOSIS_CHAIN),
         //     },
         // },
         allow.mainnet.omnibridge["relayTokens(address,address,uint256)"](
             undefined,
-            OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN
+            BRIDGE_RECIPIENT_GNOSIS_CHAIN
         )
     ],
-    placeholders: { AVATAR },
+    placeholders: { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset
 
 export default preset

@@ -14,7 +14,7 @@ import {
   staticEqual,
   staticOneOf,
 } from "../../helpers/utils"
-import { AVATAR, OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 
@@ -497,7 +497,10 @@ const preset = {
     //   },
     // },
     allow.mainnet.aura.booster["deposit"](
-      0), // Aura poolId
+      {
+        oneOf: [0]
+      }
+    ), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -2304,15 +2307,15 @@ const preset = {
     //   targetAddress: OMNI_BRIDGE,
     //   signature: "relayTokens(address,address,uint256)",
     //   params: {
-    //     [1]: staticEqual(OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN),
+    //     [1]: staticEqual(BRIDGE_RECIPIENT_GNOSIS_CHAIN),
     //   },
     // },
     allow.mainnet.omnibridge["relayTokens(address,address,uint256)"](
       undefined,
-      OMNI_BRIDGE_RECIPIENT_GNOSIS_CHAIN
+      BRIDGE_RECIPIENT_GNOSIS_CHAIN
     )
   ],
-  placeholders: { AVATAR },
+  placeholders: { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset
 
 export default preset
