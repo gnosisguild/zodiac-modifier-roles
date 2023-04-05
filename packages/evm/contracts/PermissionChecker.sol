@@ -106,13 +106,13 @@ abstract contract PermissionChecker is Core, Periphery {
     /// @dev Inspects an individual transaction and performs checks based on permission scoping.
     /// Wildcarded indicates whether params need to be inspected or not. When true, only ExecutionOptions are checked.
     /// @param role Role to check for.
-    /// @param targetAddress Destination address of transaction.
+    /// @param to Destination address of transaction.
     /// @param value Ether value of module transaction.
     /// @param data Data payload of module transaction.
     /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
     function _transaction(
         Role storage role,
-        address targetAddress,
+        address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
@@ -122,7 +122,7 @@ abstract contract PermissionChecker is Core, Periphery {
             revert FunctionSignatureTooShort();
         }
 
-        TargetAddress storage target = role.targets[targetAddress];
+        TargetAddress storage target = role.targets[to];
 
         if (target.clearance == Clearance.Target) {
             return (
@@ -130,7 +130,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Result({consumptions: consumptions, info: 0})
             );
         } else if (target.clearance == Clearance.Function) {
-            bytes32 key = _key(targetAddress, bytes4(data));
+            bytes32 key = _key(to, bytes4(data));
             bytes32 header = role.scopeConfig[key];
             if (header == 0) {
                 return (

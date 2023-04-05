@@ -12,15 +12,15 @@ import "../Types.sol";
  */
 library BufferPacker {
     // HEADER (stored as a single word in storage)
-    // 2   bytes -> paramCount (Condition count)
+    // 2   bytes -> count (Condition count)
     // 1   bytes -> options (ExecutionOptions)
     // 1   bytes -> isWildcarded
     // 8   bytes -> unused
     // 20  bytes -> pointer (address containining packed conditions)
-    uint256 private constant offsetParamCount = 240;
+    uint256 private constant offsetCount = 240;
     uint256 private constant offsetOptions = 224;
     uint256 private constant offsetIsWildcarded = 216;
-    uint256 private constant maskParamCount = 0xffff << offsetParamCount;
+    uint256 private constant maskCount = 0xffff << offsetCount;
     uint256 private constant maskOptions = 0xff << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // CONDITION:(stored in code at the address kept in header)
@@ -38,10 +38,10 @@ library BufferPacker {
     function packedSize(
         ConditionFlat[] memory conditions
     ) internal pure returns (uint256 result) {
-        uint256 paramCount = conditions.length;
+        uint256 count = conditions.length;
 
-        result = paramCount * bytesPerCondition;
-        for (uint256 i; i < paramCount; ++i) {
+        result = count * bytesPerCondition;
+        for (uint256 i; i < count; ++i) {
             if (conditions[i].operator >= Operator.EqualTo) {
                 result += 32;
             }
@@ -49,12 +49,12 @@ library BufferPacker {
     }
 
     function packHeader(
-        uint256 paramCount,
+        uint256 count,
         ExecutionOptions options,
         address pointer
     ) internal pure returns (bytes32) {
         return
-            bytes32(paramCount << offsetParamCount) |
+            bytes32(count << offsetCount) |
             (bytes32(uint256(options)) << offsetOptions) |
             bytes32(uint256(uint160(pointer)));
     }
@@ -69,8 +69,8 @@ library BufferPacker {
 
     function unpackHeader(
         bytes32 header
-    ) internal pure returns (uint256 paramCount, address pointer) {
-        paramCount = (uint256(header) & maskParamCount) >> offsetParamCount;
+    ) internal pure returns (uint256 count, address pointer) {
+        count = (uint256(header) & maskCount) >> offsetCount;
         pointer = address(bytes20(uint160(uint256(header))));
     }
 
@@ -112,7 +112,7 @@ library BufferPacker {
 
     function unpackBody(
         bytes memory buffer,
-        uint256 paramCount
+        uint256 count
     )
         internal
         pure
@@ -122,15 +122,15 @@ library BufferPacker {
             uint256 allowanceCount
         )
     {
-        result = new ConditionFlat[](paramCount);
-        compValues = new bytes32[](paramCount);
+        result = new ConditionFlat[](count);
+        compValues = new bytes32[](count);
 
         unchecked {
             bytes32 word;
             uint256 offset = 32;
-            uint256 compValueOffset = 32 + paramCount * bytesPerCondition;
+            uint256 compValueOffset = 32 + count * bytesPerCondition;
 
-            for (uint256 i; i < paramCount; ++i) {
+            for (uint256 i; i < count; ++i) {
                 assembly {
                     word := mload(add(buffer, offset))
                 }
