@@ -54,6 +54,15 @@ library Decoder {
         return data[location:location + size];
     }
 
+    function word(
+        bytes calldata data,
+        uint256 offset
+    ) internal pure returns (bytes32 result) {
+        assembly {
+            result := calldataload(add(data.offset, offset))
+        }
+    }
+
     /**
      * @dev Walks through a parameter encoding tree and maps their location and
      * size within calldata.
@@ -77,14 +86,14 @@ library Decoder {
             // taking into account the length prefix which is a uint256 value
             // preceding the actual dynamic data.
             result.location = location;
-            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
+            result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.AbiEncoded) {
             // If the parameter is ABI-encoded, parse its components and
             // recursively map their locations and sizes within calldata.
             // take into accounts the encoded length and the 4 bytes selector
             result = __block__(data, location + 32 + 4, node);
             result.location = 32 + location;
-            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
+            result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.Tuple) {
             return __block__(data, location, node);
         } else if (paramType == ParameterType.Array) {
@@ -137,7 +146,7 @@ library Decoder {
         uint256 location,
         Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        uint256 length = uint256(_loadWord(data, location));
+        uint256 length = uint256(word(data, location));
 
         result.location = location;
         result.children = new ParameterPayload[](length);
@@ -182,16 +191,7 @@ library Decoder {
         if (isInline) {
             return headLocation;
         } else {
-            return location + uint256(_loadWord(data, headLocation));
-        }
-    }
-
-    function _loadWord(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes32 result) {
-        assembly {
-            result := calldataload(add(data.offset, offset))
+            return location + uint256(word(data, headLocation));
         }
     }
 
