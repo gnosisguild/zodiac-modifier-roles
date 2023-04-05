@@ -113,7 +113,7 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     ) external onlyOwner {
         roles[roleKey].scopeConfig[_key(targetAddress, selector)] = BufferPacker
-            .packHeader(0, true, options, address(0));
+            .packHeaderAsWildcarded(options);
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
     }

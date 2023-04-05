@@ -11,16 +11,16 @@ import "../Types.sol";
  */
 library BufferPacker {
     // HEADER (stored as a single word in storage)
-    // 8   bits  -> length (Condition count)
-    // 2   bits  -> options (ExecutionOptions)
-    // 1   bits  -> isWildcarded
-    // 5   bits  -> unused
-    // 20  bytes -> address that contains packed conditions
-    uint256 private constant offsetLength = 248;
-    uint256 private constant offsetOptions = 246;
-    uint256 private constant offsetIsWildcarded = 245;
-    uint256 private constant maskLength = 0xff << offsetLength;
-    uint256 private constant maskOptions = 0x3 << offsetOptions;
+    // 2   bytes -> paramCount (Condition count)
+    // 1   bytes -> options (ExecutionOptions)
+    // 1   bytes -> isWildcarded
+    // 8   bytes -> unused
+    // 20  bytes -> pointer (address containining packed conditions)
+    uint256 private constant offsetParamCount = 240;
+    uint256 private constant offsetOptions = 224;
+    uint256 private constant offsetIsWildcarded = 216;
+    uint256 private constant maskParamCount = 0xffff << offsetParamCount;
+    uint256 private constant maskOptions = 0xff << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // CONDITION:(stored in code at the address kept in header)
     // 8    bits -> parent
@@ -48,17 +48,21 @@ library BufferPacker {
     }
 
     function packHeader(
-        uint256 length,
-        bool isWildcarded,
+        uint256 paramCount,
         ExecutionOptions options,
         address pointer
     ) internal pure returns (bytes32 result) {
-        result = bytes32(length << offsetLength);
-        if (isWildcarded) {
-            result |= bytes32(maskIsWildcarded);
-        }
+        result |= bytes32(paramCount << offsetParamCount);
         result |= bytes32(uint256(options)) << offsetOptions;
-        result |= bytes32(bytes20(pointer)) >> 16;
+        result |= bytes32(bytes20(pointer)) >> (12 * 8);
+    }
+
+    function packHeaderAsWildcarded(
+        ExecutionOptions options
+    ) internal pure returns (bytes32) {
+        return
+            (bytes32(uint256(options)) << offsetOptions) |
+            bytes32(maskIsWildcarded);
     }
 
     function packCondition(
