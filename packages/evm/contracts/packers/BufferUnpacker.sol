@@ -11,16 +11,16 @@ import "../Types.sol";
  */
 library BufferUnpacker {
     // HEADER (stored as a single word in storage)
-    // 8   bits  -> length (Condition count)
-    // 2   bits  -> options (ExecutionOptions)
-    // 1   bits  -> isWildcarded
-    // 5   bits  -> unused
-    // 20  bytes -> address that contains packed conditions
-    uint256 private constant offsetLength = 248;
-    uint256 private constant offsetOptions = 246;
-    uint256 private constant offsetIsWildcarded = 245;
-    uint256 private constant maskLength = 0xff << offsetLength;
-    uint256 private constant maskOptions = 0x3 << offsetOptions;
+    // 2   bytes -> paramCount (Condition count)
+    // 1   bytes -> options (ExecutionOptions)
+    // 1   bytes -> isWildcarded
+    // 8   bytes -> unused
+    // 20  bytes -> pointer (address containining packed conditions)
+    uint256 private constant offsetParamCount = 240;
+    uint256 private constant offsetOptions = 224;
+    uint256 private constant offsetIsWildcarded = 216;
+    uint256 private constant maskParamCount = 0xffff << offsetParamCount;
+    uint256 private constant maskOptions = 0xff << offsetOptions;
     uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
     // CONDITION:(stored in code at the address kept in header)
     // 8    bits -> parent
@@ -36,27 +36,25 @@ library BufferUnpacker {
 
     function unpackHeader(
         bytes32 header
-    )
-        internal
-        pure
-        returns (
-            uint256 length,
-            bool isWildcarded,
-            ExecutionOptions options,
-            address pointer
-        )
-    {
-        length = (uint256(header) & maskLength) >> offsetLength;
+    ) internal pure returns (uint256 paramCount, address pointer) {
+        paramCount = (uint256(header) & maskParamCount) >> offsetParamCount;
+
+        pointer = address(bytes20(uint160(uint256(header))));
+        pointer = address(bytes20(header << (12 * 8)));
+    }
+
+    function unpackOptions(
+        bytes32 header
+    ) internal pure returns (bool isWildcarded, ExecutionOptions options) {
         isWildcarded = uint256(header) & maskIsWildcarded != 0;
         options = ExecutionOptions(
             (uint256(header) & maskOptions) >> offsetOptions
         );
-        pointer = address(bytes20(header << 16));
     }
 
     function unpackBody(
         bytes memory buffer,
-        uint256 count
+        uint256 paramCount
     )
         internal
         pure
@@ -66,12 +64,12 @@ library BufferUnpacker {
             uint256 allowanceCount
         )
     {
-        result = new ConditionFlat[](count);
-        compValues = new bytes32[](count);
+        result = new ConditionFlat[](paramCount);
+        compValues = new bytes32[](paramCount);
 
         unchecked {
-            uint256 compValueOffset = 32 + count * bytesPerCondition;
-            for (uint256 i; i < count; ++i) {
+            uint256 compValueOffset = 32 + paramCount * bytesPerCondition;
+            for (uint256 i; i < paramCount; ++i) {
                 bytes32 word;
                 uint256 offset = 32 + i * bytesPerCondition;
                 assembly {
@@ -84,9 +82,7 @@ library BufferUnpacker {
                 condition.paramType = ParameterType(
                     (bits & maskParamType) >> offsetParamType
                 );
-                condition.operator = Operator(
-                    (bits & maskOperator) >> offsetOperator
-                );
+                condition.operator = Operator(bits & maskOperator);
 
                 if (condition.operator >= Operator.EqualTo) {
                     assembly {

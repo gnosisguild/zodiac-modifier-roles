@@ -26,7 +26,6 @@ abstract contract PermissionLoader is Core {
 
         role.scopeConfig[key] = BufferPacker.packHeader(
             conditions.length,
-            false,
             options,
             pointer
         );
@@ -41,11 +40,14 @@ abstract contract PermissionLoader is Core {
         override
         returns (Condition memory condition, Consumption[] memory consumptions)
     {
-        (uint256 length, , , address pointer) = BufferUnpacker.unpackHeader(
+        (uint256 paramCount, address pointer) = BufferUnpacker.unpackHeader(
             role.scopeConfig[key]
         );
         bytes memory buffer = WriteOnce.load(pointer);
-        (condition, consumptions) = PermissionUnpacker.unpack(buffer, length);
+        (condition, consumptions) = PermissionUnpacker.unpack(
+            buffer,
+            paramCount
+        );
 
         for (uint256 i; i < consumptions.length; ++i) {
             (consumptions[i].balance, ) = _accruedAllowance(
