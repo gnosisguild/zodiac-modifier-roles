@@ -71,7 +71,6 @@ library BufferPacker {
         bytes32 header
     ) internal pure returns (uint256 paramCount, address pointer) {
         paramCount = (uint256(header) & maskParamCount) >> offsetParamCount;
-
         pointer = address(bytes20(uint160(uint256(header))));
     }
 
