@@ -4,9 +4,10 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../Types.sol";
 
 /**
- * @title BufferPacker a library that provides packing functions for permission
- * conditions. It allows packing externally provided ConditionsFlat[] into a
- * storage-optimized buffer
+ * @title BufferPacker a library that provides packing and unpacking functions
+ * for permission conditions. It allows packing externally provided
+ * ConditionsFlat[] into a storage-optimized buffer, and later unpack it into
+ * memory.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library BufferPacker {
@@ -65,6 +66,24 @@ library BufferPacker {
             bytes32(maskIsWildcarded);
     }
 
+    function unpackHeader(
+        bytes32 header
+    ) internal pure returns (uint256 paramCount, address pointer) {
+        paramCount = (uint256(header) & maskParamCount) >> offsetParamCount;
+
+        pointer = address(bytes20(uint160(uint256(header))));
+        pointer = address(bytes20(header << (12 * 8)));
+    }
+
+    function unpackOptions(
+        bytes32 header
+    ) internal pure returns (bool isWildcarded, ExecutionOptions options) {
+        isWildcarded = uint256(header) & maskIsWildcarded != 0;
+        options = ExecutionOptions(
+            (uint256(header) & maskOptions) >> offsetOptions
+        );
+    }
+
     function packCondition(
         bytes memory buffer,
         uint256 index,
@@ -72,7 +91,7 @@ library BufferPacker {
     ) internal pure {
         uint16 bits = (uint16(condition.parent) << offsetParent) |
             (uint16(condition.paramType) << offsetParamType) |
-            (uint16(condition.operator) << offsetOperator);
+            (uint16(condition.operator << offsetOperator));
 
         uint256 offset = index * bytesPerCondition;
         buffer[offset] = bytes1(uint8(bits >> 8));
@@ -90,6 +109,52 @@ library BufferPacker {
 
         assembly {
             mstore(add(buffer, offset), word)
+        }
+    }
+
+    function unpackBody(
+        bytes memory buffer,
+        uint256 paramCount
+    )
+        internal
+        pure
+        returns (
+            ConditionFlat[] memory result,
+            bytes32[] memory compValues,
+            uint256 allowanceCount
+        )
+    {
+        result = new ConditionFlat[](paramCount);
+        compValues = new bytes32[](paramCount);
+
+        unchecked {
+            uint256 compValueOffset = 32 + paramCount * bytesPerCondition;
+            for (uint256 i; i < paramCount; ++i) {
+                bytes32 word;
+                uint256 offset = 32 + i * bytesPerCondition;
+                assembly {
+                    word := mload(add(buffer, offset))
+                }
+                uint16 bits = uint16(bytes2(word));
+
+                ConditionFlat memory condition = result[i];
+                condition.parent = uint8((bits & maskParent) >> offsetParent);
+                condition.paramType = ParameterType(
+                    (bits & maskParamType) >> offsetParamType
+                );
+                condition.operator = Operator(bits & maskOperator);
+
+                if (condition.operator >= Operator.EqualTo) {
+                    assembly {
+                        word := mload(add(buffer, compValueOffset))
+                    }
+                    compValues[i] = word;
+                    compValueOffset += 32;
+                    if (condition.operator >= Operator.WithinAllowance) {
+                        ++allowanceCount;
+                    }
+                }
+            }
         }
     }
 }

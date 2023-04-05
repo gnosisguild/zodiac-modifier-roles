@@ -142,7 +142,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             }
 
-            (bool isWildcarded, ExecutionOptions options) = BufferUnpacker
+            (bool isWildcarded, ExecutionOptions options) = BufferPacker
                 .unpackOptions(header);
 
             Status status = _executionOptions(value, operation, options);

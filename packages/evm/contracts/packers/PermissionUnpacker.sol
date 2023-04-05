@@ -6,7 +6,7 @@ import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "../Consumptions.sol";
 import "../Topology.sol";
 
-import "./BufferUnpacker.sol";
+import "./BufferPacker.sol";
 
 /**
  * @title PermissionUnpacker - a library that coordinates the process of unpacking
@@ -26,7 +26,7 @@ library PermissionUnpacker {
             ConditionFlat[] memory conditions,
             bytes32[] memory compValues,
             uint256 allowanceCount
-        ) = BufferUnpacker.unpackBody(buffer, paramCount);
+        ) = BufferPacker.unpackBody(buffer, paramCount);
 
         _unpackCondition(
             conditions,
