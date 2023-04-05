@@ -218,6 +218,7 @@ export enum PermissionCheckerStatus {
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
   CustomConditionViolation,
+  ParameterNotEqualToAvatar,
   /// TODO
   AllowanceExceeded,
   /// TODO
