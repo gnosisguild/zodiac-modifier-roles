@@ -547,16 +547,11 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status) {
-        bytes calldata plucked = Decoder.pluck(
-            data,
-            payload.location,
-            payload.size
-        );
         Operator operator = condition.operator;
         bytes32 compValue = condition.compValue;
         bytes32 value = operator == Operator.EqualTo
-            ? keccak256(plucked)
-            : bytes32(plucked);
+            ? keccak256(Decoder.pluck(data, payload.location, payload.size))
+            : Decoder.word(data, payload.location);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -574,14 +569,9 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload
     ) private pure returns (Status status) {
-        bytes calldata plucked = Decoder.pluck(
-            data,
-            payload.location,
-            payload.size
-        );
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(condition.compValue));
-        int256 value = int256(uint256(bytes32(plucked)));
+        int256 value = int256(uint256(Decoder.word(data, payload.location)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -664,9 +654,7 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status, Result memory) {
-        uint256 value = uint256(
-            bytes32(Decoder.pluck(data, payload.location, payload.size))
-        );
+        uint256 value = uint256(Decoder.word(data, payload.location));
         return __consume(value, condition, consumptions);
     }
 
