@@ -16,30 +16,30 @@ library BufferPacker {
     // 1   bytes -> isWildcarded
     // 8   bytes -> unused
     // 20  bytes -> pointer (address containining packed conditions)
-    uint256 private constant offsetCount = 240;
-    uint256 private constant offsetOptions = 224;
-    uint256 private constant offsetIsWildcarded = 216;
-    uint256 private constant maskCount = 0xffff << offsetCount;
-    uint256 private constant maskOptions = 0xff << offsetOptions;
-    uint256 private constant maskIsWildcarded = 0x1 << offsetIsWildcarded;
-    // CONDITION:(stored in code at the address kept in header)
+    uint256 private constant OFFSET_COUNT = 240;
+    uint256 private constant OFFSET_OPTIONS = 224;
+    uint256 private constant OFFSET_IS_WILDCARDED = 216;
+    uint256 private constant MASK_COUNT = 0xffff << OFFSET_COUNT;
+    uint256 private constant MASK_OPTIONS = 0xff << OFFSET_OPTIONS;
+    uint256 private constant MASK_IS_WILDCARDED = 0x1 << OFFSET_IS_WILDCARDED;
+    // CONDITION (stored as runtimeBytecode at pointer address kept in header)
     // 8    bits -> parent
     // 3    bits -> type
     // 5    bits -> operator
-    uint256 private constant bytesPerCondition = 2;
-    uint16 private constant offsetParent = 8;
-    uint16 private constant offsetParamType = 5;
-    uint16 private constant offsetOperator = 0;
-    uint16 private constant maskParent = uint16(0xff << offsetParent);
-    uint16 private constant maskParamType = uint16(0x07 << offsetParamType);
-    uint16 private constant maskOperator = uint16(0x1f << offsetOperator);
+    uint256 private constant BYTES_PER_CONDITION = 2;
+    uint16 private constant OFFSET_PARENT = 8;
+    uint16 private constant OFFSET_PARAM_TYPE = 5;
+    uint16 private constant OFFSET_OPERATOR = 0;
+    uint16 private constant MASK_PARENT = uint16(0xff << OFFSET_PARENT);
+    uint16 private constant MASK_PARAM_TYPE = uint16(0x07 << OFFSET_PARAM_TYPE);
+    uint16 private constant MASK_OPERATOR = uint16(0x1f << OFFSET_OPERATOR);
 
     function packedSize(
         ConditionFlat[] memory conditions
     ) internal pure returns (uint256 result) {
         uint256 count = conditions.length;
 
-        result = count * bytesPerCondition;
+        result = count * BYTES_PER_CONDITION;
         for (uint256 i; i < count; ++i) {
             if (conditions[i].operator >= Operator.EqualTo) {
                 result += 32;
@@ -53,8 +53,8 @@ library BufferPacker {
         address pointer
     ) internal pure returns (bytes32) {
         return
-            bytes32(count << offsetCount) |
-            (bytes32(uint256(options)) << offsetOptions) |
+            bytes32(count << OFFSET_COUNT) |
+            (bytes32(uint256(options)) << OFFSET_OPTIONS) |
             bytes32(uint256(uint160(pointer)));
     }
 
@@ -62,23 +62,23 @@ library BufferPacker {
         ExecutionOptions options
     ) internal pure returns (bytes32) {
         return
-            bytes32(uint256(options) << offsetOptions) |
-            bytes32(maskIsWildcarded);
+            bytes32(uint256(options) << OFFSET_OPTIONS) |
+            bytes32(MASK_IS_WILDCARDED);
     }
 
     function unpackHeader(
         bytes32 header
     ) internal pure returns (uint256 count, address pointer) {
-        count = (uint256(header) & maskCount) >> offsetCount;
+        count = (uint256(header) & MASK_COUNT) >> OFFSET_COUNT;
         pointer = address(bytes20(uint160(uint256(header))));
     }
 
     function unpackOptions(
         bytes32 header
     ) internal pure returns (bool isWildcarded, ExecutionOptions options) {
-        isWildcarded = uint256(header) & maskIsWildcarded != 0;
+        isWildcarded = uint256(header) & MASK_IS_WILDCARDED != 0;
         options = ExecutionOptions(
-            (uint256(header) & maskOptions) >> offsetOptions
+            (uint256(header) & MASK_OPTIONS) >> OFFSET_OPTIONS
         );
     }
 
@@ -87,10 +87,10 @@ library BufferPacker {
         uint256 index,
         ConditionFlat memory condition
     ) internal pure {
-        uint256 offset = index * bytesPerCondition;
+        uint256 offset = index * BYTES_PER_CONDITION;
         buffer[offset] = bytes1(condition.parent);
         buffer[offset + 1] = bytes1(
-            (uint8(condition.paramType) << uint8(offsetParamType)) |
+            (uint8(condition.paramType) << uint8(OFFSET_PARAM_TYPE)) |
                 uint8(condition.operator)
         );
     }
@@ -123,21 +123,21 @@ library BufferPacker {
         unchecked {
             bytes32 word;
             uint256 offset = 32;
-            uint256 compValueOffset = 32 + count * bytesPerCondition;
+            uint256 compValueOffset = 32 + count * BYTES_PER_CONDITION;
 
             for (uint256 i; i < count; ++i) {
                 assembly {
                     word := mload(add(buffer, offset))
                 }
-                offset += bytesPerCondition;
+                offset += BYTES_PER_CONDITION;
 
                 uint16 bits = uint16(bytes2(word));
                 ConditionFlat memory condition = result[i];
-                condition.parent = uint8((bits & maskParent) >> offsetParent);
+                condition.parent = uint8((bits & MASK_PARENT) >> OFFSET_PARENT);
                 condition.paramType = ParameterType(
-                    (bits & maskParamType) >> offsetParamType
+                    (bits & MASK_PARAM_TYPE) >> OFFSET_PARAM_TYPE
                 );
-                condition.operator = Operator(bits & maskOperator);
+                condition.operator = Operator(bits & MASK_OPERATOR);
 
                 if (condition.operator >= Operator.EqualTo) {
                     assembly {
