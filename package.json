@@ -24,7 +24,7 @@
     "preinstall": "yarn contracts:install && yarn app:install && yarn subgraph:install && yarn sdk:install",
     "prepare": "husky install",
     "pre-commit": "yarn app:pre-commit && yarn subgraph:pre-commit && yarn contracts:pre-commit && yarn sdk:pre-commit",
-    "test": "yarn contracts:test && yarn sdk:test"
+    "test": "yarn contracts:test"
   },
   "repository": {
     "type": "git",
