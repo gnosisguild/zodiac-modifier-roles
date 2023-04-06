@@ -4,9 +4,8 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Topology.sol";
 
 /**
- * @title Integrity, a library that ensures the provided configuration
- * conditions meet certain sanity checks and that the data conforms to the
- * expected data model for the roles modifier.
+ * @title Integrity, A library that validates condition integrity, and
+ * adherence to the expected input structure and rules.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Integrity {
@@ -80,50 +79,19 @@ library Integrity {
             conditions
         );
 
-        // check at least 1 child for Logical
+        // check suitable children count
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
                 (condition.operator >= Operator.And &&
                     condition.operator <= Operator.Xor)
             ) {
-                // must have no compValue
-                if (condition.compValue.length != 0) {
-                    revert UnsuitableCompValue(i);
-                }
-
                 // must have at least one child
                 if (childrenBounds[i].length == 0) {
                     revert UnsuitableChildrenCount(i);
                 }
             }
-        }
 
-        for (uint256 i = 0; i < conditions.length; i++) {
-            ConditionFlat memory condition = conditions[i];
-            if (
-                (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Xor)
-            ) {
-                compatibleSubTypeTree(conditions, i, childrenBounds);
-            }
-
-            if (
-                (condition.paramType == ParameterType.Array &&
-                    childrenBounds[i].length > 1)
-            ) {
-                compatibleSubTypeTree(conditions, i, childrenBounds);
-            }
-        }
-
-        for (uint256 i = 0; i < conditions.length; i++) {
-            ConditionFlat memory condition = conditions[i];
-            if (
-                condition.paramType == ParameterType.Array &&
-                childrenBounds[i].length == 0
-            ) {
-                revert UnsuitableChildrenCount(i);
-            }
             if (
                 (condition.operator == Operator.ArraySome ||
                     condition.operator == Operator.ArrayEvery) &&
@@ -134,9 +102,21 @@ library Integrity {
 
             if (
                 condition.operator == Operator.ArraySubset &&
-                childrenBounds[i].length > 256
+                (childrenBounds[i].length == 0 ||
+                    childrenBounds[i].length > 256)
             ) {
                 revert UnsuitableChildrenCount(i);
+            }
+        }
+
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
+            if (
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor) ||
+                condition.paramType == ParameterType.Array
+            ) {
+                compatibleSubTypeTree(conditions, i, childrenBounds);
             }
         }
     }
@@ -150,21 +130,12 @@ library Integrity {
         bytes memory compValue = condition.compValue;
         if (operator == Operator.Pass) {
             return;
-        } else if (operator == Operator.And) {
+        } else if (operator >= Operator.And && operator <= Operator.Xor) {
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
-        } else if (operator == Operator.Or) {
-            if (paramType != ParameterType.None) {
-                revert UnsuitableParameterType(index);
-            }
-        } else if (operator == Operator.Nor) {
-            if (paramType != ParameterType.None) {
-                revert UnsuitableParameterType(index);
-            }
-        } else if (operator == Operator.Xor) {
-            if (paramType != ParameterType.None) {
-                revert UnsuitableParameterType(index);
+            if (condition.compValue.length != 0) {
+                revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Matches) {
             if (
@@ -269,6 +240,10 @@ library Integrity {
         uint256 index,
         Topology.Bounds[] memory childrenBounds
     ) private pure {
+        if (childrenBounds[index].length == 0) {
+            return;
+        }
+
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
