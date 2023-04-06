@@ -4,6 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
 import "./PermissionLoader.sol";
+import "./PermissionTracker.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
@@ -17,7 +18,8 @@ contract Roles is
     Modifier,
     PermissionBuilder,
     PermissionChecker,
-    PermissionLoader
+    PermissionLoader,
+    PermissionTracker
 {
     mapping(address => bytes32) public defaultRoles;
 
