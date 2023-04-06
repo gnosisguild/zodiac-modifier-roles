@@ -17,11 +17,13 @@ library Consumptions {
         }
 
         uint256 length = consumptions.length;
-        result = new Consumption[](length);
-        for (uint256 i; i < length; ++i) {
-            result[i].allowanceKey = consumptions[i].allowanceKey;
-            result[i].balance = consumptions[i].balance;
-            result[i].consumed = consumptions[i].consumed;
+        unchecked {
+            result = new Consumption[](length);
+            for (uint256 i; i < length; ++i) {
+                result[i].allowanceKey = consumptions[i].allowanceKey;
+                result[i].balance = consumptions[i].balance;
+                result[i].consumed = consumptions[i].consumed;
+            }
         }
     }
 
@@ -30,9 +32,11 @@ library Consumptions {
         bytes32 key
     ) internal pure returns (uint256, bool) {
         uint256 length = consumptions.length;
-        for (uint256 i; i < length; ++i) {
-            if (consumptions[i].allowanceKey == key) {
-                return (i, true);
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                if (consumptions[i].allowanceKey == key) {
+                    return (i, true);
+                }
             }
         }
 
@@ -48,28 +52,30 @@ library Consumptions {
 
         result = new Consumption[](c1.length + c2.length);
 
-        for (uint256 i; i < c1.length; ++i) {
-            result[i].allowanceKey = c1[i].allowanceKey;
-            result[i].balance = c1[i].balance;
-            result[i].consumed = c1[i].consumed;
-        }
+        uint256 length = c1.length;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                result[i].allowanceKey = c1[i].allowanceKey;
+                result[i].balance = c1[i].balance;
+                result[i].consumed = c1[i].consumed;
+            }
 
-        uint256 resultLength = c1.length;
-        for (uint256 i; i < c2.length; ++i) {
-            (uint256 index, bool found) = find(result, c2[i].allowanceKey);
-            if (found) {
-                result[index].consumed += c2[i].consumed;
-            } else {
-                result[resultLength].allowanceKey = c2[i].allowanceKey;
-                result[resultLength].balance = c2[i].balance;
-                result[resultLength].consumed = c2[i].consumed;
-                resultLength++;
+            for (uint256 i; i < c2.length; ++i) {
+                (uint256 index, bool found) = find(result, c2[i].allowanceKey);
+                if (found) {
+                    result[index].consumed += c2[i].consumed;
+                } else {
+                    result[length].allowanceKey = c2[i].allowanceKey;
+                    result[length].balance = c2[i].balance;
+                    result[length].consumed = c2[i].consumed;
+                    length++;
+                }
             }
         }
 
-        if (resultLength < result.length) {
+        if (length < result.length) {
             assembly {
-                mstore(result, resultLength)
+                mstore(result, length)
             }
         }
     }
