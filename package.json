@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Zodiac Roles monorepo",
   "scripts": {
-    "build": "yarn contracts:build && yarn app:build && yarn subgraph:build",
+    "build": "yarn contracts:build",
     "coverage": "yarn contracts:coverage",
     "contracts:test": "cd packages/evm && yarn coverage",
     "contracts:build": "cd packages/evm && yarn build",
