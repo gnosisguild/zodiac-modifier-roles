@@ -55,11 +55,10 @@ abstract contract PermissionLoader is Core {
         unchecked {
             for (uint256 i; i < conditionsFlat.length; ++i) {
                 Operator operator = conditionsFlat[i].operator;
-                if (operator == Operator.EqualToAvatar) {
-                    ++avatarCount;
-                }
                 if (operator >= Operator.WithinAllowance) {
                     ++allowanceCount;
+                } else if (operator == Operator.EqualToAvatar) {
+                    ++avatarCount;
                 }
             }
         }
