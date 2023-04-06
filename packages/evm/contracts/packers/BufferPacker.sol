@@ -63,7 +63,7 @@ library BufferPacker {
         ExecutionOptions options
     ) internal pure returns (bytes32) {
         return
-            (bytes32(uint256(options)) << offsetOptions) |
+            bytes32(uint256(options) << offsetOptions) |
             bytes32(maskIsWildcarded);
     }
 
@@ -116,12 +116,7 @@ library BufferPacker {
     )
         internal
         pure
-        returns (
-            ConditionFlat[] memory result,
-            bytes32[] memory compValues,
-            bool hasAvatar,
-            bool hasAllowance
-        )
+        returns (ConditionFlat[] memory result, bytes32[] memory compValues)
     {
         result = new ConditionFlat[](count);
         compValues = new bytes32[](count);
@@ -152,12 +147,6 @@ library BufferPacker {
                     }
                     compValueOffset += 32;
                     compValues[i] = word;
-
-                    hasAllowance =
-                        hasAllowance ||
-                        operator >= Operator.WithinAllowance;
-                } else {
-                    hasAvatar = hasAvatar || operator == Operator.EqualToAvatar;
                 }
             }
         }
