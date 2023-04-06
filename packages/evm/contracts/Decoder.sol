@@ -49,12 +49,18 @@ library Decoder {
         return data[location:location + size];
     }
 
+    /**
+     * @dev Loads a word from calldata.
+     * @param data The calldata to load the word from.
+     * @param location The starting location of the slice.
+     * @return result 32 byte word from calldata.
+     */
     function word(
         bytes calldata data,
-        uint256 offset
+        uint256 location
     ) internal pure returns (bytes32 result) {
         assembly {
-            result := calldataload(add(data.offset, offset))
+            result := calldataload(add(data.offset, location))
         }
     }
 

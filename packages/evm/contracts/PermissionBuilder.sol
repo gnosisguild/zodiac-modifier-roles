@@ -198,9 +198,9 @@ abstract contract PermissionBuilder is Core {
      * information about allowances and consumed amounts.
      */
     function _flushPrepare(Consumption[] memory consumptions) internal {
-        uint256 paramCount = consumptions.length;
+        uint256 count = consumptions.length;
         unchecked {
-            for (uint256 i; i < paramCount; ++i) {
+            for (uint256 i; i < count; ++i) {
                 bytes32 key = consumptions[i].allowanceKey;
                 uint128 consumed = consumptions[i].consumed;
 
@@ -211,9 +211,9 @@ abstract contract PermissionBuilder is Core {
                     allowance,
                     block.timestamp
                 );
-                assert(balance == consumptions[i].balance);
+                // this assert is bytecode expensive. Worth it?
+                // assert(balance == consumptions[i].balance);
                 assert(consumed <= balance);
-
                 // Flush
                 allowances[key].balance = balance - consumed;
                 allowances[key].refillTimestamp = refillTimestamp;
@@ -228,9 +228,9 @@ abstract contract PermissionBuilder is Core {
         Consumption[] memory consumptions,
         bool success
     ) internal {
-        uint256 paramCount = consumptions.length;
+        uint256 count = consumptions.length;
         unchecked {
-            for (uint256 i; i < paramCount; ++i) {
+            for (uint256 i; i < count; ++i) {
                 Consumption memory consumption = consumptions[i];
                 bytes32 key = consumption.allowanceKey;
                 if (success) {
