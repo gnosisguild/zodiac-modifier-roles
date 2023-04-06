@@ -7,23 +7,23 @@ import "./BufferPacker.sol";
 
 /**
  * @title Packer - a library that coordinates the process of packing
- * conditions into a storage optimized buffer.
+ * conditionsFlat into a storage optimized buffer.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Packer {
     function pack(
-        ConditionFlat[] memory conditions
+        ConditionFlat[] memory conditionsFlat
     ) external pure returns (bytes memory buffer) {
-        _removeExtraneousOffsets(conditions);
+        _removeExtraneousOffsets(conditionsFlat);
 
-        buffer = new bytes(BufferPacker.packedSize(conditions));
+        buffer = new bytes(BufferPacker.packedSize(conditionsFlat));
 
-        uint256 count = conditions.length;
+        uint256 count = conditionsFlat.length;
         uint256 offset = 32 + count * 2;
         for (uint256 i; i < count; ++i) {
-            BufferPacker.packCondition(buffer, i, conditions[i]);
-            if (conditions[i].operator >= Operator.EqualTo) {
-                BufferPacker.packCompValue(buffer, offset, conditions[i]);
+            BufferPacker.packCondition(buffer, i, conditionsFlat[i]);
+            if (conditionsFlat[i].operator >= Operator.EqualTo) {
+                BufferPacker.packCompValue(buffer, offset, conditionsFlat[i]);
                 offset += 32;
             }
         }
@@ -40,28 +40,27 @@ library Packer {
      * Without it, the encoded fields would need to be patched externally
      * depending on whether the payload is fully encoded inline or not.
      *
-     * @param conditions Array of ConditionFlat structs to remove extraneous
+     * @param conditionsFlat Array of ConditionFlat structs to remove extraneous
      * offsets from
      */
     function _removeExtraneousOffsets(
-        ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
-        uint256 count = conditions.length;
+        ConditionFlat[] memory conditionsFlat
+    ) private pure {
+        uint256 count = conditionsFlat.length;
         for (uint256 i; i < count; ++i) {
             if (
-                conditions[i].operator == Operator.EqualTo &&
-                _isInline(conditions, i) == false
+                conditionsFlat[i].operator == Operator.EqualTo &&
+                !_isInline(conditionsFlat, i)
             ) {
-                bytes memory compValue = conditions[i].compValue;
+                bytes memory compValue = conditionsFlat[i].compValue;
                 uint256 length = compValue.length;
                 assembly {
                     compValue := add(compValue, 32)
                     mstore(compValue, sub(length, 32))
                 }
-                conditions[i].compValue = compValue;
+                conditionsFlat[i].compValue = compValue;
             }
         }
-        return conditions;
     }
 
     function _isInline(

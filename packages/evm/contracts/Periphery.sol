@@ -23,9 +23,7 @@ abstract contract Periphery is OwnableUpgradeable {
         bytes4 selector,
         ITransactionUnwrapper adapter
     ) external onlyOwner {
-        unwrappers[
-            bytes32(bytes20(to)) | (bytes32(selector) >> (160))
-        ] = adapter;
+        unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)] = adapter;
         emit SetUnwrapAdapter(to, selector, adapter);
     }
 
@@ -33,12 +31,6 @@ abstract contract Periphery is OwnableUpgradeable {
         address to,
         bytes4 selector
     ) internal view returns (ITransactionUnwrapper) {
-        /*
-         *
-         * Unoptimized version of
-         * bytes32(abi.encodePacked(to, bytes4(data)))
-         *
-         */
-        return unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> (160))];
+        return unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)];
     }
 }

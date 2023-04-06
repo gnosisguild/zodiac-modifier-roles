@@ -498,8 +498,6 @@ abstract contract PermissionChecker is Core, Periphery {
         ParameterPayload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Status, Result memory result) {
-        assert(condition.children.length <= 256);
-
         result = Result({consumptions: consumptions, info: 0});
 
         if (

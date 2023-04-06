@@ -5,9 +5,8 @@ import "../Types.sol";
 
 /**
  * @title BufferPacker a library that provides packing and unpacking functions
- * for permission conditions. It allows packing externally provided
- * ConditionsFlat[] into a storage-optimized buffer, and later unpack it into
- * memory.
+ * for conditions. It allows packing externally provided ConditionsFlat[] into
+ * a storage-optimized buffer, and later unpack it into memory.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library BufferPacker {
