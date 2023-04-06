@@ -55,17 +55,20 @@ library WriteOnce {
         address pointer
     ) internal view returns (bytes memory runtimeBytecode) {
         unchecked {
-            // jump over the 00
-            uint256 offset = 1;
-            uint256 size;
+            uint256 rawSize;
             assembly {
-                size := extcodesize(pointer)
+                rawSize := extcodesize(pointer)
             }
-            assert(size > 1);
+            assert(rawSize > 1);
 
-            runtimeBytecode = new bytes(size - offset);
+            // jump over the prepended 00
+            uint256 offset = 1;
+            // don't count with the 00
+            uint256 size = rawSize - 1;
+
+            runtimeBytecode = new bytes(size);
             assembly {
-                extcodecopy(pointer, add(runtimeBytecode, 0x20), offset, size)
+                extcodecopy(pointer, add(runtimeBytecode, 32), offset, size)
             }
         }
     }
