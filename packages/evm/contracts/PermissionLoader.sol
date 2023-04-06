@@ -39,7 +39,7 @@ abstract contract PermissionLoader is Core {
         internal
         view
         override
-        returns (Condition memory result, Consumption[] memory consumptions)
+        returns (Condition memory condition, Consumption[] memory consumptions)
     {
         (uint256 count, address pointer) = BufferPacker.unpackHeader(
             role.scopeConfig[key]
@@ -50,7 +50,6 @@ abstract contract PermissionLoader is Core {
             bytes32[] memory compValues
         ) = BufferPacker.unpackBody(buffer, count);
 
-        uint256 avatarCount;
         uint256 allowanceCount;
         unchecked {
             for (uint256 i; i < conditionsFlat.length; ++i) {
@@ -58,75 +57,61 @@ abstract contract PermissionLoader is Core {
                 if (operator >= Operator.WithinAllowance) {
                     ++allowanceCount;
                 } else if (operator == Operator.EqualToAvatar) {
-                    ++avatarCount;
-                }
-            }
-        }
-
-        if (avatarCount > 0) {
-            _conditionsFlat(conditionsFlat, compValues);
-        }
-
-        if (allowanceCount > 0) {
-            consumptions = _consumptions(
-                conditionsFlat,
-                compValues,
-                allowanceCount
-            );
-        }
-
-        _toTree(
-            conditionsFlat,
-            compValues,
-            Topology.childrenBounds(conditionsFlat),
-            0,
-            result
-        );
-    }
-
-    function _conditionsFlat(
-        ConditionFlat[] memory conditionsFlat,
-        bytes32[] memory compValues
-    ) private view {
-        uint256 length = conditionsFlat.length;
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                if (conditionsFlat[i].operator == Operator.EqualToAvatar) {
+                    // patch Operator.EqualToAvatar which in reality works as
+                    // a placeholder
                     conditionsFlat[i].operator = Operator.EqualTo;
                     compValues[i] = keccak256(abi.encode(avatar));
                 }
             }
         }
+
+        _conditionTree(
+            conditionsFlat,
+            compValues,
+            Topology.childrenBounds(conditionsFlat),
+            0,
+            condition
+        );
+
+        return (
+            condition,
+            allowanceCount > 0
+                ? _consumptions(conditionsFlat, compValues, allowanceCount)
+                : consumptions
+        );
     }
 
-    function _toTree(
+    function _conditionTree(
         ConditionFlat[] memory conditionsFlat,
         bytes32[] memory compValues,
         Topology.Bounds[] memory childrenBounds,
         uint256 index,
-        Condition memory result
+        Condition memory treeNode
     ) private pure {
+        // This function populates a buffer received as an argument instead of
+        // instantiating a result object. This is an important gas optimization
+
         unchecked {
             ConditionFlat memory conditionFlat = conditionsFlat[index];
-            result.paramType = conditionFlat.paramType;
-            result.operator = conditionFlat.operator;
-            result.compValue = compValues[index];
+            treeNode.paramType = conditionFlat.paramType;
+            treeNode.operator = conditionFlat.operator;
+            treeNode.compValue = compValues[index];
 
             if (childrenBounds[index].length == 0) {
                 return;
             }
 
             uint256 start = childrenBounds[index].start;
-            uint256 count = childrenBounds[index].length;
+            uint256 length = childrenBounds[index].length;
 
-            result.children = new Condition[](count);
-            for (uint j; j < count; ++j) {
-                _toTree(
+            treeNode.children = new Condition[](length);
+            for (uint j; j < length; ++j) {
+                _conditionTree(
                     conditionsFlat,
                     compValues,
                     childrenBounds,
                     start + j,
-                    result.children[j]
+                    treeNode.children[j]
                 );
             }
         }
