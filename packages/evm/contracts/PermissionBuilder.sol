@@ -51,12 +51,6 @@ abstract contract PermissionBuilder is Core {
         uint64 refillTimestamp
     );
 
-    event ConsumeAllowance(
-        bytes32 allowanceKey,
-        uint128 consumed,
-        uint128 newBalance
-    );
-
     /// @dev Allows transactions to a target address.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
@@ -190,87 +184,5 @@ abstract contract PermissionBuilder is Core {
             refillInterval,
             refillTimestamp
         );
-    }
-
-    /**
-     * @dev Flushes the consumption of allowances back into storage.
-     * @param consumptions The array of consumption structs containing
-     * information about allowances and consumed amounts.
-     */
-    function _flushPrepare(Consumption[] memory consumptions) internal {
-        uint256 count = consumptions.length;
-        unchecked {
-            for (uint256 i; i < count; ++i) {
-                bytes32 key = consumptions[i].allowanceKey;
-                uint128 consumed = consumptions[i].consumed;
-
-                // Retrieve the allowance and calculate its current updated balance
-                // and next refill timestamp.
-                Allowance memory allowance = allowances[key];
-                (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
-                    allowance,
-                    block.timestamp
-                );
-                // this assert is bytecode expensive. Worth it?
-                // assert(balance == consumptions[i].balance);
-                assert(consumed <= balance);
-                // Flush
-                allowances[key].balance = balance - consumed;
-                allowances[key].refillTimestamp = refillTimestamp;
-
-                // Emit an event to signal the total consumed amount.
-                emit ConsumeAllowance(key, consumed, balance - consumed);
-            }
-        }
-    }
-
-    function _flushCommit(
-        Consumption[] memory consumptions,
-        bool success
-    ) internal {
-        uint256 count = consumptions.length;
-        unchecked {
-            for (uint256 i; i < count; ++i) {
-                Consumption memory consumption = consumptions[i];
-                bytes32 key = consumption.allowanceKey;
-                if (success) {
-                    emit ConsumeAllowance(
-                        key,
-                        consumption.consumed,
-                        consumption.balance - consumption.consumed
-                    );
-                } else {
-                    allowances[key].balance = consumption.balance;
-                }
-            }
-        }
-    }
-
-    function _accruedAllowance(
-        Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
-        if (
-            allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp + allowance.refillInterval
-        ) {
-            return (allowance.balance, allowance.refillTimestamp);
-        }
-
-        uint64 elapsedIntervals = (uint64(timestamp) -
-            allowance.refillTimestamp) / allowance.refillInterval;
-
-        uint128 uncappedBalance = allowance.balance +
-            allowance.refillAmount *
-            elapsedIntervals;
-
-        balance = uncappedBalance < allowance.maxBalance
-            ? uncappedBalance
-            : allowance.maxBalance;
-
-        refillTimestamp =
-            allowance.refillTimestamp +
-            elapsedIntervals *
-            allowance.refillInterval;
     }
 }
