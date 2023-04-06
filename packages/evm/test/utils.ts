@@ -124,56 +124,56 @@ export enum ParameterType {
 
 export enum Operator {
   // 00:    EMPTY EXPRESSION (default, always passes)
-  //          paramType: Static / Dynamic
+  //          paramType: Static / Dynamic / Tuple / Array
   //          🚫 children
-  //          🚫 compValue
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
   // 01-04: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
-  /* 01: */ And = 1,
-  /* 02: */ Or = 2,
-  /* 03: */ Nor = 3,
-  /* 04: */ Xor = 4,
+  /* 01: */ And,
+  /* 02: */ Or,
+  /* 03: */ Nor,
+  /* 04: */ Xor,
   // ------------------------------------------------------------
   // 05-16: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
-  /* 05: */ Matches = 5,
-  /* 06: */ ArraySome = 6,
-  /* 07: */ ArrayEvery = 7,
-  /* 08: */ ArraySubset = 8,
-  /* 09: */ _ComplexPlaceholder09,
-  /* 10: */ _ComplexPlaceholder10,
-  /* 11: */ _ComplexPlaceholder11,
-  /* 12: */ _ComplexPlaceholder12,
-  /* 13: */ _ComplexPlaceholder13,
-  /* 14: */ _ComplexPlaceholder14,
-  /* 15: */ _ComplexPlaceholder15,
-  /* 16: */ EqualToAvatar = 16,
+  /* 05: */ Matches,
+  /* 06: */ ArraySome,
+  /* 07: */ ArrayEvery,
+  /* 08: */ ArraySubset,
+  /* 09: */ _Placeholder09,
+  /* 10: */ _Placeholder10,
+  /* 11: */ _Placeholder11,
+  /* 12: */ _Placeholder12,
+  /* 13: */ _Placeholder13,
+  /* 14: */ _Placeholder14,
+  /* 15: */ EqualToAvatar,
   // ------------------------------------------------------------
-  // 17-31: COMPARISON EXPRESSIONS
-  //          paramType: Static / Dynamic
-  //          🚫 children
+  // 16-31: COMPARISON EXPRESSIONS
+  //          paramType: Static / Dynamic / Tuple / Array
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
-  /* 17: */ EqualTo = 17,
-  /* 18: */ GreaterThan = 18,
-  /* 19: */ LessThan = 19,
-  /* 20: */ SignedIntGreaterThan = 20,
-  /* 21: */ SignedIntLessThan = 21,
-  /* 22: */ Bitmask = 22,
-  /* 23: */ Custom = 23,
-  /* 24: */ _BinaryPlaceholder24,
-  /* 25: */ _BinaryPlaceholder25,
-  /* 26: */ _BinaryPlaceholder26,
-  /* 27: */ _BinaryPlaceholder27,
-  /* 28: */ _BinaryPlaceholder28,
-  /* 29: */ WithinAllowance = 29,
-  /* 30: */ EtherWithinAllowance = 30,
-  /* 31: */ CallWithinAllowance = 31,
+  /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+  /* 17: */ GreaterThan, // paramType: Static
+  /* 18: */ LessThan, // paramType: Static
+  /* 19: */ SignedIntGreaterThan, // paramType: Static
+  /* 20: */ SignedIntLessThan, // paramType: Static
+  /* 21: */ Bitmask, // paramType: Static / Dynamic
+  /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
+  /* 23: */ _Placeholder23,
+  /* 24: */ _Placeholder24,
+  /* 25: */ _Placeholder25,
+  /* 26: */ _Placeholder26,
+  /* 27: */ _Placeholder27,
+  /* 28: */ WithinAllowance, // paramType: Static
+  /* 29: */ EtherWithinAllowance, // paramType: None
+  /* 30: */ CallWithinAllowance, // paramType: None
+  /* 31: */ _Placeholder31,
 }
 
 export enum ExecutionOptions {
