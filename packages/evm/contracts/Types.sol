@@ -40,34 +40,34 @@ enum Operator {
     /* 06: */ ArraySome,
     /* 07: */ ArrayEvery,
     /* 08: */ ArraySubset,
-    /* 09: */ _ComplexPlaceholder09,
-    /* 10: */ _ComplexPlaceholder10,
-    /* 11: */ _ComplexPlaceholder11,
-    /* 12: */ _ComplexPlaceholder12,
-    /* 13: */ _ComplexPlaceholder13,
-    /* 14: */ _ComplexPlaceholder14,
-    /* 15: */ _ComplexPlaceholder15,
-    /* 16: */ EqualToAvatar,
+    /* 09: */ _Placeholder09,
+    /* 10: */ _Placeholder10,
+    /* 11: */ _Placeholder11,
+    /* 12: */ _Placeholder12,
+    /* 13: */ _Placeholder13,
+    /* 14: */ _Placeholder14,
+    /* 15: */ EqualToAvatar,
     // ------------------------------------------------------------
-    // 17-31: COMPARISON EXPRESSIONS
+    // 16-31: COMPARISON EXPRESSIONS
     //          paramType: Static / Dynamic / Tuple / Array
     //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          ✅ compValue
-    /* 17: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
-    /* 18: */ GreaterThan, // paramType: Static
-    /* 19: */ LessThan, // paramType: Static
-    /* 20: */ SignedIntGreaterThan, // paramType: Static
-    /* 21: */ SignedIntLessThan, // paramType: Static
-    /* 22: */ Bitmask, // paramType: Static / Dynamic
-    /* 23: */ Custom, // paramType: Static / Dynamic / Tuple / Array
-    /* 22: */ _ComparisonPlaceholder24,
-    /* 25: */ _ComparisonPlaceholder25,
-    /* 26: */ _ComparisonPlaceholder26,
-    /* 27: */ _ComparisonPlaceholder27,
-    /* 28: */ _ComparisonPlaceholder28,
-    /* 29: */ WithinAllowance, // paramType: Static
-    /* 30: */ EtherWithinAllowance, // paramType: None
-    /* 31: */ CallWithinAllowance // paramType: None
+    /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+    /* 17: */ GreaterThan, // paramType: Static
+    /* 18: */ LessThan, // paramType: Static
+    /* 19: */ SignedIntGreaterThan, // paramType: Static
+    /* 20: */ SignedIntLessThan, // paramType: Static
+    /* 21: */ Bitmask, // paramType: Static / Dynamic
+    /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
+    /* 23: */ _Placeholder23,
+    /* 24: */ _Placeholder24,
+    /* 25: */ _Placeholder25,
+    /* 26: */ _Placeholder26,
+    /* 27: */ _Placeholder27,
+    /* 28: */ WithinAllowance, // paramType: Static
+    /* 29: */ EtherWithinAllowance, // paramType: None
+    /* 30: */ CallWithinAllowance, // paramType: None
+    /* 31: */ _Placeholder31
 }
 
 enum ExecutionOptions {
