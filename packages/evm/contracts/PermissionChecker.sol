@@ -123,7 +123,6 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         TargetAddress storage target = role.targets[to];
-
         if (target.clearance == Clearance.Target) {
             return (
                 _executionOptions(value, operation, target.options),

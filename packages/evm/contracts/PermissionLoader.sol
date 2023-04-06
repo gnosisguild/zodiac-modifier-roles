@@ -39,7 +39,7 @@ abstract contract PermissionLoader is Core {
         internal
         view
         override
-        returns (Condition memory condition, Consumption[] memory consumptions)
+        returns (Condition memory result, Consumption[] memory consumptions)
     {
         (uint256 count, address pointer) = BufferPacker.unpackHeader(
             role.scopeConfig[key]
@@ -47,20 +47,42 @@ abstract contract PermissionLoader is Core {
         bytes memory buffer = WriteOnce.load(pointer);
         (
             ConditionFlat[] memory conditionsFlat,
-            bytes32[] memory compValues,
-            bool hasEqualToAvatar,
-            bool hasAnyAllowance
+            bytes32[] memory compValues
         ) = BufferPacker.unpackBody(buffer, count);
 
-        if (hasEqualToAvatar) {
+        uint256 avatarCount;
+        uint256 allowanceCount;
+        unchecked {
+            for (uint256 i; i < conditionsFlat.length; ++i) {
+                Operator operator = conditionsFlat[i].operator;
+                if (operator == Operator.EqualToAvatar) {
+                    ++avatarCount;
+                }
+                if (operator >= Operator.WithinAllowance) {
+                    ++allowanceCount;
+                }
+            }
+        }
+
+        if (avatarCount > 0) {
             _conditionsFlat(conditionsFlat, compValues);
         }
 
-        if (hasAnyAllowance) {
-            consumptions = _consumptions(conditionsFlat, compValues);
+        if (allowanceCount > 0) {
+            consumptions = _consumptions(
+                conditionsFlat,
+                compValues,
+                allowanceCount
+            );
         }
 
-        _conditions(conditionsFlat, compValues, condition);
+        _toTree(
+            conditionsFlat,
+            compValues,
+            Topology.childrenBounds(conditionsFlat),
+            0,
+            result
+        );
     }
 
     function _conditionsFlat(
@@ -76,20 +98,6 @@ abstract contract PermissionLoader is Core {
                 }
             }
         }
-    }
-
-    function _conditions(
-        ConditionFlat[] memory conditionsFlat,
-        bytes32[] memory compValues,
-        Condition memory result
-    ) private pure {
-        _toTree(
-            conditionsFlat,
-            compValues,
-            Topology.childrenBounds(conditionsFlat),
-            0,
-            result
-        );
     }
 
     function _toTree(
@@ -127,10 +135,11 @@ abstract contract PermissionLoader is Core {
 
     function _consumptions(
         ConditionFlat[] memory conditions,
-        bytes32[] memory compValues
+        bytes32[] memory compValues,
+        uint256 maxAllowanceCount
     ) private view returns (Consumption[] memory result) {
         uint256 count = conditions.length;
-        result = new Consumption[](count);
+        result = new Consumption[](maxAllowanceCount);
 
         uint256 insert;
         unchecked {
@@ -139,12 +148,12 @@ abstract contract PermissionLoader is Core {
                     continue;
                 }
 
-                (, bool contains) = Consumptions.find(result, compValues[i]);
+                bytes32 key = compValues[i];
+                (, bool contains) = Consumptions.find(result, key);
                 if (contains) {
                     continue;
                 }
 
-                bytes32 key = compValues[i];
                 result[insert].allowanceKey = key;
                 (result[insert].balance, ) = _accruedAllowance(
                     allowances[key],
@@ -153,7 +162,8 @@ abstract contract PermissionLoader is Core {
                 insert++;
             }
         }
-        if (insert < count) {
+
+        if (insert < maxAllowanceCount) {
             assembly {
                 mstore(result, insert)
             }
