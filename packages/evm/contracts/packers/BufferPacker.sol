@@ -133,14 +133,13 @@ library BufferPacker {
 
                 uint16 bits = uint16(bytes2(word));
                 ConditionFlat memory condition = result[i];
-                Operator operator = Operator(bits & maskOperator);
                 condition.parent = uint8((bits & maskParent) >> offsetParent);
                 condition.paramType = ParameterType(
                     (bits & maskParamType) >> offsetParamType
                 );
-                condition.operator = operator;
+                condition.operator = Operator(bits & maskOperator);
 
-                if (operator >= Operator.EqualTo) {
+                if (condition.operator >= Operator.EqualTo) {
                     assembly {
                         word := mload(add(buffer, compValueOffset))
                     }
