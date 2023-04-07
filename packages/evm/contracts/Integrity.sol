@@ -73,21 +73,26 @@ library Integrity {
             ) {
                 revert UnsuitableParameterType(index);
             }
-        } else if (operator == Operator.ArraySome) {
+            if (compValue.length != 0) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (
+            operator == Operator.ArraySome ||
+            operator == Operator.ArrayEvery ||
+            operator == Operator.ArraySubset
+        ) {
             if (paramType != ParameterType.Array) {
                 revert UnsuitableParameterType(index);
             }
-        } else if (operator == Operator.ArrayEvery) {
-            if (paramType != ParameterType.Array) {
-                revert UnsuitableParameterType(index);
-            }
-        } else if (operator == Operator.ArraySubset) {
-            if (paramType != ParameterType.Array) {
-                revert UnsuitableParameterType(index);
+            if (compValue.length != 0) {
+                revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
             if (paramType != ParameterType.Static) {
                 revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 0) {
+                revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualTo) {
             if (
@@ -98,31 +103,15 @@ library Integrity {
             ) {
                 revert UnsuitableParameterType(index);
             }
-            if (compValue.length % 32 != 0) {
+            if (compValue.length == 0 || compValue.length % 32 != 0) {
                 revert UnsuitableCompValue(index);
             }
-        } else if (operator == Operator.GreaterThan) {
-            if (paramType != ParameterType.Static) {
-                revert UnsuitableParameterType(index);
-            }
-            if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
-            }
-        } else if (operator == Operator.LessThan) {
-            if (paramType != ParameterType.Static) {
-                revert UnsuitableParameterType(index);
-            }
-            if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
-            }
-        } else if (operator == Operator.SignedIntGreaterThan) {
-            if (paramType != ParameterType.Static) {
-                revert UnsuitableParameterType(index);
-            }
-            if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
-            }
-        } else if (operator == Operator.SignedIntLessThan) {
+        } else if (
+            operator == Operator.GreaterThan ||
+            operator == Operator.LessThan ||
+            operator == Operator.SignedIntGreaterThan ||
+            operator == Operator.SignedIntLessThan
+        ) {
             if (paramType != ParameterType.Static) {
                 revert UnsuitableParameterType(index);
             }
@@ -148,17 +137,25 @@ library Integrity {
             ) {
                 revert UnsuitableParameterType(index);
             }
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.WithinAllowance) {
             if (paramType != ParameterType.Static) {
                 revert UnsuitableParameterType(index);
             }
-        } else if (operator == Operator.EtherWithinAllowance) {
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (
+            operator == Operator.EtherWithinAllowance ||
+            operator == Operator.CallWithinAllowance
+        ) {
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
-        } else if (operator == Operator.CallWithinAllowance) {
-            if (paramType != ParameterType.None) {
-                revert UnsuitableParameterType(index);
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
             }
         }
     }
