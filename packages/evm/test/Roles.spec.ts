@@ -25,14 +25,13 @@ describe("Roles", async () => {
     const testContract = await TestContract.deploy();
 
     const [owner, invoker, alice, bob] = await hre.ethers.getSigners();
-    const modifier = await deployRolesMod(
+    const roles = await deployRolesMod(
       hre,
       owner.address,
       avatar.address,
       avatar.address
     );
-
-    await modifier.enableModule(invoker.address);
+    await roles.enableModule(invoker.address);
 
     return {
       avatar,
@@ -40,54 +39,101 @@ describe("Roles", async () => {
       invoker,
       alice,
       bob,
-      modifier,
-      roles: modifier,
+      roles,
       testContract,
+    };
+  }
+
+  async function setupWitSpendAndRevert() {
+    const { roles, testContract, owner, invoker } = await setup();
+
+    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
+    const allowanceKey =
+      "0x1230000000000000000000000000000000000000000000000000000000000123";
+
+    await roles.setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles.connect(owner).scopeFunction(
+      ROLE_KEY,
+      testContract.address,
+      testContract.interface.getSighash(
+        testContract.interface.getFunction("spendAndMaybeRevert")
+      ),
+      [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.WithinAllowance,
+          compValue: allowanceKey,
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+      ExecutionOptions.None
+    );
+
+    return {
+      roles,
+      testContract,
+      invoker,
+      roleKey: ROLE_KEY,
+      allowanceKey,
     };
   }
 
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
       const [user1] = await hre.ethers.getSigners();
-      const modifier = await deployRolesMod(
+      const roles = await deployRolesMod(
         hre,
         user1.address,
         user1.address,
         user1.address
       );
-      await modifier.deployed();
-      await expect(modifier.deployTransaction)
-        .to.emit(modifier, "RolesModSetup")
+      await roles.deployed();
+      await expect(roles.deployTransaction)
+        .to.emit(roles, "RolesModSetup")
         .withArgs(user1.address, user1.address, user1.address, user1.address);
     });
   });
 
   describe("assignRoles()", async () => {
     it("should throw on length mismatch", async () => {
-      const { modifier, owner, alice } = await loadFixture(setup);
+      const { roles, owner, alice } = await loadFixture(setup);
       await expect(
-        modifier
+        roles
           .connect(owner)
           .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true])
-      ).to.be.revertedWithCustomError(modifier, "ArraysDifferentLength");
+      ).to.be.revertedWithCustomError(roles, "ArraysDifferentLength");
     });
     it("reverts if not authorized", async () => {
-      const { modifier, alice, bob } = await loadFixture(setup);
+      const { roles, alice, bob } = await loadFixture(setup);
       await expect(
-        modifier.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
+        roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("assigns roles to a module", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
-      await modifier
+      await roles
         .connect(owner)
         .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -95,16 +141,16 @@ describe("Roles", async () => {
             testContract.interface.encodeFunctionData("doNothing"),
             0
           )
-      ).to.be.revertedWithCustomError(modifier, "NoMembership");
+      ).to.be.revertedWithCustomError(roles, "NoMembership");
 
-      await modifier
+      await roles
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -115,23 +161,21 @@ describe("Roles", async () => {
       ).to.emit(testContract, "DoNothing");
     });
     it("revokes roles to a module", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
-      await modifier
+      await roles
         .connect(owner)
         .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
 
       //authorize
-      await modifier
+      await roles
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
       // expect it to succeed, after assigning role
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -142,13 +186,13 @@ describe("Roles", async () => {
       ).to.emit(testContract, "DoNothing");
 
       //revoke
-      await modifier
+      await roles
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [false]);
 
       // expect it to fail, after revoking
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -156,64 +200,60 @@ describe("Roles", async () => {
             testContract.interface.encodeFunctionData("doNothing"),
             0
           )
-      ).to.be.revertedWithCustomError(modifier, "NoMembership");
+      ).to.be.revertedWithCustomError(roles, "NoMembership");
     });
     it("it enables the module if necessary", async () => {
-      const { modifier, owner, alice } = await loadFixture(setup);
+      const { roles, owner, alice } = await loadFixture(setup);
 
-      await modifier
+      await roles
         .connect(owner)
         .assignRoles(alice.address, [ROLE_KEY1], [true]);
 
-      await expect(await modifier.isModuleEnabled(alice.address)).to.equal(
-        true
-      );
+      await expect(await roles.isModuleEnabled(alice.address)).to.equal(true);
 
       await expect(
-        modifier
+        roles
           .connect(owner)
           .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true])
       ).to.not.be.reverted;
     });
     it("emits the AssignRoles event", async () => {
-      const { owner, alice, modifier } = await loadFixture(setup);
+      const { owner, alice, roles } = await loadFixture(setup);
 
       await expect(
-        modifier.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true])
+        roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true])
       )
-        .to.emit(modifier, "AssignRoles")
+        .to.emit(roles, "AssignRoles")
         .withArgs(alice.address, [ROLE_KEY1], [true]);
     });
   });
 
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
-      const { modifier, alice, bob } = await loadFixture(setup);
+      const { roles, alice, bob } = await loadFixture(setup);
       await expect(
-        modifier.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
+        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("sets default role", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       // grant roles 1 and 2 to invoker
-      await modifier
+      await roles
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY1, ROLE_KEY2], [true, true]);
 
       // make ROLE2 the default for invoker
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2);
 
       // allow all calls to testContract from ROLE1
-      await modifier
+      await roles
         .connect(owner)
         .allowTarget(ROLE_KEY1, testContract.address, ExecutionOptions.None);
 
       // expect it to fail
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -224,9 +264,9 @@ describe("Roles", async () => {
       ).to.be.reverted;
 
       // make ROLE1 the default to invoker
-      await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
       await expect(
-        modifier
+        roles
           .connect(invoker)
           .execTransactionFromModule(
             testContract.address,
@@ -237,38 +277,293 @@ describe("Roles", async () => {
       ).to.emit(testContract, "DoNothing");
     });
     it("emits event with correct params", async () => {
-      const { modifier, owner, invoker } = await loadFixture(setup);
+      const { roles, owner, invoker } = await loadFixture(setup);
 
       await expect(
-        modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2)
+        roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2)
       )
-        .to.emit(modifier, "SetDefaultRole")
+        .to.emit(roles, "SetDefaultRole")
         .withArgs(invoker.address, ROLE_KEY2);
     });
   });
 
   describe("execTransactionFromModule()", () => {
-    it.skip("success=true, flushes consumptions to storage");
-    it.skip("success=false, does not flush consumptions to storage");
+    async function setup_() {
+      const { roles, testContract, invoker, allowanceKey } =
+        await setupWitSpendAndRevert();
+      async function invoke(toSpend: number, success: boolean) {
+        const executionRevert = !success;
+
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            (
+              await testContract.populateTransaction.spendAndMaybeRevert(
+                toSpend,
+                executionRevert
+              )
+            ).data as string,
+            0
+          );
+      }
+
+      return { roles, invoke, allowanceKey };
+    }
+    it("success=true, flushes consumptions to storage", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=false, does not flush consumptions to storage", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
   });
 
   describe("execTransactionFromModuleReturnData()", () => {
-    it.skip("success=true, flushes consumptions to storage");
-    it.skip("success=false, does not flush consumptions to storage");
+    async function setup_() {
+      const { roles, testContract, invoker, allowanceKey } =
+        await setupWitSpendAndRevert();
+      async function invoke(toSpend: number, success: boolean) {
+        const executionRevert = !success;
+        return roles
+          .connect(invoker)
+          .execTransactionFromModuleReturnData(
+            testContract.address,
+            0,
+            (
+              await testContract.populateTransaction.spendAndMaybeRevert(
+                toSpend,
+                executionRevert
+              )
+            ).data as string,
+            0
+          );
+      }
+
+      return { roles, invoke, allowanceKey };
+    }
+    it("success=true, flushes consumptions to storage", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=false, does not flush consumptions to storage", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
   });
 
   describe("execTransactionWithRole()", () => {
-    it.skip("success=true shouldRevert=true, flush YES revert NO");
-    it.skip("success=true shouldRevert=false, flush YES revert NO");
-    it.skip("success=false shouldRevert=true, flush NO revert YES");
-    it.skip("success=false shouldRevert=false, flush NO revert NO");
+    async function setup_() {
+      const { roles, testContract, invoker, roleKey, allowanceKey } =
+        await setupWitSpendAndRevert();
+
+      async function invoke(
+        toSpend: number,
+        success: boolean,
+        shouldModifierRevert: boolean
+      ) {
+        const executionRevert = !success;
+        return roles
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContract.address,
+            0,
+            (
+              await testContract.populateTransaction.spendAndMaybeRevert(
+                toSpend,
+                executionRevert
+              )
+            ).data as string,
+            0,
+            roleKey,
+            shouldModifierRevert
+          );
+      }
+
+      return { roles, invoke, allowanceKey };
+    }
+    it("success=true shouldRevert=true, flush YES revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+      const shouldRevert = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=true shouldRevert=false, flush YES revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+      const shouldRevert = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=false shouldRevert=true, flush NO revert YES", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+      const shouldRevert = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
+    it("success=false shouldRevert=false, flush NO revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+      const shouldRevert = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
   });
 
   describe("execTransactionWithRoleReturnData()", () => {
-    it.skip("success=true shouldRevert=true, flush YES revert NO");
-    it.skip("success=true shouldRevert=false, flush YES revert NO");
-    it.skip("success=false shouldRevert=true, flush NO revert YES");
-    it.skip("success=false shouldRevert=false, flush NO revert NO");
+    async function setup_() {
+      const { roles, testContract, invoker, roleKey, allowanceKey } =
+        await setupWitSpendAndRevert();
+
+      async function invoke(
+        toSpend: number,
+        success: boolean,
+        shouldModifierRevert: boolean
+      ) {
+        const executionRevert = !success;
+        return roles
+          .connect(invoker)
+          .execTransactionWithRoleReturnData(
+            testContract.address,
+            0,
+            (
+              await testContract.populateTransaction.spendAndMaybeRevert(
+                toSpend,
+                executionRevert
+              )
+            ).data as string,
+            0,
+            roleKey,
+            shouldModifierRevert
+          );
+      }
+
+      return { roles, invoke, allowanceKey };
+    }
+    it("success=true shouldRevert=true, flush YES revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+      const shouldRevert = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=true shouldRevert=false, flush YES revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = true;
+      const shouldRevert = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(500);
+    });
+    it("success=false shouldRevert=true, flush NO revert YES", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+      const shouldRevert = true;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
+    it("success=false shouldRevert=false, flush NO revert NO", async () => {
+      const { roles, invoke, allowanceKey } = await loadFixture(setup_);
+
+      const success = false;
+      const shouldRevert = false;
+
+      let result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+
+      await expect(invoke(500, success, shouldRevert)).to.not.be.reverted;
+
+      result = await roles.allowances(allowanceKey);
+      expect(result.balance).to.equal(1000);
+    });
   });
 
   describe("Misc", async () => {

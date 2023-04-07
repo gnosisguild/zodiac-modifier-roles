@@ -150,4 +150,10 @@ contract TestContract {
     function oneParamArrayOfStaticTuple(StaticTuple[] calldata) public {}
 
     function twoParamsStatic(uint256 a, uint256 b) public {}
+
+    function spendAndMaybeRevert(uint256, bool revert_) public pure {
+        if (revert_) {
+            revert();
+        }
+    }
 }
