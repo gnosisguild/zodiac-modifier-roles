@@ -21,7 +21,7 @@ library Integrity {
 
     error UnsuitableParent(uint256 index);
 
-    error UnsuitableChildrenCount(uint256 index);
+    error UnsuitableChildCount(uint256 index);
 
     error UnsuitableChildTypeTree(uint256 index);
 
@@ -189,7 +189,7 @@ library Integrity {
 
             if (condition.paramType == ParameterType.Array) {
                 if (childrenBounds[i].length == 0) {
-                    revert UnsuitableChildrenCount(i);
+                    revert UnsuitableChildCount(i);
                 }
             }
 
@@ -198,7 +198,7 @@ library Integrity {
                     condition.operator <= Operator.Xor)
             ) {
                 if (childrenBounds[i].length == 0) {
-                    revert UnsuitableChildrenCount(i);
+                    revert UnsuitableChildCount(i);
                 }
             }
 
@@ -207,7 +207,7 @@ library Integrity {
                     condition.operator == Operator.ArrayEvery) &&
                 childrenBounds[i].length != 1
             ) {
-                revert UnsuitableChildrenCount(i);
+                revert UnsuitableChildCount(i);
             }
 
             if (
@@ -215,7 +215,7 @@ library Integrity {
                 (childrenBounds[i].length == 0 ||
                     childrenBounds[i].length > 256)
             ) {
-                revert UnsuitableChildrenCount(i);
+                revert UnsuitableChildCount(i);
             }
         }
 
