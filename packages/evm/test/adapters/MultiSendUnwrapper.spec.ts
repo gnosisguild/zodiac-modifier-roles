@@ -116,6 +116,41 @@ describe("MultiSendUnwrapper", async () => {
     ).to.not.be.reverted;
   });
 
+  it("reverts if calldata length incorrect", async () => {
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+
+    const { data: simpleCalldata } =
+      await testEncoder.populateTransaction.simple(1);
+
+    const { data } = await multisend.populateTransaction.multiSend(
+      multisendPayload([
+        {
+          to: "0x0000000000000000000000000000000000000001",
+          value: 0,
+          operation: Operation.DelegateCall,
+          data: simpleCalldata as string,
+        },
+      ])
+    );
+
+    assert(data);
+
+    const lengthWrong =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 74)}${lengthWrong}${data.slice(140)}`,
+        Operation.DelegateCall
+      )
+    ).to.be.reverted;
+
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
+  });
+
   it("reverts if value not zero", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
@@ -170,6 +205,28 @@ describe("MultiSendUnwrapper", async () => {
 
     await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
       .to.be.reverted;
+  });
+
+  it("reverts if single transaction length wrong", async () => {
+    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+
+    const { data: simpleCalldata } =
+      await testEncoder.populateTransaction.simple(1);
+
+    const { data } = await multisend.populateTransaction.multiSend(
+      multisendPayloadWrongLength([
+        {
+          to: "0x0000000000000000000000000000000000000001",
+          value: 0,
+          operation: Operation.DelegateCall,
+          data: simpleCalldata as string,
+        },
+      ])
+    );
+
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+    ).to.be.reverted;
   });
 
   it("unwraps a single transaction", async () => {
@@ -309,6 +366,20 @@ const multisendPayload = (txs: MetaTransaction[]): string => {
         solidityPack(
           ["uint8", "address", "uint256", "uint256", "bytes"],
           [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
+        ).slice(2)
+      )
+      .join("")
+  );
+};
+
+const multisendPayloadWrongLength = (txs: MetaTransaction[]): string => {
+  return (
+    "0x" +
+    txs
+      .map((tx) =>
+        solidityPack(
+          ["uint8", "address", "uint256", "uint256", "bytes"],
+          [tx.operation, tx.to, tx.value, 4000000, tx.data]
         ).slice(2)
       )
       .join("")
