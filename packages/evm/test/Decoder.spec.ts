@@ -1634,8 +1634,6 @@ describe("Decoder library", async () => {
       expect(staticField.location).to.equal(4);
       expect(staticField.size).to.equal(32);
     });
-
-    it("extraneous Value in Tuple gets inspected as None", async () => {});
   });
 });
 

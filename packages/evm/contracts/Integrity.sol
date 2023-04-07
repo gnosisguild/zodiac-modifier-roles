@@ -21,11 +21,9 @@ library Integrity {
 
     error UnsuitableCompValue(uint256 index);
 
-    error UnsuitableSubTypeTree(uint256 index);
-
     error UnsuitableChildrenCount(uint256 index);
 
-    error MalformedBitmask(uint256 index);
+    error UnsuitableSubTypeTree(uint256 index);
 
     function enforce(ConditionFlat[] memory conditions) external pure {
         _root(conditions);
@@ -209,7 +207,7 @@ library Integrity {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
-                revert MalformedBitmask(index);
+                revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Custom) {
             if (
