@@ -358,7 +358,7 @@ describe("Integrity", async () => {
           ],
           ExecutionOptions.None
         )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
 
       await expect(
         modifier.connect(owner).scopeFunction(
@@ -489,7 +489,7 @@ describe("Integrity", async () => {
             conditions,
             ExecutionOptions.None
           )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
 
       // swap
       conditions[6].paramType = ParameterType.Dynamic;
@@ -585,7 +585,7 @@ describe("Integrity", async () => {
             conditions.slice(0, -1),
             ExecutionOptions.None
           )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableSubTypeTree");
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
     });
   });
 });

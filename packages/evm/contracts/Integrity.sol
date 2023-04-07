@@ -15,23 +15,22 @@ library Integrity {
 
     error NotBFS();
 
-    error UnsuitableParent(uint256 index);
-
     error UnsuitableParameterType(uint256 index);
 
     error UnsuitableCompValue(uint256 index);
 
+    error UnsuitableParent(uint256 index);
+
     error UnsuitableChildrenCount(uint256 index);
 
-    error UnsuitableSubTypeTree(uint256 index);
+    error UnsuitableChildTypeTree(uint256 index);
 
     function enforce(ConditionFlat[] memory conditions) external pure {
         _root(conditions);
-        _topology(conditions);
-
         for (uint256 i = 0; i < conditions.length; ++i) {
-            _content(conditions[i], i);
+            _node(conditions[i], i);
         }
+        _tree(conditions);
     }
 
     function _root(ConditionFlat[] memory conditions) private pure {
@@ -53,76 +52,7 @@ library Integrity {
         }
     }
 
-    function _topology(ConditionFlat[] memory conditions) private pure {
-        uint256 length = conditions.length;
-        // check BFS
-        for (uint256 i = 1; i < length; ++i) {
-            if (conditions[i - 1].parent > conditions[i].parent) {
-                revert NotBFS();
-            }
-        }
-
-        for (uint256 i = 0; i < length; ++i) {
-            if (
-                (conditions[i].operator == Operator.EtherWithinAllowance ||
-                    conditions[i].operator == Operator.CallWithinAllowance) &&
-                conditions[conditions[i].parent].paramType !=
-                ParameterType.AbiEncoded
-            ) {
-                revert UnsuitableParent(i);
-            }
-        }
-
-        Topology.Bounds[] memory childrenBounds = Topology.childrenBounds(
-            conditions
-        );
-
-        // check suitable children count
-        for (uint256 i = 0; i < conditions.length; i++) {
-            ConditionFlat memory condition = conditions[i];
-            if (
-                (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Xor)
-            ) {
-                // must have at least one child
-                if (childrenBounds[i].length == 0) {
-                    revert UnsuitableChildrenCount(i);
-                }
-            }
-
-            if (
-                (condition.operator == Operator.ArraySome ||
-                    condition.operator == Operator.ArrayEvery) &&
-                childrenBounds[i].length != 1
-            ) {
-                revert UnsuitableChildrenCount(i);
-            }
-
-            if (
-                condition.operator == Operator.ArraySubset &&
-                (childrenBounds[i].length == 0 ||
-                    childrenBounds[i].length > 256)
-            ) {
-                revert UnsuitableChildrenCount(i);
-            }
-        }
-
-        for (uint256 i = 0; i < conditions.length; i++) {
-            ConditionFlat memory condition = conditions[i];
-            if (
-                (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Xor) ||
-                condition.paramType == ParameterType.Array
-            ) {
-                compatibleSubTypeTree(conditions, i, childrenBounds);
-            }
-        }
-    }
-
-    function _content(
-        ConditionFlat memory condition,
-        uint256 index
-    ) private pure {
+    function _node(ConditionFlat memory condition, uint256 index) private pure {
         Operator operator = condition.operator;
         ParameterType paramType = condition.paramType;
         bytes memory compValue = condition.compValue;
@@ -233,7 +163,71 @@ library Integrity {
         }
     }
 
-    function compatibleSubTypeTree(
+    function _tree(ConditionFlat[] memory conditions) private pure {
+        uint256 length = conditions.length;
+        // check BFS
+        for (uint256 i = 1; i < length; ++i) {
+            if (conditions[i - 1].parent > conditions[i].parent) {
+                revert NotBFS();
+            }
+        }
+
+        for (uint256 i = 0; i < length; ++i) {
+            if (
+                (conditions[i].operator == Operator.EtherWithinAllowance ||
+                    conditions[i].operator == Operator.CallWithinAllowance) &&
+                conditions[conditions[i].parent].paramType !=
+                ParameterType.AbiEncoded
+            ) {
+                revert UnsuitableParent(i);
+            }
+        }
+
+        Topology.Bounds[] memory childrenBounds = Topology.childrenBounds(
+            conditions
+        );
+
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
+            if (
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor)
+            ) {
+                if (childrenBounds[i].length == 0) {
+                    revert UnsuitableChildrenCount(i);
+                }
+            }
+
+            if (
+                (condition.operator == Operator.ArraySome ||
+                    condition.operator == Operator.ArrayEvery) &&
+                childrenBounds[i].length != 1
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+
+            if (
+                condition.operator == Operator.ArraySubset &&
+                (childrenBounds[i].length == 0 ||
+                    childrenBounds[i].length > 256)
+            ) {
+                revert UnsuitableChildrenCount(i);
+            }
+        }
+
+        for (uint256 i = 0; i < conditions.length; i++) {
+            ConditionFlat memory condition = conditions[i];
+            if (
+                (condition.operator >= Operator.And &&
+                    condition.operator <= Operator.Xor) ||
+                condition.paramType == ParameterType.Array
+            ) {
+                compatiblechildTypeTree(conditions, i, childrenBounds);
+            }
+        }
+    }
+
+    function compatiblechildTypeTree(
         ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
@@ -253,7 +247,7 @@ library Integrity {
                 id !=
                 typeTreeId(Topology.typeTree(conditions, j, childrenBounds))
             ) {
-                revert UnsuitableSubTypeTree(index);
+                revert UnsuitableChildTypeTree(index);
             }
         }
     }
