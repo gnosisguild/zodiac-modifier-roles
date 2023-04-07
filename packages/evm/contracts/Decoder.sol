@@ -69,15 +69,15 @@ library Decoder {
      * size within calldata.
      * @param data The encoded transaction data.
      * @param location The current offset within the calldata buffer.
-     * @param node The current node being traversed within the parameter tree.
+     * @param typeNode The current node being traversed within the parameter tree.
      * @return result The location and size of the parameter within calldata.
      */
     function _walk(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory node
+        Topology.TypeTree memory typeNode
     ) private pure returns (ParameterPayload memory result) {
-        ParameterType paramType = node.paramType;
+        ParameterType paramType = typeNode.paramType;
 
         if (paramType == ParameterType.Static) {
             result.location = location;
@@ -92,13 +92,13 @@ library Decoder {
             // If the parameter is ABI-encoded, parse its components and
             // recursively map their locations and sizes within calldata.
             // take into accounts the encoded length and the 4 bytes selector
-            result = __block__(data, location + 32 + 4, node);
+            result = __block__(data, location + 32 + 4, typeNode);
             result.location = 32 + location;
             result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.Tuple) {
-            return __block__(data, location, node);
+            return __block__(data, location, typeNode);
         } else if (paramType == ParameterType.Array) {
-            return _array(data, location, node);
+            return _array(data, location, typeNode);
         }
     }
 
@@ -106,22 +106,22 @@ library Decoder {
      * @dev Recursively walk through the TypeTree to decode a block of parameters.
      * @param data The encoded transaction data.
      * @param location The current location of the parameter block being processed.
-     * @param node The current TypeTree node being processed.
+     * @param typeNode The current TypeTree node being processed.
      * @return result The decoded ParameterPayload.
      */
     function __block__(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory node
+        Topology.TypeTree memory typeNode
     ) private pure returns (ParameterPayload memory result) {
-        uint256 length = node.children.length;
+        uint256 length = typeNode.children.length;
         result.location = location;
         result.children = new ParameterPayload[](length);
 
         uint256 offset;
         unchecked {
             for (uint256 i; i < length; ++i) {
-                Topology.TypeTree memory part = node.children[i];
+                Topology.TypeTree memory part = typeNode.children[i];
                 bool isInline = Topology.isInline(part);
 
                 result.children[i] = _walk(
@@ -139,13 +139,13 @@ library Decoder {
      * @dev Recursively walk through the TypeTree to decode an array parameter.
      * @param data The encoded transaction data.
      * @param location The current location of the array block being processed.
-     * @param node The current TypeTree node being processed.
+     * @param typeNode The current TypeTree node being processed.
      * @return result The decoded ParameterPayload.
      */
     function _array(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory node
+        Topology.TypeTree memory typeNode
     ) private pure returns (ParameterPayload memory result) {
         uint256 length = uint256(word(data, location));
 
@@ -153,7 +153,7 @@ library Decoder {
         result.children = new ParameterPayload[](length);
         result.size = 32;
 
-        Topology.TypeTree memory part = node.children[0];
+        Topology.TypeTree memory part = typeNode.children[0];
         bool isInline = Topology.isInline(part);
 
         uint256 offset;
