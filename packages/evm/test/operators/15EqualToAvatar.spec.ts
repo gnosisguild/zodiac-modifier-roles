@@ -11,7 +11,7 @@ import {
 } from "../utils";
 
 describe("Operator - EqualToAvatar", async () => {
-  it("it passes a check", async () => {
+  it("evaluates operator EqualToAvatar", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamAddress
     );
