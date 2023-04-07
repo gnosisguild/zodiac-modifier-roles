@@ -138,7 +138,37 @@ describe("OnlyOwner", async () => {
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
+      modifier.connect(owner).setAllowance(allowanceKey, 100, 10, 0, 0, 0)
+    ).to.be.revertedWithCustomError(
+      modifier,
+      "UnsuitableMaxBalanceForAllowance"
+    );
+
+    await expect(
       modifier.connect(owner).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
+    ).to.not.be.reverted;
+  });
+  it("onlyOwner for setTransactionUnwrapper, simple invoker fails", async () => {
+    const { modifier, owner, johnDoe } = await loadFixture(setup);
+
+    await expect(
+      modifier
+        .connect(johnDoe)
+        .setTransactionUnwrapper(
+          "0x0000000000000000000000000000000000000003",
+          "0xaabbccdd",
+          "0x0000000000000000000000000000000000000004"
+        )
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await expect(
+      modifier
+        .connect(owner)
+        .setTransactionUnwrapper(
+          "0x0000000000000000000000000000000000000003",
+          "0xaabbccdd",
+          "0x0000000000000000000000000000000000000004"
+        )
     ).to.not.be.reverted;
   });
 });
