@@ -392,6 +392,36 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke([4, 5, 6])).to.not.be.reverted;
   });
 
+  it("evaluates operator EqualTo for Array - empty", async () => {
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamArrayOfStatic
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Array,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(["uint256[]"], [[]]),
+      },
+    ]);
+
+    await expect(invoke([])).to.not.be.reverted;
+
+    await expect(invoke([1]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+    await expect(invoke([2, 3]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+  });
+
   it("evaluates operator EqualTo for Tuple", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamDynamicTuple

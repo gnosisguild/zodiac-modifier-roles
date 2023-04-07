@@ -100,7 +100,7 @@ describe("Operator - Matches", async () => {
   });
 
   it("evaluates a Matches for Array", async () => {
-    const { invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamArrayOfStatic
     );
 
@@ -132,6 +132,42 @@ describe("Operator - Matches", async () => {
     ]);
 
     await expect(invoke([1111, 99])).to.not.be.reverted;
+    await expect(invoke([1111, 99, 100]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
+
+    await expect(invoke([1111, 100]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(
+        PermissionCheckerStatus.ParameterGreaterThanAllowed,
+        BYTES32_ZERO
+      );
+  });
+
+  it("evaluates a Matches for Array - empty", async () => {
+    const { roles, invoke, scopeFunction } = await loadFixture(
+      setupOneParamArrayOfStatic
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Array,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+    ]);
+
+    await expect(invoke([])).to.not.be.reverted;
+    await expect(invoke([1]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
   });
 
   it("evaluates a Matches for AbiEncoded", async () => {
