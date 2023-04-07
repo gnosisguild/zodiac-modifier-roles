@@ -145,29 +145,24 @@ describe("Operator - Matches", async () => {
   });
 
   it("evaluates a Matches for Array - empty", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
-    );
+    const { scopeFunction } = await loadFixture(setupOneParamArrayOfStatic);
 
-    await scopeFunction([
-      {
-        parent: 0,
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: ParameterType.Array,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-    ]);
-
-    await expect(invoke([])).to.not.be.reverted;
-    await expect(invoke([1]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
+    await expect(
+      scopeFunction([
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+      ])
+    ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
   it("evaluates a Matches for AbiEncoded", async () => {
