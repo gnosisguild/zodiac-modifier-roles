@@ -12,10 +12,6 @@ library Consumptions {
     function clone(
         Consumption[] memory consumptions
     ) internal pure returns (Consumption[] memory result) {
-        if (consumptions.length == 0) {
-            return result;
-        }
-
         uint256 length = consumptions.length;
         unchecked {
             result = new Consumption[](length);
