@@ -136,20 +136,36 @@ contract TestContract {
         bool b;
     }
 
+    struct StaticNestedTuple {
+        uint256 a;
+        StaticTuple b;
+    }
+
     function oneParamStaticTuple(StaticTuple calldata) public {}
+
+    function oneParamStaticNestedTuple(StaticNestedTuple calldata) public {}
 
     struct DynamicTuple {
         uint256 a;
         bytes b;
     }
 
+    struct DynamicNestedTuple {
+        uint256 a;
+        DynamicTuple b;
+    }
+
     function oneParamDynamicTuple(DynamicTuple calldata) public {}
+
+    function oneParamDynamicNestedTuple(DynamicNestedTuple calldata) public {}
 
     function oneParamArrayOfStatic(uint256[] calldata) public {}
 
     function oneParamArrayOfStaticTuple(StaticTuple[] calldata) public {}
 
     function twoParamsStatic(uint256 a, uint256 b) public {}
+
+    function twoParamsStaticTupleStatic(StaticTuple calldata, uint256) public {}
 
     function spendAndMaybeRevert(uint256, bool revert_) public pure {
         if (revert_) {

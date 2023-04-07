@@ -14,12 +14,15 @@ import {
   setupOneParamBytes,
   setupOneParamBytesSmall,
   setupOneParamBytesWord,
+  setupOneParamDynamicNestedTuple,
   setupOneParamDynamicTuple,
   setupOneParamIntSmall,
   setupOneParamIntWord,
+  setupOneParamStaticNestedTuple,
   setupOneParamString,
   setupOneParamUintSmall,
   setupOneParamUintWord,
+  setupTwoParamsStaticTupleStatic,
 } from "./setup";
 
 describe("Operator - EqualTo", async () => {
@@ -428,7 +431,113 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
 
-  it("evaluates operator EqualTo for Tuple", async () => {
+  it("evaluates operator EqualTo for Tuple - static", async () => {
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupTwoParamsStaticTupleStatic
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Tuple,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(
+          ["tuple(uint256,bool)"],
+          [[123, false]]
+        ),
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+    ]);
+
+    await expect(invoke({ a: 100, b: false }, 1))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+    await expect(invoke({ a: 123, b: true }, 1))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+    await expect(invoke({ a: 123, b: false }, 1)).to.not.be.reverted;
+  });
+
+  it("evaluates operator EqualTo for Tuple - static nested", async () => {
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamStaticNestedTuple
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Tuple,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(
+          ["tuple(uint256,tuple(uint256, bool))"],
+          [[9, [8, false]]]
+        ),
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Tuple,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 3,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 3,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+    ]);
+
+    await expect(invoke({ a: 10, b: { a: 9, b: true } }))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+    await expect(invoke({ a: 9, b: { a: 8, b: false } })).to.not.be.reverted;
+  });
+
+  it("evaluates operator EqualTo for Tuple - dynamic", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamDynamicTuple
     );
@@ -471,5 +580,60 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
 
     await expect(invoke({ a: 100, b: "0xbadfed" })).to.not.be.reverted;
+  });
+
+  it("evaluates operator EqualTo for Tuple - dynamic nested", async () => {
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamDynamicNestedTuple
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Tuple,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(
+          ["tuple(uint256,tuple(uint256,bytes))"],
+          [[222, [333, "0xbadfed"]]]
+        ),
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Tuple,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 3,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+      {
+        parent: 3,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+    ]);
+
+    await expect(invoke({ a: 222, b: { a: 333, b: "0xdeadbeef" } }))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+    // await expect(invoke({ a: 222, b: { a: 333, b: "0xbadfed" } })).to.not.be
+    //   .reverted;
   });
 });
