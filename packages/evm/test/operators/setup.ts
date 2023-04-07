@@ -11,7 +11,10 @@ export async function baseSetup(
     | "oneParamStatic"
     | "twoParamsStatic"
     | "oneParamStaticTuple"
+    | "oneParamStaticNestedTuple"
+    | "twoParamsStaticTupleStatic"
     | "oneParamDynamicTuple"
+    | "oneParamDynamicNestedTuple"
     | "oneParamArrayOfStatic"
     | "oneParamArrayOfStaticTuple"
     | "oneParamUintWord"
@@ -147,6 +150,56 @@ export async function setupOneParamStaticTuple() {
     invoke,
   };
 }
+export async function setupOneParamStaticNestedTuple() {
+  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
+    "oneParamStaticNestedTuple"
+  );
+
+  async function invoke(a: TestContract.StaticNestedTupleStruct) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (await testContract.populateTransaction.oneParamStaticNestedTuple(a))
+          .data as string,
+        0
+      );
+  }
+
+  return {
+    roles,
+    scopeFunction,
+    invoke,
+  };
+}
+export async function setupTwoParamsStaticTupleStatic() {
+  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
+    "twoParamsStaticTupleStatic"
+  );
+
+  async function invoke(a: TestContract.StaticTupleStruct, b: number) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (
+          await testContract.populateTransaction.twoParamsStaticTupleStatic(
+            a,
+            b
+          )
+        ).data as string,
+        0
+      );
+  }
+
+  return {
+    roles,
+    scopeFunction,
+    invoke,
+  };
+}
 export async function setupOneParamDynamicTuple() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamDynamicTuple"
@@ -159,6 +212,29 @@ export async function setupOneParamDynamicTuple() {
         testContract.address,
         0,
         (await testContract.populateTransaction.oneParamDynamicTuple(a))
+          .data as string,
+        0
+      );
+  }
+
+  return {
+    roles,
+    scopeFunction,
+    invoke,
+  };
+}
+export async function setupOneParamDynamicNestedTuple() {
+  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
+    "oneParamDynamicNestedTuple"
+  );
+
+  async function invoke(a: TestContract.DynamicNestedTupleStruct) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (await testContract.populateTransaction.oneParamDynamicNestedTuple(a))
           .data as string,
         0
       );
