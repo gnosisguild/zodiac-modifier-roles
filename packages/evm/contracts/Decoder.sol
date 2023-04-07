@@ -153,6 +153,10 @@ library Decoder {
         result.children = new ParameterPayload[](length);
         result.size = 32;
 
+        if (node.children.length == 0) {
+            return result;
+        }
+
         Topology.TypeTree memory part = node.children[0];
         bool isInline = Topology.isInline(part);
 
