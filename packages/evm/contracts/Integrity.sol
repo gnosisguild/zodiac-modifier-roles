@@ -186,6 +186,13 @@ library Integrity {
 
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
+
+            if (condition.paramType == ParameterType.Array) {
+                if (childrenBounds[i].length == 0) {
+                    revert UnsuitableChildrenCount(i);
+                }
+            }
+
             if (
                 (condition.operator >= Operator.And &&
                     condition.operator <= Operator.Xor)

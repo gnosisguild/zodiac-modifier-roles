@@ -410,6 +410,12 @@ describe("Operator - EqualTo", async () => {
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256[]"], [[]]),
       },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
     ]);
 
     await expect(invoke([])).to.not.be.reverted;
