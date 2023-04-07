@@ -2,7 +2,13 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ExecutionOptions, deployRolesMod } from "./utils";
+import {
+  ExecutionOptions,
+  Operator,
+  ParameterType,
+  deployRolesMod,
+} from "./utils";
+import { defaultAbiCoder } from "@ethersproject/abi";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -35,6 +41,7 @@ describe("Roles", async () => {
       alice,
       bob,
       modifier,
+      roles: modifier,
       testContract,
     };
   }
@@ -262,5 +269,83 @@ describe("Roles", async () => {
     it.skip("success=true shouldRevert=false, flush YES revert NO");
     it.skip("success=false shouldRevert=true, flush NO revert YES");
     it.skip("success=false shouldRevert=false, flush NO revert NO");
+  });
+
+  describe("Misc", async () => {
+    it("reuses a permission blob from storage", async () => {
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract2 = await TestContract.deploy();
+
+      await roles
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_KEY1], [true]);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
+      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract.address);
+      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract2.address);
+
+      const SELECTOR = testContract.interface.getSighash(
+        testContract.interface.getFunction("fnWithSingleParam")
+      );
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY1,
+        testContract.address,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [11]),
+          },
+        ],
+        ExecutionOptions.None
+      );
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY1,
+        testContract2.address,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [11]),
+          },
+        ],
+        ExecutionOptions.None
+      );
+
+      const invoke = async (targetAddress: string, a: number) =>
+        roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            targetAddress,
+            0,
+            (await testContract.populateTransaction.fnWithSingleParam(a))
+              .data as string,
+            0
+          );
+
+      await expect(invoke(testContract.address, 11)).to.not.be.reverted;
+      await expect(invoke(testContract2.address, 11)).to.not.be.reverted;
+      await expect(invoke(testContract.address, 0)).to.be.reverted;
+      await expect(invoke(testContract2.address, 0)).to.be.reverted;
+    });
   });
 });
