@@ -50,7 +50,6 @@ describe("Operator - LessThan", async () => {
       );
     await expect(invoke(999)).to.not.be.reverted;
   });
-
   it("evaluates operator LessThan - uint smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamUintSmall
@@ -93,7 +92,6 @@ describe("Operator - LessThan", async () => {
     await expect(invoke(49)).to.not.be.reverted;
     await expect(invoke(0)).to.not.be.reverted;
   });
-
   it("evaluates operator LessThan - address", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamAddress

@@ -3,7 +3,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { defaultAbiCoder } from "ethers/lib/utils";
 
-import { setupOneParamArrayOfStaticTuple } from "./setup";
+import {
+  setupOneParamArrayOfStatic,
+  setupOneParamArrayOfStaticTuple,
+} from "./setup";
 import {
   BYTES32_ZERO,
   Operator,
@@ -70,13 +73,12 @@ describe("Operator - ArrayEvery", async () => {
       ])
     ).to.be.reverted;
   });
-
-  it("evaluates an ArrayEvery condition", async () => {
+  it("evaluates Operator ArrayEvery", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple
     );
 
-    scopeFunction([
+    await scopeFunction([
       {
         parent: 0,
         paramType: ParameterType.AbiEncoded,
@@ -136,6 +138,43 @@ describe("Operator - ArrayEvery", async () => {
         { a: 1000, b: true },
       ])
     )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(
+        PermissionCheckerStatus.NotEveryArrayElementPasses,
+        BYTES32_ZERO
+      );
+  });
+  it("evaluates Operator ArrayEvery - empty input", async () => {
+    const { roles, invoke, scopeFunction } = await loadFixture(
+      setupOneParamArrayOfStatic
+    );
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Array,
+        operator: Operator.ArrayEvery,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(["uint256"], [1234]),
+      },
+    ]);
+
+    await expect(invoke([])).to.not.be.reverted;
+    await expect(invoke([1234])).to.not.be.reverted;
+    await expect(invoke([1234, 1234])).to.not.be.reverted;
+
+    await expect(invoke([1234, 1233, 1234]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,

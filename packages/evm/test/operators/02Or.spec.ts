@@ -32,7 +32,7 @@ describe("Operator - Or", async () => {
     ).to.be.reverted;
   });
 
-  it("evaluates an Or with a single child", async () => {
+  it("evaluates operator Or with a single child", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -65,7 +65,7 @@ describe("Operator - Or", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
   });
 
-  it("evaluates an Or with multiple children", async () => {
+  it("evaluates operator Or with multiple children", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -114,5 +114,5 @@ describe("Operator - Or", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
   });
 
-  it.skip("Tracks the resulting trace");
+  it.skip("Tracks the resulting consumption");
 });

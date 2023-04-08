@@ -51,7 +51,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(123)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Static - uint smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamUintSmall
@@ -77,7 +76,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(50)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Static - signed integer full word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamIntWord
@@ -103,7 +101,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(-5555)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Static - integer smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamIntSmall
@@ -129,7 +126,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(-55)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Static - bytes full word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamBytesWord
@@ -159,7 +155,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(value)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Static - smaller than full word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamBytesSmall
@@ -185,7 +180,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke("0xa1")).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for String", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamString
@@ -211,7 +205,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke("Hello World!")).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for String - empty", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamString
@@ -237,7 +230,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke("")).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for String - large", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamString
@@ -269,7 +261,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(value)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Bytes", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamBytes
@@ -298,7 +289,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke("0xbadfed")).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Bytes - large", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamBytes
@@ -330,7 +320,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke(largeValue)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Bytes - empty", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamBytes
@@ -359,7 +348,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke("0x")).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Array", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamArrayOfStatic
@@ -394,7 +382,6 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     await expect(invoke([4, 5, 6])).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Array - empty", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamArrayOfStatic
@@ -430,7 +417,6 @@ describe("Operator - EqualTo", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
-
   it("evaluates operator EqualTo for Tuple - static", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupTwoParamsStaticTupleStatic
@@ -482,7 +468,6 @@ describe("Operator - EqualTo", async () => {
 
     await expect(invoke({ a: 123, b: false }, 1)).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Tuple - static nested", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStaticNestedTuple
@@ -536,7 +521,6 @@ describe("Operator - EqualTo", async () => {
 
     await expect(invoke({ a: 9, b: { a: 8, b: false } })).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Tuple - dynamic", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamDynamicTuple
@@ -581,7 +565,6 @@ describe("Operator - EqualTo", async () => {
 
     await expect(invoke({ a: 100, b: "0xbadfed" })).to.not.be.reverted;
   });
-
   it("evaluates operator EqualTo for Tuple - dynamic nested", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamDynamicNestedTuple

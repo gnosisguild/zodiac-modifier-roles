@@ -32,7 +32,7 @@ describe("Operator - Nor", async () => {
     ).to.be.reverted;
   });
 
-  it("evaluates a Nor with a single child", async () => {
+  it("evaluates operator Nor with single child", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -65,7 +65,7 @@ describe("Operator - Nor", async () => {
     await expect(invoke(1000)).to.not.be.reverted;
   });
 
-  it("evaluates a Nor with multiple children", async () => {
+  it("evaluates operator Nor with multiple children", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );

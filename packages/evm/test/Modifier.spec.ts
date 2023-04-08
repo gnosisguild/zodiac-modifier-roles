@@ -24,13 +24,12 @@ describe("Modifier", async () => {
   }
 
   describe("disableModule()", async () => {
-    it("reverts if not authorized", async () => {
+    it("reverts if not owner", async () => {
       const { roles, invoker } = await loadFixture(setup);
       await expect(
         roles.connect(invoker).disableModule(AddressOne, invoker.address)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
     it("reverts if module is null or sentinel", async () => {
       const { roles, owner } = await loadFixture(setup);
 
@@ -38,8 +37,7 @@ describe("Modifier", async () => {
         .to.be.revertedWithCustomError(roles, "InvalidModule")
         .withArgs("0x0000000000000000000000000000000000000001");
     });
-
-    it("reverts if module is not added ", async () => {
+    it("reverts if module is not enabled ", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
       await expect(
         roles.connect(owner).disableModule(AddressZero, invoker.address)
@@ -47,8 +45,7 @@ describe("Modifier", async () => {
         .to.be.revertedWithCustomError(roles, `AlreadyDisabledModule`)
         .withArgs(invoker.address);
     });
-
-    it("disables a module()", async () => {
+    it("disables a module", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 
       await expect(await roles.isModuleEnabled(invoker.address)).to.equal(
@@ -64,13 +61,12 @@ describe("Modifier", async () => {
   });
 
   describe("enableModule()", async () => {
-    it("reverts if not authorized", async () => {
+    it("reverts if not owner", async () => {
       const { roles, invoker } = await loadFixture(setup);
       await expect(
         roles.connect(invoker).enableModule(AddressOne)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
     it("reverts if module is already enabled", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 
@@ -79,7 +75,6 @@ describe("Modifier", async () => {
         .to.be.revertedWithCustomError(roles, `AlreadyEnabledModule`)
         .withArgs(invoker.address);
     });
-
     it("reverts if module is invalid ", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 
@@ -90,7 +85,6 @@ describe("Modifier", async () => {
       await expect(roles.connect(owner).enableModule(invoker.address)).to.not.be
         .reverted;
     });
-
     it("enables a module", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 

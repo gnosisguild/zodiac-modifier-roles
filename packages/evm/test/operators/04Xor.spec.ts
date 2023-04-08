@@ -32,7 +32,7 @@ describe("Operator - Xor", async () => {
     ).to.be.reverted;
   });
 
-  it("evaluates a Xor with a single child", async () => {
+  it("evaluates operator Xor with single child", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -65,7 +65,7 @@ describe("Operator - Xor", async () => {
     await expect(invoke(100)).to.not.be.reverted;
   });
 
-  it("evaluates a Xor with multiple children", async () => {
+  it("evaluates operator Xor with multiple children", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -118,5 +118,5 @@ describe("Operator - Xor", async () => {
       .withArgs(PermissionCheckerStatus.XorViolation, BYTES32_ZERO);
   });
 
-  it.skip("Tracks the resulting trace");
+  it.skip("Tracks the resulting consumption");
 });

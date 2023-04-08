@@ -151,7 +151,6 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
     });
-
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, sendEthAndDoNothing } =
         await loadFixture(setup);
@@ -174,7 +173,6 @@ describe("Operator - EtherWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
-
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, sendEthAndDoNothing } =
         await loadFixture(setup);

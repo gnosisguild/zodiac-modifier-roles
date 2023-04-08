@@ -59,7 +59,7 @@ describe("Operator - Matches", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
   });
 
-  it("evaluates a Matches for Tuple", async () => {
+  it("evaluates operator Matches for Tuple", async () => {
     // ..
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamStaticTuple
@@ -99,7 +99,7 @@ describe("Operator - Matches", async () => {
       .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
   });
 
-  it("evaluates a Matches for Array", async () => {
+  it("evaluates operator Matches for Array", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamArrayOfStatic
     );
@@ -144,7 +144,7 @@ describe("Operator - Matches", async () => {
       );
   });
 
-  it("evaluates a Matches for Array - empty", async () => {
+  it("evaluates operator Matches for Array - empty", async () => {
     const { scopeFunction } = await loadFixture(setupOneParamArrayOfStatic);
 
     await expect(
@@ -165,7 +165,7 @@ describe("Operator - Matches", async () => {
     ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
-  it("evaluates a Matches for AbiEncoded", async () => {
+  it("evaluates operator Matches for AbiEncoded", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupTwoParamsStatic
     );
@@ -198,5 +198,5 @@ describe("Operator - Matches", async () => {
     await expect(invoke(2222, 101)).to.not.be.reverted;
   });
 
-  it.skip("Tracks the resulting trace");
+  it.skip("Tracks the resulting consumption");
 });

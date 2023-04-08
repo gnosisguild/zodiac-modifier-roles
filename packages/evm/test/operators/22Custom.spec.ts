@@ -24,7 +24,7 @@ describe("Operator - Custom", async () => {
 
     return { roles, customChecker, scopeFunction, invoke };
   }
-  it("passes a custom check", async () => {
+  it("evaluates operator Custom - result is check pass", async () => {
     const { customChecker, scopeFunction, invoke } = await loadFixture(setup);
 
     const extra = "aabbccddeeff112233445566";
@@ -46,7 +46,7 @@ describe("Operator - Custom", async () => {
     // above 101 is accepted
     await expect(invoke(101)).to.not.be.reverted;
   });
-  it("fails a custom check and reports error info", async () => {
+  it("evaluates operator Custom - result is check fail", async () => {
     const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
       setup
     );
@@ -75,7 +75,7 @@ describe("Operator - Custom", async () => {
         `0xaabbccddeeff1122334455660000000000000000000000000000000000000000`
       );
   });
-  it.skip("fails by calling an adapter that doesn't implement ICustomChecker", async () => {
+  it.skip("adapter does not implement ICustomChecker", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(setup);
 
     await scopeFunction([

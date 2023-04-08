@@ -71,7 +71,7 @@ describe("Operator - ArraySome", async () => {
     ).to.be.reverted;
   });
 
-  it("evaluates an ArraySome condition", async () => {
+  it("evaluates operator ArraySome", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple
     );
