@@ -31,8 +31,7 @@ describe("Operator - And", async () => {
       ])
     ).to.be.reverted;
   });
-
-  it("evaluates an And with a single child", async () => {
+  it("evaluates operator And with a single child", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -64,8 +63,7 @@ describe("Operator - And", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
-
-  it("evaluates an And with multiple children", async () => {
+  it("evaluates operator And with multiple children", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
     );
@@ -120,6 +118,5 @@ describe("Operator - And", async () => {
 
     await expect(invoke(20)).to.not.be.reverted;
   });
-
-  it.skip("Tracks the resulting trace");
+  it.skip("Tracks the resulting consumption");
 });

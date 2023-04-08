@@ -44,7 +44,6 @@ describe("Operator - GreaterThan", async () => {
       .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(1001)).to.not.be.reverted;
   });
-
   it("evaluates operator GreaterThan - uint smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamUintSmall
@@ -73,7 +72,6 @@ describe("Operator - GreaterThan", async () => {
       .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
     await expect(invoke(51)).to.not.be.reverted;
   });
-
   it("evaluates operator GreaterThan - address", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamAddress
