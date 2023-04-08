@@ -214,8 +214,7 @@ library Integrity {
 
             if (
                 condition.operator == Operator.ArraySubset &&
-                (childrenBounds[i].length == 0 ||
-                    childrenBounds[i].length > 256)
+                childrenBounds[i].length > 256
             ) {
                 revert UnsuitableChildCount(i);
             }

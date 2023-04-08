@@ -489,30 +489,33 @@ describe("Integrity", async () => {
     });
     it("enforces (Ether/Call)WithinAllowance to be child of AbiEncoded", async () => {
       const { integrity, enforce } = await loadFixture(setup);
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.None,
+          operator: Operator.EtherWithinAllowance,
+          compValue:
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+        .withArgs(2);
 
-      await expect(
-        enforce([
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
-            paramType: ParameterType.None,
-            operator: Operator.EtherWithinAllowance,
-            compValue:
-              "0x0000000000000000000000000000000000000000000000000000000000000000",
-          },
-        ])
-      )
+      conditions[2].operator = Operator.CallWithinAllowance;
+      await expect(enforce(conditions))
         .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
         .withArgs(2);
     });
@@ -611,6 +614,11 @@ describe("Integrity", async () => {
           compValue: "0x",
         },
       ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+
+      conditions[1].operator = Operator.ArrayEvery;
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
