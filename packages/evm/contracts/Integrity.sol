@@ -238,9 +238,7 @@ library Integrity {
         uint256 index,
         Topology.Bounds[] memory childrenBounds
     ) private pure {
-        if (childrenBounds[index].length == 0) {
-            return;
-        }
+        assert(childrenBounds[index].length > 0);
 
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
