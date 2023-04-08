@@ -516,9 +516,107 @@ describe("Integrity", async () => {
         .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
         .withArgs(2);
     });
-    it.skip("enforces array to have at least 1 child");
-    it.skip("enforces and/or/nor/xor to have at least 1 child");
-    it.skip("enforces arraySome/arrayEvery to have at exactly 1 child");
+    it("enforces array to have at least 1 child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      let conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Array,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+
+      conditions = [
+        ...conditions,
+        {
+          parent: 1,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+    it("enforces and/or/nor/xor to have at least 1 child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      let conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.None,
+          operator: Operator.And,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+
+      conditions = [
+        ...conditions,
+        {
+          parent: 1,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+    it("enforces arraySome/arrayEvery to have at exactly 1 child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Array,
+          operator: Operator.ArraySome,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+
+      await expect(enforce(conditions.slice(0, -1))).to.not.be.reverted;
+    });
     it("enforces arraySubset to have at most 256 children", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
