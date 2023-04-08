@@ -1,210 +1,637 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getSingletonFactory } from "@gnosis.pm/zodiac/dist/src/factory/singletonFactory";
 
-import { Operator, ExecutionOptions, ParameterType } from "./utils";
-import { defaultAbiCoder } from "ethers/lib/utils";
-
-const AddressOne = "0x0000000000000000000000000000000000000000";
-const ROLE_KEY =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+import { Operator, ParameterType } from "./utils";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
 
 async function setup() {
-  await getSingletonFactory(hre.ethers.provider.getSigner());
-  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-  const avatar = await Avatar.deploy();
-
-  const [owner] = await hre.ethers.getSigners();
-
-  const Packer = await hre.ethers.getContractFactory("Packer");
-  const packer = await Packer.deploy();
-
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
-  const Modifier = await hre.ethers.getContractFactory("Roles", {
+  const Mock = await hre.ethers.getContractFactory("MockIntegrity", {
     libraries: {
       Integrity: integrity.address,
-      Packer: packer.address,
     },
   });
-  const modifier = await Modifier.deploy(
-    owner.address,
-    avatar.address,
-    owner.address
-  );
+  const mock = await Mock.deploy();
+
+  async function enforce(conditionsFlat: ConditionFlatStruct[]) {
+    await mock.enforce(conditionsFlat);
+  }
 
   return {
-    owner,
+    enforce,
     integrity,
-    modifier,
   };
 }
 
 describe("Integrity", async () => {
   it("enforces only one root node", async () => {
-    const { modifier, owner, integrity } = await loadFixture(setup);
+    const { integrity, enforce } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_KEY,
-        AddressOne,
-        "0x00000000",
-        [
-          {
-            parent: 1,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ],
-        ExecutionOptions.None
-      )
+      enforce([
+        {
+          parent: 1,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ])
     ).to.be.revertedWithCustomError(integrity, "NoRootNode");
 
     await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_KEY,
-        AddressOne,
-        "0x00000000",
-        [
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ],
-        ExecutionOptions.None
-      )
+      enforce([
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ])
     ).to.be.revertedWithCustomError(integrity, "TooManyRootNodes");
   });
 
-  it("enforces param config in BFS order", async () => {
-    const { modifier, integrity, owner } = await loadFixture(setup);
-
-    await expect(
-      modifier.connect(owner).scopeFunction(
-        ROLE_KEY,
-        AddressOne,
-        "0x00000000",
-        [
+  describe("node", async () => {
+    it("Node Pass well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
             operator: Operator.Pass,
-            compValue: "0x",
+            compValue: "0x00",
           },
-          {
-            parent: 0,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
-            paramType: ParameterType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ],
-        ExecutionOptions.None
+        ])
       )
-    ).to.be.revertedWithCustomError(integrity, "NotBFS");
-  });
-
-  describe("Enforces Parameter Size constraints", () => {
-    const MORE_THAN_32_BYTES_TEXT =
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
-
-    it("static node has correct compValue size", async () => {
-      const { modifier, integrity, owner } = await loadFixture(setup);
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_KEY,
-          AddressOne,
-          "0x00000000",
-          [
-            {
-              parent: 0,
-              paramType: ParameterType.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: ParameterType.Static,
-              operator: Operator.EqualTo,
-              compValue: hre.ethers.utils.solidityPack(
-                ["string"],
-                [MORE_THAN_32_BYTES_TEXT]
-              ),
-            },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableCompValue");
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_KEY,
-          AddressOne,
-          "0x00000000",
-          [
-            {
-              parent: 0,
-              paramType: ParameterType.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: ParameterType.Static,
-              operator: Operator.EqualTo,
-              compValue: defaultAbiCoder.encode(["uint256"], [123]),
-            },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.not.be.reverted;
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
     });
+    it("Node And/Or/Nor/Xor well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
 
-    it("dynamic node has correct compValue size");
-  });
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node Matches well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
 
-  describe("Enforces compatible childTypeTree for And/Or operators", () => {
-    it.skip("detects array type mismatch", async () => {
-      const { modifier, integrity, owner } = await loadFixture(setup);
-
-      await modifier.connect(owner).scopeFunction(
-        ROLE_KEY,
-        AddressOne,
-        "0x00000000",
-        [
+      await expect(
+        enforce([
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
             operator: Operator.Matches,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node ArraySome/Every/Subset well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.ArraySome,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.ArrayEvery,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.ArraySubset,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.ArraySubset,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node EqualToAvatar well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.EqualToAvatar,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualToAvatar,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node EqualTo well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.EqualTo,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node GT/LT well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.GreaterThan,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.LessThan,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.SignedIntGreaterThan,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.SignedIntLessThan,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.SignedIntLessThan,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node Bitmask well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Bitmask,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Bitmask,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node Custom well formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Custom,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Custom,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node WithinAllowance formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Tuple,
+            operator: Operator.WithinAllowance,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.WithinAllowance,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+    it("Node (Ether|Call)WithinAllowance formed", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EtherWithinAllowance,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.CallWithinAllowance,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: "0x00",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+  });
+
+  describe("tree", async () => {
+    it("enforces param config in BFS order", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ])
+      ).to.be.revertedWithCustomError(integrity, "NotBFS");
+    });
+    it("enforces (Ether/Call)WithinAllowance to be child of AbiEncoded", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+        .withArgs(2);
+    });
+    it.skip("enforces array to have at least 1 child");
+    it.skip("enforces and/or/nor/xor to have at least 1 child");
+    it.skip("enforces arraySome/arrayEvery to have at exactly 1 child");
+    it("enforces arraySubset to have at most 256 children", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.ArraySubset,
+            compValue: "0x",
+          },
+          ...new Array(257).fill(null).map(() => ({
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          })),
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+
+    describe("compatible childTypeTree ", () => {
+      it("and/or/nor/xor mismatch", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
+
+        await expect(
+          enforce([
+            {
+              parent: 0,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ])
+        ).to.not.be.reverted;
+      });
+      it("and/or/nor/xor mismatch - order counts", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
@@ -213,96 +640,50 @@ describe("Integrity", async () => {
             operator: Operator.Or,
             compValue: "0x",
           },
-          // first Array 1
           {
             parent: 1,
-            paramType: ParameterType.Array,
-            operator: Operator.Matches,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
             compValue: "0x",
           },
-          // second Array 2
           {
             parent: 1,
-            paramType: ParameterType.Array,
-            operator: Operator.Matches,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
             compValue: "0x",
           },
-          // first array first element 3
           {
             parent: 2,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Matches,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
             compValue: "0x",
           },
-          // first array second element 4
           {
             parent: 2,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Matches,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
             compValue: "0x",
           },
-          // second array first element 5
           {
             parent: 3,
-            paramType: ParameterType.Tuple,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          // tuple first
-          {
-            parent: 4,
-            paramType: ParameterType.Static,
-            operator: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
             compValue: "0x",
           },
           {
-            parent: 4,
+            parent: 3,
             paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["address"], [address1]),
-          },
-          // tuple second 8
-          {
-            parent: 5,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["uint256"], [334455]),
-          },
-          {
-            parent: 5,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["address"], [address2]),
-          },
-          // tuple third 9
-          {
-            parent: 6,
-            paramType: ParameterType.Static,
-            operator: 0,
+            operator: Operator.Pass,
             compValue: "0x",
           },
-          {
-            parent: 6,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["address"], [address3]),
-          },
-        ],
-        ExecutionOptions.None
-      );
-    });
-  });
+        ];
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
 
-  describe("Enforces compatible childTypeTree for Array nodes", () => {
-    it("detects array type mismatch", async () => {
-      const { modifier, integrity, owner } = await loadFixture(setup);
-
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_KEY,
-          AddressOne,
-          "0x00000000",
-          [
+        await expect(
+          enforce([
             {
               parent: 0,
               paramType: ParameterType.AbiEncoded,
@@ -311,25 +692,28 @@ describe("Integrity", async () => {
             },
             {
               parent: 0,
-              paramType: ParameterType.Array,
-              operator: Operator.Pass,
+              paramType: ParameterType.None,
+              operator: Operator.Or,
               compValue: "0x",
             },
-            // first element 2
             {
               parent: 1,
               paramType: ParameterType.Tuple,
               operator: Operator.Pass,
               compValue: "0x",
             },
-            // second element 3
             {
               parent: 1,
               paramType: ParameterType.Tuple,
               operator: Operator.Pass,
               compValue: "0x",
             },
-            // tuple first
+            {
+              parent: 2,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
             {
               parent: 2,
               paramType: ParameterType.Dynamic,
@@ -337,13 +721,6 @@ describe("Integrity", async () => {
               compValue: "0x",
             },
             {
-              parent: 2,
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            // tuple second 8
-            {
               parent: 3,
               paramType: ParameterType.Static,
               operator: Operator.Pass,
@@ -351,241 +728,309 @@ describe("Integrity", async () => {
             },
             {
               parent: 3,
-              paramType: ParameterType.Static,
+              paramType: ParameterType.Dynamic,
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
+          ])
+        ).to.not.be.reverted;
+      });
+      it("and/or/nor/xor mismatch - recursive", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
 
-      await expect(
-        modifier.connect(owner).scopeFunction(
-          ROLE_KEY,
-          AddressOne,
-          "0x00000000",
-          [
-            {
-              parent: 0,
-              paramType: ParameterType.AbiEncoded,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: ParameterType.Array,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            // first element 2
-            {
-              parent: 1,
-              paramType: ParameterType.Tuple,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            // second element 3
-            {
-              parent: 1,
-              paramType: ParameterType.Tuple,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            // tuple first
-            {
-              parent: 2,
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 2,
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            // tuple second 8
-            {
-              parent: 3,
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 3,
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          ExecutionOptions.None
-        )
-      ).to.not.be.reverted;
-    });
-    it("detects array type mismatch - order counts", async () => {
-      const { modifier, integrity, owner } = await loadFixture(setup);
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.Xor,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
 
-      const conditions = [
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.Array,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        // first element 2
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        // second element 3
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Dynamic,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Dynamic,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ];
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
 
-      await expect(
-        modifier
-          .connect(owner)
-          .scopeFunction(
-            ROLE_KEY,
-            AddressOne,
-            "0x00000000",
-            conditions,
-            ExecutionOptions.None
-          )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
+        conditions[conditions.length - 1].paramType = ParameterType.Static;
 
-      // swap
-      conditions[6].paramType = ParameterType.Dynamic;
-      conditions[7].paramType = ParameterType.Static;
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+      it("array mismatch", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
 
-      await expect(
-        modifier
-          .connect(owner)
-          .scopeFunction(
-            ROLE_KEY,
-            AddressOne,
-            "0x00000000",
-            conditions,
-            ExecutionOptions.None
-          )
-      ).to.not.be.reverted;
-    });
-    it("detects array type mismatch - length mismatch", async () => {
-      const { modifier, integrity, owner } = await loadFixture(setup);
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // first element 2
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // second element 3
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // tuple first
+          {
+            parent: 2,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 2,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // tuple second 8
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
 
-      const conditions = [
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.Array,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        // first element 2
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        // second element 3
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Dynamic,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Dynamic,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ];
+        conditions[4].paramType = ParameterType.Static;
 
-      await expect(
-        modifier
-          .connect(owner)
-          .scopeFunction(
-            ROLE_KEY,
-            AddressOne,
-            "0x00000000",
-            conditions,
-            ExecutionOptions.None
-          )
-      ).to.be.not.reverted;
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+      it("array mismatch - order counts", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
 
-      await expect(
-        modifier
-          .connect(owner)
-          .scopeFunction(
-            ROLE_KEY,
-            AddressOne,
-            "0x00000000",
-            conditions.slice(0, -1),
-            ExecutionOptions.None
-          )
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // first element 2
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // second element 3
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 2,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 2,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
+
+        // swap
+        conditions[6].paramType = ParameterType.Dynamic;
+        conditions[7].paramType = ParameterType.Static;
+
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+      it("array mismatch - different length", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // first element 2
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          // second element 3
+          {
+            parent: 1,
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 2,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 2,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+
+        await expect(enforce(conditions)).to.be.not.reverted;
+
+        await expect(
+          enforce(conditions.slice(0, -1))
+        ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
+      });
+      it("array mismatch - recursive", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Array,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.None,
+            operator: Operator.Or,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 3,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+
+        await expect(enforce(conditions)).to.be.revertedWithCustomError(
+          integrity,
+          "UnsuitableChildTypeTree"
+        );
+
+        conditions[conditions.length - 1].paramType = ParameterType.Static;
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
     });
   });
 });
