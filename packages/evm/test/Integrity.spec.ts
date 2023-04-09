@@ -4,6 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Operator, ParameterType } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { defaultAbiCoder } from "@ethersproject/abi";
 
 async function setup() {
   const Integrity = await hre.ethers.getContractFactory("Integrity");
@@ -218,6 +219,17 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualToAvatar,
+            compValue: "0x",
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node EqualTo well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -259,6 +271,17 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [100]),
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node GT/LT well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -326,6 +349,17 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.SignedIntLessThan,
+            compValue: defaultAbiCoder.encode(["int32"], [-100]),
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node Bitmask well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -354,6 +388,18 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Bitmask,
+            compValue:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node Custom well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -382,6 +428,18 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Custom,
+            compValue:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node WithinAllowance formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -410,6 +468,18 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.WithinAllowance,
+            compValue:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+          },
+        ])
+      ).to.not.be.reverted;
     });
     it("Node (Ether|Call)WithinAllowance formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -451,6 +521,24 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.CallWithinAllowance,
+            compValue:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+          },
+        ])
+      ).to.not.be.reverted;
     });
   });
 

@@ -149,10 +149,11 @@ library Integrity {
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
-        } else if (
-            operator == Operator.EtherWithinAllowance ||
-            operator == Operator.CallWithinAllowance
-        ) {
+        } else {
+            assert(
+                operator == Operator.EtherWithinAllowance ||
+                    operator == Operator.CallWithinAllowance
+            );
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
