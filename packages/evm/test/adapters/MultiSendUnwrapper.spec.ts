@@ -39,7 +39,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -80,7 +80,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -123,7 +123,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -157,7 +157,7 @@ describe("MultiSendUnwrapper", async () => {
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     assert(txData);
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -179,7 +179,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -214,7 +214,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayloadWrongLength([
+      encodeMultisendWrongLength([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -234,7 +234,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -277,7 +277,7 @@ describe("MultiSendUnwrapper", async () => {
     assert(txData2);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0x0000000000000000000000000000000000000002",
           value: 999444555,
@@ -322,7 +322,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     let { data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -336,7 +336,7 @@ describe("MultiSendUnwrapper", async () => {
     ).to.be.reverted;
 
     ({ data } = await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -358,7 +358,7 @@ interface MetaTransaction {
   operation: number;
 }
 
-const multisendPayload = (txs: MetaTransaction[]): string => {
+const encodeMultisend = (txs: MetaTransaction[]): string => {
   return (
     "0x" +
     txs
@@ -372,7 +372,7 @@ const multisendPayload = (txs: MetaTransaction[]): string => {
   );
 };
 
-const multisendPayloadWrongLength = (txs: MetaTransaction[]): string => {
+const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
   return (
     "0x" +
     txs

@@ -5,7 +5,7 @@ import {
   BYTES32_ZERO,
   deployRolesMod,
   ExecutionOptions,
-  multisendPayload,
+  encodeMultisend,
   Operator,
   ParameterType,
   PermissionCheckerStatus,
@@ -18,153 +18,68 @@ import {
   setupOneParamArrayOfDynamicTuple,
   setupOneParamStatic,
   setupOneParamStaticTuple,
+  setupTwoParamsStatic,
 } from "./operators/setup";
 
-const ROLE_KEY =
-  "0x000000000000000000000000000000000000000000000000000000000000000f";
-
-async function setup() {
-  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-  const avatar = await Avatar.deploy();
-
-  const TestContract = await hre.ethers.getContractFactory("TestContract");
-  const testContract = await TestContract.deploy();
-
-  const [owner, invoker] = await hre.ethers.getSigners();
-
-  const roles = await deployRolesMod(
-    hre,
-    owner.address,
-    avatar.address,
-    avatar.address
-  );
-
-  const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-  const multisend = await MultiSend.deploy();
-
-  const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-    "MultiSendUnwrapper"
-  );
-  const adapter = await MultiSendUnwrapper.deploy();
-
-  await roles
-    .connect(owner)
-    .setTransactionUnwrapper(
-      multisend.address,
-      multisend.interface.getSighash(
-        multisend.interface.getFunction("multiSend")
-      ),
-      adapter.address
+describe("Allowance", async () => {
+  it("consumption in truthy And branch influences other branches", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupTwoParamsStatic
     );
 
-  await roles.enableModule(invoker.address);
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 300, 0, 0, 0, 0);
 
-  await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
-  await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-  await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.WithinAllowance,
+        compValue: allowanceKey,
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Static,
+        operator: Operator.WithinAllowance,
+        compValue: allowanceKey,
+      },
+    ]);
 
-  async function setAllowance(allowanceKey: string, balance: BigNumberish) {
-    await roles.connect(owner).setAllowance(allowanceKey, balance, 0, 0, 0, 0);
-  }
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(300);
 
-  function scopeFunction(conditions: ConditionFlatStruct[]) {
-    return roles
-      .connect(owner)
-      .scopeFunction(
-        ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
-        conditions,
-        ExecutionOptions.None
-      );
-  }
+    await expect(invoke(100, 100)).to.not.be.reverted;
 
-  async function invoke(a: BigNumberish, b: BigNumberish) {
-    return roles
-      .connect(invoker)
-      .execTransactionFromModule(
-        testContract.address,
-        0,
-        (await testContract.populateTransaction.twoParamsStatic(a, b))
-          .data as string,
-        0
-      );
-  }
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
+    await expect(invoke(100, 1))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
 
-  return {
-    adapter,
-    multisend,
-    testContract,
-    roles,
-    owner,
-    invoker,
-    setAllowance,
-    scopeFunction,
-    invoke,
-  };
-}
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
+  });
+  it("consumption in falsy Or branch gets discarded", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupTwoParamsStatic
+    );
 
-describe.only("Flushing", async () => {
-  describe("singleEntrypoint", async () => {
-    it("consumption in truthy And branch influences other branches", async () => {
-      const { roles, setAllowance, scopeFunction, invoke } = await loadFixture(
-        setup
-      );
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000000f";
-      await setAllowance(allowanceKey, 300);
-
-      await scopeFunction([
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          compValue: "0x",
-        },
-        {
-          parent: 1,
-          paramType: ParameterType.Static,
-          operator: Operator.WithinAllowance,
-          compValue: allowanceKey,
-        },
-        {
-          parent: 1,
-          paramType: ParameterType.Static,
-          operator: Operator.WithinAllowance,
-          compValue: allowanceKey,
-        },
-      ]);
-
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(300);
-
-      await expect(invoke(100, 100)).to.not.be.reverted;
-
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
-      await expect(invoke(100, 1))
-        .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
-
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
-    });
-    it("consumption in falsy Or branch gets discarded", async () => {
-      const { roles, setAllowance, scopeFunction, invoke } = await loadFixture(
-        setup
-      );
-
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000000f";
-      await setAllowance(allowanceKey, 1000);
-
-      const conditionsFlat = toConditionsFlat({
+    await scopeFunction(
+      toConditionsFlat({
         paramType: ParameterType.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
@@ -211,26 +126,26 @@ describe.only("Flushing", async () => {
             ],
           },
         ],
-      });
+      })
+    );
 
-      await scopeFunction(conditionsFlat);
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    await expect(invoke(501, 1)).to.not.be.reverted;
 
-      await expect(invoke(501, 1)).to.not.be.reverted;
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
+  });
+  it("consumption in falsy Xor branch gets discarded", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupTwoParamsStatic
+    );
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
-    });
-    it("consumption in falsy Xor branch gets discarded", async () => {
-      const { roles, setAllowance, scopeFunction, invoke } = await loadFixture(
-        setup
-      );
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000000f";
-      await setAllowance(allowanceKey, 1000);
-
-      const conditionsFlat = toConditionsFlat({
+    await scopeFunction(
+      toConditionsFlat({
         paramType: ParameterType.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
@@ -277,514 +192,568 @@ describe.only("Flushing", async () => {
             ],
           },
         ],
-      });
+      })
+    );
 
-      await scopeFunction(conditionsFlat);
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    await expect(invoke(501, 1)).to.not.be.reverted;
 
-      await expect(invoke(501, 1)).to.not.be.reverted;
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
+  });
+  it("consumption in ArraySome gets counted once", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamArrayOfDynamicTuple
+    );
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.ArraySome,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
+                },
+              ],
+            },
+          ],
+        },
+      ],
     });
-    it("consumption in ArraySome gets counted once", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamArrayOfDynamicTuple
+    await scopeFunction(conditionsFlat);
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+
+    await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.NoArrayElementPasses, BYTES32_ZERO);
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+
+    await expect(invoke([{ a: 100, b: "0xbadfed" }])).to.not.be.reverted;
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(900);
+
+    await expect(
+      invoke([
+        { a: 100, b: "0xbadfed" },
+        { a: 900, b: "0xbadfed" },
+        { a: 1234, b: "0xbadfed" },
+      ])
+    ).to.not.be.reverted;
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(800);
+  });
+  it("consumption in ArrayEvery gets counted for all elements", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamArrayOfDynamicTuple
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.ArrayEvery,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    await scopeFunction(conditionsFlat);
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+
+    await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(
+        PermissionCheckerStatus.NotEveryArrayElementPasses,
+        BYTES32_ZERO
       );
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000000f";
-      await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.Array,
-            operator: Operator.ArraySome,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey,
-                  },
-                  {
-                    paramType: ParameterType.Dynamic,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-      await scopeFunction(conditionsFlat);
+    await expect(
+      invoke([
+        { a: 123, b: "0xbadfed" },
+        { a: 200, b: "0xbadfed" },
+      ])
+    ).to.not.be.reverted;
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(
+      1000 - (123 + 200)
+    );
+  });
+  it("consumption in ArraySubset gets counted in hits", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamArrayOfDynamicTuple
+    );
 
-      await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
-        .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.NoArrayElementPasses, BYTES32_ZERO);
+    const allowanceKey1 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f1";
+    await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    const allowanceKey2 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f2";
+    await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-      await expect(invoke([{ a: 100, b: "0xbadfed" }])).to.not.be.reverted;
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(900);
+    const allowanceKey3 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f3";
+    await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
 
-      await expect(
-        invoke([
-          { a: 100, b: "0xbadfed" },
-          { a: 900, b: "0xbadfed" },
-          { a: 1234, b: "0xbadfed" },
-        ])
-      ).to.not.be.reverted;
-
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(800);
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.ArraySubset,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey1,
+                },
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey2,
+                },
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bytes"], ["0xdeadbeef"]),
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey3,
+                },
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bytes"], ["0xbad0beef"]),
+                },
+              ],
+            },
+          ],
+        },
+      ],
     });
-    it("consumption in ArrayEvery gets counted for all elements", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamArrayOfDynamicTuple
-      );
+    await scopeFunction(conditionsFlat);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000000f";
-      await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey3)).balance).to.equal(100);
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.Array,
-            operator: Operator.ArrayEvery,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey,
-                  },
-                  {
-                    paramType: ParameterType.Dynamic,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-      await scopeFunction(conditionsFlat);
+    await expect(
+      invoke([
+        { a: 20, b: "0xdeadbeef" },
+        { a: 30, b: "0xbad0beef" },
+      ])
+    ).to.not.be.reverted;
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(80);
+    expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
+  });
 
-      await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
-        .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          PermissionCheckerStatus.NotEveryArrayElementPasses,
-          BYTES32_ZERO
-        );
+  it("failing And returns unchanged in memory consumptions", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamStatic
+    );
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+    const allowanceKey1 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f1";
+    await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
 
-      await expect(
-        invoke([
-          { a: 123, b: "0xbadfed" },
-          { a: 200, b: "0xbadfed" },
-        ])
-      ).to.not.be.reverted;
+    const allowanceKey2 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f2";
+    await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(
-        1000 - (123 + 200)
-      );
-    });
-    it("consumption in ArraySubset gets counted in hits", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamArrayOfDynamicTuple
-      );
-
-      const allowanceKey1 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f1";
-      await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
-
-      const allowanceKey2 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f2";
-      await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
-
-      const allowanceKey3 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f3";
-      await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
-
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.Array,
-            operator: Operator.ArraySubset,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey1,
-                  },
-                  {
-                    paramType: ParameterType.Dynamic,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey2,
-                  },
-                  {
-                    paramType: ParameterType.Dynamic,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(
-                      ["bytes"],
-                      ["0xdeadbeef"]
-                    ),
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey3,
-                  },
-                  {
-                    paramType: ParameterType.Dynamic,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(
-                      ["bytes"],
-                      ["0xbad0beef"]
-                    ),
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-      await scopeFunction(conditionsFlat);
-
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey3)).balance).to.equal(100);
-
-      await expect(
-        invoke([
-          { a: 20, b: "0xdeadbeef" },
-          { a: 30, b: "0xbad0beef" },
-        ])
-      ).to.not.be.reverted;
-
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(80);
-      expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey1,
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.LessThan,
+                  compValue: defaultAbiCoder.encode(["uint256"], [50]),
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.WithinAllowance,
+              compValue: allowanceKey2,
+            },
+          ],
+        },
+      ],
     });
 
-    it("failing And returns unchanged consumptions", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamStatic
-      );
+    await scopeFunction(conditionsFlat);
 
-      const allowanceKey1 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f1";
-      await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
 
-      const allowanceKey2 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f2";
-      await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
+    await expect(invoke(51)).to.not.be.reverted;
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.None,
-            operator: Operator.Or,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.None,
-                operator: Operator.And,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey1,
-                  },
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.LessThan,
-                    compValue: defaultAbiCoder.encode(["uint256"], [50]),
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Static,
-                operator: Operator.WithinAllowance,
-                compValue: allowanceKey2,
-              },
-            ],
-          },
-        ],
-      });
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
+  });
+  it("failing OR returns unchanged in memory consumptions", async () => {
+    const { roles, invoke, scopeFunction, owner } = await loadFixture(
+      setupOneParamStatic
+    );
 
-      await scopeFunction(conditionsFlat);
+    const allowanceKey1 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f1";
+    await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
 
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
+    const allowanceKey2 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f2";
+    await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-      await expect(invoke(51)).to.not.be.reverted;
-
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.None,
+              operator: Operator.Or,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.None,
+                  operator: Operator.And,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKey1,
+                    },
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.LessThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [50]),
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.WithinAllowance,
+              compValue: allowanceKey2,
+            },
+          ],
+        },
+      ],
     });
-    it("failing OR returns unchanged consumptions", async () => {
-      const { roles, invoke, scopeFunction, owner } = await loadFixture(
-        setupOneParamStatic
-      );
 
-      const allowanceKey1 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f1";
-      await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
+    await scopeFunction(conditionsFlat);
 
-      const allowanceKey2 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f2";
-      await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.None,
-            operator: Operator.Or,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.None,
-                operator: Operator.Or,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.None,
-                    operator: Operator.And,
-                    compValue: "0x",
-                    children: [
-                      {
-                        paramType: ParameterType.Static,
-                        operator: Operator.WithinAllowance,
-                        compValue: allowanceKey1,
-                      },
-                      {
-                        paramType: ParameterType.Static,
-                        operator: Operator.LessThan,
-                        compValue: defaultAbiCoder.encode(["uint256"], [50]),
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Static,
-                operator: Operator.WithinAllowance,
-                compValue: allowanceKey2,
-              },
-            ],
-          },
-        ],
-      });
+    await expect(invoke(51)).to.not.be.reverted;
 
-      await scopeFunction(conditionsFlat);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
+  });
+  it("failing XOR returns unchanged in memory consumptions", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamStatic
+    );
 
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
+    const allowanceKey1 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f1";
+    await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
 
-      await expect(invoke(51)).to.not.be.reverted;
+    const allowanceKey2 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f2";
+    await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.None,
+              operator: Operator.Xor,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey1,
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.LessThan,
+                  compValue: defaultAbiCoder.encode(["uint256"], [50]),
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.WithinAllowance,
+              compValue: allowanceKey2,
+            },
+          ],
+        },
+      ],
     });
-    it("failing XOR returns unchanged consumptions", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamStatic
-      );
 
-      const allowanceKey1 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f1";
-      await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
+    await scopeFunction(conditionsFlat);
 
-      const allowanceKey2 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f2";
-      await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.None,
-            operator: Operator.Or,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.None,
-                operator: Operator.Xor,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey1,
-                  },
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.LessThan,
-                    compValue: defaultAbiCoder.encode(["uint256"], [50]),
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Static,
-                operator: Operator.WithinAllowance,
-                compValue: allowanceKey2,
-              },
-            ],
-          },
-        ],
-      });
+    await expect(invoke(49)).to.not.be.reverted;
 
-      await scopeFunction(conditionsFlat);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(51);
+  });
+  it("failing Matches returns unchanged in memory consumptions", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupOneParamStaticTuple
+    );
 
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
+    const allowanceKey1 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f1";
+    await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
 
-      await expect(invoke(49)).to.not.be.reverted;
+    const allowanceKey2 =
+      "0x00000000000000000000000000000000000000000000000000000000000000f2";
+    await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(51);
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey1,
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["bool"], [true]),
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey2,
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                },
+              ],
+            },
+          ],
+        },
+      ],
     });
-    it("failing Matches returns unchanged consumptions", async () => {
-      const { roles, scopeFunction, invoke, owner } = await loadFixture(
-        setupOneParamStaticTuple
-      );
 
-      const allowanceKey1 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f1";
-      await roles.connect(owner).setAllowance(allowanceKey1, 100, 0, 0, 0, 0);
+    await scopeFunction(conditionsFlat);
 
-      const allowanceKey2 =
-        "0x00000000000000000000000000000000000000000000000000000000000000f2";
-      await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
 
-      const conditionsFlat = toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-        children: [
-          {
-            paramType: ParameterType.None,
-            operator: Operator.Or,
-            compValue: "0x",
-            children: [
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey1,
-                  },
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.EqualTo,
-                    compValue: defaultAbiCoder.encode(["bool"], [true]),
-                  },
-                ],
-              },
-              {
-                paramType: ParameterType.Tuple,
-                operator: Operator.Matches,
-                compValue: "0x",
-                children: [
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.WithinAllowance,
-                    compValue: allowanceKey2,
-                  },
-                  {
-                    paramType: ParameterType.Static,
-                    operator: Operator.Pass,
-                    compValue: "0x",
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
+    await expect(invoke({ a: 65, b: false })).to.not.be.reverted;
 
-      await scopeFunction(conditionsFlat);
-
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
-
-      await expect(invoke({ a: 65, b: false })).to.not.be.reverted;
-
-      expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
-      expect((await roles.allowances(allowanceKey2)).balance).to.equal(35);
-    });
+    expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
+    expect((await roles.allowances(allowanceKey2)).balance).to.equal(35);
   });
 
   describe("multiEntrypoint", async () => {
+    async function setup() {
+      const ROLE_KEY =
+        "0x000000000000000000000000000000000000000000000000000000000000000f";
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+
+      const [owner, invoker] = await hre.ethers.getSigners();
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatar.address,
+        avatar.address
+      );
+      await roles.enableModule(invoker.address);
+
+      await roles
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+
+      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const multisend = await MultiSend.deploy();
+
+      const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+        "MultiSendUnwrapper"
+      );
+      const adapter = await MultiSendUnwrapper.deploy();
+
+      await roles
+        .connect(owner)
+        .setTransactionUnwrapper(
+          multisend.address,
+          multisend.interface.getSighash(
+            multisend.interface.getFunction("multiSend")
+          ),
+          adapter.address
+        );
+
+      async function setAllowance(allowanceKey: string, balance: BigNumberish) {
+        await roles
+          .connect(owner)
+          .setAllowance(allowanceKey, balance, 0, 0, 0, 0);
+      }
+
+      return {
+        roleKey: ROLE_KEY,
+        adapter,
+        multisend,
+        testContract,
+        roles,
+        setAllowance,
+        owner,
+        invoker,
+      };
+    }
+
     it.skip("consumptions without overlap across entrypoints get flushed");
     it("consumptions with overlap across entrypoints overspend", async () => {
-      const { multisend, roles, testContract, owner, invoker } = await setup();
+      const { roleKey, multisend, roles, testContract, owner, invoker } =
+        await setup();
 
       const allowanceKey = "0x01".padEnd(66, "0");
 
@@ -797,7 +766,7 @@ describe.only("Flushing", async () => {
         .setAllowance(allowanceKey, balance, 0, 0, 0, 0);
 
       await roles.connect(owner).scopeFunction(
-        ROLE_KEY,
+        roleKey,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("oneParamStatic")
@@ -820,7 +789,7 @@ describe.only("Flushing", async () => {
       );
 
       await roles.connect(owner).scopeFunction(
-        ROLE_KEY,
+        roleKey,
         testContract.address,
         testContract.interface.getSighash(
           testContract.interface.getFunction("twoParamsStatic")
@@ -850,7 +819,7 @@ describe.only("Flushing", async () => {
 
       const multisendCallData = (
         await multisend.populateTransaction.multiSend(
-          multisendPayload([
+          encodeMultisend([
             {
               to: testContract.address,
               value: 0,
