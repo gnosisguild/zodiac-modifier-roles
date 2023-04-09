@@ -57,7 +57,7 @@ async function setup() {
 
   const multisendCallData = (
     await multisend.populateTransaction.multiSend(
-      multisendPayload([
+      encodeMultisend([
         {
           to: testContract.address,
           value: 0,
@@ -227,7 +227,7 @@ describe("Multi Entrypoint", async () => {
 
     const multisendCallData = (
       await multisend.populateTransaction.multiSend(
-        multisendPayload([
+        encodeMultisend([
           {
             to: testContract.address,
             value: 0,
@@ -344,7 +344,7 @@ interface MetaTransaction {
   operation: number;
 }
 
-const multisendPayload = (txs: MetaTransaction[]): string => {
+const encodeMultisend = (txs: MetaTransaction[]): string => {
   return (
     "0x" +
     txs

@@ -257,7 +257,7 @@ export async function deployRolesMod(
   return modifier;
 }
 
-export const multisendPayload = (txs: MetaTransaction[]): string => {
+export const encodeMultisend = (txs: MetaTransaction[]): string => {
   return (
     "0x" +
     txs
@@ -311,3 +311,4 @@ export function toConditionsFlat(root: ConditionStruct): ConditionFlatStruct[] {
   }
 
   return result;
+}
