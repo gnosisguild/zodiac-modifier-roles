@@ -17,6 +17,7 @@ export async function baseSetup(
     | "oneParamDynamicNestedTuple"
     | "oneParamArrayOfStatic"
     | "oneParamArrayOfStaticTuple"
+    | "oneParamArrayOfDynamicTuple"
     | "oneParamUintWord"
     | "oneParamUintSmall"
     | "oneParamIntWord"
@@ -247,9 +248,8 @@ export async function setupOneParamDynamicNestedTuple() {
   };
 }
 export async function setupOneParamArrayOfStatic() {
-  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
-    "oneParamArrayOfStatic"
-  );
+  const { invoker, roles, testContract, scopeFunction, owner } =
+    await baseSetup("oneParamArrayOfStatic");
 
   async function invoke(a: number[]) {
     return roles
@@ -267,6 +267,7 @@ export async function setupOneParamArrayOfStatic() {
     roles,
     scopeFunction,
     invoke,
+    owner,
   };
 }
 export async function setupOneParamArrayOfStaticTuple() {
@@ -290,6 +291,29 @@ export async function setupOneParamArrayOfStaticTuple() {
     roles,
     scopeFunction,
     invoke,
+  };
+}
+export async function setupOneParamArrayOfDynamicTuple() {
+  const { invoker, roles, testContract, scopeFunction, owner } =
+    await baseSetup("oneParamArrayOfDynamicTuple");
+
+  async function invoke(a: TestContract.DynamicTupleStruct[]) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (await testContract.populateTransaction.oneParamArrayOfDynamicTuple(a))
+          .data as string,
+        0
+      );
+  }
+
+  return {
+    roles,
+    scopeFunction,
+    invoke,
+    owner,
   };
 }
 export async function setupOneParamUintWord() {

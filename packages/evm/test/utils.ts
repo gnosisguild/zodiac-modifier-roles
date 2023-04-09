@@ -1,9 +1,10 @@
 import { AddressZero } from "@ethersproject/constants";
 import { Contract, utils, BigNumber, BigNumberish } from "ethers";
-import { solidityPack } from "ethers/lib/utils";
+import { BytesLike, solidityPack } from "ethers/lib/utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { getSingletonFactory } from "@gnosis.pm/zodiac/dist/src/factory/singletonFactory";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
 
 export const logGas = async (
   message: string,
@@ -271,3 +272,25 @@ export const multisendPayload = (txs: MetaTransaction[]): string => {
 
 export const BYTES32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+type ConditionStruct = {
+  paramType: ParameterType;
+  operator: Operator;
+  compValue: BytesLike;
+  children?: ConditionStruct[];
+};
+
+export function toConditionsFlat(
+  condition: ConditionStruct,
+  index = 0,
+  parent = 0
+): ConditionFlatStruct[] {
+  const { children = [], ...rest } = condition;
+
+  return [
+    { ...rest, parent },
+    ...children.flatMap((child, j) =>
+      toConditionsFlat(child, index + 1 + j, index)
+    ),
+  ].sort((a, b) => (a.parent < b.parent ? -1 : 1));
+}

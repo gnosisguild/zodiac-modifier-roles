@@ -163,6 +163,8 @@ contract TestContract {
 
     function oneParamArrayOfStaticTuple(StaticTuple[] calldata) public {}
 
+    function oneParamArrayOfDynamicTuple(DynamicTuple[] calldata) public {}
+
     function twoParamsStatic(uint256 a, uint256 b) public {}
 
     function twoParamsStaticTupleStatic(StaticTuple calldata, uint256) public {}
