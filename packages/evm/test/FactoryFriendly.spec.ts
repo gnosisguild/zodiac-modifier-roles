@@ -1,6 +1,7 @@
+import assert from "assert";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
-import { AbiCoder } from "ethers/lib/utils";
+import { AbiCoder, defaultAbiCoder } from "ethers/lib/utils";
 
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -51,26 +52,35 @@ describe("Module works with factory", () => {
   it("should deploy new roles module proxy", async () => {
     const { factory, masterCopy, Modifier } = await loadFixture(setup);
     const [avatar, owner, target] = await ethers.getSigners();
-    const paramsValues = [owner.address, avatar.address, target.address];
-    const encodedParams = [new AbiCoder().encode(paramsTypes, paramsValues)];
-    const initParams = masterCopy.interface.encodeFunctionData(
-      "setUp",
-      encodedParams
+
+    const initializer = await masterCopy.populateTransaction.setUp(
+      defaultAbiCoder.encode(
+        ["address", "address", "address"],
+        [owner.address, avatar.address, target.address]
+      )
     );
-    const receipt = await factory
-      .deployModule(masterCopy.address, initParams, saltNonce)
-      .then((tx: any) => tx.wait());
+    const receipt = await (
+      await factory.deployModule(
+        masterCopy.address,
+        initializer.data as string,
+        saltNonce
+      )
+    ).wait();
+
+    assert(receipt.events);
 
     // retrieve new address from event
-    const {
-      args: [newProxyAddress],
-    } = receipt.events.find(
-      ({ event }: { event: string }) => event === "ModuleProxyCreation"
+    const result = receipt.events.find(
+      (evt) => evt.event === "ModuleProxyCreation"
     );
+    assert(result);
+    assert(result.args);
 
-    const newProxy = Modifier.attach(newProxyAddress);
+    const [newProxyAddress] = result.args;
+
+    const proxy = Modifier.attach(newProxyAddress);
     // const newProxy = await hre.ethers.getContractAt("Roles", newProxyAddress);
-    expect(await newProxy.avatar()).to.be.eq(avatar.address);
-    expect(await newProxy.target()).to.be.eq(target.address);
+    expect(await proxy.avatar()).to.be.eq(avatar.address);
+    expect(await proxy.target()).to.be.eq(target.address);
   });
 });
