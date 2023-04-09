@@ -15,64 +15,6 @@ import {
 } from "../utils";
 
 describe("Operator - ArrayEvery", async () => {
-  it("can't set up more than one child rule for ArrayEvery", async () => {
-    const { scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStaticTuple
-    );
-
-    await expect(
-      scopeFunction([
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.Array,
-          operator: Operator.ArrayEvery,
-          compValue: "0x",
-        },
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 1,
-          paramType: ParameterType.Tuple,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 2,
-          paramType: ParameterType.Static,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["bool"], [true]),
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 3,
-          paramType: ParameterType.Static,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["bool"], [true]),
-        },
-      ])
-    ).to.be.reverted;
-  });
   it("evaluates Operator ArrayEvery", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple

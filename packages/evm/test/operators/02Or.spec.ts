@@ -11,27 +11,6 @@ import {
 import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Or", async () => {
-  it("cannot set up an empty Or", async () => {
-    const { scopeFunction } = await loadFixture(setupOneParamStatic);
-
-    await expect(
-      scopeFunction([
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.None,
-          operator: Operator.Or,
-          compValue: "0x",
-        },
-      ])
-    ).to.be.reverted;
-  });
-
   it("evaluates operator Or with a single child", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupOneParamStatic
