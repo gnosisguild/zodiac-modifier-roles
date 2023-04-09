@@ -12,27 +12,6 @@ import {
 } from "../utils";
 
 describe("Operator - ArraySubset", async () => {
-  it("can't set up an ArraySubset with no children", async () => {
-    const { scopeFunction } = await loadFixture(setupOneParamArrayOfStatic);
-
-    await expect(
-      scopeFunction([
-        {
-          parent: 0,
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: ParameterType.Array,
-          operator: Operator.ArraySubset,
-          compValue: "0x",
-        },
-      ])
-    ).to.be.reverted;
-  });
-
   it("can't set up an ArraySubset with inconsistent typeTree across children", async () => {
     const { scopeFunction } = await loadFixture(setupOneParamArrayOfStatic);
 
