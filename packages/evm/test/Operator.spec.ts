@@ -820,12 +820,6 @@ describe("Operator", async () => {
     ).to.not.be.reverted;
   });
 
-  it.skip("checks a tuple comparison with partial scoping");
-
-  it.skip("checks a nested tuple comparison");
-
-  it.skip("checks a nested tuple comparison with partial scoping");
-
   it("checks operator Matches for Array", async () => {
     const address1 = "0x0000000000000000000000000000000000000fff";
     const address2 = "0x0000000000000000000000000000000000000123";
@@ -955,10 +949,6 @@ describe("Operator", async () => {
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
-
-  it.skip("checks an array with a static tuple inside");
-
-  it.skip("checks an array with a nested tuple inside");
 
   describe("Variants", async () => {
     it("checks a simple 3 way variant", async () => {
