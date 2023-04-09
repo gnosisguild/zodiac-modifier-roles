@@ -1100,7 +1100,6 @@ describe("Allowance", async () => {
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(balance);
     });
-
     it("middle entrypoint allowed with no consumptions carries and flushes", async () => {
       const {
         roleKey,
@@ -1244,7 +1243,6 @@ describe("Allowance", async () => {
         balance2 - value2
       );
     });
-
     it("middle entrypoint scoped with no consumptions carries and flushes", async () => {
       const {
         roleKey,
