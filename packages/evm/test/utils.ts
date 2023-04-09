@@ -1,3 +1,4 @@
+import assert from "assert";
 import { AddressZero } from "@ethersproject/constants";
 import { Contract, utils, BigNumber, BigNumberish } from "ethers";
 import { BytesLike, solidityPack } from "ethers/lib/utils";
@@ -280,17 +281,33 @@ type ConditionStruct = {
   children?: ConditionStruct[];
 };
 
-export function toConditionsFlat(
-  condition: ConditionStruct,
-  index = 0,
-  parent = 0
-): ConditionFlatStruct[] {
-  const { children = [], ...rest } = condition;
+export function toConditionsFlat(root: ConditionStruct): ConditionFlatStruct[] {
+  let queue = [{ node: root, parent: 0 }];
+  let result: ConditionFlatStruct[] = [];
 
-  return [
-    { ...rest, parent },
-    ...children.flatMap((child, j) =>
-      toConditionsFlat(child, index + 1 + j, index)
-    ),
-  ].sort((a, b) => (a.parent < b.parent ? -1 : 1));
-}
+  for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
+    const entry = queue.shift();
+    assert(entry);
+
+    const { node, parent } = entry;
+
+    result = [
+      ...result,
+      {
+        parent,
+        paramType: node.paramType,
+        operator: node.operator,
+        compValue: node.compValue,
+      },
+    ];
+
+    queue = [
+      ...queue,
+      ...(node.children || []).map((child) => ({
+        node: child,
+        parent: bfsOrder,
+      })),
+    ];
+  }
+
+  return result;

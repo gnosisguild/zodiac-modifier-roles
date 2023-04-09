@@ -129,9 +129,8 @@ export async function setupTwoParamsStatic() {
   };
 }
 export async function setupOneParamStaticTuple() {
-  const { invoker, roles, testContract, scopeFunction } = await baseSetup(
-    "oneParamStaticTuple"
-  );
+  const { invoker, roles, testContract, scopeFunction, owner } =
+    await baseSetup("oneParamStaticTuple");
 
   async function invoke(a: TestContract.StaticTupleStruct) {
     return roles
@@ -149,6 +148,7 @@ export async function setupOneParamStaticTuple() {
     roles,
     scopeFunction,
     invoke,
+    owner,
   };
 }
 export async function setupOneParamStaticNestedTuple() {
