@@ -9,6 +9,7 @@ import {
   deployRolesMod,
 } from "./utils";
 import { defaultAbiCoder } from "@ethersproject/abi";
+import { AddressOne } from "@gnosis.pm/safe-contracts";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -88,6 +89,7 @@ describe("Roles", async () => {
     return {
       roles,
       testContract,
+      owner,
       invoker,
       roleKey: ROLE_KEY,
       allowanceKey,
@@ -289,7 +291,7 @@ describe("Roles", async () => {
 
   describe("execTransactionFromModule()", () => {
     async function setup_() {
-      const { roles, testContract, invoker, allowanceKey } =
+      const { roles, testContract, allowanceKey, owner, invoker } =
         await setupWitSpendAndRevert();
       async function invoke(toSpend: number, success: boolean) {
         const executionRevert = !success;
@@ -309,8 +311,18 @@ describe("Roles", async () => {
           );
       }
 
-      return { roles, invoke, allowanceKey };
+      return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("invoker not enabled as a module is not authorized", async () => {
+      const { roles, invoke, owner, invoker } = await loadFixture(setup_);
+
+      await roles.connect(owner).disableModule(AddressOne, invoker.address);
+
+      await expect(invoke(0, true)).to.revertedWithCustomError(
+        roles,
+        "NotAuthorized"
+      );
+    });
     it("success=true, flushes consumptions to storage", async () => {
       const { roles, invoke, allowanceKey } = await loadFixture(setup_);
 
@@ -341,7 +353,7 @@ describe("Roles", async () => {
 
   describe("execTransactionFromModuleReturnData()", () => {
     async function setup_() {
-      const { roles, testContract, invoker, allowanceKey } =
+      const { roles, testContract, allowanceKey, owner, invoker } =
         await setupWitSpendAndRevert();
       async function invoke(toSpend: number, success: boolean) {
         const executionRevert = !success;
@@ -360,8 +372,18 @@ describe("Roles", async () => {
           );
       }
 
-      return { roles, invoke, allowanceKey };
+      return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("invoker not enabled as a module is not authorized", async () => {
+      const { roles, invoke, owner, invoker } = await loadFixture(setup_);
+
+      await roles.connect(owner).disableModule(AddressOne, invoker.address);
+
+      await expect(invoke(0, true)).to.revertedWithCustomError(
+        roles,
+        "NotAuthorized"
+      );
+    });
     it("success=true, flushes consumptions to storage", async () => {
       const { roles, invoke, allowanceKey } = await loadFixture(setup_);
 
@@ -392,7 +414,7 @@ describe("Roles", async () => {
 
   describe("execTransactionWithRole()", () => {
     async function setup_() {
-      const { roles, testContract, invoker, roleKey, allowanceKey } =
+      const { roles, testContract, roleKey, allowanceKey, owner, invoker } =
         await setupWitSpendAndRevert();
 
       async function invoke(
@@ -418,8 +440,18 @@ describe("Roles", async () => {
           );
       }
 
-      return { roles, invoke, allowanceKey };
+      return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("invoker not enabled as a module is not authorized", async () => {
+      const { roles, invoke, owner, invoker } = await loadFixture(setup_);
+
+      await roles.connect(owner).disableModule(AddressOne, invoker.address);
+
+      await expect(invoke(0, true, true)).to.revertedWithCustomError(
+        roles,
+        "NotAuthorized"
+      );
+    });
     it("success=true shouldRevert=true, flush YES revert NO", async () => {
       const { roles, invoke, allowanceKey } = await loadFixture(setup_);
 
@@ -480,7 +512,7 @@ describe("Roles", async () => {
 
   describe("execTransactionWithRoleReturnData()", () => {
     async function setup_() {
-      const { roles, testContract, invoker, roleKey, allowanceKey } =
+      const { roles, testContract, roleKey, allowanceKey, owner, invoker } =
         await setupWitSpendAndRevert();
 
       async function invoke(
@@ -506,8 +538,18 @@ describe("Roles", async () => {
           );
       }
 
-      return { roles, invoke, allowanceKey };
+      return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("invoker not enabled as a module is not authorized", async () => {
+      const { roles, invoke, owner, invoker } = await loadFixture(setup_);
+
+      await roles.connect(owner).disableModule(AddressOne, invoker.address);
+
+      await expect(invoke(0, true, true)).to.revertedWithCustomError(
+        roles,
+        "NotAuthorized"
+      );
+    });
     it("success=true shouldRevert=true, flush YES revert NO", async () => {
       const { roles, invoke, allowanceKey } = await loadFixture(setup_);
 
