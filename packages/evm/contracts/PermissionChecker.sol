@@ -354,10 +354,10 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory result) {
+    ) private pure returns (Status, Result memory) {
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
-                (status, result) = _walk(
+                (Status status, Result memory result) = _walk(
                     value,
                     data,
                     condition.children[i],
@@ -382,10 +382,10 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory result) {
+    ) private pure returns (Status, Result memory) {
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
-                (status, ) = _walk(
+                (Status status, ) = _walk(
                     value,
                     data,
                     condition.children[i],
@@ -442,10 +442,10 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory result) {
+    ) private pure returns (Status, Result memory) {
         unchecked {
             for (uint256 i; i < payload.children.length; ++i) {
-                (status, result) = _walk(
+                (Status status, Result memory result) = _walk(
                     value,
                     data,
                     condition.children[0],
@@ -543,7 +543,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status) {
         Operator operator = condition.operator;
         bytes32 compValue = condition.compValue;
         bytes32 value = operator == Operator.EqualTo
@@ -565,7 +565,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(condition.compValue));
         int256 value = int256(uint256(Decoder.word(data, payload.location)));
@@ -592,7 +592,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Condition memory condition,
         ParameterPayload memory payload
-    ) private pure returns (Status status) {
+    ) private pure returns (Status) {
         bytes32 compValue = condition.compValue;
         bool isInline = condition.paramType == ParameterType.Static;
         bytes calldata value = Decoder.pluck(
@@ -624,7 +624,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory) {
+    ) private pure returns (Status, Result memory) {
         // 20 bytes on the left
         ICustomCondition adapter = ICustomCondition(
             address(bytes20(condition.compValue))
