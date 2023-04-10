@@ -3,13 +3,17 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
+  BYTES32_ZERO,
   ExecutionOptions,
   Operator,
   ParameterType,
+  PermissionCheckerStatus,
   deployRolesMod,
+  toConditionsFlat,
 } from "./utils";
 import { defaultAbiCoder } from "@ethersproject/abi";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
+import { BytesLike } from "ethers";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -683,6 +687,165 @@ describe("Roles", async () => {
       await expect(invoke(testContract2.address, 11)).to.not.be.reverted;
       await expect(invoke(testContract.address, 0)).to.be.reverted;
       await expect(invoke(testContract2.address, 0)).to.be.reverted;
+    });
+
+    it("a permission with fields insided a nested AbiEncoded", async () => {
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
+
+      await roles
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_KEY1], [true]);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
+      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract.address);
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY1,
+        testContract.address,
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("dynamic")
+        ),
+        toConditionsFlat({
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: ParameterType.Tuple,
+                  operator: Operator.Matches,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(["uint256"], [123456]),
+                    },
+                    {
+                      paramType: ParameterType.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(
+                        ["bytes"],
+                        ["0xaabbccdd4500d1"]
+                      ),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.None
+      );
+
+      const invoke = async (a: number, b: BytesLike) => {
+        const inner = (
+          await testContract.populateTransaction.oneParamDynamicTuple({
+            a,
+            b,
+          })
+        ).data as string;
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContract.address,
+            0,
+            (await testContract.populateTransaction.dynamic(inner))
+              .data as string,
+            0
+          );
+      };
+
+      await expect(invoke(123457, "0xaabbccdd4500d1"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+      await expect(invoke(123456, "0xaabb"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+
+      await expect(invoke(123456, "0xaabbccdd4500d1")).to.not.be.reverted;
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY1,
+        testContract.address,
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("dynamic")
+        ),
+        toConditionsFlat({
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.EqualTo,
+              compValue:
+                "0x0000000000000000000000000000000000000000000000000000000000000011",
+              children: [
+                {
+                  paramType: ParameterType.AbiEncoded,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.None
+      );
+    });
+
+    it("covering a test branch", async () => {
+      const { roles, testContract, owner } = await loadFixture(setup);
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY1,
+        testContract.address,
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("dynamic")
+        ),
+        toConditionsFlat({
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.EqualTo,
+              compValue:
+                "0x0000000000000000000000000000000000000000000000000000000000000011",
+              children: [
+                {
+                  paramType: ParameterType.AbiEncoded,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.None
+      );
     });
   });
 });
