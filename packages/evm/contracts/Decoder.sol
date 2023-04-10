@@ -29,39 +29,10 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        result = __block__(data, 4, Topology.typeTree(condition));
+        Topology.TypeTree memory typeNode = Topology.typeTree(condition);
+        result = __block__(data, 4, typeNode, typeNode.children.length, false);
         result.location = 0;
         result.size = data.length;
-    }
-
-    /**
-     * @dev Plucks a slice of bytes from calldata.
-     * @param data The calldata to pluck the slice from.
-     * @param location The starting location of the slice.
-     * @param size The size of the slice.
-     * @return A slice of bytes from calldata.
-     */
-    function pluck(
-        bytes calldata data,
-        uint256 location,
-        uint256 size
-    ) internal pure returns (bytes calldata) {
-        return data[location:location + size];
-    }
-
-    /**
-     * @dev Loads a word from calldata.
-     * @param data The calldata to load the word from.
-     * @param location The starting location of the slice.
-     * @return result 32 byte word from calldata.
-     */
-    function word(
-        bytes calldata data,
-        uint256 location
-    ) internal pure returns (bytes32 result) {
-        assembly {
-            result := calldataload(add(data.offset, location))
-        }
     }
 
     /**
@@ -80,26 +51,37 @@ library Decoder {
         ParameterType paramType = typeNode.paramType;
 
         if (paramType == ParameterType.Static) {
-            result.location = location;
             result.size = 32;
         } else if (paramType == ParameterType.Dynamic) {
-            // If the parameter is a dynamic type, set its location and size
-            // taking into account the length prefix which is a uint256 value
-            // preceding the actual dynamic data.
-            result.location = location;
-            result.size = 32 + _ceil32(uint256(word(data, location)));
-        } else if (paramType == ParameterType.AbiEncoded) {
-            // If the parameter is ABI-encoded, parse its components and
-            // recursively map their locations and sizes within calldata.
-            // take into accounts the encoded length and the 4 bytes selector
-            result = __block__(data, location + 32 + 4, typeNode);
-            result.location = location;
             result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.Tuple) {
-            return __block__(data, location, typeNode);
+            result = __block__(
+                data,
+                location,
+                typeNode,
+                typeNode.children.length,
+                false
+            );
         } else if (paramType == ParameterType.Array) {
-            return _array(data, location, typeNode);
+            result = __block__(
+                data,
+                location + 32,
+                typeNode,
+                uint256(word(data, location)),
+                true
+            );
+            result.size += 32;
+        } else if (paramType == ParameterType.AbiEncoded) {
+            result = __block__(
+                data,
+                location + 32 + 4,
+                typeNode,
+                typeNode.children.length,
+                false
+            );
+            result.size = 32 + _ceil32(uint256(word(data, location)));
         }
+        result.location = location;
     }
 
     /**
@@ -107,62 +89,35 @@ library Decoder {
      * @param data The encoded transaction data.
      * @param location The current location of the parameter block being processed.
      * @param typeNode The current TypeTree node being processed.
+     * @param length The number of parts in the block.
+     * @param templateChild whether first child is type descriptor for all parts.
      * @return result The decoded ParameterPayload.
      */
     function __block__(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory typeNode
+        Topology.TypeTree memory typeNode,
+        uint256 length,
+        bool templateChild
     ) private pure returns (ParameterPayload memory result) {
-        uint256 length = typeNode.children.length;
-        result.location = location;
         result.children = new ParameterPayload[](length);
 
-        uint256 offset;
+        bool isInline;
+        if (templateChild) {
+            isInline = Topology.isInline(typeNode.children[0]);
+        }
+
         unchecked {
-            for (uint256 i; i < length; ++i) {
-                Topology.TypeTree memory part = typeNode.children[i];
-                bool isInline = Topology.isInline(part);
+            uint256 offset;
+            for (uint256 i; i < length; i++) {
+                if (!templateChild) {
+                    isInline = Topology.isInline(typeNode.children[i]);
+                }
 
                 result.children[i] = _walk(
                     data,
                     _locationInBlock(data, location, offset, isInline),
-                    part
-                );
-                result.size += result.children[i].size + (isInline ? 0 : 32);
-                offset += isInline ? result.children[i].size : 32;
-            }
-        }
-    }
-
-    /**
-     * @dev Recursively walk through the TypeTree to decode an array parameter.
-     * @param data The encoded transaction data.
-     * @param location The current location of the array block being processed.
-     * @param typeNode The current TypeTree node being processed.
-     * @return result The decoded ParameterPayload.
-     */
-    function _array(
-        bytes calldata data,
-        uint256 location,
-        Topology.TypeTree memory typeNode
-    ) private pure returns (ParameterPayload memory result) {
-        uint256 length = uint256(word(data, location));
-
-        result.location = location;
-        result.children = new ParameterPayload[](length);
-        result.size = 32;
-
-        Topology.TypeTree memory part = typeNode.children[0];
-        bool isInline = Topology.isInline(part);
-
-        uint256 offset;
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                result.children[i] = _walk(
-                    data,
-                    _locationInBlock(data, 32 + location, offset, isInline),
-                    part
+                    typeNode.children[templateChild ? 0 : i]
                 );
                 result.size += result.children[i].size + (isInline ? 0 : 32);
                 offset += isInline ? result.children[i].size : 32;
@@ -193,6 +148,36 @@ library Decoder {
             return headLocation;
         } else {
             return location + uint256(word(data, headLocation));
+        }
+    }
+
+    /**
+     * @dev Plucks a slice of bytes from calldata.
+     * @param data The calldata to pluck the slice from.
+     * @param location The starting location of the slice.
+     * @param size The size of the slice.
+     * @return A slice of bytes from calldata.
+     */
+    function pluck(
+        bytes calldata data,
+        uint256 location,
+        uint256 size
+    ) internal pure returns (bytes calldata) {
+        return data[location:location + size];
+    }
+
+    /**
+     * @dev Loads a word from calldata.
+     * @param data The calldata to load the word from.
+     * @param location The starting location of the slice.
+     * @return result 32 byte word from calldata.
+     */
+    function word(
+        bytes calldata data,
+        uint256 location
+    ) internal pure returns (bytes32 result) {
+        assembly {
+            result := calldataload(add(data.offset, location))
         }
     }
 
