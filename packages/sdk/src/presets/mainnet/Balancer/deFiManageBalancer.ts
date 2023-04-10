@@ -1,223 +1,256 @@
-import { ExecutionOptions } from "../../../types"
-import { ZERO_ADDRESS } from "../../gnosisChain/addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
 import {
-  dynamic32Equal,
-  dynamic32OneOf,
+  ZERO_ADDRESS, AAVE, COMP, DAI, rETH2, sETH2, SWISE,
+  USDC, USDT, WBTC, WETH, wstETH,
+  balancer,
+  compound_v2,
+  uniswapv3
+} from "../addresses"
+import {
   staticEqual,
-  dynamicOneOf,
-  subsetOf,
-  dynamicEqual,
   staticOneOf,
 } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
+import { allow } from "../../allow"
 
-//Tokens
-const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-const WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-
-//Lido contracts
-const stETH = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
-const wstETH = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
-
-//AAVE contracts
-const AAVE = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9"
-const stkAAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
-
-//Compound V2 contracts
-const COMPTROLLER = "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
-const cUSDC = "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
-const cAAVE = "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
-const cDAI = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
-const COMP = "0xc00e94Cb662C3520282E6f5717214004A7f26888"
-
-//Uniswap V3 contracts
-const UV3_NFT_POSITIONS = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
-const UV3_ROUTER_2 = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
-
-//Balancer contracts
-const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-
-//Stakewise contracts
-const STAKEWISE_ETH2_STAKING = "0xC874b064f465bdD6411D45734b56fac750Cda29A"
-const STAKEWISE_MERKLE_DIS = "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
-const sETH2 = "0xFe2e637202056d30016725477c5da089Ab0A043A"
-const rETH2 = "0x20BC832ca081b91433ff6c17f85701B6e92486c5"
-const SWISE = "0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2"
 
 const preset = {
   network: 1,
   allow: [
+
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //LIDO
+    // LIDO
     //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([stETH], [wstETH]),
 
-    //...allowErc20Approve([stETH], [wstETH]),
-    {
-      targetAddress: stETH,
-      signature: "submit(address)",
-      params: {
-        [0]: staticEqual(ZERO_ADDRESS, "address"),
-      },
-      send: true,
-    },
-    { targetAddress: wstETH, signature: "wrap(uint256)" },
-    { targetAddress: wstETH, signature: "unwrap(uint256)" },
+    // {
+    //   targetAddress: stETH,
+    //   signature: "submit(address)",
+    //   params: {
+    //     [0]: staticEqual(ZERO_ADDRESS, "address"),
+    //   },
+    //   send: true,
+    // },
+    allow.mainnet.lido.stETH["submit"](
+      ZERO_ADDRESS,
+      {
+        send: true
+      }
+    ),
+
+    // { targetAddress: wstETH, signature: "wrap(uint256)" },
+    allow.mainnet.lido.wstETH["wrap"](),
+    // { targetAddress: wstETH, signature: "unwrap(uint256)" }
+    allow.mainnet.lido.wstETH["unwrap"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Staking of AAVE in Safety Module
+    // Staking of AAVE in Safety Module
     //---------------------------------------------------------------------------------------------------------------------------------
-
     //...allowErc20Approve([AAVE], [stkAAVE]),
-    {
-      targetAddress: stkAAVE,
-      signature: "stake(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
-    {
-      targetAddress: stkAAVE,
-      signature: "claimRewards(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
 
-    //Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
-    {
-      targetAddress: stkAAVE,
-      signature: "cooldown()",
-    },
+    // {
+    //   targetAddress: stkAAVE,
+    //   signature: "stake(address,uint256)",
+    //   params: {
+    //     [0]: staticEqual(AVATAR),
+    //   },
+    // },
+    allow.mainnet.aave.stkAave["stake"](
+      AVATAR
+    ),
 
-    //Unstakes, can only be called during the 2 days unstaking window after the 10 days cooldown period
-    {
-      targetAddress: stkAAVE,
-      signature: "redeem(address,uint256)",
-      params: {
-        [0]: staticEqual(AVATAR),
-      },
-    },
+    // {
+    //   targetAddress: stkAAVE,
+    //   signature: "claimRewards(address,uint256)",
+    //   params: {
+    //     [0]: staticEqual(AVATAR),
+    //   },
+    // },
+    allow.mainnet.aave.stkAave["claimRewards"](
+      AVATAR
+    ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Compound V2 - USDC
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
+    // {
+    //   targetAddress: stkAAVE,
+    //   signature: "cooldown()",
+    // },
+    allow.mainnet.aave.stkAave["cooldown"](),
 
-    //...allowErc20Approve([USDC], [cUSDC]),
-
-    //Deposit
-    {
-      targetAddress: cUSDC,
-      signature: "mint(uint256)",
-    },
-    //Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    {
-      targetAddress: cUSDC,
-      signature: "redeem(uint256)",
-    },
-    //Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    {
-      targetAddress: cUSDC,
-      signature: "redeemUnderlying(uint256)",
-    },
-    //We are not allowing to include it as collateral
+    // Unstakes, can only be called during the 2 days unstaking window after the 10 days cooldown period
+    // {
+    //   targetAddress: stkAAVE,
+    //   signature: "redeem(address,uint256)",
+    //   params: {
+    //     [0]: staticEqual(AVATAR),
+    //   },
+    // },
+    allow.mainnet.aave.stkAave["redeem"](
+      AVATAR
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Compound V2 - DAI
+    // Compound V2 - USDC
     //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([USDC], [cUSDC]),
 
-    //...allowErc20Approve([DAI], [cDAI]),
+    // Deposit
+    // {
+    //   targetAddress: cUSDC,
+    //   signature: "mint(uint256)",
+    // },
+    allow.mainnet.compound.cUSDC["mint"](),
 
-    //Deposit
-    {
-      targetAddress: cDAI,
-      signature: "mint(uint256)",
-    },
-    //Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    {
-      targetAddress: cDAI,
-      signature: "redeem(uint256)",
-    },
-    //Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    {
-      targetAddress: cDAI,
-      signature: "redeemUnderlying(uint256)",
-    },
-    //We are not allowing to include it as collateral
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    // {
+    //   targetAddress: cUSDC,
+    //   signature: "redeem(uint256)",
+    // },
+    allow.mainnet.compound.cUSDC["redeem"](),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Compound V2 - AAVE
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    // {
+    //   targetAddress: cUSDC,
+    //   signature: "redeemUnderlying(uint256)",
+    // },
+    allow.mainnet.compound.cUSDC["redeemUnderlying"](),
 
-    //...allowErc20Approve([AAVE], [cAAVE]),
-
-    //Deposit
-    {
-      targetAddress: cAAVE,
-      signature: "mint(uint256)",
-    },
-    //Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    {
-      targetAddress: cAAVE,
-      signature: "redeem(uint256)",
-    },
-    //Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    {
-      targetAddress: cAAVE,
-      signature: "redeemUnderlying(uint256)",
-    },
-
-    //We are not allowing to include it as collateral
+    // We are not allowing to include it as collateral
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Compound V2 - Claiming of rewards
+    // Compound V2 - DAI
     //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([DAI], [cDAI]),
+
+    // Deposit
+    // {
+    //   targetAddress: cDAI,
+    //   signature: "mint(uint256)",
+    // },
+    allow.mainnet.compound.cDAI["mint"](),
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    // {
+    //   targetAddress: cDAI,
+    //   signature: "redeem(uint256)",
+    // },
+    allow.mainnet.compound.cDAI["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    // {
+    //   targetAddress: cDAI,
+    //   signature: "redeemUnderlying(uint256)",
+    // },
+    allow.mainnet.compound.cDAI["redeemUnderlying"](),
+
+    // We are not allowing to include it as collateral
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - AAVE
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([AAVE], [cAAVE]),
+
+    // Deposit
+    // {
+    //   targetAddress: cAAVE,
+    //   signature: "mint(uint256)",
+    // },
+    allow.mainnet.compound.cAAVE["mint"](),
+
+    // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
+    // {
+    //   targetAddress: cAAVE,
+    //   signature: "redeem(uint256)",
+    // },
+    allow.mainnet.compound.cAAVE["redeem"](),
+
+    // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
+    // {
+    //   targetAddress: cAAVE,
+    //   signature: "redeemUnderlying(uint256)",
+    // },
+    allow.mainnet.compound.cAAVE["redeemUnderlying"](),
+
+    // We are not allowing to include it as collateral
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2 - Claiming of rewards
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // {
+    //   targetAddress: COMPTROLLER,
+    //   signature: "claimComp(address,address[])",
+    //   params: {
+    //     [0]: staticEqual(AVATAR),
+    //     [1]: subsetOf(
+    //       [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+    //       "address[]",
+    //       {
+    //         restrictOrder: true,
+    //       }
+    //     ),
+    //   },
+    // },
+    allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+      AVATAR,
+      {
+        subsetOf: [compound_v2.cAAVE, compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+        restrictOrder: true,
+      }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Uniswap V3 - WBTC + WETH, Range: 11.786 - 15.082. Fee: 0.3%.
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([WBTC, WETH], [UV3_NFT_POSITIONS]),
+
+    // // Adding liquidity using ETH
+    // {
+    //   targetAddress: uniswapv3.POSITIONS_NFT,
+    //   signature:
+    //     "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+    //   params: {
+    //     [0]: staticEqual(WBTC, "address"),
+    //     [1]: staticEqual(WETH, "address"),
+    //     [2]: staticEqual(3000, "uint24"), // 3000 represents the 0.3% fee
+    //     [9]: staticEqual(AVATAR),
+    //   },
+    //   send: true
+    // },
+
+    // allow.mainnet.uniswapv3.positions_nft["refundETH"](),
+
+    // Adding liquidity using WETH
     {
-      targetAddress: COMPTROLLER,
-      signature: "claimComp(address,address[])",
-      params: {
-        [0]: staticEqual(AVATAR),
-        [1]: subsetOf(
-          [cAAVE, cDAI, cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
-          "address[]",
-          {
-            restrictOrder: true,
-          }
-        ),
-      },
-    },
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Uniswap V3 - WBTC + WETH, Range: 11.786 - 15.082. Fee: 0.3%.
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    //...allowErc20Approve([WBTC, WETH], [UV3_NFT_POSITIONS]),
-
-    //Adding liquidity
-    {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
       params: {
         [0]: staticEqual(WBTC, "address"),
         [1]: staticEqual(WETH, "address"),
-        [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
+        [2]: staticEqual(3000, "uint24"), // 3000 represents the 0.3% fee
         [9]: staticEqual(AVATAR),
       },
     },
-    //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
-    //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
-    //by another address calling the refundETH function
 
-    //Increasing liquidity: NFT ID 430246 was created in transaction with hash 0x8dc0368be4a8a28ab431a33ccf49acc85a4ca00a6c212c5d070a74af8aa0541f
+    // // Increasing liquidity using ETH: NFT ID 430246 was created in transaction with hash 0x8dc0368be4a8a28ab431a33ccf49acc85a4ca00a6c212c5d070a74af8aa0541f
+    // {
+    //   targetAddress: uniswapv3.POSITIONS_NFT,
+    //   signature:
+    //     "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+    //   params: {
+    //     [0]: staticEqual(430246, "uint256"),
+    //   },
+    //   send: true
+    // },
+
+    // The refundETH() function is called after the increaseLiquidity() but it has already been whitelisted
+
+    // Increasing liquidity using WETH: NFT ID 430246 was created in transaction with hash 0x8dc0368be4a8a28ab431a33ccf49acc85a4ca00a6c212c5d070a74af8aa0541f
     {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
       params: {
@@ -225,63 +258,96 @@ const preset = {
       },
     },
 
-    //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
-    //allowing for the depositing of WETH.
-
-    //Removing liquidity: to remove liquidity one has to call the decreaseLiquidity and collect functions
-    //decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represent the uncollected fees
-
+    // Removing liquidity: to remove liquidity one has to call the decreaseLiquidity and collect functions
+    // decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represent the uncollected fees
     {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
     },
-    //collect collects token0Owed and token1Owed. The address argument could also be the zero address, which is used to collect ETH
-    //instead of WETH. In this case, the tokens (one of them WETH) are first sent to the NFT Positions contract, and have to then be
-    //claimed by calling unwrapWETH9 and sweepToken. Since this is not safe non-custodial wise, we are only allowing the collecting
-    //of ETH instead of WETH
+
+    // collect collects token0Owed and token1Owed. The address argument could also be the zero address, which is used to collect ETH
+    // instead of WETH. In this case, the tokens (one of them WETH) are first sent to the NFT Positions contract, and have to then be
+    // claimed by calling unwrapWETH9 and sweepToken.
     {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature: "collect((uint256,address,uint128,uint128))",
       params: {
-        [1]: staticEqual(AVATAR),
+        // If the collected token is ETH then the address must be the ZERO_ADDRESS
+        // [1]: staticOneOf([AVATAR, ZERO_ADDRESS], "address"),
+        [1]: staticEqual(AVATAR)
       },
     },
 
-    //If ETH is collected instead of WETH, one has to call the unwrapWETH9 and sweepToken functions, but we are only allowing for the collecting of WETH.
+    // // If ETH is collected instead of WETH, one has to call the unwrapWETH9 and sweepToken functions
+    // allow.mainnet.uniswapv3.positions_nft["unwrapWETH9"](
+    //   undefined,
+    //   AVATAR
+    // ),
+
+    // allow.mainnet.uniswapv3.positions_nft["sweepToken"](
+    //   WBTC,
+    //   undefined,
+    //   AVATAR
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Stakewise
+    // Stakewise
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    //When staking ETH one receives sETH2
+    // When staking ETH one receives sETH2
+    // {
+    //   targetAddress: STAKEWISE_ETH2_STAKING,
+    //   signature: "stake()",
+    //   send: true,
+    // },
+    allow.mainnet.stakewise.eth2_staking["stake"](
+      {
+        send: true
+      }
+    ),
+
+    // By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
+    // {
+    //   targetAddress: STAKEWISE_MERKLE_DIS,
+    //   signature: "claim(uint256,address,address[],uint256[],bytes32[])",
+    //   params: {
+    //     [1]: staticEqual(AVATAR),
+    //     [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
+    //   },
+    // },
+    allow.mainnet.stakewise.merkle_distributor["claim"](
+      undefined,
+      AVATAR,
+      [rETH2, SWISE]
+    ),
+
+    // The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
+    // But as of now it is not considered within the strategy scope
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Stakewise - UniswapV3 WETH + sETH2, 0.3%
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([sETH2, WETH], [uniswapv3.POSITIONS_NFT]),
+
+    // // Add liquidity using ETH
+    // {
+    //   targetAddress: uniswapv3.POSITIONS_NFT,
+    //   signature:
+    //     "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+    //   params: {
+    //     [0]: staticEqual(WETH, "address"),
+    //     [1]: staticEqual(sETH2, "address"),
+    //     [2]: staticEqual(3000, "uint24"),
+    //     [9]: staticEqual(AVATAR),
+    //   },
+    //   send: true
+    // },
+
+    // The refundETH() function is called after the mint() but it has already been whitelisted
+
+    // Add liquidity using WETH
     {
-      targetAddress: STAKEWISE_ETH2_STAKING,
-      signature: "stake()",
-      send: true,
-    },
-
-    //By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
-    {
-      targetAddress: STAKEWISE_MERKLE_DIS,
-      signature: "claim(uint256,address,address[],uint256[],bytes32[])",
-      params: {
-        [1]: staticEqual(AVATAR),
-        [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
-      },
-    },
-
-    //The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
-    //But as of now it is not considered within the strategy scope
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Stakewise - UniswapV3 WETH + sETH2, 0.3%
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    //...allowErc20Approve([sETH2, WETH], [UV3_NFT_POSITIONS]),
-
-    //Add liquidity
-    {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
       params: {
@@ -291,13 +357,23 @@ const preset = {
         [9]: staticEqual(AVATAR),
       },
     },
-    //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
-    //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
-    //by another address calling the refundETH function
 
-    //Increasing liquidity: NFT ID 418686 was created in transaction with hash 0x198d10fc36ecfd2050990a5f1286d3d7ad226b4b482956d689d7216634fd7503:
+    // // Increasing liquidity using ETH: NFT ID 418686 was created in transaction with hash 0x198d10fc36ecfd2050990a5f1286d3d7ad226b4b482956d689d7216634fd7503:
+    // {
+    //   targetAddress: uniswapv3.POSITIONS_NFT,
+    //   signature:
+    //     "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+    //   params: {
+    //     [0]: staticEqual(418686, "uint256"),
+    //   },
+    //   send: true
+    // },
+
+    // The refundETH() function is called after the increaseLiquidity() but it has already been whitelisted
+
+    // Increasing liquidity using WETH: NFT ID 418686 was created in transaction with hash 0x198d10fc36ecfd2050990a5f1286d3d7ad226b4b482956d689d7216634fd7503:
     {
-      targetAddress: UV3_NFT_POSITIONS,
+      targetAddress: uniswapv3.POSITIONS_NFT,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
       params: {
@@ -305,207 +381,152 @@ const preset = {
       },
     },
 
-    //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the increaseLiquidity function, but we are only
-    //allowing for the depositing of WETH.
+    // Remove liquidity
+    // The decreaseLiquidity and collect functions have already been whitelisted.
 
-    //Remove liquidity
-    //The decreaseLiquidity and collect functions have already been whitelisted.
-    //See the comments above regarding unwrapETH9 and sweepToken
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //Wrapping and unwrapping of ETH
-    //---------------------------------------------------------------------------------------------------------------------------------
-    {
-      targetAddress: WETH,
-      signature: "withdraw(uint256)",
-    },
-    {
-      targetAddress: WETH,
-      signature: "deposit()",
-      send: true,
-    },
+    // // If ETH is collected instead of WETH, one has to call the unwrapWETH9 (already whitelisted) and sweepToken functions
+    // allow.mainnet.uniswapv3.positions_nft["sweepToken"](
+    //   sETH2,
+    //   undefined,
+    //   AVATAR
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of tokens COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT and WBTC in UniswapV3
+    // Wrapping and unwrapping of ETH, WETH
     //---------------------------------------------------------------------------------------------------------------------------------
+    // {
+    //   targetAddress: WETH,
+    //   signature: "withdraw(uint256)",
+    // },
+    allow.mainnet.weth["withdraw"](),
 
-    /* ...allowErc20Approve(
-      [COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC],
-      [UV3_ROUTER_2]
-    ), */
+    // {
+    //   targetAddress: WETH,
+    //   signature: "deposit()",
+    //   send: true,
+    // },
+    allow.mainnet.weth["deposit"](
+      {
+        send: true
+      }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Swapping of tokens COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT and WBTC in UniswapV3
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve(
+    //  [COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC],
+    //  [uniswapv3.ROUTER_2]
+    //),
 
     // THE FUNCTION "swapExactTokensForTokens(uint256,uint256,address[],address)" USE UNISWAPV2 ROUTES
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
-      params: {
-        [2]: dynamic32OneOf(
-          [
-            [COMP, WETH, USDC],
-            [COMP, WETH, DAI],
-            [COMP, WETH],
-            [AAVE, WETH, USDC],
-            [AAVE, WETH, DAI],
-            [AAVE, WETH],
-            [rETH2, sETH2, WETH, USDC],
-            [rETH2, sETH2, WETH, DAI],
-            [rETH2, sETH2, WETH],
-            [SWISE, sETH2, WETH, USDC],
-            [SWISE, sETH2, WETH, DAI],
-            [SWISE, sETH2, WETH],
-            [sETH2, WETH],
-            [WETH, sETH2],
-            [WETH, DAI],
-            [WETH, USDC],
-            [WETH, USDT],
-            [WETH, WBTC],
-            [USDC, WETH],
-            [USDC, USDT],
-            [USDC, WETH, USDT],
-            [USDC, DAI],
-            [USDC, WETH, DAI],
-            [DAI, WETH],
-            [DAI, USDC],
-            [DAI, WETH, USDC],
-            [DAI, USDT],
-            [DAI, WETH, USDT],
-            [USDT, WETH],
-            [USDT, USDC],
-            [USDT, WETH, USDC],
-            [USDT, DAI],
-            [USDT, WETH, DAI],
-            [WBTC, WETH],
-          ],
-          "address[]"
-        ),
-        [3]: staticEqual(AVATAR),
+    // {
+    //   targetAddress: uniswapv3.ROUTER_2,
+    //   signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
+    //   params: {
+    //     [2]: dynamic32OneOf(
+    //       [
+    //         [COMP, WETH, USDC],
+    //         [COMP, WETH, DAI],
+    //         [COMP, WETH],
+    //         [AAVE, WETH, USDC],
+    //         [AAVE, WETH, DAI],
+    //         [AAVE, WETH],
+    //         [rETH2, sETH2, WETH, USDC],
+    //         [rETH2, sETH2, WETH, DAI],
+    //         [rETH2, sETH2, WETH],
+    //         [SWISE, sETH2, WETH, USDC],
+    //         [SWISE, sETH2, WETH, DAI],
+    //         [SWISE, sETH2, WETH],
+    //         [sETH2, WETH],
+    //         [WETH, sETH2],
+    //         [WETH, DAI],
+    //         [WETH, USDC],
+    //         [WETH, USDT],
+    //         [WETH, WBTC],
+    //         [USDC, WETH],
+    //         [USDC, USDT],
+    //         [USDC, WETH, USDT],
+    //         [USDC, DAI],
+    //         [USDC, WETH, DAI],
+    //         [DAI, WETH],
+    //         [DAI, USDC],
+    //         [DAI, WETH, USDC],
+    //         [DAI, USDT],
+    //         [DAI, WETH, USDT],
+    //         [USDT, WETH],
+    //         [USDT, USDC],
+    //         [USDT, WETH, USDC],
+    //         [USDT, DAI],
+    //         [USDT, WETH, DAI],
+    //         [WBTC, WETH],
+    //       ],
+    //       "address[]"
+    //     ),
+    //     [3]: staticEqual(AVATAR),
+    //   },
+    // },
+    allow.mainnet.uniswapv3.router_2["swapExactTokensForTokens"](
+      undefined,
+      undefined,
+      {
+        oneOf: [
+          [COMP, WETH, USDC],
+          [COMP, WETH, DAI],
+          [COMP, WETH],
+          [AAVE, WETH, USDC],
+          [AAVE, WETH, DAI],
+          [AAVE, WETH],
+          [rETH2, sETH2, WETH, USDC],
+          [rETH2, sETH2, WETH, DAI],
+          [rETH2, sETH2, WETH],
+          [SWISE, sETH2, WETH, USDC],
+          [SWISE, sETH2, WETH, DAI],
+          [SWISE, sETH2, WETH],
+          [sETH2, WETH],
+          [WETH, sETH2],
+          [WETH, DAI],
+          [WETH, USDC],
+          [WETH, USDT],
+          [WETH, WBTC],
+          [USDC, WETH],
+          [USDC, USDT],
+          [USDC, WETH, USDT],
+          [USDC, DAI],
+          [USDC, WETH, DAI],
+          [DAI, WETH],
+          [DAI, USDC],
+          [DAI, WETH, USDC],
+          [DAI, USDT],
+          [DAI, WETH, USDT],
+          [USDT, WETH],
+          [USDT, USDC],
+          [USDT, WETH, USDC],
+          [USDT, DAI],
+          [USDT, WETH, DAI],
+          [WBTC, WETH]
+        ]
       },
-    },
+      AVATAR
+    ),
 
-    // Swap COMP for WETH
     {
-      targetAddress: UV3_ROUTER_2,
+      targetAddress: uniswapv3.ROUTER_2,
       signature:
         "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
-        [0]: staticEqual(COMP, "address"),
-        [1]: staticEqual(WETH, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap AAVE for WETH
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(AAVE, "address"),
-        [1]: staticEqual(WETH, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap rETH2 for sETH2
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(rETH2, "address"),
-        [1]: staticEqual(sETH2, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap SWISE for sETH2
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(SWISE, "address"),
-        [1]: staticEqual(sETH2, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap sETH2 for WETH
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(sETH2, "address"),
-        [1]: staticEqual(WETH, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap WETH for sETH2/USDC/USDT/DAI/WBTC
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(WETH, "address"),
-        [1]: staticOneOf([sETH2, USDC, USDT, DAI, WBTC], "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap USDC for WETH/USDT/DAI
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(USDC, "address"),
-        [1]: staticOneOf([WETH, USDT, DAI], "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap DAI for WETH/USDC/USDT
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(DAI, "address"),
-        [1]: staticOneOf([WETH, USDC, USDT], "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap USDT for WETH/USDC/DAI
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(USDT, "address"),
-        [1]: staticOneOf([WETH, USDC, DAI], "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
-        [3]: staticEqual(AVATAR),
-      },
-    },
-    // Swap WBTC for WETH
-    {
-      targetAddress: UV3_ROUTER_2,
-      signature:
-        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      params: {
-        [0]: staticEqual(WBTC, "address"),
-        [1]: staticEqual(WETH, "address"),
-        // [2]: staticOneOf([100, 500, 3000, 10000], "uint24"),
+        [0]: staticOneOf(
+          [AAVE, COMP, DAI, rETH2, sETH2, SWISE, USDC, USDT, WBTC, WETH],
+          "address"
+        ),
+        [1]: staticOneOf([DAI, sETH2, USDC, USDT, WBTC, WETH], "address"),
         [3]: staticEqual(AVATAR),
       },
     },
 
     // THIS FUNCTION CAN'T BE WHITELISTED SINCE THE ROLES MODULE V1 DOES NOT SUPPORT STRUCTS WITH DYNAMIC LENGTH PARAMETERS
     /*{
-      targetAddress: UV3_ROUTER_2,
+      targetAddress: uniswapv3.ROUTER_2,
       signature: "exactInput((bytes,address,uint256,uint256))",
       params: {
         [2]: staticEqual(AVATAR),
@@ -1039,7 +1060,7 @@ const preset = {
     },*/
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    //Swapping of COMP, WETH, in Balancer: https://dev.balancer.fi/guides/swaps/single-swaps
+    // Swapping of COMP, WETH, in Balancer: https://dev.balancer.fi/guides/swaps/single-swaps
     //---------------------------------------------------------------------------------------------------------------------------------
 
     /*     
@@ -1061,13 +1082,15 @@ const preset = {
     }
      */
 
-    //Swap COMP for WETH
-    //...allowErc20Approve([COMP], [BALANCER_VAULT]),
+    // Swap COMP for WETH
+    // ...allowErc20Approve([COMP], [balancer.VAULT]),
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1075,19 +1098,31 @@ const preset = {
         [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
           "bytes32"
-        ), //COMP-WETH pool ID
-        [9]: staticEqual(COMP, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
+        ), // COMP-WETH pool ID
+        [8]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(COMP, "address"), // Asset in
+        [10]: staticEqual(WETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
 
-    //Swap WETH for DAI
-    //...allowErc20Approve([WETH], [BALANCER_VAULT]),
+    // Swap WETH for DAI
+    // ...allowErc20Approve([WETH], [balancer.VAULT]),
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1095,19 +1130,31 @@ const preset = {
         [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
           "bytes32"
-        ), //WETH-DAI pool ID
-        [9]: staticEqual(WETH, "address"), //Asset in
-        [10]: staticEqual(DAI, "address"), //Asset out
+        ), // WETH-DAI pool ID
+        [8]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(WETH, "address"), // Asset in
+        [10]: staticEqual(DAI, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
 
-    //Swap WETH for USDC
-    //...allowErc20Approve([WETH], [BALANCER_VAULT]),
+    // Swap WETH for USDC
+    // ...allowErc20Approve([WETH], [balancer.VAULT]),
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1116,18 +1163,30 @@ const preset = {
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
           "bytes32"
         ), //USDC-WETH pool ID
+        [8]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(WETH, "address"), //Asset in
         [10]: staticEqual(USDC, "address"), //Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
 
-    //Swap wstETH for WETH
-    //...allowErc20Approve([wstETH], [BALANCER_VAULT]),
+    // Swap wstETH for WETH
+    // ...allowErc20Approve([wstETH], [balancer.VAULT]),
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1135,19 +1194,31 @@ const preset = {
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"
-        ), //wstETH-WETH pool ID
-        [9]: staticEqual(wstETH, "address"), //Asset in
-        [10]: staticEqual(WETH, "address"), //Asset out
+        ), // wstETH-WETH pool ID
+        [8]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(wstETH, "address"), // Asset in
+        [10]: staticEqual(WETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
 
-    //Swap WETH for wstETH
-    //...allowErc20Approve([WETH], [BALANCER_VAULT]),
+    // Swap WETH for wstETH
+    // ...allowErc20Approve([WETH], [balancer.VAULT]),
     {
-      targetAddress: BALANCER_VAULT,
+      targetAddress: balancer.VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
+        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1155,9 +1226,19 @@ const preset = {
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"
-        ), //wstETH-WETH pool ID
+        ), // wstETH-WETH pool ID
+        [8]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(WETH, "address"), //Asset in
         [10]: staticEqual(wstETH, "address"), //Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
   ],

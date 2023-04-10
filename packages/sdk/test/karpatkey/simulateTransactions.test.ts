@@ -14,7 +14,7 @@ import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/Gnosi
 import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
 import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
 
-import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
+import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS_old"
 
 import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
 
