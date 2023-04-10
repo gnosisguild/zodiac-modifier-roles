@@ -29,8 +29,8 @@ library Decoder {
          *   offset does not include the 4-byte function signature."
          *
          */
-        Topology.TypeTree memory typeNode = Topology.typeTree(condition);
-        result = __block__(data, 4, typeNode, typeNode.children.length, false);
+        Topology.TypeTree memory node = Topology.typeTree(condition);
+        result = __block__(data, 4, node, node.children.length, false);
         result.location = 0;
         result.size = data.length;
     }
@@ -40,15 +40,15 @@ library Decoder {
      * size within calldata.
      * @param data The encoded transaction data.
      * @param location The current offset within the calldata buffer.
-     * @param typeNode The current node being traversed within the parameter tree.
+     * @param node The current node being traversed within the parameter tree.
      * @return result The location and size of the parameter within calldata.
      */
     function _walk(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory typeNode
+        Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        ParameterType paramType = typeNode.paramType;
+        ParameterType paramType = node.paramType;
 
         if (paramType == ParameterType.Static) {
             result.size = 32;
@@ -58,15 +58,15 @@ library Decoder {
             result = __block__(
                 data,
                 location,
-                typeNode,
-                typeNode.children.length,
+                node,
+                node.children.length,
                 false
             );
         } else if (paramType == ParameterType.Array) {
             result = __block__(
                 data,
                 location + 32,
-                typeNode,
+                node,
                 uint256(word(data, location)),
                 true
             );
@@ -75,8 +75,8 @@ library Decoder {
             result = __block__(
                 data,
                 location + 32 + 4,
-                typeNode,
-                typeNode.children.length,
+                node,
+                node.children.length,
                 false
             );
             result.size = 32 + _ceil32(uint256(word(data, location)));
@@ -88,39 +88,36 @@ library Decoder {
      * @dev Recursively walk through the TypeTree to decode a block of parameters.
      * @param data The encoded transaction data.
      * @param location The current location of the parameter block being processed.
-     * @param typeNode The current TypeTree node being processed.
+     * @param node The current TypeTree node being processed.
      * @param length The number of parts in the block.
-     * @param templateChild whether first child is type descriptor for all parts.
+     * @param template whether first child is type descriptor for all parts.
      * @return result The decoded ParameterPayload.
      */
     function __block__(
         bytes calldata data,
         uint256 location,
-        Topology.TypeTree memory typeNode,
+        Topology.TypeTree memory node,
         uint256 length,
-        bool templateChild
+        bool template
     ) private pure returns (ParameterPayload memory result) {
         result.children = new ParameterPayload[](length);
-
         bool isInline;
-        if (templateChild) {
-            isInline = Topology.isInline(typeNode.children[0]);
-        }
+        if (template) isInline = Topology.isInline(node.children[0]);
 
         unchecked {
             uint256 offset;
-            for (uint256 i; i < length; i++) {
-                if (!templateChild) {
-                    isInline = Topology.isInline(typeNode.children[i]);
-                }
+            for (uint256 i; i < length; ++i) {
+                if (!template) isInline = Topology.isInline(node.children[i]);
 
                 result.children[i] = _walk(
                     data,
                     _locationInBlock(data, location, offset, isInline),
-                    typeNode.children[templateChild ? 0 : i]
+                    node.children[template ? 0 : i]
                 );
-                result.size += result.children[i].size + (isInline ? 0 : 32);
-                offset += isInline ? result.children[i].size : 32;
+
+                uint256 childSize = result.children[i].size;
+                result.size += isInline ? childSize : childSize + 32;
+                offset += isInline ? childSize : 32;
             }
         }
     }
