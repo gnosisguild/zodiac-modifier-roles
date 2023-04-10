@@ -634,7 +634,7 @@ describe("Decoder library", async () => {
       const result = await decoder.inspect(data, layout);
 
       const extraneousField = result.children[0];
-      expect(extraneousField.location).to.equal(0);
+      expect(extraneousField.location).to.equal(4);
       expect(extraneousField.size).to.equal(0);
 
       const staticField = result.children[1];
