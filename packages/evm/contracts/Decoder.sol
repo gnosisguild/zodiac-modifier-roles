@@ -93,7 +93,7 @@ library Decoder {
             // recursively map their locations and sizes within calldata.
             // take into accounts the encoded length and the 4 bytes selector
             result = __block__(data, location + 32 + 4, typeNode);
-            result.location = 32 + location;
+            result.location = location;
             result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.Tuple) {
             return __block__(data, location, typeNode);
