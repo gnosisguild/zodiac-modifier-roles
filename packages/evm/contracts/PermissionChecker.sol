@@ -409,20 +409,23 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Consumption[] memory consumptions
-    ) private pure returns (Status, Result memory result) {
+    ) private pure returns (Status status, Result memory result) {
+        result = Result({consumptions: consumptions, info: 0});
+
         uint256 okCount;
         unchecked {
             for (uint256 i; i < condition.children.length; ++i) {
-                (Status status, Result memory _result) = _walk(
+                (status, result) = _walk(
                     value,
                     data,
                     condition.children[i],
                     payload,
-                    consumptions
+                    result.consumptions
                 );
                 if (status == Status.Ok) {
-                    result = _result;
-                    okCount = okCount + 1;
+                    if (++okCount > 1) {
+                        break;
+                    }
                 }
             }
         }
