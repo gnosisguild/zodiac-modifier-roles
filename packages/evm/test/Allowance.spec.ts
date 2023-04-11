@@ -21,7 +21,7 @@ import {
 } from "./operators/setup";
 
 describe("Allowance", async () => {
-  it("consumption in truthy And branch influences other branches", async () => {
+  it("consumption in truthy And branch bleeds to other branches", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
       setupTwoParamsStatic
     );
@@ -199,6 +199,76 @@ describe("Allowance", async () => {
     await expect(invoke(501, 1)).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
+  });
+  it("consumption in truthy Xor branch bleeds to other branches", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupTwoParamsStatic
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1, 0, 0, 0, 0);
+
+    await scopeFunction(
+      toConditionsFlat({
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+        children: [
+          {
+            paramType: ParameterType.None,
+            operator: Operator.Xor,
+            compValue: "0x",
+            children: [
+              {
+                paramType: ParameterType.None,
+                operator: Operator.And,
+                compValue: "0x",
+                children: [
+                  {
+                    paramType: ParameterType.Static,
+                    operator: Operator.WithinAllowance,
+                    compValue: allowanceKey,
+                  },
+                  {
+                    paramType: ParameterType.Static,
+                    operator: Operator.Pass,
+                    compValue: "0x",
+                  },
+                ],
+              },
+              {
+                paramType: ParameterType.None,
+                operator: Operator.And,
+                compValue: "0x",
+                children: [
+                  {
+                    paramType: ParameterType.Static,
+                    operator: Operator.Pass,
+                    compValue: "0x",
+                  },
+                  {
+                    paramType: ParameterType.Static,
+                    operator: Operator.WithinAllowance,
+                    compValue: allowanceKey,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
+
+    await expect(invoke(1, 1)).to.not.be.reverted;
+
+    await expect(invoke(1, 0))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.XorViolation, BYTES32_ZERO);
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
   });
   it("consumption in ArraySome gets counted once", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
