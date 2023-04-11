@@ -4,13 +4,13 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Core.sol";
 
 /**
- * @title PermissionTracker - a component of the Zodiac Roles Mod that is
+ * @title AllowanceTracker - a component of the Zodiac Roles Mod that is
  * responsible for loading and calculating allowance balances. Persists
  * consumptions back to storage.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
-abstract contract PermissionTracker is Core {
+abstract contract AllowanceTracker is Core {
     event ConsumeAllowance(
         bytes32 allowanceKey,
         uint128 consumed,
