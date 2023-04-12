@@ -57,21 +57,21 @@ const preset = {
         //   targetAddress: cUSDC,
         //   signature: "mint(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["mint"](),
+        allow.mainnet.compound_v2.cUSDC["mint"](),
 
         // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
         // {
         //   targetAddress: cUSDC,
         //   signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeem"](),
+        allow.mainnet.compound_v2.cUSDC["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //   targetAddress: cUSDC,
         //   signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
         // We are not allowing to include it as collateral
 
@@ -85,21 +85,21 @@ const preset = {
         //   targetAddress: cDAI,
         //   signature: "mint(uint256)",
         // },
-        allow.mainnet.compound.cDAI["mint"](),
+        allow.mainnet.compound_v2.cDAI["mint"](),
 
         // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
         // {
         //   targetAddress: cDAI,
         //   signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeem"](),
+        allow.mainnet.compound_v2.cDAI["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //   targetAddress: cDAI,
         //   signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
         // We are not allowing to include it as collateral
 
@@ -121,7 +121,7 @@ const preset = {
         //     ),
         //   },
         // },
-        allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+        allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
             AVATAR,
             {
                 subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order

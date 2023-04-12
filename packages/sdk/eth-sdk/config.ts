@@ -13,44 +13,9 @@ export default defineConfig({
   },
   contracts: {
     mainnet: {
-      lido: {
-        stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-        wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
-      },
-      uniswapv3: {
-        positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
-        router_2: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
-      },
-      compound: {
-        comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b",
-        cometRewards: "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
-        cUSDC: "0x39AA39c021dfbaE8faC545936693aC917d5E7563",
-        cDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
-        cAAVE: "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
-      },
-      aave: {
+      aave_v2: {
+        lending_pool: "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
         stkAave: "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
-      },
-      balancer: {
-        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-        relayer_library: "0xd02992266BB6a6324A3aB8B62FeCBc9a3C58d1F9",
-        B_stETH_stable_gauge: "0xcD4722B7c24C29e0413BDCd9e51404B4539D14aE",
-        B_auraBAL_stable_gauge: "0x0312AA8D0BA4a1969Fddb382235870bF55f7f242",
-        B_rETH_stable_gauge: "0x79eF6103A513951a3b25743DB509E267685726B7",
-        B_80GNO_20WETH_gauge: "0xCB664132622f29943f67FA56CCfD1e24CC8B4995",
-        B_50COW_50GNO_gauge: "0xA6468eca7633246Dcb24E5599681767D27d1F978",
-        B_50WSTETH_50LDO_gauge: "0x95201b61ef19c867da0d093df20021e1a559452c",
-        B_50WETH_50AURA_gauge: "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00",
-        B_50COW_50WETH_gauge: "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5",
-        bb_a_USD_gauge: "0xa6325e799d266632D347e41265a69aF111b05403",
-        BAL_minter: "0x239e55f427d44c3cc793f49bfb507ebe76638a2b",
-        fee_distributor: "0xD3cf852898b21fc233251427c2DC93d3d604F3BB",
-        veBAL: "0xC128a9954e6c874eA3d62ce62B468bA073093F25"
-      },
-      idle: {
-        stEthCdo: "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8",
-        wstEthAaGauge: "0x675eC042325535F6e176638Dd2d4994F645502B9",
-        distributorProxy: "0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6"
       },
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
@@ -69,6 +34,29 @@ export default defineConfig({
         claim_zap: "0x623B83755a39B12161A63748f3f595A530917Ab2",
         B_80BAL_20WETH_depositor: "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827",
         BAL_depositor: "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
+      },
+      balancer: {
+        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        relayer_library: "0xd02992266BB6a6324A3aB8B62FeCBc9a3C58d1F9",
+        B_stETH_stable_gauge: "0xcD4722B7c24C29e0413BDCd9e51404B4539D14aE",
+        B_auraBAL_stable_gauge: "0x0312AA8D0BA4a1969Fddb382235870bF55f7f242",
+        B_rETH_stable_gauge: "0x79eF6103A513951a3b25743DB509E267685726B7",
+        B_80GNO_20WETH_gauge: "0xCB664132622f29943f67FA56CCfD1e24CC8B4995",
+        B_50COW_50GNO_gauge: "0xA6468eca7633246Dcb24E5599681767D27d1F978",
+        B_50WSTETH_50LDO_gauge: "0x95201b61ef19c867da0d093df20021e1a559452c",
+        B_50WETH_50AURA_gauge: "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00",
+        B_50COW_50WETH_gauge: "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5",
+        bb_a_USD_gauge: "0xa6325e799d266632D347e41265a69aF111b05403",
+        BAL_minter: "0x239e55f427d44c3cc793f49bfb507ebe76638a2b",
+        fee_distributor: "0xD3cf852898b21fc233251427c2DC93d3d604F3BB",
+        veBAL: "0xC128a9954e6c874eA3d62ce62B468bA073093F25"
+      },
+      compound_v2: {
+        comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b",
+        cometRewards: "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
+        cUSDC: "0x39AA39c021dfbaE8faC545936693aC917d5E7563",
+        cDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+        cAAVE: "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
       },
       convex: {
         booster: "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
@@ -91,6 +79,15 @@ export default defineConfig({
         cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06",
         x3CRV_pool: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
       },
+      idle: {
+        stEthCdo: "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8",
+        wstEthAaGauge: "0x675eC042325535F6e176638Dd2d4994F645502B9",
+        distributorProxy: "0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6"
+      },
+      lido: {
+        stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+        wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+      },
       stakewise: {
         eth2_staking: "0xC874b064f465bdD6411D45734b56fac750Cda29A",
         merkle_distributor: "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
@@ -99,12 +96,28 @@ export default defineConfig({
         router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
       },
       weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      uniswapv3: {
+        positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+        router_2: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+      },
       omnibridge: "0x88ad09518695c6c3712AC10a214bE5109a655671"
     },
     gnosis: {
-      sushiswap: {
-        router: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-        minichef_v2: "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3"
+      agave: {
+        wxdai_gateway: "0x36A644cC38Ae257136EEca5919800f364d73FeFC",
+        lending_pool: "0x5E15d5E33d318dCEd84Bfe3F4EACe07909bE6d9c",
+        incentives_controller: "0xfa255f5104f129B78f477e9a6D050a02f31A5D86",
+        stkAGVE: "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221",
+        variableDebtWXDAI: "0xec72De30C3084023F7908002A2252a606CCe0B2c",
+      },
+      balancer: {
+        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        relayer_library: "0xD7FAD3bd59D6477cbe1BE7f646F7f1BA25b230f8",
+        child_chain_gauge_reward_helper: "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
+        B_50bbagGNO_50bbagWETH_gauge: "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
+        bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
+        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
+        B_50bbagGNO_50bbagUSD_gauge: "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
       },
       curve: {
         crvEUReUSD_pool: "0x056C6C5e684CeC248635eD86033378Cc444459B0",
@@ -125,32 +138,20 @@ export default defineConfig({
         crv_minter: "0xabC000d88f23Bb45525E447528DBF656A9D55bf5",
         stake_deposit_zap: "0xB7De33440B7171159a9718CBE748086cecDd9685"
       },
+      honeyswap: {
+        router: "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
+      },
       realt: {
         gateway: "0x80Dc050A8C923C0051D438026f1192d53033728c",
         lending_pool: "0x5B8D36De471880Ee21936f328AAB2383a280CB2A",
         variableDebtrmmWXDAI: "0x6a7CeD66902D07066Ad08c81179d17d0fbE36829"
       },
-      honeyswap: {
-        router: "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
+      sushiswap: {
+        router: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        minichef_v2: "0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3"
       },
       swapr: {
         router: "0xE43e60736b1cb4a75ad25240E2f9a62Bff65c0C0"
-      },
-      agave: {
-        wxdai_gateway: "0x36A644cC38Ae257136EEca5919800f364d73FeFC",
-        lending_pool: "0x5E15d5E33d318dCEd84Bfe3F4EACe07909bE6d9c",
-        incentives_controller: "0xfa255f5104f129B78f477e9a6D050a02f31A5D86",
-        stkAGVE: "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221",
-        variableDebtWXDAI: "0xec72De30C3084023F7908002A2252a606CCe0B2c",
-      },
-      balancer: {
-        vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-        relayer_library: "0xD7FAD3bd59D6477cbe1BE7f646F7f1BA25b230f8",
-        child_chain_gauge_reward_helper: "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
-        B_50bbagGNO_50bbagWETH_gauge: "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
-        bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
-        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
-        B_50bbagGNO_50bbagUSD_gauge: "0x793fAF861a78B07c0C8c0ed1450D3919F3473226"
       },
       omnibridge: "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d",
       xdai_bridge: "0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6"

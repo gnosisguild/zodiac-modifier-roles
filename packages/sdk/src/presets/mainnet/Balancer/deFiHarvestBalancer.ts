@@ -26,7 +26,7 @@ const preset = {
         //     [0]: staticEqual(AVATAR),
         //   },
         // },
-        allow.mainnet.aave.stkAave["claimRewards"](
+        allow.mainnet.aave_v2.stkAave["claimRewards"](
             AVATAR
         ),
 
@@ -52,7 +52,7 @@ const preset = {
         //     ),
         //   },
         // },
-        allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+        allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
             AVATAR,
             {
                 subsetOf: [compound_v2.cAAVE, compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order

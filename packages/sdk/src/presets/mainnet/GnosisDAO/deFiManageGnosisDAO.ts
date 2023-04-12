@@ -1,13 +1,15 @@
 import { allow } from "../../allow"
 import {
-  ZERO_ADDRESS, E_ADDRESS, AURA, auraBAL, BAL, COW, CRV,
-  CVX, DAI, WETH, GNO, LDO, rETH, stETH, USDC, wstETH,
+  ZERO_ADDRESS, E_ADDRESS, AAVE, AURA, auraBAL, BAL, COW, CRV,
+  CVX, DAI, WETH, GNO, LDO, rETH, rETH2, sETH2, stETH, SWISE, USDC, WBTC, wstETH,
   OMNI_BRIDGE,
+  aave_v2,
   aura,
   balancer,
   compound_v2,
   convex,
-  curve
+  curve,
+  uniswapv3
 } from "../addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
 import {
@@ -2208,13 +2210,13 @@ const preset = {
     ...allowErc20Approve([USDC], [compound_v2.cUSDC]),
 
     // Deposit
-    allow.mainnet.compound.cUSDC["mint"](),
+    allow.mainnet.compound_v2.cUSDC["mint"](),
 
     // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    allow.mainnet.compound.cUSDC["redeem"](),
+    allow.mainnet.compound_v2.cUSDC["redeem"](),
 
     // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+    allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
     // Use as Collateral
     // We are only allowing to call this function with one single token address, since it's the way the UI does it
@@ -2235,15 +2237,15 @@ const preset = {
     },
 
     // Stop using as Collateral
-    allow.mainnet.compound.comptroller["exitMarket"](
+    allow.mainnet.compound_v2.comptroller["exitMarket"](
       compound_v2.cUSDC
     ),
 
     // Borrow specified amount of underlying asset (uint256)
-    allow.mainnet.compound.cUSDC["borrow"](),
+    allow.mainnet.compound_v2.cUSDC["borrow"](),
 
     // Repay specified borrowed amount of underlying asset (uint256)
-    allow.mainnet.compound.cUSDC["repayBorrow"](),
+    allow.mainnet.compound_v2.cUSDC["repayBorrow"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2 - DAI
@@ -2251,13 +2253,13 @@ const preset = {
     ...allowErc20Approve([DAI], [compound_v2.cDAI]),
 
     // Deposit
-    allow.mainnet.compound.cDAI["mint"](),
+    allow.mainnet.compound_v2.cDAI["mint"](),
 
     // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    allow.mainnet.compound.cDAI["redeem"](),
+    allow.mainnet.compound_v2.cDAI["redeem"](),
 
     // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    allow.mainnet.compound.cDAI["redeemUnderlying"](),
+    allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
     // Use as Collateral
     // We are only allowing to call this function with one single token address, since it's the way the UI does it
@@ -2278,26 +2280,204 @@ const preset = {
     },
 
     // Stop using as Collateral
-    allow.mainnet.compound.comptroller["exitMarket"](
+    allow.mainnet.compound_v2.comptroller["exitMarket"](
       compound_v2.cDAI
     ),
 
     // Borrow specified amount of underlying asset (uint256)
-    allow.mainnet.compound.cDAI["borrow"](),
+    allow.mainnet.compound_v2.cDAI["borrow"](),
 
     // Repay specified borrowed amount of underlying asset (uint256)
-    allow.mainnet.compound.cDAI["repayBorrow"](),
+    allow.mainnet.compound_v2.cDAI["repayBorrow"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2 - Claiming of rewards
     //---------------------------------------------------------------------------------------------------------------------------------
-    allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+    allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
       AVATAR,
       {
         subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
     ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V2 - stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([stETH], [aave_v2.LENDING_POOL]),
+
+    // Deposit
+    allow.mainnet.aave_v2.lending_pool["deposit"](
+      stETH,
+      undefined,
+      AVATAR,
+    ),
+
+    // Withdraw
+    allow.mainnet.aave_v2.lending_pool["withdraw"](
+      stETH,
+      undefined,
+      AVATAR,
+    ),
+
+    // Set/Unset Asset as Collateral
+    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](
+      stETH
+    ),
+
+    // Borrow (Should we add this functionality for stETH?)
+    allow.mainnet.aave_v2.lending_pool["borrow"](
+      stETH,
+      undefined,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    // Repay (Should we add this functionality for stETH?)
+    allow.mainnet.aave_v2.lending_pool["repay"](
+      stETH,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V2 - WBTC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([WBTC], [aave_v2.LENDING_POOL]),
+
+    // Deposit (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v2.lending_pool["deposit"](
+      WBTC,
+      undefined,
+      AVATAR,
+    ),
+
+    // Withdraw (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v2.lending_pool["withdraw"](
+      WBTC,
+      undefined,
+      AVATAR,
+    ),
+
+    // Set/Unset Asset as Collateral (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](
+      WBTC
+    ),
+
+    // Borrow
+    allow.mainnet.aave_v2.lending_pool["borrow"](
+      WBTC,
+      undefined,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    // Repay
+    allow.mainnet.aave_v2.lending_pool["repay"](
+      WBTC,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Staking of AAVE in Safety Module
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([AAVE], [aave_v2.stkAAVE]),
+
+    // Stake
+    allow.mainnet.aave_v2.stkAave["stake"](
+      AVATAR
+    ),
+
+    // Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
+    allow.mainnet.aave_v2.stkAave["cooldown"](),
+
+    // Unstakes, can only be called during the 2 days unstaking window after the 10 days cooldown period
+    allow.mainnet.aave_v2.stkAave["redeem"](
+      AVATAR
+    ),
+
+    // Claim Rewards
+    allow.mainnet.aave_v2.stkAave["claimRewards"](
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Stakewise
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // When staking ETH one receives sETH2
+    allow.mainnet.stakewise.eth2_staking["stake"](
+      {
+        send: true
+      }
+    ),
+
+    // By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
+    allow.mainnet.stakewise.merkle_distributor["claim"](
+      undefined,
+      AVATAR,
+      [rETH2, SWISE]
+    ),
+
+    // The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
+    // But as of now it is not considered within the strategy scope
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Stakewise - UniswapV3 ETH + sETH2, 0.3%
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([sETH2, WETH], [uniswapv3.POSITIONS_NFT]),
+
+    // Add liquidity using WETH
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature:
+        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+      params: {
+        [0]: staticEqual(WETH, "address"),
+        [1]: staticEqual(sETH2, "address"),
+        [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
+        [9]: staticEqual(AVATAR),
+      },
+    },
+
+    // Increasing liquidity using WETH: NFT ID 415282 was created in transaction with hash 0xc5641e5f6fb3d4497ba6a8c3a50fc0f738a2aae3247cbead859d054a3c0ddc98
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature:
+        "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+      params: {
+        [0]: staticEqual(415282, "uint256"),
+      },
+    },
+
+    // Removing liquidity: to remove liquidity one has to call the decreaseLiquidity and collect functions
+    // decreaseLiquidity burns the token amounts in the pool, and increases token0Owed and token1Owed which represent the uncollected fees
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature: "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+    },
+
+    // collect collects token0Owed and token1Owed. The address argument could also be the zero address, which is used to collect ETH
+    // instead of WETH. In this case, the tokens (one of them WETH) are first sent to the NFT Positions contract, and have to then be
+    // claimed by calling unwrapWETH9 and sweepToken.
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature: "collect((uint256,address,uint128,uint128))",
+      params: {
+        // If the collected token is ETH then the address must be the ZERO_ADDRESS
+        // [1]: staticOneOf([AVATAR, ZERO_ADDRESS], "address"),
+        [1]: staticEqual(AVATAR),
+      },
+    },
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // OMNI BRIDGE

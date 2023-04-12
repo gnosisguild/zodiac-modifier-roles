@@ -704,21 +704,21 @@ const preset = {
         //     targetAddress: cUSDC,
         //     signature: "mint(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["mint"](),
+        allow.mainnet.compound_v2.cUSDC["mint"](),
 
         // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
         // {
         //     targetAddress: cUSDC,
         //     signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeem"](),
+        allow.mainnet.compound_v2.cUSDC["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //     targetAddress: cUSDC,
         //     signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
         // Use as Collateral
         // We are only allowing to call this function with one single token address, since it's the way the UI does it
@@ -746,7 +746,7 @@ const preset = {
         //         [0]: staticEqual(cUSDC, "address"),
         //     },
         // },
-        allow.mainnet.compound.comptroller["exitMarket"](
+        allow.mainnet.compound_v2.comptroller["exitMarket"](
             compound_v2.cUSDC
         ),
 
@@ -755,14 +755,14 @@ const preset = {
         //     targetAddress: cUSDC,
         //     signature: "borrow(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["borrow"](),
+        allow.mainnet.compound_v2.cUSDC["borrow"](),
 
         // Repay specified borrowed amount of underlying asset (uint256)
         // {
         //     targetAddress: cUSDC,
         //     signature: "repayBorrow(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["repayBorrow"](),
+        allow.mainnet.compound_v2.cUSDC["repayBorrow"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - DAI
@@ -774,21 +774,21 @@ const preset = {
         //     targetAddress: cDAI,
         //     signature: "mint(uint256)",
         // },
-        allow.mainnet.compound.cDAI["mint"](),
+        allow.mainnet.compound_v2.cDAI["mint"](),
 
         // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
         // {
         //     targetAddress: cDAI,
         //     signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeem"](),
+        allow.mainnet.compound_v2.cDAI["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //     targetAddress: cDAI,
         //     signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
         // Use as Collateral
         // We are only allowing to call this function with one single token address, since it's the way the UI does it
@@ -816,7 +816,7 @@ const preset = {
         //         [0]: staticEqual(cDAI, "address"),
         //     },
         // },
-        allow.mainnet.compound.comptroller["exitMarket"](
+        allow.mainnet.compound_v2.comptroller["exitMarket"](
             compound_v2.cDAI
         ),
 
@@ -825,14 +825,14 @@ const preset = {
         //     targetAddress: cDAI,
         //     signature: "borrow(uint256)",
         // },
-        allow.mainnet.compound.cDAI["borrow"](),
+        allow.mainnet.compound_v2.cDAI["borrow"](),
 
         // Repay specified borrowed amount of underlying asset (uint256)
         // {
         //     targetAddress: cDAI,
         //     signature: "repayBorrow(uint256)",
         // },
-        allow.mainnet.compound.cDAI["repayBorrow"](),
+        allow.mainnet.compound_v2.cDAI["repayBorrow"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - Claiming of rewards
@@ -851,7 +851,7 @@ const preset = {
         //         ),
         //     },
         // },
-        allow.mainnet.compound.comptroller["claimComp(address,address[])"](
+        allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
             AVATAR,
             {
                 subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order

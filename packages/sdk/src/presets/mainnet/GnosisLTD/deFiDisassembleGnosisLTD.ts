@@ -283,14 +283,14 @@ const preset = {
         //     targetAddress: cUSDC,
         //     signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeem"](),
+        allow.mainnet.compound_v2.cUSDC["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //     targetAddress: cUSDC,
         //     signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
         // Stop using as Collateral
         // {
@@ -300,7 +300,7 @@ const preset = {
         //         [0]: staticEqual(cUSDC, "address"),
         //     },
         // },
-        allow.mainnet.compound.comptroller["exitMarket"](
+        allow.mainnet.compound_v2.comptroller["exitMarket"](
             compound_v2.cUSDC
         ),
 
@@ -309,7 +309,7 @@ const preset = {
         //     targetAddress: cUSDC,
         //     signature: "repayBorrow(uint256)",
         // },
-        allow.mainnet.compound.cUSDC["repayBorrow"](),
+        allow.mainnet.compound_v2.cUSDC["repayBorrow"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - DAI
@@ -320,14 +320,14 @@ const preset = {
         //     targetAddress: cDAI,
         //     signature: "redeem(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeem"](),
+        allow.mainnet.compound_v2.cDAI["redeem"](),
 
         // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
         // {
         //     targetAddress: cDAI,
         //     signature: "redeemUnderlying(uint256)",
         // },
-        allow.mainnet.compound.cDAI["redeemUnderlying"](),
+        allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
         // Stop using as Collateral
         // {
@@ -337,7 +337,7 @@ const preset = {
         //         [0]: staticEqual(cDAI, "address"),
         //     },
         // },
-        allow.mainnet.compound.comptroller["exitMarket"](
+        allow.mainnet.compound_v2.comptroller["exitMarket"](
             compound_v2.cDAI
         ),
 
@@ -346,7 +346,7 @@ const preset = {
         //     targetAddress: cDAI,
         //     signature: "repayBorrow(uint256)",
         // },
-        allow.mainnet.compound.cDAI["repayBorrow"](),
+        allow.mainnet.compound_v2.cDAI["repayBorrow"](),
     ],
     placeholders: { AVATAR },
 } satisfies RolePreset

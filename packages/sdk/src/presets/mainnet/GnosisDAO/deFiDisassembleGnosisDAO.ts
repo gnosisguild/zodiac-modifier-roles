@@ -753,36 +753,36 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    allow.mainnet.compound.cUSDC["redeem"](),
+    allow.mainnet.compound_v2.cUSDC["redeem"](),
 
     // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    allow.mainnet.compound.cUSDC["redeemUnderlying"](),
+    allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
     // Stop using as Collateral
-    allow.mainnet.compound.comptroller["exitMarket"](
+    allow.mainnet.compound_v2.comptroller["exitMarket"](
       compound_v2.cUSDC
     ),
 
     // Repay specified borrowed amount of underlying asset (uint256)
-    allow.mainnet.compound.cUSDC["repayBorrow"](),
+    allow.mainnet.compound_v2.cUSDC["repayBorrow"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2 - DAI
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Withdrawing: sender redeems uint256 cTokens, it is called when MAX is withdrawn
-    allow.mainnet.compound.cDAI["redeem"](),
+    allow.mainnet.compound_v2.cDAI["redeem"](),
 
     // Withdrawing: sender redeems cTokens in exchange for a specified amount of underlying asset (uint256), it is called when MAX isn't withdrawn
-    allow.mainnet.compound.cDAI["redeemUnderlying"](),
+    allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
     // Stop using as Collateral
-    allow.mainnet.compound.comptroller["exitMarket"](
+    allow.mainnet.compound_v2.comptroller["exitMarket"](
       compound_v2.cDAI
     ),
 
     // Repay specified borrowed amount of underlying asset (uint256)
-    allow.mainnet.compound.cDAI["repayBorrow"](),
+    allow.mainnet.compound_v2.cDAI["repayBorrow"](),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset
