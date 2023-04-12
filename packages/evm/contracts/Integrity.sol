@@ -209,6 +209,14 @@ library Integrity {
             ) {
                 revert UnsuitableChildCount(i);
             }
+
+            if (
+                (condition.operator == Operator.EtherWithinAllowance ||
+                    condition.operator == Operator.CallWithinAllowance) &&
+                childrenBounds[i].length != 0
+            ) {
+                revert UnsuitableChildCount(i);
+            }
         }
 
         for (uint256 i = 0; i < conditions.length; i++) {
