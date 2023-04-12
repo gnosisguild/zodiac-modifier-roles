@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { Operator, ParameterType } from "./utils";
+import { BYTES32_ZERO, Operator, ParameterType } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
 import { defaultAbiCoder } from "@ethersproject/abi";
 
@@ -753,6 +753,59 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           })),
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+    it("enforces (Ether|Call)WithinAllowance to have no children", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.CallWithinAllowance,
+            compValue: BYTES32_ZERO,
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: BYTES32_ZERO,
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
