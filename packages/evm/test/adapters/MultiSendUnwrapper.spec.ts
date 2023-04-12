@@ -6,6 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { BigNumberish } from "ethers";
 import { getAddress, solidityPack } from "ethers/lib/utils";
+import { encodeMultisendPayload } from "../utils";
 
 enum Operation {
   Call = 0,
@@ -39,7 +40,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -80,7 +81,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -123,7 +124,7 @@ describe("MultiSendUnwrapper", async () => {
       await testEncoder.populateTransaction.simple(1);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
           value: 0,
@@ -157,7 +158,7 @@ describe("MultiSendUnwrapper", async () => {
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     assert(txData);
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -179,7 +180,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -234,7 +235,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -277,7 +278,7 @@ describe("MultiSendUnwrapper", async () => {
     assert(txData2);
 
     const { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000002",
           value: 999444555,
@@ -322,7 +323,7 @@ describe("MultiSendUnwrapper", async () => {
 
     const { data: txData } = await testEncoder.populateTransaction.simple(1);
     let { data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -336,7 +337,7 @@ describe("MultiSendUnwrapper", async () => {
     ).to.be.reverted;
 
     ({ data } = await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
@@ -357,20 +358,6 @@ interface MetaTransaction {
   data: string;
   operation: number;
 }
-
-const encodeMultisend = (txs: MetaTransaction[]): string => {
-  return (
-    "0x" +
-    txs
-      .map((tx) =>
-        solidityPack(
-          ["uint8", "address", "uint256", "uint256", "bytes"],
-          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
-        ).slice(2)
-      )
-      .join("")
-  );
-};
 
 const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
   return (

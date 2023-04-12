@@ -5,11 +5,11 @@ import {
   BYTES32_ZERO,
   deployRolesMod,
   ExecutionOptions,
-  encodeMultisend,
   Operator,
   ParameterType,
   PermissionCheckerStatus,
   toConditionsFlat,
+  encodeMultisendPayload,
 } from "./utils";
 import { BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -896,9 +896,9 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
-      const multisendCallData = (
+      const multisendCalldata = (
         await multisend.populateTransaction.multiSend(
-          encodeMultisend([
+          encodeMultisendPayload([
             {
               to: testContract.address,
               value: 0,
@@ -932,7 +932,7 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCallData, 1)
+          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -1020,9 +1020,9 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
-      const multisendCallData = (
+      const multisendCalldata = (
         await multisend.populateTransaction.multiSend(
-          encodeMultisend([
+          encodeMultisendPayload([
             {
               to: testContract.address,
               value: 0,
@@ -1056,7 +1056,7 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCallData, 1)
+          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -1132,9 +1132,9 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
-      const multisendCallData = (
+      const multisendCalldata = (
         await multisend.populateTransaction.multiSend(
-          encodeMultisend([
+          encodeMultisendPayload([
             {
               to: testContract.address,
               value: 0,
@@ -1163,7 +1163,7 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCallData, 1)
+          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
       )
         .to.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
@@ -1259,9 +1259,9 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
-      const multisendCallData = (
+      const multisendCalldata = (
         await multisend.populateTransaction.multiSend(
-          encodeMultisend([
+          encodeMultisendPayload([
             {
               to: testContract.address,
               value: 0,
@@ -1303,7 +1303,7 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCallData, 1)
+          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -1408,9 +1408,9 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
-      const multisendCallData = (
+      const multisendCalldata = (
         await multisend.populateTransaction.multiSend(
-          encodeMultisend([
+          encodeMultisendPayload([
             {
               to: testContract.address,
               value: 0,
@@ -1452,7 +1452,7 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCallData, 1)
+          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(

@@ -3,11 +3,11 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BigNumberish } from "ethers";
-import { solidityPack } from "ethers/lib/utils";
 
 import {
   BYTES32_ZERO,
   deployRolesMod,
+  encodeMultisendPayload,
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
@@ -57,7 +57,7 @@ async function setup() {
 
   const multisendCallData = (
     await multisend.populateTransaction.multiSend(
-      encodeMultisend([
+      encodeMultisendPayload([
         {
           to: testContract.address,
           value: 0,
@@ -227,7 +227,7 @@ describe("Multi Entrypoint", async () => {
 
     const multisendCallData = (
       await multisend.populateTransaction.multiSend(
-        encodeMultisend([
+        encodeMultisendPayload([
           {
             to: testContract.address,
             value: 0,
@@ -343,17 +343,3 @@ interface MetaTransaction {
   data: string;
   operation: number;
 }
-
-const encodeMultisend = (txs: MetaTransaction[]): string => {
-  return (
-    "0x" +
-    txs
-      .map((tx) =>
-        solidityPack(
-          ["uint8", "address", "uint256", "uint256", "bytes"],
-          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
-        ).slice(2)
-      )
-      .join("")
-  );
-};

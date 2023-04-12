@@ -3,14 +3,13 @@ import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
-  buildContractCall,
-  buildMultiSendSafeTx,
   ParameterType,
   ExecutionOptions,
   Operator,
   deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
+  encodeMultisendPayload,
 } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
@@ -33,7 +32,7 @@ describe("OldTests", async () => {
       avatar.address
     );
 
-    return { Avatar, avatar, testContract, modifier };
+    return { avatar, testContract, modifier };
   }
 
   async function setupRolesWithOwnerAndInvoker() {
@@ -62,7 +61,7 @@ describe("OldTests", async () => {
   }
 
   async function txSetup() {
-    const baseAvatar = await setupTestWithTestAvatar();
+    const { avatar, modifier, testContract } = await setupTestWithTestAvatar();
 
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
@@ -72,11 +71,11 @@ describe("OldTests", async () => {
     );
     const adapter = await MultiSendUnwrapper.deploy();
 
-    await baseAvatar.avatar.exec(
-      baseAvatar.modifier.address,
+    await avatar.exec(
+      modifier.address,
       0,
       (
-        await baseAvatar.modifier.populateTransaction.setTransactionUnwrapper(
+        await modifier.populateTransaction.setTransactionUnwrapper(
           multisend.address,
           "0x8d80ff0a",
           adapter.address
@@ -115,32 +114,30 @@ describe("OldTests", async () => {
         "This is an input that is larger than 32 bytes and must be scanned for correctness",
       ]
     );
-    const tx_1 = buildContractCall(
-      baseAvatar.testContract,
-      "mint",
-      [user1.address, 99],
-      0
-    );
-    const tx_2 = buildContractCall(
-      baseAvatar.testContract,
-      "mint",
-      [user1.address, 99],
-      0
-    );
-    const tx_3 = await buildContractCall(
-      baseAvatar.testContract,
-      "testDynamic",
-      [
-        "This is a dynamic array",
-        4,
-        "Test",
-        true,
-        3,
-        "weeeeeeee",
-        "This is an input that is larger than 32 bytes and must be scanned for correctness",
-      ],
-      0
-    );
+    const tx_1 = {
+      to: testContract.address,
+      value: 0,
+      data: (await testContract.populateTransaction.mint(user1.address, 99))
+        .data as string,
+      operation: 0,
+    };
+
+    const tx_3 = {
+      to: testContract.address,
+      value: 0,
+      data: (
+        await testContract.populateTransaction.testDynamic(
+          "This is a dynamic array",
+          4,
+          "Test",
+          true,
+          3,
+          "weeeeeeee",
+          "This is an input that is larger than 32 bytes and must be scanned for correctness"
+        )
+      ).data as string,
+      operation: 0,
+    };
 
     const parameterConfig_9 = [
       {
@@ -194,7 +191,10 @@ describe("OldTests", async () => {
     ];
 
     return {
-      ...baseAvatar,
+      avatar,
+      multisend,
+      testContract,
+      modifier,
       encodedParam_1,
       encodedParam_2,
       encodedParam_3,
@@ -206,9 +206,7 @@ describe("OldTests", async () => {
       encodedParam_9,
       parameterConfig_9,
       tx_1,
-      tx_2,
       tx_3,
-      multisend,
     };
   }
 
@@ -652,7 +650,6 @@ describe("OldTests", async () => {
         encodedParam_2,
         parameterConfig_9,
         tx_1,
-        tx_2,
         tx_3,
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
@@ -713,24 +710,24 @@ describe("OldTests", async () => {
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
-      const tx_bad = buildContractCall(
-        testContract,
-        "mint",
-        [user1.address, 98],
-        0
-      );
-
-      const multiTx = buildMultiSendSafeTx(
-        multisend,
-        [tx_1, tx_2, tx_3, tx_bad, tx_2, tx_3],
-        0
-      );
+      const tx_bad = {
+        to: testContract.address,
+        value: 0,
+        data: (await testContract.populateTransaction.mint(user1.address, 98))
+          .data as string,
+        operation: 0,
+      };
 
       await expect(
         modifier.execTransactionFromModule(
           multisend.address,
           0,
-          multiTx.data,
+          (
+            await multisend.populateTransaction.multiSend(
+              encodeMultisendPayload([tx_1, tx_1, tx_3, tx_bad, tx_1, tx_3])
+            )
+          ).data as string,
+
           1
         )
       )
@@ -798,16 +795,21 @@ describe("OldTests", async () => {
 
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
-      const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
+      let multisendCalldata = (
+        await multisend.populateTransaction.multiSend(
+          encodeMultisendPayload([tx_1])
+        )
+      ).data as string;
 
       // setting offset to 0x21 bytes instead of 0x20
-      multiTx.data = multiTx.data.slice(0, 73) + "1" + multiTx.data.slice(74);
+      multisendCalldata =
+        multisendCalldata.slice(0, 73) + "1" + multisendCalldata.slice(74);
 
       await expect(
         modifier.execTransactionFromModule(
           multisend.address,
           0,
-          multiTx.data,
+          multisendCalldata,
           1
         )
       ).to.be.revertedWithCustomError(modifier, "MalformedMultiEntrypoint");
@@ -823,7 +825,6 @@ describe("OldTests", async () => {
         encodedParam_2,
         parameterConfig_9,
         tx_1,
-        tx_2,
         tx_3,
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
@@ -884,17 +885,17 @@ describe("OldTests", async () => {
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
-      const multiTx = buildMultiSendSafeTx(
-        multisend,
-        [tx_1, tx_2, tx_3, tx_1, tx_2, tx_3],
-        0
-      );
+      const multisendCalldata = (
+        await multisend.populateTransaction.multiSend(
+          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
+        )
+      ).data as string;
 
       await expect(
         modifier.execTransactionFromModule(
           multisend.address,
           0,
-          multiTx.data,
+          multisendCalldata,
           1
         )
       ).to.emit(testContract, "TestDynamic");
@@ -1176,7 +1177,6 @@ describe("OldTests", async () => {
         encodedParam_2,
         parameterConfig_9,
         tx_1,
-        tx_2,
         tx_3,
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
@@ -1234,17 +1234,17 @@ describe("OldTests", async () => {
 
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
 
-      const multiTx = buildMultiSendSafeTx(
-        multisend,
-        [tx_1, tx_2, tx_3, tx_1, tx_2, tx_3],
-        0
-      );
+      const multisendCalldata = (
+        await multisend.populateTransaction.multiSend(
+          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
+        )
+      ).data as string;
 
       await expect(
         modifier.execTransactionWithRoleReturnData(
           multisend.address,
           0,
-          multiTx.data,
+          multisendCalldata,
           1,
           ROLE_KEY,
           !SHOULD_REVERT
