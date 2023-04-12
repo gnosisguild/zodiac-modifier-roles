@@ -19,7 +19,7 @@ const ROLE_KEY =
 const ROLE_KEY1 =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-describe.only("Legacy", async () => {
+describe("OldTests", async () => {
   async function setupTestWithTestAvatar() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
