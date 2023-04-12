@@ -46,7 +46,24 @@ describe("Integrity", async () => {
           compValue: "0x",
         },
       ])
-    ).to.be.revertedWithCustomError(integrity, "NoRootNode");
+    ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
+
+    await expect(
+      enforce([
+        {
+          parent: 1,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ])
+    ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
 
     await expect(
       enforce([
@@ -63,7 +80,7 @@ describe("Integrity", async () => {
           compValue: "0x",
         },
       ])
-    ).to.be.revertedWithCustomError(integrity, "TooManyRootNodes");
+    ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
   });
 
   describe("node", async () => {

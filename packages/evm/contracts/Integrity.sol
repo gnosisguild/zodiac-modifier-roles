@@ -9,9 +9,7 @@ import "./Topology.sol";
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Integrity {
-    error NoRootNode();
-
-    error TooManyRootNodes();
+    error UnsuitableRootNode();
 
     error NotBFS();
 
@@ -34,21 +32,13 @@ library Integrity {
     }
 
     function _root(ConditionFlat[] memory conditions) private pure {
-        uint256 index;
         uint256 count;
 
         for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].parent == i) {
-                index = i;
-                count++;
-            }
+            if (conditions[i].parent == i) ++count;
         }
-        if (count == 0) {
-            revert NoRootNode();
-        }
-
-        if (count > 1) {
-            revert TooManyRootNodes();
+        if (count != 1 || conditions[0].parent != 0) {
+            revert UnsuitableRootNode();
         }
     }
 
