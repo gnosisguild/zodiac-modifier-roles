@@ -19,44 +19,43 @@ const ROLE_KEY =
 const ROLE_KEY1 =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-describe("Legacy", async () => {
-  async function baseSetup() {
+describe.only("Legacy", async () => {
+  async function setupTestWithTestAvatar() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-    return { Avatar, avatar, testContract };
-  }
-
-  async function setupTestWithTestAvatar() {
-    const base = await baseSetup();
 
     const modifier = await deployRolesMod(
       hre,
-      base.avatar.address,
-      base.avatar.address,
-      base.avatar.address
+      avatar.address,
+      avatar.address,
+      avatar.address
     );
 
-    return { ...base, modifier };
+    return { Avatar, avatar, testContract, modifier };
   }
 
   async function setupRolesWithOwnerAndInvoker() {
-    const base = await baseSetup();
+    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+    const avatar = await Avatar.deploy();
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const testContract = await TestContract.deploy();
 
     const [owner, invoker] = await hre.ethers.getSigners();
     const modifier = await deployRolesMod(
       hre,
       owner.address,
-      base.avatar.address,
-      base.avatar.address
+      avatar.address,
+      avatar.address
     );
 
     await modifier.enableModule(invoker.address);
 
     return {
-      ...base,
       modifier,
+      avatar,
+      testContract,
       owner,
       invoker,
     };
@@ -64,6 +63,28 @@ describe("Legacy", async () => {
 
   async function txSetup() {
     const baseAvatar = await setupTestWithTestAvatar();
+
+    const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+    const multisend = await MultiSend.deploy();
+
+    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+      "MultiSendUnwrapper"
+    );
+    const adapter = await MultiSendUnwrapper.deploy();
+
+    await baseAvatar.avatar.exec(
+      baseAvatar.modifier.address,
+      0,
+      (
+        await baseAvatar.modifier.populateTransaction.setTransactionUnwrapper(
+          multisend.address,
+          "0x8d80ff0a",
+          adapter.address
+        )
+      ).data as string,
+      0
+    );
+
     const [user1] = await hre.ethers.getSigners();
     const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
       ["address"],
@@ -187,6 +208,7 @@ describe("Legacy", async () => {
       tx_1,
       tx_2,
       tx_3,
+      multisend,
     };
   }
 
@@ -620,11 +642,12 @@ describe("Legacy", async () => {
       ).to.emit(testContract, "TestDynamic");
     });
 
-    it.skip("reverts a call with multisend tx", async () => {
+    it("reverts a call with multisend tx", async () => {
       const {
         avatar,
         modifier,
         testContract,
+        multisend,
         encodedParam_1,
         encodedParam_2,
         parameterConfig_9,
@@ -634,20 +657,12 @@ describe("Legacy", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-      const multisend = await MultiSend.deploy();
-
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
-      //   multisend.address
-      // );
-      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -668,12 +683,18 @@ describe("Legacy", async () => {
         [
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
@@ -717,9 +738,10 @@ describe("Legacy", async () => {
         .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
     });
 
-    it.skip("reverts if multisend tx data offset is not 32 bytes", async () => {
+    it("reverts if multisend tx data offset is not 32 bytes", async () => {
       const {
         avatar,
+        multisend,
         modifier,
         testContract,
         encodedParam_1,
@@ -727,8 +749,6 @@ describe("Legacy", async () => {
         tx_1,
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-      const multisend = await MultiSend.deploy();
 
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -736,11 +756,6 @@ describe("Legacy", async () => {
         [true]
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
-      //   multisend.address
-      // );
-      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -761,12 +776,18 @@ describe("Legacy", async () => {
         [
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
@@ -780,7 +801,7 @@ describe("Legacy", async () => {
       const multiTx = buildMultiSendSafeTx(multisend, [tx_1], 0);
 
       // setting offset to 0x21 bytes instead of 0x20
-      multiTx.data = multiTx.data.substr(0, 73) + "1" + multiTx.data.substr(74);
+      multiTx.data = multiTx.data.slice(0, 73) + "1" + multiTx.data.slice(74);
 
       await expect(
         modifier.execTransactionFromModule(
@@ -789,13 +810,14 @@ describe("Legacy", async () => {
           multiTx.data,
           1
         )
-      ).to.be.revertedWith("UnacceptableMultiSendOffset()");
+      ).to.be.revertedWithCustomError(modifier, "MalformedMultiEntrypoint");
     });
 
-    it.skip("executes a call with multisend tx", async () => {
+    it("executes a call with multisend tx", async () => {
       const {
         avatar,
         modifier,
+        multisend,
         testContract,
         encodedParam_1,
         encodedParam_2,
@@ -805,8 +827,6 @@ describe("Legacy", async () => {
         tx_3,
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-      const multisend = await MultiSend.deploy();
 
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -814,11 +834,6 @@ describe("Legacy", async () => {
         [true]
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
-
-      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
-      //   multisend.address
-      // );
-      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
 
       const defaultRole = await modifier.populateTransaction.setDefaultRole(
         user1.address,
@@ -837,6 +852,12 @@ describe("Legacy", async () => {
         testContract.address,
         "0x40c10f19",
         [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -1145,9 +1166,10 @@ describe("Legacy", async () => {
       ).to.be.not.be.reverted;
     });
 
-    it.skip("executes a call with multisend tx", async () => {
+    it("executes a call with multisend tx", async () => {
       const {
         avatar,
+        multisend,
         modifier,
         testContract,
         encodedParam_1,
@@ -1161,9 +1183,6 @@ describe("Legacy", async () => {
 
       const SHOULD_REVERT = true;
 
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
-      const multisend = await MultiSend.deploy();
-
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
         [ROLE_KEY],
@@ -1171,22 +1190,23 @@ describe("Legacy", async () => {
       );
       await avatar.exec(modifier.address, 0, assign.data || "", 0);
 
-      // const multiSendTarget = await modifier.populateTransaction.setMultisend(
-      //   multisend.address
-      // );
-      // await avatar.exec(modifier.address, 0, multiSendTarget.data || "", 0);
-
       const scopeTarget = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
+        ROLE_KEY,
         testContract.address
       );
       await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
       const paramScoped = await modifier.populateTransaction.scopeFunction(
-        ROLE_KEY1,
+        ROLE_KEY,
         testContract.address,
         "0x40c10f19",
         [
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -1194,7 +1214,7 @@ describe("Legacy", async () => {
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
@@ -1205,7 +1225,7 @@ describe("Legacy", async () => {
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
 
       const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
-        ROLE_KEY1,
+        ROLE_KEY,
         testContract.address,
         "0x273454bf",
         parameterConfig_9,
