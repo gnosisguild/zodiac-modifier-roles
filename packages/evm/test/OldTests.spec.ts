@@ -139,7 +139,7 @@ describe("OldTests", async () => {
       operation: 0,
     };
 
-    const parameterConfig_9 = [
+    const conditionTree = [
       {
         parent: 0,
         paramType: ParameterType.AbiEncoded,
@@ -204,7 +204,7 @@ describe("OldTests", async () => {
       encodedParam_7,
       encodedParam_8,
       encodedParam_9,
-      parameterConfig_9,
+      conditionTree,
       tx_1,
       tx_3,
     };
@@ -363,7 +363,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -432,7 +434,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -473,18 +477,8 @@ describe("OldTests", async () => {
     });
 
     it("reverts dynamic parameter is not allowed", async () => {
-      const {
-        avatar,
-        modifier,
-        testContract,
-        encodedParam_3,
-        encodedParam_4,
-        encodedParam_5,
-        encodedParam_6,
-        encodedParam_7,
-        encodedParam_8,
-        encodedParam_9,
-      } = await loadFixture(txSetup);
+      const { avatar, modifier, testContract, conditionTree } =
+        await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
         user1.address,
@@ -509,57 +503,10 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x273454bf",
-        [
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Dynamic,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_3,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_4,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Dynamic,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_5,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_6,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Static,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_7,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Dynamic,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_8,
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Dynamic,
-            operator: Operator.EqualTo,
-            compValue: encodedParam_9,
-          },
-        ],
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("testDynamic")
+        ),
+        conditionTree,
         ExecutionOptions.None
       );
       await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
@@ -587,7 +534,7 @@ describe("OldTests", async () => {
     });
 
     it("executes a call with allowed dynamic parameter", async () => {
-      const { avatar, modifier, testContract, parameterConfig_9 } =
+      const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
       const assign = await modifier.populateTransaction.assignRoles(
@@ -614,7 +561,7 @@ describe("OldTests", async () => {
         ROLE_KEY1,
         testContract.address,
         "0x273454bf",
-        parameterConfig_9,
+        conditionTree,
         ExecutionOptions.None
       );
 
@@ -648,7 +595,7 @@ describe("OldTests", async () => {
         multisend,
         encodedParam_1,
         encodedParam_2,
-        parameterConfig_9,
+        conditionTree,
         tx_1,
         tx_3,
       } = await loadFixture(txSetup);
@@ -676,7 +623,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -705,7 +654,7 @@ describe("OldTests", async () => {
         ROLE_KEY1,
         testContract.address,
         "0x273454bf",
-        parameterConfig_9,
+        conditionTree,
         ExecutionOptions.None
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
@@ -727,7 +676,6 @@ describe("OldTests", async () => {
               encodeMultisendPayload([tx_1, tx_1, tx_3, tx_bad, tx_1, tx_3])
             )
           ).data as string,
-
           1
         )
       )
@@ -769,7 +717,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -823,7 +773,7 @@ describe("OldTests", async () => {
         testContract,
         encodedParam_1,
         encodedParam_2,
-        parameterConfig_9,
+        conditionTree,
         tx_1,
         tx_3,
       } = await loadFixture(txSetup);
@@ -851,7 +801,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY1,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -880,7 +832,7 @@ describe("OldTests", async () => {
         ROLE_KEY1,
         testContract.address,
         "0x273454bf",
-        parameterConfig_9,
+        conditionTree,
         ExecutionOptions.None
       );
       await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
@@ -1175,7 +1127,7 @@ describe("OldTests", async () => {
         testContract,
         encodedParam_1,
         encodedParam_2,
-        parameterConfig_9,
+        conditionTree,
         tx_1,
         tx_3,
       } = await loadFixture(txSetup);
@@ -1199,7 +1151,9 @@ describe("OldTests", async () => {
       const paramScoped = await modifier.populateTransaction.scopeFunction(
         ROLE_KEY,
         testContract.address,
-        "0x40c10f19",
+        testContract.interface.getSighash(
+          testContract.interface.getFunction("mint")
+        ),
         [
           {
             parent: 0,
@@ -1228,7 +1182,7 @@ describe("OldTests", async () => {
         ROLE_KEY,
         testContract.address,
         "0x273454bf",
-        parameterConfig_9,
+        conditionTree,
         ExecutionOptions.None
       );
 
