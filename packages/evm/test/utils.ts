@@ -1,6 +1,5 @@
 import assert from "assert";
-import { AddressZero } from "@ethersproject/constants";
-import { Contract, utils, BigNumber, BigNumberish } from "ethers";
+import { BigNumberish } from "ethers";
 import { BytesLike, solidityPack } from "ethers/lib/utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
