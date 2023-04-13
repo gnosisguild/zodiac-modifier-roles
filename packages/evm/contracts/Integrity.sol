@@ -229,6 +229,16 @@ library Integrity {
                 compatiblechildTypeTree(conditions, i, childrenBounds);
             }
         }
+
+        Topology.TypeTree memory typeTree = Topology.typeTree(
+            conditions,
+            0,
+            childrenBounds
+        );
+
+        if (typeTree.paramType != ParameterType.AbiEncoded) {
+            revert UnsuitableRootNode();
+        }
     }
 
     function compatiblechildTypeTree(

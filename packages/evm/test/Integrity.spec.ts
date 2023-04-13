@@ -215,6 +215,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Dynamic,
             operator: Operator.EqualToAvatar,
             compValue: "0x",
@@ -222,10 +228,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -235,10 +247,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -255,16 +273,28 @@ describe("Integrity", async () => {
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
             operator: Operator.EqualTo,
             compValue: "0x",
           },
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -274,10 +304,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -287,10 +323,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -306,6 +348,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Dynamic,
             operator: Operator.GreaterThan,
             compValue: "0x",
@@ -313,10 +361,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Dynamic,
@@ -326,10 +380,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Dynamic,
@@ -339,10 +399,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Dynamic,
@@ -352,10 +418,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -365,10 +437,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -384,6 +462,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Tuple,
             operator: Operator.Bitmask,
             compValue: "0x",
@@ -391,10 +475,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -404,10 +494,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -437,6 +533,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.Custom,
             compValue: "0x00",
@@ -444,10 +546,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -464,6 +572,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Tuple,
             operator: Operator.WithinAllowance,
             compValue: "0x",
@@ -471,10 +585,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -484,10 +604,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Static,
@@ -504,6 +630,12 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EtherWithinAllowance,
             compValue: "0x",
@@ -511,10 +643,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.Dynamic,
@@ -524,10 +662,16 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
           {
             parent: 0,
             paramType: ParameterType.None,
@@ -537,7 +681,7 @@ describe("Integrity", async () => {
         ])
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
-        .withArgs(0);
+        .withArgs(1);
 
       await expect(
         enforce([
