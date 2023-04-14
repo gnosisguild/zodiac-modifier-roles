@@ -13,11 +13,6 @@
 
 packages/evm/typechain-types
 
-# To always keep the app, contracts and subgraph in sync on the repo
-packages/app/contracts/abi/*.json
-packages/app/src/contracts
-
-
 # This will be generated from the template on deployment (to support multiple networks)
 packages/subgraph/subgraph.yaml
 packages/subgraph/generated
