@@ -8,6 +8,7 @@
 **/coverage*
 **/deployments
 **/.yarn/cache
+**/.yarn/install-state.gz
 .devcontainer
 packages/evm/typechain-types
 packages/subgraph/generated
