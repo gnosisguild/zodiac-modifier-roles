@@ -103,6 +103,7 @@ const mapSdk = <S extends EthSdk>(sdk: S): AllowKit<S> => {
 
 const { getContract, ...sdkGetters } = ethSdk
 export { sdkGetters as ethSdk }
+
 type SdkGetterName = keyof typeof sdkGetters
 type NetworkName<S extends SdkGetterName> = S extends `get${infer N}Sdk`
   ? Uncapitalize<N>
@@ -120,24 +121,7 @@ export const allow: AllowKitMap = Object.keys(sdkGetters).reduce(
   (acc, sdkGetterName) => {
     const network = uncapitalize(sdkGetterName.slice(3, -3))
     acc[network] = mapSdk(
-      ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider(network))
-    )
-    return acc
-  },
-  {} as any
-)
-
-type ContractMap = {
-  [Key in NetworkName<SdkGetterName>]: ReturnType<
-    (typeof ethSdk)[`get${Capitalize<Key>}Sdk`]
-  >
-}
-
-export const contracts: ContractMap = Object.keys(sdkGetters).reduce(
-  (acc, sdkGetterName) => {
-    const network = uncapitalize(sdkGetterName.slice(3, -3))
-    acc[network] = ethSdk[sdkGetterName as SdkGetterName](
-      ethers.getDefaultProvider(network)
+      ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider())
     )
     return acc
   },

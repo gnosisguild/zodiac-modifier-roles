@@ -41,11 +41,14 @@ export const describeStructure = (type: AbiType): Condition => {
   const paramType = ParamType.from(type)
   const children = paramType.arrayChildren
     ? [paramType.arrayChildren]
-    : paramType.components
+    : (paramType.components as ParamType[] | undefined) // ethers typings are wrong
 
   return {
     paramType: parameterType(type),
     operator: Operator.Pass,
-    children: children.length > 0 ? children.map(describeStructure) : undefined,
+    children:
+      children && children.length > 0
+        ? children.map(describeStructure)
+        : undefined,
   }
 }
