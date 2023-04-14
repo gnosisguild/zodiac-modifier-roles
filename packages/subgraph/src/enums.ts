@@ -30,12 +30,12 @@ export const ParameterTypeKeys = ["None", "Static", "Dynamic", "Tuple", "Array",
 
 export enum Operator {
   // 00:    EMPTY EXPRESSION (default, always passes)
-  //          paramType: Static / Dynamic
+  //          paramType: Static / Dynamic / Tuple / Array
   //          🚫 children
-  //          🚫 compValue
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: BOOLEAN EXPRESSIONS
+  // 01-04: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
@@ -44,7 +44,7 @@ export enum Operator {
   Xor = 3,
   Nor = 4,
   // ------------------------------------------------------------
-  // 05-16: COMPLEX EXPRESSIONS
+  // 05-14: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
@@ -52,11 +52,16 @@ export enum Operator {
   ArraySome = 6,
   ArrayEvery = 7,
   ArraySubset = 8,
-
+  // ------------------------------------------------------------
+  // 15:    SPECIAL COMPARISON (without compValue)
+  //          paramType: Static
+  //          🚫 children
+  //          🚫 compValue
+  EqualToAvatar = 15,
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
   //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
-  //          🚫 children
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
   EqualTo = 16,
   GreaterThan = 17,
@@ -64,10 +69,10 @@ export enum Operator {
   SignedIntGreaterThan = 19,
   SignedIntLessThan = 20,
   Bitmask = 21,
-
-  WithinAllowance = 29,
-  EtherWithinAllowance = 30,
-  CallWithinAllowance = 31,
+  Custom = 22,
+  WithinAllowance = 28,
+  EtherWithinAllowance = 29,
+  CallWithinAllowance = 30,
 }
 
 export const OperatorKeys = [
@@ -82,13 +87,14 @@ export const OperatorKeys = [
   "ArraySome", // 6
   "ArrayEvery", // 7
   "ArraySubset", // 8
-  "_ComplexPlaceholder9", // 9
-  "_ComplexPlaceholder10", // 10
-  "_ComplexPlaceholder11", // 11
-  "_ComplexPlaceholder12", // 12
-  "_ComplexPlaceholder13", // 13
-  "_ComplexPlaceholder14", // 14
-  "_ComplexPlaceholder15", // 15
+  "_Placeholder9", // 9
+  "_Placeholder10", // 10
+  "_Placeholder11", // 11
+  "_Placeholder12", // 12
+  "_Placeholder13", // 13
+  "_Placeholder14", // 14
+
+  "EqualToAvatar", // 15
 
   "EqualTo", // 16
   "GreaterThan", // 17
@@ -96,14 +102,14 @@ export const OperatorKeys = [
   "SignedIntGreaterThan", // 19
   "SignedIntLessThan", // 20
   "Bitmask", // 21
-  "_ComparisonPlaceholder22", // 22
-  "_ComparisonPlaceholder23", // 23
-  "_ComparisonPlaceholder24", // 24
-  "_ComparisonPlaceholder25", // 25
-  "_ComparisonPlaceholder26", // 26
-  "_ComparisonPlaceholder27", // 27
-  "_ComparisonPlaceholder28", // 28
-  "WithinAllowance", // 29
-  "EtherWithinAllowance", // 30
-  "CallWithinAllowance", // 31
+  "Custom", // 22
+  "_Placeholder23", // 23
+  "_Placeholder24", // 24
+  "_Placeholder25", // 25
+  "_Placeholder26", // 26
+  "_Placeholder27", // 27
+  "WithinAllowance", // 28
+  "EtherWithinAllowance", // 29
+  "CallWithinAllowance", // 30
+  "_Placeholder31", // 31
 ]
