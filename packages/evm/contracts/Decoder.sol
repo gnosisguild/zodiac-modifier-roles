@@ -9,6 +9,8 @@ import "./Topology.sol";
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Decoder {
+    error CalldataOutOfBounds();
+
     /**
      * @dev Maps the location and size of parameters in the encoded transaction data.
      * @param data The encoded transaction data.
@@ -179,6 +181,9 @@ library Decoder {
         bytes calldata data,
         uint256 location
     ) internal pure returns (bytes32 result) {
+        if (location + 32 > data.length) {
+            revert CalldataOutOfBounds();
+        }
         assembly {
             result := calldataload(add(data.offset, location))
         }
