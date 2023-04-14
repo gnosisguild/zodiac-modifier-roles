@@ -121,14 +121,6 @@ library Integrity {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Custom) {
-            if (
-                paramType != ParameterType.Static &&
-                paramType != ParameterType.Dynamic &&
-                paramType != ParameterType.Tuple &&
-                paramType != ParameterType.Array
-            ) {
-                revert UnsuitableParameterType(index);
-            }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
