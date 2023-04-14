@@ -32,7 +32,7 @@ export function handleAssignRoles(event: AssignRoles): void {
 
   const memberAddress = event.params.module
   const memberId = getMemberId(rolesModifierId, memberAddress)
-  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
+  getOrCreateMember(memberId, rolesModifierId, memberAddress) // create member if it does not exist
 
   const roleKeys = event.params.roleKeys
   const memberOfArray = event.params.memberOf
