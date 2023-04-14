@@ -1,7 +1,6 @@
 **/node_modules
 **/build
 **/.DS_Store
-**/artifacts
 **/env/
 **/.env
 **/.history
@@ -10,16 +9,16 @@
 **/.yarn/cache
 **/.yarn/install-state.gz
 .devcontainer
+.idea/
+
 packages/evm/typechain-types
-packages/subgraph/generated
 
 # To always keep the app, contracts and subgraph in sync on the repo
 packages/app/contracts/abi/*.json
 packages/app/src/contracts
 
-.idea/
 
 # This will be generated from the template on deployment (to support multiple networks)
 packages/subgraph/subgraph.yaml
+packages/subgraph/generated
 
-.vscode
