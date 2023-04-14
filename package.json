@@ -1,7 +1,6 @@
 {
   "name": "zodiac-roles-monorepo",
   "private": true,
-  "version": "1.0.0",
   "description": "Zodiac Roles monorepo",
   "scripts": {
     "build": "yarn contracts:build",
