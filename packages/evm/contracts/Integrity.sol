@@ -136,7 +136,7 @@ library Integrity {
                 revert UnsuitableCompValue(index);
             }
         } else {
-            assert(
+            require(
                 operator == Operator.EtherWithinAllowance ||
                     operator == Operator.CallWithinAllowance
             );
