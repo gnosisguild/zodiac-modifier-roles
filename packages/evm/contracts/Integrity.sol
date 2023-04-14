@@ -47,6 +47,10 @@ library Integrity {
         ParameterType paramType = condition.paramType;
         bytes memory compValue = condition.compValue;
         if (operator == Operator.Pass) {
+            if (paramType == ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+
             if (condition.compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
