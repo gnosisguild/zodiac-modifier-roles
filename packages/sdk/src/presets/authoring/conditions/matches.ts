@@ -2,7 +2,7 @@ import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
 import { ParamType } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
-import { PresetCondition } from "../../types"
+import { Placeholder, PresetCondition } from "../../types"
 
 import { eq } from "./comparison"
 import {
@@ -29,6 +29,9 @@ export const matches =
     }
 
     let conditions: (PresetCondition | undefined)[]
+
+    console.log({ scoping, abiType })
+
     if (Array.isArray(scoping)) {
       // scoping is an array (TupleScopings)
 
@@ -59,10 +62,8 @@ export const matches =
       }
 
       // map scoping values to conditions
-      conditions = abiType.components.map(
-        (componentType) =>
-          scoping[componentType.name] &&
-          mapScoping(scoping[componentType.name], componentType)
+      conditions = abiType.components.map((componentType) =>
+        mapScoping(scoping[componentType.name], componentType)
       )
     }
 
@@ -123,20 +124,25 @@ export const matchesAbi =
 export function mapScoping(
   scoping: Scoping<any> | undefined,
   abiType: ParamType
-): PresetCondition {
+): PresetCondition | undefined {
+  if (scoping === undefined) {
+    return undefined
+  }
+
   let conditionFunction: ConditionFunction<any>
 
   if (typeof scoping === "function") {
     // scoping is already a condition function
     conditionFunction = scoping
   } else if (
+    scoping instanceof Placeholder ||
     typeof scoping === "boolean" ||
     typeof scoping === "string" ||
     typeof scoping === "number" ||
     Array.isArray(scoping) ||
     isBigNumberish(scoping)
   ) {
-    // primitive values and arrays default to eq condition
+    // placeholders, primitive values, and arrays default to eq condition
     conditionFunction = eq(scoping)
   } else {
     // object values default to matches condition

@@ -1,6 +1,7 @@
 import { ParamType } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
+import { PresetCondition } from "../../types"
 
 import { mapScoping } from "./matches"
 import { ArrayElement, ConditionFunction, Scoping } from "./types"
@@ -17,10 +18,15 @@ export const every =
     if (abiType.type !== "array") {
       throw new Error("every() can only be used on array types")
     }
+    if (elementScoping === undefined) {
+      throw new Error("every() element condition must not be undefined")
+    }
     return {
       paramType: ParameterType.Array,
       operator: Operator.ArrayEvery,
-      children: [mapScoping(elementScoping, abiType.arrayChildren)],
+      children: [
+        mapScoping(elementScoping, abiType.arrayChildren) as PresetCondition, // cast is safe because of earlier elementScoping check
+      ],
     }
   }
 
@@ -36,10 +42,15 @@ export const some =
     if (abiType.type !== "array") {
       throw new Error("some() can only be used on array types")
     }
+    if (elementScoping === undefined) {
+      throw new Error("some() element condition must not be undefined")
+    }
     return {
       paramType: ParameterType.Array,
       operator: Operator.ArraySome,
-      children: [mapScoping(elementScoping, abiType.arrayChildren)],
+      children: [
+        mapScoping(elementScoping, abiType.arrayChildren) as PresetCondition, // cast is safe because of earlier elementScoping check
+      ],
     }
   }
 
@@ -52,14 +63,20 @@ export const subset =
     elementScopings: S
   ): ConditionFunction<T> =>
   (abiType: ParamType) => {
-    if (abiType.type !== "array") {
+    if (abiType.baseType !== "array") {
       throw new Error("subset() can only be used on array types")
     }
     return {
       paramType: ParameterType.Array,
       operator: Operator.ArraySubset,
-      children: elementScopings.map((elementScoping) =>
-        mapScoping(elementScoping, abiType.arrayChildren)
-      ),
+      children: elementScopings.map((elementScoping) => {
+        if (elementScoping === undefined) {
+          throw new Error("subset() element condition must not be undefined")
+        }
+        return mapScoping(
+          elementScoping,
+          abiType.arrayChildren
+        ) as PresetCondition // cast is safe because of earlier elementScoping check
+      }),
     }
   }
