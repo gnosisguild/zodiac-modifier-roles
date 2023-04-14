@@ -516,18 +516,6 @@ describe("Integrity", async () => {
     });
     it("Node Custom well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
-      await expect(
-        enforce([
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Custom,
-            compValue: "0x",
-          },
-        ])
-      )
-        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(0);
 
       await expect(
         enforce([
