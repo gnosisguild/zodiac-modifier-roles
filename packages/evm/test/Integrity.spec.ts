@@ -91,6 +91,25 @@ describe("Integrity", async () => {
           {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ])
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+        .withArgs(1);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
             operator: Operator.Pass,
             compValue: "0x00",
           },
@@ -942,6 +961,20 @@ describe("Integrity", async () => {
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
+    });
+    it("enforces resolved root type to be AbiEncoded", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ])
+      ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
     });
 
     describe("compatible childTypeTree ", () => {
