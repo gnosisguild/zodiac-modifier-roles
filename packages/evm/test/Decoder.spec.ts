@@ -320,10 +320,201 @@ describe("Decoder library", async () => {
     ).to.equal(encode(["bytes"], [bytesValue], YesRemoveOffset));
   });
 
-  it.skip("plucks Dynamic from top level");
-  it.skip("plucks Dynamic from Tuple");
-  it.skip("plucks Dynamic from Array");
-  it.skip("plucks Dynamic from nested AbiEncoded");
+  it("plucks Dynamic from top level", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data } =
+      await testEncoder.populateTransaction.dynamic32DynamicStatic(
+        [],
+        "Hello World!",
+        123456789
+      );
+
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+        {
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          children: [],
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          children: [],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data, layout);
+
+    expect(
+      await decoder.pluck(
+        data,
+        result.children[1].location,
+        result.children[1].size
+      )
+    ).to.equal(encode(["string"], ["Hello World!"], YesRemoveOffset));
+  });
+  it("plucks Dynamic from Tuple", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data } = await testEncoder.populateTransaction._dynamicTuple({
+      dynamic: "0xabcd0011",
+    });
+
+    assert(data);
+    const layout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data, layout);
+
+    expect(
+      await decoder.pluck(
+        data,
+        result.children[0].location,
+        result.children[0].size
+      )
+    ).to.equal(encode(["tuple(bytes)"], [["0xabcd0011"]], YesRemoveOffset));
+  });
+  it("plucks Dynamic from Array", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data } = await testEncoder.populateTransaction.dynamicArray([
+      "0xaabbccdd",
+      "0x004466ff",
+    ]);
+
+    const layout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const arrayElement0 = result.children[0].children[0];
+    const arrayElement1 = result.children[0].children[1];
+    expect(
+      await decoder.pluck(
+        data as string,
+        arrayElement0.location,
+        arrayElement0.size
+      )
+    ).to.equal(encode(["bytes"], ["0xaabbccdd"], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        arrayElement1.location,
+        arrayElement1.size
+      )
+    ).to.equal(encode(["bytes"], ["0x004466ff"], YesRemoveOffset));
+  });
+  it("plucks Dynamic from nested AbiEncoded", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data: nestedData } =
+      await testEncoder.populateTransaction.dynamicStaticDynamic32(
+        "0xbadfed",
+        true,
+        ["0xccdd"]
+      );
+
+    assert(nestedData);
+
+    const { data } = await testEncoder.populateTransaction._dynamicTuple({
+      dynamic: nestedData,
+    });
+
+    const nestedLayout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          children: [],
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          children: [],
+        },
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const layout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          children: [nestedLayout],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const tupleField = result.children[0].children[0].children[0];
+    expect(
+      await decoder.pluck(data as string, tupleField.location, tupleField.size)
+    ).to.equal(encode(["bytes"], ["0xbadfed"], YesRemoveOffset));
+  });
 
   it.skip("plucks Tuple from top level");
   it.skip("plucks Tuple from Tuple");
@@ -643,7 +834,7 @@ describe("Decoder library", async () => {
     });
   });
 
-  describe("old tests", async () => {
+  describe("old decoder tests", async () => {
     it("plucks (dynamic) empty buffer from encoded caldata", async () => {
       const { testEncoder, decoder } = await loadFixture(setup);
 
