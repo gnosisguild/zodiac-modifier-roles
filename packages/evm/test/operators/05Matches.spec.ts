@@ -8,7 +8,12 @@ import {
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
 } from "./setup";
-import { Operator, ParameterType } from "../utils";
+import {
+  BYTES32_ZERO,
+  Operator,
+  ParameterType,
+  PermissionCheckerStatus,
+} from "../utils";
 
 describe("Operator - Matches", async () => {
   it("throws on children length mismatch", async () => {
@@ -43,17 +48,15 @@ describe("Operator - Matches", async () => {
       },
     ]);
 
-    await expect(invoke([100, 2, 3])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAMatch"
-    );
+    await expect(invoke([100, 2, 3]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
 
     await expect(invoke([100, 8888])).to.not.be.reverted;
 
-    await expect(invoke([100])).to.be.revertedWithCustomError(
-      roles,
-      "ParameterNotAMatch"
-    );
+    await expect(invoke([100]))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
   });
 
   it("evaluates a Matches for Tuple", async () => {
@@ -91,10 +94,9 @@ describe("Operator - Matches", async () => {
 
     await expect(invoke({ a: 101, b: false })).to.not.be.reverted;
     await expect(invoke({ a: 101, b: true })).to.not.be.reverted;
-    await expect(invoke({ a: 100, b: true })).to.be.revertedWithCustomError(
-      roles,
-      "ParameterLessThanAllowed"
-    );
+    await expect(invoke({ a: 100, b: true }))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
   });
 
   it("evaluates a Matches for Array", async () => {
@@ -158,10 +160,9 @@ describe("Operator - Matches", async () => {
       },
     ]);
 
-    await expect(invoke(2222, 100)).to.be.revertedWithCustomError(
-      roles,
-      "ParameterLessThanAllowed"
-    );
+    await expect(invoke(2222, 100))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
 
     await expect(invoke(2222, 101)).to.not.be.reverted;
   });

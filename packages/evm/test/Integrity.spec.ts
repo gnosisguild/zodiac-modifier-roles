@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { getSingletonFactory } from "@gnosis.pm/zodiac/dist/src/factory/singletonFactory";
 
 import { Operator, ExecutionOptions, ParameterType } from "./utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
@@ -10,27 +11,22 @@ const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 async function setup() {
+  await getSingletonFactory(hre.ethers.provider.getSigner());
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
 
   const [owner] = await hre.ethers.getSigners();
 
-  const Consumptions = await hre.ethers.getContractFactory("Consumptions");
-  const consumptions = await Consumptions.deploy();
+  const Packer = await hre.ethers.getContractFactory("Packer");
+  const packer = await Packer.deploy();
 
-  const Topology = await hre.ethers.getContractFactory("Topology");
-  const topology = await Topology.deploy();
-
-  const Integrity = await hre.ethers.getContractFactory("Integrity", {
-    libraries: { Topology: topology.address },
-  });
+  const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Consumptions: consumptions.address,
-      Topology: topology.address,
       Integrity: integrity.address,
+      Packer: packer.address,
     },
   });
   const modifier = await Modifier.deploy(

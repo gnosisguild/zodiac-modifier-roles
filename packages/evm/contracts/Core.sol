@@ -7,9 +7,9 @@ import "./Types.sol";
 /**
  * @title Core is the base contract for the Zodiac Roles Mod, which defines
  * the common abstract connection points between Builder, Loader, and Checker.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
-abstract contract Core is OwnableUpgradeable {
+abstract contract Core is Modifier {
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
 

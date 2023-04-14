@@ -4,20 +4,22 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
 import "./PermissionLoader.sol";
+import "./PermissionTracker.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
  * on-chain avatar accounts (like Safe).
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
- * @author Auryn Macmillan     - <auryn.macmillan@gnosis.pm>
- * @author Nathan Ginnever    - <nathan.ginnever@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
+ * @author Auryn Macmillan     - <auryn.macmillan@gnosis.io>
+ * @author Nathan Ginnever    - <nathan.ginnever@gnosis.io>
  */
 contract Roles is
     Modifier,
     PermissionBuilder,
     PermissionChecker,
-    PermissionLoader
+    PermissionLoader,
+    PermissionTracker
 {
     mapping(address => bytes32) public defaultRoles;
 
@@ -106,17 +108,16 @@ contract Roles is
         bytes calldata data,
         Enum.Operation operation
     ) public override moduleOnly returns (bool success) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
             value,
             data,
             operation
         );
+        _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
-        if (success) {
-            _track(trace);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -136,17 +137,16 @@ contract Roles is
         moduleOnly
         returns (bool success, bytes memory returnData)
     {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
             value,
             data,
             operation
         );
+        _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
-        if (success) {
-            _track(trace);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -165,20 +165,19 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
             value,
             data,
             operation
         );
+        _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (success) {
-            _track(trace);
-        }
+        _flushCommit(consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -197,19 +196,18 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public moduleOnly returns (bool success, bytes memory returnData) {
-        Consumption[] memory trace = authorize(
+        Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
             value,
             data,
             operation
         );
+        _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        if (success) {
-            _track(trace);
-        }
+        _flushCommit(consumptions, success);
     }
 }

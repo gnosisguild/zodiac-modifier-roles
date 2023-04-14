@@ -6,11 +6,9 @@ import "./Topology.sol";
 /**
  * @title Decoder - a library that discovers parameter locations in calldata
  * from a list of conditions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Decoder {
-    error CalldataOutOfBounds();
-
     /**
      * @dev Maps the location and size of parameters in the encoded transaction data.
      * @param data The encoded transaction data.
@@ -48,10 +46,22 @@ library Decoder {
         uint256 location,
         uint256 size
     ) internal pure returns (bytes calldata) {
-        if (data.length < location + size) {
-            revert CalldataOutOfBounds();
-        }
         return data[location:location + size];
+    }
+
+    /**
+     * @dev Loads a word from calldata.
+     * @param data The calldata to load the word from.
+     * @param location The starting location of the slice.
+     * @return result 32 byte word from calldata.
+     */
+    function word(
+        bytes calldata data,
+        uint256 location
+    ) internal pure returns (bytes32 result) {
+        assembly {
+            result := calldataload(add(data.offset, location))
+        }
     }
 
     /**
@@ -77,14 +87,14 @@ library Decoder {
             // taking into account the length prefix which is a uint256 value
             // preceding the actual dynamic data.
             result.location = location;
-            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
+            result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.AbiEncoded) {
             // If the parameter is ABI-encoded, parse its components and
             // recursively map their locations and sizes within calldata.
             // take into accounts the encoded length and the 4 bytes selector
             result = __block__(data, location + 32 + 4, node);
             result.location = 32 + location;
-            result.size = 32 + _ceil32(uint256(_loadWord(data, location)));
+            result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (paramType == ParameterType.Tuple) {
             return __block__(data, location, node);
         } else if (paramType == ParameterType.Array) {
@@ -109,17 +119,19 @@ library Decoder {
         result.children = new ParameterPayload[](length);
 
         uint256 offset;
-        for (uint256 i; i < length; ++i) {
-            Topology.TypeTree memory part = node.children[i];
-            bool isInline = Topology.isInline(part);
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                Topology.TypeTree memory part = node.children[i];
+                bool isInline = Topology.isInline(part);
 
-            result.children[i] = _walk(
-                data,
-                _locationInBlock(data, location, offset, isInline),
-                part
-            );
-            result.size += result.children[i].size + (isInline ? 0 : 32);
-            offset += isInline ? result.children[i].size : 32;
+                result.children[i] = _walk(
+                    data,
+                    _locationInBlock(data, location, offset, isInline),
+                    part
+                );
+                result.size += result.children[i].size + (isInline ? 0 : 32);
+                offset += isInline ? result.children[i].size : 32;
+            }
         }
     }
 
@@ -135,7 +147,7 @@ library Decoder {
         uint256 location,
         Topology.TypeTree memory node
     ) private pure returns (ParameterPayload memory result) {
-        uint256 length = uint256(_loadWord(data, location));
+        uint256 length = uint256(word(data, location));
 
         result.location = location;
         result.children = new ParameterPayload[](length);
@@ -145,14 +157,16 @@ library Decoder {
         bool isInline = Topology.isInline(part);
 
         uint256 offset;
-        for (uint256 i; i < length; ++i) {
-            result.children[i] = _walk(
-                data,
-                _locationInBlock(data, 32 + location, offset, isInline),
-                part
-            );
-            result.size += result.children[i].size + (isInline ? 0 : 32);
-            offset += isInline ? result.children[i].size : 32;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                result.children[i] = _walk(
+                    data,
+                    _locationInBlock(data, 32 + location, offset, isInline),
+                    part
+                );
+                result.size += result.children[i].size + (isInline ? 0 : 32);
+                offset += isInline ? result.children[i].size : 32;
+            }
         }
     }
 
@@ -178,20 +192,7 @@ library Decoder {
         if (isInline) {
             return headLocation;
         } else {
-            return location + uint256(_loadWord(data, headLocation));
-        }
-    }
-
-    function _loadWord(
-        bytes calldata data,
-        uint256 offset
-    ) private pure returns (bytes32 result) {
-        if (data.length < offset) {
-            revert CalldataOutOfBounds();
-        }
-
-        assembly {
-            result := calldataload(add(data.offset, offset))
+            return location + uint256(word(data, headLocation));
         }
     }
 

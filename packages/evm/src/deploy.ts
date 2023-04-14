@@ -1,4 +1,3 @@
-import { deployAndSetUpModule } from "@gnosis.pm/zodiac";
 import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -22,22 +21,20 @@ task("deploy", "Deploys a Roles modifier")
       const [signer] = await hre.ethers.getSigners();
       const deployer = hre.ethers.provider.getSigner(signer.address);
 
-      const Topology = await hre.ethers.getContractFactory("Topology");
-      const topology = await Topology.connect(deployer).deploy();
-      await topology.deployed();
-      console.log("Library Topology:", topology.address);
+      const Packer = await hre.ethers.getContractFactory("Packer");
+      const packer = await Packer.connect(deployer).deploy();
+      await packer.deployed();
+      console.log("Library Packer:", packer.address);
 
-      const Integrity = await hre.ethers.getContractFactory("Integrity", {
-        libraries: { Topology: topology.address },
-      });
+      const Integrity = await hre.ethers.getContractFactory("Integrity");
       const integrity = await Integrity.connect(deployer).deploy();
       await integrity.deployed();
       console.log("Library Integrity:", integrity.address);
 
       const Roles = await hre.ethers.getContractFactory("Roles", {
         libraries: {
-          Topology: topology.address,
           Integrity: integrity.address,
+          Packer: packer.address,
         },
       });
 

@@ -1,3 +1,4 @@
+
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import { AbiCoder } from "ethers/lib/utils";
@@ -14,23 +15,16 @@ describe("Module works with factory", () => {
   async function setup() {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
+    const Packer = await hre.ethers.getContractFactory("Packer");
+    const packer = await Packer.deploy();
 
-    const Consumptions = await hre.ethers.getContractFactory("Consumptions");
-    const consumptions = await Consumptions.deploy();
-
-    const Topology = await hre.ethers.getContractFactory("Topology");
-    const topology = await Topology.deploy();
-
-    const Integrity = await hre.ethers.getContractFactory("Integrity", {
-      libraries: { Topology: topology.address },
-    });
+    const Integrity = await hre.ethers.getContractFactory("Integrity");
     const integrity = await Integrity.deploy();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        Consumptions: consumptions.address,
-        Topology: topology.address,
         Integrity: integrity.address,
+        Packer: packer.address,
       },
     });
     const masterCopy = await Modifier.deploy(

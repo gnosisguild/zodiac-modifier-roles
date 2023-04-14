@@ -3,15 +3,15 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Core.sol";
 import "./Integrity.sol";
-import "./Topology.sol";
-import "./ScopeConfig.sol";
+
+import "./packers/BufferPacker.sol";
 
 /**
  * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
  * responsible for constructing, managing, granting, and revoking all types
  * of permission data.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionBuilder is Core {
     error UnsuitableMaxBalanceForAllowance();
@@ -49,12 +49,6 @@ abstract contract PermissionBuilder is Core {
         uint128 refillAmount,
         uint64 refillInterval,
         uint64 refillTimestamp
-    );
-
-    event ConsumeAllowance(
-        bytes32 allowanceKey,
-        uint128 consumed,
-        uint128 newBalance
     );
 
     /// @dev Allows transactions to a target address.
@@ -112,8 +106,8 @@ abstract contract PermissionBuilder is Core {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .packHeader(0, true, options, address(0));
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = BufferPacker
+            .packHeaderAsWildcarded(options);
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
     }
@@ -144,7 +138,6 @@ abstract contract PermissionBuilder is Core {
         ExecutionOptions options
     ) external onlyOwner {
         Integrity.enforce(conditions);
-        _removeExtraneousOffsets(conditions);
 
         _store(
             roles[roleKey],
@@ -191,96 +184,5 @@ abstract contract PermissionBuilder is Core {
             refillInterval,
             refillTimestamp
         );
-    }
-
-    function _track(Consumption[] memory trace) internal {
-        uint256 paramCount = trace.length;
-        for (uint256 i; i < paramCount; ) {
-            bytes32 key = trace[i].allowanceKey;
-            uint128 consumed = trace[i].consumed;
-            Allowance memory allowance = allowances[key];
-            (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
-                allowance,
-                block.timestamp
-            );
-
-            assert(balance == trace[i].balance);
-            assert(consumed <= balance);
-
-            allowances[key].balance = balance - consumed;
-            allowances[key].refillTimestamp = refillTimestamp;
-
-            emit ConsumeAllowance(key, consumed, balance - consumed);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function _accruedAllowance(
-        Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
-        if (
-            allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp + allowance.refillInterval
-        ) {
-            return (allowance.balance, allowance.refillTimestamp);
-        }
-
-        uint64 elapsedIntervals = (uint64(timestamp) -
-            allowance.refillTimestamp) / allowance.refillInterval;
-
-        uint128 uncappedBalance = allowance.balance +
-            allowance.refillAmount *
-            elapsedIntervals;
-
-        balance = uncappedBalance < allowance.maxBalance
-            ? uncappedBalance
-            : allowance.maxBalance;
-
-        refillTimestamp =
-            allowance.refillTimestamp +
-            elapsedIntervals *
-            allowance.refillInterval;
-    }
-
-    /**
-     * @dev This function removes unnecessary offsets from compValue fields of
-     * the `conditions` array. Its purpose is to ensure a consistent API where
-     * every `compValue` provided for use in `Operations.EqualsTo` is obtained
-     * by calling `abi.encode` directly.
-     *
-     * By removing the leading extraneous offsets this function makes
-     * abi.encode(...) match the output produced by Decoder inspection.
-     * Without it, the encoded fields would need to be patched externally
-     * depending on whether the payload is fully encoded inline or not.
-     *
-     * @param conditions Array of ConditionFlat structs to remove extraneous
-     * offsets from
-     */
-    function _removeExtraneousOffsets(
-        ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
-        uint256 count = conditions.length;
-        for (uint256 i; i < count; ) {
-            if (
-                conditions[i].operator == Operator.EqualTo &&
-                Topology.isInline(conditions, i) == false
-            ) {
-                bytes memory compValue = conditions[i].compValue;
-                uint256 length = compValue.length;
-                assembly {
-                    compValue := add(compValue, 32)
-                    mstore(compValue, sub(length, 32))
-                }
-                conditions[i].compValue = compValue;
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-        return conditions;
     }
 }

@@ -1,6 +1,9 @@
 import { AddressZero } from "@ethersproject/constants";
-import { Contract, utils, BigNumber } from "ethers";
+import { Contract, utils, BigNumber, BigNumberish } from "ethers";
+import { solidityPack } from "ethers/lib/utils";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+
+import { getSingletonFactory } from "@gnosis.pm/zodiac/dist/src/factory/singletonFactory";
 
 export const logGas = async (
   message: string,
@@ -19,7 +22,7 @@ export const logGas = async (
 
 export interface MetaTransaction {
   to: string;
-  value: string | number | BigNumber;
+  value: BigNumberish;
   data: string;
   operation: number;
 }
@@ -121,56 +124,56 @@ export enum ParameterType {
 
 export enum Operator {
   // 00:    EMPTY EXPRESSION (default, always passes)
-  //          paramType: Static / Dynamic
+  //          paramType: Static / Dynamic / Tuple / Array
   //          🚫 children
-  //          🚫 compValue
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
   // 01-04: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
-  /* 01: */ And = 1,
-  /* 02: */ Or = 2,
-  /* 03: */ Nor = 3,
-  /* 04: */ Xor = 4,
+  /* 01: */ And,
+  /* 02: */ Or,
+  /* 03: */ Nor,
+  /* 04: */ Xor,
   // ------------------------------------------------------------
   // 05-16: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
-  /* 05: */ Matches = 5,
-  /* 06: */ ArraySome = 6,
-  /* 07: */ ArrayEvery = 7,
-  /* 08: */ ArraySubset = 8,
-  // /* 09: */ _ComplexPlaceholder09,
-  // /* 10: */ _ComplexPlaceholder10,
-  // /* 11: */ _ComplexPlaceholder11,
-  // /* 12: */ _ComplexPlaceholder12,
-  // /* 13: */ _ComplexPlaceholder13,
-  // /* 14: */ _ComplexPlaceholder14,
-  // /* 15: */ _ComplexPlaceholder15,
-  // /* 16: */ _ComplexPlaceholder16,
+  /* 05: */ Matches,
+  /* 06: */ ArraySome,
+  /* 07: */ ArrayEvery,
+  /* 08: */ ArraySubset,
+  /* 09: */ _Placeholder09,
+  /* 10: */ _Placeholder10,
+  /* 11: */ _Placeholder11,
+  /* 12: */ _Placeholder12,
+  /* 13: */ _Placeholder13,
+  /* 14: */ _Placeholder14,
+  /* 15: */ EqualToAvatar,
   // ------------------------------------------------------------
-  // 17-31: COMPARISON EXPRESSIONS
-  //          paramType: Static / Dynamic
-  //          🚫 children
+  // 16-31: COMPARISON EXPRESSIONS
+  //          paramType: Static / Dynamic / Tuple / Array
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
-  /* 17: */ EqualTo = 17,
-  /* 18: */ GreaterThan = 18,
-  /* 19: */ LessThan = 19,
-  /* 20: */ SignedIntGreaterThan = 20,
-  /* 21: */ SignedIntLessThan = 21,
-  /* 22: */ Bitmask = 22,
-  // /* 23: */ _BinaryPlaceholder23,
-  // /* 24: */ _BinaryPlaceholder24,
-  // /* 25: */ _BinaryPlaceholder25,
-  // /* 26: */ _BinaryPlaceholder26,
-  // /* 27: */ _BinaryPlaceholder27,
-  // /* 28: */ _BinaryPlaceholder28,
-  /* 29: */ WithinAllowance = 29,
-  /* 30: */ EtherWithinAllowance = 30,
-  /* 31: */ CallWithinAllowance = 31,
+  /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
+  /* 17: */ GreaterThan, // paramType: Static
+  /* 18: */ LessThan, // paramType: Static
+  /* 19: */ SignedIntGreaterThan, // paramType: Static
+  /* 20: */ SignedIntLessThan, // paramType: Static
+  /* 21: */ Bitmask, // paramType: Static / Dynamic
+  /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
+  /* 23: */ _Placeholder23,
+  /* 24: */ _Placeholder24,
+  /* 25: */ _Placeholder25,
+  /* 26: */ _Placeholder26,
+  /* 27: */ _Placeholder27,
+  /* 28: */ WithinAllowance, // paramType: Static
+  /* 29: */ EtherWithinAllowance, // paramType: None
+  /* 30: */ CallWithinAllowance, // paramType: None
+  /* 31: */ _Placeholder31,
 }
 
 export enum ExecutionOptions {
@@ -178,6 +181,49 @@ export enum ExecutionOptions {
   Send,
   DelegateCall,
   Both,
+}
+
+export enum PermissionCheckerStatus {
+  Ok,
+  /// Role not allowed to delegate call to target address
+  DelegateCallNotAllowed,
+  /// Role not allowed to call target address
+  TargetAddressNotAllowed,
+  /// Role not allowed to call this function on target address
+  FunctionNotAllowed,
+  /// Role not allowed to send to target address
+  SendNotAllowed,
+  /// Or conition not met
+  OrViolation,
+  /// Nor conition not met
+  NorViolation,
+  /// Xor conition not met
+  XorViolation,
+  /// Parameter value is not equal to allowed
+  ParameterNotAllowed,
+  /// Parameter value less than allowed
+  ParameterLessThanAllowed,
+  /// Parameter value greater than maximum allowed by role
+  ParameterGreaterThanAllowed,
+  /// Parameter value does not match
+  ParameterNotAMatch,
+  /// Array elements do not meet allowed criteria for every element
+  NotEveryArrayElementPasses,
+  /// Array elements do not meet allowed criteria for at least one element
+  NoArrayElementPasses,
+  /// Parameter value not a subset of allowed
+  ParameterNotSubsetOfAllowed,
+  /// Bitmask exceeded value length
+  BitmaskOverflow,
+  /// Bitmask not an allowed value
+  BitmaskNotAllowed,
+  CustomConditionViolation,
+  /// TODO
+  AllowanceExceeded,
+  /// TODO
+  CallAllowanceExceeded,
+  /// TODO
+  EtherAllowanceExceeded,
 }
 
 export function removeTrailingOffset(data: string) {
@@ -190,25 +236,38 @@ export async function deployRolesMod(
   avatar: string,
   target: string
 ) {
-  const Consumptions = await hre.ethers.getContractFactory("Consumptions");
-  const consumptions = await Consumptions.deploy();
+  await getSingletonFactory(hre.ethers.provider.getSigner());
 
-  const Topology = await hre.ethers.getContractFactory("Topology");
-  const topology = await Topology.deploy();
-
-  const Integrity = await hre.ethers.getContractFactory("Integrity", {
-    libraries: { Topology: topology.address },
-  });
+  const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
+
+  const Packer = await hre.ethers.getContractFactory("Packer");
+  const packer = await Packer.deploy();
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Consumptions: consumptions.address,
-      Topology: topology.address,
       Integrity: integrity.address,
+      Packer: packer.address,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);
 
   return modifier;
 }
+
+export const multisendPayload = (txs: MetaTransaction[]): string => {
+  return (
+    "0x" +
+    txs
+      .map((tx) =>
+        solidityPack(
+          ["uint8", "address", "uint256", "uint256", "bytes"],
+          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
+        ).slice(2)
+      )
+      .join("")
+  );
+};
+
+export const BYTES32_ZERO =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";

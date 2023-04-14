@@ -1,6 +1,6 @@
 import hre from "hardhat";
 import { deployMastercopyWithInitData } from "@gnosis.pm/zodiac";
-import { concat, defaultAbiCoder, solidityPack } from "ethers/lib/utils";
+import { defaultAbiCoder } from "ethers/lib/utils";
 
 const SaltZero =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -10,16 +10,14 @@ async function run() {
   const [signer] = await hre.ethers.getSigners();
   const deployer = hre.ethers.provider.getSigner(signer.address);
 
-  const Topology = await hre.ethers.getContractFactory("Topology");
-  const topologyLibraryAddress = await deployMastercopyWithInitData(
+  const Packer = await hre.ethers.getContractFactory("Packer");
+  const packerLibraryAddress = await deployMastercopyWithInitData(
     deployer,
-    Topology.bytecode,
+    Packer.bytecode,
     SaltZero
   );
 
-  const Integrity = await hre.ethers.getContractFactory("Integrity", {
-    libraries: { Topology: topologyLibraryAddress },
-  });
+  const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrityLibraryAddress = await deployMastercopyWithInitData(
     deployer,
     Integrity.bytecode,
@@ -28,8 +26,8 @@ async function run() {
 
   const Roles = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Topology: topologyLibraryAddress,
       Integrity: integrityLibraryAddress,
+      Packer: packerLibraryAddress,
     },
   });
 

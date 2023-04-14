@@ -7,7 +7,7 @@ import "./Topology.sol";
  * @title Integrity, a library that ensures the provided configuration
  * conditions meet certain sanity checks and that the data conforms to the
  * expected data model for the roles modifier.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.pm>
+ * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Integrity {
     error NoRootNode();
@@ -17,8 +17,6 @@ library Integrity {
     error NotBFS();
 
     error UnsuitableParent(uint256 index);
-
-    error UnsuitableOperator(uint256 index);
 
     error UnsuitableParameterType(uint256 index);
 
@@ -31,15 +29,15 @@ library Integrity {
     error MalformedBitmask(uint256 index);
 
     function enforce(ConditionFlat[] memory conditions) external pure {
-        root(conditions);
-        topology(conditions);
+        _root(conditions);
+        _topology(conditions);
 
         for (uint256 i = 0; i < conditions.length; ++i) {
-            content(conditions[i], i);
+            _content(conditions[i], i);
         }
     }
 
-    function root(ConditionFlat[] memory conditions) internal pure {
+    function _root(ConditionFlat[] memory conditions) private pure {
         uint256 index;
         uint256 count;
 
@@ -58,7 +56,7 @@ library Integrity {
         }
     }
 
-    function topology(ConditionFlat[] memory conditions) private pure {
+    function _topology(ConditionFlat[] memory conditions) private pure {
         uint256 length = conditions.length;
         // check BFS
         for (uint256 i = 1; i < length; ++i) {
@@ -89,11 +87,6 @@ library Integrity {
                 (condition.operator >= Operator.And &&
                     condition.operator <= Operator.Xor)
             ) {
-                // must have Type None
-                if (condition.paramType != ParameterType.None) {
-                    revert UnsuitableParameterType(i);
-                }
-
                 // must have no compValue
                 if (condition.compValue.length != 0) {
                     revert UnsuitableCompValue(i);
@@ -146,64 +139,98 @@ library Integrity {
                 revert UnsuitableChildrenCount(i);
             }
         }
-
-        // TODO dynamic multiple of 32
     }
 
-    function content(
+    function _content(
         ConditionFlat memory condition,
         uint256 index
-    ) internal pure {
-        bytes memory compValue = condition.compValue;
+    ) private pure {
         Operator operator = condition.operator;
         ParameterType paramType = condition.paramType;
-
-        bool isComparison = operator >= Operator.EqualTo &&
-            operator <= Operator.LessThan;
-        bool isLogical = operator >= Operator.And && operator <= Operator.Xor;
-        bool isMetaAllowance = operator == Operator.EtherWithinAllowance ||
-            operator == Operator.CallWithinAllowance;
-
-        if (
-            paramType == ParameterType.None && !(isLogical || isMetaAllowance)
-        ) {
-            revert UnsuitableOperator(index);
-        }
-
-        if ((isLogical || isMetaAllowance) && paramType != ParameterType.None) {
-            revert UnsuitableParameterType(index);
-        }
-
-        if (
-            operator >= Operator.GreaterThan &&
-            operator <= Operator.SignedIntLessThan &&
-            paramType != ParameterType.Static
-        ) {
-            revert UnsuitableParameterType(index);
-        }
-
-        if (
-            paramType == ParameterType.Static &&
-            isComparison &&
-            compValue.length != 32
-        ) {
-            revert UnsuitableCompValue(index);
-        }
-
-        if (operator >= Operator.EqualTo && compValue.length % 32 != 0) {
-            revert UnsuitableCompValue(index);
-        }
-
-        if (
-            operator == Operator.Matches &&
-            !(paramType == ParameterType.Tuple ||
-                paramType == ParameterType.Array ||
-                paramType == ParameterType.AbiEncoded)
-        ) {
-            revert UnsuitableParameterType(index);
-        }
-
-        if (operator == Operator.Bitmask) {
+        bytes memory compValue = condition.compValue;
+        if (operator == Operator.Pass) {
+            return;
+        } else if (operator == Operator.And) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.Or) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.Nor) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.Xor) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.Matches) {
+            if (
+                paramType != ParameterType.Tuple &&
+                paramType != ParameterType.Array &&
+                paramType != ParameterType.AbiEncoded
+            ) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.ArraySome) {
+            if (paramType != ParameterType.Array) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.ArrayEvery) {
+            if (paramType != ParameterType.Array) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.ArraySubset) {
+            if (paramType != ParameterType.Array) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.EqualToAvatar) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.EqualTo) {
+            if (
+                paramType != ParameterType.Static &&
+                paramType != ParameterType.Dynamic &&
+                paramType != ParameterType.Tuple &&
+                paramType != ParameterType.Array
+            ) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length % 32 != 0) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.GreaterThan) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.LessThan) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.SignedIntGreaterThan) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.SignedIntLessThan) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.Bitmask) {
             if (
                 paramType != ParameterType.Static &&
                 paramType != ParameterType.Dynamic
@@ -212,6 +239,27 @@ library Integrity {
             }
             if (compValue.length != 32) {
                 revert MalformedBitmask(index);
+            }
+        } else if (operator == Operator.Custom) {
+            if (
+                paramType != ParameterType.Static &&
+                paramType != ParameterType.Dynamic &&
+                paramType != ParameterType.Tuple &&
+                paramType != ParameterType.Array
+            ) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.WithinAllowance) {
+            if (paramType != ParameterType.Static) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.EtherWithinAllowance) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
+            }
+        } else if (operator == Operator.CallWithinAllowance) {
+            if (paramType != ParameterType.None) {
+                revert UnsuitableParameterType(index);
             }
         }
     }
