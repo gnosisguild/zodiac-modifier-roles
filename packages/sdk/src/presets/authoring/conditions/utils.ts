@@ -1,16 +1,20 @@
 import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
 
 import { ParameterType, Condition, Operator } from "../../../types"
-import { AbiType, Placeholder } from "../../types"
+import { Placeholder } from "../../types"
 
 export const encodeValue = (
   value: any,
-  type?: AbiType
+  type?: ParamType
 ): string | Placeholder<any> => {
   if (value instanceof Placeholder) {
-    if (value.type !== type) {
+    if (type && type.format("sighash") !== value.type.format("sighash")) {
       console.warn(
-        `Placeholder type ${value.type} does not match expected type ${type}, casting the placeholder to the expected type`
+        `Placeholder type \`${value.type.format(
+          "sighash"
+        )}\` does not match expected type \`${type.format(
+          "sighash"
+        )}\`, casting the placeholder to the expected type`
       )
     }
     return type ? value.as(type) : value
@@ -22,9 +26,8 @@ export const encodeValue = (
   }
 }
 
-export const parameterType = (type: AbiType): ParameterType => {
-  const paramType = ParamType.from(type)
-  switch (paramType.baseType) {
+export const parameterType = (type: ParamType): ParameterType => {
+  switch (type.baseType) {
     case "tuple":
       return ParameterType.Tuple
     case "array":
@@ -37,11 +40,10 @@ export const parameterType = (type: AbiType): ParameterType => {
   }
 }
 
-export const describeStructure = (type: AbiType): Condition => {
-  const paramType = ParamType.from(type)
-  const children = paramType.arrayChildren
-    ? [paramType.arrayChildren]
-    : (paramType.components as ParamType[] | undefined) // ethers typings are wrong
+export const describeStructure = (type: ParamType): Condition => {
+  const children = type.arrayChildren
+    ? [type.arrayChildren]
+    : (type.components as ParamType[] | undefined) // ethers typings are wrong
 
   return {
     paramType: parameterType(type),

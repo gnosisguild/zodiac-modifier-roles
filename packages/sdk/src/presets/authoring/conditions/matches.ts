@@ -30,8 +30,6 @@ export const matches =
 
     let conditions: (PresetCondition | undefined)[]
 
-    console.log({ scoping, abiType })
-
     if (Array.isArray(scoping)) {
       // scoping is an array (TupleScopings)
 
@@ -156,9 +154,21 @@ const assertValidConditionsLength = (
   conditions: (PresetCondition | undefined)[],
   typeOrTypes: ParamType | ParamType[]
 ) => {
-  const expectedLength = Array.isArray(typeOrTypes)
-    ? typeOrTypes.length
-    : typeOrTypes.arrayLength
+  let expectedLength: number
+  if (Array.isArray(typeOrTypes)) {
+    expectedLength = typeOrTypes.length
+  } else if (typeOrTypes.baseType === "tuple") {
+    expectedLength = typeOrTypes.components.length
+  } else if (typeOrTypes.baseType === "array") {
+    expectedLength = typeOrTypes.arrayLength
+  } else {
+    throw new Error(
+      `Can only use \`matches\` on tuple or array type params, got: \`${typeOrTypes.format(
+        "sighash"
+      )}\``
+    )
+  }
+
   if (expectedLength <= 0) return
 
   if (conditions.length > expectedLength) {
@@ -194,22 +204,67 @@ const assertValidConditionsKeys = (
 }
 
 const assertCompatibleParamTypes = (
-  arrayStructure: (PresetCondition | undefined)[],
+  conditions: (PresetCondition | undefined)[],
   typeOrTypes: ParamType | ParamType[]
 ) => {
-  arrayStructure.forEach((condition, index) => {
+  conditions.forEach((condition, index) => {
     if (!condition) return
-    const type = Array.isArray(typeOrTypes) ? typeOrTypes[index] : typeOrTypes
+    let type: ParamType
+
+    if (Array.isArray(typeOrTypes)) {
+      type = typeOrTypes[index]
+    } else if (typeOrTypes.baseType === "tuple") {
+      type = typeOrTypes.components[index]
+    } else if (typeOrTypes.baseType === "array") {
+      type = typeOrTypes.arrayChildren
+    } else {
+      throw new Error(
+        `Can only use \`matches\` on tuple or array type params, got: \`${typeOrTypes.format(
+          "sighash"
+        )}\``
+      )
+    }
+
     const expectedType = parameterType(type)
-    if (condition.paramType !== expectedType) {
+    const scopedType = checkScopedType(condition)
+
+    if (scopedType !== expectedType) {
       const fieldReference = `'${type.name}'` || `at index ${index}`
       throw new Error(
-        `Condition for field ${fieldReference} has wrong paramType ${
-          ParameterType[condition.paramType]
-        }} (expected ${ParameterType[expectedType]}))`
+        `Condition for field ${fieldReference} has wrong paramType \`${ParameterType[scopedType]}\` (expected: \`${ParameterType[expectedType]}\`)`
       )
     }
   })
+}
+
+/**
+ * Returns `condition.paramType` if it is not `ParameterType.None`, otherwise returns the scoped param type of its children, if any.
+ * Throws if the children have mixed scoped param types.
+ * @param condition The condition to get the scoped param type of.
+ * @returns the `ParameterType` the condition is applied to.
+ */
+const checkScopedType = (condition: PresetCondition): ParameterType => {
+  if (condition.paramType === ParameterType.None) {
+    if (!condition.children || condition.children.length === 0) {
+      // e.g.: Operator.EtherWithinAllowance / Operator.CallWithinAllowance
+      return ParameterType.None
+    }
+
+    const [first, ...rest] = condition.children
+    const result = checkScopedType(first)
+
+    // assert uniform children types
+    if (rest.some((child) => checkScopedType(child) !== result)) {
+      throw new Error(
+        `Invalid \`${
+          Operator[condition.operator]
+        }\` condition: mixed children types`
+      )
+    }
+    return result
+  }
+
+  return condition.paramType
 }
 
 const arrayDiff = (a: string[], b: string[]) => {

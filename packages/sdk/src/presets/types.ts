@@ -11,21 +11,20 @@ export interface ExecutionFlags {
 
 export class Placeholder<T> {
   readonly name: string
-  readonly type: AbiType
+  readonly type: ParamType
   readonly description?: string
 
   private _identity?: Placeholder<T>
 
   constructor(name: string, type: AbiType, description?: string) {
     this.name = name
-    this.type = typeof type === "string" ? type : type.format("sighash")
+    this.type = ParamType.from(type)
     this.description = description
   }
 
-  as(newType: ParamType | string) {
+  as(newType: AbiType) {
     if (
-      ParamType.from(newType).format("sighash") ===
-      ParamType.from(this.type).format("sighash")
+      ParamType.from(newType).format("sighash") === this.type.format("sighash")
     ) {
       return this
     }
