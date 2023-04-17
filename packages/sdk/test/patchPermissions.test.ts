@@ -4,7 +4,7 @@ import { patchPermissions } from "../src/patchPermissions"
 import { Operator, ParameterType, Target } from "../src/types"
 
 describe("patchPermissions", () => {
-  it("should revoke functions with param scopings", () => {
+  it("should revoke function-scoped targets", () => {
     const before: Target[] = [
       {
         address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -15,6 +15,10 @@ describe("patchPermissions", () => {
             selector: "0x095ea7b3",
             executionOptions: 0,
             wildcarded: false,
+            condition: {
+              paramType: ParameterType.None,
+              operator: Operator.Pass,
+            },
           },
         ],
       },
@@ -30,7 +34,7 @@ describe("patchPermissions", () => {
     ])
   })
 
-  it("should patch params scoping", () => {
+  it("should patch conditions", () => {
     const before: Target[] = [
       {
         address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -79,7 +83,7 @@ describe("patchPermissions", () => {
         call: "scopeFunction",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
         selector: "0x095ea7b3",
-        options: 0,
+        executionOptions: 0,
         condition: {
           paramType: ParameterType.None,
           operator: Operator.Or,
