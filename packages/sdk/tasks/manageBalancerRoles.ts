@@ -195,11 +195,11 @@ task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataManageBalancer.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/Balancer/txDataManageBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataManageBalancer.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataManageBalancer.json`
     )
 })
 
@@ -217,11 +217,11 @@ task("encodeApplyPresetManageBalancer").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataRevokeBalancer.json"),
+//             path.join(__dirname, "..", "/presets_output/mainnet/Balancer/txDataRevokeBalancer.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataRevokeBalancer.json`
+//             `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataRevokeBalancer.json`
 //         )
 //     }
 // )
@@ -239,11 +239,11 @@ task("encodeApplyPresetHarvestBalancer").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataHarvestBalancer.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/Balancer/txDataHarvestBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataHarvestBalancer.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataHarvestBalancer.json`
     )
 })
 
@@ -261,11 +261,11 @@ task("encodeApplyPresetHarvestBalancer").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataDisassembleBalancer.json"),
+//             path.join(__dirname, "..", "/presets_output/mainnet/Balancer/txDataDisassembleBalancer.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataDisassembleBalancer.json`
+//             `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataDisassembleBalancer.json`
 //         )
 //     }
 // )
@@ -283,11 +283,11 @@ task("encodeApplyPresetSwapBalancer").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataSwapBalancer.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/Balancer/txDataSwapBalancer.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataSwapBalancer.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataSwapBalancer.json`
     )
 })
 

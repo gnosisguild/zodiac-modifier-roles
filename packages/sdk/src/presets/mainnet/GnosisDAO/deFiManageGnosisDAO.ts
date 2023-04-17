@@ -2480,6 +2480,40 @@ const preset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // UniswapV3
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // UniswapV3 GNO + ETH, 0.3%
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([GNO, WETH], [uniswapv3.POSITIONS_NFT]),
+
+    // Add liquidity using WETH
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature:
+        "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+      params: {
+        [0]: staticEqual(GNO, "address"),
+        [1]: staticEqual(WETH, "address"),
+        [2]: staticEqual(3000, "uint24"), //3000 represents the 0.3% fee
+        [9]: staticEqual(AVATAR),
+      },
+    },
+
+    // Increasing liquidity using WETH: NFT ID 358770 was created in transaction with hash 0xdaeb7ce2d9373d534de8af1cc0fe2e76b00532550725188934cd14befb218840
+    {
+      targetAddress: uniswapv3.POSITIONS_NFT,
+      signature:
+        "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+      params: {
+        [0]: staticEqual(358770, "uint256"),
+      },
+    },
+
+    // The decreaseLiquidity and collect functions have already been whitelisted.
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // OMNI BRIDGE
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([WETH, COW], [OMNI_BRIDGE]),

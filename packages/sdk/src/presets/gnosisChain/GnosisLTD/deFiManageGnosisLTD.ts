@@ -21,7 +21,7 @@ const preset = {
         // SushiSwap
         //---------------------------------------------------------------------------------------------------------------------------------
         ...allowErc20Approve([GNO, SUSHI, WETH, wstETH], [sushiswap.ROUTER]),
-        ...allowErc20Approve([sushiswap.SLP_SUSHI_GNO, sushiswap.SLP_WETH_GNO, sushiswap.SLP_WETH_wstETH], [sushiswap.ROUTER]),
+        ...allowErc20Approve([sushiswap.SLP_SUSHI_GNO, sushiswap.SLP_WETH_GNO, sushiswap.SLP_WETH_wstETH], [sushiswap.MINI_CHEF_V2]),
 
         // Add Liquidity
         allow.gnosis.sushiswap.router["addLiquidity"](
@@ -77,7 +77,7 @@ const preset = {
         // // SushiSwap WETH/GNO
         // //---------------------------------------------------------------------------------------------------------------------------------
         // ...allowErc20Approve([WETH, GNO], [SUSHISWAP_ROUTER]),
-        // ...allowErc20Approve([SLP_WETH_GNO], [SUSHISWAP_ROUTER]),
+        // ...allowErc20Approve([SLP_WETH_GNO], [MINI_CHEF_V2]),
 
         // // Add Liquidity
         // // {

@@ -183,11 +183,11 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataManageENS.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataManageENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataManageENS.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataManageENS.json`
     )
 })
 
@@ -205,11 +205,11 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataRevokeENS.json"),
+//             path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataRevokeENS.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataRevokeENS.json`
+//             `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataRevokeENS.json`
 //         )
 //     }
 // )
@@ -227,11 +227,11 @@ task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataHarvestENS.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataHarvestENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataHarvestENS.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataHarvestENS.json`
     )
 })
 
@@ -249,11 +249,11 @@ task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
 //         )
 
 //         writeFileSync(
-//             path.join(__dirname, "..", "txDataDisassembleENS.json"),
+//             path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataDisassembleENS.json"),
 //             JSON.stringify(txBatches, undefined, 2)
 //         )
 //         console.log(
-//             `Transaction builder JSON written to packages/sdk/txDataDisassembleENS.json`
+//             `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataDisassembleENS.json`
 //         )
 //     }
 // )
@@ -271,10 +271,10 @@ task("encodeApplyPresetSwapENS").setAction(async (taskArgs, hre) => {
     )
 
     writeFileSync(
-        path.join(__dirname, "..", "txDataSwapENS.json"),
+        path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataSwapENS.json"),
         JSON.stringify(txBatches, undefined, 2)
     )
     console.log(
-        `Transaction builder JSON written to packages/sdk/txDataSwapENS.json`
+        `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataSwapENS.json`
     )
 })

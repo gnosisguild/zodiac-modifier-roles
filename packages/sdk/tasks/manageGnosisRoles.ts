@@ -242,11 +242,11 @@ task("encodeApplyPresetManageGnosisDAOmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataManageGnosisDAOmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisDAO/txDataManageGnosisDAOmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataManageGnosisDAOmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisDAO/txDataManageGnosisDAOmainnet.json`
         )
     }
 )
@@ -265,11 +265,11 @@ task("encodeApplyPresetRevokeGnosisDAOmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataRevokeGnosisDAOmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisDAO/txDataRevokeGnosisDAOmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisDAOmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisDAO/txDataRevokeGnosisDAOmainnet.json`
         )
     }
 )
@@ -288,11 +288,11 @@ task("encodeApplyPresetHarvestGnosisDAOmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataHarvestGnosisDAOmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisDAO/txDataHarvestGnosisDAOmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisDAOmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisDAO/txDataHarvestGnosisDAOmainnet.json`
         )
     }
 )
@@ -311,11 +311,11 @@ task("encodeApplyPresetDisassembleGnosisDAOmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataDisassembleGnosisDAOmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisDAO/txDataDisassembleGnosisDAOmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisDAOmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisDAO/txDataDisassembleGnosisDAOmainnet.json`
         )
     }
 )
@@ -334,11 +334,11 @@ task("encodeApplyPresetSwapGnosisDAOmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataSwapGnosisDAOmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisDAO/txDataSwapGnosisDAOmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisDAOmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisDAO/txDataSwapGnosisDAOmainnet.json`
         )
     }
 )
@@ -361,11 +361,11 @@ task("encodeApplyPresetManageGnosisLTDmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataManageGnosisLTDmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisLTD/txDataManageGnosisLTDmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataManageGnosisLTDmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisLTD/txDataManageGnosisLTDmainnet.json`
         )
     }
 )
@@ -384,11 +384,11 @@ task("encodeApplyPresetRevokeGnosisLTDmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataRevokeGnosisLTDmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisLTD/txDataRevokeGnosisLTDmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisLTDmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisLTD/txDataRevokeGnosisLTDmainnet.json`
         )
     }
 )
@@ -407,11 +407,11 @@ task("encodeApplyPresetHarvestGnosisLTDmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataHarvestGnosisLTDmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisLTD/txDataHarvestGnosisLTDmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisLTDmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisLTD/txDataHarvestGnosisLTDmainnet.json`
         )
     }
 )
@@ -430,11 +430,11 @@ task("encodeApplyPresetDisassembleGnosisLTDmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataDisassembleGnosisLTDmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisLTD/txDataDisassembleGnosisLTDmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisLTDmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisLTD/txDataDisassembleGnosisLTDmainnet.json`
         )
     }
 )
@@ -453,11 +453,11 @@ task("encodeApplyPresetSwapGnosisLTDmainnet").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataSwapGnosisLTDmainnet.json"),
+            path.join(__dirname, "..", "/presets_output/mainnet/GnosisLTD/txDataSwapGnosisLTDmainnet.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisLTDmainnet.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/mainnet/GnosisLTD/txDataSwapGnosisLTDmainnet.json`
         )
     }
 )
@@ -480,11 +480,11 @@ task("encodeApplyPresetManageGnosisDAOgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataManageGnosisDAOgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisDAO/txDataManageGnosisDAOgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataManageGnosisDAOgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataManageGnosisDAOgnosis.json`
         )
     }
 )
@@ -503,11 +503,11 @@ task("encodeApplyPresetRevokeGnosisDAOgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataRevokeGnosisDAOgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisDAO/txDataRevokeGnosisDAOgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisDAOgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataRevokeGnosisDAOgnosis.json`
         )
     }
 )
@@ -526,11 +526,11 @@ task("encodeApplyPresetHarvestGnosisDAOgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataHarvestGnosisDAOgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisDAO/txDataHarvestGnosisDAOgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisDAOgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataHarvestGnosisDAOgnosis.json`
         )
     }
 )
@@ -549,11 +549,11 @@ task("encodeApplyPresetDisassembleGnosisDAOgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataDisassembleGnosisDAOgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisDAO/txDataDisassembleGnosisDAOgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisDAOgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataDisassembleGnosisDAOgnosis.json`
         )
     }
 )
@@ -572,11 +572,11 @@ task("encodeApplyPresetSwapGnosisDAOgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataSwapGnosisDAOgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisDAO/txDataSwapGnosisDAOgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisDAOgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataSwapGnosisDAOgnosis.json`
         )
     }
 )
@@ -599,11 +599,11 @@ task("encodeApplyPresetManageGnosisLTDgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataManageGnosisLTDgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisLTD/txDataManageGnosisLTDgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataManageGnosisLTDgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataManageGnosisLTDgnosis.json`
         )
     }
 )
@@ -622,11 +622,11 @@ task("encodeApplyPresetRevokeGnosisLTDgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataRevokeGnosisLTDgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisLTD/txDataRevokeGnosisLTDgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataRevokeGnosisLTDgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataRevokeGnosisLTDgnosis.json`
         )
     }
 )
@@ -645,11 +645,11 @@ task("encodeApplyPresetHarvestGnosisLTDgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataHarvestGnosisLTDgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisLTD/txDataHarvestGnosisLTDgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataHarvestGnosisLTDgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataHarvestGnosisLTDgnosis.json`
         )
     }
 )
@@ -668,11 +668,11 @@ task("encodeApplyPresetDisassembleGnosisLTDgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataDisassembleGnosisLTDgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisLTD/txDataDisassembleGnosisLTDgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataDisassembleGnosisLTDgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataDisassembleGnosisLTDgnosis.json`
         )
     }
 )
@@ -691,11 +691,11 @@ task("encodeApplyPresetSwapGnosisLTDgnosis").setAction(
         )
 
         writeFileSync(
-            path.join(__dirname, "..", "txDataSwapGnosisLTDgnosis.json"),
+            path.join(__dirname, "..", "/presets_output/gnosis/GnosisLTD/txDataSwapGnosisLTDgnosis.json"),
             JSON.stringify(txBatches, undefined, 2)
         )
         console.log(
-            `Transaction builder JSON written to packages/sdk/txDataSwapGnosisLTDgnosis.json`
+            `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataSwapGnosisLTDgnosis.json`
         )
     }
 )
