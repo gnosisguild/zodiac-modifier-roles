@@ -1,5 +1,3 @@
-import { formatBytes32String, parseBytes32String } from "ethers/lib/utils"
-
 import SUBGRAPH from "./subgraph"
 import {
   Role,
@@ -48,10 +46,8 @@ const QUERY = `
   }
 `
 
-const getRoleId = (address: string, roleKey: string) => {
-  const roleKeyBytes32 = formatBytes32String(roleKey)
-  return `${address.toLowerCase()}-ROLE-${roleKeyBytes32}`
-}
+const getRoleId = (address: string, roleKey: string) =>
+  `${address.toLowerCase()}-ROLE-${roleKey}`
 
 export const fetchRole = async ({
   address,
@@ -79,7 +75,6 @@ export const fetchRole = async ({
 
 const mapGraphQl = (role: any): Role => ({
   ...role,
-  key: parseBytes32String(role.key),
   targets: role.targets.map(
     (target: any): Target => ({
       address: target.address,

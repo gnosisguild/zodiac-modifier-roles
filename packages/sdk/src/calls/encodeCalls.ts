@@ -1,5 +1,3 @@
-import { formatBytes32String } from "ethers/lib/utils"
-
 import { Roles__factory } from "../../../evm/typechain-types"
 import { flattenCondition } from "../conditions"
 
@@ -12,7 +10,7 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
     switch (call.call) {
       case "allowTarget": {
         return rolesInterface.encodeFunctionData("allowTarget", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
           call.executionOptions,
         ])
@@ -20,21 +18,21 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
 
       case "scopeTarget": {
         return rolesInterface.encodeFunctionData("scopeTarget", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
         ])
       }
 
       case "revokeTarget": {
         return rolesInterface.encodeFunctionData("revokeTarget", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
         ])
       }
 
       case "allowFunction": {
         return rolesInterface.encodeFunctionData("allowFunction", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
           call.selector,
           call.executionOptions,
@@ -43,7 +41,7 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
 
       case "scopeFunction": {
         return rolesInterface.encodeFunctionData("scopeFunction", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
           call.selector,
           flattenCondition(call.condition).map((c) => ({
@@ -56,7 +54,7 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
 
       case "revokeFunction": {
         return rolesInterface.encodeFunctionData("revokeFunction", [
-          formatBytes32String(roleKey),
+          roleKey,
           call.targetAddress,
           call.selector,
         ])
