@@ -2,14 +2,15 @@ import { BigNumber } from "ethers"
 import { formatBytes32String } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
-import { Roles, TestAvatar } from "../../../evm/typechain-types"
+import { TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
 import { PermissionPreset } from "../../src/presets/types"
+import { deployContracts } from "../deployContracts"
 
-import balancer1ManagePreset from "./presets/deFiManageBalancer1TypedKit"
-import ens1ManagePreset from "./presets/deFiManageENS1Untyped"
-import balancerManage1Transactions from "./testTransactions/balancer1Manage"
-import ensManage1Transactions from "./testTransactions/ens1Manage"
+import manageBalancer1Preset from "./presets/deFiManageBalancer1TypedKit"
+import manageENS1Preset from "./presets/deFiManageENS1Untyped"
+import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1"
+import manageENS1Transactions from "./testTransactions/deFiManageENS1"
 
 const KARPATKEY_ADDRESSES = {
   BALANCER_1_ETH: {
@@ -58,11 +59,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       },
     })
 
-    const modifier = (await Modifier.deploy(
-      owner.address,
+    const modifier = await deployContracts(
+      avatar.address,
       avatar.address,
       avatar.address
-    )) as unknown as Roles
+    )
 
     await modifier.setTransactionUnwrapper(
       "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
@@ -173,8 +174,8 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
-        preset: balancer1ManagePreset,
-        transactions: balancerManage1Transactions,
+        preset: manageBalancer1Preset,
+        transactions: manageBalancer1Transactions,
       })
     })
   })
@@ -183,8 +184,8 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.ENS_1_ETH,
-        preset: ens1ManagePreset,
-        transactions: ensManage1Transactions,
+        preset: manageENS1Preset,
+        transactions: manageENS1Transactions,
       })
     })
   })
