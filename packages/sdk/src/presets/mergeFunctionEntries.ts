@@ -1,6 +1,6 @@
 import { Operator, ParameterType } from "../types"
 
-import { PresetAllowEntry, PresetCondition, PermissionPreset } from "./types"
+import { PresetAllowEntry, PermissionPreset, PresetFunction } from "./types"
 import { functionId, isScoped } from "./utils"
 
 /**
@@ -37,22 +37,31 @@ export const mergeFunctionEntries = (
     }
 
     // merge conditions into the entry we already have
-    matchingEntry.condition = mergeConditions(
-      matchingEntry.condition,
-      entry.condition
-    )
+    matchingEntry.condition = mergeConditions(matchingEntry, entry)
     return result
   }, [] as PresetAllowEntry[]),
 })
 
-const mergeConditions = (
-  a: PresetCondition | undefined,
-  b: PresetCondition | undefined
-) => {
-  if (!a || !b) return undefined
+/**
+ * @dev Merges two conditions using a logical OR, flattening nested OR conditions. If the conditions are equal, it will still create separate OR branches.
+ * These will be pruned later in sanitizeCondition().
+ */
+const mergeConditions = (a: PresetFunction, b: PresetFunction) => {
+  if (!!a.condition !== !!b.condition) {
+    console.warn(
+      `Target ${functionId(
+        a
+      )} is allowed with and without conditions. It will be allowed without conditions.`
+    )
+    return undefined
+  }
 
-  const aBranches = a.operator === Operator.Or ? a.children : [a]
-  const bBranches = b.operator === Operator.Or ? b.children : [b]
+  if (!a.condition || !b.condition) return undefined
+
+  const aBranches =
+    a.condition.operator === Operator.Or ? a.condition.children : [a.condition]
+  const bBranches =
+    b.condition.operator === Operator.Or ? b.condition.children : [b.condition]
 
   return {
     paramType: ParameterType.None,
