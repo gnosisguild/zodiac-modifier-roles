@@ -1,6 +1,11 @@
 import { Operator, ParameterType } from "../types"
 
-import { PresetAllowEntry, PermissionPreset, PresetFunction } from "./types"
+import {
+  PresetAllowEntry,
+  PermissionPreset,
+  PresetFunction,
+  PresetCondition,
+} from "./types"
 import { functionId, isScoped } from "./utils"
 
 /**
@@ -46,7 +51,10 @@ export const mergeFunctionEntries = (
  * @dev Merges two conditions using a logical OR, flattening nested OR conditions. If the conditions are equal, it will still create separate OR branches.
  * These will be pruned later in sanitizeCondition().
  */
-const mergeConditions = (a: PresetFunction, b: PresetFunction) => {
+const mergeConditions = (
+  a: PresetFunction,
+  b: PresetFunction
+): PresetCondition | undefined => {
   if (!!a.condition !== !!b.condition) {
     console.warn(
       `Target ${functionId(
@@ -66,6 +74,6 @@ const mergeConditions = (a: PresetFunction, b: PresetFunction) => {
   return {
     paramType: ParameterType.None,
     operator: Operator.Or,
-    conditions: [...(aBranches || []), ...(bBranches || [])],
+    children: [...(aBranches || []), ...(bBranches || [])],
   }
 }

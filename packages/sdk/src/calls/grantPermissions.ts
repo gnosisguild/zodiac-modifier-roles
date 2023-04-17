@@ -48,7 +48,7 @@ const scopeFunction = (func: Function, targetAddress: string): Call => {
     call: "scopeFunction",
     targetAddress,
     selector: func.selector,
-    executionOptions: func.executionOptions,
     condition: func.condition,
+    executionOptions: func.executionOptions,
   }
 }
