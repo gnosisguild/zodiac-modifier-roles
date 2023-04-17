@@ -46,7 +46,10 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
           formatBytes32String(roleKey),
           call.targetAddress,
           call.selector,
-          flattenCondition(call.condition),
+          flattenCondition(call.condition).map((c) => ({
+            ...c,
+            compValue: c.compValue || "0x",
+          })),
           call.executionOptions,
         ])
       }
