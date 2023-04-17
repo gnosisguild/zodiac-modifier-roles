@@ -59,7 +59,7 @@ describe("diffPermissions", () => {
     ])
   })
 
-  it("should diff functions based all their properties including conditions", () => {
+  it("should diff functions based on all their properties including conditions", () => {
     const a: Target[] = [
       {
         address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -90,8 +90,9 @@ describe("diffPermissions", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
-              operator: Operator.Pass,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: "0x00",
             },
           },
         ],
