@@ -33,7 +33,9 @@ export const gt = (value: Placeholder<any> | any) => (abiType: ParamType) => {
   }
   return {
     paramType: ParameterType.Static,
-    operator: Operator.GreaterThan, // TODO must use UintGreaterThan / IntGreaterThan depending on abiType
+    operator: type.type.startsWith("uint")
+      ? Operator.GreaterThan
+      : Operator.SignedIntGreaterThan,
     compValue: encodeValue(value, abiType),
   }
 }
@@ -51,7 +53,9 @@ export const lt = (value: Placeholder<any> | any) => (abiType: ParamType) => {
   }
   return {
     paramType: ParameterType.Static,
-    operator: Operator.LessThan, // TODO must use UintGreaterThan / IntGreaterThan depending on abiType
+    operator: type.type.startsWith("uint")
+      ? Operator.LessThan
+      : Operator.SignedIntLessThan,
     compValue: encodeValue(value, abiType),
   }
 }
