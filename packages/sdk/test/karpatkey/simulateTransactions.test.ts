@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers"
-import { formatBytes32String } from "ethers/lib/utils"
+import { formatBytes32String, toUtf8Bytes } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
@@ -34,7 +34,7 @@ type Configs = typeof KARPATKEY_ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
-  const ROLE_KEY = formatBytes32String("TEST_ROLE")
+  const ROLE_KEY = formatBytes32String("TEST_ROE")
 
   const setup = deployments.createFixture(async () => {
     await deployments.fixture()
@@ -51,16 +51,8 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
     const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
-    const Permissions = await hre.ethers.getContractFactory("Permissions")
-    const permissions = await Permissions.deploy()
-    const Modifier = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Permissions: permissions.address,
-      },
-    })
-
     const modifier = await deployContracts(
-      avatar.address,
+      owner.address,
       avatar.address,
       avatar.address
     )
@@ -79,7 +71,6 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       owner,
       Avatar,
       avatar,
-      Modifier,
       modifier,
       multiSend,
     }
@@ -123,10 +114,14 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     let totalGas = BigNumber.from(0)
     for (let i = 0; i < transactionsData.length; i++) {
+      console.log(permissionUpdateTransactions[i])
       totalGas = totalGas.add(
         await owner.estimateGas(permissionUpdateTransactions[i])
       )
-      await owner.sendTransaction(permissionUpdateTransactions[i])
+
+      await owner.sendTransaction({
+        ...permissionUpdateTransactions[i],
+      })
 
       console.log(
         `Executed permissions update tx ${i + 1}/${
@@ -170,7 +165,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
-  describe("Balancer1 Manage  preset [balancer1:manage]", () => {
+  describe.only("ManageBalancer1 preset", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
@@ -180,7 +175,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   })
 
-  describe("ENS1 Manage preset [ens1:manage]", () => {
+  describe("ManageENS1 preset", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.ENS_1_ETH,
