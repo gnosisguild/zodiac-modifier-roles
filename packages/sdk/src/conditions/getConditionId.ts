@@ -2,9 +2,11 @@ import { BigNumber } from "ethers"
 import {
   BytesLike,
   concat,
+  defaultAbiCoder,
   getCreate2Address,
   hexDataLength,
   hexlify,
+  hexConcat,
   keccak256,
 } from "ethers/lib/utils"
 
@@ -16,18 +18,15 @@ import { ConditionFlat } from "./types"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
   "0xce0042b868300000d44a59004da54a005ffdcf9f"
-const CREATE2_SALT = "0x00"
+const CREATE2_SALT =
+  "0xbadfed0000000000000000000000000000000000000000000000000000badfed"
 
 export const getConditionId = (condition: Condition) => {
   const conditions = flattenCondition(normalizeCondition(condition))
-  const packed = conditions
-    .map((condition) => packCondition(condition))
-    .reduce((acc, item) => acc.concat(item), new Bytes(0))
-    .concat(
-      conditions
-        .map((condition) => packCompValue(condition))
-        .reduce((acc, item) => acc.concat(item), new Bytes(0))
-    )
+  const packed = hexConcat([
+    ...conditions.map((condition) => packCondition(condition)),
+    ...conditions.map((condition) => packCompValue(condition)),
+  ])
 
   const initCode = initCodeFor(packed)
   return getCreate2Address(
@@ -51,10 +50,18 @@ const packCondition = (condition: ConditionFlat) =>
       (condition.operator << offsetOperator)
   )
 
-const packCompValue = (condition: ConditionFlat) =>
-  condition.operator == Operator.EqualTo
+const packCompValue = (condition: ConditionFlat) => {
+  if (!hasCompValue(condition.operator)) return "0x"
+  if (!condition.compValue) {
+    throw new Error(
+      `compValue is required for operator ${Operator[condition.operator]}`
+    )
+  }
+
+  return condition.operator == Operator.EqualTo
     ? keccak256(condition.compValue)
-    : bytes32(condition.compValue)
+    : defaultAbiCoder.encode(["bytes32"], [condition.compValue])
+}
 
 const initCodeFor = (bytecode: BytesLike) =>
   concat([
@@ -63,3 +70,5 @@ const initCodeFor = (bytecode: BytesLike) =>
     "0x80600E6000396000F300",
     bytecode,
   ])
+
+const hasCompValue = (operator: Operator) => operator >= Operator.EqualTo
