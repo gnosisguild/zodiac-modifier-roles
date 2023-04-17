@@ -1,7 +1,7 @@
-import { Address, ByteArray, Bytes, crypto } from "@graphprotocol/graph-ts"
+import { Address, Bytes, crypto } from "@graphprotocol/graph-ts"
 import { ScopeFunctionConditionsStruct } from "../generated/PermissionBuilder/PermissionBuilder"
 import { Condition } from "../generated/schema"
-import { Operator, OperatorKeys, ParameterType, ParameterTypeKeys } from "./enums"
+import { Operator, OperatorKeys, ParameterTypeKeys } from "./enums"
 
 export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]): Condition => {
   assert(conditions.length > 0, "Conditions array is empty")
@@ -39,7 +39,7 @@ export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]): Co
 }
 
 export const ERC2470_SINGLETON_FACTORY_ADDRESS = Address.fromString("0xce0042b868300000d44a59004da54a005ffdcf9f")
-export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0))
+export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0)) // TODO update to "0xbadfed0000000000000000000000000000000000000000000000000000badfed"?
 
 export function getRootConditionId(conditions: ScopeFunctionConditionsStruct[]): string {
   const packed = conditions
@@ -71,6 +71,10 @@ function packCondition(condition: ScopeFunctionConditionsStruct): Bytes {
 }
 
 function packCompValue(condition: ScopeFunctionConditionsStruct): Bytes {
+  if (!hasCompValue(condition.operator)) {
+    return new Bytes(0)
+  }
+
   return condition.operator == Operator.EqualTo
     ? Bytes.fromByteArray(crypto.keccak256(condition.compValue))
     : bytes32(condition.compValue)
@@ -78,6 +82,10 @@ function packCompValue(condition: ScopeFunctionConditionsStruct): Bytes {
 
 function bytes32(value: Bytes): Bytes {
   return Bytes.fromUint8Array(value.slice(0, 32))
+}
+
+function hasCompValue(operator: Operator): boolean {
+  return operator >= Operator.EqualTo
 }
 
 function creationCodeFor(bytecode: Bytes): Bytes {
