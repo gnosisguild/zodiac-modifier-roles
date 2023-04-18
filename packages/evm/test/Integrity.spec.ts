@@ -690,6 +690,26 @@ describe("Integrity", async () => {
         ])
       ).to.not.be.reverted;
     });
+
+    it("Not possible to setup a node with Operator Placeholder", async () => {
+      const { enforce } = await loadFixture(setup);
+      await expect(
+        enforce([
+          {
+            parent: 0,
+            paramType: ParameterType.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator._Placeholder09,
+            compValue: "0x",
+          },
+        ])
+      ).to.be.revertedWith("Placeholder Operators are not supported");
+    });
   });
 
   describe("tree", async () => {

@@ -134,8 +134,10 @@ library Integrity {
         } else {
             require(
                 operator == Operator.EtherWithinAllowance ||
-                    operator == Operator.CallWithinAllowance
+                    operator == Operator.CallWithinAllowance,
+                "Placeholder Operators are not supported"
             );
+
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
