@@ -29,33 +29,48 @@ describe("Decoder library", async () => {
   it("pluck fails if calldata is too short", async () => {
     const { testEncoder, decoder } = await loadFixture(setup);
 
-    const { data } = await testEncoder.populateTransaction.staticFn(
-      "0xaabbccdd"
-    );
-
-    assert(data);
+    const { data } = await testEncoder.populateTransaction.dynamicTuple({
+      dynamic: "0xaabbccdd",
+      _static: 234,
+      dynamic32: [],
+    });
 
     const layout = {
       paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: ParameterType.Tuple,
           operator: Operator.Pass,
-          children: [],
+          children: [
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
         },
       ],
     };
 
-    const result = await decoder.inspect(data, layout);
-
-    await expect(
-      decoder.pluck(
-        data.slice(0, data.length - 2),
-        result.children[0].location,
-        result.children[0].size
-      )
-    ).to.be.reverted;
+    await expect(decoder.inspect((data as string).slice(0, -64), layout)).to.be
+      .reverted;
   });
   it("pluck fails with param scoped out of bounds", async () => {
     const { testEncoder, decoder } = await loadFixture(setup);
