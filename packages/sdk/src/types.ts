@@ -40,7 +40,7 @@ export enum Operator {
   And = 1,
   Or = 2,
   Xor = 3,
-  Not = 4,
+  Nor = 4,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
