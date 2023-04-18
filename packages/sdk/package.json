@@ -21,7 +21,7 @@
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
     "test": "hardhat test",
-    "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
+    "test:watch": "hardhat watch test",
     "pre-commit": "yarn fix",
     "prepare": "yarn eth-sdk"
   },
@@ -58,6 +58,7 @@
     "ethereum-waffle": "^3.4.4",
     "hardhat": "^2.12.5",
     "hardhat-deploy": "^0.11.22",
+    "hardhat-watcher": "^2.5.0",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",

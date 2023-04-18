@@ -2,6 +2,7 @@ import "@typechain/hardhat"
 import "@nomiclabs/hardhat-ethers"
 import "@nomiclabs/hardhat-waffle"
 import "hardhat-deploy"
+import "hardhat-watcher"
 import dotenv from "dotenv"
 import { HardhatUserConfig } from "hardhat/config"
 import type { HttpNetworkUserConfig } from "hardhat/types"
@@ -79,6 +80,15 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 2000000,
+  },
+  watcher: {
+    test: {
+      tasks: [{ command: "test" }],
+      files: ["./test/**/*", "./src/**/*"],
+      verbose: true,
+      clearOnStart: true,
+      start: "echo Running my test task now..",
+    },
   },
 }
 

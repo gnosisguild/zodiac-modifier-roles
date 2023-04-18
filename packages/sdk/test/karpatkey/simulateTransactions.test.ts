@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers"
-import { formatBytes32String, toUtf8Bytes } from "ethers/lib/utils"
+import { formatBytes32String } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
