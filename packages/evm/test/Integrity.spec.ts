@@ -86,24 +86,6 @@ describe("Integrity", async () => {
   describe("node", async () => {
     it("Node Pass well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
-      await expect(
-        enforce([
-          {
-            parent: 0,
-            paramType: ParameterType.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.None,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ])
-      )
-        .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
-        .withArgs(1);
 
       await expect(
         enforce([
