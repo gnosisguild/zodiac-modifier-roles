@@ -676,10 +676,10 @@ const preset = {
     ),
 
     // Unstake
-    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdraw"](),
 
     // Unstake and Withdraw
-    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdrawAndUnwrap"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - Convert CRV to cvxCRV and Stake cvxCRV

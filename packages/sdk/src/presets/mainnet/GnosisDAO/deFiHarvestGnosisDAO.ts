@@ -265,7 +265,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Claim Rewards
-    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["getReward(address,bool)"](
       AVATAR
     ),
 

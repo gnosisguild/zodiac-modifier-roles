@@ -1947,16 +1947,16 @@ const preset = {
     ),
 
     // Stake
-    allow.mainnet.convex.cvxsteCRV_rewarder["stake"](),
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["stake"](),
 
     // Unstake
-    allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdraw"](),
 
     // Unstake and Withdraw
-    allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdrawAndUnwrap"](),
 
     // Claim Rewards
-    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
+    allow.mainnet.convex.cvxcDAIcUSDC_rewarder["getReward(address,bool)"](
       AVATAR
     ),
 
