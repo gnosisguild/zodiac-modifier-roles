@@ -13,7 +13,7 @@ library WriteOnce {
         0xce0042B868300000d44A59004Da54A005ffdcf9f;
 
     bytes32 public constant SALT =
-        0xbadfed0000000000000000000000000000000000000000000000000000badfed;
+        0x0000000000000000000000000000000000000000000000000000000000000000;
 
     /**
     @notice Stores `data` and returns `pointer` as key for later retrieval
