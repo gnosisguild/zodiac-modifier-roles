@@ -5,7 +5,7 @@ import "./Types.sol";
 
 /**
  * @title Consumptions - a library that provides helper functions for dealing
- * with arrays of Consumption entries.
+ * with collection of Consumptions.
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Consumptions {
