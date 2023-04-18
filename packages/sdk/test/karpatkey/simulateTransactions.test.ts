@@ -114,7 +114,6 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     let totalGas = BigNumber.from(0)
     for (let i = 0; i < transactionsData.length; i++) {
-      console.log(permissionUpdateTransactions[i])
       totalGas = totalGas.add(
         await owner.estimateGas(permissionUpdateTransactions[i])
       )
@@ -165,7 +164,8 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
-  describe.only("ManageBalancer1 preset", () => {
+
+  describe("ManageBalancer1 preset", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
