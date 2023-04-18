@@ -3594,7 +3594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:3.5.3, chokidar@npm:^3.4.0, chokidar@npm:^3.5.2, chokidar@npm:^3.5.3":
+"chokidar@npm:3.5.3, chokidar@npm:^3.4.0, chokidar@npm:^3.5.2":
   version: 3.5.3
   resolution: "chokidar@npm:3.5.3"
   dependencies:
@@ -6459,17 +6459,6 @@ __metadata:
     qs: ^6.9.4
     zksync-web3: ^0.8.1
   checksum: 47e7bd8c96bca85cf3f6ef5fc3a73724f8165094c5c8262a31c3890ef964f00a4e5e9dfa77c81e0ebeac8cf21fd2aeec1e1d4a1baa0f1b6f26b4c3dcae0b24af
-  languageName: node
-  linkType: hard
-
-"hardhat-watcher@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "hardhat-watcher@npm:2.5.0"
-  dependencies:
-    chokidar: ^3.5.3
-  peerDependencies:
-    hardhat: ^2.0.0
-  checksum: e6c0d52865529653733b3fed6887b41a676fc5185eb835909b360e8cc24223a2fc4c398e3874b234fa918ec59be9de86d7fe92963022139c05cf07f027377cbb
   languageName: node
   linkType: hard
 
@@ -12905,7 +12894,6 @@ __metadata:
     ethers-multisend: ^2.1.1
     hardhat: ^2.12.5
     hardhat-deploy: ^0.11.22
-    hardhat-watcher: ^2.5.0
     prettier: ^2.8.4
     rimraf: ^3.0.2
     ts-node: ^10.8.0
