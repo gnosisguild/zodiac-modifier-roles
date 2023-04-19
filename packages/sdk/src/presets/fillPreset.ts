@@ -1,10 +1,18 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
 import { normalizeCondition } from "../conditions"
-import { Clearance, Condition, ExecutionOptions, Target } from "../types"
+import {
+  Clearance,
+  Condition,
+  ExecutionOptions,
+  Operator,
+  ParameterType,
+  Target,
+} from "../types"
 
 import { execOptions } from "./execOptions"
 import { mergeFunctionEntries } from "./mergeFunctionEntries"
+import { AVATAR } from "./placeholders"
 import {
   PlaceholderValues,
   PermissionPreset,
@@ -90,14 +98,29 @@ const makePlaceholderLookupMap = <P extends PermissionPreset>(
 const fillConditionPlaceholders = (
   condition: PresetCondition,
   placeholderLookupMap: Map<Placeholder<any>, any>
-): Condition => ({
-  paramType: condition.paramType,
-  operator: condition.operator,
-  compValue: fillPlaceholder(condition.compValue, placeholderLookupMap),
-  children: condition.children?.map((child) =>
-    fillConditionPlaceholders(child, placeholderLookupMap)
-  ),
-})
+): Condition => {
+  // special handling for AVATAR placeholder: use EqualToAvatar operator
+  // (This is an optimization to avoid having to encode the avatar address making the condition data more broadly shareable)
+  if (
+    condition.paramType === ParameterType.Static &&
+    condition.compValue instanceof Placeholder &&
+    condition.compValue.identity === AVATAR
+  ) {
+    return {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualToAvatar,
+    }
+  }
+
+  return {
+    paramType: condition.paramType,
+    operator: condition.operator,
+    compValue: fillPlaceholder(condition.compValue, placeholderLookupMap),
+    children: condition.children?.map((child) =>
+      fillConditionPlaceholders(child, placeholderLookupMap)
+    ),
+  }
+}
 
 const fillPlaceholder = (
   valueOrPlaceholder: ComparisonValue | undefined,
