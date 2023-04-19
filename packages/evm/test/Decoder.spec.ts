@@ -535,6 +535,80 @@ describe("Decoder library", async () => {
   it.skip("plucks Tuple from Tuple");
   it.skip("plucks Tuple from Array");
   it.skip("plucks Tuple from nested AbiEncoded");
+  it("plucks Tuple with multiple dynamic fields", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data } = await testEncoder.populateTransaction.multiDynamicTuple({
+      a: "0xaa",
+      b: 123,
+      c: "0xbadfed",
+      d: [2, 3, 4],
+    });
+
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const field1 = result.children[0].children[0];
+    const field2 = result.children[0].children[1];
+    const field3 = result.children[0].children[2];
+    const field4 = result.children[0].children[3];
+
+    expect(
+      await decoder.pluck(data as string, field1.location, field1.size)
+    ).to.equal(encode(["bytes"], ["0xaa"], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(data as string, field2.location, field2.size)
+    ).to.equal(encode(["uint256"], [123], DontRemoveOffset));
+
+    expect(
+      await decoder.pluck(data as string, field3.location, field3.size)
+    ).to.equal(encode(["bytes"], ["0xbadfed"], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(data as string, field4.location, field4.size)
+    ).to.equal(encode(["uint256[]"], [[2, 3, 4]], YesRemoveOffset));
+  });
 
   it.skip("plucks Array from top level");
   it.skip("plucks Array from Tuple");

@@ -38,6 +38,15 @@ contract TestEncoder {
 
     function dynamicTuple(DynamicTuple memory) external {}
 
+    struct MultiDynamicTuple {
+        bytes a;
+        uint256 b;
+        bytes c;
+        uint256[] d;
+    }
+
+    function multiDynamicTuple(MultiDynamicTuple memory) external {}
+
     struct _DynamicTuple {
         bytes dynamic;
     }
