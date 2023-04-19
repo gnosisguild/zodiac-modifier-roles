@@ -2,57 +2,6 @@
 
 This package offers an SDK for managing role permissions, based on presets.
 
-## Conditions
-
-The SDK provides a convenience API for defining conditions on targets. Function inputs can be constrained to exact values, matched against patterns, or checked against condition functions.
-
-### Exact constraint
-
-If a primitive, BigNumber, or array value is given it will be used for an equality check.
-This also applies to placeholders.
-A contract function call will have to use exactly this value to pass the condition.
-
-To set an exact constraint on tuples users can provide the expected tuple values as an array. For providing them as an object with named keys, it must be wrapped in an `eq({ name: 'foo', age: 30 })` condition function, to enforce an exact match rather than a pattern match.
-
-### Matching patterns
-
-If an object is given it will be used as a matching pattern on tuples. In a matching pattern the values to each key define the condition that shall be enforced on the respective tuple field. Each field condition can be either an exact value, a nested matching pattern, or a condition function.
-
-Matching patterns can also be supplied as arrays using the `matches([ 1, undefined, 3 ])` condition function. This allows using matching patterns on arrays or unnamed tuples. `undefined` elements in a pattern array will allow anything to pass for that tuple member.
-
-### Condition functions
-
-#### Comparisons
-
-- `eq`
-- `lt`
-- `gt`
-- `bitmask`
-
-#### Array conditions
-
-- `some`
-- `every`
-- `subset`
-
-#### Branch conditions
-
-- `and`
-- `or`
-- `xor`
-- `nor`
-
-#### Tuple matching
-
-- `matches`
-- `matchesAbi` (The same as `matches` but for ABI encoded `bytes` parameters)
-
-#### Allowance conditions
-
-- `withinAllowance`
-- `etherWithinAllowance`
-- `callWithinAllowance`
-
 ## Architecture
 
 The SDK is designed in three layers of abstraction:
@@ -112,3 +61,54 @@ Users just provide the addresses of contracts. Powered by [eth-sdk](https://gith
 ```javascript
 allow.curve.stETH_ETH_gauge["claim_rewards(address)"](AVATAR)
 ```
+
+## Conditions
+
+The SDK provides a convenience API for defining conditions on targets. Function inputs can be constrained to exact values, matched against patterns, or checked against condition functions.
+
+### Exact constraint
+
+If a primitive, BigNumber, or array value is given it will be used for an equality check.
+This also applies to placeholders.
+A contract function call will have to use exactly this value to pass the condition.
+
+To set an exact constraint on tuples users can provide the expected tuple values as an array. For providing them as an object with named keys, it must be wrapped in an `eq({ name: 'foo', age: 30 })` condition function, to enforce an exact match rather than a pattern match.
+
+### Matching patterns
+
+If an object is given it will be used as a matching pattern on tuples. In a matching pattern the values to each key define the condition that shall be enforced on the respective tuple field. Each field condition can be either an exact value, a nested matching pattern, or a condition function.
+
+Matching patterns can also be supplied as arrays using the `matches([ 1, undefined, 3 ])` condition function. This allows using matching patterns on arrays or unnamed tuples. `undefined` elements in a pattern array will allow anything to pass for that tuple member.
+
+### Condition functions
+
+#### Comparisons
+
+- `eq`
+- `lt`
+- `gt`
+- `bitmask`
+
+#### Array conditions
+
+- `some`
+- `every`
+- `subset`
+
+#### Branch conditions
+
+- `and`
+- `or`
+- `xor`
+- `nor`
+
+#### Tuple matching
+
+- `matches`
+- `matchesAbi` (The same as `matches` but for ABI encoded `bytes` parameters)
+
+#### Allowance conditions
+
+- `withinAllowance`
+- `etherWithinAllowance`
+- `callWithinAllowance`
