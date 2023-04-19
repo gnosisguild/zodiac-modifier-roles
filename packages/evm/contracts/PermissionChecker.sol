@@ -652,7 +652,7 @@ abstract contract PermissionChecker is Core, Periphery {
             consumptions,
             condition.compValue
         );
-        assert(found == true);
+        assert(found);
 
         if (
             value + consumptions[index].consumed > consumptions[index].balance
