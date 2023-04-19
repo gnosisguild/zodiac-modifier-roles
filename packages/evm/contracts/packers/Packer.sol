@@ -80,9 +80,15 @@ library Packer {
             uint256 length = conditions.length;
             unchecked {
                 for (uint256 j = index + 1; j < length; ++j) {
-                    if (conditions[j].parent != index) {
+                    uint8 parent = conditions[j].parent;
+                    if (parent < index) {
                         continue;
                     }
+
+                    if (parent > index) {
+                        break;
+                    }
+
                     if (!_isInline(conditions, j)) {
                         return false;
                     }
