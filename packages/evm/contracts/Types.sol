@@ -30,7 +30,7 @@ enum Operator {
     /* 01: */ And,
     /* 02: */ Or,
     /* 03: */ Nor,
-    /* 04: */ Xor,
+    /* 04: */ _Placeholder04,
     // ------------------------------------------------------------
     // 05-16: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,

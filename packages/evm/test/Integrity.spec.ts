@@ -100,7 +100,7 @@ describe("Integrity", async () => {
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
     });
-    it("Node And/Or/Nor/Xor well formed", async () => {
+    it("Node And/Or/Nor well formed", async () => {
       const { integrity, enforce } = await loadFixture(setup);
       await expect(
         enforce([
@@ -810,7 +810,7 @@ describe("Integrity", async () => {
 
       await expect(enforce(conditions)).to.not.be.reverted;
     });
-    it("enforces and/or/nor/xor to have at least 1 child", async () => {
+    it("enforces and/or/nor to have at least 1 child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       let conditions = [
@@ -980,7 +980,7 @@ describe("Integrity", async () => {
     });
 
     describe("compatible childTypeTree ", () => {
-      it("and/or/nor/xor mismatch", async () => {
+      it("and/or/nor mismatch", async () => {
         const { integrity, enforce } = await loadFixture(setup);
 
         const conditions = [
@@ -1055,7 +1055,7 @@ describe("Integrity", async () => {
           ])
         ).to.not.be.reverted;
       });
-      it("and/or/nor/xor mismatch - order counts", async () => {
+      it("and/or/nor mismatch - order counts", async () => {
         const { integrity, enforce } = await loadFixture(setup);
 
         const conditions = [
@@ -1166,7 +1166,7 @@ describe("Integrity", async () => {
           ])
         ).to.not.be.reverted;
       });
-      it("and/or/nor/xor mismatch - recursive", async () => {
+      it("and/or/nor mismatch - recursive", async () => {
         const { integrity, enforce } = await loadFixture(setup);
 
         const conditions = [
@@ -1179,7 +1179,7 @@ describe("Integrity", async () => {
           {
             parent: 0,
             paramType: ParameterType.None,
-            operator: Operator.Xor,
+            operator: Operator.Nor,
             compValue: "0x",
           },
           {

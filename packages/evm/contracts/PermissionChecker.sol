@@ -243,8 +243,6 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _or(value, data, condition, payload, consumptions);
             } else if (operator == Operator.Nor) {
                 return _nor(value, data, condition, payload, consumptions);
-            } else if (operator == Operator.Xor) {
-                return _xor(value, data, condition, payload, consumptions);
             } else if (operator == Operator.ArraySome) {
                 return
                     _arraySome(value, data, condition, payload, consumptions);
@@ -401,42 +399,6 @@ abstract contract PermissionChecker is Core, Periphery {
             }
         }
         return (Status.Ok, Result({consumptions: consumptions, info: 0}));
-    }
-
-    function _xor(
-        uint256 value,
-        bytes calldata data,
-        Condition memory condition,
-        ParameterPayload memory payload,
-        Consumption[] memory consumptions
-    ) private pure returns (Status status, Result memory result) {
-        result = Result({consumptions: consumptions, info: 0});
-
-        uint256 okCount;
-        unchecked {
-            for (uint256 i; i < condition.children.length; ++i) {
-                (status, result) = _walk(
-                    value,
-                    data,
-                    condition.children[i],
-                    payload,
-                    result.consumptions
-                );
-                if (status == Status.Ok) {
-                    if (++okCount > 1) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return
-            okCount == 1
-                ? (Status.Ok, result)
-                : (
-                    Status.XorViolation,
-                    Result({consumptions: consumptions, info: 0})
-                );
     }
 
     function _arraySome(
@@ -728,8 +690,6 @@ abstract contract PermissionChecker is Core, Periphery {
         OrViolation,
         /// Nor conition not met
         NorViolation,
-        /// Xor conition not met
-        XorViolation,
         /// Parameter value is not equal to allowed
         ParameterNotAllowed,
         /// Parameter value less than allowed

@@ -73,7 +73,7 @@ library Topology {
         unchecked {
             if (
                 condition.operator >= Operator.And &&
-                condition.operator <= Operator.Xor
+                condition.operator <= Operator.Nor
             ) {
                 assert(condition.children.length > 0);
                 return typeTree(condition.children[0]);
@@ -101,7 +101,7 @@ library Topology {
         ConditionFlat memory condition = conditions[index];
         if (
             condition.operator >= Operator.And &&
-            condition.operator <= Operator.Xor
+            condition.operator <= Operator.Nor
         ) {
             assert(bounds[index].length > 0);
             return typeTree(conditions, bounds[index].start, bounds);
