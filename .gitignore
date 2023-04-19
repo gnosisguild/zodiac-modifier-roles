@@ -6,8 +6,9 @@
 **/.history
 **/coverage*
 **/deployments
-**/.yarn/cache
-**/.yarn/install-state.gz
+
+.yarn/cache
+.yarn/install-state.gz
 .devcontainer
 .idea/
 

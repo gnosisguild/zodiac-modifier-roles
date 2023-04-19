@@ -2,27 +2,25 @@
   "name": "zodiac-roles-monorepo",
   "private": true,
   "description": "Zodiac Roles monorepo",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "yarn contracts:build",
+    "build": "yarn workspace evm build",
     "coverage": "yarn contracts:coverage",
     "contracts:test": "cd packages/evm && yarn coverage",
-    "contracts:build": "cd packages/evm && yarn build",
-    "contracts:install": "cd packages/evm && yarn install",
     "contracts:coverage": "cd packages/evm && yarn coverage",
     "contracts:pre-commit": "cd packages/evm && yarn pre-commit",
     "app:build": "cd packages/app && yarn build",
     "app:pre-commit": "cd packages/app && yarn pre-commit",
-    "app:install": "cd packages/app && yarn install",
     "subgraph:build": "cd packages/subgraph && yarn build",
     "subgraph:pre-commit": "cd packages/subgraph && yarn pre-commit",
-    "subgraph:install": "cd packages/subgraph && yarn install",
     "sdk:build": "cd packages/sdk && yarn build",
     "sdk:test": "cd packages/sdk && yarn test",
     "sdk:pre-commit": "cd packages/sdk && yarn pre-commit",
     "sdk:install": "cd packages/sdk && yarn install",
-    "preinstall": "yarn contracts:install && yarn app:install && yarn subgraph:install && yarn sdk:install",
     "prepare": "husky install",
-    "pre-commit": "yarn app:pre-commit && yarn subgraph:pre-commit && yarn contracts:pre-commit && yarn sdk:pre-commit",
+    "pre-commit": "yarn workspaces foreach run pre-commit",
     "test": "yarn contracts:test && yarn sdk:test"
   },
   "repository": {
@@ -33,5 +31,6 @@
   "license": "LGPL-3.0+",
   "devDependencies": {
     "husky": "5.1.3"
-  }
+  },
+  "packageManager": "yarn@3.4.1"
 }

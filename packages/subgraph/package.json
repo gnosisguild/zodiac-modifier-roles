@@ -5,6 +5,7 @@
     "codegen": "yarn prepare:mainnet && graph codegen",
     "build": "graph build",
     "format": "prettier '(test|src)/**/*.ts' -w",
+    "pre-commit": "yarn format",
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gnosis/zodiac-roles-mod",
     "deploy:mainnet": "yarn prepare:mainnet && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_MAINNET'",
     "deploy:goerli": "yarn prepare:goerli && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_GOERLI'",
@@ -30,8 +31,7 @@
     "prettier": "^2.5.1"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.44.0",
+    "@graphprotocol/graph-cli": "^0.46.1",
     "@graphprotocol/graph-ts": "^0.29.3"
-  },
-  "packageManager": "yarn@1.22.19"
+  }
 }

@@ -1,6 +1,5 @@
 {
   "name": "zodiac-roles-app",
-  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@gnosis.pm/safe-apps-sdk": "^6.2.0",

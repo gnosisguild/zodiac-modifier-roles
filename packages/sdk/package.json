@@ -67,6 +67,5 @@
   },
   "resolutions": {
     "typechain": "^8.1.1"
-  },
-  "packageManager": "yarn@1.22.19"
+  }
 }

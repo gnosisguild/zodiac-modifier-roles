@@ -1,5 +1,7 @@
 import { BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
+// There's some weird issue with eslint not being able to resolve this import...
+// eslint-disable-next-line import/no-unresolved
 import { RequireAtLeastOne } from "type-fest"
 
 import { Placeholder, PresetCondition } from "../../types"
