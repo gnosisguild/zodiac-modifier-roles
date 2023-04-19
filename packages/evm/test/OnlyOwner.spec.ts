@@ -105,6 +105,12 @@ describe("OnlyOwner", async () => {
             operator: Operator.Matches,
             compValue: "0x",
           },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
         ],
         0
       )
@@ -120,6 +126,12 @@ describe("OnlyOwner", async () => {
             parent: 0,
             paramType: ParameterType.AbiEncoded,
             operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
             compValue: "0x",
           },
         ],

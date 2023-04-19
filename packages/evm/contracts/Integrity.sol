@@ -173,43 +173,57 @@ library Integrity {
 
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
+            Topology.Bounds memory childBounds = childrenBounds[i];
 
-            if (condition.paramType == ParameterType.Array) {
-                if (childrenBounds[i].length == 0) {
+            if (condition.paramType == ParameterType.None) {
+                if (
+                    (condition.operator == Operator.EtherWithinAllowance ||
+                        condition.operator == Operator.CallWithinAllowance) &&
+                    childBounds.length != 0
+                ) {
                     revert UnsuitableChildCount(i);
                 }
-            }
-
-            if (
-                (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Nor)
+                if (
+                    (condition.operator >= Operator.And &&
+                        condition.operator <= Operator.Nor)
+                ) {
+                    if (childBounds.length == 0) {
+                        revert UnsuitableChildCount(i);
+                    }
+                }
+            } else if (
+                condition.paramType == ParameterType.Static ||
+                condition.paramType == ParameterType.Dynamic
             ) {
-                if (childrenBounds[i].length == 0) {
+                if (childBounds.length != 0) {
                     revert UnsuitableChildCount(i);
                 }
-            }
-
-            if (
-                (condition.operator == Operator.ArraySome ||
-                    condition.operator == Operator.ArrayEvery) &&
-                childrenBounds[i].length != 1
+            } else if (
+                condition.paramType == ParameterType.Tuple ||
+                condition.paramType == ParameterType.AbiEncoded
             ) {
-                revert UnsuitableChildCount(i);
-            }
+                if (childBounds.length == 0) {
+                    revert UnsuitableChildCount(i);
+                }
+            } else {
+                assert(condition.paramType == ParameterType.Array);
 
-            if (
-                condition.operator == Operator.ArraySubset &&
-                childrenBounds[i].length > 256
-            ) {
-                revert UnsuitableChildCount(i);
-            }
+                if (childBounds.length == 0) {
+                    revert UnsuitableChildCount(i);
+                }
 
-            if (
-                (condition.operator == Operator.EtherWithinAllowance ||
-                    condition.operator == Operator.CallWithinAllowance) &&
-                childrenBounds[i].length != 0
-            ) {
-                revert UnsuitableChildCount(i);
+                if (
+                    (condition.operator == Operator.ArraySome ||
+                        condition.operator == Operator.ArrayEvery) &&
+                    childBounds.length != 1
+                ) {
+                    revert UnsuitableChildCount(i);
+                } else if (
+                    condition.operator == Operator.ArraySubset &&
+                    childBounds.length > 256
+                ) {
+                    revert UnsuitableChildCount(i);
+                }
             }
         }
 
