@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike, ethers, PopulatedTransaction } from "ethers"
-import { Roles, Roles__factory } from "../contracts/type"
+import { Roles, Roles__factory } from "../../contracts/types"
 import SafeAppsSDK, { BaseTransaction, GatewayTransactionDetails } from "@gnosis.pm/safe-apps-sdk"
 import {
   ConditionType,
