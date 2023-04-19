@@ -45,6 +45,8 @@ After that, you can start working on the different packages.
 
 ### Packages
 
+This monorepo uses [yarn workspaces](https://yarnpkg.com/features/workspaces) and is comprised of:
+
 - evm: Roles mod smart contracts
 - subgraph: a subgraph indexing deployed Roles mod instances
 - sdk: a TypeScript SDK for managing roles
