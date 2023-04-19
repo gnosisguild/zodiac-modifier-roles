@@ -56,8 +56,8 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^3.1.4",
     "ethereum-waffle": "^3.4.4",
-    "hardhat": "^2.12.5",
-    "hardhat-deploy": "^0.11.22",
+    "hardhat": "^2.14.0",
+    "hardhat-deploy": "^0.11.26",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",
@@ -67,5 +67,8 @@
   },
   "resolutions": {
     "typechain": "^8.1.1"
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
   }
 }
