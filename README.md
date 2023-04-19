@@ -1,5 +1,6 @@
 **⚠️ This is the code for the yet unaudited v2 contracts, find v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosis/zodiac-modifier-roles-v1)**
-___
+
+---
 
 # Zodiac Roles Modifier
 
@@ -25,7 +26,7 @@ The interface mirrors the relevant parts of the Gnosis Safe's interface, so this
 - Assign roles to addresses
 - Allow roles access to call, delegate call, and/or send to address
 - Scope which functions a role can call on given address
-- Scope which paramters are allowed on a given function
+- Define conditions on function parameters
 
 ### Flow
 
@@ -37,21 +38,17 @@ The interface mirrors the relevant parts of the Gnosis Safe's interface, so this
 
 1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
 2. From the repo root run `yarn`
-3. From the repo root run `yarn build`
+3. From the repo root run `yarn prepare`
+4. From the repo root run `yarn build`
 
 After that, you can start working on the different packages.
 
-### Solidity Compiler
+### Packages
 
-The contracts have been developed with [Solidity 0.8.6](https://github.com/ethereum/solidity/releases/tag/v0.8.6). This version of Solidity made all arithmetic checked by default, therefore eliminating the need for explicit overflow or underflow (or other arithmetic) checks. This version of solidity was chosen as it allows to easily cast bytes to bytes4 and bytes32.
-
-### Audits
-
-An audit has been performed by the [G0 group](https://github.com/g0-group).
-
-All identified issues have been resolved as of commit [454be9d3c26f90221ca717518df002d1eca1845f](https://github.com/gnosis/zodiac-modifier-roles/tree/454be9d3c26f90221ca717518df002d1eca1845f/contracts)
-
-The audit results are available as a pdf in [this repo](packages/evm/docs/ZodiacRolesModifierJan2022.pdf).
+- evm: Roles mod smart contracts
+- subgraph: a subgraph indexing deployed Roles mod instances
+- sdk: a TypeScript SDK for managing roles
+- app: a webapp for editing roles
 
 ### Security and Liability
 
