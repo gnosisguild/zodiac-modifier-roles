@@ -31,9 +31,11 @@ export default defineConfig({
         aurabb_a_USD_rewarder: "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B",
         aura_locker: "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC",
         snapshot_delegate_registry: "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",
-        claim_zap: "0x623B83755a39B12161A63748f3f595A530917Ab2",
-        B_80BAL_20WETH_depositor: "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827",
-        BAL_depositor: "0x68655AD9852a99C87C0934c7290BB62CFa5D4123"
+        claim_zap: "0x5b2364fD757E262253423373E4D57C5c011Ad7F4",
+        stkauraBAL: "0xfAA2eD111B4F580fCb85C48E6DC6782Dc5FCD7a6",
+        auraBAL_B_80BAL_20WETH_depositor: "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827",
+        auraBAL_BAL_depositor: "0x68655AD9852a99C87C0934c7290BB62CFa5D4123",
+        auraBAL_compounding_rewarder: "0xAc16927429c5c7Af63dD75BC9d8a58c63FfD0147"
       },
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",

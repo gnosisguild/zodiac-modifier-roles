@@ -652,7 +652,7 @@ const preset = {
     allow.mainnet.aura.auraBAL_staking_rewarder["withdraw"](),
 
     // Using 80BAL-20WETH
-    ...allowErc20Approve([balancer.B_80BAL_20WETH], [aura.B_80BAL_20WETH_DEPOSITOR]),
+    ...allowErc20Approve([balancer.B_80BAL_20WETH], [aura.auraBAL_B_80BAL_20WETH_DEPOSITOR]),
 
     // {
     //   targetAddress: B_80BAL_20WETH_DEPOSITOR,
@@ -661,14 +661,19 @@ const preset = {
     //     [2]: staticEqual(auraBAL_STAKING_REWARDER, "address"),
     //   },
     // },
-    allow.mainnet.aura.B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
+    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
       undefined,
       undefined,
-      aura.auraBAL_STAKING_REWARDER,
+      {
+        oneOf: [
+          ZERO_ADDRESS, // When Minting ONLY
+          aura.auraBAL_STAKING_REWARDER // When Minting + Staking
+        ]
+      }
     ),
 
     // Using BAL
-    ...allowErc20Approve([BAL], [aura.BAL_DEPOSITOR]),
+    ...allowErc20Approve([BAL], [aura.auraBAL_BAL_DEPOSITOR]),
 
     // {
     //   targetAddress: BAL_DEPOSITOR,
@@ -677,11 +682,16 @@ const preset = {
     //     [3]: staticEqual(auraBAL_STAKING_REWARDER, "address"),
     //   },
     // },
-    allow.mainnet.aura.BAL_depositor["deposit"](
+    allow.mainnet.aura.auraBAL_BAL_depositor["deposit"](
       undefined,
       undefined,
       undefined,
-      aura.auraBAL_STAKING_REWARDER,
+      {
+        oneOf: [
+          ZERO_ADDRESS, // When Minting ONLY
+          aura.auraBAL_STAKING_REWARDER // When Minting + Staking
+        ]
+      }
     ),
 
     // Claiming auraBAL Staking Rewards
@@ -690,6 +700,61 @@ const preset = {
     //   signature: "getReward()",
     // },
     allow.mainnet.aura.auraBAL_staking_rewarder["getReward()"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compounding auraBAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Using auraBAL
+    ...allowErc20Approve([auraBAL], [aura.stkauraBAL]),
+
+    // Stake
+    allow.mainnet.aura.stkauraBAL["deposit"](
+      undefined,
+      AVATAR
+    ),
+
+    // Unstake
+    allow.mainnet.aura.stkauraBAL["withdraw"](
+      undefined,
+      AVATAR,
+      AVATAR
+    ),
+
+    // When the MAX amount is unstaked
+    allow.mainnet.aura.stkauraBAL["redeem"](
+      undefined,
+      AVATAR,
+      AVATAR
+    ),
+
+    // Mint auraBAL and Stake
+    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
+      undefined,
+      undefined,
+      {
+        oneOf: [
+          ZERO_ADDRESS, // When Minting ONLY
+          aura.auraBAL_STAKER // When Minting + Staking
+        ]
+      }
+    ),
+
+    // Mint auraBAL and Stake
+    allow.mainnet.aura.auraBAL_BAL_depositor["deposit"](
+      undefined,
+      undefined,
+      undefined,
+      {
+        oneOf: [
+          ZERO_ADDRESS, // When Minting ONLY
+          aura.auraBAL_STAKER // When Minting + Staking
+        ]
+      }
+    ),
+
+    // Claiming auraBAL Compounding Rewards
+    allow.mainnet.aura.auraBAL_compounding_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Locking AURA
