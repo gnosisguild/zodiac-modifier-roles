@@ -4,8 +4,11 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 
 contract MultiSendUnwrapper is ITransactionUnwrapper {
-    bytes4 private constant SELECTOR = 0x8d80ff0a;
     uint256 private constant OFFSET_START = 68;
+
+    error UnsupportedMode();
+    error MalformedHeader();
+    error MalformedBody();
 
     function unwrap(
         address,
@@ -14,10 +17,10 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
         Enum.Operation operation
     ) external pure returns (UnwrappedTransaction[] memory) {
         if (value != 0) {
-            revert();
+            revert UnsupportedMode();
         }
         if (operation != Enum.Operation.DelegateCall) {
-            revert();
+            revert UnsupportedMode();
         }
         _validateHeader(data);
         uint256 count = _validateEntries(data);
@@ -26,14 +29,14 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
 
     function _validateHeader(bytes calldata data) private pure {
         // first 4 bytes are the selector for multiSend(bytes)
-        if (bytes4(data) != SELECTOR) {
-            revert();
+        if (bytes4(data) != IMultiSend.multiSend.selector) {
+            revert MalformedHeader();
         }
 
         // the following 32 bytes are the offset to the bytes param
         // (always 0x20)
         if (bytes32(data[4:]) != bytes32(uint256(0x20))) {
-            revert();
+            revert MalformedHeader();
         }
 
         // the following 32 bytes are the length of the bytes param
@@ -43,7 +46,7 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
         // it's the 4 + 32 + 32 bytes checked above + the <length> bytes
         // padded to a multiple of 32
         if (4 + _ceil32(32 + 32 + length) != data.length) {
-            revert();
+            revert MalformedHeader();
         }
     }
 
@@ -62,12 +65,12 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
             // Data        Length bytes
             uint8 operation = uint8(bytes1(data[offset:]));
             if (operation > 1) {
-                revert();
+                revert MalformedBody();
             }
 
             uint256 length = uint256(bytes32(data[offset + 53:]));
             if (offset + 85 + length > data.length) {
-                revert();
+                revert MalformedBody();
             }
 
             offset += 85 + length;
@@ -75,7 +78,7 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
         }
 
         if (count == 0) {
-            revert();
+            revert MalformedBody();
         }
     }
 

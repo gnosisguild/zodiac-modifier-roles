@@ -3,6 +3,10 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+interface IMultiSend {
+    function multiSend(bytes memory transactions) external payable;
+}
+
 struct UnwrappedTransaction {
     Enum.Operation operation;
     address to;
