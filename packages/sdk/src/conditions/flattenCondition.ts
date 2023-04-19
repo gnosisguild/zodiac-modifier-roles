@@ -25,5 +25,11 @@ export const flattenCondition = (root: Condition): ConditionFlat[] => {
     }
   }
 
+  if (result.length > 256) {
+    console.warn(
+      "Condition tree has more than 256 nodes. It will not be possible to apply this permission to the Roles mod."
+    )
+  }
+
   return result
 }

@@ -1,4 +1,7 @@
 export { flattenCondition } from "./flattenCondition"
 export { getConditionId } from "./getConditionId"
 export { normalizeCondition } from "./normalizeCondition"
-export { checkConditionIntegrity } from "./checkConditionIntegrity"
+export {
+  checkConditionIntegrity,
+  checkRootConditionIntegrity,
+} from "./checkConditionIntegrity"

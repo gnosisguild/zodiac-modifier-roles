@@ -1,4 +1,4 @@
-import { checkConditionIntegrity } from "./conditions"
+import { checkRootConditionIntegrity } from "./conditions"
 import { Clearance, Function, Target } from "./types"
 
 export const checkPermissionsIntegrity = (targets: Target[]): void => {
@@ -52,6 +52,6 @@ export const checkFunctionIntegrity = (func: Function): void => {
   }
 
   if (func.condition) {
-    checkConditionIntegrity(func.condition)
+    checkRootConditionIntegrity(func.condition)
   }
 }
