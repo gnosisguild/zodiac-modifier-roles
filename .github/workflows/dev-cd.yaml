@@ -29,11 +29,15 @@ jobs:
     name: Deploy to Dev
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: 16
-      - run: npm install -g yarn
-      - run: yarn install --frozen-lockfile
+      - uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn
+      - run: yarn prepare
       - run: yarn build
 
       - name: Pin to IPFS
