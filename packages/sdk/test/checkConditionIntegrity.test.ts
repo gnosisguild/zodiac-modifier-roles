@@ -1,9 +1,13 @@
 import { expect } from "chai"
+import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { checkRootConditionIntegrity } from "../src/conditions"
+import {
+  checkConditionIntegrity,
+  checkRootConditionIntegrity,
+} from "../src/conditions"
 import { Operator, ParameterType } from "../src/types"
 
-describe.only("checkRootConditionIntegrity()", () => {
+describe("checkRootConditionIntegrity()", () => {
   it("should throw if the root param type is not AbiEncoded", () => {
     expect(() =>
       checkRootConditionIntegrity({
@@ -18,12 +22,12 @@ describe.only("checkRootConditionIntegrity()", () => {
 
   it("should throw for And without children", () => {
     expect(() =>
-      checkRootConditionIntegrity({
-        paramType: ParameterType.AbiEncoded,
+      checkConditionIntegrity({
+        paramType: ParameterType.None,
         operator: Operator.And,
         children: [],
       })
-    ).to.throw("And condition must have at least one child")
+    ).to.throw("`And` condition must have children")
   })
 
   it("should throw for EqualTo without compValue", () => {
@@ -32,7 +36,20 @@ describe.only("checkRootConditionIntegrity()", () => {
         paramType: ParameterType.AbiEncoded,
         operator: Operator.EqualTo,
       })
-    ).to.throw("EqualTo condition must have a compValue")
+    ).to.throw("`EqualTo` condition must have a compValue")
+  })
+
+  it("should throw for And with compValue", () => {
+    expect(() =>
+      checkRootConditionIntegrity({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        compValue: defaultAbiCoder.encode(["uint256"], [0]),
+        children: [
+          { paramType: ParameterType.AbiEncoded, operator: Operator.Pass },
+        ],
+      })
+    ).to.throw("`And` condition cannot have a compValue")
   })
 
   it("should throw for And with mixed children types", () => {
