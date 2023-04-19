@@ -360,7 +360,6 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(80);
     expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
   });
-
   it("failing And returns unchanged in memory consumptions", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
       setupOneParamStatic
@@ -571,6 +570,9 @@ describe("Allowance", async () => {
       const TestContract = await hre.ethers.getContractFactory("TestContract");
       const testContract = await TestContract.deploy();
 
+      const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
+      const testEncoder = await TestEncoder.deploy();
+
       const [owner, invoker] = await hre.ethers.getSigners();
 
       const roles = await deployRolesMod(
@@ -586,6 +588,7 @@ describe("Allowance", async () => {
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
       await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
 
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
@@ -616,6 +619,7 @@ describe("Allowance", async () => {
         adapter,
         multisend,
         testContract,
+        testEncoder,
         roles,
         setAllowance,
         owner,
@@ -632,7 +636,7 @@ describe("Allowance", async () => {
         setAllowance,
         owner,
         invoker,
-      } = await setup();
+      } = await loadFixture(setup);
 
       const allowanceKey1 =
         "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -755,7 +759,7 @@ describe("Allowance", async () => {
         setAllowance,
         owner,
         invoker,
-      } = await setup();
+      } = await loadFixture(setup);
 
       const allowanceKey1 =
         "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -872,7 +876,7 @@ describe("Allowance", async () => {
     });
     it("consumptions with overlap overspend", async () => {
       const { roleKey, multisend, roles, testContract, owner, invoker } =
-        await setup();
+        await loadFixture(setup);
 
       const allowanceKey = "0x01".padEnd(66, "0");
 
@@ -983,7 +987,7 @@ describe("Allowance", async () => {
         setAllowance,
         owner,
         invoker,
-      } = await setup();
+      } = await loadFixture(setup);
 
       const allowanceKey1 =
         "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -1123,10 +1127,11 @@ describe("Allowance", async () => {
         multisend,
         roles,
         testContract,
+        testEncoder,
         setAllowance,
         owner,
         invoker,
-      } = await setup();
+      } = await loadFixture(setup);
 
       const allowanceKey1 =
         "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -1168,9 +1173,9 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("doNothing")
+        testEncoder.address,
+        testEncoder.interface.getSighash(
+          testEncoder.interface.getFunction("simple")
         ),
         [
           {
@@ -1178,6 +1183,12 @@ describe("Allowance", async () => {
             paramType: ParameterType.AbiEncoded,
             operator: Operator.Pass,
             compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [1]),
           },
         ],
         ExecutionOptions.None
@@ -1224,10 +1235,10 @@ describe("Allowance", async () => {
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testEncoder.address,
               value: 0,
               data: (
-                await testContract.populateTransaction.doNothing()
+                await testEncoder.populateTransaction.simple(1)
               ).data as string,
               operation: 0,
             },

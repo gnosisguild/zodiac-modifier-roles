@@ -818,7 +818,7 @@ describe("OldTests", async () => {
             compValue: encodedParam_1,
           },
           {
-            parent: 1,
+            parent: 0,
             paramType: ParameterType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,

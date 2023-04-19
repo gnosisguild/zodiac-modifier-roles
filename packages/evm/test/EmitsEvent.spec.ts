@@ -89,6 +89,12 @@ describe("EmitsEvent", async () => {
             operator: Operator.Matches,
             compValue: "0x",
           },
+          {
+            parent: 0,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
         ],
         ExecutionOptions.None
       )

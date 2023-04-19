@@ -690,7 +690,6 @@ describe("Integrity", async () => {
         ])
       ).to.not.be.reverted;
     });
-
     it("Not possible to setup a node with Operator Placeholder", async () => {
       const { enforce } = await loadFixture(setup);
       await expect(
@@ -777,7 +776,7 @@ describe("Integrity", async () => {
         .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
         .withArgs(2);
     });
-    it("enforces array to have at least 1 child", async () => {
+    it("enforces and/or/nor to have at least 1 child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       let conditions = [
@@ -789,8 +788,8 @@ describe("Integrity", async () => {
         },
         {
           parent: 0,
-          paramType: ParameterType.Array,
-          operator: Operator.Pass,
+          paramType: ParameterType.None,
+          operator: Operator.And,
           compValue: "0x",
         },
       ];
@@ -810,7 +809,109 @@ describe("Integrity", async () => {
 
       await expect(enforce(conditions)).to.not.be.reverted;
     });
-    it("enforces and/or/nor to have at least 1 child", async () => {
+    it("enforces static to have no children", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 1,
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+    it("enforces dynamic to have no children", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 2,
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(2);
+    });
+    it("enforces tuple to have at least one child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Tuple,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(2);
+    });
+    it("enforces abiEncoded to have at least one child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ];
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+        .withArgs(0);
+    });
+    it("enforces array to have at least 1 child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       let conditions = [
@@ -822,8 +923,8 @@ describe("Integrity", async () => {
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
-          operator: Operator.And,
+          paramType: ParameterType.Array,
+          operator: Operator.Pass,
           compValue: "0x",
         },
       ];
