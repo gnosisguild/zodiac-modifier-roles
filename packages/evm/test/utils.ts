@@ -60,7 +60,7 @@ export enum Operator {
   /* 01: */ And,
   /* 02: */ Or,
   /* 03: */ Nor,
-  /* 04: */ Xor,
+  /* 04: */ _Placeholder04,
   // ------------------------------------------------------------
   // 05-16: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
@@ -117,12 +117,10 @@ export enum PermissionCheckerStatus {
   FunctionNotAllowed,
   /// Role not allowed to send to target address
   SendNotAllowed,
-  /// Or conition not met
+  /// Or condition not met
   OrViolation,
-  /// Nor conition not met
+  /// Nor condition not met
   NorViolation,
-  /// Xor conition not met
-  XorViolation,
   /// Parameter value is not equal to allowed
   ParameterNotAllowed,
   /// Parameter value less than allowed

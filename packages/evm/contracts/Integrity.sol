@@ -50,7 +50,7 @@ library Integrity {
             if (condition.compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
-        } else if (operator >= Operator.And && operator <= Operator.Xor) {
+        } else if (operator >= Operator.And && operator <= Operator.Nor) {
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
@@ -182,7 +182,7 @@ library Integrity {
 
             if (
                 (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Xor)
+                    condition.operator <= Operator.Nor)
             ) {
                 if (childrenBounds[i].length == 0) {
                     revert UnsuitableChildCount(i);
@@ -217,7 +217,7 @@ library Integrity {
             ConditionFlat memory condition = conditions[i];
             if (
                 (condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Xor) ||
+                    condition.operator <= Operator.Nor) ||
                 condition.paramType == ParameterType.Array
             ) {
                 compatiblechildTypeTree(conditions, i, childrenBounds);
