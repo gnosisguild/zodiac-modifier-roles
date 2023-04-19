@@ -1,8 +1,9 @@
 {
   "name": "zodiac-roles-subgraph",
+  "private": true,
   "license": "LGPL-3.0+",
   "scripts": {
-    "codegen": "yarn prepare:mainnet && graph codegen",
+    "prepare": "yarn prepare:mainnet && graph codegen",
     "build": "graph build",
     "format": "prettier '(test|src)/**/*.ts' -w",
     "pre-commit": "yarn format",

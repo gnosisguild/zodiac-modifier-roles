@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky install && yarn workspace zodiac-roles-sdk run prepare",
+    "prepare": "husky install && yarn workspaces foreach run prepare",
     "pre-commit": "yarn workspaces foreach run pre-commit",
     "test": "yarn workspaces foreach run test",
     "build": "yarn workspaces foreach run build",
