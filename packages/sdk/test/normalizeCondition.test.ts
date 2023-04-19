@@ -1,7 +1,7 @@
 import { expect } from "chai"
 import { defaultAbiCoder } from "ethers/lib/utils"
 
-import { normalizeCondition } from "../src/conditions/normalizeConditions"
+import { normalizeCondition } from "../src/conditions"
 import { Condition, Operator, ParameterType } from "../src/types"
 
 const DUMMY_COMP = (id: number): Condition => ({
@@ -10,12 +10,13 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: defaultAbiCoder.encode(["uint256"], [id]),
 })
 
-describe("normalizeConditions()", () => {
+describe("normalizeCondition()", () => {
   it("should flatten nested AND conditions", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
         operator: Operator.And,
+
         children: [
           {
             paramType: ParameterType.None,

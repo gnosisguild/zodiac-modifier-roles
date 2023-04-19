@@ -137,7 +137,7 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
     if (!condition.children) return condition
 
     const pairs = condition.children.map(
-      (child) => [BigNumber.from(getConditionId(child, true)), child] as const
+      (child) => [BigNumber.from(getConditionId(child)), child] as const
     )
     // sort is in-place
     pairs.sort(([a], [b]) => (a.lt(b) ? -1 : 1))

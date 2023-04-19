@@ -13,7 +13,6 @@ import {
 import { Condition, Operator } from "../types"
 
 import { flattenCondition } from "./flattenCondition"
-import { normalizeCondition } from "./normalizeConditions"
 import { ConditionFlat } from "./types"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
@@ -21,13 +20,8 @@ const ERC2470_SINGLETON_FACTORY_ADDRESS =
 const CREATE2_SALT =
   "0xbadfed0000000000000000000000000000000000000000000000000000badfed"
 
-export const getConditionId = (
-  condition: Condition,
-  noNormalization = false
-) => {
-  const conditions = flattenCondition(
-    noNormalization ? condition : normalizeCondition(condition)
-  )
+export const getConditionId = (condition: Condition) => {
+  const conditions = flattenCondition(condition)
   const packed = hexConcat([
     ...conditions.map((condition) => packCondition(condition)),
     ...conditions.map((condition) => packCompValue(condition)),

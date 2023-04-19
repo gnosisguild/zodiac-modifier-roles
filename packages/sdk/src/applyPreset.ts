@@ -9,6 +9,7 @@ import { ethers as defaultEthers, Signer } from "ethers"
 import { encodeMulti } from "ethers-multisend"
 
 import { encodeCalls, logCall } from "./calls"
+import { checkPermissionsIntegrity } from "./checkPermissionsIntegrity"
 import { fetchRole } from "./fetchRole"
 import { patchPermissions } from "./patchPermissions"
 import { fillPreset } from "./presets/fillPreset"
@@ -151,6 +152,7 @@ export const encodeApplyPreset = async <P extends PermissionPreset>(
   }
 
   const nextPermissions = fillPreset(preset, placeholderValues)
+  checkPermissionsIntegrity(nextPermissions)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
   return encodeCalls(roleKey, calls)

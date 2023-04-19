@@ -1,4 +1,4 @@
-import { getConditionId } from "./conditions"
+import { getConditionId, normalizeCondition } from "./conditions"
 import { Clearance, Target, Function, Condition } from "./types"
 
 /**
@@ -70,6 +70,7 @@ const conditionsEqual = (conditionA?: Condition, conditionB?: Condition) =>
   conditionA === conditionB ||
   (conditionA &&
     conditionB &&
-    getConditionId(conditionA) === getConditionId(conditionB))
+    getConditionId(normalizeCondition(conditionA)) ===
+      getConditionId(normalizeCondition(conditionB)))
 
 const isTruthy = Boolean as any as <T>(x: T | undefined) => x is T

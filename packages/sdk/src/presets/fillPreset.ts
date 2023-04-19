@@ -1,5 +1,6 @@
 import { defaultAbiCoder } from "ethers/lib/utils"
 
+import { normalizeCondition } from "../conditions"
 import { Clearance, Condition, ExecutionOptions, Target } from "../types"
 
 import { execOptions } from "./execOptions"
@@ -61,7 +62,10 @@ export const fillPreset = <P extends PermissionPreset>(
         executionOptions: execOptions(allowFunction),
         wildcarded: !condition,
         condition:
-          condition && processCondition(condition, placeholderLookupMap),
+          condition &&
+          normalizeCondition(
+            fillConditionPlaceholders(condition, placeholderLookupMap)
+          ),
       }
     }),
   }))
@@ -83,7 +87,7 @@ const makePlaceholderLookupMap = <P extends PermissionPreset>(
   return map
 }
 
-const processCondition = (
+const fillConditionPlaceholders = (
   condition: PresetCondition,
   placeholderLookupMap: Map<Placeholder<any>, any>
 ): Condition => ({
@@ -91,7 +95,7 @@ const processCondition = (
   operator: condition.operator,
   compValue: fillPlaceholder(condition.compValue, placeholderLookupMap),
   children: condition.children?.map((child) =>
-    processCondition(child, placeholderLookupMap)
+    fillConditionPlaceholders(child, placeholderLookupMap)
   ),
 })
 
