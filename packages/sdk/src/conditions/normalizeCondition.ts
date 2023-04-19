@@ -103,7 +103,7 @@ const dedupeBranches = (condition: Condition): Condition => {
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const childId = getConditionId(child, true)
+      const childId = getConditionId(child)
       const isDuplicate = !childIds.has(childId)
       childIds.add(childId)
       return isDuplicate
