@@ -57,7 +57,7 @@ library Consumptions {
             }
 
             for (uint256 i; i < c2.length; ++i) {
-                (uint256 index, bool found) = find(result, c2[i].allowanceKey);
+                (uint256 index, bool found) = find(c1, c2[i].allowanceKey);
                 if (found) {
                     result[index].consumed += c2[i].consumed;
                 } else {
