@@ -2,7 +2,7 @@ import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
 import { ParamType } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
-import { Placeholder, PresetCondition } from "../../types"
+import { AbiType, Placeholder, PresetCondition } from "../../types"
 
 import { eq } from "./comparison"
 import {
@@ -85,9 +85,17 @@ export const matches =
     }
   }
 
+/**
+ * Matches ABI-encoded bytes against a structure of conditions.
+ *
+ * @param scoping The conditions structure over the decoded parameters
+ * @param abiTypes The parameter types defining how to decode bytes
+ **/
 export const matchesAbi =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: ParamType[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
   (abiType?: ParamType) => {
+    const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
+
     // only supported at the top level or for bytes type params
     if (abiType && abiType.name !== "bytes") {
       throw new Error(
@@ -96,19 +104,19 @@ export const matchesAbi =
     }
 
     // map scoping items to conditions
-    const conditions: (PresetCondition | undefined)[] = abiTypes.map(
+    const conditions: (PresetCondition | undefined)[] = paramTypes.map(
       (type, index) => mapScoping(scopings[index], type)
     )
 
     // sanity checks
-    assertValidConditionsKeys(conditions, abiTypes)
-    assertCompatibleParamTypes(conditions, abiTypes)
+    assertValidConditionsKeys(conditions, paramTypes)
+    assertCompatibleParamTypes(conditions, paramTypes)
 
     return {
       paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
-        (condition, index) => condition || describeStructure(abiTypes[index])
+        (condition, index) => condition || describeStructure(paramTypes[index])
       ),
     }
   }
