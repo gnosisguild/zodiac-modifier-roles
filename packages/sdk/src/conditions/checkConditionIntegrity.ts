@@ -12,7 +12,7 @@ export const checkRootConditionIntegrity = (condition: Condition): void => {
       `Root param type must be \`AbiEncoded\`, got \`${ParameterType[rootType]}\``
     )
   }
-  checkConditionIntegrity(condition)
+  checkConditionIntegrityRecursive(condition)
 }
 
 const checkConsistentChildrenTypes = (condition: Condition): ParameterType => {

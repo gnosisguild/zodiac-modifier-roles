@@ -32,5 +32,6 @@
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.44.0",
     "@graphprotocol/graph-ts": "^0.29.3"
-  }
+  },
+  "packageManager": "yarn@1.22.19"
 }
