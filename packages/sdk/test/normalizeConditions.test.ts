@@ -10,7 +10,7 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: defaultAbiCoder.encode(["uint256"], [id]),
 })
 
-describe.only("normalizeConditions()", () => {
+describe("normalizeConditions()", () => {
   it("should flatten nested AND conditions", () => {
     expect(
       normalizeCondition({
@@ -158,5 +158,62 @@ describe.only("normalizeConditions()", () => {
         children: [DUMMY_COMP(2), DUMMY_COMP(0), DUMMY_COMP(1)],
       })
     )
+  })
+
+  it("should collapse condition subtrees unnecessarily describing static tuple structures", () => {
+    const compValue = defaultAbiCoder.encode(["uint256"], [123])
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Tuple,
+        operator: Operator.EqualTo,
+        compValue,
+        children: [
+          // tuple has only static children
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue,
+    })
+  })
+
+  it("should collapse condition subtrees unnecessarily describing static array structures", () => {
+    const compValue = defaultAbiCoder.encode(["uint256"], [123])
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Array,
+        operator: Operator.EqualTo,
+        compValue,
+        children: [
+          // array children type is static
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue,
+    })
+  })
+
+  it("should prune trailing Static Pass nodes", () => {
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.AbiEncoded,
+      operator: Operator.Matches,
+      children: [DUMMY_COMP(0)],
+    })
   })
 })
