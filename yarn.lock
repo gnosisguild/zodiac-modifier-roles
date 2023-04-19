@@ -4168,7 +4168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-ethers@npm:^2.0.0, @nomiclabs/hardhat-ethers@npm:^2.2.1":
+"@nomiclabs/hardhat-ethers@npm:^2.0.0, @nomiclabs/hardhat-ethers@npm:^2.2.1, @nomiclabs/hardhat-ethers@npm:^2.2.3":
   version: 2.2.3
   resolution: "@nomiclabs/hardhat-ethers@npm:2.2.3"
   peerDependencies:
@@ -15867,7 +15867,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat-deploy@npm:^0.11.22":
+"hardhat-deploy@npm:^0.11.26":
   version: 0.11.26
   resolution: "hardhat-deploy@npm:0.11.26"
   dependencies:
@@ -15980,7 +15980,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat@npm:^2.12.5":
+"hardhat@npm:^2.14.0":
   version: 2.14.0
   resolution: "hardhat@npm:2.14.0"
   dependencies:
@@ -30689,6 +30689,7 @@ __metadata:
     "@material-ui/core": ^4.12.3
     "@material-ui/icons": ^4.11.2
     "@material-ui/lab": ^4.0.0-alpha.60
+    "@nomiclabs/hardhat-ethers": ^2.2.3
     "@reduxjs/toolkit": ^1.7.1
     "@typechain/ethers-v5": ^9.0.0
     "@types/lodash.memoize": ^4.1.6
@@ -30701,6 +30702,7 @@ __metadata:
     axios-cache-adapter: ^2.7.3
     bnc-onboard: ^1.37.0
     classnames: ^2.3.1
+    eslint: ^7.11.0
     eslint-config-prettier: ^8.3.0
     eslint-config-react-app: ^6.0.0
     eslint-plugin-flowtype: ^5.7.2
@@ -30769,8 +30771,8 @@ __metadata:
     ethereum-waffle: ^3.4.4
     ethers: ^5.4.7
     ethers-multisend: ^2.1.1
-    hardhat: ^2.12.5
-    hardhat-deploy: ^0.11.22
+    hardhat: ^2.14.0
+    hardhat-deploy: ^0.11.26
     prettier: ^2.8.4
     rimraf: ^3.0.2
     ts-node: ^10.8.0

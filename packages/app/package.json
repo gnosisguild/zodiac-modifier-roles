@@ -28,6 +28,7 @@
     "zodiac-ui-components": "^0.0.28"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@typechain/ethers-v5": "^9.0.0",
     "@types/lodash.memoize": "^4.1.6",
     "@types/react": "^17.0.20",
@@ -35,6 +36,7 @@
     "@types/styled-components": "^5.1.12",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.11.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-react-app": "^6.0.0",
     "eslint-plugin-flowtype": "^5.7.2",
@@ -51,7 +53,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false",
+    "test:watch": "react-scripts test",
     "eject": "react-scripts eject",
     "fmt": "prettier '(test|src)/**/*.(ts|tsx)' -w",
     "pre-commit": "yarn fmt"

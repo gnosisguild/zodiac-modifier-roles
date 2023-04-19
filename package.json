@@ -6,22 +6,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn workspace evm build",
-    "coverage": "yarn contracts:coverage",
-    "contracts:test": "cd packages/evm && yarn coverage",
-    "contracts:coverage": "cd packages/evm && yarn coverage",
-    "contracts:pre-commit": "cd packages/evm && yarn pre-commit",
-    "app:build": "cd packages/app && yarn build",
-    "app:pre-commit": "cd packages/app && yarn pre-commit",
-    "subgraph:build": "cd packages/subgraph && yarn build",
-    "subgraph:pre-commit": "cd packages/subgraph && yarn pre-commit",
-    "sdk:build": "cd packages/sdk && yarn build",
-    "sdk:test": "cd packages/sdk && yarn test",
-    "sdk:pre-commit": "cd packages/sdk && yarn pre-commit",
-    "sdk:install": "cd packages/sdk && yarn install",
+    "build": "yarn workspaces foreach run build",
+    "coverage": "yarn workspace @gnosis.pm/zodiac-modifier-roles run coverage",
     "prepare": "husky install",
     "pre-commit": "yarn workspaces foreach run pre-commit",
-    "test": "yarn contracts:test && yarn sdk:test"
+    "test": "yarn workspaces foreach run test"
   },
   "repository": {
     "type": "git",
