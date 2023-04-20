@@ -1,5 +1,6 @@
 import { BigNumberish } from "ethers"
 
+import * as c from "../src/presets/authoring/conditions"
 import { Scoping } from "../src/presets/authoring/conditions/types"
 
 // These are tests of the typing system, not the runtime behavior.
@@ -16,3 +17,6 @@ const _t03: Scoping<any[]> = {}
 
 // @ts-expect-error - It should not be allowed to use promises as a scopings
 const _t04: Scoping<{ a: Promise<string> }> = { a: Promise.resolve("a") }
+
+// @ts-expect-error - It should only be allowed to use gt on BigNumberish scopings
+const _t05: Scoping<string[]> = c.gt(0)
