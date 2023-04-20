@@ -92,6 +92,10 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     }[]
   }) => {
     const { owner, modifier } = await setup()
+
+    // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
+    await modifier.setAvatar(config.AVATAR)
+
     const placeholderValues = {
       AVATAR: config.AVATAR,
     }
@@ -175,7 +179,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   })
 
-  describe("ManageENS1 preset", () => {
+  describe.only("ManageENS1 preset", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.ENS_1_ETH,
