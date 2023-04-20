@@ -51,7 +51,7 @@ export const and =
  * @param branches conditions to be evaluated
  */
 export const nor =
-  <Branches extends ScopingBranches<T>, T>(
+  <Branches extends Scoping<T>[], T>(
     ...branches: Branches
   ): ConditionFunction<T> =>
   (abiType: ParamType) => ({
