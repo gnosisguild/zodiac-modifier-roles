@@ -11,7 +11,7 @@ export const normalizeCondition = (condition: Condition): Condition => {
   let result: Condition = normalizedChildren
     ? { ...condition, children: normalizedChildren }
     : condition
-  result = collapseStaticComplexTypeTrees(result)
+  result = collapseStaticTupleTypeTrees(result)
   result = pruneTrailingStaticPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
@@ -20,23 +20,20 @@ export const normalizeCondition = (condition: Condition): Condition => {
   return result
 }
 
-/** collapse condition subtrees unnecessarily describing static tuple/array structures */
-const collapseStaticComplexTypeTrees = (condition: Condition): Condition => {
-  if (
-    condition.paramType === ParameterType.Array ||
-    condition.paramType === ParameterType.Tuple
-  ) {
+/** collapse condition subtrees unnecessarily describing static tuple structures */
+const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
+  if (condition.paramType === ParameterType.Tuple) {
     if (
       condition.operator === Operator.Pass ||
       condition.operator === Operator.EqualTo
     ) {
       if (!condition.children) return condition
 
-      const isStaticComplexType = condition.children.every(
+      const isStaticTuple = condition.children.every(
         (child) => child.paramType === ParameterType.Static
       )
 
-      return isStaticComplexType
+      return isStaticTuple
         ? {
             paramType: ParameterType.Static,
             operator: condition.operator,
@@ -53,8 +50,10 @@ const collapseStaticComplexTypeTrees = (condition: Condition): Condition => {
 const pruneTrailingStaticPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
 
-  let prunedChildren: Condition[] = []
-  for (let i = condition.children.length - 1; i >= 0; i--) {
+  // Start from the end and prune all trailing Static Pass nodes.
+  // Always keep the first child, even if it is a Static Pass, because children must not be empty.
+  let prunedChildren: Condition[] = condition.children.slice(0, 1)
+  for (let i = condition.children.length - 1; i >= 1; i--) {
     const child = condition.children[i]
     if (
       child.operator !== Operator.Pass ||

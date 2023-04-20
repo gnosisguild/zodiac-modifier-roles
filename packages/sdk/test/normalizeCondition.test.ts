@@ -162,7 +162,7 @@ describe("normalizeCondition()", () => {
   })
 
   it("should collapse condition subtrees unnecessarily describing static tuple structures", () => {
-    const compValue = defaultAbiCoder.encode(["uint256"], [123])
+    const compValue = defaultAbiCoder.encode(["(uint256)"], [[123]])
     expect(
       normalizeCondition({
         paramType: ParameterType.Tuple,
@@ -170,26 +170,6 @@ describe("normalizeCondition()", () => {
         compValue,
         children: [
           // tuple has only static children
-          { paramType: ParameterType.Static, operator: Operator.Pass },
-          { paramType: ParameterType.Static, operator: Operator.Pass },
-        ],
-      })
-    ).to.deep.equal({
-      paramType: ParameterType.Static,
-      operator: Operator.EqualTo,
-      compValue,
-    })
-  })
-
-  it("should collapse condition subtrees unnecessarily describing static array structures", () => {
-    const compValue = defaultAbiCoder.encode(["uint256"], [123])
-    expect(
-      normalizeCondition({
-        paramType: ParameterType.Array,
-        operator: Operator.EqualTo,
-        compValue,
-        children: [
-          // array children type is static
           { paramType: ParameterType.Static, operator: Operator.Pass },
         ],
       })
