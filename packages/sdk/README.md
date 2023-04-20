@@ -106,9 +106,9 @@ Matching patterns can also be supplied as arrays using the `matches([ 1, undefin
 
 #### Allowance conditions
 
-- `withinAllowance` _not yet implemented_
-- `etherWithinAllowance` _not yet implemented_
-- `callWithinAllowance` _not yet implemented_
+- `withinAllowance`
+- `etherWithinAllowance`
+- `callWithinAllowance`
 
 #### Custom conditions
 
