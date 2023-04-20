@@ -1,6 +1,7 @@
 import "@typechain/hardhat"
 import "@nomiclabs/hardhat-ethers"
 import "@nomiclabs/hardhat-waffle"
+import "hardhat-deploy"
 import dotenv from "dotenv"
 import { HardhatUserConfig } from "hardhat/config"
 import type { HttpNetworkUserConfig } from "hardhat/types"
