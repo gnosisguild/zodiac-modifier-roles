@@ -45,3 +45,22 @@ export const and =
       return mapScoping(branch, abiType) as PresetCondition // cast is safe because of earlier branch check
     }),
   })
+
+/**
+ * Passes if all branch conditions are false.
+ * @param branches conditions to be evaluated
+ */
+export const nor =
+  <Branches extends ScopingBranches<T>, T>(
+    ...branches: Branches
+  ): ConditionFunction<T> =>
+  (abiType: ParamType) => ({
+    paramType: ParameterType.None,
+    operator: Operator.Nor,
+    children: branches.map((branch) => {
+      if (branch === undefined) {
+        throw new Error("nor() branch condition must not be undefined")
+      }
+      return mapScoping(branch, abiType) as PresetCondition // cast is safe because of earlier branch check
+    }),
+  })
