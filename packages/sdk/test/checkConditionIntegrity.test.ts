@@ -7,19 +7,7 @@ import {
 } from "../src/conditions"
 import { Operator, ParameterType } from "../src/types"
 
-describe("checkRootConditionIntegrity()", () => {
-  it("should throw if the root param type is not AbiEncoded", () => {
-    expect(() =>
-      checkRootConditionIntegrity({
-        paramType: ParameterType.None,
-        operator: Operator.And,
-        children: [
-          { paramType: ParameterType.Static, operator: Operator.Pass },
-        ],
-      })
-    ).to.throw("Root param type must be `AbiEncoded`, got `Static`")
-  })
-
+describe("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {
     expect(() =>
       checkConditionIntegrity({
@@ -32,8 +20,8 @@ describe("checkRootConditionIntegrity()", () => {
 
   it("should throw for EqualTo without compValue", () => {
     expect(() =>
-      checkRootConditionIntegrity({
-        paramType: ParameterType.AbiEncoded,
+      checkConditionIntegrity({
+        paramType: ParameterType.Static,
         operator: Operator.EqualTo,
       })
     ).to.throw("`EqualTo` condition must have a compValue")
@@ -41,12 +29,12 @@ describe("checkRootConditionIntegrity()", () => {
 
   it("should throw for And with compValue", () => {
     expect(() =>
-      checkRootConditionIntegrity({
+      checkConditionIntegrity({
         paramType: ParameterType.None,
         operator: Operator.And,
         compValue: defaultAbiCoder.encode(["uint256"], [0]),
         children: [
-          { paramType: ParameterType.AbiEncoded, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
         ],
       })
     ).to.throw("`And` condition cannot have a compValue")
@@ -54,14 +42,28 @@ describe("checkRootConditionIntegrity()", () => {
 
   it("should throw for And with mixed children types", () => {
     expect(() =>
+      checkConditionIntegrity({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+        ],
+      })
+    ).to.throw("Inconsistent children types (`Static` and `Dynamic`)")
+  })
+})
+
+describe("checkRootConditionIntegrity()", () => {
+  it("should throw if the root param type is not AbiEncoded", () => {
+    expect(() =>
       checkRootConditionIntegrity({
         paramType: ParameterType.None,
         operator: Operator.And,
         children: [
-          { paramType: ParameterType.AbiEncoded, operator: Operator.Pass },
-          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
         ],
       })
-    ).to.throw("Inconsistent children types (`AbiEncoded` and `Dynamic`)")
+    ).to.throw("Root param type must be `AbiEncoded`, got `Static`")
   })
 })

@@ -44,11 +44,59 @@ const checkConditionIntegrityRecursive = (condition: Condition): void => {
 }
 
 const checkParamTypeIntegrity = (condition: Condition): void => {
-  if (
-    condition.operator === Operator.ArraySome ||
-    condition.operator === Operator.ArrayEvery ||
-    condition.operator === Operator.ArraySubset
-  ) {
+  const COMPATIBLE_TYPES = {
+    [Operator.Pass]: [
+      ParameterType.Static,
+      ParameterType.Dynamic,
+      ParameterType.Tuple,
+      ParameterType.Array,
+    ],
+
+    [Operator.And]: [ParameterType.None],
+    [Operator.Or]: [ParameterType.None],
+    [Operator.Nor]: [ParameterType.None],
+    [Operator.Xor]: [ParameterType.None],
+
+    [Operator.Matches]: [
+      ParameterType.AbiEncoded,
+      ParameterType.Tuple,
+      ParameterType.Array,
+    ],
+
+    [Operator.ArraySome]: [ParameterType.Array],
+    [Operator.ArrayEvery]: [ParameterType.Array],
+    [Operator.ArraySubset]: [ParameterType.Array],
+
+    [Operator.EqualToAvatar]: [ParameterType.Static],
+    [Operator.EqualTo]: [
+      ParameterType.Static,
+      ParameterType.Dynamic,
+      ParameterType.Tuple,
+      ParameterType.Array,
+    ],
+
+    [Operator.GreaterThan]: [ParameterType.Static],
+    [Operator.LessThan]: [ParameterType.Static],
+    [Operator.SignedIntGreaterThan]: [ParameterType.Static],
+    [Operator.SignedIntLessThan]: [ParameterType.Static],
+
+    [Operator.Bitmask]: [ParameterType.Static, ParameterType.Dynamic],
+
+    [Operator.Custom]: [
+      ParameterType.Static,
+      ParameterType.Dynamic,
+      ParameterType.Tuple,
+      ParameterType.Array,
+    ],
+
+    [Operator.WithinAllowance]: [ParameterType.Static],
+
+    [Operator.EtherWithinAllowance]: [ParameterType.None],
+    [Operator.CallWithinAllowance]: [ParameterType.None],
+  }
+  const compatibleTypes = COMPATIBLE_TYPES[condition.operator]
+
+  if (!compatibleTypes.includes(condition.paramType)) {
     throw new Error(
       `\`${
         Operator[condition.operator]
@@ -56,55 +104,6 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
         ParameterType[condition.paramType]
       }\``
     )
-  }
-
-  if (condition.operator === Operator.Matches) {
-    if (
-      condition.paramType !== ParameterType.AbiEncoded &&
-      condition.paramType !== ParameterType.Tuple &&
-      condition.paramType !== ParameterType.Array
-    ) {
-      throw new Error(
-        `\`Matches\` condition not supported for paramType \`${
-          ParameterType[condition.paramType]
-        }\``
-      )
-    }
-  }
-
-  if (
-    condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor ||
-    condition.operator === Operator.Xor ||
-    condition.operator === Operator.EtherWithinAllowance ||
-    condition.operator === Operator.CallWithinAllowance
-  ) {
-    if (condition.paramType !== ParameterType.None) {
-      throw new Error(
-        `\`${
-          Operator[condition.operator]
-        }\` condition must use paramType \`None\`, got: \`${
-          ParameterType[condition.paramType]
-        }\``
-      )
-    }
-  }
-
-  if (
-    condition.operator === Operator.LessThan ||
-    condition.operator === Operator.GreaterThan ||
-    condition.operator === Operator.SignedIntLessThan ||
-    condition.operator === Operator.SignedIntGreaterThan ||
-    condition.operator === Operator.WithinAllowance
-  ) {
-    if (condition.paramType !== ParameterType.Static) {
-      throw new Error(
-        `\`${Operator[condition.operator]}\` not supported for paramType \`${
-          ParameterType[condition.paramType]
-        }\``
-      )
-    }
   }
 }
 
@@ -155,9 +154,11 @@ const checkChildrenIntegrity = (condition: Condition): void => {
     condition.operator === Operator.Matches ||
     condition.operator === Operator.ArraySubset
   ) {
-    throw new Error(
-      `\`${Operator[condition.operator]}\` conditions must have children`
-    )
+    if (!condition.children || condition.children.length === 0) {
+      throw new Error(
+        `\`${Operator[condition.operator]}\` conditions must have children`
+      )
+    }
   }
 
   if (
