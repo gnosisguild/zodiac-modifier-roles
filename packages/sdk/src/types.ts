@@ -54,7 +54,7 @@ export enum Operator {
   //          paramType: Static
   //          🚫 children
   //          🚫 compValue
-  /* 15: */ EqualToAvatar,
+  EqualToAvatar = 15,
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
   //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
