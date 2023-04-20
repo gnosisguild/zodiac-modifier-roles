@@ -53,21 +53,17 @@ const collapseStaticComplexTypeTrees = (condition: Condition): Condition => {
 const pruneTrailingStaticPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
 
-  let breakPruning = false
-  const prunedChildren = condition.children
-    .reverse()
-    .filter((child) => {
-      if (breakPruning) return true
-      if (
-        child.operator !== Operator.Pass ||
-        child.paramType !== ParameterType.Static
-      ) {
-        breakPruning = true
-        return true
-      }
-      return false
-    })
-    .reverse()
+  let prunedChildren: Condition[] = []
+  for (let i = condition.children.length - 1; i >= 0; i--) {
+    const child = condition.children[i]
+    if (
+      child.operator !== Operator.Pass ||
+      child.paramType !== ParameterType.Static
+    ) {
+      prunedChildren = condition.children.slice(0, i + 1)
+      break
+    }
+  }
 
   return prunedChildren.length === condition.children.length
     ? condition
