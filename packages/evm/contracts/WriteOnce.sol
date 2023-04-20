@@ -112,7 +112,7 @@ library WriteOnce {
                 hex"63",
                 uint32(data.length + 1),
                 hex"80_60_0E_60_00_39_60_00_F3",
-                // Append 00 to data so contract can't be called
+                // Prepend 00 to data so contract can't be called
                 hex"00",
                 data
             );
