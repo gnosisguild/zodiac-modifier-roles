@@ -97,9 +97,9 @@ export const matchesAbi =
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 
     // only supported at the top level or for bytes type params
-    if (abiType && abiType.name !== "bytes") {
+    if (abiType && abiType.type !== "bytes") {
       throw new Error(
-        `Can only use \`matchesAbi\` on bytes types params, got: ${abiType.type}`
+        `Can only use \`matchesAbi\` on bytes type params, got: ${abiType.type}`
       )
     }
 

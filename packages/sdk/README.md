@@ -37,15 +37,13 @@ It also offers various sanity checks and normalizations for conditions.
 
 A permission preset is a parametrized set of permissions. It can be applied to different roles, filling in the specific parameter values for the placeholders in conditions.
 
-On this layer, the sdk offers the `inputsMatch()` helper function for defining conditions, relying on user-provided ABIs for contract function parameters.
-
 **Example:**
 
 ```javascript
 {
   targetAddress: '0x182B723a58739a9c974cFDB385ceaDb237453c28',
   signature: "claim_rewards(address)",
-  condition: inputsMatch([AVATAR], ["address"]),
+  condition: c.matchesAbi([AVATAR], ["address"]),
 }
 ```
 
@@ -87,7 +85,7 @@ Matching patterns can also be supplied as arrays using the `matches([ 1, undefin
 - `eq`
 - `lt`
 - `gt`
-- `bitmask`
+- `bitmask` _not yet implemented_
 
 #### Array conditions
 
@@ -99,7 +97,6 @@ Matching patterns can also be supplied as arrays using the `matches([ 1, undefin
 
 - `and`
 - `or`
-- `xor`
 - `nor`
 
 #### Tuple matching
@@ -109,6 +106,10 @@ Matching patterns can also be supplied as arrays using the `matches([ 1, undefin
 
 #### Allowance conditions
 
-- `withinAllowance`
-- `etherWithinAllowance`
-- `callWithinAllowance`
+- `withinAllowance` _not yet implemented_
+- `etherWithinAllowance` _not yet implemented_
+- `callWithinAllowance` _not yet implemented_
+
+#### Custom conditions
+
+- `custom` _not yet implemented_

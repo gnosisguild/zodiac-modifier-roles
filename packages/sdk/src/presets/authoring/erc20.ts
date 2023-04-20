@@ -1,8 +1,8 @@
 import { Placeholder } from "../types"
 
 import { forAll } from "./batching"
+import { matchesAbi } from "./conditions"
 import { or } from "./conditions/branching"
-import { inputsMatch } from "./inputsMatch"
 
 export const allowErc20Approve = (
   tokens: string[],
@@ -12,7 +12,7 @@ export const allowErc20Approve = (
 
   return forAll(tokens, {
     signature: "approve(address,uint256)",
-    condition: inputsMatch(
+    condition: matchesAbi(
       [
         spenders.length === 1
           ? spenders[0]
@@ -33,7 +33,7 @@ export const allowErc20Revoke = (
     signature: "approve(address,uint256)",
     condition:
       spenders &&
-      inputsMatch(
+      matchesAbi(
         [
           spenders.length === 1
             ? spenders[0]
@@ -50,7 +50,7 @@ export const allowErc20Transfer = (tokens: string[], recipients: string[]) => {
 
   return forAll(tokens, {
     signature: "transfer(address,uint256)",
-    condition: inputsMatch(
+    condition: matchesAbi(
       [
         recipients.length === 1
           ? recipients[0]

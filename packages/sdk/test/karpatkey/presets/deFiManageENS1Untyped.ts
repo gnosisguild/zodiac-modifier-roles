@@ -1,4 +1,3 @@
-import { inputsMatch } from "../../../src/presets/authoring"
 import * as c from "../../../src/presets/authoring/conditions"
 import { AVATAR } from "../../../src/presets/placeholders"
 import { PermissionPreset } from "../../../src/presets/types"
@@ -66,7 +65,7 @@ const preset = {
     {
       targetAddress: stETH,
       signature: "submit(address)",
-      condition: inputsMatch([ZERO_ADDRESS], ["address"]),
+      condition: c.matchesAbi([ZERO_ADDRESS], ["address"]),
       send: true,
     },
     { targetAddress: wstETH, signature: "wrap(uint256)" },
@@ -124,7 +123,7 @@ const preset = {
     {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [AVATAR, c.subset([cDAI, cUSDC])],
         ["address", "address[]"]
       ),
@@ -145,7 +144,7 @@ const preset = {
     {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [undefined, AVATAR, [rETH2, SWISE]],
         ["uint256", "address", "address[]", "uint256[]", "bytes32[]"]
       ),
@@ -165,7 +164,7 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             token0: WETH,
@@ -188,7 +187,7 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature:
         "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [{ tokenId: 424810 }],
         [
           "(uint256 tokenId, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, uint256 deadline)",
@@ -213,7 +212,7 @@ const preset = {
     {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [c.matches([undefined, AVATAR])],
         ["(uint256,address,uint128,uint128)"]
       ),
@@ -266,14 +265,14 @@ const preset = {
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
-      condition: inputsMatch([AVATAR], ["address"]),
+      condition: c.matchesAbi([AVATAR], ["address"]),
     },
 
     //Claiming CRV rewards
     {
       targetAddress: CRV_MINTER,
       signature: "mint(address)",
-      condition: inputsMatch([CURVE_stETH_ETH_GAUGE], ["address"]),
+      condition: c.matchesAbi([CURVE_stETH_ETH_GAUGE], ["address"]),
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -286,7 +285,7 @@ const preset = {
       targetAddress: AURA_REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           AURA_BALANCER_stETH_VAULT, // rewardPoolAddress
           WETH, // inputToken
@@ -332,7 +331,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", // poolId
           AVATAR, // sender
@@ -367,7 +366,7 @@ const preset = {
     {
       targetAddress: UV3_ROUTER_2,
       signature: "swapExactTokensForTokens(uint256,uint256,address[],address)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           undefined, // amountIn
           undefined, // amountOutMin
@@ -411,7 +410,7 @@ const preset = {
       targetAddress: UV3_ROUTER_2,
       signature:
         "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             tokenIn: c.or(
@@ -465,7 +464,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             poolId:
@@ -495,7 +494,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             poolId:
@@ -525,7 +524,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             poolId:
@@ -555,7 +554,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             poolId:
@@ -585,7 +584,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           {
             poolId:
@@ -615,7 +614,7 @@ const preset = {
       targetAddress: BALANCER_VAULT,
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           c.or(
             {
@@ -660,7 +659,7 @@ const preset = {
       targetAddress: SUSHISWAP_ROUTER,
       signature:
         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-      condition: inputsMatch(
+      condition: c.matchesAbi(
         [
           undefined,
           undefined,

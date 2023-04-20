@@ -19,8 +19,9 @@ import {
   Placeholder,
   ComparisonValue,
   PresetCondition,
+  PresetFunctionCoerced,
 } from "./types"
-import { functionId, isScoped, sighash } from "./utils"
+import { allowEntryId, isScoped } from "./utils"
 
 /**
  * Processes a RolePreset, filling in the placeholders and returning the final permissions
@@ -32,15 +33,17 @@ export const fillPreset = <P extends PermissionPreset>(
   preset: P,
   placeholderValues: PlaceholderValues<P>
 ): Target[] => {
-  preset = mergeFunctionEntries(preset) as P
-  sanityCheck(preset)
+  const mergedPreset = mergeFunctionEntries(preset)
+  sanityCheck(mergedPreset)
 
   const placeholderLookupMap = makePlaceholderLookupMap(
-    preset,
+    mergedPreset,
     placeholderValues
   )
 
-  const fullyClearedTargets = preset.allow
+  const { allow } = mergedPreset
+
+  const fullyClearedTargets = allow
     .filter((entry) => !isScoped(entry))
     .map((entry) => ({
       address: entry.targetAddress.toLowerCase(),
@@ -49,24 +52,20 @@ export const fillPreset = <P extends PermissionPreset>(
       functions: [],
     }))
 
+  const allowFunctionEntries = allow.filter(
+    (entry) => "selector" in entry
+  ) as PresetFunctionCoerced[]
+
   const functionScopedTargets = Object.entries(
-    groupBy(preset.allow.filter(isScoped), (entry) =>
-      entry.targetAddress.toLowerCase()
-    )
+    groupBy(allowFunctionEntries, (entry) => entry.targetAddress)
   ).map(([targetAddress, allowFunctions]) => ({
     address: targetAddress.toLowerCase(),
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {
-      let selector = "selector" in allowFunction && allowFunction.selector
-      if (!selector) {
-        selector =
-          "signature" in allowFunction && sighash(allowFunction.signature)
-      }
-      if (!selector) throw new Error("invariant violation")
       const { condition } = allowFunction
       return {
-        selector,
+        selector: allowFunction.selector,
         executionOptions: execOptions(allowFunction),
         wildcarded: !condition,
         condition:
@@ -168,7 +167,7 @@ const assertNoWildcardScopedIntersection = (preset: PermissionPreset) => {
 }
 
 const assertNoDuplicateAllowFunction = (preset: PermissionPreset) => {
-  const allowFunctions = preset.allow.filter(isScoped).map(functionId)
+  const allowFunctions = preset.allow.filter(isScoped).map(allowEntryId)
 
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
