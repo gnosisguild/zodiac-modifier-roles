@@ -39,8 +39,7 @@ export enum Operator {
   //          🚫 compValue
   And = 1,
   Or = 2,
-  Xor = 3,
-  Nor = 4,
+  Nor = 3,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,

@@ -31,8 +31,8 @@ export const ParameterTypeKeys = ["None", "Static", "Dynamic", "Tuple", "Array",
 export enum Operator {
   // 00:    EMPTY EXPRESSION (default, always passes)
   //          paramType: Static / Dynamic / Tuple / Array
-  //          🚫 children
   //          ❓ children (only for paramType: Tuple / Array to describe their structure)
+  //          🚫 compValue
   Pass = 0,
   // ------------------------------------------------------------
   // 01-04: LOGICAL EXPRESSIONS
@@ -41,8 +41,7 @@ export enum Operator {
   //          🚫 compValue
   And = 1,
   Or = 2,
-  Xor = 3,
-  Nor = 4,
+  Nor = 3,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
@@ -80,8 +79,8 @@ export const OperatorKeys = [
 
   "And", // 1
   "Or", // 2
-  "Xor", // 3
-  "Nor", // 4
+  "Nor", // 3
+  "_Placeholder4", // 4
 
   "Matches", // 5
   "ArraySome", // 6

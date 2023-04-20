@@ -55,7 +55,6 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
     [Operator.And]: [ParameterType.None],
     [Operator.Or]: [ParameterType.None],
     [Operator.Nor]: [ParameterType.None],
-    [Operator.Xor]: [ParameterType.None],
 
     [Operator.Matches]: [
       ParameterType.AbiEncoded,
@@ -180,8 +179,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor ||
-    condition.operator === Operator.Xor
+    condition.operator === Operator.Nor
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
