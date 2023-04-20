@@ -10,7 +10,7 @@ import { describeStructure, parameterType, encodeValue } from "./utils"
  * @param value The reference value to encode or a placeholder
  */
 export const eq = (value: Placeholder<any> | any) => (abiType: ParamType) => {
-  const type = ParamType.from(abiType || value.type)
+  const type = ParamType.from(abiType)
   const structure = describeStructure(type)
   return {
     paramType: parameterType(type),
@@ -25,7 +25,7 @@ export const eq = (value: Placeholder<any> | any) => (abiType: ParamType) => {
  * @param value The reference value to encode or a placeholder
  */
 export const gt = (value: Placeholder<any> | any) => (abiType: ParamType) => {
-  const type = ParamType.from(abiType || value.type)
+  const type = ParamType.from(abiType)
   if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {
     console.warn(
       `Using a gt condition on non-numeric type ${type.type}, bytes will be interpreted as a uint256`
@@ -45,7 +45,7 @@ export const gt = (value: Placeholder<any> | any) => (abiType: ParamType) => {
  * @param value The reference value to encode or a placeholder
  */
 export const lt = (value: Placeholder<any> | any) => (abiType: ParamType) => {
-  const type = ParamType.from(abiType || value.type)
+  const type = ParamType.from(abiType)
   if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {
     console.warn(
       `Using a lt condition on non-numeric type ${type.type}, bytes will be interpreted as a uint256`
