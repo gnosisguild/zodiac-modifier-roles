@@ -19,22 +19,18 @@ export const withinAllowance =
     }
   }
 
-export const callWithinAllowance =
-  (allowanceKey: string): ConditionFunction<any> =>
-  () => {
-    return {
-      paramType: ParameterType.None,
-      operator: Operator.CallWithinAllowance,
-      compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-    }
+export const callWithinAllowance = (allowanceKey: string) => () => {
+  return {
+    paramType: ParameterType.None,
+    operator: Operator.CallWithinAllowance,
+    compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
   }
+}
 
-export const etherWithinAllowance =
-  (allowanceKey: string): ConditionFunction<any> =>
-  () => {
-    return {
-      paramType: ParameterType.None,
-      operator: Operator.EtherWithinAllowance,
-      compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-    }
+export const etherWithinAllowance = (allowanceKey: string) => () => {
+  return {
+    paramType: ParameterType.None,
+    operator: Operator.EtherWithinAllowance,
+    compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
   }
+}

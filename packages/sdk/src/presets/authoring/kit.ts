@@ -1,21 +1,29 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
+import { Operator, ParameterType } from "../../types"
 import {
+  ExecutionFlags,
+  PresetCondition,
   PresetFullyClearedTarget,
   PresetFunction,
-  ExecutionFlags,
+  PresetFunctionCoerced,
 } from "../types"
+import { coercePresetFunction } from "../utils"
 
+import {
+  callWithinAllowance,
+  etherWithinAllowance,
+} from "./conditions/allowances"
 import { matchesAbi } from "./conditions/matches"
 import { TupleScopings } from "./conditions/types"
 
-// In this file, we define a derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
+// In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
 type MapParams<T extends any[]> = ((...b: T) => void) extends (
   ...args: [...infer I, any]
 ) => void
-  ? [...params: TupleScopings<I>, options?: ExecutionFlags]
+  ? [...params: TupleScopings<I>, options?: Options]
   : []
 
 const makeAllowFunction = <
@@ -33,16 +41,61 @@ const makeAllowFunction = <
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): PresetFunction => {
     const scopings = args.slice(0, functionInputs.length) as any[]
-    const options = (args[functionInputs.length] || {}) as ExecutionFlags
-    return {
+    const options = (args[functionInputs.length] || {}) as Options
+    const presetFunction: PresetFunction = {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
       condition:
         scopings.length > 0
           ? matchesAbi(scopings, functionInputs)()
           : undefined,
-      ...options,
     }
+    return applyOptions(coercePresetFunction(presetFunction), options)
+  }
+}
+
+type Options = {
+  send?: boolean
+  delegatecall?: boolean
+  etherWithinAllowance?: string
+  callWithinAllowance?: string
+}
+
+const applyOptions = (
+  entry: PresetFunctionCoerced,
+  options: Options
+): PresetFunctionCoerced => {
+  const conditions: PresetCondition[] = []
+
+  if (entry.condition) {
+    conditions.push(entry.condition)
+  }
+
+  if (options.etherWithinAllowance) {
+    if (!options.send) {
+      throw new Error(
+        "`etherWithinAllowance` can only be used if `send` is allowed"
+      )
+    }
+
+    conditions.push(etherWithinAllowance(options.etherWithinAllowance)())
+  }
+
+  if (options.callWithinAllowance) {
+    conditions.push(callWithinAllowance(options.callWithinAllowance)())
+  }
+
+  if (conditions.length === 0) {
+    return entry
+  }
+
+  return {
+    ...entry,
+    condition: {
+      paramType: ParameterType.None,
+      operator: Operator.And,
+      children: conditions,
+    },
   }
 }
 
@@ -54,7 +107,7 @@ type AllowFunctions<C extends BaseContract> = {
   ) => PresetFunction
 }
 type AllowContract<C extends BaseContract> = {
-  [EVERYTHING]: (options?: ExecutionFlags) => PresetFullyClearedTarget
+  [EVERYTHING]: (options?: Options) => PresetFullyClearedTarget
 } & AllowFunctions<C>
 
 const makeAllowContract = <C extends BaseContract>(
