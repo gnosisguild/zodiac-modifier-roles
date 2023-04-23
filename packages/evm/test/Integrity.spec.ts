@@ -690,8 +690,8 @@ describe("Integrity", async () => {
         ])
       ).to.not.be.reverted;
     });
-    it("Not possible to setup a node with Operator Placeholder", async () => {
-      const { enforce } = await loadFixture(setup);
+    it("Node *Placeholder* triggers error", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
       await expect(
         enforce([
           {
@@ -707,7 +707,9 @@ describe("Integrity", async () => {
             compValue: "0x",
           },
         ])
-      ).to.be.revertedWith("Placeholder Operators are not supported");
+      )
+        .to.be.revertedWithCustomError(integrity, "UnsupportedOperator")
+        .withArgs(1);
     });
   });
 
