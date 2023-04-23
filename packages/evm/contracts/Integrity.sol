@@ -17,6 +17,8 @@ library Integrity {
 
     error UnsuitableCompValue(uint256 index);
 
+    error UnsupportedOperator(uint256 index);
+
     error UnsuitableParent(uint256 index);
 
     error UnsuitableChildCount(uint256 index);
@@ -131,19 +133,18 @@ library Integrity {
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
-        } else {
-            require(
-                operator == Operator.EtherWithinAllowance ||
-                    operator == Operator.CallWithinAllowance,
-                "Placeholder Operators are not supported"
-            );
-
+        } else if (
+            operator == Operator.EtherWithinAllowance ||
+            operator == Operator.CallWithinAllowance
+        ) {
             if (paramType != ParameterType.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
+        } else {
+            revert UnsupportedOperator(index);
         }
     }
 
