@@ -58,7 +58,7 @@ contract Roles is
         avatar = _avatar;
         target = _target;
 
-        transferOwnership(_owner);
+        _transferOwnership(_owner);
         setupModules();
 
         emit RolesModSetup(msg.sender, _owner, _avatar, _target);
