@@ -40,9 +40,11 @@ library BufferPacker {
         uint256 count = conditions.length;
 
         result = count * BYTES_PER_CONDITION;
-        for (uint256 i; i < count; ++i) {
-            if (conditions[i].operator >= Operator.EqualTo) {
-                result += 32;
+        unchecked {
+            for (uint256 i; i < count; ++i) {
+                if (conditions[i].operator >= Operator.EqualTo) {
+                    result += 32;
+                }
             }
         }
     }

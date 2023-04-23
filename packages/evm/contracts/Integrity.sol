@@ -34,11 +34,13 @@ library Integrity {
     function _root(ConditionFlat[] memory conditions) private pure {
         uint256 count;
 
-        for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].parent == i) ++count;
-        }
-        if (count != 1 || conditions[0].parent != 0) {
-            revert UnsuitableRootNode();
+        unchecked {
+            for (uint256 i; i < conditions.length; ++i) {
+                if (conditions[i].parent == i) ++count;
+            }
+            if (count != 1 || conditions[0].parent != 0) {
+                revert UnsuitableRootNode();
+            }
         }
     }
 

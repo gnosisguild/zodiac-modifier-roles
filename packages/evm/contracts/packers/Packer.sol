@@ -18,13 +18,19 @@ library Packer {
 
         buffer = new bytes(BufferPacker.packedSize(conditionsFlat));
 
-        uint256 count = conditionsFlat.length;
-        uint256 offset = 32 + count * 2;
-        for (uint256 i; i < count; ++i) {
-            BufferPacker.packCondition(buffer, i, conditionsFlat[i]);
-            if (conditionsFlat[i].operator >= Operator.EqualTo) {
-                BufferPacker.packCompValue(buffer, offset, conditionsFlat[i]);
-                offset += 32;
+        unchecked {
+            uint256 count = conditionsFlat.length;
+            uint256 offset = 32 + count * 2;
+            for (uint256 i; i < count; ++i) {
+                BufferPacker.packCondition(buffer, i, conditionsFlat[i]);
+                if (conditionsFlat[i].operator >= Operator.EqualTo) {
+                    BufferPacker.packCompValue(
+                        buffer,
+                        offset,
+                        conditionsFlat[i]
+                    );
+                    offset += 32;
+                }
             }
         }
     }

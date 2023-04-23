@@ -76,9 +76,12 @@ contract Roles is
         if (roleKeys.length != memberOf.length) {
             revert ArraysDifferentLength();
         }
-        for (uint16 i; i < roleKeys.length; ++i) {
-            roles[roleKeys[i]].members[module] = memberOf[i];
+        unchecked {
+            for (uint16 i; i < roleKeys.length; ++i) {
+                roles[roleKeys[i]].members[module] = memberOf[i];
+            }
         }
+
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }

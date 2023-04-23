@@ -108,14 +108,20 @@ library Topology {
         }
 
         result.paramType = condition.paramType;
-        if (bounds[index].length > 0) {
-            uint256 start = bounds[index].start;
-            uint256 end = condition.paramType == ParameterType.Array
-                ? bounds[index].start + 1
-                : bounds[index].end;
-            result.children = new TypeTree[](end - start);
-            for (uint256 i = start; i < end; ++i) {
-                result.children[i - start] = typeTree(conditions, i, bounds);
+        unchecked {
+            if (bounds[index].length > 0) {
+                uint256 start = bounds[index].start;
+                uint256 end = condition.paramType == ParameterType.Array
+                    ? bounds[index].start + 1
+                    : bounds[index].end;
+                result.children = new TypeTree[](end - start);
+                for (uint256 i = start; i < end; ++i) {
+                    result.children[i - start] = typeTree(
+                        conditions,
+                        i,
+                        bounds
+                    );
+                }
             }
         }
     }
