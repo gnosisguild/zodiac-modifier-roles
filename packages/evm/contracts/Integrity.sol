@@ -230,9 +230,10 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                (condition.operator >= Operator.And &&
+                ((condition.operator >= Operator.And &&
                     condition.operator <= Operator.Nor) ||
-                condition.paramType == ParameterType.Array
+                    condition.paramType == ParameterType.Array) &&
+                childrenBounds[i].length > 1
             ) {
                 compatiblechildTypeTree(conditions, i, childrenBounds);
             }
@@ -254,8 +255,6 @@ library Integrity {
         uint256 index,
         Topology.Bounds[] memory childrenBounds
     ) private pure {
-        assert(childrenBounds[index].length > 0);
-
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
