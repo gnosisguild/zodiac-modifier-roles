@@ -62,7 +62,7 @@ abstract contract AllowanceTracker is Core {
 
                 // Retrieve the allowance and calculate its current updated balance
                 // and next refill timestamp.
-                Allowance memory allowance = allowances[key];
+                Allowance storage allowance = allowances[key];
                 (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
                     allowance,
                     block.timestamp
@@ -71,8 +71,8 @@ abstract contract AllowanceTracker is Core {
                 assert(balance == consumption.balance);
                 assert(consumed <= balance);
                 // Flush
-                allowances[key].balance = balance - consumed;
-                allowances[key].refillTimestamp = refillTimestamp;
+                allowance.balance = balance - consumed;
+                allowance.refillTimestamp = refillTimestamp;
 
                 // Emit an event to signal the total consumed amount.
                 emit ConsumeAllowance(key, consumed, balance - consumed);
