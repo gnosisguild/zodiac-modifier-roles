@@ -80,6 +80,7 @@ export const fetchRole = async ({
 
 const mapGraphQl = (role: any): Role => ({
   ...role,
+  members: role.members.map((assignment: any) => assignment.member.address),
   targets: role.targets.map(
     (target: any): Target => ({
       address: target.address,

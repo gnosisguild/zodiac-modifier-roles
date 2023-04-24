@@ -5,22 +5,21 @@ import { patchPermissions } from "./patchPermissions"
 import { ChainId, Target } from "./types"
 
 /**
- * Returns a set of populated transactions objects for updating the permissions of the given role.
+ * Returns a set of encoded call data to be sent to the Roles mod for updating the permissions of the given role.
  *
- * @param address The address of the roles modifier
  * @param roleKey The key of the role to update
  * @param permissions Permissions to apply to the role
- * @param [options.network] The chain where the roles modifier is deployed
  * @param [options.currentPermissions] The permissions that are currently set on the role. If not specified, they will be fetched from the subgraph.
- *
+ * @param [options.network] The chain where the Roles mod is deployed
+ * @param [options.address] The address of the Roles mod
  */
 export const applyPermissions = async (
-  address: string,
   roleKey: string,
   permissions: Target[],
   options:
     | {
         network: ChainId
+        address: string
       }
     | {
         currentPermissions: Target[]
@@ -32,14 +31,14 @@ export const applyPermissions = async (
   if (!currentPermissions) {
     if ("network" in options && options.network) {
       const role = await fetchRole({
-        address,
-        roleKey,
         network: options.network,
+        address: options.address,
+        roleKey,
       })
       currentPermissions = role.targets
     } else {
       throw new Error(
-        "Either `currentPermissions` or `network` must be specified"
+        "Either `currentPermissions` or `network` and `address` must be specified"
       )
     }
   }
