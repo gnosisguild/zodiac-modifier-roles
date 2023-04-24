@@ -2,7 +2,7 @@ import { getConditionId, normalizeCondition } from "./conditions"
 import { Clearance, Target, Function, Condition } from "./types"
 
 /**
- *  Returns permissions granted by a that are not granted by b
+ *  Returns permissions granted by `a` that are not granted by `b`
  */
 export const diffPermissions = (a: Target[], b: Target[]): Target[] => {
   // targets in a that are not in b

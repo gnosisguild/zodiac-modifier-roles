@@ -1,7 +1,7 @@
 import SUBGRAPH from "./subgraph"
 import {
   Role,
-  NetworkId,
+  ChainId,
   Clearance,
   ExecutionOptions,
   Function,
@@ -14,7 +14,7 @@ import {
 interface Props {
   address: string
   roleKey: string
-  network: NetworkId
+  network: ChainId
 }
 
 const QUERY = `
@@ -27,8 +27,13 @@ const QUERY = `
     }
   }
 
-  query RolePermissions($id: String) {
+  query Role($id: String) {
     role(id: $id) {
+      members {
+        member {
+          address
+        }
+      }
       targets {
         address
         clearance
@@ -59,7 +64,7 @@ export const fetchRole = async ({
     body: JSON.stringify({
       query: QUERY,
       variables: { id: getRoleId(address, roleKey) },
-      operationName: "RolePermissions",
+      operationName: "Role",
     }),
   })
   const { data, error } = await res.json()

@@ -2,7 +2,7 @@ import { BigNumber } from "ethers"
 
 import SUBGRAPH from "./subgraph"
 
-export type NetworkId = keyof typeof SUBGRAPH
+export type ChainId = keyof typeof SUBGRAPH
 
 export enum ExecutionOptions {
   None = 0,
