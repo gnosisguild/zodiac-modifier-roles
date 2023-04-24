@@ -10,7 +10,6 @@ import {
   Target,
 } from "../types"
 
-import { execOptions } from "./execOptions"
 import { mergeFunctionEntries } from "./mergeFunctionEntries"
 import { AVATAR } from "./placeholders"
 import {
@@ -21,7 +20,7 @@ import {
   PresetCondition,
   PresetFunctionCoerced,
 } from "./types"
-import { allowEntryId, isScoped } from "./utils"
+import { execOptions, allowEntryId, isScoped } from "./utils"
 
 /**
  * Processes a RolePreset, filling in the placeholders and returning the final permissions
