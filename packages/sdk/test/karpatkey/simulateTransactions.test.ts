@@ -3,7 +3,8 @@ import { formatBytes32String } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
-import { encodeApplyPreset } from "../../src/applyPreset"
+import { fillPreset } from "../../src"
+import { applyPermissions } from "../../src/applyPermissions"
 import { PermissionPreset } from "../../src/presets/types"
 import { deployContracts } from "../deployContracts"
 
@@ -99,14 +100,12 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const placeholderValues = {
       AVATAR: config.AVATAR,
     }
-    const transactionsData = await encodeApplyPreset(
+    const transactionsData = await applyPermissions(
       modifier.address,
       ROLE_KEY,
-      preset,
-      placeholderValues,
+      fillPreset(preset, placeholderValues),
       {
         currentPermissions: [],
-        network: 100, // this value won't be used
       }
     )
 
