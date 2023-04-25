@@ -155,7 +155,6 @@ const mapSdk = <S extends EthSdk>(sdk: S): AllowKit<S> => {
 }
 
 const { getContract, ...sdkGetters } = ethSdk
-export { sdkGetters as ethSdk }
 
 type SdkGetterName = keyof typeof sdkGetters
 type NetworkName<S extends SdkGetterName> = S extends `get${infer N}Sdk`
