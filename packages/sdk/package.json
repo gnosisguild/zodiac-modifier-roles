@@ -10,8 +10,7 @@
     "README.md"
   ],
   "scripts": {
-    "prebuild": "rimraf build",
-    "build": "yarn build:cjs && yarn build:esm",
+    "build": "rimraf build && yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "check": "yarn check:prettier && yarn check:lint",
@@ -26,12 +25,12 @@
     "prepare": "yarn eth-sdk"
   },
   "dependencies": {
+    "@dethcrypto/eth-sdk-client": "^0.1.6",
     "ethers": "^5.4.7",
     "type-fest": "^3.7.1"
   },
   "devDependencies": {
     "@dethcrypto/eth-sdk": "^0.3.3",
-    "@dethcrypto/eth-sdk-client": "^0.1.6",
     "@gnosis.pm/zodiac": "^3.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^2.1.0",
