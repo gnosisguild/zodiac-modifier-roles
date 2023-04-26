@@ -101,7 +101,6 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       AVATAR: config.AVATAR,
     }
     const transactionsData = await applyPermissions(
-      modifier.address,
       ROLE_KEY,
       fillPreset(preset, placeholderValues),
       {
