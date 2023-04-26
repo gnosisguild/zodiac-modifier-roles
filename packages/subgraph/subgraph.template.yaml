@@ -79,6 +79,27 @@ dataSources:
           handler: handleSetAllowance
       file: ./src/permissions.mapping.ts
   - kind: ethereum
+    name: AllowanceTracker
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: AllowanceTracker
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Allowance
+      abis:
+        - name: AllowanceTracker
+          file: ./abis/AllowanceTracker.sol/AllowanceTracker.json
+      eventHandlers:
+        - event: ConsumeAllowance(bytes32,uint128,uint128)
+          handler: handleConsumeAllowance
+      file: ./src/allowances.mapping.ts
+  - kind: ethereum
     name: Periphery
     # prettier-ignore
     network: {{network}}
