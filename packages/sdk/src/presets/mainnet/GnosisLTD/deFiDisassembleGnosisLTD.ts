@@ -2,7 +2,8 @@ import { allow } from "../../allow"
 import {
     COW, DAI, GNO, USDC, USDT,
     balancer,
-    compound_v2
+    compound_v2,
+    compound_v3
 } from "../addresses"
 import {
     staticEqual,
@@ -347,6 +348,62 @@ const preset = {
         //     signature: "repayBorrow(uint256)",
         // },
         allow.mainnet.compound_v2.cDAI["repayBorrow"](),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3 - USDC
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Withdraw/Borrow
+        allow.mainnet.compound_v3.cUSDCv3["withdraw"](
+            USDC
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3 - ETH
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        // Withdraw
+        {
+            targetAddress: compound_v3.MainnetBulker,
+            signature:
+                "invoke(bytes32[],bytes[])",
+            params: {
+                [0]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000040",
+                    "bytes32"
+                ), // Offset of bytes32[] from beginning 64=32*2
+                [1]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"
+                ), // Offset of bytes[] from beginning 128=32*4
+                [2]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000001",
+                    "bytes32"
+                ), // Length of bytes32[] = 1
+                [3]: staticEqual(
+                    "414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000",
+                    "bytes32"
+                ), // ACTION_WITHDRAW_NATIVE_TOKEN Encoded
+                [4]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000001",
+                    "bytes32"
+                ), // Length of bytes[] = 1
+                [5]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000020",
+                    "bytes32"
+                ), // Offset of the first element of the bytes[] from beginning of bytes[] 32=32*1
+                [6]: staticEqual(
+                    "0000000000000000000000000000000000000000000000000000000000000060",
+                    "bytes32"
+                ), // Length of the first element of the bytes[] 96=32*3
+                [7]: staticEqual(compound_v3.cUSDCv3, "address"),
+                [8]: staticEqual(AVATAR)
+            },
+        },
     ],
     placeholders: { AVATAR },
 } satisfies RolePreset

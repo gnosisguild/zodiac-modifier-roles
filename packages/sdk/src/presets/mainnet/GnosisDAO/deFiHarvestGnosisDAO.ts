@@ -2,9 +2,10 @@ import { allow } from "../../allow"
 import {
   balancer,
   compound_v2,
+  compound_v3,
   curve
 } from "../addresses"
-import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
 
 
@@ -340,6 +341,14 @@ const preset = {
         subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V3 - Claiming of rewards
+    //---------------------------------------------------------------------------------------------------------------------------------
+    allow.mainnet.compound_v3.CometRewards["claim"](
+      compound_v3.cUSDCv3,
+      AVATAR
     ),
   ],
   placeholders: { AVATAR },

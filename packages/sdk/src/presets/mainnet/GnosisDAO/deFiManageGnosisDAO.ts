@@ -7,6 +7,7 @@ import {
   aura,
   balancer,
   compound_v2,
+  compound_v3,
   convex,
   curve,
   uniswapv3
@@ -2364,6 +2365,119 @@ const preset = {
         subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V3
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V3 - USDC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([USDC], [compound_v3.cUSDCv3]),
+
+    // Supply/Repay
+    allow.mainnet.compound_v3.cUSDCv3["supply"](
+      USDC
+    ),
+
+    // Withdraw/Borrow
+    allow.mainnet.compound_v3.cUSDCv3["withdraw"](
+      USDC
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V3 - ETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // You need to approve the Compound III proxy (MainnetBulker) contract first. You only need to do this once.
+    allow.mainnet.compound_v3.cUSDCv3["allow"](
+      compound_v3.MainnetBulker
+    ),
+
+    // Supply
+    {
+      targetAddress: compound_v3.MainnetBulker,
+      signature:
+        "invoke(bytes32[],bytes[])",
+      params: {
+        [0]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000040",
+          "bytes32"
+        ), // Offset of bytes32[] from beginning 64=32*2
+        [1]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000080",
+          "bytes32"
+        ), // Offset of bytes[] from beginning 128=32*4
+        [2]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of bytes32[] = 1
+        [3]: staticEqual(
+          "414354494f4e5f535550504c595f4e41544956455f544f4b454e000000000000",
+          "bytes32"
+        ), // ACTION_SUPPLY_NATIVE_TOKEN Encoded
+        [4]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of bytes[] = 1
+        [5]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // Offset of the first element of the bytes[] from beginning of bytes[] 32=32*1
+        [6]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000060",
+          "bytes32"
+        ), // Length of the first element of the bytes[] 96=32*3
+        [7]: staticEqual(compound_v3.cUSDCv3, "address"),
+        [8]: staticEqual(AVATAR)
+      },
+    },
+
+    // Withdraw
+    {
+      targetAddress: compound_v3.MainnetBulker,
+      signature:
+        "invoke(bytes32[],bytes[])",
+      params: {
+        [0]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000040",
+          "bytes32"
+        ), // Offset of bytes32[] from beginning 64=32*2
+        [1]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000080",
+          "bytes32"
+        ), // Offset of bytes[] from beginning 128=32*4
+        [2]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of bytes32[] = 1
+        [3]: staticEqual(
+          "414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000",
+          "bytes32"
+        ), // ACTION_WITHDRAW_NATIVE_TOKEN Encoded
+        [4]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of bytes[] = 1
+        [5]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // Offset of the first element of the bytes[] from beginning of bytes[] 32=32*1
+        [6]: staticEqual(
+          "0000000000000000000000000000000000000000000000000000000000000060",
+          "bytes32"
+        ), // Length of the first element of the bytes[] 96=32*3
+        [7]: staticEqual(compound_v3.cUSDCv3, "address"),
+        [8]: staticEqual(AVATAR)
+      },
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V3 - Claiming of rewards
+    //---------------------------------------------------------------------------------------------------------------------------------
+    allow.mainnet.compound_v3.CometRewards["claim"](
+      compound_v3.cUSDCv3,
+      AVATAR
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------

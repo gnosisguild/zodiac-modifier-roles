@@ -60,6 +60,11 @@ export default defineConfig({
         cDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
         cAAVE: "0xe65cdB6479BaC1e22340E4E755fAE7E509EcD06c"
       },
+      compound_v3: {
+        cUSDCv3: "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+        MainnetBulker: "0xa397a8C2086C554B531c02E29f3291c9704B00c7",
+        CometRewards: "0x1b0e765f6224c21223aea2af16c1c46e38885a40"
+      },
       convex: {
         booster: "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
         snapshot_delegation: "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",

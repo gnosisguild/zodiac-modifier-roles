@@ -130,6 +130,12 @@ export const compound_v2 = {
     cUSDC: "0x39AA39c021dfbaE8faC545936693aC917d5E7563"
 }
 
+export const compound_v3 = {
+    cUSDCv3: "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+    MainnetBulker: "0xa397a8C2086C554B531c02E29f3291c9704B00c7",
+    CometRewards: "0x1b0e765f6224c21223aea2af16c1c46e38885a40"
+}
+
 export const convex = {
     BOOSTER: "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
 
