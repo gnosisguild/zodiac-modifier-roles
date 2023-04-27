@@ -2431,6 +2431,7 @@ const preset = {
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
         [8]: staticEqual(AVATAR)
       },
+      send: true,
     },
 
     // Withdraw
