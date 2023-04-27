@@ -2001,15 +2001,21 @@ const preset = {
 
     // Deposit
     allow.mainnet.convex.booster["depositAll"](
-      0 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+      {
+        oneOf: [0]
+      } // poolId (If you don't specify a poolId you can deposit funds in any pool)
     ),
     allow.mainnet.convex.booster["deposit"](
-      0 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+      {
+        oneOf: [0]
+      } // poolId (If you don't specify a poolId you can deposit funds in any pool)
     ),
 
     // Withdraw
     allow.mainnet.convex.booster["withdraw"](
-      0 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+      {
+        oneOf: [0]
+      } // poolId (If you don't specify a poolId you can withdraw funds in any pool)
     ),
 
     // Stake
@@ -2145,9 +2151,6 @@ const preset = {
       }
     ),
 
-    // Exchange not using ETH
-    allow.mainnet.curve.steth_eth_pool["exchange"](),
-
     // Stake
     allow.mainnet.curve.steth_eth_gauge["deposit(uint256)"](),
 
@@ -2168,33 +2171,20 @@ const preset = {
     ),
 
     // Using ETH
-    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-      curve.stETH_ETH_POOL,
-      curve.steCRV,
-      curve.stETH_ETH_GAUGE,
-      2,
-      [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-      undefined,
-      undefined,
-      undefined,
-      ZERO_ADDRESS,
-      {
-        send: true
-      }
-    ),
-
-    // Not using ETH
-    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-      curve.stETH_ETH_POOL,
-      curve.steCRV,
-      curve.stETH_ETH_GAUGE,
-      2,
-      [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-      undefined,
-      undefined,
-      undefined,
-      ZERO_ADDRESS,
-    ),
+    // allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+    //   curve.stETH_ETH_POOL,
+    //   curve.steCRV,
+    //   curve.stETH_ETH_GAUGE,
+    //   2,
+    //   [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   ZERO_ADDRESS,
+    //   {
+    //     send: true
+    //   }
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - cDAI/cUSDC
@@ -2243,19 +2233,42 @@ const preset = {
     ),
 
     // Deposit and Stake using a special ZAP
-    allow.mainnet.curve.cDAIcUSDC_gauge["set_approve_deposit"](
-      curve.STAKE_DEPOSIT_ZAP
-    ),
+    // allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+    //   {
+    //     oneOf: [curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
+    //   },
+    //   curve.crvcDAIcUSDC,
+    //   curve.cDAIcUSDC_GAUGE,
+    //   2,
+    //   {
+    //     oneOf: [
+    //       [DAI, USDC, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    //       [compound_v2.cUSDC, compound_v2.cDAI, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    //     ]
+    //   },
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   ZERO_ADDRESS
+    // ),
 
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Curve - Deposit and Stake using a special ZAP
+    //---------------------------------------------------------------------------------------------------------------------------------
     allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
       {
-        oneOf: [curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
+        oneOf: [curve.stETH_ETH_POOL, curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
       },
-      curve.crvcDAIcUSDC,
-      curve.cDAIcUSDC_GAUGE,
+      {
+        oneOf: [curve.steCRV, curve.crvcDAIcUSDC]
+      },
+      {
+        oneOf: [curve.stETH_ETH_GAUGE, curve.cDAIcUSDC_GAUGE]
+      },
       2,
       {
         oneOf: [
+          [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
           [DAI, USDC, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
           [compound_v2.cUSDC, compound_v2.cDAI, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
         ]
@@ -2263,7 +2276,10 @@ const preset = {
       undefined,
       undefined,
       undefined,
-      ZERO_ADDRESS
+      ZERO_ADDRESS,
+      {
+        send: true
+      }
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -2293,7 +2309,7 @@ const preset = {
         [0]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000020",
           "bytes32"
-        ), // // Offset of address[] from beginning of tuple 64=32*2
+        ), // Offset of address[] from beginning of tuple 64=32*2
         [1]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
@@ -2336,7 +2352,7 @@ const preset = {
         [0]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000020",
           "bytes32"
-        ), // // Offset of address[] from beginning of tuple 64=32*2
+        ), // Offset of address[] from beginning of tuple 64=32*2
         [1]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
@@ -2401,37 +2417,37 @@ const preset = {
         "invoke(bytes32[],bytes[])",
       params: {
         [0]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000040",
+          "0x0000000000000000000000000000000000000000000000000000000000000040",
           "bytes32"
         ), // Offset of bytes32[] from beginning 64=32*2
         [1]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000080",
+          "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
         ), // Offset of bytes[] from beginning 128=32*4
         [2]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000001",
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
         ), // Length of bytes32[] = 1
         [3]: staticEqual(
-          "414354494f4e5f535550504c595f4e41544956455f544f4b454e000000000000",
+          "0x414354494f4e5f535550504c595f4e41544956455f544f4b454e000000000000",
           "bytes32"
         ), // ACTION_SUPPLY_NATIVE_TOKEN Encoded
         [4]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000001",
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
         ), // Length of bytes[] = 1
         [5]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000020",
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
           "bytes32"
         ), // Offset of the first element of the bytes[] from beginning of bytes[] 32=32*1
         [6]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000060",
+          "0x0000000000000000000000000000000000000000000000000000000000000060",
           "bytes32"
         ), // Length of the first element of the bytes[] 96=32*3
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
         [8]: staticEqual(AVATAR)
       },
-      send: true,
+      send: true
     },
 
     // Withdraw
@@ -2441,36 +2457,37 @@ const preset = {
         "invoke(bytes32[],bytes[])",
       params: {
         [0]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000040",
+          "0x0000000000000000000000000000000000000000000000000000000000000040",
           "bytes32"
         ), // Offset of bytes32[] from beginning 64=32*2
         [1]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000080",
+          "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
         ), // Offset of bytes[] from beginning 128=32*4
         [2]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000001",
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
         ), // Length of bytes32[] = 1
         [3]: staticEqual(
-          "414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000",
+          "0x414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000",
           "bytes32"
         ), // ACTION_WITHDRAW_NATIVE_TOKEN Encoded
         [4]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000001",
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
           "bytes32"
         ), // Length of bytes[] = 1
         [5]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000020",
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
           "bytes32"
         ), // Offset of the first element of the bytes[] from beginning of bytes[] 32=32*1
         [6]: staticEqual(
-          "0000000000000000000000000000000000000000000000000000000000000060",
+          "0x0000000000000000000000000000000000000000000000000000000000000060",
           "bytes32"
         ), // Length of the first element of the bytes[] 96=32*3
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
         [8]: staticEqual(AVATAR)
       },
+      send: true
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
