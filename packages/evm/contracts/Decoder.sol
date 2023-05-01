@@ -111,21 +111,23 @@ library Decoder {
         bool isInline;
         if (template) isInline = Topology.isInline(node.children[0]);
 
-        unchecked {
-            uint256 offset;
-            for (uint256 i; i < length; ++i) {
-                if (!template) isInline = Topology.isInline(node.children[i]);
+        uint256 offset;
+        for (uint256 i; i < length; ) {
+            if (!template) isInline = Topology.isInline(node.children[i]);
 
-                _walk(
-                    data,
-                    _locationInBlock(data, location, offset, isInline),
-                    node.children[template ? 0 : i],
-                    result.children[i]
-                );
+            _walk(
+                data,
+                _locationInBlock(data, location, offset, isInline),
+                node.children[template ? 0 : i],
+                result.children[i]
+            );
 
-                uint256 childSize = result.children[i].size;
-                result.size += isInline ? childSize : childSize + 32;
-                offset += isInline ? childSize : 32;
+            uint256 childSize = result.children[i].size;
+            result.size += isInline ? childSize : childSize + 32;
+            offset += isInline ? childSize : 32;
+
+            unchecked {
+                ++i;
             }
         }
     }

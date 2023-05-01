@@ -53,29 +53,32 @@ abstract contract AllowanceTracker is Core {
      */
     function _flushPrepare(Consumption[] memory consumptions) internal {
         uint256 count = consumptions.length;
-        unchecked {
-            for (uint256 i; i < count; ++i) {
-                Consumption memory consumption = consumptions[i];
 
-                bytes32 key = consumption.allowanceKey;
-                uint128 consumed = consumption.consumed;
+        for (uint256 i; i < count; ) {
+            Consumption memory consumption = consumptions[i];
 
-                // Retrieve the allowance and calculate its current updated balance
-                // and next refill timestamp.
-                Allowance storage allowance = allowances[key];
-                (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
-                    allowance,
-                    block.timestamp
-                );
+            bytes32 key = consumption.allowanceKey;
+            uint128 consumed = consumption.consumed;
 
-                assert(balance == consumption.balance);
-                assert(consumed <= balance);
-                // Flush
-                allowance.balance = balance - consumed;
-                allowance.refillTimestamp = refillTimestamp;
+            // Retrieve the allowance and calculate its current updated balance
+            // and next refill timestamp.
+            Allowance storage allowance = allowances[key];
+            (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
+                allowance,
+                block.timestamp
+            );
 
-                // Emit an event to signal the total consumed amount.
-                emit ConsumeAllowance(key, consumed, balance - consumed);
+            assert(balance == consumption.balance);
+            assert(consumed <= balance);
+            // Flush
+            allowance.balance = balance - consumed;
+            allowance.refillTimestamp = refillTimestamp;
+
+            // Emit an event to signal the total consumed amount.
+            emit ConsumeAllowance(key, consumed, balance - consumed);
+
+            unchecked {
+                ++i;
             }
         }
     }
@@ -93,19 +96,20 @@ abstract contract AllowanceTracker is Core {
         bool success
     ) internal {
         uint256 count = consumptions.length;
-        unchecked {
-            for (uint256 i; i < count; ++i) {
-                Consumption memory consumption = consumptions[i];
-                bytes32 key = consumption.allowanceKey;
-                if (success) {
-                    emit ConsumeAllowance(
-                        key,
-                        consumption.consumed,
-                        consumption.balance - consumption.consumed
-                    );
-                } else {
-                    allowances[key].balance = consumption.balance;
-                }
+        for (uint256 i; i < count; ) {
+            Consumption memory consumption = consumptions[i];
+            bytes32 key = consumption.allowanceKey;
+            if (success) {
+                emit ConsumeAllowance(
+                    key,
+                    consumption.consumed,
+                    consumption.balance - consumption.consumed
+                );
+            } else {
+                allowances[key].balance = consumption.balance;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
