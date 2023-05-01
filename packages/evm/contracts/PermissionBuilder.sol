@@ -60,10 +60,10 @@ abstract contract PermissionBuilder is Core {
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.Target,
-            options
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.Target,
+            options: options
+        });
         emit AllowTarget(roleKey, targetAddress, options);
     }
 
@@ -74,10 +74,10 @@ abstract contract PermissionBuilder is Core {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.None,
-            ExecutionOptions.None
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.None,
+            options: ExecutionOptions.None
+        });
         emit RevokeTarget(roleKey, targetAddress);
     }
 
@@ -88,10 +88,10 @@ abstract contract PermissionBuilder is Core {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.Function,
-            ExecutionOptions.None
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.Function,
+            options: ExecutionOptions.None
+        });
         emit ScopeTarget(roleKey, targetAddress);
     }
 
