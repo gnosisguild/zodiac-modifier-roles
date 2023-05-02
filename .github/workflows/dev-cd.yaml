@@ -34,7 +34,10 @@ jobs:
           node-version: 16
       - uses: actions/cache@v3
         with:
-          path: ["**/node_modules", ".yarn/cache", ".yarn/install-state.gz"]
+          path: |
+            **/node_modules
+            .yarn/cache
+            .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: yarn prepare
