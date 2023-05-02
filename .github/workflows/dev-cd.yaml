@@ -32,13 +32,14 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+
       - uses: actions/cache@v3
         with:
           path: |
             **/node_modules
             .yarn/cache
             .yarn/install-state.gz
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
       - run: yarn
       - run: yarn prepare
       - run: yarn build
