@@ -40,6 +40,7 @@ jobs:
             .yarn/cache
             .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
+      - run: yarn -v
       - run: yarn
       - run: yarn prepare
       - run: yarn build
