@@ -288,14 +288,14 @@ const preset = {
         //   targetAddress: AURA_LOCKER,
         //   signature: "delegate(address)",
         // },
-        allow.mainnet.aura.aura_locker["delegate"](),
+        // allow.mainnet.aura.aura_locker["delegate"](),
 
         // Proposals Delegation - IMPORTANT: THE ADDRESS SHOULD BE CONSTRAINED IN ORDER TO AVOID DELEGATING THE VOTING POWER TO UNWANTED ADDRESSES
         // {
         //   targetAddress: SNAPSHOT_DELEGATE_REGISTRY,
         //   signature: "setDelegate(bytes32,address)",
         // },
-        allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
+        // allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura - General Rewards Claiming

@@ -10,8 +10,13 @@ import {
   compound_v3,
   convex,
   curve,
-  uniswapv3
+  stakedao,
+  uniswapv3,
+  votium
 } from "../addresses"
+import {
+  curve as curve_gc
+} from "../../gnosisChain/addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
 import {
   staticEqual,
@@ -798,14 +803,14 @@ const preset = {
     //   targetAddress: AURA_LOCKER,
     //   signature: "delegate(address)",
     // },
-    allow.mainnet.aura.aura_locker["delegate"](),
+    // allow.mainnet.aura.aura_locker["delegate"](),
 
     // Proposals Delegation - IMPORTANT: THE ADDRESS SHOULD BE CONSTRAINED IN ORDER TO AVOID DELEGATING THE VOTING POWER TO UNWANTED ADDRESSES
     // {
     //   targetAddress: SNAPSHOT_DELEGATE_REGISTRY,
     //   signature: "setDelegate(bytes32,address)",
     // },
-    allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
+    // allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura - General Rewards Claiming
@@ -2724,7 +2729,42 @@ const preset = {
     allow.mainnet.omnibridge["relayTokens(address,address,uint256)"](
       undefined,
       BRIDGE_RECIPIENT_GNOSIS_CHAIN
-    )
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // BRIBES
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // StakeDAO
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([GNO], [stakedao.BRIBE]),
+
+    // Bribes for 3pool in Gnosis Chain
+    allow.mainnet.stakedao.bribe["createBribe"](
+      curve_gc.x3CRV_GAUGE,
+      AVATAR,
+      GNO,
+      2,
+      undefined,
+      undefined,
+      [convex.VOTER_PROXY],
+      true
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Votium
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([GNO], [votium.BRIBE]),
+
+    // Bribes for 3pool in Gnosis Chain
+    allow.mainnet.votium.bribe["depositBribe"](
+      GNO,
+      undefined,
+      undefined,
+      undefined
+    ),
+
   ],
   placeholders: { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset

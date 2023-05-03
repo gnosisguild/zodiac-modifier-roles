@@ -95,6 +95,9 @@ export default defineConfig({
         stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
       },
+      stakedao: {
+        bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225"
+      },
       stakewise: {
         eth2_staking: "0xC874b064f465bdD6411D45734b56fac750Cda29A",
         merkle_distributor: "0xA3F21010e8b9a3930996C8849Df38f9Ca3647c20"
@@ -102,11 +105,14 @@ export default defineConfig({
       sushiswap: {
         router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
       },
-      weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       uniswapv3: {
         positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
         router_2: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
       },
+      votium: {
+        bribe: "0x19BBC3463Dd8d07f55438014b021Fb457EBD4595"
+      },
+      weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       omnibridge: "0x88ad09518695c6c3712AC10a214bE5109a655671"
     },
     gnosis: {
