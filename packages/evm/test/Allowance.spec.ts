@@ -21,7 +21,7 @@ import {
 } from "./operators/setup";
 
 describe("Allowance", async () => {
-  it.only("Unexistent allowance produces error", async () => {
+  it("Unexistent allowance produces error", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupTwoParamsStatic
     );
