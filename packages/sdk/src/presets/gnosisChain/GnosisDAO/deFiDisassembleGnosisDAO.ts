@@ -865,7 +865,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
 
         // Relayer Approval (this is done only once per wallet)
-        allow.gnosis.balancer.relayer_library["setRelayerApproval"](
+        allow.gnosis.balancer.relayer["setRelayerApproval"](
             balancer.RELAYER
         ),
 
@@ -929,7 +929,7 @@ const preset = {
 
         // Swap WETH for bb_ag_WETH (for both, join and exit pool) / Swap GNO for bb_ag_GNO (for both, join and exit pool)
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -980,7 +980,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {
@@ -1107,7 +1107,7 @@ const preset = {
         // Swap USDT for bb_ag_USDT (for both, join and exit pool)
         // Swap USDC for bb_ag_USDC (for both, join and exit pool)
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -1168,7 +1168,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {
@@ -1387,7 +1387,7 @@ const preset = {
         // Swap USDT for bb_ag_USDT (for both, join and exit pool)
         // Swap USDC for bb_ag_USDC (for both, join and exit pool)
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -1453,7 +1453,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {
@@ -1580,7 +1580,7 @@ const preset = {
         // Swap USDT for bb_ag_USDT (for both, join and exit pool)
         // Swap USDC for bb_ag_USDC (for both, join and exit pool)
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -1641,7 +1641,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {

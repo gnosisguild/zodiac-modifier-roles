@@ -312,7 +312,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
 
         // Relayer Approval (this is done only once per wallet)
-        allow.mainnet.balancer.relayer_library["setRelayerApproval"](
+        allow.mainnet.balancer.relayer["setRelayerApproval"](
             balancer.RELAYER
         ),
 
@@ -328,7 +328,7 @@ const preset = {
         // Swap USDT for bb_a_USDT (for both, join and exit pool)
         // Swap USDC for bb_a_USDC (for both, join and exit pool)
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
             params: {
@@ -389,7 +389,7 @@ const preset = {
 
         // Add Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "joinPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),uint256,uint256)",
             params: {
@@ -456,7 +456,7 @@ const preset = {
 
         // Remove Liquidity
         {
-            targetAddress: balancer.RELAYER_LIBRARY,
+            targetAddress: balancer.RELAYER,
             signature:
                 "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
             params: {

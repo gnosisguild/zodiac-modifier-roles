@@ -1,9 +1,10 @@
 import {
-    ZERO_ADDRESS, E_ADDRESS, AURA, BAL, COMP, CRV, DAI, LDO, rETH2,
+    ZERO_ADDRESS, E_ADDRESS, AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH2,
     sETH2, stETH, SWISE, USDC, USDT, WETH, wstETH,
     aura,
     balancer,
     compound_v2,
+    compound_v3,
     curve,
     uniswapv3
 } from "../addresses"
@@ -127,6 +128,33 @@ const preset = {
                 subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
                 restrictOrder: true,
             }
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3 - USDC
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([USDC], [compound_v3.cUSDCv3]),
+
+        // Supply/Repay
+        allow.mainnet.compound_v3.cUSDCv3["supply"](
+            USDC
+        ),
+
+        // Withdraw/Borrow
+        allow.mainnet.compound_v3.cUSDCv3["withdraw"](
+            USDC
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V3 - Claiming of rewards
+        //---------------------------------------------------------------------------------------------------------------------------------
+        allow.mainnet.compound_v3.CometRewards["claim"](
+            compound_v3.cUSDCv3,
+            AVATAR
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
@@ -326,6 +354,52 @@ const preset = {
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve - cDAI/cUSDC
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC], [curve.cDAIcUSDC_POOL]),
+        // ...allowErc20Approve([curve.crvcDAIcUSDC], [curve.cDAIcUSDC_GAUGE]),
+        // ...allowErc20Approve([DAI, USDC], [curve.cDAIcUSDC_ZAP]),
+        // ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC, DAI, USDC], [curve.STAKE_DEPOSIT_ZAP]),
+
+        // Add Liquidity
+        allow.mainnet.curve.cDAIcUSDC_pool["add_liquidity"](),
+
+        // Add Liquidity (Underlying, using ZAP)
+        allow.mainnet.curve.cDAIcUSDC_zap["add_liquidity"](),
+
+        // Remove Liquidity
+        allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity"](),
+
+        // Remove Liquidity (Underlying, using ZAP)
+        allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity"](),
+
+        // Removing Liquidity Imbalance
+        allow.mainnet.curve.cDAIcUSDC_pool["remove_liquidity_imbalance"](),
+
+        // Removing Liquidity Imbalance (Underlying, using ZAP)
+        allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_imbalance"](),
+
+        // Removing Liquidity of One Coin (Underlying, using ZAP)
+        allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+
+        // Exchange
+        allow.mainnet.curve.cDAIcUSDC_pool["exchange"](),
+
+        // Exchange Underlying
+        allow.mainnet.curve.cDAIcUSDC_pool["exchange_underlying"](),
+
+        // Stake
+        allow.mainnet.curve.cDAIcUSDC_gauge["deposit(uint256)"](),
+
+        // Unstake
+        allow.mainnet.curve.cDAIcUSDC_gauge["withdraw"](),
+
+        // Claim CRV Rewards - This pool gauge does not grant any rewards
+        allow.mainnet.curve.crv_minter["mint"](
+            curve.cDAIcUSDC_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
         // AURA wstETH/WETH
         //---------------------------------------------------------------------------------------------------------------------------------
         //...allowErc20Approve([WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
@@ -400,6 +474,8 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Balancer wstETH/WETH pool
         //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([wstETH, WETH], [balancer.VAULT]),
+        // ...allowErc20Approve([balancer.B_stETH_STABLE], [balancer.B_stETH_STABLE_GAUGE]),
 
         //exitPool: the (address[],uint256[],bytes,bool) tuple argument represents the request data for joining the pool
         /* request=(
@@ -410,6 +486,61 @@ const preset = {
         )   
         */
         //userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
+
+        // Add Liquidity (using WETH)
+        {
+            targetAddress: balancer.VAULT,
+            signature:
+                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+            params: {
+                [0]: staticEqual(
+                    "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+                    "bytes32"
+                ), // Balancer PoolId
+                [1]: staticEqual(AVATAR),
+                [2]: staticEqual(AVATAR),
+                [3]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of tuple from beginning 128=32*4
+                [4]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000080",
+                    "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+                [5]: staticEqual(
+                    "0x00000000000000000000000000000000000000000000000000000000000000e0",
+                    "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+                [6]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000140",
+                    "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+                [8]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of address[] = 2
+                [9]: staticEqual(wstETH, "address"),
+                // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+                [10]: staticEqual(WETH, "address"),
+                [11]: staticEqual(
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "bytes32"
+                ), // Length of unit256[] = 2
+                [14]: staticOneOf([
+                    "0x00000000000000000000000000000000000000000000000000000000000000a0",
+                    "0x00000000000000000000000000000000000000000000000000000000000000c0",
+                    "0x0000000000000000000000000000000000000000000000000000000000000060",
+                    "0x0000000000000000000000000000000000000000000000000000000000000040"
+                ],
+                    "bytes32"
+                ), // Length of bytes
+                [15]: staticOneOf([
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    "0x0000000000000000000000000000000000000000000000000000000000000001",
+                    "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "0x0000000000000000000000000000000000000000000000000000000000000003"
+                ],
+                    "bytes32"
+                ), // Join Kind
+            },
+            // send: true, // IMPORTANT: we only allow WETH -> If we allow ETH and WETH we could lose the ETH we send
+        },
 
         // Remove Liquidity
         {
@@ -461,6 +592,96 @@ const preset = {
                 ), // Join Kind
             },
         },
+
+        // Stake
+        allow.mainnet.balancer.B_stETH_stable_gauge["deposit(uint256)"](),
+
+        // Unstake
+        allow.mainnet.balancer.B_stETH_stable_gauge["withdraw(uint256)"](),
+
+        // Claim Rewards
+        allow.mainnet.balancer.B_stETH_stable_gauge["claim_rewards()"](),
+
+        // Claim BAL Rewards
+        allow.mainnet.balancer.BAL_minter["mint"](
+            balancer.B_stETH_STABLE_GAUGE
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // CONVEX
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Convex - ETH/stETH
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([curve.steCRV], [convex.BOOSTER]),
+        // ...allowErc20Approve([convex.cvxsteCRV], [convex.cvxsteCRV_REWARDER]),
+
+        // Deposit
+        allow.mainnet.convex.booster["depositAll"](
+            25 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+        ),
+        allow.mainnet.convex.booster["deposit"](
+            25 // poolId (If you don't specify a poolId you can deposit funds in any pool)
+        ),
+
+        // Withdraw
+        allow.mainnet.convex.booster["withdraw"](
+            25 // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+        ),
+
+        // Stake
+        allow.mainnet.convex.cvxsteCRV_rewarder["stake"](),
+
+        // Unstake
+        allow.mainnet.convex.cvxsteCRV_rewarder["withdraw"](),
+
+        // Unstake and Withdraw
+        allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
+
+        // Claim Rewards
+        allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
+            AVATAR
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Convex - cDAI/cUSDC
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([curve.crvcDAIcUSDC], [convex.BOOSTER]),
+        // ...allowErc20Approve([convex.cvxcDAIcUSDC], [convex.cvxcDAIcUSDC_REWARDER]),
+
+        // Deposit
+        allow.mainnet.convex.booster["depositAll"](
+            {
+                oneOf: [0]
+            } // poolId (If you don't specify a poolId you can deposit funds in any pool)
+        ),
+        allow.mainnet.convex.booster["deposit"](
+            {
+                oneOf: [0]
+            } // poolId (If you don't specify a poolId you can deposit funds in any pool)
+        ),
+
+        // Withdraw
+        allow.mainnet.convex.booster["withdraw"](
+            {
+                oneOf: [0]
+            } // poolId (If you don't specify a poolId you can withdraw funds in any pool)
+        ),
+
+        // Stake
+        allow.mainnet.convex.cvxcDAIcUSDC_rewarder["stake"](),
+
+        // Unstake
+        allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdraw"](),
+
+        // Unstake and Withdraw
+        allow.mainnet.convex.cvxcDAIcUSDC_rewarder["withdrawAndUnwrap"](),
+
+        // Claim Rewards
+        allow.mainnet.convex.cvxcDAIcUSDC_rewarder["getReward(address,bool)"](
+            AVATAR
+        ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Wrapping and unwrapping of ETH, WETH
@@ -573,7 +794,7 @@ const preset = {
                 "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
             params: {
                 [0]: staticOneOf(
-                    [COMP, CRV, DAI, LDO, rETH2, sETH2, SWISE, USDC, USDT, WETH],
+                    [COMP, CRV, CVX, DAI, LDO, rETH2, sETH2, SWISE, USDC, USDT, WETH],
                     "address"
                 ),
                 [1]: staticOneOf([DAI, USDC, USDT, sETH2, WETH], "address"),

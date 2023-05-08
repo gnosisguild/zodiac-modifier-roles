@@ -1,5 +1,5 @@
 import {
-    AURA, BAL, COMP, CRV, DAI, LDO, rETH2,
+    AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH2,
     sETH2, SWISE, USDC, USDT, WETH, wstETH,
     balancer,
     uniswapv3
@@ -128,7 +128,7 @@ const preset = {
                 "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
             params: {
                 [0]: staticOneOf(
-                    [COMP, CRV, DAI, LDO, rETH2, sETH2, SWISE, USDC, USDT, WETH],
+                    [COMP, CRV, CVX, DAI, LDO, rETH2, sETH2, SWISE, USDC, USDT, WETH],
                     "address"
                 ),
                 [1]: staticOneOf([DAI, USDC, USDT, sETH2, WETH], "address"),
