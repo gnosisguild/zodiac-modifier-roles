@@ -43,7 +43,7 @@ Refer to the [eth-sdk docs](https://github.com/dethcrypto/eth-sdk#configuration)
 You now have typed _allow kit_ at your disposal:
 
 ```typescript
-import { allow } from "zodiac-roles-sdk"
+import { allow } from "zodiac-roles-sdk/kit"
 
 const CURVE_3POOL = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
 

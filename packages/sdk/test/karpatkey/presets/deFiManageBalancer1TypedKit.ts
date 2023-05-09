@@ -1,5 +1,5 @@
-import { allow as allowKit } from "../../../src/presets/authoring"
 import * as c from "../../../src/presets/authoring/conditions"
+import { allow as allowKit } from "../../../src/presets/authoring/kit"
 import { AVATAR } from "../../../src/presets/placeholders"
 import { PermissionPreset } from "../../../src/presets/types"
 
