@@ -1,6 +1,7 @@
 import {
     ZERO_ADDRESS, E_ADDRESS, AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH2,
     sETH2, stETH, SWISE, USDC, USDT, WETH, wstETH,
+    aave_v3,
     aura,
     balancer,
     compound_v2,
@@ -47,6 +48,10 @@ const preset = {
         allow.mainnet.lido.wstETH["wrap"](),
         // { targetAddress: wstETH, signature: "unwrap(uint256)" }
         allow.mainnet.lido.wstETH["unwrap"](),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Compound V2
+        //---------------------------------------------------------------------------------------------------------------------------------
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Compound V2 - USDC
@@ -154,6 +159,48 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
         allow.mainnet.compound_v3.CometRewards["claim"](
             compound_v3.cUSDCv3,
+            AVATAR
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Aave V3
+        //---------------------------------------------------------------------------------------------------------------------------------
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Aave V3 - DAI
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([DAI], [aave_v3.POOL_V3]),
+
+        // Supply
+        allow.mainnet.aave_v3.pool_v3["supply"](
+            DAI,
+            undefined,
+            AVATAR
+        ),
+
+        // Withdraw
+        allow.mainnet.aave_v3.pool_v3["withdraw"](
+            DAI,
+            undefined,
+            AVATAR
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Aave V3 - USDC
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ...allowErc20Approve([USDC], [aave_v3.POOL_V3]),
+
+        // Supply
+        allow.mainnet.aave_v3.pool_v3["supply"](
+            USDC,
+            undefined,
+            AVATAR
+        ),
+
+        // Withdraw
+        allow.mainnet.aave_v3.pool_v3["withdraw"](
+            USDC,
+            undefined,
             AVATAR
         ),
 
@@ -324,35 +371,6 @@ const preset = {
             curve.STAKE_DEPOSIT_ZAP
         ),
 
-        // Using ETH
-        allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.stETH_ETH_POOL,
-            curve.steCRV,
-            curve.stETH_ETH_GAUGE,
-            2,
-            [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS,
-            {
-                send: true
-            }
-        ),
-
-        // Not using ETH
-        allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
-            curve.stETH_ETH_POOL,
-            curve.steCRV,
-            curve.stETH_ETH_GAUGE,
-            2,
-            [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-            undefined,
-            undefined,
-            undefined,
-            ZERO_ADDRESS,
-        ),
-
         //---------------------------------------------------------------------------------------------------------------------------------
         // Curve - cDAI/cUSDC
         //---------------------------------------------------------------------------------------------------------------------------------
@@ -397,6 +415,41 @@ const preset = {
         // Claim CRV Rewards - This pool gauge does not grant any rewards
         allow.mainnet.curve.crv_minter["mint"](
             curve.cDAIcUSDC_GAUGE
+        ),
+
+        // Deposit and Stake using a special ZAP
+        allow.mainnet.curve.cDAIcUSDC_gauge["set_approve_deposit"](
+            curve.STAKE_DEPOSIT_ZAP
+        ),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Curve - Deposit and Stake using a special ZAP
+        //---------------------------------------------------------------------------------------------------------------------------------
+        allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+            {
+                oneOf: [curve.stETH_ETH_POOL, curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
+            },
+            {
+                oneOf: [curve.steCRV, curve.crvcDAIcUSDC]
+            },
+            {
+                oneOf: [curve.stETH_ETH_GAUGE, curve.cDAIcUSDC_GAUGE]
+            },
+            2,
+            {
+                oneOf: [
+                    [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [DAI, USDC, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                    [compound_v2.cUSDC, compound_v2.cDAI, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+                ]
+            },
+            undefined,
+            undefined,
+            undefined,
+            ZERO_ADDRESS,
+            {
+                send: true
+            }
         ),
 
         //---------------------------------------------------------------------------------------------------------------------------------
@@ -708,7 +761,7 @@ const preset = {
         //---------------------------------------------------------------------------------------------------------------------------------
 
         /* ...allowErc20Approve(
-          [COMP, rETH2, SWISE, sETH2, CRV, LDO, WETH, USDC, DAI, USDT],
+          [COMP, rETH2, SWISE, sETH2, CRV, LDO, WETH, USDC, DAI, USDT, CVX],
           [uniswapv3.ROUTER_2]
         ), */
 
@@ -1175,9 +1228,6 @@ const preset = {
                 send: true
             }
         ),
-
-        // Exchange not using ETH
-        allow.mainnet.curve.steth_eth_pool["exchange"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Swapping in Curve's 3pool

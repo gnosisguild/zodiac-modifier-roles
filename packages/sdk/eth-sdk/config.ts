@@ -17,6 +17,9 @@ export default defineConfig({
         lending_pool: "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
         stkAave: "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
       },
+      aave_v3: {
+        pool_v3: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
+      },
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
         auraB_stETH_stable_rewarder: "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528",

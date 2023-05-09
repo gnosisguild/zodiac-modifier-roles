@@ -2238,6 +2238,11 @@ const preset = {
     ),
 
     // Deposit and Stake using a special ZAP
+    allow.mainnet.curve.cDAIcUSDC_gauge["set_approve_deposit"](
+      curve.STAKE_DEPOSIT_ZAP
+    ),
+
+    // Deposit and Stake using a special ZAP
     // allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
     //   {
     //     oneOf: [curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
