@@ -9,6 +9,10 @@
     ".": {
       "require": "./build/cjs/sdk/src/index.js",
       "import": "./build/esm/sdk/src/index.js"
+    },
+    "./kit": {
+      "require": "./build/cjs/sdk/src/presets/authoring/kit.js",
+      "import": "./build/esm/sdk/src/presets/authoring/kit.js"
     }
   },
   "files": [
@@ -31,9 +35,16 @@
     "prepare": "yarn eth-sdk"
   },
   "dependencies": {
-    "@dethcrypto/eth-sdk-client": "^0.1.6",
     "ethers": "^5.4.7",
     "type-fest": "^3.7.1"
+  },
+  "peerDependencies": {
+    "@dethcrypto/eth-sdk-client": "^0.1.6"
+  },
+  "peerDependenciesMeta": {
+    "@dethcrypto/eth-sdk-client": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@dethcrypto/eth-sdk": "^0.3.3",
