@@ -1,6 +1,6 @@
 import * as c from "../../../src/presets/authoring/conditions"
 import { AVATAR } from "../../../src/presets/placeholders"
-import { PermissionPreset } from "../../../src/presets/types"
+import { Preset } from "../../../src/presets/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
@@ -53,7 +53,6 @@ const SUSHISWAP_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 const preset = {
-  network: 1,
   allow: [
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
 
@@ -722,6 +721,8 @@ const preset = {
       signature: "exchange(int128,int128,uint256,uint256)",
     },
   ],
-  placeholders: { AVATAR },
-} satisfies PermissionPreset
+  placeholders: {},
+  chainId: 1,
+} satisfies Preset
+
 export default preset

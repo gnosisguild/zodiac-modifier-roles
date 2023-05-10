@@ -41,7 +41,7 @@ export class Placeholder<T> {
   }
 }
 
-export type PlaceholderValues<P extends PermissionPreset> = {
+export type PlaceholderValues<P extends Preset> = {
   [key in keyof P["placeholders"]]: P["placeholders"][key] extends Placeholder<
     infer T
   >
@@ -49,10 +49,12 @@ export type PlaceholderValues<P extends PermissionPreset> = {
     : never
 }
 
-export interface PermissionPreset {
-  network: number
+export interface Preset {
   allow: PresetAllowEntry[]
+  /** If the preset uses any placeholders beyond AVATAR, these must be registered here */
   placeholders: { [key: string]: Placeholder<any> }
+  /** The ID of the chain this preset is designed for. */
+  chainId: number
 }
 
 // allows call to any function on the target addresses

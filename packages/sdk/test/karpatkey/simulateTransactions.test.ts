@@ -5,7 +5,7 @@ import hre, { deployments, waffle } from "hardhat"
 import { TestAvatar } from "../../../evm/typechain-types"
 import { fillPreset } from "../../src"
 import { applyPermissions } from "../../src/applyPermissions"
-import { PermissionPreset } from "../../src/presets/types"
+import { Preset } from "../../src/presets/types"
 import { deployContracts } from "../deployContracts"
 
 import manageBalancer1Preset from "./presets/deFiManageBalancer1TypedKit"
@@ -82,7 +82,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     config,
     transactions,
   }: {
-    preset: PermissionPreset
+    preset: Preset
     config: Config
     transactions: {
       from: string

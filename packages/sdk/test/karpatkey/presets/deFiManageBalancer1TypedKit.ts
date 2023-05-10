@@ -1,7 +1,7 @@
 import * as c from "../../../src/presets/authoring/conditions"
 import { allow as allowKit } from "../../../src/presets/authoring/kit"
 import { AVATAR } from "../../../src/presets/placeholders"
-import { PermissionPreset } from "../../../src/presets/types"
+import { Preset } from "../../../src/presets/types"
 
 const allow = allowKit.mainnet
 
@@ -23,7 +23,6 @@ const SWISE = "0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2"
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 const preset = {
-  network: 1,
   allow: [
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
 
@@ -329,7 +328,8 @@ const preset = {
       }
     ),
   ],
-  placeholders: { AVATAR },
-} satisfies PermissionPreset
+  placeholders: {},
+  chainId: 1,
+} satisfies Preset
 
 export default preset

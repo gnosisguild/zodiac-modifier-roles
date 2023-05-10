@@ -1,7 +1,7 @@
 import { Operator, ParameterType } from "../types"
 
 import {
-  PermissionPreset,
+  Preset,
   PresetCondition,
   PresetAllowEntryCoerced,
   PresetFunctionCoerced,
@@ -14,7 +14,7 @@ import { coercePresetFunction, allowEntryId, isScoped } from "./utils"
  * @param preset The preset to process
  * @returns The updated preset
  */
-export const mergeFunctionEntries = (preset: PermissionPreset) => ({
+export const mergeFunctionEntries = (preset: Preset) => ({
   ...preset,
   allow: preset.allow.reduce((result, entry) => {
     if (!isScoped(entry)) {
