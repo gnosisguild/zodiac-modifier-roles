@@ -1,5 +1,6 @@
 export * from "./conditions"
 export * from "./presets"
+export { encodeCalls } from "./calls"
 
 export { fetchRole } from "./fetchRole"
 export { diffPermissions } from "./diffPermissions"
