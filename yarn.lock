@@ -1873,13 +1873,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dethcrypto/eth-sdk-client@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "@dethcrypto/eth-sdk-client@npm:0.1.6"
-  checksum: f7f2084ac04ad0d57d38ae6253de660ea53043032d684bd330dd3652d9303069c519b866c6be8722be15096a1c8bc21f826e7f527ab38fc452f09a1463fed6f3
-  languageName: node
-  linkType: hard
-
 "@dethcrypto/eth-sdk@npm:^0.3.3":
   version: 0.3.3
   resolution: "@dethcrypto/eth-sdk@npm:0.3.3"
@@ -30512,7 +30505,6 @@ __metadata:
   resolution: "zodiac-roles-sdk@workspace:packages/sdk"
   dependencies:
     "@dethcrypto/eth-sdk": ^0.3.3
-    "@dethcrypto/eth-sdk-client": ^0.1.6
     "@gnosis.pm/zodiac": ^3.2.2
     "@nomiclabs/hardhat-ethers": ^2.0.0
     "@nomiclabs/hardhat-waffle": ^2.0.0
@@ -30541,6 +30533,11 @@ __metadata:
     typechain: ^8.1.1
     typescript: ^4.9.5
     yargs: ^16.1.1
+  peerDependencies:
+    "@dethcrypto/eth-sdk-client": ^0.1.6
+  peerDependenciesMeta:
+    "@dethcrypto/eth-sdk-client":
+      optional: true
   languageName: unknown
   linkType: soft
 
