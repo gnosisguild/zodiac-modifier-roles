@@ -78,20 +78,19 @@ library Packer {
             return false;
         } else {
             uint256 length = conditions.length;
-            unchecked {
-                for (uint256 j = index + 1; j < length; ++j) {
-                    uint8 parent = conditions[j].parent;
-                    if (parent < index) {
-                        continue;
-                    }
 
-                    if (parent > index) {
-                        break;
-                    }
+            for (uint256 j = index + 1; j < length; ++j) {
+                uint8 parent = conditions[j].parent;
+                if (parent < index) {
+                    continue;
+                }
 
-                    if (!_isInline(conditions, j)) {
-                        return false;
-                    }
+                if (parent > index) {
+                    break;
+                }
+
+                if (!_isInline(conditions, j)) {
+                    return false;
                 }
             }
             return true;

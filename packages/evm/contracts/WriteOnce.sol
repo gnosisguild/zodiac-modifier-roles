@@ -54,22 +54,20 @@ library WriteOnce {
     function load(
         address pointer
     ) internal view returns (bytes memory runtimeBytecode) {
-        unchecked {
-            uint256 rawSize;
-            assembly {
-                rawSize := extcodesize(pointer)
-            }
-            assert(rawSize > 1);
+        uint256 rawSize;
+        assembly {
+            rawSize := extcodesize(pointer)
+        }
+        assert(rawSize > 1);
 
-            // jump over the prepended 00
-            uint256 offset = 1;
-            // don't count with the 00
-            uint256 size = rawSize - 1;
+        // jump over the prepended 00
+        uint256 offset = 1;
+        // don't count with the 00
+        uint256 size = rawSize - 1;
 
-            runtimeBytecode = new bytes(size);
-            assembly {
-                extcodecopy(pointer, add(runtimeBytecode, 32), offset, size)
-            }
+        runtimeBytecode = new bytes(size);
+        assembly {
+            extcodecopy(pointer, add(runtimeBytecode, 32), offset, size)
         }
     }
 
@@ -112,7 +110,7 @@ library WriteOnce {
                 hex"63",
                 uint32(data.length + 1),
                 hex"80_60_0E_60_00_39_60_00_F3",
-                // Append 00 to data so contract can't be called
+                // Prepend 00 to data so contract can't be called
                 hex"00",
                 data
             );

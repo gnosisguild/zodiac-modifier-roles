@@ -13,12 +13,15 @@ library Consumptions {
         Consumption[] memory consumptions
     ) internal pure returns (Consumption[] memory result) {
         uint256 length = consumptions.length;
-        unchecked {
-            result = new Consumption[](length);
-            for (uint256 i; i < length; ++i) {
-                result[i].allowanceKey = consumptions[i].allowanceKey;
-                result[i].balance = consumptions[i].balance;
-                result[i].consumed = consumptions[i].consumed;
+
+        result = new Consumption[](length);
+        for (uint256 i; i < length; ) {
+            result[i].allowanceKey = consumptions[i].allowanceKey;
+            result[i].balance = consumptions[i].balance;
+            result[i].consumed = consumptions[i].consumed;
+
+            unchecked {
+                ++i;
             }
         }
     }
@@ -28,11 +31,14 @@ library Consumptions {
         bytes32 key
     ) internal pure returns (uint256, bool) {
         uint256 length = consumptions.length;
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                if (consumptions[i].allowanceKey == key) {
-                    return (i, true);
-                }
+
+        for (uint256 i; i < length; ) {
+            if (consumptions[i].allowanceKey == key) {
+                return (i, true);
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
@@ -49,23 +55,30 @@ library Consumptions {
         result = new Consumption[](c1.length + c2.length);
 
         uint256 length = c1.length;
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                result[i].allowanceKey = c1[i].allowanceKey;
-                result[i].balance = c1[i].balance;
-                result[i].consumed = c1[i].consumed;
+
+        for (uint256 i; i < length; ) {
+            result[i].allowanceKey = c1[i].allowanceKey;
+            result[i].balance = c1[i].balance;
+            result[i].consumed = c1[i].consumed;
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        for (uint256 i; i < c2.length; ) {
+            (uint256 index, bool found) = find(c1, c2[i].allowanceKey);
+            if (found) {
+                result[index].consumed += c2[i].consumed;
+            } else {
+                result[length].allowanceKey = c2[i].allowanceKey;
+                result[length].balance = c2[i].balance;
+                result[length].consumed = c2[i].consumed;
+                length++;
             }
 
-            for (uint256 i; i < c2.length; ++i) {
-                (uint256 index, bool found) = find(c1, c2[i].allowanceKey);
-                if (found) {
-                    result[index].consumed += c2[i].consumed;
-                } else {
-                    result[length].allowanceKey = c2[i].allowanceKey;
-                    result[length].balance = c2[i].balance;
-                    result[length].consumed = c2[i].consumed;
-                    length++;
-                }
+            unchecked {
+                ++i;
             }
         }
 

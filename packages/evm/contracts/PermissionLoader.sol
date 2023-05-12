@@ -51,17 +51,19 @@ abstract contract PermissionLoader is Core {
         ) = BufferPacker.unpackBody(buffer, count);
 
         uint256 allowanceCount;
-        unchecked {
-            for (uint256 i; i < conditionsFlat.length; ++i) {
-                Operator operator = conditionsFlat[i].operator;
-                if (operator >= Operator.WithinAllowance) {
-                    ++allowanceCount;
-                } else if (operator == Operator.EqualToAvatar) {
-                    // patch Operator.EqualToAvatar which in reality works as
-                    // a placeholder
-                    conditionsFlat[i].operator = Operator.EqualTo;
-                    compValues[i] = keccak256(abi.encode(avatar));
-                }
+
+        for (uint256 i; i < conditionsFlat.length; ) {
+            Operator operator = conditionsFlat[i].operator;
+            if (operator >= Operator.WithinAllowance) {
+                ++allowanceCount;
+            } else if (operator == Operator.EqualToAvatar) {
+                // patch Operator.EqualToAvatar which in reality works as
+                // a placeholder
+                conditionsFlat[i].operator = Operator.EqualTo;
+                compValues[i] = keccak256(abi.encode(avatar));
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -91,28 +93,29 @@ abstract contract PermissionLoader is Core {
         // This function populates a buffer received as an argument instead of
         // instantiating a result object. This is an important gas optimization
 
-        unchecked {
-            ConditionFlat memory conditionFlat = conditionsFlat[index];
-            treeNode.paramType = conditionFlat.paramType;
-            treeNode.operator = conditionFlat.operator;
-            treeNode.compValue = compValues[index];
+        ConditionFlat memory conditionFlat = conditionsFlat[index];
+        treeNode.paramType = conditionFlat.paramType;
+        treeNode.operator = conditionFlat.operator;
+        treeNode.compValue = compValues[index];
 
-            if (childrenBounds[index].length == 0) {
-                return;
-            }
+        if (childrenBounds[index].length == 0) {
+            return;
+        }
 
-            uint256 start = childrenBounds[index].start;
-            uint256 length = childrenBounds[index].length;
+        uint256 start = childrenBounds[index].start;
+        uint256 length = childrenBounds[index].length;
 
-            treeNode.children = new Condition[](length);
-            for (uint j; j < length; ++j) {
-                _conditionTree(
-                    conditionsFlat,
-                    compValues,
-                    childrenBounds,
-                    start + j,
-                    treeNode.children[j]
-                );
+        treeNode.children = new Condition[](length);
+        for (uint j; j < length; ) {
+            _conditionTree(
+                conditionsFlat,
+                compValues,
+                childrenBounds,
+                start + j,
+                treeNode.children[j]
+            );
+            unchecked {
+                ++j;
             }
         }
     }
@@ -126,25 +129,24 @@ abstract contract PermissionLoader is Core {
         result = new Consumption[](maxAllowanceCount);
 
         uint256 insert;
-        unchecked {
-            for (uint256 i; i < count; ++i) {
-                if (conditions[i].operator < Operator.WithinAllowance) {
-                    continue;
-                }
 
-                bytes32 key = compValues[i];
-                (, bool contains) = Consumptions.find(result, key);
-                if (contains) {
-                    continue;
-                }
-
-                result[insert].allowanceKey = key;
-                (result[insert].balance, ) = _accruedAllowance(
-                    allowances[key],
-                    block.timestamp
-                );
-                insert++;
+        for (uint256 i; i < count; ++i) {
+            if (conditions[i].operator < Operator.WithinAllowance) {
+                continue;
             }
+
+            bytes32 key = compValues[i];
+            (, bool contains) = Consumptions.find(result, key);
+            if (contains) {
+                continue;
+            }
+
+            result[insert].allowanceKey = key;
+            (result[insert].balance, ) = _accruedAllowance(
+                allowances[key],
+                block.timestamp
+            );
+            insert++;
         }
 
         if (insert < maxAllowanceCount) {

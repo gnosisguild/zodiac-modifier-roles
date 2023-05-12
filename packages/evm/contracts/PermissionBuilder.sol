@@ -60,10 +60,10 @@ abstract contract PermissionBuilder is Core {
         address targetAddress,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.Target,
-            options
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.Target,
+            options: options
+        });
         emit AllowTarget(roleKey, targetAddress, options);
     }
 
@@ -74,10 +74,10 @@ abstract contract PermissionBuilder is Core {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.None,
-            ExecutionOptions.None
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.None,
+            options: ExecutionOptions.None
+        });
         emit RevokeTarget(roleKey, targetAddress);
     }
 
@@ -88,10 +88,10 @@ abstract contract PermissionBuilder is Core {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress(
-            Clearance.Function,
-            ExecutionOptions.None
-        );
+        roles[roleKey].targets[targetAddress] = TargetAddress({
+            clearance: Clearance.Function,
+            options: ExecutionOptions.None
+        });
         emit ScopeTarget(roleKey, targetAddress);
     }
 
@@ -125,10 +125,11 @@ abstract contract PermissionBuilder is Core {
         emit RevokeFunction(roleKey, targetAddress, selector);
     }
 
-    /// @dev Defines the values that can be called for a given function for each param.
+    /// @dev Sets conditions to enforce on calls to the specified target.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
+    /// @param conditions The conditions to enforce.
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunction(
         bytes32 roleKey,
