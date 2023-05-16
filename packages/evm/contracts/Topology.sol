@@ -26,20 +26,21 @@ library Topology {
         uint256 count = conditions.length;
         assert(count > 0);
 
-        unchecked {
-            // parents are breadth-first
-            result = new Bounds[](count);
-            result[0].start = type(uint256).max;
+        // parents are breadth-first
+        result = new Bounds[](count);
+        result[0].start = type(uint256).max;
 
-            // first item is the root
-            for (uint256 i = 1; i < count; ++i) {
-                result[i].start = type(uint256).max;
-                Bounds memory parentBounds = result[conditions[i].parent];
-                if (parentBounds.start == type(uint256).max) {
-                    parentBounds.start = i;
-                }
-                parentBounds.end = i + 1;
-                parentBounds.length = parentBounds.end - parentBounds.start;
+        // first item is the root
+        for (uint256 i = 1; i < count; ) {
+            result[i].start = type(uint256).max;
+            Bounds memory parentBounds = result[conditions[i].parent];
+            if (parentBounds.start == type(uint256).max) {
+                parentBounds.start = i;
+            }
+            parentBounds.end = i + 1;
+            parentBounds.length = parentBounds.end - parentBounds.start;
+            unchecked {
+                ++i;
             }
         }
     }
@@ -56,11 +57,13 @@ library Topology {
             return false;
         } else {
             uint256 length = node.children.length;
-            unchecked {
-                for (uint256 i; i < length; ++i) {
-                    if (!isInline(node.children[i])) {
-                        return false;
-                    }
+
+            for (uint256 i; i < length; ) {
+                if (!isInline(node.children[i])) {
+                    return false;
+                }
+                unchecked {
+                    ++i;
                 }
             }
             return true;
@@ -70,24 +73,26 @@ library Topology {
     function typeTree(
         Condition memory condition
     ) internal pure returns (TypeTree memory result) {
-        unchecked {
-            if (
-                condition.operator >= Operator.And &&
-                condition.operator <= Operator.Nor
-            ) {
-                assert(condition.children.length > 0);
-                return typeTree(condition.children[0]);
-            }
+        if (
+            condition.operator >= Operator.And &&
+            condition.operator <= Operator.Nor
+        ) {
+            assert(condition.children.length > 0);
+            return typeTree(condition.children[0]);
+        }
 
-            result.paramType = condition.paramType;
-            if (condition.children.length > 0) {
-                uint256 length = condition.paramType == ParameterType.Array
-                    ? 1
-                    : condition.children.length;
-                result.children = new TypeTree[](length);
+        result.paramType = condition.paramType;
+        if (condition.children.length > 0) {
+            uint256 length = condition.paramType == ParameterType.Array
+                ? 1
+                : condition.children.length;
+            result.children = new TypeTree[](length);
 
-                for (uint256 i; i < length; ++i) {
-                    result.children[i] = typeTree(condition.children[i]);
+            for (uint256 i; i < length; ) {
+                result.children[i] = typeTree(condition.children[i]);
+
+                unchecked {
+                    ++i;
                 }
             }
         }
@@ -114,8 +119,11 @@ library Topology {
                 ? bounds[index].start + 1
                 : bounds[index].end;
             result.children = new TypeTree[](end - start);
-            for (uint256 i = start; i < end; ++i) {
+            for (uint256 i = start; i < end; ) {
                 result.children[i - start] = typeTree(conditions, i, bounds);
+                unchecked {
+                    ++i;
+                }
             }
         }
     }

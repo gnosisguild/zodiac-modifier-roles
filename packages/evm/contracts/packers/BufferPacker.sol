@@ -120,32 +120,33 @@ library BufferPacker {
         result = new ConditionFlat[](count);
         compValues = new bytes32[](count);
 
-        unchecked {
-            bytes32 word;
-            uint256 offset = 32;
-            uint256 compValueOffset = 32 + count * BYTES_PER_CONDITION;
+        bytes32 word;
+        uint256 offset = 32;
+        uint256 compValueOffset = 32 + count * BYTES_PER_CONDITION;
 
-            for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count; ) {
+            assembly {
+                word := mload(add(buffer, offset))
+            }
+            offset += BYTES_PER_CONDITION;
+
+            uint16 bits = uint16(bytes2(word));
+            ConditionFlat memory condition = result[i];
+            condition.parent = uint8((bits & MASK_PARENT) >> OFFSET_PARENT);
+            condition.paramType = ParameterType(
+                (bits & MASK_PARAM_TYPE) >> OFFSET_PARAM_TYPE
+            );
+            condition.operator = Operator(bits & MASK_OPERATOR);
+
+            if (condition.operator >= Operator.EqualTo) {
                 assembly {
-                    word := mload(add(buffer, offset))
+                    word := mload(add(buffer, compValueOffset))
                 }
-                offset += BYTES_PER_CONDITION;
-
-                uint16 bits = uint16(bytes2(word));
-                ConditionFlat memory condition = result[i];
-                condition.parent = uint8((bits & MASK_PARENT) >> OFFSET_PARENT);
-                condition.paramType = ParameterType(
-                    (bits & MASK_PARAM_TYPE) >> OFFSET_PARAM_TYPE
-                );
-                condition.operator = Operator(bits & MASK_OPERATOR);
-
-                if (condition.operator >= Operator.EqualTo) {
-                    assembly {
-                        word := mload(add(buffer, compValueOffset))
-                    }
-                    compValueOffset += 32;
-                    compValues[i] = word;
-                }
+                compValueOffset += 32;
+                compValues[i] = word;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
