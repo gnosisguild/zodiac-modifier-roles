@@ -94,19 +94,24 @@ This layer has diffing & patching functions on role configurations, operating on
 
 ```typescript
 {
-  targetAddress: "0x182B723a58739a9c974cFDB385ceaDb237453c28",
-  selector: "0x84e9bd7e",
-  condition: {
-    paramType: ParameterType.AbiEncoded,
-    operator: Operator.Matches,
-    children: [
-      {
-        paramType: ParameterType.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["address"], ["0x4F2083f5fBede34C2714aFfb3105539775f7FE64"]),
-      }
-    ],
-  },
+  address: "0x182B723a58739a9c974cFDB385ceaDb237453c28",
+  clearance: Clearance.Function,
+  functions: [
+    {
+      selector: "0x84e9bd7e",
+      condition: {
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["address"], ["0x4F2083f5fBede34C2714aFfb3105539775f7FE64"]),
+          }
+        ],
+      },
+    }
+  ]
 }
 ```
 
