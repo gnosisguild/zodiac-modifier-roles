@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "meta": {
+    "name": null,
+    "description": "",
+    "txBuilderVersion": "1.8.0"
+  },
+  "createdAt": 1684425238056,
+  "transactions": []
+}
