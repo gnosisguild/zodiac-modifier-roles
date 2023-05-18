@@ -247,8 +247,9 @@ task("encodeApplyPresetHarvestBalancer").setAction(async (taskArgs, hre) => {
   const filePath = path.join(
     __dirname,
     "..",
-    "/presets_output/mainnet/Balancer/txDataHarvestBalancer.json"
+    "/presets-output/mainnet/Balancer/txDataHarvestBalancer.json"
   )
+  // Check if the file exists
   if (!existsSync(filePath)) {
     // Create the directory structure if it doesn't exist
     mkdirSync(path.dirname(filePath), { recursive: true })
@@ -293,17 +294,19 @@ task("encodeApplyPresetSwapBalancer").setAction(async (taskArgs, hre) => {
     }
   )
 
-  writeFileSync(
-    path.join(
-      __dirname,
-      "..",
-      "/presets_output/mainnet/Balancer/txDataSwapBalancer.json"
-    ),
-    JSON.stringify(txBatches, undefined, 2)
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "/presets-output/mainnet/Balancer/txDataSwapBalancer.json"
   )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/presets_output/mainnet/Balancer/txDataSwapBalancer.json`
-  )
+  // Check if the file exists
+  if (!existsSync(filePath)) {
+    // Create the directory structure if it doesn't exist
+    mkdirSync(path.dirname(filePath), { recursive: true })
+  }
+  // Write the JSON data to the file
+  writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+  console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
 //-----------------------------------------------------------------------------------------------------------------------------

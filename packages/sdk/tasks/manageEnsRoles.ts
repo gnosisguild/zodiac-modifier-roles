@@ -226,17 +226,18 @@ task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
     }
   )
 
-  writeFileSync(
-    path.join(
-      __dirname,
-      "..",
-      "/presets_output/mainnet/ENS/txDataHarvestENS.json"
-    ),
-    JSON.stringify(txBatches, undefined, 2)
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "/presets-output/mainnet/ENS/txDataHarvestENS.json"
   )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataHarvestENS.json`
-  )
+  if (!existsSync(filePath)) {
+    // Create the directory structure if it doesn't exist
+    mkdirSync(path.dirname(filePath), { recursive: true })
+  }
+  // Write the JSON data to the file
+  writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+  console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
 // task("encodeApplyPresetDisassembleENS").setAction(
@@ -274,15 +275,16 @@ task("encodeApplyPresetSwapENS").setAction(async (taskArgs, hre) => {
     }
   )
 
-  writeFileSync(
-    path.join(
-      __dirname,
-      "..",
-      "/presets_output/mainnet/ENS/txDataSwapENS.json"
-    ),
-    JSON.stringify(txBatches, undefined, 2)
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "/presets-output/mainnet/ENS/txDataSwapENS.json"
   )
-  console.log(
-    `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataSwapENS.json`
-  )
+  if (!existsSync(filePath)) {
+    // Create the directory structure if it doesn't exist
+    mkdirSync(path.dirname(filePath), { recursive: true })
+  }
+  // Write the JSON data to the file
+  writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+  console.log(`Transaction builder JSON written to  ${filePath}`)
 })
