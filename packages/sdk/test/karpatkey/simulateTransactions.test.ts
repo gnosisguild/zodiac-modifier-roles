@@ -14,7 +14,7 @@ import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/Gnosi
 import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
 import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
 
-import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS_old"
+import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
 
 import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
 
@@ -131,7 +131,8 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       await owner.sendTransaction(permissionUpdateTransactions[i])
 
       console.log(
-        `Executed permissions update tx ${i + 1}/${permissionUpdateTransactions.length
+        `Executed permissions update tx ${i + 1}/${
+          permissionUpdateTransactions.length
         }`
       )
     }
