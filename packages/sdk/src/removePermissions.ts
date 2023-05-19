@@ -8,7 +8,7 @@ import { Target } from "./types"
  * @param subtract permissions to subtract from the current permissions the role
  * @returns The set of calls to make to the Roles modifier owning the role
  */
-export const restrictPermissions = (
+export const removePermissions = (
   current: Target[],
   subtract: Target[]
 ): Call[] => {

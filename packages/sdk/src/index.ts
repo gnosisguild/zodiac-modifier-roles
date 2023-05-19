@@ -6,7 +6,7 @@ export { fetchRole } from "./fetchRole"
 export { diffPermissions } from "./diffPermissions"
 export { replacePermissions } from "./replacePermissions"
 export { extendPermissions } from "./extendPermissions"
-export { restrictPermissions } from "./restrictPermissions"
+export { removePermissions } from "./removePermissions"
 export { checkPermissionsIntegrity } from "./checkPermissionsIntegrity"
 
 export { applyPermissions } from "./applyPermissions"

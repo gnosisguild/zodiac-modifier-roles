@@ -2,8 +2,8 @@ import { Call, encodeCalls, logCall } from "./calls"
 import { checkPermissionsIntegrity } from "./checkPermissionsIntegrity"
 import { extendPermissions } from "./extendPermissions"
 import { fetchRole } from "./fetchRole"
+import { removePermissions } from "./removePermissions"
 import { replacePermissions } from "./replacePermissions"
-import { restrictPermissions } from "./restrictPermissions"
 import { ChainId, Target } from "./types"
 
 type Options = (
@@ -21,9 +21,9 @@ type Options = (
   /**  The mode to use for updating the permissions of the role:
    *  - "replace": The role will have only the passed permissions, meaning that all other currently configured permissions will be revoked from the role
    *  - "extend": The role will keep its current permissions and will additionally be granted the passed permissions
-   *  - "restrict": All passed permissions will be revoked from the role
+   *  - "remove": All passed permissions will be revoked from the role
    */
-  mode: "replace" | "extend" | "restrict"
+  mode: "replace" | "extend" | "remove"
   log?: boolean | ((message: string) => void)
 }
 
@@ -66,8 +66,8 @@ export const applyPermissions = async (
     case "extend":
       calls = extendPermissions(currentPermissions, permissions)
       break
-    case "restrict":
-      calls = restrictPermissions(currentPermissions, permissions)
+    case "remove":
+      calls = removePermissions(currentPermissions, permissions)
       break
     default:
       throw new Error(`Invalid mode: ${options.mode}`)
