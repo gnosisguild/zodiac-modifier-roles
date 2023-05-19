@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import { patchPermissions } from "../src/patchPermissions"
+import { patchPermissions } from "../src/replacePermissions"
 import { Operator, ParameterType, Target } from "../src/types"
 
 describe("patchPermissions", () => {

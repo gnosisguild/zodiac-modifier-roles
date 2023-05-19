@@ -3,7 +3,10 @@ import { ExecutionOptions } from "../types"
 
 import { Call } from "./types"
 
-export const logCall = (call: Call, log = console.log) => {
+export const logCall = (
+  call: Call,
+  log: (message: string) => void = console.log
+) => {
   switch (call.call) {
     case "allowTarget": {
       const { targetAddress, executionOptions } = call
