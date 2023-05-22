@@ -9,5 +9,7 @@ import { Target } from "./types"
  * @returns The set of calls to make to the Roles modifier owning the role
  */
 export const extendPermissions = (current: Target[], add: Target[]): Call[] => {
+  // TODO if current grants a fully-cleareed target, we need to remove function-scoped permissions to that target from add
+  // TODO merge permissions to same target+function by joining their conditions with OR
   return grantPermissions(diffPermissions(add, current))
 }

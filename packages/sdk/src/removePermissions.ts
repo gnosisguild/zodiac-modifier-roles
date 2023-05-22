@@ -14,5 +14,6 @@ export const removePermissions = (
 ): Call[] => {
   const notGranted = diffPermissions(subtract, current)
   const toRevoke = diffPermissions(subtract, notGranted)
+  // TODO throw, if subtract contains a function to a target that is fully-cleared in current
   return revokePermissions(toRevoke)
 }
