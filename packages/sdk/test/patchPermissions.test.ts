@@ -1,9 +1,9 @@
 import { expect } from "chai"
 
-import { patchPermissions } from "../src/replacePermissions"
+import { replacePermissions } from "../src/replacePermissions"
 import { Operator, ParameterType, Target } from "../src/types"
 
-describe("patchPermissions", () => {
+describe("replacePermissions", () => {
   it("should revoke function-scoped targets", () => {
     const before: Target[] = [
       {
@@ -25,7 +25,7 @@ describe("patchPermissions", () => {
     ]
     const after: Target[] = []
 
-    expect(patchPermissions(before, after)).to.deep.equal([
+    expect(replacePermissions(before, after)).to.deep.equal([
       {
         call: "revokeFunction",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -74,7 +74,7 @@ describe("patchPermissions", () => {
       },
     ]
 
-    expect(patchPermissions(before, after)).to.deep.equal([
+    expect(replacePermissions(before, after)).to.deep.equal([
       {
         call: "scopeTarget",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",

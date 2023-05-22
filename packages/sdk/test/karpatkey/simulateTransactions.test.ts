@@ -35,7 +35,7 @@ type Configs = typeof KARPATKEY_ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
-  const ROLE_KEY = formatBytes32String("TEST_ROE")
+  const ROLE_KEY = formatBytes32String("TEST_ROLE")
 
   const setup = deployments.createFixture(async () => {
     await deployments.fixture()
@@ -105,6 +105,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       fillPreset(preset, placeholderValues),
       {
         currentPermissions: [],
+        mode: "replace",
       }
     )
 
