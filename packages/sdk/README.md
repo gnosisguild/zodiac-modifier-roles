@@ -9,7 +9,13 @@ This package offers an SDK for managing role permissions, based on presets.
 This module relies on [eth-sdk](https://github.com/dethcrypto/eth-sdk) for generating type-safe APIs from automatically downloaded contract ABIs. For adding it to your project, run:
 
 ```
-yarn add @dethcrypto/eth-sdk zodiac-roles-sdk
+yarn add @dethcrypto/eth-sdk @dethcrypto/eth-sdk-client zodiac-roles-sdk
+```
+
+If you don't want to use [typed allow kits](typed-allow-kits), only install `zodiac-roles-sdk` and skip the configuration step described in the following section.
+
+```
+yarn add zodiac-roles-sdk
 ```
 
 ### Configuration
@@ -132,7 +138,7 @@ A permission preset is a parametrized set of permissions. It can be applied to d
 }
 ```
 
-### Layer 3: Typed allow kits
+### <a name="typed-allow-kits"></a>Layer 3: Typed allow kits
 
 On the highest layer of abstraction, users can generate _allow kits_ for contracts they want to permission.
 An allow kit is a typed sdk tailored to a specific set of contracts that allows defining permissions on these in a convenient syntax and fully supported by the type system.
