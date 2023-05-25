@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -13,6 +13,16 @@
     "./kit": {
       "require": "./build/cjs/sdk/src/presets/authoring/kit.js",
       "import": "./build/esm/sdk/src/presets/authoring/kit.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./build/cjs/sdk/src/index.d.ts"
+      ],
+      "kit": [
+        "./build/cjs/sdk/src/presets/authoring/kit.d.ts"
+      ]
     }
   },
   "files": [
