@@ -7,8 +7,7 @@ export default defineConfig({
     gnosis: "https://blockscout.com/xdai/mainnet/api",
   },
   rpc: {
-    mainnet:
-      "https://eth-mainnet.g.alchemy.com/v2/twj7sBzB1_Njwoejwj0EFM-_x-TKJkZb",
+    mainnet: "https://ethereum.publicnode.com",
     gnosis: "https://rpc.gnosischain.com/",
     //gnosis: "https://rpc.ankr.com/gnosis"
   },
