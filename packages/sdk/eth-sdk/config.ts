@@ -37,7 +37,7 @@ export default defineConfig({
           "0x712CC5BeD99aA06fC4D5FB50Aea3750fA5161D0f",
         aura50COW_50WETH_rewarder: "0x228054e9c056F024FC724F515A2a8764Ae175ED6",
         auraBAL_staking_rewarder: "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2",
-        aurabb_a_USD_rewarder: "0xFb6b1c1A1eA5618b3CfC20F81a11A97E930fA46B",
+        aurabb_aV3_USD_rewarder: "0xD48451A61d5190a1Ba7C9D17056490cB5d50999d",
         aura_locker: "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC",
         snapshot_delegate_registry:
           "0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",
@@ -61,6 +61,7 @@ export default defineConfig({
         B_50WETH_50AURA_gauge: "0x275dF57d2B23d53e20322b4bb71Bf1dCb21D0A00",
         B_50COW_50WETH_gauge: "0x158772F59Fe0d3b75805fC11139b46CBc89F70e5",
         bb_a_USD_gauge: "0xa6325e799d266632D347e41265a69aF111b05403",
+        bb_aV3_USD_gauge: "0x0052688295413b32626D226a205b95cDB337DE86",
         BAL_minter: "0x239e55f427d44c3cc793f49bfb507ebe76638a2b",
         fee_distributor: "0xD3cf852898b21fc233251427c2DC93d3d604F3BB",
         veBAL: "0xC128a9954e6c874eA3d62ce62B468bA073093F25",
@@ -141,8 +142,9 @@ export default defineConfig({
         relayer: "0x3536fD480CA495Ac91E698A703248A8915c137a3",
         child_chain_gauge_reward_helper:
           "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
-        B_50bbagGNO_50bbagWETH_gauge:
-          "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
+        // B_50bbagGNO_50bbagWETH_gauge:
+        //   "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
+        B_50bbagGNO_50bbagWETH_gauge: "0xf752dd899F87a91370C1C8ac1488Aef6be687505",
         bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
         agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
         B_50bbagGNO_50bbagUSD_gauge:

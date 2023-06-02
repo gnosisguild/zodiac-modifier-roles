@@ -28,30 +28,15 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura bb-aUSDT/bb-a-USDC/bb-a-DAI (Boosted Pool)
+    // Aura bb-aV3-USDT/bb-aV3-USDC/bb-aV3-DAI (Boosted Aave V3 Pool)
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([balancer.bb_a_USD], [aura.BOOSTER]),
+    ...allowErc20Approve([balancer.bb_aV3_USD], [aura.BOOSTER]),
 
-    // {
-    //     targetAddress: AURA_BOOSTER,
-    //     signature: "deposit(uint256,uint256,bool)",
-    //     params: {
-    //         [0]: staticEqual(2, "uint256"), // Aura poolId
-    //     },
-    // },
-    allow.mainnet.aura.booster["deposit"](2), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](81), // Aura poolId
 
-    // {
-    //     targetAddress: aurabb_a_USD_REWARDER,
-    //     signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.aurabb_a_USD_rewarder["withdrawAndUnwrap"](),
+    allow.mainnet.aura.aurabb_aV3_USD_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //     targetAddress: aurabb_a_USD_REWARDER,
-    //     signature: "getReward()",
-    // },
-    allow.mainnet.aura.aurabb_a_USD_rewarder["getReward()"](),
+    allow.mainnet.aura.aurabb_aV3_USD_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura GNO/COW

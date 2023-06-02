@@ -20,7 +20,7 @@ const preset = {
         //     targetAddress: aurabb_a_USD_REWARDER,
         //     signature: "getReward()",
         // },
-        allow.mainnet.aura.aurabb_a_USD_rewarder["getReward()"](),
+        allow.mainnet.aura.aurabb_aV3_USD_rewarder["getReward()"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura GNO/COW

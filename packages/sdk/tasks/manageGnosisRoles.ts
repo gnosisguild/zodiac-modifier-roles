@@ -545,17 +545,19 @@ task("encodeApplyPresetManageGnosisDAOgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisDAO/txDataManageGnosisDAOgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisDAO/txDataManageGnosisDAOgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataManageGnosisDAOgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -572,17 +574,19 @@ task("encodeApplyPresetRevokeGnosisDAOgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisDAO/txDataRevokeGnosisDAOgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisDAO/txDataRevokeGnosisDAOgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataRevokeGnosisDAOgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -599,17 +603,19 @@ task("encodeApplyPresetHarvestGnosisDAOgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisDAO/txDataHarvestGnosisDAOgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisDAO/txDataHarvestGnosisDAOgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataHarvestGnosisDAOgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -626,17 +632,19 @@ task("encodeApplyPresetDisassembleGnosisDAOgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisDAO/txDataDisassembleGnosisDAOgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisDAO/txDataDisassembleGnosisDAOgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataDisassembleGnosisDAOgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -653,17 +661,19 @@ task("encodeApplyPresetSwapGnosisDAOgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisDAO/txDataSwapGnosisDAOgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisDAO/txDataSwapGnosisDAOgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisDAO/txDataSwapGnosisDAOgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -684,17 +694,19 @@ task("encodeApplyPresetManageGnosisLTDgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisLTD/txDataManageGnosisLTDgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisLTD/txDataManageGnosisLTDgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataManageGnosisLTDgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -711,17 +723,19 @@ task("encodeApplyPresetRevokeGnosisLTDgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisLTD/txDataRevokeGnosisLTDgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisLTD/txDataRevokeGnosisLTDgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataRevokeGnosisLTDgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -738,17 +752,19 @@ task("encodeApplyPresetHarvestGnosisLTDgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisLTD/txDataHarvestGnosisLTDgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisLTD/txDataHarvestGnosisLTDgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataHarvestGnosisLTDgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -765,17 +781,19 @@ task("encodeApplyPresetDisassembleGnosisLTDgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisLTD/txDataDisassembleGnosisLTDgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisLTD/txDataDisassembleGnosisLTDgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataDisassembleGnosisLTDgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
 
@@ -792,16 +810,18 @@ task("encodeApplyPresetSwapGnosisLTDgnosis").setAction(
       }
     )
 
-    writeFileSync(
-      path.join(
-        __dirname,
-        "..",
-        "/presets_output/gnosis/GnosisLTD/txDataSwapGnosisLTDgnosis.json"
-      ),
-      JSON.stringify(txBatches, undefined, 2)
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/gnosis/GnosisLTD/txDataSwapGnosisLTDgnosis.json"
     )
-    console.log(
-      `Transaction builder JSON written to packages/sdk/presets_output/gnosis/GnosisLTD/txDataSwapGnosisLTDgnosis.json`
-    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )

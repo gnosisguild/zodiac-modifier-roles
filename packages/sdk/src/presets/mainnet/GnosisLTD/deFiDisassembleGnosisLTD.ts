@@ -29,7 +29,7 @@ const preset = {
         //     targetAddress: aurabb_a_USD_REWARDER,
         //     signature: "withdrawAndUnwrap(uint256,bool)",
         // },
-        allow.mainnet.aura.aurabb_a_USD_rewarder["withdrawAndUnwrap"](),
+        allow.mainnet.aura.aurabb_aV3_USD_rewarder["withdrawAndUnwrap"](),
 
         //---------------------------------------------------------------------------------------------------------------------------------
         // Aura GNO/COW

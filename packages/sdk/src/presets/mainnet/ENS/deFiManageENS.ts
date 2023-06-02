@@ -315,6 +315,10 @@ const preset = {
     // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // CURVE
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - ETH/stETH
     //---------------------------------------------------------------------------------------------------------------------------------
     // ...allowErc20Approve([stETH], [curve.stETH_ETH_POOL]),
@@ -446,6 +450,10 @@ const preset = {
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // AURA
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // AURA wstETH/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
     //...allowErc20Approve([WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
@@ -518,6 +526,21 @@ const preset = {
     allow.mainnet.aura.auraB_stETH_stable_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // Aura bb-aV3-USDT/bb-aV3-USDC/bb-aV3-DAI (Boosted Aave V3 Pool)
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([balancer.bb_aV3_USD], [aura.BOOSTER]),
+
+    allow.mainnet.aura.booster["deposit"](81), // Aura poolId
+
+    allow.mainnet.aura.aurabb_aV3_USD_rewarder["withdrawAndUnwrap"](),
+
+    allow.mainnet.aura.aurabb_aV3_USD_rewarder["getReward()"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // BALANCER
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     // ...allowErc20Approve([wstETH, WETH], [balancer.VAULT]),
@@ -549,47 +572,47 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
         ), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"
-        ), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(wstETH, "address"),
-        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [10]: staticEqual(WETH, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf(
-          [
-            "0x00000000000000000000000000000000000000000000000000000000000000a0",
-            "0x00000000000000000000000000000000000000000000000000000000000000c0",
-            "0x0000000000000000000000000000000000000000000000000000000000000060",
-            "0x0000000000000000000000000000000000000000000000000000000000000040",
-          ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "0x0000000000000000000000000000000000000000000000000000000000000001",
-            "0x0000000000000000000000000000000000000000000000000000000000000002",
-            "0x0000000000000000000000000000000000000000000000000000000000000003",
-          ],
-          "bytes32"
-        ), // Join Kind
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //   "bytes32"
+        // ), // Offset of uint256[] from beginning of tuple 224=32*7
+        // [6]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //   "bytes32"
+        // ), // Offset of bytes from beginning of tuple 320=32*10
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of address[] = 2
+        // [9]: staticEqual(wstETH, "address"),
+        // // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        // [10]: staticEqual(WETH, "address"),
+        // [11]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of unit256[] = 2
+        // [14]: staticOneOf(
+        //   [
+        //     "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //   ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [15]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //   ],
+        //   "bytes32"
+        // ), // Join Kind
       },
       // send: true, // IMPORTANT: we only allow WETH -> If we allow ETH and WETH we could lose the ETH we send
     },
@@ -610,44 +633,44 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
         ), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"
-        ), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(wstETH, "address"),
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000060",
-            "0x0000000000000000000000000000000000000000000000000000000000000040",
-            "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "0x0000000000000000000000000000000000000000000000000000000000000001",
-            "0x0000000000000000000000000000000000000000000000000000000000000002",
-          ],
-          "bytes32"
-        ), // Join Kind
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //   "bytes32"
+        // ), // Offset of uint256[] from beginning of tuple 224=32*7
+        // [6]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //   "bytes32"
+        // ), // Offset of bytes from beginning of tuple 320=32*10
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of address[] = 2
+        // [9]: staticEqual(wstETH, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        // [11]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of unit256[] = 2
+        // [14]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //   ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [15]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   ],
+        //   "bytes32"
+        // ), // Join Kind
       },
     },
 
@@ -669,11 +692,11 @@ const preset = {
 
     // Relayer Approval (this is done only once per wallet)
     // This approval will be executed by the Avatar Safe
-    //allow.mainnet.balancer.relayer["setRelayerApproval"](balancer.RELAYER),
+    // allow.mainnet.balancer.relayer["setRelayerApproval"](balancer.RELAYER),
 
     /*
-    ...allowErc20Approve([balancer.bb_a_USD], [balancer.bb_a_USD_GAUGE]),
-    ...allowErc20Approve([DAI, USDT, USDC], [balancer.VAULT]),
+    ...allowErc20Approve([balancer.bb_aV3_USD], [balancer.bb_aV3_USD_GAUGE]),
+    ...allowErc20Approve([DAI, balancer.bb_aV3_DAI, USDT, balancer.bb_aV3_USDT, USDC, balancer.bb_aV3_USDC], [balancer.VAULT]),
     */
 
     // Using the BALANCER_RELAYER and it's BALANCER_RELAYER_LIBRARY
@@ -682,17 +705,17 @@ const preset = {
     // Swap USDT for bb_a_USDT (for both, join and exit pool)
     // Swap USDC for bb_a_USDC (for both, join and exit pool)
     {
-      targetAddress: balancer.RELAYER,
+      targetAddress: balancer.VAULT,
       signature:
-        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256,uint256,uint256)",
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
         [0]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000120",
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ), // Offset of the tuple from beginning 288=32*9
-        [1]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // sender
-        [3]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // recipient
-        [9]: staticOneOf(
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // sender
+        [3]: staticEqual(AVATAR), // recipient
+        [7]: staticOneOf(
           [
             "0x6667c6fa9f2b3fc1cc8d85320b62703d938e43850000000000000000000004fb", // bb_a_DAI V3
             "0xa1697f9af0875b63ddc472d6eebada8c1fab85680000000000000000000004f9", // bb_a_USDT V3
@@ -700,11 +723,11 @@ const preset = {
           ],
           "bytes32"
         ), // Balancer PoolId
-        [10]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"
-        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
-        [11]: staticOneOf(
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "bytes32"
+        // ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticOneOf(
           [
             DAI,
             balancer.bb_aV3_DAI,
@@ -715,7 +738,7 @@ const preset = {
           ],
           "address"
         ), // assetIn
-        [12]: staticOneOf(
+        [10]: staticOneOf(
           [
             DAI,
             balancer.bb_aV3_DAI,
@@ -726,157 +749,153 @@ const preset = {
           ],
           "address"
         ), // assetOut
-        [14]: staticEqual(
+        [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
           "bytes32"
         ), // Offset of bytes from beginning of tuple 192=32*6
-        [15]: staticEqual(
+        [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
         ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
 
-    // IMPORTANT: FOR THE "Balancer Boosted Aave USD" the joinPool and exitPool MUST BE WHITELISTED WITH BOTH THE SENDER AND
-    // RECIPIENT WITH THE POSSIBILITY OF BEING EITHER THE AVATAR OR THE BALANCER_RELAYER. WHEN YOU ADD OR REMOVE LIQUIDITY
-    // FROM A POOL WITH bb_ag_USD (ie: Weighted Pool wstETH/bb-a-USD) THE BALANCER_RELAYER DOES A joinPool or exitPool
-    // WITH THE BALANCER_RELAYER AS BOTH THE SENDER AND RECIPIENT.
+    // // IMPORTANT: FOR THE "Balancer Boosted Aave USD" the joinPool and exitPool MUST BE WHITELISTED WITH BOTH THE SENDER AND
+    // // RECIPIENT WITH THE POSSIBILITY OF BEING EITHER THE AVATAR OR THE BALANCER_RELAYER. WHEN YOU ADD OR REMOVE LIQUIDITY
+    // // FROM A POOL WITH bb_ag_USD (ie: Weighted Pool wstETH/bb-a-USD) THE BALANCER_RELAYER DOES A joinPool or exitPool
+    // // WITH THE BALANCER_RELAYER AS BOTH THE SENDER AND RECIPIENT.
 
     // Add Liquidity
     {
-      targetAddress: balancer.RELAYER,
+      targetAddress: balancer.VAULT,
       signature:
-        "joinPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),uint256,uint256)",
+        "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(
           "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502",
           "bytes32"
         ), // Balancer Boosted Aave V3 PoolId
-        [1]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"
-        ), // bytes (userData)
-        [2]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // sender
-        [3]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // recipient
-        [4]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"
-        ), // Offset of the tuple from beginning 224=32*7
-        [7]: staticEqual(
+        [1]: staticEqual(AVATAR), // sender
+        [2]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
-        ), // Offset of address[] from beginning of tuple 128=32*4
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000120",
-          "bytes32"
-        ), // Offset of uint256[] from beginning of tuple 288=32*9
-        [9]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000001c0",
-          "bytes32"
-        ), // Offset of bytes from beginning of tuple 448=32*14
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000004",
-          "bytes32"
-        ), // Length of address[] = 4
-        [12]: staticEqual(balancer.bb_a_USDT, "address"),
-        [13]: staticEqual(balancer.bb_a_USDC, "address"),
-        [14]: staticEqual(balancer.bb_a_USD, "address"),
-        [15]: staticEqual(balancer.bb_a_DAI, "address"),
-        [16]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000004",
-          "bytes32"
-        ), // Length of unit256[] = 4
-        [21]: staticOneOf(
-          [
-            "0x00000000000000000000000000000000000000000000000000000000000000e0",
-            "0x0000000000000000000000000000000000000000000000000000000000000100",
-            "0x0000000000000000000000000000000000000000000000000000000000000060",
-            "0x0000000000000000000000000000000000000000000000000000000000000040",
-          ],
-          "bytes32"
-        ), // Length of bytes
-        [22]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "0x0000000000000000000000000000000000000000000000000000000000000001",
-            "0x0000000000000000000000000000000000000000000000000000000000000002",
-            "0x0000000000000000000000000000000000000000000000000000000000000003",
-          ],
-          "bytes32"
-        ), // Join Kind
+        ), // Offset of tuple from beginning 128=32*4
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000120",
+        //   "bytes32"
+        // ), // Offset of uint256[] from beginning of tuple 288=32*9
+        // [6]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000001c0",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 448=32*14
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //   "bytes32"
+        // ), // Length of address[] = 4
+        // [9]: staticEqual(balancer.bb_aV3_DAI, "address"),
+        // [10]: staticEqual(balancer.bb_aV3_USDT, "address"),
+        // [11]: staticEqual(balancer.bb_aV3_USDC, "address"),
+        // [12]: staticEqual(balancer.bb_aV3_USD, "address"),
+        // [13]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //   "bytes32"
+        // ), // Length of unit256[] = 4
+        // [17]: staticOneOf(
+        //   [
+        //     "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000100",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //   ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [18]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000003",
+        //   ],
+        //   "bytes32"
+        // ), // Join Kind
       },
     },
 
     // Remove Liquidity
     {
-      targetAddress: balancer.RELAYER,
+      targetAddress: balancer.VAULT,
       signature:
-        "exitPool(bytes32,uint8,address,address,(address[],uint256[],bytes,bool),(uint256,uint256)[])",
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(
-          "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d",
+          "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502",
           "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"
-        ), // bytes (userData)
-        [2]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // sender
-        [3]: staticOneOf([AVATAR, balancer.RELAYER], "address"), // recipient
-        [4]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"
-        ), // Offset of the first tuple from beginning 192=32*6
-        [5]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000300",
-          "bytes32"
-        ), // Offset of the second tuple from beginning 768=32*24
-        [6]: staticEqual(
+        ), // Balancer Boosted Aave V3 PoolId
+        [1]: staticEqual(AVATAR), // sender
+        [2]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
           "bytes32"
-        ), // Offset of address[] from beginning of tuple 128=32*4
-        [7]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000120",
-          "bytes32"
-        ), // Offset of uint256[] from beginning of tuple 288=32*9
-        [8]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000001c0",
-          "bytes32"
-        ), // Offset of bytes from beginning of tuple 448=32*14
-        [10]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000004",
-          "bytes32"
-        ), // Length of address[] = 4
-        [11]: staticEqual(balancer.bb_a_USDT, "address"),
-        [12]: staticEqual(balancer.bb_a_USDC, "address"),
-        [13]: staticEqual(balancer.bb_a_USD, "address"),
-        [14]: staticEqual(balancer.bb_a_DAI, "address"),
-        [15]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000004",
-          "bytes32"
-        ), // Length of unit256[] = 4
-        [20]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000060",
-            "0x0000000000000000000000000000000000000000000000000000000000000040",
-            "0x0000000000000000000000000000000000000000000000000000000000000100",
-          ],
-          "bytes32"
-        ), // Length of bytes
-        [21]: staticOneOf(
-          [
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "0x0000000000000000000000000000000000000000000000000000000000000001",
-            "0x0000000000000000000000000000000000000000000000000000000000000002",
-          ],
-          "bytes32"
-        ), // Join Kind
-        [24]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"
-        ), // Length of (uint256,uint256)[] = 1
+        ), // Offset of tuple from beginning 128=32*4
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000120",
+        //   "bytes32"
+        // ), // Offset of uint256[] from beginning of tuple 288=32*9
+        // [6]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000001c0",
+        //   "bytes32"
+        // ), // Offset of address[] from beginning of tuple 448=32*14
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //   "bytes32"
+        // ), // Length of address[] = 4
+        // [9]: staticEqual(balancer.bb_aV3_DAI, "address"),
+        // [10]: staticEqual(balancer.bb_aV3_USDT, "address"),
+        // [11]: staticEqual(balancer.bb_aV3_USDC, "address"),
+        // [12]: staticEqual(balancer.bb_aV3_USD, "address"),
+        // [13]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000004",
+        //   "bytes32"
+        // ), // Length of unit256[] = 4
+        // [17]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //     "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //   ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [18]: staticOneOf(
+        //   [
+        //     "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //     "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   ],
+        //   "bytes32"
+        // ), // Join Kind
       },
     },
+
+    // Stake
+    allow.mainnet.balancer.bb_aV3_USD_gauge["deposit(uint256)"](),
+
+    // Unstake
+    allow.mainnet.balancer.bb_aV3_USD_gauge["withdraw(uint256)"](),
+
+    // Claim Rewards
+    allow.mainnet.balancer.bb_aV3_USD_gauge["claim_rewards()"](),
+
+    // Claim BAL Rewards
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.bb_aV3_USD_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // CONVEX
@@ -1102,11 +1121,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
           "bytes32"
@@ -1138,11 +1155,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
           "bytes32"
@@ -1174,11 +1189,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
           "bytes32"
@@ -1210,11 +1223,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
           "bytes32"
@@ -1246,11 +1257,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
           "bytes32"
@@ -1282,11 +1291,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"
@@ -1318,11 +1325,9 @@ const preset = {
         [0]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
           "bytes32"
-        ),
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
-        [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
-        [4]: staticEqual(false, "bool"),
         [7]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"

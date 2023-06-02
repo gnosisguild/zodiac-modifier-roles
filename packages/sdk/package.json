@@ -45,7 +45,7 @@
     "apply:ens:eth:swap": "hardhat encodeApplyPresetSwapENS --network mainnet --safe ENS_ETH",
     "test": "hardhat test",
     "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
-    "apply:santi:gno:manage": "hardhat encodeApplyPresetManage --network xdai --safe SANTI_TEST_GNO",
+    "apply:santi:gno:manage": "hardhat encodeApplyPresetManageTestGNO --network xdai --safe SANTI_TEST_GNO",
     "apply:santi:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe SANTI_TEST_ETH",
     "apply:test:eth:manage": "hardhat encodeApplyPresetManageTest --network mainnet --safe TEST_ETH",
     "pre-commit": "yarn fix",

@@ -11,20 +11,23 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 // import gnosisChainDeFiHarvestPreset from "../src/presets/gnosisChain/deFiHarvest"
 // import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManage"
+import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManageTest"
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import { NetworkId } from "../src/types"
 
 export const KARPATKEY_ADDRESSES = {
   SANTI_TEST_GNO: {
-    AVATAR: "0x3AD295402978659427C179Fb30f319bF6a2c8678",
-    MODULE: "0x8422d860d48Bc2aFeA8037d3954db31d5d3b4924",
+    // AVATAR: "0x3AD295402978659427C179Fb30f319bF6a2c8678",
+    AVATAR: "0x9a18b276e86844A05587e1C822D2311D51d1c7F9",
+    // MODULE: "0x8422d860d48Bc2aFeA8037d3954db31d5d3b4924",
+    MODULE: "0xB6CeDb9603e7992A5d42ea2246B3ba0a21342503",
     MANAGER: "0xa928b0F1582126db08f902066403a3C69D2E7814",
-    REVOKER: "",
+    REVOKER: "0x7e19DE37A31E40eec58977CEA36ef7fB70e2c5CD",
     HARVESTER: "",
     DISASSEMBLER: "",
     SWAPPER: "",
     NETWORK: 100,
-    BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
   TEST_ETH: {
     AVATAR: "0xA2372f3C9a26F45b5D69BD513BE0d553Ff9CC617",
@@ -141,6 +144,29 @@ task("encodeApplyPresetManageTest").setAction(async (taskArgs, hre) => {
     config.MODULE,
     1,
     mainnetDeFiManageTestPreset,
+    {
+      AVATAR: config.AVATAR,
+    },
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  writeFileSync(
+    path.join(__dirname, "..", "txDataManageTest.json"),
+    JSON.stringify(txBatches, undefined, 2)
+  )
+  console.log(
+    `Transaction builder JSON written to packages/sdk/txDataManageTest.json`
+  )
+})
+
+task("encodeApplyPresetManageTestGNO").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    2,
+    gnosisChainDeFiManagePreset,
     {
       AVATAR: config.AVATAR,
     },
