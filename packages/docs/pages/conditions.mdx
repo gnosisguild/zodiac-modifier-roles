@@ -1,0 +1,62 @@
+import { BalancerSwapExample } from "./conditionsExamples";
+
+# Conditions
+
+Zodiac Roles implements a condition system that allows for defining complex conditions over call data and ether value.
+
+## Conditions Tree Structure
+
+A condition is represented by a tree structure.
+Each node in the tree defines a condition operator and informs the call data range it targets.
+The root node of the tree generally targets the entire call data range, while children condition nodes allow setting conditions on specific fields of the decoded call data.
+
+### Node Properties
+
+Each condition node is defined by the following properties:
+
+#### `paramType`
+
+Informs how to pluck to value from call data. Can be one of the following:
+
+`AbiEncoded` – Decode the call data using standard ABI decoding. The `children` condition nodes inform the individual field types.
+
+#### `children`
+
+An array of sub conditions, used for any of the following purposes:
+
+- Inform the decoding of complex types by defining types for each of their fields (required for `ParamType.AbiEncoded`, `ParamType.Tuple`, `ParamType.Array`)
+- Set conditions on specific fields of a tuple type value (via `Operator.Matches`)
+- Set conditions on elements of an array type value (via `Operator.ArraySome`, `Operator.ArrayEvery`, `Operator.ArraySubset`)
+- Define sub conditions for n-ary operators (`And`, `Or`, `Nor`)
+
+#### `operator`
+
+Defines the conditional operation to apply to the value plucked from call data.
+
+#### `compValue`
+
+Only used with comparison operators. Defines the value to compare against.
+
+### Examples
+
+#### Balancer swap
+
+The following condition enforces that the Balancer [single swap](https://docs.balancer.fi/reference/swaps/single-swap.html#single-swap) function must only be used to swap WETH for DAI and vice versa.
+Also, sender and recipient for the swap must set to the avatar address.
+
+<BalancerSwapExample />
+
+## Operators
+
+### `EqualTo`
+
+Checks equality of a value with a given comparison value.
+
+### `Pass`
+
+Allows any value. Used for condition nodes that are required solely for informing how to decode complex type value.
+For example, the types of all fields of a tuple must be defined so that the tuple can be correctly decoded.
+
+```javascript
+test;
+```

@@ -11,9 +11,12 @@ const themeConfig = {
   docsRepositoryBase:
     "https://github.com/gnosis/zodiac-modifier-roles/tree/main/docs/pages",
   useNextSeoProps() {
-    return {
-      titleTemplate: "%s – Zodiac Roles",
-    };
+    const { asPath } = useRouter();
+    if (asPath !== "/") {
+      return {
+        titleTemplate: "%s – Zodiac Roles",
+      };
+    }
   },
   head: function useHead() {
     const { title } = useConfig();
