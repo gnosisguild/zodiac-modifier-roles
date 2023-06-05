@@ -8,7 +8,7 @@ export interface TreeProps {
   highlightOnSelect?: boolean;
   highlightOnHover?: boolean;
   //   expandOnHighlight?: boolean;
-  onHighlight?(id: string): void;
+  onHighlight?(id: string | null): void;
   onToggle?(id: string): void;
   onSelect?(id: string): void;
   onMouseEnter?(id: string): void;
@@ -49,10 +49,17 @@ const Tree: React.FC<Props> = ({
           onSelect?.(childProps.id);
         },
         onMouseEnter: () => {
+          console.log("enter");
+          if (highlightOnHover) {
+            onHighlight?.(childProps.id);
+          }
           childProps.onMouseEnter?.();
           onMouseEnter?.(childProps.id);
         },
         onMouseLeave: () => {
+          if (highlightOnHover) {
+            onHighlight?.(null);
+          }
           childProps.onMouseLeave?.();
           onMouseLeave?.(childProps.id);
         },
