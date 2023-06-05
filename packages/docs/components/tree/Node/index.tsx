@@ -23,20 +23,35 @@ const Node: React.FC<Props> = ({
   expanded,
   onToggle,
   onSelect,
+  onMouseEnter,
+  onMouseLeave,
 }) =>
   React.Children.count(children) > 0 ? (
     <ParentNode
-      id={id}
-      head={head}
-      highlight={highlight}
-      expanded={expanded}
-      onToggle={onToggle}
-      onSelect={onSelect}
+      {...{
+        id,
+        head,
+        highlight,
+        expanded,
+        onToggle,
+        onSelect,
+        onMouseEnter,
+        onMouseLeave,
+      }}
     >
       {children}
     </ParentNode>
   ) : (
-    <LeafNode head={head} highlight={highlight} onSelect={onSelect} />
+    <LeafNode
+      {...{
+        id,
+        head,
+        highlight,
+        onSelect,
+        onMouseEnter,
+        onMouseLeave,
+      }}
+    />
   );
 
 export default Node;

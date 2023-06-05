@@ -39,6 +39,11 @@ export default ConditionTree;
 const ConditionHead: React.FC<{ condition: Condition }> = ({ condition }) => (
   <div className={styles.head}>
     <div className={styles.operator}>{Operator[condition.operator]}</div>
+    {condition.compValue && (
+      <code className={styles.compValue} title={condition.compValue}>
+        {hexEllipsis(condition.compValue)}
+      </code>
+    )}
     <code className={styles.type}>{ParameterType[condition.paramType]}</code>
   </div>
 );
@@ -60,4 +65,9 @@ export const gatherNodeIds = (
       )
     ) ?? []),
   ];
+};
+
+const hexEllipsis = (hex: string) => {
+  if (hex.length <= 18) return hex;
+  return hex.slice(0, 10) + "…" + hex.slice(-8);
 };

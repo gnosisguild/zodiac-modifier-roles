@@ -4,6 +4,11 @@
   align-items: center;
 }
 
+.compValue {
+  white-space: nowrap;
+  color: hsl(var(--nextra-primary-hue) 100% 32% / var(--tw-text-opacity));
+}
+
 .type {
   font-size: 0.7rem;
   padding: 0 4px;
