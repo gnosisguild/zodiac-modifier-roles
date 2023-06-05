@@ -1,0 +1,27 @@
+.headWrap {
+  display: flex;
+  flex-direction: row;
+  flex-gap: 4px;
+}
+
+.chevron {
+  width: 16px;
+  cursor: pointer;
+}
+.chevron:disabled {
+  cursor: default;
+}
+.chevron:checked {
+  transform: rotate(90deg);
+  transition: transform 0.1s ease-in-out;
+}
+
+.head {
+}
+.head:checked {
+  background-color: #f5f5f5;
+}
+
+.children {
+  list-style: none;
+}
