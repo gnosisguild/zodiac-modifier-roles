@@ -12545,12 +12545,14 @@ __metadata:
     "@types/react-dom": 18.2.4
     eslint: 8.41.0
     eslint-config-next: 13.4.4
+    ethers: ^5.4.7
     next: 13.4.4
     nextra: ^2.6.2
     nextra-theme-docs: ^2.6.2
     react: 18.2.0
     react-dom: 18.2.0
     typescript: 5.1.3
+    zodiac-roles-sdk: "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -33409,7 +33411,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"zodiac-roles-sdk@workspace:packages/sdk":
+"zodiac-roles-sdk@workspace:*, zodiac-roles-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "zodiac-roles-sdk@workspace:packages/sdk"
   dependencies:

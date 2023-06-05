@@ -2,19 +2,22 @@ import React, { ReactElement, ReactNode, useEffect } from "react";
 import styles from "./styles.module.css";
 import { Props as NodeProps } from "../Node";
 
-interface Props {
-  children: ReactElement<NodeProps> | ReactElement<NodeProps>[];
+export interface TreeProps {
   expanded?: string[];
   highlight?: { [id: string]: number };
   highlightOnSelect?: boolean;
   highlightOnHover?: boolean;
   //   expandOnHighlight?: boolean;
-  onHighlight?(id: string): number; // return the highlight index
+  onHighlight?(id: string): void;
   onToggle?(id: string): void;
   onSelect?(id: string): void;
   onMouseEnter?(id: string): void;
   onMouseLeave?(id: string): void;
 }
+
+type Props = TreeProps & {
+  children: ReactElement<NodeProps> | ReactElement<NodeProps>[];
+};
 
 const Tree: React.FC<Props> = ({
   children,
@@ -30,38 +33,57 @@ const Tree: React.FC<Props> = ({
 }) => {
   return (
     <ul className={styles.tree}>
-      {React.Children.map(children, (child) =>
-        React.cloneElement(child, {
-          expanded: expanded.includes(child.props.id),
-          highlight: highlight[child.props.id],
-          onToggle: () => {
-            child.props.onToggle?.();
-            onToggle?.(child.props.id);
-          },
-          onSelect: () => {
-            if (highlightOnSelect) {
-              onHighlight?.(child.props.id);
-            }
-            child.props.onSelect?.();
-            onSelect?.(child.props.id);
-          },
-          onMouseEnter: () => {
-            child.props.onMouseEnter?.();
-            onMouseEnter?.(child.props.id);
-          },
-          onMouseLeave: () => {
-            child.props.onMouseLeave?.();
-            onMouseLeave?.(child.props.id);
-          },
-        })
-      )}
+      {deepMapChildrenProps(children, (childProps) => ({
+        ...childProps,
+        expanded: expanded.includes(childProps.id),
+        highlight: highlight[childProps.id],
+        onToggle: () => {
+          childProps.onToggle?.();
+          onToggle?.(childProps.id);
+        },
+        onSelect: () => {
+          if (highlightOnSelect) {
+            onHighlight?.(childProps.id);
+          }
+          childProps.onSelect?.();
+          onSelect?.(childProps.id);
+        },
+        onMouseEnter: () => {
+          childProps.onMouseEnter?.();
+          onMouseEnter?.(childProps.id);
+        },
+        onMouseLeave: () => {
+          childProps.onMouseLeave?.();
+          onMouseLeave?.(childProps.id);
+        },
+      }))}
     </ul>
   );
 };
 
 export default Tree;
 
-export const useTreesState = ({
+type NodeChildren =
+  | React.ReactElement<NodeProps, string | React.JSXElementConstructor<any>>
+  | React.ReactElement<NodeProps, string | React.JSXElementConstructor<any>>[];
+
+const deepMapChildrenProps = (
+  children: NodeChildren,
+  mapProps: (props: NodeProps) => NodeProps
+): React.ReactElement[] | undefined =>
+  React.Children.map(
+    children,
+    (child) =>
+      child &&
+      React.cloneElement(child, {
+        ...mapProps(child.props),
+        children:
+          child.props.children &&
+          deepMapChildrenProps(child.props.children as NodeChildren, mapProps),
+      })
+  );
+
+export const useTreeState = ({
   expanded,
   highlight,
   highlightColor,
@@ -86,7 +108,7 @@ export const useTreesState = ({
     onToggle: (id: string) => {
       setExpanded((expanded) =>
         expanded.includes(id)
-          ? expanded.filter((id) => id !== id)
+          ? expanded.filter((exId) => exId !== id)
           : [...expanded, id]
       );
     },

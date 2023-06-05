@@ -2,16 +2,19 @@
   display: flex;
   flex-direction: row;
   flex-gap: 4px;
+  align-items: center;
 }
 
 .chevron {
+  position: relative;
+  top: 1px;
   width: 16px;
   cursor: pointer;
 }
 .chevron:disabled {
   cursor: default;
 }
-.chevron:checked {
+.chevron[aria-checked="true"] {
   transform: rotate(90deg);
   transition: transform 0.1s ease-in-out;
 }
@@ -24,4 +27,9 @@
 
 .children {
   list-style: none;
+  margin-left: 1rem;
+  display: none;
+}
+.children.expanded {
+  display: block;
 }

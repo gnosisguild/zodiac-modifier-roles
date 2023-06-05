@@ -58,7 +58,7 @@ const ParentNode: React.FC<Props> = ({
         role="checkbox"
         aria-checked={expanded}
         tabIndex={-1}
-        onChange={onToggle}
+        onClick={onToggle}
       >
         <VscChevronRight />
       </div>
