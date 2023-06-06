@@ -38,7 +38,6 @@ export const BalancerSwapExample = () => {
           highlightOnHover
         />
       </div>
-      <div className={styles.box}></div>
       <div className={clsx(styles.box, styles.fullWidth, styles.tabs)}>
         <div className={styles.tabLabels}>
           <div

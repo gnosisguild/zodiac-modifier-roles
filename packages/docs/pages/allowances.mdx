@@ -1,0 +1,52 @@
+# Allowances
+
+Allowances are a mechanism for enforcing spending limits or other kind of quotas for individual roles.
+
+## Structure
+
+Allowances are centrally defined and can be referenced from conditions.
+Each allowance is stored as a tuple of the following shape:
+
+```solidity
+struct Allowance {
+  uint128 refillAmount;
+  uint128 maxBalance;
+  uint64 refillInterval;
+  uint128 balance;
+  uint64 refillTimestamp;
+}
+```
+
+`refillInterval` – Duration of the period in seconds, 0 for one-time allowance
+
+`refillAmount` – Amount that will be replenished per period
+
+`refillTimestamp` – Timestamp of the last interval refilled for
+
+`maxBalance` – Max accrual amount, replenishing stops once the unused allowance hits this value
+
+`balance` – Unused allowance that can be spent
+
+All fields can be manually updated.
+Upon consumption of an allowance, the `balance` and `refillTimestamp` fields will be updated automatically:
+
+- Update the balance to reflect the accrual since the last refill
+- Update the refill timestamp to the current interval's timestamp
+- Subtract the consumed amount from the balance
+
+## Usage
+
+There are three different ways allowances can be used:
+
+### Allowance on a `uint` field
+
+To define an allowance on any `uint` field in the transaction call data, use an `WithinAllowance` condition.
+
+### Allowance on the ether `value`
+
+To define an allowance on the ether `value` sent with the transaction, use an `EtherWithinAllowance` condition.
+
+### Call rate limits
+
+It's also possible to enforce a rate limit on the number of calls to a function using an `CallWithinAllowance` condition.
+Each call to the function will decrement the allowance balance by `1`.
