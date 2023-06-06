@@ -17,9 +17,12 @@ const ConditionTree: React.FC<Props & TreeProps> = ({ condition, ...rest }) => {
     abiPath = "0"
   ) => {
     const isNotPlucking = condition.paramType === ParameterType.None;
-    const id = isNotPlucking ? "none:" + path : abiPath;
     return (
-      <Node key={path} id={id} head={<ConditionHead condition={condition} />}>
+      <Node
+        key={path}
+        id={abiPath}
+        head={<ConditionHead condition={condition} />}
+      >
         {condition.children?.map((child, index) =>
           recursivelyRender(
             child,
@@ -54,9 +57,8 @@ export const gatherNodeIds = (
   abiPath = "0"
 ): string[] => {
   const isNotPlucking = condition.paramType === ParameterType.None;
-  const id = isNotPlucking ? "none:" + path : abiPath;
   return [
-    id,
+    abiPath,
     ...(condition.children?.flatMap((child, index) =>
       gatherNodeIds(
         child,
