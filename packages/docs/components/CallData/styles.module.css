@@ -22,3 +22,9 @@
 .invalid {
   text-decoration: 1px wavy red underline;
 }
+
+.highlight {
+  background-color: hsl(
+    var(--nextra-primary-hue) 100% 94% / var(--tw-bg-opacity)
+  );
+}

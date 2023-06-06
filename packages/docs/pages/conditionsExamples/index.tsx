@@ -13,6 +13,13 @@ export const BalancerSwapExample = () => {
       return 1;
     },
   });
+
+  const callDataHighlight = Object.fromEntries(
+    Object.entries(treeState.highlight || {}).flatMap(
+      ([id, color]) => wordsByNodeId[id]?.map((word) => [word, color]) || []
+    )
+  );
+
   return (
     <div className={styles.grid}>
       <div className={styles.box}>
@@ -38,6 +45,7 @@ export const BalancerSwapExample = () => {
             [10]: "WETH token address",
             [11]: "DAI token address",
           }}
+          highlight={callDataHighlight}
         />
       </div>
       <div className={styles.box}>
@@ -52,6 +60,7 @@ export const BalancerSwapExample = () => {
             [11]: "DAI token address",
           }}
           invalid={[4]}
+          highlight={callDataHighlight}
         />
       </div>
     </div>
@@ -206,3 +215,21 @@ const balancerSwapCondition: Condition = {
 };
 
 const allNodeIds = gatherNodeIds(balancerSwapCondition);
+
+const wordsByNodeId: Record<string, number[]> = {
+  "0": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "0.0": [1, 8, 9, 10, 11, 12, 13, 14, 15],
+  "0.0.0": [8],
+  "0.0.1": [9],
+  "0.0.2": [10],
+  "0.0.3": [11],
+  "0.0.4": [12],
+  "0.0.5": [13, 14, 15],
+  "0.1": [2, 3, 4, 5],
+  "0.1.0": [2],
+  "0.1.1": [3],
+  "0.1.2": [4],
+  "0.1.3": [5],
+  "0.2": [6],
+  "0.3": [7],
+};
