@@ -183,6 +183,15 @@ export const curve = {
   cxvETH_POOL: "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4",
 }
 
+export const maker = {
+  DSR_MANAGER: "0x373238337Bfe1146fb49989fc222523f83081dDb"
+}
+
+export const rocket_pool = {
+  STORAGE: "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46",
+  DEPOSIT_POOL: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8" // This address might due to Rocket Pool's Architecture
+}
+
 export const stakedao = {
   BRIBE: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
 }

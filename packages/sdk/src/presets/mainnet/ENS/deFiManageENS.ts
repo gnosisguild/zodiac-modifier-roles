@@ -22,6 +22,7 @@ import {
   compound_v2,
   compound_v3,
   curve,
+  maker,
   uniswapv3,
 } from "../addresses"
 import { staticEqual, staticOneOf } from "../../helpers/utils"
@@ -988,6 +989,52 @@ const preset = {
     allow.mainnet.weth["deposit"]({
       send: true,
     }),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // MAKER
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Maker - DRS (DAI Savings Rate)
+    // The DsrManager provides an easy to use smart contract that allows service providers to deposit/withdraw dai into 
+    // the DSR contract pot, and activate/deactivate the Dai Savings Rate to start earning savings on a pool of dai in a single 
+    // function call.
+    // https://docs.makerdao.com/smart-contract-modules/proxy-module/dsr-manager-detailed-documentation#contract-details
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([DAI], [maker.DSR_MANAGER])
+
+    // Deposit
+    allow.mainnet.maker.dsr_manager["join"](
+      AVATAR
+    ),
+
+    // Withdraw an specific amount
+    allow.mainnet.maker.dsr_manager["exit"](
+      AVATAR
+    ),
+
+    // Withdraw all
+    allow.mainnet.maker.dsr_manager["exit"](
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ROCKET POOL
+    // Current Deployments: https://docs.rocketpool.net/overview/contracts-integrations.html
+    // IMPORTANT: https://docs.rocketpool.net/developers/usage/contracts/contracts.html
+    // RocketStorage contract: 0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46
+    // The central hub of the network is the RocketStorage contract, which is responsible for storing the state of the 
+    // entire protocol. This is implemented through the use of maps for key-value storage, and getter and setter methods for 
+    // reading and writing values for a key.
+    // The RocketStorage contract also stores the addresses of all other network contracts (keyed by name), 
+    // and restricts data modification to those contracts only.
+    // Because of Rocket Pool's architecture, the addresses of other contracts should not be used directly but retrieved 
+    // from the blockchain before use. Network upgrades may have occurred since the previous interaction, resulting in 
+    // outdated addresses. RocketStorage can never change address, so it is safe to store a reference to it.
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    // Deposit ETH
+
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of tokens COMP, CRV, LDO, WETH, USDC, DAI and USDT in Uniswap

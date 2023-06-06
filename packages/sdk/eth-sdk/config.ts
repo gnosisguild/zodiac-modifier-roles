@@ -3,8 +3,8 @@ import { defineConfig } from "@dethcrypto/eth-sdk"
 export default defineConfig({
   etherscanURLs: {
     mainnet: "https://api.etherscan.io/api",
-    //gnosis: "https://api.gnosisscan.io/api"
-    gnosis: "https://blockscout.com/xdai/mainnet/api",
+    gnosis: "https://api.gnosisscan.io/api"
+    //gnosis: "https://blockscout.com/xdai/mainnet/api",
   },
   rpc: {
     mainnet: "https://ethereum.publicnode.com",
@@ -109,6 +109,12 @@ export default defineConfig({
         stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
       },
+      maker: {
+        dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb"
+      },
+      rocket_pool: {
+        deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8" // This address might due to Rocket Pool's Architecture
+      },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
       },
@@ -140,15 +146,11 @@ export default defineConfig({
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
         relayer: "0x3536fD480CA495Ac91E698A703248A8915c137a3",
-        child_chain_gauge_reward_helper:
-          "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
-        // B_50bbagGNO_50bbagWETH_gauge:
-        //   "0x2165b84b2Ae1Fc01F481fA8c9c762B695c57bB21",
+        child_chain_gauge_reward_helper: "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
         B_50bbagGNO_50bbagWETH_gauge: "0xf752dd899F87a91370C1C8ac1488Aef6be687505",
-        bb_ag_USD_gauge: "0x266C15970AEEeCc254117b1C366E26718Ad02cEE",
-        agUSD_agWETH_agWBTC_gauge: "0xc04672a31C5ba04912BAD418631f9b45E73619EF",
-        B_50bbagGNO_50bbagUSD_gauge:
-          "0x793fAF861a78B07c0C8c0ed1450D3919F3473226",
+        bb_ag_USD_gauge: "0xDe3B7eC86B67B05D312ac8FD935B6F59836F2c41",
+        agUSD_agWETH_agWBTC_gauge: "0x7eA8B4e2CaBA854C3dD6bf9c5ebABa143BE7Fe9E",
+        B_50bbagGNO_50bbagUSD_gauge: "0x7E13b8b95d887c2326C25e71815F33Ea10A2674e",
       },
       curve: {
         crvEUReUSD_pool: "0x056C6C5e684CeC248635eD86033378Cc444459B0",
