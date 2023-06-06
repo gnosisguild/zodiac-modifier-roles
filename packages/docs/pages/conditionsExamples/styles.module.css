@@ -11,8 +11,7 @@
   position: relative;
   flex: 1;
 }
-.box:nth-child(3),
-.box:nth-child(4) {
+.box.fullWidth {
   flex: 0 0 100%; /* flex-grow, flex-shrink, flex-basis */
 }
 
@@ -30,4 +29,19 @@
   right: -1px;
   left: auto;
   border-bottom-left-radius: 3px;
+}
+
+.tabLabels {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  display: flex;
+  gap: 4px;
+}
+.tabLabels .boxLabel {
+  position: static;
+}
+.tabLabels .boxLabel:not(.active) {
+  opacity: 0.7;
+  cursor: pointer;
 }
