@@ -227,6 +227,11 @@ const balancerSwapCondition: Condition = {
           paramType: ParameterType.Static,
           operator: Operator.EqualToAvatar,
         },
+        {
+          // toInternalBalance
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+        },
       ],
     },
   ],
