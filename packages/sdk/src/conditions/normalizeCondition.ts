@@ -46,9 +46,17 @@ const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
   return condition
 }
 
-/** removes trailing Static Pass nodes (they are useless) */
+/** Removes trailing Static Pass nodes from Matches on dynamic tuples and AbiEncoded (they are useless) */
 const pruneTrailingStaticPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
+  if (condition.operator !== Operator.Matches) return condition
+
+  const canPrune =
+    condition.paramType === ParameterType.AbiEncoded ||
+    (condition.paramType === ParameterType.Tuple &&
+      isDynamicParamType(condition))
+
+  if (!canPrune) return condition
 
   // Start from the end and prune all trailing Static Pass nodes.
   // Always keep the first child, even if it is a Static Pass, because children must not be empty.
@@ -145,4 +153,20 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
   }
 
   return condition
+}
+
+const isDynamicParamType = (condition: Condition): boolean => {
+  switch (condition.paramType) {
+    case ParameterType.Static:
+      return false
+    case ParameterType.Dynamic:
+    case ParameterType.Array:
+      return true
+    case ParameterType.Tuple:
+    case ParameterType.AbiEncoded:
+    case ParameterType.None:
+      return condition.children?.some(isDynamicParamType) ?? false
+    default:
+      throw new Error(`Unknown paramType: ${condition.paramType}`)
+  }
 }

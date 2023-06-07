@@ -180,7 +180,7 @@ describe("normalizeCondition()", () => {
     })
   })
 
-  it("should prune trailing Static Pass nodes", () => {
+  it("should prune trailing Static Pass nodes on AbiEncoded", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.AbiEncoded,
@@ -195,6 +195,54 @@ describe("normalizeCondition()", () => {
       paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: [DUMMY_COMP(0)],
+    })
+  })
+
+  it("should prune trailing Static Pass nodes on dynamic tuples", () => {
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Tuple,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Dynamic,
+            operator: Operator.EqualToAvatar,
+          },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Tuple,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Dynamic,
+          operator: Operator.EqualToAvatar,
+        },
+      ],
+    })
+  })
+
+  it("should not prune trailing Static Pass nodes on static tuples", () => {
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Tuple,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Tuple,
+      operator: Operator.Matches,
+      children: [
+        DUMMY_COMP(0),
+        { paramType: ParameterType.Static, operator: Operator.Pass },
+        { paramType: ParameterType.Static, operator: Operator.Pass },
+      ],
     })
   })
 })
