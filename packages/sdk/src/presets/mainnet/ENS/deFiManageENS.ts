@@ -8,6 +8,7 @@ import {
   CVX,
   DAI,
   LDO,
+  rETH,
   rETH2,
   sETH2,
   stETH,
@@ -23,6 +24,7 @@ import {
   compound_v3,
   curve,
   maker,
+  rocket_pool,
   uniswapv3,
 } from "../addresses"
 import { staticEqual, staticOneOf } from "../../helpers/utils"
@@ -538,11 +540,83 @@ const preset = {
     allow.mainnet.aura.aurabb_aV3_USD_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // Aura rETH/WETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([balancer.B_rETH_STABLE], [aura.BOOSTER]),
+    // ...allowErc20Approve([rETH, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
+
+    // {
+    //   targetAddress: aura.BOOSTER,
+    //   signature: "deposit(uint256,uint256,bool)",
+    //   params: {
+    //     [0]: staticEqual(109, "uint256"), // Aura poolId
+    //   },
+    // },
+    allow.mainnet.aura.booster["deposit"](
+      109), // Aura poolId
+
+    {
+      targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
+      signature:
+        "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(aura.auraB_rETH_STABLE_REWARDER, "address"),
+        [1]: staticOneOf([rETH, WETH], "address"),
+        [3]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // Balancer PoolId
+        [4]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000a0",
+          "bytes32"
+        ), // Offset of tuple from beginning 160=32*5
+        [5]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000080",
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
+        [6]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
+        [7]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000140",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
+        [9]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000002",
+          "bytes32"
+        ), // Length of address[] = 2
+        [10]: staticEqual(rETH, "address"),
+        [11]: staticEqual(WETH, "address"),
+        [12]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000002",
+          "bytes32"
+        ), // Length of unit256[] = 2
+        [15]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Length of bytes 192=32*6
+      },
+    },
+
+    // {
+    //   targetAddress: auraB_rETH_STABLE_REWARDER,
+    //   signature: "withdrawAndUnwrap(uint256,bool)",
+    // },
+    allow.mainnet.aura.auraB_rETH_stable_rewarder["withdrawAndUnwrap"](),
+
+    // {
+    //   targetAddress: auraB_rETH_STABLE_REWARDER,
+    //   signature: "getReward()",
+    // },
+    allow.mainnet.aura.auraB_rETH_stable_rewarder["getReward()"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // BALANCER
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer wstETH/WETH pool
+    // Balancer - wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     // ...allowErc20Approve([wstETH, WETH], [balancer.VAULT]),
     // ...allowErc20Approve([balancer.B_stETH_STABLE], [balancer.B_stETH_STABLE_GAUGE]),
@@ -569,10 +643,10 @@ const preset = {
         ), // Balancer PoolId
         [1]: staticEqual(AVATAR),
         [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of tuple from beginning 128=32*4
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of tuple from beginning 128=32*4
         // [4]: staticEqual(
         //   "0x0000000000000000000000000000000000000000000000000000000000000080",
         //   "bytes32"
@@ -630,10 +704,10 @@ const preset = {
         ), // Balancer PoolId
         [1]: staticEqual(AVATAR),
         [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of tuple from beginning 128=32*4
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of tuple from beginning 128=32*4
         // [4]: staticEqual(
         //   "0x0000000000000000000000000000000000000000000000000000000000000080",
         //   "bytes32"
@@ -778,10 +852,10 @@ const preset = {
         ), // Balancer Boosted Aave V3 PoolId
         [1]: staticEqual(AVATAR), // sender
         [2]: staticEqual(AVATAR), // recipient
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of tuple from beginning 128=32*4
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of tuple from beginning 128=32*4
         // [4]: staticEqual(
         //   "0x0000000000000000000000000000000000000000000000000000000000000080",
         //   "bytes32"
@@ -839,10 +913,10 @@ const preset = {
         ), // Balancer Boosted Aave V3 PoolId
         [1]: staticEqual(AVATAR), // sender
         [2]: staticEqual(AVATAR), // recipient
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of tuple from beginning 128=32*4
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"
+        // ), // Offset of tuple from beginning 128=32*4
         // [4]: staticEqual(
         //   "0x0000000000000000000000000000000000000000000000000000000000000080",
         //   "bytes32"
@@ -897,6 +971,132 @@ const preset = {
 
     // Claim BAL Rewards
     allow.mainnet.balancer.BAL_minter["mint"](balancer.bb_aV3_USD_GAUGE),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Balancer - rETH/WETH pool
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([rETH, WETH], [balancer.VAULT]),
+    // ...allowErc20Approve([balancer.B_rETH_STABLE], [balancer.B_rETH_STABLE_GAUGE]),
+
+    // Add Liquidity (using WETH)
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"), // Offset of tuple from beginning 128=32*4
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //   "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        // [6]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //   "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of address[] = 2
+        // [9]: staticEqual(rETH, "address"),
+        // // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        // [10]: staticEqual(WETH, "address"),
+        // [11]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of unit256[] = 2
+        // [14]: staticOneOf([
+        //   "0x00000000000000000000000000000000000000000000000000000000000000a0",
+        //   "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000040"
+        // ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [15]: staticOneOf([
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000003"
+        // ],
+        //   "bytes32"
+        // ), // Join Kind
+      },
+      // send: true, // IMPORTANT: we only allow WETH -> If we allow ETH and WETH we could lose the ETH we send
+    },
+
+    // Remove Liquidity
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+        // [3]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"), // Offset of tuple from beginning 128=32*4
+        // [4]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000080",
+        //   "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+        // [5]: staticEqual(
+        //   "0x00000000000000000000000000000000000000000000000000000000000000e0",
+        //   "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+        // [6]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000140",
+        //   "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of address[] = 2
+        // [9]: staticEqual(wstETH, "address"),
+        // [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
+        // [11]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002",
+        //   "bytes32"
+        // ), // Length of unit256[] = 2
+        // [14]: staticOneOf([
+        //   "0x0000000000000000000000000000000000000000000000000000000000000060",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000040",
+        //   "0x00000000000000000000000000000000000000000000000000000000000000c0",
+        // ],
+        //   "bytes32"
+        // ), // Length of bytes
+        // [15]: staticOneOf([
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000001",
+        //   "0x0000000000000000000000000000000000000000000000000000000000000002"
+        // ],
+        //   "bytes32"
+        // ), // Join Kind
+      },
+    },
+
+    // Stake
+    allow.mainnet.balancer.B_rETH_stable_gauge["deposit(uint256)"](),
+
+    // Unstake
+    allow.mainnet.balancer.B_rETH_stable_gauge["withdraw(uint256)"](),
+
+    // Claim Rewards
+    allow.mainnet.balancer.B_rETH_stable_gauge["claim_rewards()"](),
+
+    // Claim BAL Rewards
+    allow.mainnet.balancer.BAL_minter["mint"](
+      balancer.B_rETH_STABLE_GAUGE
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // CONVEX
@@ -1014,7 +1214,7 @@ const preset = {
     ),
 
     // Withdraw all
-    allow.mainnet.maker.dsr_manager["exit"](
+    allow.mainnet.maker.dsr_manager["exitAll"](
       AVATAR
     ),
 
@@ -1032,9 +1232,33 @@ const preset = {
     // from the blockchain before use. Network upgrades may have occurred since the previous interaction, resulting in 
     // outdated addresses. RocketStorage can never change address, so it is safe to store a reference to it.
     //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([rETH], [rocket_pool.SWAP_ROUTER]),
 
     // Deposit ETH
+    allow.mainnet.rocket_pool.deposit_pool["deposit"](
+      {
+        send: true
+      }
+    ),
 
+    // Withdraw ETH - Burns rETH in exchange for ETH
+    allow.mainnet.rocket_pool.rETH["burn"](),
+
+    // Swap ETH for rETH through SWAP_ROUTER - When there is not enough rETH on the DEPOSIT_POOL in exchange for the 
+    // ETH you are depositing, the SWAP_ROUTER swaps the ETH for rETH in secondary markets (Balancer and Uniswap).
+    allow.mainnet.rocket_pool.swap_router["swapTo"](
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        send: true
+      }
+    ),
+
+    // Swap rETH for ETH through SWAP_ROUTER - When there is not enough ETH on the DEPOSIT_POOL in exchange for the 
+    // rETH you are withdrawing, the SWAP_ROUTER swaps the rETH for ETH in secondary markets (Balancer and Uniswap).
+    allow.mainnet.rocket_pool.swap_router["swapFrom"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of tokens COMP, CRV, LDO, WETH, USDC, DAI and USDT in Uniswap

@@ -537,6 +537,25 @@ const preset = {
 
         //Swap CVX for ETH
         //allow.mainnet.curve.cvxETH_pool["exchange_underlying"](1, 0),
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // ROCKET POOL
+        //---------------------------------------------------------------------------------------------------------------------------------
+        // Swap ETH for rETH through SWAP_ROUTER - When there is not enough rETH on the DEPOSIT_POOL in exchange for the 
+        // ETH you are depositing, the SWAP_ROUTER swaps the ETH for rETH in secondary markets (Balancer and Uniswap).
+        allow.mainnet.rocket_pool.swap_router["swapTo"](
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            {
+                send: true
+            }
+        ),
+
+        // Swap rETH for ETH through SWAP_ROUTER - When there is not enough ETH on the DEPOSIT_POOL in exchange for the 
+        // rETH you are withdrawing, the SWAP_ROUTER swaps the rETH for ETH in secondary markets (Balancer and Uniswap).
+        allow.mainnet.rocket_pool.swap_router["swapFrom"](),
     ],
     placeholders: { AVATAR },
 } satisfies RolePreset

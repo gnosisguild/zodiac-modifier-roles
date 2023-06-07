@@ -25,17 +25,17 @@ export default defineConfig({
         auraB_stETH_stable_rewarder:
           "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528",
         auraB_auraBAL_stable_rewarder:
-          "0xACAdA51C320947E7ed1a0D0F6b939b0FF465E4c2",
+          "0x89D3D732da8bf0f88659Cf3738E5E44e553f9ED7",
         auraB_rETH_stable_rewarder:
-          "0x001B78CEC62DcFdc660E06A91Eb1bC966541d758",
+          "0xDd1fE5AD401D4777cE89959b7fa587e569Bf125D",
         auraB_80GNO_20WETH_rewarder:
           "0xD3780729035c5b302f76ced0E7F74cF0Fb7c739a",
-        aura50COW_50GNO_rewarder: "0x6256518aE9a97C408a03AAF1A244989Ce6B937F6",
+        aura50COW_50GNO_rewarder: "0x82FeB430d9D14eE5E635C41807e03fD8F5FfFDeC",
         aura50WSTETH_50LDO_rewarder:
-          "0x6c3f6C327DE4aE51a2DfAaF3431b3c508ec8D3EB",
+          "0x5209dB28b3cF22a944401c83370Af7A703ffFb08",
         aura50WETH_50AURA_rewarder:
-          "0x712CC5BeD99aA06fC4D5FB50Aea3750fA5161D0f",
-        aura50COW_50WETH_rewarder: "0x228054e9c056F024FC724F515A2a8764Ae175ED6",
+          "0x1204f5060bE8b716F5A62b4Df4cE32acD01a69f5",
+        aura50COW_50WETH_rewarder: "0xA6e54eA1C67396Bde9e92cA462197bE59Af3E875",
         auraBAL_staking_rewarder: "0x00A7BA8Ae7bca0B10A32Ea1f8e2a1Da980c6CAd2",
         aurabb_aV3_USD_rewarder: "0xD48451A61d5190a1Ba7C9D17056490cB5d50999d",
         aura_locker: "0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC",
@@ -113,7 +113,9 @@ export default defineConfig({
         dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb"
       },
       rocket_pool: {
-        deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8" // This address might due to Rocket Pool's Architecture
+        deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture
+        rETH: "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        swap_router: "0x16d5a408e807db8ef7c578279beeee6b228f1c1c"
       },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
