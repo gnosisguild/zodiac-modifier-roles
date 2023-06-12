@@ -459,7 +459,8 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // AURA wstETH/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    //...allowErc20Approve([WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
+    // ...allowErc20Approve([wstETH, WETH], [AURA_REWARD_POOL_DEPOSIT_WRAPPER]),
+    // ...allowErc20Approve([balancer.B_stETH_STABLE], [aura.BOOSTER]),
 
     //deposiSingle: the (address[],uint256[],bytes,bool) tuple argument represents the request data for joining the pool
     /* request=(
@@ -471,14 +472,16 @@ const preset = {
         */
     //userData specifies the JoinKind, see https://dev.balancer.fi/resources/joins-and-exits/pool-joins
 
-    // Desposit using only WETH
+    allow.mainnet.aura.booster["deposit"](
+      115), // Aura poolId
+
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
       signature:
         "depositSingle(address,address,uint256,bytes32,(address[],uint256[],bytes,bool))",
       params: {
         [0]: staticEqual(aura.auraB_stETH_STABLE_REWARDER, "address"),
-        [1]: staticEqual(WETH, "address"),
+        [1]: staticOneOf([wstETH, WETH], "address"),
         [3]: staticEqual(
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
           "bytes32"

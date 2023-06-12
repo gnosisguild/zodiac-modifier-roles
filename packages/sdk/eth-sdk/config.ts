@@ -23,7 +23,7 @@ export default defineConfig({
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
         auraB_stETH_stable_rewarder:
-          "0xe4683Fe8F53da14cA5DAc4251EaDFb3aa614d528",
+          "0x59D66C58E83A26d6a0E35114323f65c3945c89c1",
         auraB_auraBAL_stable_rewarder:
           "0x89D3D732da8bf0f88659Cf3738E5E44e553f9ED7",
         auraB_rETH_stable_rewarder:
