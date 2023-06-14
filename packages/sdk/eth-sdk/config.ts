@@ -98,7 +98,7 @@ export default defineConfig({
         cDAIcUSDC_gauge: "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
         cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06",
         x3CRV_pool: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
-        cvxETH_pool: "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4",
+        cvxETH_pool: "0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4",
       },
       idle: {
         stEthCdo: "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8",
@@ -115,7 +115,7 @@ export default defineConfig({
       rocket_pool: {
         deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture
         rETH: "0xae78736Cd615f374D3085123A210448E74Fc6393",
-        swap_router: "0x16d5a408e807db8ef7c578279beeee6b228f1c1c"
+        swap_router: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C"
       },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",

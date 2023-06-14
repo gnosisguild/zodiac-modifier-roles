@@ -1198,7 +1198,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Maker - DRS (DAI Savings Rate)
+    // Maker - DSR (DAI Savings Rate)
     // The DsrManager provides an easy to use smart contract that allows service providers to deposit/withdraw dai into 
     // the DSR contract pot, and activate/deactivate the Dai Savings Rate to start earning savings on a pool of dai in a single 
     // function call.
@@ -1237,7 +1237,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // ...allowErc20Approve([rETH], [rocket_pool.SWAP_ROUTER]),
 
-    // Deposit ETH
+    // Deposit ETH in exchange for rETH
     allow.mainnet.rocket_pool.deposit_pool["deposit"](
       {
         send: true

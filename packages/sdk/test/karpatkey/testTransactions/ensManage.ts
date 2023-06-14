@@ -128,7 +128,7 @@ export default [
     data: "0x69328dec0000000000000000000000006b175474e89094c44da98b954eedeac495271d0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004F2083f5fBede34C2714aFfb3105539775f7FE64",
   },
   //---------------------------------------------------------------------------------------------------------------------------------
-  // AAVE V3 - Deposit DAI
+  // AAVE V3 - Deposit USDC
   //---------------------------------------------------------------------------------------------------------------------------------
   //supply(address asset,uint256 amount,address onBehalfOf,uint16 referralCode)
   {
