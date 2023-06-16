@@ -108,6 +108,7 @@ export default defineConfig({
       lido: {
         stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        unstETH: "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1"
       },
       maker: {
         dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb"

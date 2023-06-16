@@ -23,6 +23,7 @@ import {
   compound_v2,
   compound_v3,
   curve,
+  lido,
   maker,
   rocket_pool,
   uniswapv3,
@@ -42,6 +43,7 @@ const preset = {
     // LIDO
     //---------------------------------------------------------------------------------------------------------------------------------
     // ...allowErc20Approve([stETH], [wstETH]),
+    // ...allowErc20Approve([stETH, wstETH], [lido.unstETH]),
 
     // {
     //   targetAddress: stETH,
@@ -59,6 +61,23 @@ const preset = {
     allow.mainnet.lido.wstETH["wrap"](),
     // { targetAddress: wstETH, signature: "unwrap(uint256)" }
     allow.mainnet.lido.wstETH["unwrap"](),
+
+    // Request stETH Withdrawal - Locks your stETH in the queue. In exchange you receive an NFT, that represents your position 
+    // in the queue
+    allow.mainnet.lido.unstETH["requestWithdrawals"](
+      undefined,
+      AVATAR
+    ),
+
+    // Request wstETH Withdrawal - Transfers the wstETH to the unstETH to be burned in exchange for stETH. Then it locks your stETH
+    // in the queue. In exchange you receive an NFT, that represents your position in the queue
+    allow.mainnet.lido.unstETH["requestWithdrawalsWstETH"](
+      undefined,
+      AVATAR
+    ),
+
+    // Claim stETH - Once the request is finalized by the oracle report and becomes claimable claim your ether, burning the NFT
+    allow.mainnet.lido.unstETH["claimWithdrawals"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2

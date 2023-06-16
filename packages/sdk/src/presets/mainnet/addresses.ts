@@ -183,6 +183,10 @@ export const curve = {
   cxvETH_POOL: "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4",
 }
 
+export const lido = {
+  unstETH: "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1"
+}
+
 export const maker = {
   DSR_MANAGER: "0x373238337Bfe1146fb49989fc222523f83081dDb"
 }
