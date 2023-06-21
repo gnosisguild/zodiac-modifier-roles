@@ -381,7 +381,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - cDAI/cUSDC
     //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC], [curve.cDAIcUSDC_POOL]),
+    // ...allowErc20Approve([DAI, USDC, compound_v2.cDAI, compound_v2.cUSDC], [curve.cDAIcUSDC_POOL]),
     // ...allowErc20Approve([curve.crvcDAIcUSDC], [curve.cDAIcUSDC_GAUGE]),
     // ...allowErc20Approve([DAI, USDC], [curve.cDAIcUSDC_ZAP]),
     // ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC, DAI, USDC], [curve.STAKE_DEPOSIT_ZAP]),
