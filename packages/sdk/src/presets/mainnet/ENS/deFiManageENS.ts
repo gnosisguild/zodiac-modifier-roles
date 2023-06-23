@@ -26,6 +26,7 @@ import {
   lido,
   maker,
   rocket_pool,
+  sushiswap,
   uniswapv3,
 } from "../addresses"
 import { staticEqual, staticOneOf } from "../../helpers/utils"
@@ -1646,13 +1647,13 @@ const preset = {
     // Swapping of COMP, BAL, LDO, CRV, WETH, USDC, USDT and DAI in SushiSwap
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    /* ...allowErc20Approve(
-          [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
-          [SUSHISWAP_ROUTER]
-        ), */
+    //  ...allowErc20Approve(
+    //       [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
+    //       [sushiswap.ROUTER]
+    //     ),
 
     // {
-    //     targetAddress: SUSHISWAP_ROUTER,
+    //     targetAddress: sushiswap.ROUTER,
     //     signature:
     //         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
     //     params: {
@@ -1731,6 +1732,23 @@ const preset = {
           [DAI, USDT],
         ],
       },
+      AVATAR
+    ),
+
+    // Swaps using ROUTE_PROCESSOR_3
+    // ...allowErc20Approve(
+    //     [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
+    //     [sushiswap.ROUTE_PROCESSOR_3]
+    //   ),
+    allow.mainnet.sushiswap.route_processor_3["processRoute"](
+      {
+        oneOf: [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI]
+      },
+      undefined,
+      {
+        oneOf: [WETH, USDC, USDT, DAI]
+      },
+      undefined,
       AVATAR
     ),
 

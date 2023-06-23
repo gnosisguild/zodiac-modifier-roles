@@ -127,6 +127,7 @@ export default defineConfig({
       },
       sushiswap: {
         router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
+        route_processor_3: "0x827179dD56d07A7eeA32e3873493835da2866976"
       },
       uniswapv3: {
         positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
