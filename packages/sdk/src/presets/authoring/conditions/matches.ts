@@ -2,7 +2,13 @@ import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
 import { ParamType } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
-import { AbiType, Placeholder, PresetCondition } from "../../types"
+import {
+  AbiType,
+  Placeholder,
+  PresetCondition,
+  PresetFunction,
+} from "../../types"
+import { coercePresetFunction } from "../../utils"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
@@ -86,17 +92,7 @@ export const matches =
     }
   }
 
-/**
- * Matches the parameters part of EVM call data against a structure of conditions.
- *
- * Skips over the first 4 bytes (function selector) and matches the ABI encoded parameters against the structure of conditions.
- * Optionally, also checks the function selector.
- *
- * @param scoping The conditions structure over the decoded parameters
- * @param abiTypes The parameter types defining how to decode bytes
- * @param selector If set, checks that the 4 bytes function selector matches the given value
- **/
-export const calldataMatches =
+const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
     abiTypes: AbiType[],
@@ -136,11 +132,84 @@ export const calldataMatches =
         )
       }
 
-      return and(bitmask({ mask: selector, value: selector }), matchesCondition)
+      return and(
+        bitmask({ mask: selector, value: selector }),
+        () => matchesCondition
+      )(ParamType.from("bytes"))
     }
 
     return matchesCondition
   }
+
+const calldataMatchesPresetFunction =
+  (presetFunction: PresetFunction) => (abiType?: ParamType) => {
+    // only supported at the top level or for bytes type params
+    if (abiType && abiType.type !== "bytes") {
+      throw new Error(
+        `Can only use \`calldataMatches\` on bytes type params, got: ${abiType.type}`
+      )
+    }
+
+    const { selector, condition } = coercePresetFunction(presetFunction)
+    if (condition) {
+      if (
+        condition.operator !== Operator.Matches ||
+        condition.paramType !== ParameterType.AbiEncoded
+      ) {
+        throw new Error(
+          `matchesCalldata expects a preset function with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+            Operator[condition.operator]
+          }\`, \`ParamType.${ParameterType[condition.paramType]}\``
+        )
+      }
+    }
+
+    const selectorCondition = bitmask({
+      mask: "0xffffffff0000000000000000000000",
+      value: selector,
+    })
+
+    return (
+      condition ? and(selectorCondition, () => condition) : selectorCondition
+    )(ParamType.from("bytes"))
+  }
+
+type CalldataMatches = {
+  /**
+   * Matches the parameters part of EVM call data against a structure of conditions.
+   *
+   * Skips over the first 4 bytes (function selector) and matches the ABI encoded parameters against the structure of conditions.
+   * Optionally, also checks the function selector.
+   *
+   * @param scoping The conditions structure over the decoded parameters
+   * @param abiTypes The parameter types defining how to decode bytes
+   * @param selector If set, checks that the 4 bytes function selector matches the given value
+   **/
+  <S extends TupleScopings<any>>(
+    scopings: S,
+    abiTypes: AbiType[],
+    selector?: `0x${string}`
+  ): (abiType?: ParamType) => PresetCondition
+
+  /**
+   * Matches EVM calldata TODO
+   *
+   * @param presetFunction TODO
+   **/
+  (presetFunction: PresetFunction): (abiType?: ParamType) => PresetCondition
+}
+
+export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
+  scopingsOrPresetFunction: S | PresetFunction,
+  abiTypes?: AbiType[],
+  selector?: `0x${string}`
+): ((abiType?: ParamType) => PresetCondition) => {
+  return Array.isArray(scopingsOrPresetFunction) && abiTypes
+    ? calldataMatchesScopings(scopingsOrPresetFunction, abiTypes, selector)
+    : calldataMatchesPresetFunction(
+        scopingsOrPresetFunction as unknown as PresetFunction
+      )
+}
 
 /**
  * Maps a scoping (shortcut notation or condition function) to preset conditions.

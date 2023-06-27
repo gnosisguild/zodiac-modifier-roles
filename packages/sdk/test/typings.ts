@@ -20,3 +20,11 @@ const _t04: Scoping<{ a: Promise<string> }> = { a: Promise.resolve("a") }
 
 // @ts-expect-error - It should only be allowed to use gt on BigNumberish scopings
 const _t05: Scoping<string[]> = c.gt(0)
+
+// calldataMatches should have an overload scopings and ABI types
+c.calldataMatches([], [])
+// calldataMatches should have an overload allowing to pass a PresetFunction
+c.calldataMatches({
+  targetAddress: "0x1234567890123456789012345678901234567890",
+  selector: "0x12345678",
+})
