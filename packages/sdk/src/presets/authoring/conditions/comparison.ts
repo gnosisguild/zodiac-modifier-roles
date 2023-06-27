@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers"
-import { concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
+import { arrayify, concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
 import { Placeholder } from "../../types"
@@ -85,15 +85,27 @@ export const bitmask =
       )
     }
 
-    // TODO better errors for values that don't fit
+    if (shift < 0 || shift >= 65536) {
+      throw new Error("shift is out of range, must be between 0 and 65535")
+    }
+
+    const maskBytes = arrayify(mask)
+    if (maskBytes.length > 15) {
+      throw new Error("mask is too long, maximum length is 15 bytes")
+    }
+    const valueBytes = arrayify(value)
+    if (maskBytes.length > 15) {
+      throw new Error("value is too long, maximum length is 15 bytes")
+    }
+
     return {
       paramType,
       operator: Operator.Bitmask,
       compValue: hexlify(
         concat([
           zeroPad(hexlify(shift), 2),
-          zeroPad(mask, 15),
-          zeroPad(value, 15),
+          zeroPadRight(maskBytes, 15),
+          zeroPadRight(valueBytes, 15),
         ])
       ),
     }
@@ -106,4 +118,10 @@ interface Bitmask {
   mask: BytesLike
   /** The 15 bytes comparison value, defines the expected value (`0` or `1`) for the bit at that position */
   value: BytesLike
+}
+
+function zeroPadRight(value: Uint8Array, length: number): Uint8Array {
+  const result = new Uint8Array(length)
+  result.set(value, 0)
+  return result
 }
