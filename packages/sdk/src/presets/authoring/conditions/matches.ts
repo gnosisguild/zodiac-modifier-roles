@@ -4,7 +4,8 @@ import { ParamType } from "ethers/lib/utils"
 import { Operator, ParameterType } from "../../../types"
 import { AbiType, Placeholder, PresetCondition } from "../../types"
 
-import { eq } from "./comparison"
+import { and } from "./branching"
+import { bitmask, eq } from "./comparison"
 import {
   ConditionFunction,
   Scoping,
@@ -89,12 +90,18 @@ export const matches =
  * Matches the parameters part of EVM call data against a structure of conditions.
  *
  * Skips over the first 4 bytes (function selector) and matches the ABI encoded parameters against the structure of conditions.
+ * Optionally, also checks the function selector.
  *
  * @param scoping The conditions structure over the decoded parameters
  * @param abiTypes The parameter types defining how to decode bytes
+ * @param selector If set, checks that the 4 bytes function selector matches the given value
  **/
 export const calldataMatches =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
+  <S extends TupleScopings<any>>(
+    scopings: S,
+    abiTypes: AbiType[],
+    selector?: `0x${string}`
+  ) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 
@@ -114,13 +121,25 @@ export const calldataMatches =
     assertValidConditionsKeys(conditions, paramTypes)
     assertCompatibleParamTypes(conditions, paramTypes)
 
-    return {
+    const matchesCondition = {
       paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
       ),
     }
+
+    if (selector) {
+      if (selector.length !== 10) {
+        throw new Error(
+          `Selector must be exactly 4 bytes long, got: ${selector.length}`
+        )
+      }
+
+      return and(bitmask({ mask: selector, value: selector }), matchesCondition)
+    }
+
+    return matchesCondition
   }
 
 /**
