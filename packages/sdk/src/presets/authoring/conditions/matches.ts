@@ -86,12 +86,14 @@ export const matches =
   }
 
 /**
- * Matches ABI-encoded bytes against a structure of conditions.
+ * Matches the parameters part of EVM call data against a structure of conditions.
+ *
+ * Skips over the first 4 bytes (function selector) and matches the ABI encoded parameters against the structure of conditions.
  *
  * @param scoping The conditions structure over the decoded parameters
  * @param abiTypes The parameter types defining how to decode bytes
  **/
-export const matchesAbi =
+export const calldataMatches =
   <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
@@ -99,7 +101,7 @@ export const matchesAbi =
     // only supported at the top level or for bytes type params
     if (abiType && abiType.type !== "bytes") {
       throw new Error(
-        `Can only use \`matchesAbi\` on bytes type params, got: ${abiType.type}`
+        `Can only use \`calldataMatches\` on bytes type params, got: ${abiType.type}`
       )
     }
 

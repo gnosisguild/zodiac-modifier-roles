@@ -15,7 +15,7 @@ import {
   callWithinAllowance,
   etherWithinAllowance,
 } from "./conditions/allowances"
-import { matchesAbi } from "./conditions/matches"
+import { calldataMatches } from "./conditions/matches"
 import { TupleScopings } from "./conditions/types"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
@@ -47,7 +47,7 @@ const makeAllowFunction = <
       signature: functionFragment.format("sighash"),
       condition:
         scopings.length > 0
-          ? matchesAbi(scopings, functionInputs)()
+          ? calldataMatches(scopings, functionInputs)()
           : undefined,
     }
     return applyOptions(coercePresetFunction(presetFunction), options)

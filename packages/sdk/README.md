@@ -134,7 +134,7 @@ A permission preset is a parametrized set of permissions. It can be applied to d
 {
   targetAddress: '0x182B723a58739a9c974cFDB385ceaDb237453c28',
   signature: "claim_rewards(address)",
-  condition: c.matchesAbi([AVATAR], ["address"]),
+  condition: c.calldataMatches([AVATAR], ["address"]),
 }
 ```
 
@@ -184,7 +184,7 @@ c.or(1, 2, 3) // a condition that checks if a numeric parameter equals either of
 - `eq`
 - `lt`
 - `gt`
-- `bitmask` _not yet implemented_
+- `bitmask`
 
 #### Array conditions
 
@@ -201,7 +201,7 @@ c.or(1, 2, 3) // a condition that checks if a numeric parameter equals either of
 #### Tuple matching
 
 - `matches`
-- `matchesAbi` (The same as `matches` but for ABI encoded `bytes` parameters)
+- `calldataMatches` (The same as `matches` but for the parameters part following the four bytes function selector of standard EVM call data)
 
 #### Allowance conditions
 
