@@ -118,7 +118,7 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.AbiEncoded, // TODO change to Calldata after contract updates
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -157,7 +157,7 @@ const calldataMatchesPresetFunction =
         condition.paramType !== ParameterType.AbiEncoded
       ) {
         throw new Error(
-          `matchesCalldata expects a preset function with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+          `calldataMatches expects a preset function with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
             Operator[condition.operator]
           }\`, \`ParamType.${ParameterType[condition.paramType]}\``
         )
@@ -210,6 +210,42 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
         scopingsOrPresetFunction as unknown as PresetFunction
       )
 }
+
+/**
+ * Matches standard ABI encoded bytes against a structure of conditions.
+ *
+ * @param scoping The conditions structure over the decoded parameters
+ * @param abiTypes The parameter types defining how to decode bytes
+ **/
+export const abiEncodedMatches =
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
+  (abiType?: ParamType) => {
+    const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
+
+    // only supported at the top level or for bytes type params
+    if (abiType && abiType.type !== "bytes") {
+      throw new Error(
+        `Can only use \`abiEncodedMatches\` on bytes type params, got: ${abiType.type}`
+      )
+    }
+
+    // map scoping items to conditions
+    const conditions: (PresetCondition | undefined)[] = paramTypes.map(
+      (type, index) => mapScoping(scopings[index], type)
+    )
+
+    // sanity checks
+    assertValidConditionsKeys(conditions, paramTypes)
+    assertCompatibleParamTypes(conditions, paramTypes)
+
+    return {
+      paramType: ParameterType.AbiEncoded, // TODO should this just be Dynamic?
+      operator: Operator.Matches,
+      children: conditions.map(
+        (condition, index) => condition || describeStructure(paramTypes[index])
+      ),
+    }
+  }
 
 /**
  * Maps a scoping (shortcut notation or condition function) to preset conditions.
