@@ -11,10 +11,6 @@ export type ConditionFunction<T> = (
   _?: T // we must use the generic to make TS check on it (see: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-type-inference-work-on-this-interface-interface-foot--)
 ) => PresetCondition
 
-export type NestedRecordOrArray<T> =
-  | { [name: string]: T | NestedRecordOrArray<T> }
-  | (T | NestedRecordOrArray<T>)[]
-
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
 type PrimitiveScoping<T extends PrimitiveValue> =
@@ -26,7 +22,10 @@ export type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
 export type ArrayScoping<T extends any[]> =
-  | (Awaited<ArrayElement<T>> | Placeholder<Awaited<ArrayElement<T>>>)[]
+  | readonly (
+      | Awaited<ArrayElement<T>>
+      | Placeholder<Awaited<ArrayElement<T>>>
+    )[]
   | ConditionFunction<Awaited<ArrayElement<T>>[]>
 
 export type StructScoping<Struct extends { [key: string]: any }> =
