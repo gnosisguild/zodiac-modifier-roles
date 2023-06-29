@@ -80,7 +80,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -146,13 +146,13 @@ describe("Operator", async () => {
         },
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -213,7 +213,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -280,7 +280,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -360,7 +360,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -456,7 +456,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -604,7 +604,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -701,7 +701,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -761,7 +761,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -849,7 +849,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -991,21 +991,21 @@ describe("Operator", async () => {
           // 1
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 2
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 3
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },

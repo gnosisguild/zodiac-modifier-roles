@@ -36,7 +36,7 @@ describe("Decoder library", async () => {
     });
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -82,7 +82,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -120,7 +120,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -170,7 +170,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Pass,
       children: [
         {
@@ -228,7 +228,7 @@ describe("Decoder library", async () => {
       ]);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -296,7 +296,7 @@ describe("Decoder library", async () => {
     );
 
     const nestedLayout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Pass,
       children: [
         {
@@ -313,7 +313,7 @@ describe("Decoder library", async () => {
     };
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Pass,
       children: [nestedLayout],
     };
@@ -348,7 +348,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -394,7 +394,7 @@ describe("Decoder library", async () => {
 
     assert(data);
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -430,7 +430,7 @@ describe("Decoder library", async () => {
     ]);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -484,7 +484,7 @@ describe("Decoder library", async () => {
     });
 
     const nestedLayout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -512,7 +512,7 @@ describe("Decoder library", async () => {
     };
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -548,7 +548,7 @@ describe("Decoder library", async () => {
     assert(data);
 
     const layout = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -630,7 +630,7 @@ describe("Decoder library", async () => {
         operator: Operator.Or,
         children: [
           {
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             children: [
               {
@@ -646,7 +646,7 @@ describe("Decoder library", async () => {
             ],
           },
           {
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             children: [
               {
@@ -662,7 +662,7 @@ describe("Decoder library", async () => {
             ],
           },
           {
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             children: [
               {
@@ -705,7 +705,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -745,7 +745,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -825,7 +825,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -895,7 +895,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -931,7 +931,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -967,7 +967,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1034,7 +1034,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1103,7 +1103,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1166,7 +1166,7 @@ describe("Decoder library", async () => {
 
       assert(data);
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1215,7 +1215,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1280,7 +1280,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1348,7 +1348,7 @@ describe("Decoder library", async () => {
       );
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1429,7 +1429,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1569,7 +1569,7 @@ describe("Decoder library", async () => {
       assert(data);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1654,7 +1654,7 @@ describe("Decoder library", async () => {
         ]);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1757,7 +1757,7 @@ describe("Decoder library", async () => {
         ]);
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1876,7 +1876,7 @@ describe("Decoder library", async () => {
         );
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1885,7 +1885,7 @@ describe("Decoder library", async () => {
             children: [],
           },
           {
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             children: [
               {
@@ -1938,7 +1938,7 @@ describe("Decoder library", async () => {
       });
 
       const nestedLayout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1972,7 +1972,7 @@ describe("Decoder library", async () => {
       };
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -2059,7 +2059,7 @@ describe("Decoder library", async () => {
       ]);
 
       const nestedLayout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -2087,7 +2087,7 @@ describe("Decoder library", async () => {
       };
 
       const layout = {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {

@@ -70,7 +70,7 @@ describe("Roles", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -637,7 +637,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -658,7 +658,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -705,12 +705,12 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.AbiEncoded,
+              paramType: ParameterType.Calldata,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
@@ -776,7 +776,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -787,7 +787,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
@@ -817,7 +817,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -828,7 +828,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [

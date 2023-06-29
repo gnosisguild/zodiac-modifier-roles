@@ -35,7 +35,7 @@ describe("Integrity", async () => {
       enforce([
         {
           parent: 1,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -52,7 +52,7 @@ describe("Integrity", async () => {
       enforce([
         {
           parent: 1,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -69,7 +69,7 @@ describe("Integrity", async () => {
       enforce([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -91,7 +91,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x00",
           },
@@ -106,7 +106,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.And,
             compValue: "0x",
           },
@@ -147,7 +147,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x00",
           },
@@ -216,7 +216,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -235,7 +235,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -254,7 +254,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -273,13 +273,13 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.EqualTo,
             compValue: "0x",
           },
@@ -292,7 +292,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -311,7 +311,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -330,7 +330,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -349,7 +349,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -368,7 +368,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -387,7 +387,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -406,7 +406,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -425,7 +425,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -444,7 +444,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -463,7 +463,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -482,7 +482,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -501,7 +501,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -522,7 +522,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -541,7 +541,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -561,7 +561,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -580,7 +580,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -599,7 +599,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -619,7 +619,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -638,7 +638,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -657,7 +657,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -676,7 +676,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -696,7 +696,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -721,7 +721,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -751,7 +751,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -784,7 +784,7 @@ describe("Integrity", async () => {
       let conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -817,7 +817,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -844,7 +844,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -877,7 +877,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -904,7 +904,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -919,7 +919,7 @@ describe("Integrity", async () => {
       let conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -952,7 +952,7 @@ describe("Integrity", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -993,7 +993,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1021,7 +1021,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1046,7 +1046,7 @@ describe("Integrity", async () => {
         enforce([
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1089,7 +1089,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1127,7 +1127,7 @@ describe("Integrity", async () => {
           enforce([
             {
               parent: 0,
-              paramType: ParameterType.AbiEncoded,
+              paramType: ParameterType.Calldata,
               operator: Operator.Pass,
               compValue: "0x",
             },
@@ -1164,7 +1164,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1220,7 +1220,7 @@ describe("Integrity", async () => {
           enforce([
             {
               parent: 0,
-              paramType: ParameterType.AbiEncoded,
+              paramType: ParameterType.Calldata,
               operator: Operator.Pass,
               compValue: "0x",
             },
@@ -1275,7 +1275,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1326,7 +1326,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1392,7 +1392,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1459,7 +1459,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1521,7 +1521,7 @@ describe("Integrity", async () => {
         const conditions = [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },

@@ -76,7 +76,7 @@ library Decoder {
                 result
             );
             result.size += 32;
-        } else if (paramType == ParameterType.AbiEncoded) {
+        } else if (paramType == ParameterType.Calldata) {
             __block__(
                 data,
                 location + 32 + 4,

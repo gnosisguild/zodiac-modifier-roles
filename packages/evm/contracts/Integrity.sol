@@ -63,7 +63,7 @@ library Integrity {
             if (
                 paramType != ParameterType.Tuple &&
                 paramType != ParameterType.Array &&
-                paramType != ParameterType.AbiEncoded
+                paramType != ParameterType.Calldata
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -162,7 +162,7 @@ library Integrity {
                 (conditions[i].operator == Operator.EtherWithinAllowance ||
                     conditions[i].operator == Operator.CallWithinAllowance) &&
                 conditions[conditions[i].parent].paramType !=
-                ParameterType.AbiEncoded
+                ParameterType.Calldata
             ) {
                 revert UnsuitableParent(i);
             }
@@ -201,7 +201,7 @@ library Integrity {
                 }
             } else if (
                 condition.paramType == ParameterType.Tuple ||
-                condition.paramType == ParameterType.AbiEncoded
+                condition.paramType == ParameterType.Calldata
             ) {
                 if (childBounds.length == 0) {
                     revert UnsuitableChildCount(i);
@@ -246,7 +246,7 @@ library Integrity {
             childrenBounds
         );
 
-        if (typeTree.paramType != ParameterType.AbiEncoded) {
+        if (typeTree.paramType != ParameterType.Calldata) {
             revert UnsuitableRootNode();
         }
     }

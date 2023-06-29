@@ -13,7 +13,7 @@ enum ParameterType {
     Dynamic,
     Tuple,
     Array,
-    AbiEncoded
+    Calldata
 }
 
 enum Operator {
