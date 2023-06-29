@@ -25,7 +25,7 @@ describe("Decoder library", async () => {
     };
   }
 
-  describe.only("Static", () => {
+  describe("Static", () => {
     it("plucks Static from top level", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
@@ -77,6 +77,7 @@ describe("Decoder library", async () => {
         )
       ).to.equal(BigNumber.from(123456789));
     });
+
     it("plucks Static from Tuple", async () => {
       const { decoder } = await loadFixture(setup);
 
@@ -196,6 +197,7 @@ describe("Decoder library", async () => {
         )
       );
     });
+
     it("plucks Static from embedded AbiEncoded", async () => {
       const { decoder } = await loadFixture(setup);
 
