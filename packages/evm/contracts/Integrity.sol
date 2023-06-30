@@ -63,7 +63,8 @@ library Integrity {
             if (
                 paramType != ParameterType.Tuple &&
                 paramType != ParameterType.Array &&
-                paramType != ParameterType.Calldata
+                paramType != ParameterType.Calldata &&
+                paramType != ParameterType.AbiEncoded
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -201,7 +202,8 @@ library Integrity {
                 }
             } else if (
                 condition.paramType == ParameterType.Tuple ||
-                condition.paramType == ParameterType.Calldata
+                condition.paramType == ParameterType.Calldata ||
+                condition.paramType == ParameterType.AbiEncoded
             ) {
                 if (childBounds.length == 0) {
                     revert UnsuitableChildCount(i);
@@ -286,9 +288,12 @@ library Integrity {
         uint256 j,
         Topology.Bounds[] memory childrenBounds
     ) private pure returns (bool) {
+        ParameterType leftParamType = Topology
+            .typeTree(conditions, i, childrenBounds)
+            .paramType;
         return
-            Topology.typeTree(conditions, i, childrenBounds).paramType ==
-            ParameterType.Calldata &&
+            (leftParamType == ParameterType.Calldata ||
+                leftParamType == ParameterType.AbiEncoded) &&
             Topology.typeTree(conditions, j, childrenBounds).paramType ==
             ParameterType.Dynamic;
     }

@@ -218,6 +218,69 @@ describe("Decoder library", async () => {
       await decoder.pluck(data as string, tupleField.location, tupleField.size)
     ).to.equal(encode(["bytes"], ["0xbadfed"], YesRemoveOffset));
   });
+  it("plucks Dynamic from embedded AbiEncoded", async () => {
+    const { decoder } = await loadFixture(setup);
+
+    const iface = new Interface(["function fn(bytes a)"]);
+    const embedded = defaultAbiCoder.encode(
+      ["bytes", "bool", "bytes2[]"],
+      ["0xbadfed", true, ["0xccdd", "0x3333"]]
+    );
+
+    const data = iface.encodeFunctionData("fn", [embedded]);
+
+    const condition = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: ParameterType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, condition);
+
+    const field1 = result.children[0].children[0];
+    expect(
+      await decoder.pluck(data as string, field1.location, field1.size)
+    ).to.equal(encode(["bytes"], ["0xbadfed"]));
+
+    const field2 = result.children[0].children[1];
+    expect(
+      await decoder.pluck(data as string, field2.location, field2.size)
+    ).to.equal(encode(["bool"], ["false"], false));
+
+    const field3 = result.children[0].children[2];
+    expect(
+      await decoder.pluck(data as string, field3.location, field3.size)
+    ).to.equal(encode(["bytes2[]"], [["0xccdd", "0x3333"]]));
+  });
+
   it("plucks Dynamic from type equivalent branch", async () => {
     const { decoder } = await loadFixture(setup);
 

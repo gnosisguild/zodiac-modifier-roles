@@ -44,6 +44,7 @@ export enum ParameterType {
   Tuple,
   Array,
   Calldata,
+  AbiEncoded,
 }
 
 export enum Operator {

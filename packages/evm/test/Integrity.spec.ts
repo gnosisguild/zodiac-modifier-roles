@@ -1568,52 +1568,30 @@ describe("Integrity", async () => {
       it("sibling type equivalence - ok", async () => {
         const { integrity, enforce } = await loadFixture(setup);
 
-        const conditions = [
-          {
-            parent: 0,
-            paramType: ParameterType.None,
-            operator: Operator.Or,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Calldata,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: ParameterType.Dynamic,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
-            paramType: ParameterType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ];
-        await expect(enforce(conditions)).to.not.be.reverted;
-
-        // Dynamic should not come first for EquvialentSiblingTypeTrees
+        // A function with a dynamic argument, which is also an embedded Calldata encoded field
         await expect(
           enforce([
             {
               parent: 0,
-              paramType: ParameterType.None,
-              operator: Operator.Or,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: ParameterType.Dynamic,
+              paramType: ParameterType.Calldata,
               operator: Operator.Pass,
               compValue: "0x",
             },
             {
               parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
               paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Dynamic,
               operator: Operator.Pass,
               compValue: "0x",
             },
@@ -1624,9 +1602,121 @@ describe("Integrity", async () => {
               compValue: "0x",
             },
           ])
+        ).to.not.be.reverted;
+
+        // A function with a dynamic argument, which is also an embedded AbiEncoded encoded field
+        await expect(
+          enforce([
+            {
+              parent: 0,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.AbiEncoded,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 2,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ])
+        ).to.not.be.reverted;
+
+        // Dynamic can't come before the Calldata node that actually defines the type tree and should be the Anchor
+        await expect(
+          enforce([
+            {
+              parent: 0,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+
+            {
+              parent: 3,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ])
         )
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
-          .withArgs(0);
+          .withArgs(1);
+
+        // Dynamic can't come before the AbiEncoded node that actually defines the type tree and should be the Anchor
+        await expect(
+          enforce([
+            {
+              parent: 0,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 1,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+
+            {
+              parent: 3,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ])
+        )
+          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+          .withArgs(1);
       });
     });
   });
