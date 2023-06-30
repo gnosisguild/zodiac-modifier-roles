@@ -236,7 +236,7 @@ library Integrity {
                     condition.paramType == ParameterType.Array) &&
                 childrenBounds[i].length > 1
             ) {
-                compatiblechildTypeTree(conditions, i, childrenBounds);
+                _compatibleSiblingTypes(conditions, i, childrenBounds);
             }
         }
 
@@ -251,7 +251,7 @@ library Integrity {
         }
     }
 
-    function compatiblechildTypeTree(
+    function _compatibleSiblingTypes(
         ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
@@ -259,17 +259,38 @@ library Integrity {
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
-        bytes32 id = typeTreeId(
-            Topology.typeTree(conditions, start, childrenBounds)
-        );
         for (uint256 j = start + 1; j < end; ++j) {
             if (
-                id !=
-                typeTreeId(Topology.typeTree(conditions, j, childrenBounds))
+                !_isTypeMatch(conditions, start, j, childrenBounds) &&
+                !_isTypeEquivalent(conditions, start, j, childrenBounds)
             ) {
                 revert UnsuitableChildTypeTree(index);
             }
         }
+    }
+
+    function _isTypeMatch(
+        ConditionFlat[] memory conditions,
+        uint256 i,
+        uint256 j,
+        Topology.Bounds[] memory childrenBounds
+    ) private pure returns (bool) {
+        return
+            typeTreeId(Topology.typeTree(conditions, i, childrenBounds)) ==
+            typeTreeId(Topology.typeTree(conditions, j, childrenBounds));
+    }
+
+    function _isTypeEquivalent(
+        ConditionFlat[] memory conditions,
+        uint256 i,
+        uint256 j,
+        Topology.Bounds[] memory childrenBounds
+    ) private pure returns (bool) {
+        return
+            Topology.typeTree(conditions, i, childrenBounds).paramType ==
+            ParameterType.Calldata &&
+            Topology.typeTree(conditions, j, childrenBounds).paramType ==
+            ParameterType.Dynamic;
     }
 
     function typeTreeId(

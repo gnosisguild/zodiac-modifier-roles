@@ -1565,6 +1565,69 @@ describe("Integrity", async () => {
         conditions[conditions.length - 1].paramType = ParameterType.Static;
         await expect(enforce(conditions)).to.not.be.reverted;
       });
+      it("sibling type equivalence - ok", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const conditions = [
+          {
+            parent: 0,
+            paramType: ParameterType.None,
+            operator: Operator.Or,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Calldata,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: ParameterType.Dynamic,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ];
+        await expect(enforce(conditions)).to.not.be.reverted;
+
+        // Dynamic should not come first for EquvialentSiblingTypeTrees
+        await expect(
+          enforce([
+            {
+              parent: 0,
+              paramType: ParameterType.None,
+              operator: Operator.Or,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.Dynamic,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: ParameterType.Calldata,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 2,
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ])
+        )
+          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+          .withArgs(0);
+      });
     });
   });
 });
