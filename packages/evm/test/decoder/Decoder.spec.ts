@@ -106,7 +106,7 @@ describe("Decoder library", async () => {
   it.skip("plucks Tuple from top level");
   it.skip("plucks Tuple from Tuple");
   it.skip("plucks Tuple from Array");
-  it.skip("plucks Tuple from nested AbiEncoded");
+  it.skip("plucks Tuple from nested Calldata");
   it("plucks Tuple with multiple dynamic fields", async () => {
     const { decoder, testEncoder } = await loadFixture(setup);
 
@@ -185,7 +185,7 @@ describe("Decoder library", async () => {
   it.skip("plucks Array from top level");
   it.skip("plucks Array from Tuple");
   it.skip("plucks Array from Array");
-  it.skip("plucks Array from nested AbiEncoded");
+  it.skip("plucks Array from nested Calldata");
 
   describe("TypeTree", async () => {
     it("top level variants get unfolded to its entrypoint form", async () => {
@@ -459,7 +459,7 @@ describe("Decoder library", async () => {
         await decoder.pluck(data, arrayField.location, arrayField.size)
       ).to.equal(encode(["uint256[]"], [[7, 8, 9]], YesRemoveOffset));
     });
-    it("extraneous Value in AbiEncoded gets inspected as None", async () => {
+    it("extraneous Value in Calldata gets inspected as None", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
       const { data } = await testEncoder.populateTransaction.staticFn(
         "0xeeff3344"

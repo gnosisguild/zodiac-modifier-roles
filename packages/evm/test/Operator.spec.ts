@@ -113,7 +113,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
   });
 
-  it("checks operator And over AbiEncoded", async () => {
+  it("checks operator And over Calldata", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getSighash(

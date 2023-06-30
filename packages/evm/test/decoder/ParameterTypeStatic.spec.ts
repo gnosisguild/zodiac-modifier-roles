@@ -198,7 +198,7 @@ describe("Decoder library", async () => {
       );
     });
 
-    it("plucks Static from embedded AbiEncoded", async () => {
+    it("plucks Static from embedded Calldata", async () => {
       const { decoder } = await loadFixture(setup);
 
       const iface = new Interface([

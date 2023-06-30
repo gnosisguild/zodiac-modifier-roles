@@ -746,7 +746,7 @@ describe("Integrity", async () => {
         ])
       ).to.be.revertedWithCustomError(integrity, "NotBFS");
     });
-    it("enforces (Ether/Call)WithinAllowance to be child of AbiEncoded", async () => {
+    it("enforces (Ether/Call)WithinAllowance to be child of Calldata", async () => {
       const { integrity, enforce } = await loadFixture(setup);
       const conditions = [
         {
@@ -898,7 +898,7 @@ describe("Integrity", async () => {
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(2);
     });
-    it("enforces abiEncoded to have at least one child", async () => {
+    it("enforces Calldata to have at least one child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       const conditions = [
@@ -1067,7 +1067,7 @@ describe("Integrity", async () => {
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
     });
-    it("enforces resolved root type to be AbiEncoded", async () => {
+    it("enforces resolved root type to be Calldata", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       await expect(

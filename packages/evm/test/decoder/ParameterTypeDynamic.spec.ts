@@ -155,7 +155,7 @@ describe("Decoder library", async () => {
       )
     ).to.equal(encode(["bytes"], ["0x004466ff"], YesRemoveOffset));
   });
-  it("plucks Dynamic from embedded AbiEncoded", async () => {
+  it("plucks Dynamic from embedded Calldata", async () => {
     const { decoder } = await loadFixture(setup);
 
     const iface = new Interface([

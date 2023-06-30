@@ -961,20 +961,20 @@ describe("Decoder library", async () => {
         await decoder.pluck(data, arrayField.location, arrayField.size)
       ).to.equal(encode(["uint256[]"], [[4, 5, 6]], YesRemoveOffset));
     });
-    it("plucks AbiEncoded from top level param", async () => {
+    it("plucks Calldata from top level param", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       const number = 123456789;
       const address = "0x0000000000000000000000000000000000000001";
 
-      const { data: nestedData } = await testEncoder.populateTransaction.simple(
+      const { data: embedded } = await testEncoder.populateTransaction.simple(
         number
       );
 
       const { data } =
         await testEncoder.populateTransaction.staticDynamicDynamic32(
           address,
-          nestedData as string,
+          embedded as string,
           []
         );
 
@@ -1015,16 +1015,16 @@ describe("Decoder library", async () => {
       const result = await decoder.inspect(data as string, layout);
 
       // check the nested uint
-      // const nestedUintField = result.children[1].children[0];
-      // expect(
-      //   await decoder.pluck(
-      //     data as string,
-      //     nestedUintField.location,
-      //     nestedUintField.size
-      //   )
-      // ).to.equal(encode(["uint256"], [number]));
+      const nestedUintField = result.children[1].children[0];
+      expect(
+        await decoder.pluck(
+          data as string,
+          nestedUintField.location,
+          nestedUintField.size
+        )
+      ).to.equal(encode(["uint256"], [number]));
     });
-    it("plucks nested AbiEncoded from within a tuple", async () => {
+    it("plucks nested Calldata from within a tuple", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data: nestedData } =
@@ -1137,7 +1137,7 @@ describe("Decoder library", async () => {
         )
       ).to.equal(encode(["uint256[]"], [[55, 66, 88]], YesRemoveOffset));
     });
-    it("plucks nested AbiEncoded from within an array", async () => {
+    it("plucks nested Calldata from within an array", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data: nestedData1 } =

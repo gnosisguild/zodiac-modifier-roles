@@ -165,7 +165,7 @@ describe("Operator - Matches", async () => {
     ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
-  it("evaluates operator Matches for AbiEncoded", async () => {
+  it("evaluates operator Matches for Calldata", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupTwoParamsStatic
     );

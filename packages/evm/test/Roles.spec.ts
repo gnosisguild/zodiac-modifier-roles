@@ -689,7 +689,7 @@ describe("Roles", async () => {
       await expect(invoke(testContract2.address, 0)).to.be.reverted;
     });
 
-    it("a permission with fields insided a nested AbiEncoded", async () => {
+    it("a permission with fields insided a nested Calldata", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
