@@ -230,7 +230,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status, Result memory) {
+    ) private view returns (Status, Result memory) {
         Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
@@ -289,7 +289,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
         if (condition.children.length != payload.children.length) {
@@ -329,7 +329,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < condition.children.length; ) {
@@ -364,7 +364,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < condition.children.length; ) {
@@ -397,7 +397,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory) {
+    ) private view returns (Status status, Result memory) {
         for (uint256 i; i < condition.children.length; ) {
             (status, ) = _walk(data, condition.children[i], payload, context);
             if (status == Status.Ok) {
@@ -421,7 +421,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
         uint256 length = condition.children.length;
@@ -454,7 +454,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < payload.children.length; ) {
@@ -486,7 +486,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status, Result memory result) {
+    ) private view returns (Status, Result memory result) {
         result.consumptions = context.consumptions;
 
         if (
@@ -614,7 +614,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         ParameterPayload memory payload,
         Context memory context
-    ) private pure returns (Status, Result memory) {
+    ) private view returns (Status, Result memory) {
         // 20 bytes on the left
         ICustomCondition adapter = ICustomCondition(
             address(bytes20(condition.compValue))
@@ -623,6 +623,7 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
 
         (bool success, bytes32 info) = adapter.check(
+            context.to,
             context.value,
             data,
             payload.location,
