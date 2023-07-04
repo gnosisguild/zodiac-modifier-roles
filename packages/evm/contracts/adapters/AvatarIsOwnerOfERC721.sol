@@ -10,7 +10,7 @@ interface IModifier {
     function target() external view returns (address);
 }
 
-contract ERC721IsOwnedByAvatar is ICustomCondition {
+contract AvatarIsOwnerOfERC721 is ICustomCondition {
     function check(
         address to,
         uint256 /* value */,

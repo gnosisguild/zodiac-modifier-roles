@@ -63,13 +63,13 @@ describe("Operator - Misc", async () => {
       },
 
       {
-        parent: 3, // ??
+        parent: 3,
         paramType: ParameterType.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(iface.getSighash("fnAllowed1")),
       },
       {
-        parent: 3, // ??
+        parent: 3,
         paramType: ParameterType.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(iface.getSighash("fnAllowed2")),

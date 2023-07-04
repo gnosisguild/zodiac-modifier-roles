@@ -14,7 +14,7 @@ import {
 import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
 
-describe("ERC721IsOwnedByAvatar", async () => {
+describe("AvatarIsOwnerOfERC721", async () => {
   async function setup() {
     const ROLE_KEY =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -45,7 +45,7 @@ describe("ERC721IsOwnedByAvatar", async () => {
     await roles.connect(owner).scopeTarget(ROLE_KEY, mockERC721.address);
 
     const CustomChecker = await hre.ethers.getContractFactory(
-      "ERC721IsOwnedByAvatar"
+      "AvatarIsOwnerOfERC721"
     );
     const customChecker = await CustomChecker.deploy();
 
@@ -88,7 +88,7 @@ describe("ERC721IsOwnedByAvatar", async () => {
     };
   }
 
-  it("evaluates operator Custom - result is check pass", async () => {
+  it("passes a comparison", async () => {
     const { roles, avatar, mockERC721, customChecker, scopeFunction, invoke } =
       await loadFixture(setup);
 
