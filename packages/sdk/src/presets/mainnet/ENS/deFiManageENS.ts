@@ -77,7 +77,8 @@ const preset = {
       AVATAR
     ),
 
-    // Claim stETH - Once the request is finalized by the oracle report and becomes claimable claim your ether, burning the NFT
+    // Claim ETH - Once the request is finalized by the oracle report and becomes claimable, 
+    // this function claims your ether and burns the NFT
     allow.mainnet.lido.unstETH["claimWithdrawals"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
