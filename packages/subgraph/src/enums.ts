@@ -23,10 +23,11 @@ export enum ParameterType {
   Dynamic = 2,
   Tuple = 3,
   Array = 4,
-  AbiEncoded = 5,
+  Calldata = 5,
+  AbiEncoded = 6,
 }
 
-export const ParameterTypeKeys = ["None", "Static", "Dynamic", "Tuple", "Array", "AbiEncoded"]
+export const ParameterTypeKeys = ["None", "Static", "Dynamic", "Tuple", "Array", "Calldata", "AbiEncoded"]
 
 export enum Operator {
   // 00:    EMPTY EXPRESSION (default, always passes)

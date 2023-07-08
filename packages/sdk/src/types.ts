@@ -23,7 +23,8 @@ export enum ParameterType {
   Dynamic = 2,
   Tuple = 3,
   Array = 4,
-  AbiEncoded = 5,
+  Calldata = 5,
+  AbiEncoded = 6,
 }
 
 export enum Operator {

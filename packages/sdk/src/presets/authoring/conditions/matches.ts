@@ -118,7 +118,7 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.AbiEncoded, // TODO change to Calldata after contract updates
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -154,7 +154,7 @@ const calldataMatchesPresetFunction =
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
-        condition.paramType !== ParameterType.AbiEncoded
+        condition.paramType !== ParameterType.Calldata
       ) {
         throw new Error(
           `calldataMatches expects a preset function with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
@@ -192,9 +192,12 @@ type CalldataMatches = {
   ): (abiType?: ParamType) => PresetCondition
 
   /**
-   * Matches EVM calldata TODO
+   * Matches EVM call data against a reference preset function.
    *
-   * @param presetFunction TODO
+   * The 4 bytes function selector is checked against the preset function selector.
+   * Also, preset function condition is evaluated on the call data.
+   *
+   * @param presetFunction The reference preset function
    **/
   (presetFunction: PresetFunction): (abiType?: ParamType) => PresetCondition
 }
@@ -239,7 +242,7 @@ export const abiEncodedMatches =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     return {
-      paramType: ParameterType.AbiEncoded, // TODO should this just be Dynamic?
+      paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])

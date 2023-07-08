@@ -39,7 +39,7 @@ export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]): Co
 }
 
 export const ERC2470_SINGLETON_FACTORY_ADDRESS = Address.fromString("0xce0042b868300000d44a59004da54a005ffdcf9f")
-export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0)) // TODO update to "0xbadfed0000000000000000000000000000000000000000000000000000badfed"?
+export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0))
 
 export function getRootConditionId(conditions: ScopeFunctionConditionsStruct[]): string {
   const packed = conditions
