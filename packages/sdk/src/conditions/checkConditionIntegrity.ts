@@ -7,9 +7,9 @@ export const checkConditionIntegrity = (condition: Condition): void => {
 
 export const checkRootConditionIntegrity = (condition: Condition): void => {
   const rootType = checkConsistentChildrenTypes(condition)
-  if (rootType !== ParameterType.AbiEncoded) {
+  if (rootType !== ParameterType.Calldata) {
     throw new Error(
-      `Root param type must be \`AbiEncoded\`, got \`${ParameterType[rootType]}\``
+      `Root param type must be \`Calldata\`, got \`${ParameterType[rootType]}\``
     )
   }
   checkConditionIntegrityRecursive(condition)
@@ -57,6 +57,7 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
     [Operator.Nor]: [ParameterType.None],
 
     [Operator.Matches]: [
+      ParameterType.Calldata,
       ParameterType.AbiEncoded,
       ParameterType.Tuple,
       ParameterType.Array,
@@ -162,7 +163,8 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator >= Operator.EqualToAvatar &&
-    condition.operator !== Operator.Custom &&
+    condition.operator !== Operator.Custom && // TODO Does this make sense? Can Custom have children?
+    condition.paramType !== ParameterType.Calldata &&
     condition.paramType !== ParameterType.AbiEncoded &&
     condition.paramType !== ParameterType.Tuple &&
     condition.paramType !== ParameterType.Array

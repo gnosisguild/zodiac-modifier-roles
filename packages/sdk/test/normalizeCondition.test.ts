@@ -180,6 +180,24 @@ describe("normalizeCondition()", () => {
     })
   })
 
+  it("should prune trailing Static Pass nodes on Calldata", () => {
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [DUMMY_COMP(0)],
+    })
+  })
+
   it("should prune trailing Static Pass nodes on AbiEncoded", () => {
     expect(
       normalizeCondition({

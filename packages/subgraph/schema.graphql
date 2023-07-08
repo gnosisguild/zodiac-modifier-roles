@@ -4,6 +4,7 @@ enum ParameterType {
   Dynamic
   Tuple
   Array
+  Calldata
   AbiEncoded
 }
 
@@ -24,7 +25,7 @@ enum Operator {
   Not # 4
   # ------------------------------------------------------------
   # 05-16: COMPLEX EXPRESSIONS
-  #          paramType: AbiEncoded / Tuple / Array,
+  #          paramType: Calldata / AbiEncoded / Tuple / Array,
   #          ✅ children
   #          🚫 compValue
   Matches # 5
@@ -41,7 +42,7 @@ enum Operator {
   _ComplexPlaceholder16
   # ------------------------------------------------------------
   # 17-31: COMPARISON EXPRESSIONS
-  #          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
+  #          paramType: Static / Dynamic / Tuple / Array
   #          🚫 children
   #          ✅ compValue
   EqualTo # 17

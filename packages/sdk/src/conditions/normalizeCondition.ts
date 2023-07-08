@@ -46,12 +46,13 @@ const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
   return condition
 }
 
-/** Removes trailing Static Pass nodes from Matches on dynamic tuples and AbiEncoded (they are useless) */
+/** Removes trailing Static Pass nodes from Matches on dynamic tuples, Calldata, and AbiEncoded (they are useless) */
 const pruneTrailingStaticPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
   const canPrune =
+    condition.paramType === ParameterType.Calldata ||
     condition.paramType === ParameterType.AbiEncoded ||
     (condition.paramType === ParameterType.Tuple &&
       isDynamicParamType(condition))
@@ -163,6 +164,7 @@ const isDynamicParamType = (condition: Condition): boolean => {
     case ParameterType.Array:
       return true
     case ParameterType.Tuple:
+    case ParameterType.Calldata:
     case ParameterType.AbiEncoded:
     case ParameterType.None:
       return condition.children?.some(isDynamicParamType) ?? false

@@ -106,7 +106,7 @@ This layer has diffing & patching functions on role configurations, operating on
     {
       selector: "0x84e9bd7e",
       condition: {
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
           {

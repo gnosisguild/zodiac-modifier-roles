@@ -55,7 +55,7 @@ describe("checkConditionIntegrity()", () => {
 })
 
 describe("checkRootConditionIntegrity()", () => {
-  it("should throw if the root param type is not AbiEncoded", () => {
+  it("should throw if the root param type is not Calldata", () => {
     expect(() =>
       checkRootConditionIntegrity({
         paramType: ParameterType.None,
@@ -64,6 +64,6 @@ describe("checkRootConditionIntegrity()", () => {
           { paramType: ParameterType.Static, operator: Operator.Pass },
         ],
       })
-    ).to.throw("Root param type must be `AbiEncoded`, got `Static`")
+    ).to.throw("Root param type must be `Calldata`, got `Static`")
   })
 })

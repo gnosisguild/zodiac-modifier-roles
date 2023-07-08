@@ -43,7 +43,7 @@ export enum Operator {
   Nor = 3,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: AbiEncoded / Tuple / Array,
+  //          paramType: Calldata / AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   Matches = 5,
@@ -58,7 +58,7 @@ export enum Operator {
   EqualToAvatar = 15,
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
-  //          paramType: Static / Dynamic / Tuple / Array / AbiEncoded
+  //          paramType: Static / Dynamic / Tuple / Array
   //          🚫 children
   //          ✅ compValue
   EqualTo = 16, // paramType: Static / Dynamic / Tuple / Array
