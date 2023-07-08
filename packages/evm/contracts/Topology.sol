@@ -52,7 +52,7 @@ library Topology {
         } else if (
             paramType == ParameterType.Dynamic ||
             paramType == ParameterType.Array ||
-            paramType == ParameterType.AbiEncoded
+            paramType == ParameterType.Calldata
         ) {
             return false;
         } else {

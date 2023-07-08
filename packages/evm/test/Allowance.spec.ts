@@ -32,7 +32,7 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -66,7 +66,7 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -112,7 +112,7 @@ describe("Allowance", async () => {
 
     await scopeFunction(
       toConditionsFlat({
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
@@ -177,7 +177,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -240,7 +240,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -312,7 +312,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -407,7 +407,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -467,7 +467,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -534,7 +534,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
     const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.AbiEncoded,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
@@ -694,7 +694,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -717,7 +717,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -818,7 +818,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -841,7 +841,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -930,7 +930,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -953,7 +953,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1046,7 +1046,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1080,7 +1080,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1190,7 +1190,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1213,7 +1213,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1236,7 +1236,7 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },

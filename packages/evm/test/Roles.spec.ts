@@ -70,7 +70,7 @@ describe("Roles", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -637,7 +637,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -658,7 +658,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -689,7 +689,7 @@ describe("Roles", async () => {
       await expect(invoke(testContract2.address, 0)).to.be.reverted;
     });
 
-    it("a permission with fields insided a nested AbiEncoded", async () => {
+    it("a permission with fields insided a nested Calldata", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
@@ -705,12 +705,12 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.AbiEncoded,
+              paramType: ParameterType.Calldata,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
@@ -776,7 +776,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -787,7 +787,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
@@ -817,7 +817,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -828,7 +828,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [

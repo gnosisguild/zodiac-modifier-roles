@@ -43,6 +43,7 @@ export enum ParameterType {
   Dynamic,
   Tuple,
   Array,
+  Calldata,
   AbiEncoded,
 }
 
@@ -63,7 +64,7 @@ export enum Operator {
   /* 04: */ _Placeholder04,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: AbiEncoded / Tuple / Array,
+  //          paramType: Calldata / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   /* 05: */ Matches,

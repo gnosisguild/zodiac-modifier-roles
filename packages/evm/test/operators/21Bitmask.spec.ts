@@ -25,7 +25,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -76,7 +76,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -125,7 +125,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -175,7 +175,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -209,7 +209,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -241,7 +241,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -273,7 +273,7 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -302,7 +302,7 @@ describe("Operator - Bitmask", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -325,7 +325,7 @@ describe("Operator - Bitmask", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
