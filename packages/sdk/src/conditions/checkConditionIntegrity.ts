@@ -15,6 +15,10 @@ export const checkRootConditionIntegrity = (condition: Condition): void => {
   checkConditionIntegrityRecursive(condition)
 }
 
+/**
+ * Validates that logical condition children have consistent types.
+ * Since the children conditions address the very same value it does not make sense for them to declare incompatible param types.
+ * */
 const checkConsistentChildrenTypes = (condition: Condition): ParameterType => {
   if (condition.paramType !== ParameterType.None) {
     return condition.paramType
@@ -24,12 +28,34 @@ const checkConsistentChildrenTypes = (condition: Condition): ParameterType => {
   condition.children?.forEach((child) => {
     const childType = checkConsistentChildrenTypes(child)
     if (childType === ParameterType.None) return
-    if (expectedType && childType !== expectedType) {
+    if (!expectedType) {
+      expectedType = childType
+      return
+    }
+
+    if (childType === expectedType) return
+
+    if (
+      childType === ParameterType.Dynamic &&
+      (expectedType === ParameterType.Calldata ||
+        expectedType === ParameterType.AbiEncoded)
+    ) {
+      return
+    }
+
+    if (
+      (childType === ParameterType.Calldata ||
+        childType === ParameterType.AbiEncoded) &&
+      expectedType === ParameterType.Dynamic
+    ) {
       throw new Error(
-        `Inconsistent children types (\`${ParameterType[expectedType]}\` and \`${ParameterType[childType]}\`)`
+        `Mixed children types: \`${ParameterType[childType]}\` must appear before \`${ParameterType[expectedType]}\``
       )
     }
-    expectedType = childType
+
+    throw new Error(
+      `Inconsistent children types (\`${ParameterType[expectedType]}\` and \`${ParameterType[childType]}\`)`
+    )
   })
 
   return expectedType || ParameterType.None
@@ -50,6 +76,8 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
       ParameterType.Dynamic,
       ParameterType.Tuple,
       ParameterType.Array,
+      ParameterType.Calldata,
+      ParameterType.AbiEncoded,
     ],
 
     [Operator.And]: [ParameterType.None],

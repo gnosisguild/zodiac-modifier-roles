@@ -145,7 +145,18 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
     )
     // sort is in-place
     pairs.sort(([a], [b]) => (a.lt(b) ? -1 : 1))
-    const orderedChildren = pairs.map(([, child]) => child)
+    let orderedChildren = pairs.map(([, child]) => child)
+
+    // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
+    const moveToFront = orderedChildren.filter(
+      (child) =>
+        child.paramType === ParameterType.Calldata ||
+        child.paramType === ParameterType.AbiEncoded
+    )
+    orderedChildren = [
+      ...moveToFront,
+      ...orderedChildren.filter((c) => !moveToFront.includes(c)),
+    ]
 
     return {
       ...condition,

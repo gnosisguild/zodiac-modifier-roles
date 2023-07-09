@@ -133,8 +133,8 @@ const calldataMatchesScopings =
       }
 
       return and(
-        bitmask({ mask: selector, value: selector }),
-        () => matchesCondition
+        () => matchesCondition,
+        bitmask({ mask: selector, value: selector })
       )(ParamType.from("bytes"))
     }
 
@@ -170,7 +170,7 @@ const calldataMatchesPresetFunction =
     })
 
     return (
-      condition ? and(selectorCondition, () => condition) : selectorCondition
+      condition ? and(() => condition, selectorCondition) : selectorCondition
     )(ParamType.from("bytes"))
   }
 

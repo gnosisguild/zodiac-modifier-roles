@@ -52,6 +52,32 @@ describe("checkConditionIntegrity()", () => {
       })
     ).to.throw("Inconsistent children types (`Static` and `Dynamic`)")
   })
+
+  it("should not throw for And with Calldata and Dynamic children", () => {
+    expect(() =>
+      checkConditionIntegrity({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          { paramType: ParameterType.Calldata, operator: Operator.Pass },
+          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+        ],
+      })
+    ).to.not.throw()
+  })
+
+  it("should throw for And with Calldata and Dynamic children if Calldata does not come first", () => {
+    expect(() =>
+      checkConditionIntegrity({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+          { paramType: ParameterType.Calldata, operator: Operator.Pass },
+        ],
+      })
+    ).to.throw("Mixed children types: `Calldata` must appear before `Dynamic`")
+  })
 })
 
 describe("checkRootConditionIntegrity()", () => {
