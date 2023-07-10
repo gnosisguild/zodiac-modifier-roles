@@ -90,6 +90,8 @@ const applyOptions = (
 
   return {
     ...entry,
+    send: options.send,
+    delegatecall: options.delegatecall,
     condition: {
       paramType: ParameterType.None,
       operator: Operator.And,
