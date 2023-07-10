@@ -2,17 +2,16 @@ import { BigNumberish, BytesLike } from "ethers"
 import { arrayify, concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
-import { Placeholder } from "../../types"
 
 import { ConditionFunction } from "./types"
 import { describeStructure, parameterType, encodeValue } from "./utils"
 
 /**
  * Asserts that the value from calldata is equal to the given value
- * @param value The reference value to encode or a placeholder
+ * @param value The reference value to encode
  */
 export const eq =
-  (value: Placeholder<any> | any): ConditionFunction<any> =>
+  (value: any): ConditionFunction<any> =>
   (abiType: ParamType) => {
     const type = ParamType.from(abiType)
     const structure = describeStructure(type)
@@ -25,13 +24,24 @@ export const eq =
   }
 
 /**
+ * Asserts that the value from calldata is equal to the avatar address configured on the Roles mod
+ */
+export const avatar: ConditionFunction<string> = (abiType: ParamType) => {
+  const type = ParamType.from(abiType)
+  const structure = describeStructure(type)
+  return {
+    paramType: parameterType(type),
+    operator: Operator.EqualToAvatar,
+    children: structure.children,
+  }
+}
+
+/**
  * Asserts that the value from calldata is greater than the given value
- * @param value The reference value to encode or a placeholder
+ * @param value The reference value to encode
  */
 export const gt =
-  (
-    value: Placeholder<BigNumberish> | BigNumberish
-  ): ConditionFunction<BigNumberish> =>
+  (value: BigNumberish): ConditionFunction<BigNumberish> =>
   (abiType: ParamType) => {
     const type = ParamType.from(abiType)
     if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {
@@ -48,12 +58,10 @@ export const gt =
 
 /**
  * Asserts that the value from calldata is greater than the given value
- * @param value The reference value to encode or a placeholder
+ * @param value The reference value to encode
  */
 export const lt =
-  (
-    value: Placeholder<BigNumberish> | BigNumberish
-  ): ConditionFunction<BigNumberish> =>
+  (value: BigNumberish): ConditionFunction<BigNumberish> =>
   (abiType: ParamType) => {
     const type = ParamType.from(abiType)
     if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {

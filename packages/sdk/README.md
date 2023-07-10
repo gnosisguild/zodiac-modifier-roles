@@ -134,7 +134,7 @@ A permission preset is a parametrized set of permissions. It can be applied to d
 {
   targetAddress: '0x182B723a58739a9c974cFDB385ceaDb237453c28',
   signature: "claim_rewards(address)",
-  condition: c.calldataMatches([AVATAR], ["address"]),
+  condition: c.calldataMatches([c.avatar], ["address"]),
 }
 ```
 
@@ -148,7 +148,7 @@ Users just provide the addresses of contracts. Powered by [eth-sdk](https://gith
 **Example:**
 
 ```typescript
-allow.curve.stETH_ETH_gauge["claim_rewards(address)"](AVATAR)
+allow.curve.stETH_ETH_gauge["claim_rewards(address)"](c.avatar)
 ```
 
 ## Conditions

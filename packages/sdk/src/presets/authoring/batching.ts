@@ -1,6 +1,7 @@
 import { BytesLike } from "ethers"
 
-import { ExecutionFlags, PresetAllowEntry, PresetCondition } from "../types"
+import { Condition } from "../../types"
+import { ExecutionFlags, PresetAllowEntry } from "../types"
 
 import { ConditionFunction } from "./conditions/types"
 
@@ -9,7 +10,7 @@ type PartialPresetFunction = (
   | { selector: `0x${string}` }
   | { signature: string }
 ) & {
-  condition?: PresetCondition | ConditionFunction<BytesLike>
+  condition?: Condition | ConditionFunction<BytesLike>
 } & ExecutionFlags
 type PartialPresetAllowEntry =
   | PartialPresetFullyClearedTarget

@@ -1,11 +1,6 @@
-import { Operator, ParameterType } from "../types"
+import { Condition, Operator, ParameterType } from "../types"
 
-import {
-  Preset,
-  PresetCondition,
-  PresetAllowEntryCoerced,
-  PresetFunctionCoerced,
-} from "./types"
+import { Preset, PresetAllowEntryCoerced, PresetFunctionCoerced } from "./types"
 import { coercePresetFunction, allowEntryId, isScoped } from "./utils"
 
 /**
@@ -59,7 +54,7 @@ export const mergeFunctionEntries = (preset: Preset) => ({
 const mergeConditions = (
   a: PresetFunctionCoerced,
   b: PresetFunctionCoerced
-): PresetCondition | undefined => {
+): Condition | undefined => {
   if (!!a.condition !== !!b.condition) {
     const targetId = allowEntryId(a)
     console.warn(

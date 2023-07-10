@@ -4,28 +4,22 @@ import { ParamType } from "ethers/lib/utils"
 // eslint-disable-next-line import/no-unresolved
 import { RequireAtLeastOne } from "type-fest"
 
-import { Placeholder, PresetCondition } from "../../types"
+import { Condition } from "../../../types"
 
 export type ConditionFunction<T> = (
   abiType: ParamType,
   _?: T // we must use the generic to make TS check on it (see: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-type-inference-work-on-this-interface-interface-foot--)
-) => PresetCondition
+) => Condition
 
 type PrimitiveValue = BigNumberish | BytesLike | string | boolean
 
-type PrimitiveScoping<T extends PrimitiveValue> =
-  | T
-  | Placeholder<T>
-  | ConditionFunction<T>
+type PrimitiveScoping<T extends PrimitiveValue> = T | ConditionFunction<T>
 
 export type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
 export type ArrayScoping<T extends any[]> =
-  | readonly (
-      | Awaited<ArrayElement<T>>
-      | Placeholder<Awaited<ArrayElement<T>>>
-    )[]
+  | readonly Awaited<ArrayElement<T>>[]
   | ConditionFunction<Awaited<ArrayElement<T>>[]>
 
 export type StructScoping<Struct extends { [key: string]: any }> =
@@ -40,7 +34,7 @@ export type StructScoping<Struct extends { [key: string]: any }> =
 
 /**
  * A scoping is one of the following:
- * - a primitive, BigNumber, or array value, or a placeholder – will be used for an equality check
+ * - a primitive, BigNumber, or array value – will be used for an equality check
  * - an object – will be used as a matching pattern
  * - a condition function
  */

@@ -1,7 +1,6 @@
 import { ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../../types"
-import { PresetCondition } from "../../types"
+import { Condition, Operator, ParameterType } from "../../../types"
 
 import { mapScoping } from "./matches"
 import { ConditionFunction, Scoping } from "./types"
@@ -23,7 +22,7 @@ export const or =
       if (branch === undefined) {
         throw new Error("or() branch condition must not be undefined")
       }
-      return mapScoping(branch, abiType) as PresetCondition // cast is safe because of earlier branch check
+      return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
   })
 
@@ -42,7 +41,7 @@ export const and =
       if (branch === undefined) {
         throw new Error("and() branch condition must not be undefined")
       }
-      return mapScoping(branch, abiType) as PresetCondition // cast is safe because of earlier branch check
+      return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
   })
 
@@ -61,6 +60,6 @@ export const nor =
       if (branch === undefined) {
         throw new Error("nor() branch condition must not be undefined")
       }
-      return mapScoping(branch, abiType) as PresetCondition // cast is safe because of earlier branch check
+      return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
   })

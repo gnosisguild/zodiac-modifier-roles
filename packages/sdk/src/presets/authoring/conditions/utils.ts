@@ -1,29 +1,9 @@
 import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
 
 import { ParameterType, Condition, Operator } from "../../../types"
-import { Placeholder } from "../../types"
 
-export const encodeValue = (
-  value: any,
-  type?: ParamType
-): string | Placeholder<any> => {
-  if (value instanceof Placeholder) {
-    if (type && type.format("sighash") !== value.type.format("sighash")) {
-      console.warn(
-        `Placeholder type \`${value.type.format(
-          "sighash"
-        )}\` does not match expected type \`${type.format(
-          "sighash"
-        )}\`, casting the placeholder to the expected type`
-      )
-    }
-    return type ? value.as(type) : value
-  } else {
-    if (!type) {
-      throw new Error("the value type must be specified")
-    }
-    return defaultAbiCoder.encode([type], [value])
-  }
+export const encodeValue = (value: any, type: ParamType): string => {
+  return defaultAbiCoder.encode([type], [value])
 }
 
 export const parameterType = (type: ParamType): ParameterType => {

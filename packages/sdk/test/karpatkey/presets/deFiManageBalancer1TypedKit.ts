@@ -1,6 +1,5 @@
 import * as c from "../../../src/presets/authoring/conditions"
 import { allow as allowKit } from "../../../src/presets/authoring/kit"
-import { AVATAR } from "../../../src/presets/placeholders"
 import { Preset } from "../../../src/presets/types"
 
 const allow = allowKit.mainnet
@@ -40,14 +39,14 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //...allowErc20Approve([AAVE], [stkAAVE]),
-    allow.aave.stkAave.stake(AVATAR),
-    allow.aave.stkAave.claimRewards(AVATAR),
+    allow.aave.stkAave.stake(c.avatar),
+    allow.aave.stkAave.claimRewards(c.avatar),
 
     //Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
     allow.aave.stkAave.cooldown(),
 
     //Unstakes, can only be called during the 2 days unstaking window after the 10 days cooldown period
-    allow.aave.stkAave.redeem(AVATAR),
+    allow.aave.stkAave.redeem(c.avatar),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Compound V2 - USDC
@@ -99,7 +98,7 @@ const preset = {
     //Compound V2 - Claiming of rewards
     //---------------------------------------------------------------------------------------------------------------------------------
     allow.compound.comptroller["claimComp(address,address[])"](
-      AVATAR,
+      c.avatar,
       c.subset([cAAVE, cDAI, cUSDC])
     ),
 
@@ -114,7 +113,7 @@ const preset = {
       token0: WBTC,
       token1: WETH,
       fee: 3000, //3000 represents the 0.3% fee
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
     //We are only allowing to deposit WETH, otherwise the ETH held by the NFT Positions contract after calling the mint function could be claimed
@@ -134,7 +133,7 @@ const preset = {
     //instead of WETH. In this case, the tokens (one of them WETH) are first sent to the NFT Positions contract, and have to then be
     //claimed by calling unwrapWETH9 and sweepToken. Since this is not safe non-custodial wise, we are only allowing the collecting
     //of ETH instead of WETH
-    allow.uniswap.nftPositions.collect({ recipient: AVATAR }),
+    allow.uniswap.nftPositions.collect({ recipient: c.avatar }),
 
     //If ETH is collected instead of WETH, one has to call the unwrapWETH9 and sweepToken functions, but we are only allowing for the collecting of WETH.
 
@@ -146,7 +145,7 @@ const preset = {
     allow.stakewise.eth2Staking.stake({ send: true }),
 
     //By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
-    allow.stakewise.merkleDis.claim(undefined, AVATAR, [rETH2, SWISE]),
+    allow.stakewise.merkleDis.claim(undefined, c.avatar, [rETH2, SWISE]),
 
     //The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
     //But as of now it is not considered within the strategy scope
@@ -162,7 +161,7 @@ const preset = {
       token0: WETH,
       token1: sETH2,
       fee: 3000,
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     //If ETH is deposited instead of WETH, one has to call the refundETH function after calling the mint function
@@ -197,7 +196,7 @@ const preset = {
       tokenIn: c.or(COMP, AAVE),
       tokenOut: WETH,
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     // Swap rETH2/SWISE for sETH2
@@ -205,7 +204,7 @@ const preset = {
       tokenIn: c.or(rETH2, SWISE),
       tokenOut: sETH2,
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     // Swap sETH2 for WETH
@@ -213,14 +212,14 @@ const preset = {
       tokenIn: sETH2,
       tokenOut: WETH,
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
     // Swap WETH for sETH2/USDC/USDT/DAI/WBTC
     allow.uniswap.router2.exactInputSingle({
       tokenIn: WETH,
       tokenOut: c.or(sETH2, USDC, USDT, DAI, WBTC),
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     // Swap USDC/DAI/USDT for WETH/USDC/USDT/DAI
@@ -228,7 +227,7 @@ const preset = {
       tokenIn: c.or(USDC, USDT, DAI),
       tokenOut: c.or(WETH, USDC, USDT, DAI),
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     // Swap WBTC for WETH
@@ -236,7 +235,7 @@ const preset = {
       tokenIn: WBTC,
       tokenOut: WETH,
       fee: c.or(100, 500, 3000, 10000),
-      recipient: AVATAR,
+      recipient: c.avatar,
     }),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -253,9 +252,9 @@ const preset = {
         assetOut: WETH,
       },
       {
-        recipient: AVATAR,
+        recipient: c.avatar,
         fromInternalBalance: false,
-        sender: AVATAR,
+        sender: c.avatar,
         toInternalBalance: false,
       }
     ),
@@ -270,9 +269,9 @@ const preset = {
         assetOut: DAI,
       },
       {
-        recipient: AVATAR,
+        recipient: c.avatar,
         fromInternalBalance: false,
-        sender: AVATAR,
+        sender: c.avatar,
         toInternalBalance: false,
       }
     ),
@@ -287,9 +286,9 @@ const preset = {
         assetOut: USDC,
       },
       {
-        recipient: AVATAR,
+        recipient: c.avatar,
         fromInternalBalance: false,
-        sender: AVATAR,
+        sender: c.avatar,
         toInternalBalance: false,
       }
     ),
@@ -304,9 +303,9 @@ const preset = {
         assetOut: WETH,
       },
       {
-        recipient: AVATAR,
+        recipient: c.avatar,
         fromInternalBalance: false,
-        sender: AVATAR,
+        sender: c.avatar,
         toInternalBalance: false,
       }
     ),
@@ -321,14 +320,13 @@ const preset = {
         assetOut: wstETH,
       },
       {
-        recipient: AVATAR,
+        recipient: c.avatar,
         fromInternalBalance: false,
-        sender: AVATAR,
+        sender: c.avatar,
         toInternalBalance: false,
       }
     ),
   ],
-  placeholders: {},
   chainId: 1,
 } satisfies Preset
 

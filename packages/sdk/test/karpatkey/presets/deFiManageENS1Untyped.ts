@@ -1,5 +1,4 @@
 import * as c from "../../../src/presets/authoring/conditions"
-import { AVATAR } from "../../../src/presets/placeholders"
 import { Preset } from "../../../src/presets/types"
 
 //Tokens
@@ -54,7 +53,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 const preset = {
   allow: [
-    //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
+    //All approvals have been commented since we'll be handling over the c.avatar safe with all of them having been already executed
 
     //---------------------------------------------------------------------------------------------------------------------------------
     //Lido
@@ -123,7 +122,7 @@ const preset = {
       targetAddress: COMPTROLLER,
       signature: "claimComp(address,address[])",
       condition: c.calldataMatches(
-        [AVATAR, c.subset([cDAI, cUSDC])],
+        [c.avatar, c.subset([cDAI, cUSDC])],
         ["address", "address[]"]
       ),
     },
@@ -144,7 +143,7 @@ const preset = {
       targetAddress: STAKEWISE_MERKLE_DIS,
       signature: "claim(uint256,address,address[],uint256[],bytes32[])",
       condition: c.calldataMatches(
-        [undefined, AVATAR, [rETH2, SWISE]],
+        [undefined, c.avatar, [rETH2, SWISE]],
         ["uint256", "address", "address[]", "uint256[]", "bytes32[]"]
       ),
     },
@@ -169,7 +168,7 @@ const preset = {
             token0: WETH,
             token1: sETH2,
             fee: 3000, //3000 represents the 0.3% fee
-            recipient: AVATAR,
+            recipient: c.avatar,
           },
         ],
         [
@@ -212,7 +211,7 @@ const preset = {
       targetAddress: UV3_NFT_POSITIONS,
       signature: "collect((uint256,address,uint128,uint128))",
       condition: c.calldataMatches(
-        [c.matches([undefined, AVATAR])],
+        [c.matches([undefined, c.avatar])],
         ["(uint256,address,uint128,uint128)"]
       ),
     },
@@ -264,7 +263,7 @@ const preset = {
     {
       targetAddress: CURVE_stETH_ETH_GAUGE,
       signature: "claim_rewards(address)", // IMPORTANT!: CHANGE FOR "claim_rewards()"
-      condition: c.calldataMatches([AVATAR], ["address"]),
+      condition: c.calldataMatches([c.avatar], ["address"]),
     },
 
     //Claiming CRV rewards
@@ -333,8 +332,8 @@ const preset = {
       condition: c.calldataMatches(
         [
           "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080", // poolId
-          AVATAR, // sender
-          AVATAR, // recipient
+          c.avatar, // sender
+          c.avatar, // recipient
         ],
         ["bytes32", "address", "address"]
       ),
@@ -399,7 +398,7 @@ const preset = {
             [USDT, DAI],
             [USDT, WETH, DAI]
           ),
-          AVATAR, // to
+          c.avatar, // to
         ],
         ["uint256", "uint256", "address[]", "address"]
       ),
@@ -425,7 +424,7 @@ const preset = {
               USDT
             ),
             tokenOut: c.or(WETH, USDC, DAI, USDT, sETH2),
-            recipient: AVATAR,
+            recipient: c.avatar,
           },
         ],
         [
@@ -472,9 +471,9 @@ const preset = {
             assetOut: WETH,
           },
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -502,9 +501,9 @@ const preset = {
             assetOut: WETH,
           },
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -532,9 +531,9 @@ const preset = {
             assetOut: DAI,
           },
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -562,9 +561,9 @@ const preset = {
             assetOut: USDC,
           },
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -592,9 +591,9 @@ const preset = {
             assetOut: WETH,
           },
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -630,9 +629,9 @@ const preset = {
             }
           ),
           {
-            sender: AVATAR,
+            sender: c.avatar,
             fromInternalBalance: false,
-            recipient: AVATAR,
+            recipient: c.avatar,
             toInternalBalance: false,
           },
         ],
@@ -694,7 +693,7 @@ const preset = {
             [DAI, WETH, USDT],
             [DAI, USDT]
           ),
-          AVATAR,
+          c.avatar,
         ],
         ["uint256", "uint256", "address[]", "address", "uint256"]
       ),
@@ -721,7 +720,6 @@ const preset = {
       signature: "exchange(int128,int128,uint256,uint256)",
     },
   ],
-  placeholders: {},
   chainId: 1,
 } satisfies Preset
 

@@ -1,13 +1,8 @@
 import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
 import { ParamType } from "ethers/lib/utils"
 
-import { Operator, ParameterType } from "../../../types"
-import {
-  AbiType,
-  Placeholder,
-  PresetCondition,
-  PresetFunction,
-} from "../../types"
+import { Condition, Operator, ParameterType } from "../../../types"
+import { AbiType, PresetFunction } from "../../types"
 import { coercePresetFunction } from "../../utils"
 
 import { and } from "./branching"
@@ -35,7 +30,7 @@ export const matches =
       return scoping(abiType)
     }
 
-    let conditions: (PresetCondition | undefined)[]
+    let conditions: (Condition | undefined)[]
 
     if (Array.isArray(scoping)) {
       // scoping is an array (TupleScopings)
@@ -109,7 +104,7 @@ const calldataMatchesScopings =
     }
 
     // map scoping items to conditions
-    const conditions: (PresetCondition | undefined)[] = paramTypes.map(
+    const conditions: (Condition | undefined)[] = paramTypes.map(
       (type, index) => mapScoping(scopings[index], type)
     )
 
@@ -189,7 +184,7 @@ type CalldataMatches = {
     scopings: S,
     abiTypes: AbiType[],
     selector?: `0x${string}`
-  ): (abiType?: ParamType) => PresetCondition
+  ): (abiType?: ParamType) => Condition
 
   /**
    * Matches EVM call data against a reference preset function.
@@ -199,14 +194,14 @@ type CalldataMatches = {
    *
    * @param presetFunction The reference preset function
    **/
-  (presetFunction: PresetFunction): (abiType?: ParamType) => PresetCondition
+  (presetFunction: PresetFunction): (abiType?: ParamType) => Condition
 }
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrPresetFunction: S | PresetFunction,
   abiTypes?: AbiType[],
   selector?: `0x${string}`
-): ((abiType?: ParamType) => PresetCondition) => {
+): ((abiType?: ParamType) => Condition) => {
   return Array.isArray(scopingsOrPresetFunction) && abiTypes
     ? calldataMatchesScopings(scopingsOrPresetFunction, abiTypes, selector)
     : calldataMatchesPresetFunction(
@@ -233,7 +228,7 @@ export const abiEncodedMatches =
     }
 
     // map scoping items to conditions
-    const conditions: (PresetCondition | undefined)[] = paramTypes.map(
+    const conditions: (Condition | undefined)[] = paramTypes.map(
       (type, index) => mapScoping(scopings[index], type)
     )
 
@@ -259,7 +254,7 @@ export const abiEncodedMatches =
 export function mapScoping(
   scoping: Scoping<any> | undefined,
   abiType: ParamType
-): PresetCondition | undefined {
+): Condition | undefined {
   if (scoping === undefined) {
     return undefined
   }
@@ -270,7 +265,6 @@ export function mapScoping(
     // scoping is already a condition function
     conditionFunction = scoping
   } else if (
-    scoping instanceof Placeholder ||
     typeof scoping === "boolean" ||
     typeof scoping === "string" ||
     typeof scoping === "number" ||
@@ -288,7 +282,7 @@ export function mapScoping(
 }
 
 const assertValidConditionsLength = (
-  conditions: (PresetCondition | undefined)[],
+  conditions: (Condition | undefined)[],
   typeOrTypes: ParamType | ParamType[]
 ) => {
   let expectedLength: number
@@ -341,7 +335,7 @@ const assertValidConditionsKeys = (
 }
 
 const assertCompatibleParamTypes = (
-  conditions: (PresetCondition | undefined)[],
+  conditions: (Condition | undefined)[],
   typeOrTypes: ParamType | ParamType[]
 ) => {
   conditions.forEach((condition, index) => {
@@ -380,7 +374,7 @@ const assertCompatibleParamTypes = (
  * @param condition The condition to get the scoped param type of.
  * @returns the `ParameterType` the condition is applied to.
  */
-const checkScopedType = (condition: PresetCondition): ParameterType => {
+const checkScopedType = (condition: Condition): ParameterType => {
   if (condition.paramType === ParameterType.None) {
     if (!condition.children || condition.children.length === 0) {
       // e.g.: Operator.EtherWithinAllowance / Operator.CallWithinAllowance

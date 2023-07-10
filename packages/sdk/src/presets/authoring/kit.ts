@@ -1,10 +1,9 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 
-import { Operator, ParameterType } from "../../types"
+import { Condition, Operator, ParameterType } from "../../types"
 import {
   ExecutionFlags,
-  PresetCondition,
   PresetFullyClearedTarget,
   PresetFunction,
   PresetFunctionCoerced,
@@ -65,7 +64,7 @@ const applyOptions = (
   entry: PresetFunctionCoerced,
   options: Options
 ): PresetFunctionCoerced => {
-  const conditions: PresetCondition[] = []
+  const conditions: Condition[] = []
 
   if (entry.condition) {
     conditions.push(entry.condition)

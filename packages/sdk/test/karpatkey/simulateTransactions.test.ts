@@ -97,12 +97,9 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
 
-    const placeholderValues = {
-      AVATAR: config.AVATAR,
-    }
     const transactionsData = await applyPermissions(
       ROLE_KEY,
-      fillPreset(preset, placeholderValues),
+      fillPreset(preset),
       {
         currentPermissions: [],
         mode: "replace",

@@ -1,25 +1,8 @@
-import { defaultAbiCoder } from "ethers/lib/utils"
-
 import { normalizeCondition } from "../conditions"
-import {
-  Clearance,
-  Condition,
-  ExecutionOptions,
-  Operator,
-  ParameterType,
-  Target,
-} from "../types"
+import { Clearance, ExecutionOptions, Target } from "../types"
 
 import { mergeFunctionEntries } from "./mergeFunctionEntries"
-import { AVATAR } from "./placeholders"
-import {
-  PlaceholderValues,
-  Preset,
-  Placeholder,
-  ComparisonValue,
-  PresetCondition,
-  PresetFunctionCoerced,
-} from "./types"
+import { Preset, PresetFunctionCoerced } from "./types"
 import { execOptions, allowEntryId, isScoped } from "./utils"
 
 /**
@@ -28,17 +11,9 @@ import { execOptions, allowEntryId, isScoped } from "./utils"
  * @param placeholderValues a map of placeholder keys to the values they should be replaced with
  * @returns permissions as a list of allowed targets
  */
-export const fillPreset = <P extends Preset>(
-  preset: P,
-  placeholderValues: PlaceholderValues<P>
-): Target[] => {
+export const fillPreset = <P extends Preset>(preset: P): Target[] => {
   const mergedPreset = mergeFunctionEntries(preset)
   sanityCheck(mergedPreset)
-
-  const placeholderLookupMap = makePlaceholderLookupMap(
-    mergedPreset,
-    placeholderValues
-  )
 
   const { allow } = mergedPreset
 
@@ -67,76 +42,12 @@ export const fillPreset = <P extends Preset>(
         selector: allowFunction.selector,
         executionOptions: execOptions(allowFunction),
         wildcarded: !condition,
-        condition:
-          condition &&
-          normalizeCondition(
-            fillConditionPlaceholders(condition, placeholderLookupMap)
-          ),
+        condition: condition && normalizeCondition(condition),
       }
     }),
   }))
 
   return [...fullyClearedTargets, ...functionScopedTargets]
-}
-
-const makePlaceholderLookupMap = <P extends Preset>(
-  preset: P,
-  placeholderValues: PlaceholderValues<P>
-) => {
-  const map = new Map<Placeholder<any>, any>()
-  for (const [key, placeholder] of Object.entries(preset.placeholders)) {
-    const value = placeholderValues[key]
-    if (value === undefined)
-      throw new Error(`Missing placeholder value for ${key}`)
-    map.set(placeholder, value)
-  }
-  return map
-}
-
-const fillConditionPlaceholders = (
-  condition: PresetCondition,
-  placeholderLookupMap: Map<Placeholder<any>, any>
-): Condition => {
-  // special handling for AVATAR placeholder: use EqualToAvatar operator
-  // (This is an optimization to avoid having to encode the avatar address making the condition data more broadly shareable)
-  if (
-    condition.paramType === ParameterType.Static &&
-    condition.compValue instanceof Placeholder &&
-    condition.compValue.identity === AVATAR
-  ) {
-    return {
-      paramType: ParameterType.Static,
-      operator: Operator.EqualToAvatar,
-    }
-  }
-
-  return {
-    paramType: condition.paramType,
-    operator: condition.operator,
-    compValue: fillPlaceholder(condition.compValue, placeholderLookupMap),
-    children: condition.children?.map((child) =>
-      fillConditionPlaceholders(child, placeholderLookupMap)
-    ),
-  }
-}
-
-const fillPlaceholder = (
-  valueOrPlaceholder: ComparisonValue | undefined,
-  placeholderLookupMap: Map<Placeholder<any>, any>
-) => {
-  if (valueOrPlaceholder === undefined) return undefined
-
-  if (valueOrPlaceholder instanceof Placeholder) {
-    const value = placeholderLookupMap.get(valueOrPlaceholder.identity)
-    if (value === undefined) {
-      throw new Error(
-        `Placeholder "${valueOrPlaceholder.name}" is not registered in the preset's placeholders object`
-      )
-    }
-    return defaultAbiCoder.encode([valueOrPlaceholder.type], [value])
-  }
-
-  return valueOrPlaceholder
 }
 
 const sanityCheck = (preset: Preset) => {
