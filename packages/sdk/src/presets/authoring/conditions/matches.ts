@@ -1,5 +1,5 @@
-import { isBigNumberish } from "@ethersproject/bignumber/lib/bignumber"
-import { ParamType } from "ethers/lib/utils"
+import { BigNumber, BigNumberish } from "ethers"
+import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
 
 import { Condition, Operator, ParameterType } from "../../../types"
 import { AbiType, PresetFunction } from "../../types"
@@ -401,4 +401,16 @@ const checkScopedType = (condition: Condition): ParameterType => {
 const arrayDiff = (a: string[], b: string[]) => {
   const set = new Set(b)
   return a.filter((x) => !set.has(x))
+}
+
+function isBigNumberish(value: any): value is BigNumberish {
+  return (
+    value != null &&
+    (BigNumber.isBigNumber(value) ||
+      (typeof value === "number" && value % 1 === 0) ||
+      (typeof value === "string" && !!value.match(/^-?[0-9]+$/)) ||
+      isHexString(value) ||
+      typeof value === "bigint" ||
+      isBytes(value))
+  )
 }
