@@ -1,6 +1,12 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
+// We import via alias to avoid double bundling of sdk functions
+// eslint does not know about our Typescript path alias
+// eslint-disable-next-line import/no-unresolved
+import { c } from "zodiac-roles-sdk"
 
+// For things that are not publicly exported we still use relative paths.
+// Since these are mainly types, this won't blow up bundles.
 import { Condition, Operator, ParameterType } from "../../types"
 import {
   ExecutionFlags,
@@ -14,7 +20,6 @@ import {
   callWithinAllowance,
   etherWithinAllowance,
 } from "./conditions/allowances"
-import { calldataMatches } from "./conditions/matches"
 import { TupleScopings } from "./conditions/types"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
@@ -46,7 +51,7 @@ const makeAllowFunction = <
       signature: functionFragment.format("sighash"),
       condition:
         scopings.length > 0
-          ? calldataMatches(scopings, functionInputs)()
+          ? c.calldataMatches(scopings, functionInputs)()
           : undefined,
     }
     return applyOptions(coercePresetFunction(presetFunction), options)
@@ -174,6 +179,7 @@ export const allow: AllowKitMap = Object.keys(ethSdk).reduce(
 
     const network = uncapitalize(sdkGetterName.slice(3, -3))
     acc[network] = mapSdk(
+      // eslint-disable-next-line import/namespace
       ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider())
     )
     return acc
