@@ -359,12 +359,21 @@ const assertCompatibleParamTypes = (
     const expectedType = parameterType(type)
     const scopedType = checkScopedType(condition)
 
-    if (scopedType !== expectedType) {
-      const fieldReference = type.name ? `'${type.name}'` : `at index ${index}`
-      throw new Error(
-        `Condition for field ${fieldReference} has wrong paramType \`${ParameterType[scopedType]}\` (expected: \`${ParameterType[expectedType]}\`)`
-      )
+    if (scopedType === expectedType) return
+
+    // allow dynamic type values to be interpreted as calldata or abi encoded
+    if (
+      expectedType === ParameterType.Dynamic &&
+      (scopedType === ParameterType.Calldata ||
+        scopedType === ParameterType.AbiEncoded)
+    ) {
+      return
     }
+
+    const fieldReference = type.name ? `'${type.name}'` : `at index ${index}`
+    throw new Error(
+      `Condition for field ${fieldReference} has wrong paramType \`${ParameterType[scopedType]}\` (expected: \`${ParameterType[expectedType]}\`)`
+    )
   })
 }
 
