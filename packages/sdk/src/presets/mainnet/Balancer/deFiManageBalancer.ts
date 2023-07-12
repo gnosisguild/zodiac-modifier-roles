@@ -1,8 +1,12 @@
 import {
-  ZERO_ADDRESS, AAVE, COMP, DAI, rETH2, sETH2, SWISE,
-  USDC, USDT, WBTC, WETH, wstETH,
+  ZERO_ADDRESS, AAVE, BAL, COMP, D2D, DAI, rETH2,
+  sETH2, SWISE, USDC, USDT, WBTC, WETH, wstETH,
+  aave_v3,
+  across_v2,
   balancer,
   compound_v2,
+  mstable_v2,
+  silo_v2,
   uniswapv3
 } from "../addresses"
 import {
@@ -12,6 +16,10 @@ import {
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
+import { allowErc20Approve } from "../../helpers/erc20"
+
+// mStable
+const DELEGATE_ADDRESS = "0xd6e96e437b8d42406a64440226b77a51c74e26b1"
 
 
 const preset = {
@@ -90,6 +98,163 @@ const preset = {
     allow.mainnet.aave_v2.stkAave["redeem"](
       AVATAR
     ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3 - BAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([BAL], [aave_v3.POOL_V3]),
+
+    // Supply
+    allow.mainnet.aave_v3.pool_v3["supply"](BAL, undefined, AVATAR),
+
+    // Withdraw
+    allow.mainnet.aave_v3.pool_v3["withdraw"](BAL, undefined, AVATAR),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Across V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Across V2 - BAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([BAL], [across_v2.HUB_POOL_V2]),
+
+    // Deposit
+    allow.mainnet.across_v2.hub_pool_v2["addLiquidity"](BAL),
+
+    // Withdraw
+    allow.mainnet.across_v2.hub_pool_v2["removeLiquidity"](BAL),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Silo V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Silo V2 - BAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([BAL], [silo_v2.ROUTER]),
+
+    // Deposit
+    {
+      targetAddress: silo_v2.ROUTER,
+      signature:
+        "execute((uint8,address,address,uint256,bool)[])",
+      params: {
+        [0]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"), // Offset of the tuple from beginning 32=32*1
+        [1]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"), // Length of tuple = 1
+        [2]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"), // actionType = 0 (Deposit)
+        [3]: staticEqual(silo_v2.BAL_SILO, "address"), // BAL Silo
+        [4]: staticEqual(BAL, "address"), // BAL Silo
+      }
+    },
+
+    // Withdraw
+    {
+      targetAddress: silo_v2.ROUTER,
+      signature:
+        "execute((uint8,address,address,uint256,bool)[])",
+      params: {
+        [0]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"), // Offset of the tuple from beginning 32=32*1
+        [1]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"), // Length of tuple = 1
+        [2]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"), // actionType = 0 (Withdraw)
+        [3]: staticEqual(silo_v2.BAL_SILO, "address"), // BAL Silo
+        [4]: staticEqual(BAL, "address"), // BAL Silo
+      }
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // mStable V2
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // mStable V2 - Stake MTA
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([mstable_v2.MTA], [mstable_v2.stkMTA]),
+
+    // Staking of MTA without voting power delegation
+    allow.mainnet.mstable_v2.stkMTA["stake(uint256)"](),
+
+    // Staking of MTA with voting power delegation
+    allow.mainnet.mstable_v2.stkMTA["stake(uint256,address)"](
+      undefined,
+      DELEGATE_ADDRESS
+    ),
+
+    // Undelegate voting power
+    allow.mainnet.mstable_v2.stkMTA["delegate"](
+      AVATAR
+    ),
+
+    // Claim rewards without compounding
+    allow.mainnet.mstable_v2.stkMTA["claimReward()"](),
+
+    // Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
+    allow.mainnet.mstable_v2.stkMTA["compoundRewards"](),
+
+    // Start cooldown for withdrawal
+    allow.mainnet.mstable_v2.stkMTA["startCooldown"](),
+
+    // Forcefully end cooldown to be able to withdraw, at the expense of a penalty
+    allow.mainnet.mstable_v2.stkMTA["endCooldown"](),
+
+    // Withdraw MTA after cooldown
+    allow.mainnet.mstable_v2.stkMTA["withdraw"](
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Balancer
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Balancer - D2D + BAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([D2D, BAL], [balancer.VAULT]),
+
+    // Add Liquidity
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(
+          "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
+          "bytes32"
+        ), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+      },
+    },
+
+    // Withdraw Liquidity
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(
+          "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
+          "bytes32"
+        ), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+      },
+    },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compound V2
+    //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2 - USDC
@@ -200,6 +365,10 @@ const preset = {
         restrictOrder: true,
       }
     ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Uniswap V3
+    //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Uniswap V3 - WBTC + WETH, Range: 11.786 - 15.082. Fee: 0.3%.

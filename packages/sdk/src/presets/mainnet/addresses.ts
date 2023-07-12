@@ -13,6 +13,7 @@ export const COW = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
 export const CREAM = "0x2ba592F78dB6436527729929AAf6c908497cB200"
 export const CRV = "0xD533a949740bb3306d119CC777fa900bA034cd52"
 export const CVX = "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B"
+export const D2D = "0x43D4A3cd90ddD2F8f4f693170C9c8098163502ad"
 export const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 export const ENS = "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72"
 export const FIS = "0xef3A930e1FfFFAcd2fc13434aC81bD278B0ecC8d"
@@ -65,6 +66,10 @@ export const aave_v2 = {
 
 export const aave_v3 = {
   POOL_V3: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+}
+
+export const across_v2 = {
+  HUB_POOL_V2: "0xc186fA914353c44b2E33eBE05f21846F1048bEda",
 }
 
 export const aura = {
@@ -191,10 +196,20 @@ export const maker = {
   DSR_MANAGER: "0x373238337Bfe1146fb49989fc222523f83081dDb"
 }
 
+export const mstable_v2 = {
+  MTA: "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
+  stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7"
+}
+
 export const rocket_pool = {
   STORAGE: "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46",
   DEPOSIT_POOL: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture
   SWAP_ROUTER: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C"
+}
+
+export const silo_v2 = {
+  ROUTER: "0x8658047e48CC09161f4152c79155Dac1d710Ff0a",
+  BAL_SILO: "0x92E7E77163FFed918421E3CB6e0A22F2Fe8B37FA"
 }
 
 export const stakedao = {

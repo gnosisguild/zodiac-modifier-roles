@@ -20,6 +20,9 @@ export default defineConfig({
       aave_v3: {
         pool_v3: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
       },
+      across_v2: {
+        hub_pool_v2: "0xc186fA914353c44b2E33eBE05f21846F1048bEda"
+      },
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
         auraB_stETH_stable_rewarder:
@@ -113,10 +116,16 @@ export default defineConfig({
       maker: {
         dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb"
       },
+      mstable_v2: {
+        stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7"
+      },
       rocket_pool: {
         deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture
         rETH: "0xae78736Cd615f374D3085123A210448E74Fc6393",
         swap_router: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C"
+      },
+      silo_v2: {
+        router: "0x8658047e48CC09161f4152c79155Dac1d710Ff0a"
       },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
