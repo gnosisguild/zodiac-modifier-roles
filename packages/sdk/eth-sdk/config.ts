@@ -92,6 +92,9 @@ export default defineConfig({
         cvxcDAIcUSDC_rewarder: "0xf34DFF761145FF0B05e917811d488B441F33a968",
         claim_zap: "0x3f29cb4111cbda8081642da1f75b3c12decf2516",
       },
+      cowswap: {
+        order_signer: "0xdEb83d81d4a9758A7bAec5749DA863C409ea6C6B"
+      },
       curve: {
         crv_minter: "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",
         stake_deposit_zap: "0x271fbE8aB7f1fB262f81C77Ea5303F03DA9d3d6A",

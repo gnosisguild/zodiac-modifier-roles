@@ -5,6 +5,7 @@ import {
   across_v2,
   balancer,
   compound_v2,
+  cowswap,
   mstable_v2,
   silo_v2,
   uniswapv3
@@ -1410,6 +1411,20 @@ const preset = {
         ), // bytes (userData) = for all current Balancer pools this can be left empty
       },
     },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Cowswap
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC], [cowswap.GPv2_VAULT_RELAYER]),
+
+    allow.mainnet.cowswap.order_signer["signOrder"](
+      {
+        oneOf: [COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC]
+      },
+      {
+        oneOf: [DAI, sETH2, USDC, USDT, WBTC, WETH]
+      }
+    )
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset

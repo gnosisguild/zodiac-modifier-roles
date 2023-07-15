@@ -1798,6 +1798,19 @@ const preset = {
 
     //Swap CVX for ETH
     //allow.mainnet.curve.cvxETH_pool["exchange_underlying"](1, 0),
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Cowswap
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH, SWISE, USDC, USDT, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
+
+    allow.mainnet.cowswap.order_signer["signOrder"](
+      {
+        oneOf: [AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH, SWISE, USDC, USDT, WETH, wstETH]
+      },
+      {
+        oneOf: [DAI, USDC, USDT, rETH, stETH, WETH, wstETH]
+      }
+    )
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset
