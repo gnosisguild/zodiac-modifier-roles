@@ -4,15 +4,17 @@ import {
   CVX, DAI, WETH, GNO, LDO, rETH, rETH2, sETH2, stETH, SWISE, USDC, WBTC, wstETH,
   OMNI_BRIDGE,
   aave_v2,
+  aave_v3,
   aura,
   balancer,
   compound_v2,
   compound_v3,
   convex,
   curve,
+  spark,
   stakedao,
   uniswapv3,
-  votium
+  votium,
 } from "../addresses"
 import {
   curve as curve_gc
@@ -35,14 +37,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     ...allowErc20Approve([stETH], [wstETH]),
-    // {
-    //   targetAddress: stETH,
-    //   signature: "submit(address)",
-    //   params: {
-    //     [0]: staticEqual(ZERO_ADDRESS, "address"),
-    //   },
-    //   send: true,
-    // },
+
     allow.mainnet.lido.stETH["submit"](
       ZERO_ADDRESS,
       {
@@ -50,10 +45,27 @@ const preset = {
       }
     ),
 
-    // { targetAddress: wstETH, signature: "wrap(uint256)" },
     allow.mainnet.lido.wstETH["wrap"](),
-    // { targetAddress: wstETH, signature: "unwrap(uint256)" }
+
     allow.mainnet.lido.wstETH["unwrap"](),
+
+    // Request stETH Withdrawal - Locks your stETH in the queue. In exchange you receive an NFT, that represents your position 
+    // in the queue
+    allow.mainnet.lido.unstETH["requestWithdrawals"](
+      undefined,
+      AVATAR
+    ),
+
+    // Request wstETH Withdrawal - Transfers the wstETH to the unstETH to be burned in exchange for stETH. Then it locks your stETH
+    // in the queue. In exchange you receive an NFT, that represents your position in the queue
+    allow.mainnet.lido.unstETH["requestWithdrawalsWstETH"](
+      undefined,
+      AVATAR
+    ),
+
+    // Claim ETH - Once the request is finalized by the oracle report and becomes claimable, 
+    // this function claims your ether and burns the NFT
+    allow.mainnet.lido.unstETH["claimWithdrawals"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // AURA
@@ -65,15 +77,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_stETH_STABLE], [aura.BOOSTER]),
     ...allowErc20Approve([wstETH, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(29, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      29), // Aura poolId
+      115), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -119,16 +124,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: auraB_stETH_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: auraB_stETH_STABLE_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.auraB_stETH_stable_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -137,15 +134,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_auraBAL_STABLE], [aura.BOOSTER]),
     ...allowErc20Approve([balancer.B_80BAL_20WETH, auraBAL], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(1, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      1), // Aura poolId
+      101), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -191,16 +181,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: auraB_auraBAL_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.auraB_auraBAL_stable_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: auraB_auraBAL_STABLE_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.auraB_auraBAL_stable_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -209,15 +191,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_rETH_STABLE], [aura.BOOSTER]),
     ...allowErc20Approve([rETH, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(15, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      15), // Aura poolId
+      109), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -263,16 +238,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: auraB_rETH_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.auraB_rETH_stable_rewarder["withdrawAllAndUnwrap"](),
 
-    // {
-    //   targetAddress: auraB_rETH_STABLE_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.auraB_rETH_stable_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -281,15 +248,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_80GNO_20WETH], [aura.BOOSTER]),
     ...allowErc20Approve([GNO, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(33, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      33), // Aura poolId
+      116), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -335,16 +295,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: auraB_80GNO_20WETH_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.auraB_80GNO_20WETH_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: auraB_80GNO_20WETH_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.auraB_80GNO_20WETH_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -353,15 +305,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_50COW_50GNO], [aura.BOOSTER]),
     ...allowErc20Approve([GNO, COW], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(3, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      3), // Aura poolId
+      104), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -407,16 +352,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: aura50COW_50GNO_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.aura50COW_50GNO_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: aura50COW_50GNO_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.aura50COW_50GNO_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -425,15 +362,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_50WSTETH_50LDO], [aura.BOOSTER]),
     ...allowErc20Approve([LDO, wstETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(20, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      20), // Aura poolId
+      68), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -443,7 +373,7 @@ const preset = {
         [0]: staticEqual(aura.aura50WSTETH_50LDO_REWARDER, "address"),
         [1]: staticOneOf([LDO, wstETH], "address"),
         [3]: staticEqual(
-          "0x6a5ead5433a50472642cd268e584dafa5a394490000200000000000000000366",
+          "0x5f1f4e50ba51d723f12385a8a9606afc3a0555f5000200000000000000000465",
           "bytes32"
         ), // Balancer PoolId
         [4]: staticEqual(
@@ -479,16 +409,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: aura50WSTETH_50LDO_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.aura50WSTETH_50LDO_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: aura50WSTETH_50LDO_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.aura50WSTETH_50LDO_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -497,17 +419,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_50WETH_50AURA], [aura.BOOSTER]),
     ...allowErc20Approve([WETH, AURA], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(0, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      {
-        oneOf: [0]
-      }
+      100
     ), // Aura poolId
 
     {
@@ -554,16 +467,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: aura50WETH_50AURA_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.aura50WETH_50AURA_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: aura50WETH_50AURA_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.aura50WETH_50AURA_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -572,15 +477,8 @@ const preset = {
     ...allowErc20Approve([balancer.B_50COW_50WETH], [aura.BOOSTER]),
     ...allowErc20Approve([WETH, COW], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    // {
-    //   targetAddress: aura.BOOSTER,
-    //   signature: "deposit(uint256,uint256,bool)",
-    //   params: {
-    //     [0]: staticEqual(4, "uint256"), // Aura poolId
-    //   },
-    // },
     allow.mainnet.aura.booster["deposit"](
-      4), // Aura poolId
+      105), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -626,16 +524,8 @@ const preset = {
       },
     },
 
-    // {
-    //   targetAddress: aura50COW_50WETH_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
     allow.mainnet.aura.aura50COW_50WETH_rewarder["withdrawAndUnwrap"](),
 
-    // {
-    //   targetAddress: aura50COW_50WETH_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.aura50COW_50WETH_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -645,28 +535,13 @@ const preset = {
     // Using auraBAL
     ...allowErc20Approve([auraBAL], [aura.auraBAL_STAKING_REWARDER]),
 
-    // {
-    //   targetAddress: auraBAL_STAKING_REWARDER,
-    //   signature: "stake(uint256)",
-    // },
     allow.mainnet.aura.auraBAL_staking_rewarder["stake"](),
 
-    // {
-    //   targetAddress: auraBAL_STAKING_REWARDER,
-    //   signature: "withdraw(uint256,bool)",
-    // },
     allow.mainnet.aura.auraBAL_staking_rewarder["withdraw"](),
 
     // Using 80BAL-20WETH
     ...allowErc20Approve([balancer.B_80BAL_20WETH], [aura.auraBAL_B_80BAL_20WETH_DEPOSITOR]),
 
-    // {
-    //   targetAddress: B_80BAL_20WETH_DEPOSITOR,
-    //   signature: "deposit(uint256,bool,address)",
-    //   params: {
-    //     [2]: staticEqual(auraBAL_STAKING_REWARDER, "address"),
-    //   },
-    // },
     allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
       undefined,
       undefined,
@@ -681,13 +556,6 @@ const preset = {
     // Using BAL
     ...allowErc20Approve([BAL], [aura.auraBAL_BAL_DEPOSITOR]),
 
-    // {
-    //   targetAddress: BAL_DEPOSITOR,
-    //   signature: "deposit(uint256,uint256,bool,address)",
-    //   params: {
-    //     [3]: staticEqual(auraBAL_STAKING_REWARDER, "address"),
-    //   },
-    // },
     allow.mainnet.aura.auraBAL_BAL_depositor["deposit"](
       undefined,
       undefined,
@@ -701,10 +569,6 @@ const preset = {
     ),
 
     // Claiming auraBAL Staking Rewards
-    // {
-    //   targetAddress: auraBAL_STAKING_REWARDER,
-    //   signature: "getReward()",
-    // },
     allow.mainnet.aura.auraBAL_staking_rewarder["getReward()"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -768,58 +632,27 @@ const preset = {
     ...allowErc20Approve([AURA], [aura.AURA_LOCKER]),
 
     // Locking AURA
-    // {
-    //   targetAddress: AURA_LOCKER,
-    //   signature: "lock(address,uint256)",
-    //   params: {
-    //     [0]: staticEqual(AVATAR),
-    //   },
-    // },
     allow.mainnet.aura.aura_locker["lock"](
       AVATAR
     ),
 
     // Claiming Locking AURA Rewards
-    // {
-    //   targetAddress: AURA_LOCKER,
-    //   signature: "getReward(address)",
-    //   params: {
-    //     [0]: staticEqual(AVATAR),
-    //   },
-    // },
     allow.mainnet.aura.aura_locker["getReward(address)"](
       AVATAR
     ),
 
     // Process Expired AURA Locks - True -> Relock Expired Locks / False -> Withdraw Expired Locks
-    // {
-    //   targetAddress: AURA_LOCKER,
-    //   signature: "processExpiredLocks(bool)",
-    // },
     allow.mainnet.aura.aura_locker["processExpiredLocks"](),
 
     // Gauge Votes Delegation - IMPORTANT: THE ADDRESS SHOULD BE CONSTRAINED IN ORDER TO AVOID DELEGATING THE VOTING POWER TO UNWANTED ADDRESSES
-    // {
-    //   targetAddress: AURA_LOCKER,
-    //   signature: "delegate(address)",
-    // },
     // allow.mainnet.aura.aura_locker["delegate"](),
 
     // Proposals Delegation - IMPORTANT: THE ADDRESS SHOULD BE CONSTRAINED IN ORDER TO AVOID DELEGATING THE VOTING POWER TO UNWANTED ADDRESSES
-    // {
-    //   targetAddress: SNAPSHOT_DELEGATE_REGISTRY,
-    //   signature: "setDelegate(bytes32,address)",
-    // },
     // allow.mainnet.aura.snapshot_delegate_registry["setDelegate"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura - General Rewards Claiming
     //---------------------------------------------------------------------------------------------------------------------------------
-    // {
-    //   targetAddress: AURA_CLAIM_ZAP,
-    //   signature:
-    //     "claimRewards(address[],address[],address[],address[],uint256,uint256,uint256,uint256)",
-    // },
     allow.mainnet.aura.claim_zap["claimRewards"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -2618,6 +2451,92 @@ const preset = {
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3 - stETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([stETH], [aave_v3.POOL_V3]),
+
+    // Deposit
+    allow.mainnet.aave_v3.pool_v3["supply"](
+      stETH,
+      undefined,
+      AVATAR,
+    ),
+
+    // Withdraw
+    allow.mainnet.aave_v3.pool_v3["withdraw"](
+      stETH,
+      undefined,
+      AVATAR,
+    ),
+
+    // Set/Unset Asset as Collateral
+    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](
+      stETH
+    ),
+
+    // Borrow (Should we add this functionality for stETH?)
+    allow.mainnet.aave_v3.pool_v3["borrow"](
+      stETH,
+      undefined,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    // Repay (Should we add this functionality for stETH?)
+    allow.mainnet.aave_v3.pool_v3["repay"](
+      stETH,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3 - WBTC
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([WBTC], [aave_v3.POOL_V3]),
+
+    // Deposit (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v3.pool_v3["supply"](
+      WBTC,
+      undefined,
+      AVATAR,
+    ),
+
+    // Withdraw (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v3.pool_v3["withdraw"](
+      WBTC,
+      undefined,
+      AVATAR,
+    ),
+
+    // Set/Unset Asset as Collateral (Should we add this functionality for WBTC?)
+    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](
+      WBTC
+    ),
+
+    // Borrow
+    allow.mainnet.aave_v3.pool_v3["borrow"](
+      WBTC,
+      undefined,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    // Repay
+    allow.mainnet.aave_v3.pool_v3["repay"](
+      WBTC,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // Stakewise
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -2719,6 +2638,74 @@ const preset = {
     },
 
     // The decreaseLiquidity and collect functions have already been whitelisted.
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark - GNO
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([GNO], [spark.LENDING_POOL]),
+
+    // Deposit
+    allow.mainnet.spark.sparkLendingPoolV3["supply"](
+      GNO,
+      undefined,
+      AVATAR,
+    ),
+
+    // Withdraw
+    allow.mainnet.spark.sparkLendingPoolV3["withdraw"](
+      GNO,
+      undefined,
+      AVATAR,
+    ),
+
+    // Set/Unset Asset as Collateral
+    allow.mainnet.spark.sparkLendingPoolV3["setUserUseReserveAsCollateral"](
+      GNO
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark - DAI
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([DAI], [spark.LENDING_POOL]),
+
+    // Borrow
+    allow.mainnet.spark.sparkLendingPoolV3["borrow"](
+      DAI,
+      undefined,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    // Repay
+    allow.mainnet.spark.sparkLendingPoolV3["repay"](
+      DAI,
+      undefined,
+      undefined,
+      AVATAR
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark - sDAI
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([DAI], [spark.sDAI]),
+
+    // Deposit
+    allow.mainnet.spark.sDAI["deposit"](
+      undefined,
+      AVATAR
+    ),
+
+    // Withdraw
+    allow.mainnet.spark.sDAI["redeem"](
+      undefined,
+      AVATAR,
+      AVATAR
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // OMNI BRIDGE

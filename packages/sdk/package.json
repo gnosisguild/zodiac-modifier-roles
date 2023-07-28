@@ -43,6 +43,7 @@
     "apply:ens:eth:manage": "hardhat encodeApplyPresetManageENS --network mainnet --safe ENS_ETH",
     "apply:ens:eth:harvest": "hardhat encodeApplyPresetHarvestENS --network mainnet --safe ENS_ETH",
     "apply:ens:eth:swap": "hardhat encodeApplyPresetSwapENS --network mainnet --safe ENS_ETH",
+    "apply:gno:eth:spark": "hardhat encodeApplyPresetsSpark --network mainnet --safe ENS_ETH",
     "test": "hardhat test",
     "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
     "apply:santi:gno:manage": "hardhat encodeApplyPresetManageTestGNO --network xdai --safe SANTI_TEST_GNO",

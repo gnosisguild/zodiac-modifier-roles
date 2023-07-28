@@ -32,7 +32,7 @@ export default defineConfig({
         auraB_rETH_stable_rewarder:
           "0xDd1fE5AD401D4777cE89959b7fa587e569Bf125D",
         auraB_80GNO_20WETH_rewarder:
-          "0xD3780729035c5b302f76ced0E7F74cF0Fb7c739a",
+          "0x971fAF6BE8C20f53fe3acF065fe6E14FBA0b8a9a",
         aura50COW_50GNO_rewarder: "0x82FeB430d9D14eE5E635C41807e03fD8F5FfFDeC",
         aura50WSTETH_50LDO_rewarder:
           "0x5209dB28b3cF22a944401c83370Af7A703ffFb08",
@@ -130,6 +130,11 @@ export default defineConfig({
       silo_v2: {
         router: "0x8658047e48CC09161f4152c79155Dac1d710Ff0a"
       },
+      spark: {
+        sparkLendingPoolV3: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
+        wrappedTokenGatewayV3: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
+        sDAI: "0x83F20F44975D03b1b09e64809B757c47f942BEeA",
+      },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
       },
@@ -204,6 +209,7 @@ export default defineConfig({
       },
       omnibridge: "0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d",
       xdai_bridge: "0x7301CFA0e1756B71869E93d4e4Dca5c7d0eb0AA6",
+      wxdai: "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
     },
   },
 })

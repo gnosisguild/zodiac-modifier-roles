@@ -12,6 +12,7 @@ import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS"
 import mainnetDeFiHarvestENSPreset from "../src/presets/mainnet/ENS/deFiHarvestENS"
 import mainnetDeFiSwapENSPreset from "../src/presets/mainnet/ENS/deFiSwapENS"
+import sparkRepayDebtDAI from "../src/presets/mainnet/ENS/sparkRepayDebtDAI"
 
 import { NetworkId } from "../src/types"
 
@@ -191,28 +192,33 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
   console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
-// task("encodeApplyPresetRevokeENS").setAction(
-//     async (taskArgs, hre) => {
-//         const { config } = await processArgs(taskArgs, hre)
-//         const txBatches = await encodeApplyPresetTxBuilder(
-//             config.MODULE,
-//             2,
-//             mainnetDeFiRevokeENSPreset,
-//             { AVATAR: config.AVATAR },
-//             {
-//                 network: config.NETWORK as NetworkId,
-//             }
-//         )
+task("encodeApplyPresetsSpark").setAction(
+  async (taskArgs, hre) => {
+    const { config } = await processArgs(taskArgs, hre)
+    const txBatches = await encodeApplyPresetTxBuilder(
+      config.MODULE,
+      2,
+      sparkRepayDebtDAI,
+      { AVATAR: config.AVATAR },
+      {
+        network: config.NETWORK as NetworkId,
+      }
+    )
 
-//         writeFileSync(
-//             path.join(__dirname, "..", "/presets_output/mainnet/ENS/txDataRevokeENS.json"),
-//             JSON.stringify(txBatches, undefined, 2)
-//         )
-//         console.log(
-//             `Transaction builder JSON written to packages/sdk/presets_output/mainnet/ENS/txDataRevokeENS.json`
-//         )
-//     }
-// )
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/mainnet/ENS/txSparkRepayDebtDAI.json"
+    )
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
+  }
+)
 
 task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
