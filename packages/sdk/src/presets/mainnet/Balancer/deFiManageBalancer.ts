@@ -1,6 +1,18 @@
 import {
-  ZERO_ADDRESS, AAVE, BAL, COMP, D2D, DAI, rETH2,
-  sETH2, SWISE, USDC, USDT, WBTC, WETH, wstETH,
+  ZERO_ADDRESS,
+  AAVE,
+  BAL,
+  COMP,
+  D2D,
+  DAI,
+  rETH2,
+  sETH2,
+  SWISE,
+  USDC,
+  USDT,
+  WBTC,
+  WETH,
+  wstETH,
   aave_v3,
   across_v2,
   balancer,
@@ -8,12 +20,9 @@ import {
   cowswap,
   mstable_v2,
   silo_v2,
-  uniswapv3
+  uniswapv3,
 } from "../addresses"
-import {
-  staticEqual,
-  staticOneOf,
-} from "../../helpers/utils"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
 import { allow } from "../../allow"
@@ -22,11 +31,9 @@ import { allowErc20Approve } from "../../helpers/erc20"
 // mStable
 const DELEGATE_ADDRESS = "0xd6e96e437b8d42406a64440226b77a51c74e26b1"
 
-
 const preset = {
   network: 1,
   allow: [
-
     //All approvals have been commented since we'll be handling over the Avatar safe with all of them having been already executed
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -42,12 +49,9 @@ const preset = {
     //   },
     //   send: true,
     // },
-    allow.mainnet.lido.stETH["submit"](
-      ZERO_ADDRESS,
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.lido.stETH["submit"](ZERO_ADDRESS, {
+      send: true,
+    }),
 
     // { targetAddress: wstETH, signature: "wrap(uint256)" },
     allow.mainnet.lido.wstETH["wrap"](),
@@ -66,9 +70,7 @@ const preset = {
     //     [0]: staticEqual(AVATAR),
     //   },
     // },
-    allow.mainnet.aave_v2.stkAave["stake"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["stake"](AVATAR),
 
     // {
     //   targetAddress: stkAAVE,
@@ -77,9 +79,7 @@ const preset = {
     //     [0]: staticEqual(AVATAR),
     //   },
     // },
-    allow.mainnet.aave_v2.stkAave["claimRewards"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["claimRewards"](AVATAR),
 
     // Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
     // {
@@ -96,9 +96,7 @@ const preset = {
     //     [0]: staticEqual(AVATAR),
     //   },
     // },
-    allow.mainnet.aave_v2.stkAave["redeem"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["redeem"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3
@@ -142,116 +140,126 @@ const preset = {
     // Deposit
     {
       targetAddress: silo_v2.ROUTER,
-      signature:
-        "execute((uint8,address,address,uint256,bool)[])",
+      signature: "execute((uint8,address,address,uint256,bool)[])",
       params: {
-        [0]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000020",
-          "bytes32"), // Offset of the tuple from beginning 32=32*1
-        [1]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"), // Length of tuple = 1
-        [2]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // actionType = 0 (Deposit)
+        [0]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // Offset of the tuple from beginning 32=32*1
+        [1]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of tuple = 1
+        [2]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // actionType = 0 (Deposit)
         [3]: staticEqual(silo_v2.BAL_SILO, "address"), // BAL Silo
         [4]: staticEqual(BAL, "address"), // BAL Silo
-      }
+      },
     },
 
     // Withdraw
     {
       targetAddress: silo_v2.ROUTER,
-      signature:
-        "execute((uint8,address,address,uint256,bool)[])",
+      signature: "execute((uint8,address,address,uint256,bool)[])",
       params: {
-        [0]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000020",
-          "bytes32"), // Offset of the tuple from beginning 32=32*1
-        [1]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"), // Length of tuple = 1
-        [2]: staticEqual("0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"), // actionType = 0 (Withdraw)
+        [0]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000020",
+          "bytes32"
+        ), // Offset of the tuple from beginning 32=32*1
+        [1]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // Length of tuple = 1
+        [2]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "bytes32"
+        ), // actionType = 0 (Withdraw)
         [3]: staticEqual(silo_v2.BAL_SILO, "address"), // BAL Silo
         [4]: staticEqual(BAL, "address"), // BAL Silo
-      }
-    },
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // mStable V2
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // mStable V2 - Stake MTA
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([mstable_v2.MTA], [mstable_v2.stkMTA]),
-
-    // Staking of MTA without voting power delegation
-    allow.mainnet.mstable_v2.stkMTA["stake(uint256)"](),
-
-    // Staking of MTA with voting power delegation
-    allow.mainnet.mstable_v2.stkMTA["stake(uint256,address)"](
-      undefined,
-      DELEGATE_ADDRESS
-    ),
-
-    // Undelegate voting power
-    allow.mainnet.mstable_v2.stkMTA["delegate"](
-      AVATAR
-    ),
-
-    // Claim rewards without compounding
-    allow.mainnet.mstable_v2.stkMTA["claimReward()"](),
-
-    // Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
-    allow.mainnet.mstable_v2.stkMTA["compoundRewards"](),
-
-    // Start cooldown for withdrawal
-    allow.mainnet.mstable_v2.stkMTA["startCooldown"](),
-
-    // Forcefully end cooldown to be able to withdraw, at the expense of a penalty
-    allow.mainnet.mstable_v2.stkMTA["endCooldown"](),
-
-    // Withdraw MTA after cooldown
-    allow.mainnet.mstable_v2.stkMTA["withdraw"](
-      undefined,
-      AVATAR
-    ),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer - D2D + BAL
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([D2D, BAL], [balancer.VAULT]),
-
-    // Add Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
       },
     },
 
-    // Withdraw Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-      },
-    },
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // mStable V2
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // mStable V2 - Stake MTA
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([mstable_v2.MTA], [mstable_v2.stkMTA]),
+
+    // // Staking of MTA without voting power delegation
+    // allow.mainnet.mstable_v2.stkMTA["stake(uint256)"](),
+
+    // // Staking of MTA with voting power delegation
+    // allow.mainnet.mstable_v2.stkMTA["stake(uint256,address)"](
+    //   undefined,
+    //   DELEGATE_ADDRESS
+    // ),
+
+    // // Undelegate voting power
+    // allow.mainnet.mstable_v2.stkMTA["delegate"](
+    //   AVATAR
+    // ),
+
+    // // Claim rewards without compounding
+    // allow.mainnet.mstable_v2.stkMTA["claimReward()"](),
+
+    // // Claim compounding rewards, i.e. MTA claimed rewards are immediately staked
+    // allow.mainnet.mstable_v2.stkMTA["compoundRewards"](),
+
+    // // Start cooldown for withdrawal
+    // allow.mainnet.mstable_v2.stkMTA["startCooldown"](),
+
+    // // Forcefully end cooldown to be able to withdraw, at the expense of a penalty
+    // allow.mainnet.mstable_v2.stkMTA["endCooldown"](),
+
+    // // Withdraw MTA after cooldown
+    // allow.mainnet.mstable_v2.stkMTA["withdraw"](
+    //   undefined,
+    //   AVATAR
+    // ),
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Balancer
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Balancer - D2D + BAL
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([D2D, BAL], [balancer.VAULT]),
+
+    // // Add Liquidity
+    // {
+    //   targetAddress: balancer.VAULT,
+    //   signature:
+    //     "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+    //   params: {
+    //     [0]: staticEqual(
+    //       "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
+    //       "bytes32"
+    //     ), // Balancer PoolId
+    //     [1]: staticEqual(AVATAR),
+    //     [2]: staticEqual(AVATAR),
+    //   },
+    // },
+
+    // // Withdraw Liquidity
+    // {
+    //   targetAddress: balancer.VAULT,
+    //   signature:
+    //     "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+    //   params: {
+    //     [0]: staticEqual(
+    //       "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
+    //       "bytes32"
+    //     ), // Balancer PoolId
+    //     [1]: staticEqual(AVATAR),
+    //     [2]: staticEqual(AVATAR),
+    //   },
+    // },
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2
@@ -362,7 +370,9 @@ const preset = {
     allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
       AVATAR,
       {
-        subsetOf: [compound_v2.cAAVE, compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+        subsetOf: [compound_v2.cAAVE, compound_v2.cDAI, compound_v2.cUSDC]
+          .map((address) => address.toLowerCase())
+          .sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
     ),
@@ -444,7 +454,7 @@ const preset = {
       params: {
         // If the collected token is ETH then the address must be the ZERO_ADDRESS
         // [1]: staticOneOf([AVATAR, ZERO_ADDRESS], "address"),
-        [1]: staticEqual(AVATAR)
+        [1]: staticEqual(AVATAR),
       },
     },
 
@@ -470,11 +480,9 @@ const preset = {
     //   signature: "stake()",
     //   send: true,
     // },
-    allow.mainnet.stakewise.eth2_staking["stake"](
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.stakewise.eth2_staking["stake"]({
+      send: true,
+    }),
 
     // By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
     // {
@@ -485,11 +493,10 @@ const preset = {
     //     [2]: dynamic32Equal([rETH2, SWISE], "address[]"),
     //   },
     // },
-    allow.mainnet.stakewise.merkle_distributor["claim"](
-      undefined,
-      AVATAR,
-      [rETH2, SWISE]
-    ),
+    allow.mainnet.stakewise.merkle_distributor["claim"](undefined, AVATAR, [
+      rETH2,
+      SWISE,
+    ]),
 
     // The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
     // But as of now it is not considered within the strategy scope
@@ -575,11 +582,9 @@ const preset = {
     //   signature: "deposit()",
     //   send: true,
     // },
-    allow.mainnet.weth["deposit"](
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.weth["deposit"]({
+      send: true,
+    }),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of tokens COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT and WBTC in UniswapV3
@@ -674,8 +679,8 @@ const preset = {
           [USDT, WETH, USDC],
           [USDT, DAI],
           [USDT, WETH, DAI],
-          [WBTC, WETH]
-        ]
+          [WBTC, WETH],
+        ],
       },
       AVATAR
     ),
@@ -1259,8 +1264,10 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of the tuple from beginning 224=32*7
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1271,12 +1278,14 @@ const preset = {
         ), // COMP-WETH pool ID
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+          "bytes32"
+        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(COMP, "address"), // Asset in
         [10]: staticEqual(WETH, "address"), // Asset out
         [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
         [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
@@ -1291,8 +1300,10 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of the tuple from beginning 224=32*7
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1303,12 +1314,14 @@ const preset = {
         ), // WETH-DAI pool ID
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+          "bytes32"
+        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(WETH, "address"), // Asset in
         [10]: staticEqual(DAI, "address"), // Asset out
         [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
         [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
@@ -1323,8 +1336,10 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of the tuple from beginning 224=32*7
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1335,12 +1350,14 @@ const preset = {
         ), //USDC-WETH pool ID
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+          "bytes32"
+        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(WETH, "address"), //Asset in
         [10]: staticEqual(USDC, "address"), //Asset out
         [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
         [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
@@ -1355,8 +1372,10 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of the tuple from beginning 224=32*7
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1367,12 +1386,14 @@ const preset = {
         ), // wstETH-WETH pool ID
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+          "bytes32"
+        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(wstETH, "address"), // Asset in
         [10]: staticEqual(WETH, "address"), // Asset out
         [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
         [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
@@ -1387,8 +1408,10 @@ const preset = {
       signature:
         "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
       params: {
-        [0]: staticEqual("0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of the tuple from beginning 224=32*7
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
         [1]: staticEqual(AVATAR), // recipient
         [2]: staticEqual(false, "bool"),
         [3]: staticEqual(AVATAR), // sender
@@ -1399,12 +1422,14 @@ const preset = {
         ), // wstETH-WETH pool ID
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "bytes32"), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+          "bytes32"
+        ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
         [9]: staticEqual(WETH, "address"), //Asset in
         [10]: staticEqual(wstETH, "address"), //Asset out
         [12]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "bytes32"), // Offset of bytes from beginning of tuple 192=32*6
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
         [13]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000000",
           "bytes32"
@@ -1412,19 +1437,32 @@ const preset = {
       },
     },
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Cowswap
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC], [cowswap.GPv2_VAULT_RELAYER]),
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Cowswap
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC], [cowswap.GPv2_VAULT_RELAYER]),
 
-    allow.mainnet.cowswap.order_signer["signOrder"](
-      {
-        oneOf: [COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC]
-      },
-      {
-        oneOf: [DAI, sETH2, USDC, USDT, WBTC, WETH]
-      }
-    )
+    // allow.mainnet.cowswap.order_signer["signOrder"](
+    //   {
+    //     oneOf: [COMP, AAVE, rETH2, SWISE, sETH2, WETH, USDC, DAI, USDT, WBTC],
+    //   },
+    //   {
+    //     oneOf: [DAI, sETH2, USDC, USDT, WBTC, WETH],
+    //   },
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   {
+    //     delegatecall: true,
+    //   }
+    // ),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset
