@@ -1,67 +1,82 @@
-import Image from "next/image";
+"use client";
+import { isAddress } from "viem";
+import { useState } from "react";
 import styles from "./page.module.css";
+import Box from "@/components/Box";
+import Flex from "@/components/Flex";
+import Button from "@/components/Button";
+import Field from "@/components/Field";
+import ChainSelect from "@/components/ChainSelect";
+import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/chains";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
+const chains = Object.values(CHAINS);
+
+export default function AttachMod() {
+  const router = useRouter();
+  const [chainId, setChainId] = useState<ChainId>(DEFAULT_CHAIN.id);
+  const [address, setAddress] = useState("");
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      <Flex gap={0} justifyContent="center" alignItems="center">
+        <Box bg p={3}>
+          <Flex direction="column" gap={3}>
+            <h3>Attach to a Roles Mod</h3>
+            <p>
+              Once a Roles Mod is connected you can manage roles and
+              permissions.
+            </p>
+            <Field label="Chain">
+              <ChainSelect
+                value={chainId}
+                onChange={(nextChainId) => {
+                  setChainId(nextChainId);
+                  setAddress(
+                    CHAINS[nextChainId].prefix + ":" + unprefix(address)
+                  );
+                }}
+              />
+            </Field>
+            <Field label="Roles Mod Address">
+              <input
+                type="text"
+                placeholder={DEFAULT_CHAIN.prefix + ":0x..."}
+                spellCheck="false"
+                value={address}
+                onFocus={(ev) =>
+                  ev.target.setSelectionRange(0, ev.target.value.length)
+                }
+                onChange={(ev) => {
+                  const { value } = ev.target;
+                  if (value.indexOf(":") > 0) {
+                    const [chainPrefix, address] = value.split(":");
+                    const nextChainId =
+                      chains.find((chain) => chain.prefix === chainPrefix)
+                        ?.id || chainId;
+                    setChainId(nextChainId);
+                  }
+                  setAddress(value);
+                }}
+              />
+            </Field>
+            <Button
+              disabled={!isAddress(unprefix(address))}
+              onClick={() => router.push("/" + address)}
+            >
+              Attach
+            </Button>
+          </Flex>
+        </Box>
+      </Flex>
     </main>
   );
 }
+
+const unprefix = (value: string) => {
+  if (value.indexOf(":") > 0) {
+    const [, address] = value.split(":");
+    return address;
+  } else {
+    return value;
+  }
+};

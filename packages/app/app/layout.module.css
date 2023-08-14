@@ -1,0 +1,35 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(
+    108.86deg,
+    rgba(26, 33, 66, 0.85) 6.24%,
+    rgba(12, 19, 8, 0.85) 53.08%,
+    rgba(37, 6, 4, 0.85) 96.54%
+  );
+}
+
+.topBar {
+  flex-grow: 0;
+  flex-shrink: 0;
+  padding: 32px 32px 16px 32px;
+}
+
+.main {
+  padding: 16px 32px 32px 32px;
+  height: calc(100vh - 102px);
+  box-sizing: border-box;
+}
+
+button.appName {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-2);
+  width: 140px;
+  white-space: nowrap;
+  background: none;
+  border-width: 1px;
+  background-color: rgba(217, 212, 173, 0.1);
+}
