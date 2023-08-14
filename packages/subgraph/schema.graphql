@@ -84,8 +84,9 @@ type Role @entity {
   id: ID! # Global unique id for role in subgraph
   key: Bytes! # Unique within the Roles modifier instance (bytes32)
   rolesModifier: RolesModifier!
-  targets: [Target!] @derivedFrom(field: "role")
-  members: [RoleAssignment!] @derivedFrom(field: "role")
+  targets: [Target!]! @derivedFrom(field: "role")
+  members: [RoleAssignment!]! @derivedFrom(field: "role")
+  annotations: [PermissionAnnotation!]! @derivedFrom(field: "role")
 }
 
 type Target @entity {
@@ -94,7 +95,7 @@ type Target @entity {
   address: Bytes!
   clearance: Clearance!
   executionOptions: ExecutionOptions!
-  functions: [Function!] @derivedFrom(field: "target")
+  functions: [Function!]! @derivedFrom(field: "target")
 }
 
 type Function @entity {
@@ -113,14 +114,14 @@ type Condition @entity {
   operator: Operator!
   compValue: Bytes!
   parent: Condition
-  children: [Condition!] @derivedFrom(field: "parent")
+  children: [Condition!]! @derivedFrom(field: "parent")
 }
 
 type Member @entity {
   id: ID!
   address: Bytes!
   enabledAsModule: Boolean!
-  roles: [RoleAssignment!] @derivedFrom(field: "member")
+  roles: [RoleAssignment!]! @derivedFrom(field: "member")
 }
 
 type RoleAssignment @entity {
@@ -135,7 +136,7 @@ type RolesModifier @entity {
   owner: Bytes!
   avatar: Bytes!
   target: Bytes!
-  roles: [Role!] @derivedFrom(field: "rolesModifier")
+  roles: [Role!]! @derivedFrom(field: "rolesModifier")
 }
 
 type Allowance @entity {
@@ -155,4 +156,10 @@ type UnwrapAdapter @entity {
   targetAddress: Bytes!
   selector: Bytes!
   adapterAddress: Bytes!
+}
+
+type PermissionAnnotation @entity {
+  role: Role!
+  url: String! # URL to a REST endpoint providing the permissions to annotate
+  schema: String! # URL to the OpenAPI schema describing the `url` REST endpoint
 }
