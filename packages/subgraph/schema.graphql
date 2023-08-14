@@ -10,7 +10,7 @@ enum ParameterType {
 
 enum Operator {
   # 00:    EMPTY EXPRESSION (default, always passes)
-  #          paramType: Static / Dynamic
+  #          paramType: Static / Dynamic / Tuple / Array
   #          🚫 children
   #          🚫 compValue
   Pass # 0
@@ -21,10 +21,10 @@ enum Operator {
   #          🚫 compValue
   And # 1
   Or # 2
-  Xor # 3
-  Not # 4
+  Nor # 3
+  _Placeholder04 # 4
   # ------------------------------------------------------------
-  # 05-16: COMPLEX EXPRESSIONS
+  # 05-14: COMPLEX EXPRESSIONS
   #          paramType: Calldata / AbiEncoded / Tuple / Array,
   #          ✅ children
   #          🚫 compValue
@@ -32,34 +32,39 @@ enum Operator {
   ArraySome # 6
   ArrayEvery # 7
   ArraySubset # 8
-  _ComplexPlaceholder09
-  _ComplexPlaceholder10
-  _ComplexPlaceholder11
-  _ComplexPlaceholder12
-  _ComplexPlaceholder13
-  _ComplexPlaceholder14
-  _ComplexPlaceholder15
-  _ComplexPlaceholder16
+  _Placeholder09
+  _Placeholder10
+  _Placeholder11
+  _Placeholder12
+  _Placeholder13
+  _Placeholder14
   # ------------------------------------------------------------
-  # 17-31: COMPARISON EXPRESSIONS
-  #          paramType: Static / Dynamic / Tuple / Array
+  # 15:    SPECIAL COMPARISON (without compValue)
+  #          paramType: Static
   #          🚫 children
+  #          🚫 compValue
+  EqualToAvatar # 15
+  # ------------------------------------------------------------
+  # 16-31: COMPARISON EXPRESSIONS
+  #          paramType: Static / Dynamic / Tuple / Array
+  #          ❓ children (only for paramType: Tuple / Array to describe their structure)
   #          ✅ compValue
-  EqualTo # 17
-  GreaterThan # 18
-  LessThan # 19
-  Bitmask # 20
-  _ComparisonPlaceholder21
-  _ComparisonPlaceholder22
-  _ComparisonPlaceholder23
-  _ComparisonPlaceholder24
-  _ComparisonPlaceholder25
-  _ComparisonPlaceholder26
-  _ComparisonPlaceholder27
-  _ComparisonPlaceholder28
-  WithinAllowance # 29
-  EtherWithinAllowance # 30
-  CallWithinAllowance # 31
+  EqualTo # 16
+  GreaterThan # 17
+  LessThan # 18
+  SignedIntGreaterThan # 19
+  SignedIntLessThan # 20
+  Bitmask # 21
+  Custom # 22
+  _Placeholder23
+  _Placeholder24
+  _Placeholder25
+  _Placeholder26
+  _Placeholder27
+  WithinAllowance # 28
+  EtherWithinAllowance # 29
+  CallWithinAllowance # 30
+  _Placeholder31
 }
 
 enum ExecutionOptions {
