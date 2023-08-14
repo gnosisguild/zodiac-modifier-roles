@@ -8,7 +8,7 @@ import { ChainId, Target } from "./types"
 
 type Options = (
   | {
-      /** Chain ID of the network the roles mod is deployed on */
+      /** ID of the chain where the Roles mod is deployed */
       chainId: ChainId
       /** Address of the roles mod */
       address: string

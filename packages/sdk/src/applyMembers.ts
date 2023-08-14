@@ -7,8 +7,8 @@ const rolesInterface = Roles__factory.createInterface()
 
 type Options = (
   | {
-      /** Chain ID of the network the roles mod is deployed on */
-      network: ChainId
+      /** ID of the Chain where the Roles mod is deployed */
+      chainId: ChainId
       /** Address of the roles mod */
       address: string
     }
@@ -39,16 +39,16 @@ export const applyMembers = async (
   let currentMembers = "currentMembers" in options && options.currentMembers
 
   if (!currentMembers) {
-    if ("network" in options && options.network) {
+    if ("chainId" in options && options.chainId) {
       const role = await fetchRole({
-        network: options.network,
+        chainId: options.chainId,
         address: options.address,
         roleKey,
       })
       currentMembers = role.members
     } else {
       throw new Error(
-        "Either `currentMembers` or `network` and `address` must be specified"
+        "Either `currentMembers` or `chainId` and `address` must be specified"
       )
     }
   }
