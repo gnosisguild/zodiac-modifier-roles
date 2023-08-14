@@ -136,8 +136,8 @@ const calldataMatchesScopings =
     return matchesCondition
   }
 
-const calldataMatchesPresetFunction =
-  (presetFunction: FunctionPermission) => (abiType?: ParamType) => {
+const calldataMatchesFunctionPermission =
+  (functionPermission: FunctionPermission) => (abiType?: ParamType) => {
     // only supported at the top level or for bytes type params
     if (abiType && abiType.type !== "bytes") {
       throw new Error(
@@ -145,14 +145,14 @@ const calldataMatchesPresetFunction =
       )
     }
 
-    const { selector, condition } = coerceFunctionPermission(presetFunction)
+    const { selector, condition } = coerceFunctionPermission(functionPermission)
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
         condition.paramType !== ParameterType.Calldata
       ) {
         throw new Error(
-          `calldataMatches expects a preset function with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
             Operator[condition.operator]
           }\`, \`ParamType.${ParameterType[condition.paramType]}\``
         )
@@ -187,25 +187,25 @@ type CalldataMatches = {
   ): (abiType?: ParamType) => Condition
 
   /**
-   * Matches EVM call data against a reference preset function.
+   * Matches EVM call data against a reference function permission.
    *
-   * The 4 bytes function selector is checked against the preset function selector.
-   * Also, preset function condition is evaluated on the call data.
+   * The 4 bytes function selector is checked against the function permission selector.
+   * Also, function permission condition is evaluated on the call data.
    *
-   * @param presetFunction The reference preset function
+   * @param functionPermission The reference function permission
    **/
-  (presetFunction: FunctionPermission): (abiType?: ParamType) => Condition
+  (functionPermission: FunctionPermission): (abiType?: ParamType) => Condition
 }
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
-  scopingsOrPresetFunction: S | FunctionPermission,
+  scopingsOrFunctionPermission: S | FunctionPermission,
   abiTypes?: AbiType[],
   selector?: `0x${string}`
 ): ((abiType?: ParamType) => Condition) => {
-  return Array.isArray(scopingsOrPresetFunction) && abiTypes
-    ? calldataMatchesScopings(scopingsOrPresetFunction, abiTypes, selector)
-    : calldataMatchesPresetFunction(
-        scopingsOrPresetFunction as unknown as FunctionPermission
+  return Array.isArray(scopingsOrFunctionPermission) && abiTypes
+    ? calldataMatchesScopings(scopingsOrFunctionPermission, abiTypes, selector)
+    : calldataMatchesFunctionPermission(
+        scopingsOrFunctionPermission as unknown as FunctionPermission
       )
 }
 
@@ -246,7 +246,7 @@ export const abiEncodedMatches =
   }
 
 /**
- * Maps a scoping (shortcut notation or condition function) to preset conditions.
+ * Maps a scoping (shortcut notation or condition function) to a condition.
  * @param scoping The scoping to map.
  * @param abiType The abi type of the parameter the scoping applies to.
  * @returns

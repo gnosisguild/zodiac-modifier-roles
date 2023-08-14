@@ -3,13 +3,12 @@ import { formatBytes32String } from "ethers/lib/utils"
 import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
-import { fillPreset } from "../../src"
+import { Permission, processPermissions } from "../../src"
 import { applyTargets } from "../../src/applyTargets"
-import { Preset } from "../../src/permissions/types"
 import { deployContracts } from "../deployContracts"
 
-import manageBalancer1Preset from "./presets/deFiManageBalancer1TypedKit"
-import manageENS1Preset from "./presets/deFiManageENS1Untyped"
+import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"
+import manageENS1Permissions from "./permissions/deFiManageENS1Untyped"
 import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1"
 import manageENS1Transactions from "./testTransactions/deFiManageENS1"
 
@@ -78,11 +77,11 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   })
 
   const simulateTransactions = async ({
-    preset,
+    permissions,
     config,
     transactions,
   }: {
-    preset: Preset
+    permissions: Permission[]
     config: Config
     transactions: {
       from: string
@@ -97,10 +96,14 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
 
-    const transactionsData = await applyTargets(ROLE_KEY, fillPreset(preset), {
-      currentPermissions: [],
-      mode: "replace",
-    })
+    const transactionsData = await applyTargets(
+      ROLE_KEY,
+      processPermissions(permissions),
+      {
+        currentTargets: [],
+        mode: "replace",
+      }
+    )
 
     const permissionUpdateTransactions = transactionsData.map((data) => ({
       to: modifier.address,
@@ -161,21 +164,21 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
 
-  describe("ManageBalancer1 preset", () => {
+  describe("ManageBalancer1 permissions", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.BALANCER_1_ETH,
-        preset: manageBalancer1Preset,
+        permissions: manageBalancer1Permissions,
         transactions: manageBalancer1Transactions,
       })
     })
   })
 
-  describe("ManageENS1 preset", () => {
+  describe("ManageENS1 permissions", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.ENS_1_ETH,
-        preset: manageENS1Preset,
+        permissions: manageENS1Permissions,
         transactions: manageENS1Transactions,
       })
     })

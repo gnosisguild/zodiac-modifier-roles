@@ -12,7 +12,7 @@ import {
 } from "./utils"
 
 /**
- * Processes the allow entries of a preset and merges entries addressing the same function into a single entry.
+ * Processes the permissions and merges entries addressing the same function into a single entry.
  * This is done by merging the conditions using a logical OR.
  * @param permissions The permissions to process
  * @returns The updated permissions
