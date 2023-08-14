@@ -12,7 +12,7 @@ This module relies on [eth-sdk](https://github.com/dethcrypto/eth-sdk) for gener
 yarn add @dethcrypto/eth-sdk @dethcrypto/eth-sdk-client zodiac-roles-sdk
 ```
 
-If you don't want to use [typed allow kits](typed-allow-kits), only install `zodiac-roles-sdk` and skip the configuration step described in the following section.
+If you don't want to use [typed allow kits](#kits), only install `zodiac-roles-sdk` and skip the configuration step described in the following section.
 
 ```
 yarn add zodiac-roles-sdk
@@ -149,7 +149,7 @@ Functions:
 - support for condition authoring
 - joining permissions addressing the same function
 
-### <a name="typed-allow-kits"></a>Layer 3: Kits
+### <a name="kits"></a>Layer 3: Kits
 
 On the highest layer of abstraction, users can generate _kits_ for contracts they want to define permission for.
 A kit is a typed sdk tailored to a specific set of contracts that allows defining permissions on these in a convenient syntax and fully supported by the type system.
