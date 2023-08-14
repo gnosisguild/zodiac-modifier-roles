@@ -92,7 +92,7 @@ const multiSendTx = encodeMulti(
 
 The SDK is designed in three layers of abstraction:
 
-### Layer 1: Role patching
+### Layer 1: Targets
 
 This layer has diffing & patching functions on role configurations, operating on JSON objects matching the `Role` type of the subgraph schema.
 
@@ -121,12 +121,18 @@ This layer has diffing & patching functions on role configurations, operating on
 }
 ```
 
-It allows computing the calls required for patching an existing role configuration to a desired target configuration, covering permissions (allowed targets) and members.
-It also offers various sanity checks and normalizations for conditions.
+Functions:
 
-### Layer 2: Permission presets
+- fetch current role configurations
+- compute contract calls required for patching an existing role configuration (targets and members) to a desired configuration
+- sanity checks and and normalizations for conditions
 
-A permission preset is a parametrized set of permissions. It can be applied to different roles, filling in the specific parameter values for the placeholders in conditions.
+### Layer 2: Permissions
+
+For authoring purposes it is useful to capture permissions in a slightly different structure:
+Rather than the list of targets with nested functions as exposed by the subgraph, permissions are defined by a flat array of entries that grant call right to an address or a specific function at an address.
+
+Helper functions offer a more convenient way for expressing conditions.
 
 **Example:**
 
@@ -138,10 +144,15 @@ A permission preset is a parametrized set of permissions. It can be applied to d
 }
 ```
 
-### <a name="typed-allow-kits"></a>Layer 3: Typed allow kits
+Functions:
 
-On the highest layer of abstraction, users can generate _allow kits_ for contracts they want to permission.
-An allow kit is a typed sdk tailored to a specific set of contracts that allows defining permissions on these in a convenient syntax and fully supported by the type system.
+- support for condition authoring
+- joining permissions addressing the same function
+
+### <a name="typed-allow-kits"></a>Layer 3: Kits
+
+On the highest layer of abstraction, users can generate _kits_ for contracts they want to define permission for.
+A kit is a typed sdk tailored to a specific set of contracts that allows defining permissions on these in a convenient syntax and fully supported by the type system.
 
 Users just provide the addresses of contracts. Powered by [eth-sdk](https://github.com/dethcrypto/eth-sdk) and [TypeChain](https://github.com/dethcrypto/TypeChain), ABIs will be automatically downloaded from Etherscan to generate type-safe functions for granting permissions.
 
@@ -211,4 +222,4 @@ c.or(1, 2, 3) // a condition that checks if a numeric parameter equals either of
 
 #### Custom conditions
 
-- `custom` _not yet implemented_
+- `custom` _not yet implemented in the sdk_
