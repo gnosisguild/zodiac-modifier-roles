@@ -3,6 +3,7 @@ export * from "./permissions"
 export { encodeCalls } from "./calls"
 
 export { fetchRole } from "./fetchRole"
+export { fetchRolesMod } from "./fetchRolesMod"
 export { diffTargets } from "./diffTargets"
 export { replaceTargets } from "./replaceTargets"
 export { extendTargets } from "./extendTargets"

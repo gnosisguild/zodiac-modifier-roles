@@ -47,6 +47,10 @@ const QUERY = `
           }
         }
       }
+      annotations {
+        url
+        schema
+      }
     }
   }
 `

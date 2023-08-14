@@ -49,7 +49,7 @@ export default function AttachMod() {
                 onChange={(ev) => {
                   const { value } = ev.target;
                   if (value.indexOf(":") > 0) {
-                    const [chainPrefix, address] = value.split(":");
+                    const [chainPrefix] = value.split(":");
                     const nextChainId =
                       chains.find((chain) => chain.prefix === chainPrefix)
                         ?.id || chainId;
