@@ -1,24 +1,27 @@
 import { normalizeCondition } from "../conditions"
 import { Clearance, ExecutionOptions, Target } from "../types"
 
-import { mergeFunctionEntries } from "./mergeFunctionEntries"
-import { Preset, PresetFunctionCoerced } from "./types"
-import { execOptions, allowEntryId, isScoped } from "./utils"
+import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
+import {
+  FunctionPermissionCoerced,
+  Permission,
+  PermissionCoerced,
+} from "./types"
+import { execOptions, permissionId, isFunctionScoped } from "./utils"
 
 /**
- * Processes a RolePreset, filling in the placeholders and returning the final permissions
- * @param preset the RolePreset to process
- * @param placeholderValues a map of placeholder keys to the values they should be replaced with
- * @returns permissions as a list of allowed targets
+ * Processes permissions returning the resulting list of allowed targets. Merges permission entries addressing the same function and performs sanity checks.
+ * @param permissions to process
+ * @returns The resulting list of allowed targets
  */
-export const fillPreset = <P extends Preset>(preset: P): Target[] => {
-  const mergedPreset = mergeFunctionEntries(preset)
-  sanityCheck(mergedPreset)
+export const processPermissions = (permissions: Permission[]): Target[] => {
+  // first we merge permissions addressing the same target functions so every entry will be unique
+  const uniquePermissions = mergeFunctionPermissions(permissions)
+  sanityCheck(uniquePermissions)
 
-  const { allow } = mergedPreset
-
-  const fullyClearedTargets = allow
-    .filter((entry) => !isScoped(entry))
+  // collect all fully cleared targets
+  const fullyClearedTargets = uniquePermissions
+    .filter((entry) => !isFunctionScoped(entry))
     .map((entry) => ({
       address: entry.targetAddress.toLowerCase(),
       clearance: Clearance.Target,
@@ -26,12 +29,12 @@ export const fillPreset = <P extends Preset>(preset: P): Target[] => {
       functions: [],
     }))
 
-  const allowFunctionEntries = allow.filter(
+  // collect all function scoped targets
+  const functionPermissions = uniquePermissions.filter(
     (entry) => "selector" in entry
-  ) as PresetFunctionCoerced[]
-
+  ) as FunctionPermissionCoerced[]
   const functionScopedTargets = Object.entries(
-    groupBy(allowFunctionEntries, (entry) => entry.targetAddress)
+    groupBy(functionPermissions, (entry) => entry.targetAddress)
   ).map(([targetAddress, allowFunctions]) => ({
     address: targetAddress.toLowerCase(),
     clearance: Clearance.Function,
@@ -50,18 +53,20 @@ export const fillPreset = <P extends Preset>(preset: P): Target[] => {
   return [...fullyClearedTargets, ...functionScopedTargets]
 }
 
-const sanityCheck = (preset: Preset) => {
-  assertNoWildcardScopedIntersection(preset)
-  assertNoDuplicateAllowFunction(preset)
+const sanityCheck = (permissions: PermissionCoerced[]) => {
+  assertNoWildcardScopedIntersection(permissions)
+  assertNoDuplicateAllowFunction(permissions)
 }
 
-const assertNoWildcardScopedIntersection = (preset: Preset) => {
-  const wildcardTargets = preset.allow
-    .filter((entry) => !isScoped(entry))
+const assertNoWildcardScopedIntersection = (
+  permissions: PermissionCoerced[]
+) => {
+  const wildcardTargets = permissions
+    .filter((entry) => !isFunctionScoped(entry))
     .map((entry) => entry.targetAddress)
 
   const scopedTargets = new Set(
-    preset.allow.filter(isScoped).map((entry) => entry.targetAddress)
+    permissions.filter(isFunctionScoped).map((entry) => entry.targetAddress)
   )
 
   const intersection = [
@@ -76,8 +81,8 @@ const assertNoWildcardScopedIntersection = (preset: Preset) => {
   }
 }
 
-const assertNoDuplicateAllowFunction = (preset: Preset) => {
-  const allowFunctions = preset.allow.filter(isScoped).map(allowEntryId)
+const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
+  const allowFunctions = permissions.filter(isFunctionScoped).map(permissionId)
 
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),

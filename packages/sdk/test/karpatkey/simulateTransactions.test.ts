@@ -4,8 +4,8 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
 import { fillPreset } from "../../src"
-import { applyPermissions } from "../../src/applyPermissions"
-import { Preset } from "../../src/presets/types"
+import { applyTargets } from "../../src/applyTargets"
+import { Preset } from "../../src/permissions/types"
 import { deployContracts } from "../deployContracts"
 
 import manageBalancer1Preset from "./presets/deFiManageBalancer1TypedKit"
@@ -97,14 +97,10 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
 
-    const transactionsData = await applyPermissions(
-      ROLE_KEY,
-      fillPreset(preset),
-      {
-        currentPermissions: [],
-        mode: "replace",
-      }
-    )
+    const transactionsData = await applyTargets(ROLE_KEY, fillPreset(preset), {
+      currentPermissions: [],
+      mode: "replace",
+    })
 
     const permissionUpdateTransactions = transactionsData.map((data) => ({
       to: modifier.address,

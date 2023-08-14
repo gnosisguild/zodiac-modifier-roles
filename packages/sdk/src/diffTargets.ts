@@ -2,9 +2,9 @@ import { getConditionId, normalizeCondition } from "./conditions"
 import { Clearance, Target, Function, Condition } from "./types"
 
 /**
- *  Returns permissions granted by `a` that are not granted by `b`
+ *  Returns targets granted by `a` that are not granted by `b`
  */
-export const diffPermissions = (a: Target[], b: Target[]): Target[] => {
+export const diffTargets = (a: Target[], b: Target[]): Target[] => {
   // targets in a that are not in b
   const targetsDiff = a.filter(
     (targetA) => !b.some((targetB) => targetsEqual(targetA, targetB))
@@ -29,7 +29,7 @@ export const diffPermissions = (a: Target[], b: Target[]): Target[] => {
   return [...targetsDiff, ...scopedTargetsOverlapDiff]
 }
 
-// Returns a diff of function-cleared targets, and undefined if the targets are equal
+// Returns a diff of function-scoped targets, and undefined if the targets are equal
 const diffScopedTargets = (
   targetA: Target,
   targetB: Target

@@ -14,7 +14,7 @@ import {
 interface Props {
   address: string
   roleKey: string
-  network: ChainId
+  chainId: ChainId
 }
 
 const QUERY = `
@@ -57,9 +57,9 @@ const getRoleId = (address: string, roleKey: string) =>
 export const fetchRole = async ({
   address,
   roleKey,
-  network,
+  chainId,
 }: Props): Promise<Role> => {
-  const res = await fetch(SUBGRAPH[network], {
+  const res = await fetch(SUBGRAPH[chainId], {
     method: "POST",
     body: JSON.stringify({
       query: QUERY,

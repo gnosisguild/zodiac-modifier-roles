@@ -1,5 +1,5 @@
-import * as c from "../../../src/presets/authoring/conditions"
-import { Preset } from "../../../src/presets/types"
+import * as c from "../../../src/permissions/authoring/conditions"
+import { Preset } from "../../../src/permissions/types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"

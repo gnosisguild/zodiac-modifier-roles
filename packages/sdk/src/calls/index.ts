@@ -1,8 +1,8 @@
 export { logCall } from "./logCall"
 
 export { encodeCalls } from "./encodeCalls"
-export { grantPermissions } from "./grantPermissions"
-export { revokePermissions } from "./revokePermissions"
+export { grant } from "./grant"
+export { revoke } from "./revoke"
 export { removeObsoleteCalls } from "./removeObsoleteCalls"
 
 export type { Call } from "./types"

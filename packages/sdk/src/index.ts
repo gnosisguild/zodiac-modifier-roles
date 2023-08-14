@@ -1,15 +1,15 @@
 export * from "./conditions"
-export * from "./presets"
+export * from "./permissions"
 export { encodeCalls } from "./calls"
 
 export { fetchRole } from "./fetchRole"
-export { diffPermissions } from "./diffPermissions"
-export { replacePermissions } from "./replacePermissions"
-export { extendPermissions } from "./extendPermissions"
-export { removePermissions } from "./removePermissions"
-export { checkPermissionsIntegrity } from "./checkPermissionsIntegrity"
+export { diffTargets } from "./diffTargets"
+export { replaceTargets } from "./replaceTargets"
+export { extendTargets } from "./extendTargets"
+export { removeTargets } from "./removeTargets"
+export { checkIntegrity } from "./checkIntegrity"
 
-export { applyPermissions } from "./applyPermissions"
+export { applyTargets } from "./applyTargets"
 export { applyMembers } from "./applyMembers"
 
 export * from "./types"

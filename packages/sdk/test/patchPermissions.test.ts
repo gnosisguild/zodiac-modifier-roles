@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import { replacePermissions } from "../src/replacePermissions"
+import { replaceTargets } from "../src/replaceTargets"
 import { Operator, ParameterType, Target } from "../src/types"
 
 describe("replacePermissions", () => {
@@ -25,7 +25,7 @@ describe("replacePermissions", () => {
     ]
     const after: Target[] = []
 
-    expect(replacePermissions(before, after)).to.deep.equal([
+    expect(replaceTargets(before, after)).to.deep.equal([
       {
         call: "revokeFunction",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -74,7 +74,7 @@ describe("replacePermissions", () => {
       },
     ]
 
-    expect(replacePermissions(before, after)).to.deep.equal([
+    expect(replaceTargets(before, after)).to.deep.equal([
       {
         call: "scopeTarget",
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",

@@ -2,8 +2,8 @@ import { BigNumber, BigNumberish } from "ethers"
 import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
 
 import { Condition, Operator, ParameterType } from "../../../types"
-import { AbiType, PresetFunction } from "../../types"
-import { coercePresetFunction } from "../../utils"
+import { AbiType, FunctionPermission } from "../../types"
+import { coerceFunctionPermission } from "../../utils"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
@@ -137,7 +137,7 @@ const calldataMatchesScopings =
   }
 
 const calldataMatchesPresetFunction =
-  (presetFunction: PresetFunction) => (abiType?: ParamType) => {
+  (presetFunction: FunctionPermission) => (abiType?: ParamType) => {
     // only supported at the top level or for bytes type params
     if (abiType && abiType.type !== "bytes") {
       throw new Error(
@@ -145,7 +145,7 @@ const calldataMatchesPresetFunction =
       )
     }
 
-    const { selector, condition } = coercePresetFunction(presetFunction)
+    const { selector, condition } = coerceFunctionPermission(presetFunction)
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
@@ -194,18 +194,18 @@ type CalldataMatches = {
    *
    * @param presetFunction The reference preset function
    **/
-  (presetFunction: PresetFunction): (abiType?: ParamType) => Condition
+  (presetFunction: FunctionPermission): (abiType?: ParamType) => Condition
 }
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
-  scopingsOrPresetFunction: S | PresetFunction,
+  scopingsOrPresetFunction: S | FunctionPermission,
   abiTypes?: AbiType[],
   selector?: `0x${string}`
 ): ((abiType?: ParamType) => Condition) => {
   return Array.isArray(scopingsOrPresetFunction) && abiTypes
     ? calldataMatchesScopings(scopingsOrPresetFunction, abiTypes, selector)
     : calldataMatchesPresetFunction(
-        scopingsOrPresetFunction as unknown as PresetFunction
+        scopingsOrPresetFunction as unknown as FunctionPermission
       )
 }
 

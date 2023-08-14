@@ -1,7 +1,7 @@
 import { checkRootConditionIntegrity } from "./conditions"
 import { Clearance, Function, Target } from "./types"
 
-export const checkPermissionsIntegrity = (targets: Target[]): void => {
+export const checkIntegrity = (targets: Target[]): void => {
   const uniqueAddresses = new Set(
     targets.map((target) => target.address.toLowerCase())
   )
@@ -12,7 +12,7 @@ export const checkPermissionsIntegrity = (targets: Target[]): void => {
   targets.forEach(checkTargetIntegrity)
 }
 
-export const checkTargetIntegrity = (target: Target): void => {
+const checkTargetIntegrity = (target: Target): void => {
   if (
     target.clearance === Clearance.Function &&
     target.functions.length === 0

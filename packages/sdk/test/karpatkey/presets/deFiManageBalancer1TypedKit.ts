@@ -1,6 +1,6 @@
-import * as c from "../../../src/presets/authoring/conditions"
-import { allow as allowKit } from "../../../src/presets/authoring/kit"
-import { Preset } from "../../../src/presets/types"
+import * as c from "../../../src/permissions/authoring/conditions"
+import { allow as allowKit } from "../../../src/permissions/authoring/kit"
+import { Preset } from "../../../src/permissions/types"
 
 const allow = allowKit.mainnet
 

@@ -1,18 +1,25 @@
 import { Condition, Operator, ParameterType } from "../types"
 
-import { Preset, PresetAllowEntryCoerced, PresetFunctionCoerced } from "./types"
-import { coercePresetFunction, allowEntryId, isScoped } from "./utils"
+import {
+  PermissionCoerced,
+  FunctionPermissionCoerced,
+  Permission,
+} from "./types"
+import {
+  coerceFunctionPermission,
+  permissionId,
+  isFunctionScoped,
+} from "./utils"
 
 /**
  * Processes the allow entries of a preset and merges entries addressing the same function into a single entry.
  * This is done by merging the conditions using a logical OR.
- * @param preset The preset to process
- * @returns The updated preset
+ * @param permissions The permissions to process
+ * @returns The updated permissions
  */
-export const mergeFunctionEntries = (preset: Preset) => ({
-  ...preset,
-  allow: preset.allow.reduce((result, entry) => {
-    if (!isScoped(entry)) {
+export const mergeFunctionPermissions = (permissions: Permission[]) =>
+  permissions.reduce((result, entry) => {
+    if (!isFunctionScoped(entry)) {
       result.push({
         ...entry,
         targetAddress: entry.targetAddress.toLowerCase(),
@@ -20,12 +27,12 @@ export const mergeFunctionEntries = (preset: Preset) => ({
       return result
     }
 
-    const coercedEntry = coercePresetFunction(entry)
+    const coercedEntry = coerceFunctionPermission(entry)
 
     const matchingEntry = result.find(
       (existingEntry) =>
-        allowEntryId(existingEntry) === allowEntryId(coercedEntry)
-    ) as PresetFunctionCoerced | undefined
+        permissionId(existingEntry) === permissionId(coercedEntry)
+    ) as FunctionPermissionCoerced | undefined
 
     if (!matchingEntry) {
       result.push(coercedEntry)
@@ -44,19 +51,18 @@ export const mergeFunctionEntries = (preset: Preset) => ({
     // merge conditions into the entry we already have
     matchingEntry.condition = mergeConditions(matchingEntry, coercedEntry)
     return result
-  }, [] as PresetAllowEntryCoerced[]),
-})
+  }, [] as PermissionCoerced[])
 
 /**
  * @dev Merges two conditions using a logical OR, flattening nested OR conditions. If the conditions are equal, it will still create separate OR branches.
  * These will be pruned later in sanitizeCondition().
  */
 const mergeConditions = (
-  a: PresetFunctionCoerced,
-  b: PresetFunctionCoerced
+  a: FunctionPermissionCoerced,
+  b: FunctionPermissionCoerced
 ): Condition | undefined => {
   if (!!a.condition !== !!b.condition) {
-    const targetId = allowEntryId(a)
+    const targetId = permissionId(a)
     console.warn(
       `Target ${targetId} is allowed with and without conditions. It will be allowed without conditions.`
     )

@@ -2,7 +2,14 @@ import { Clearance, Function, Target } from "../types"
 
 import { Call } from "./types"
 
-export const grantPermissions = (targets: Target[]): Call[] => {
+/**
+ * Return the calls to allow the passed targets:
+ *  - call `allowTarget` for each fully-cleared target
+ *  - call `scopeTarget` for each function-scoped target
+ *  - call `allowFunction` for each wildcarded function of a function-scoped target
+ *  - call `scopeFunction` for each function with a condition
+ */
+export const grant = (targets: Target[]): Call[] => {
   const calls: Call[] = []
 
   targets.forEach((target) => {

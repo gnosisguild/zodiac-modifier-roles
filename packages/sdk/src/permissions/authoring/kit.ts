@@ -10,11 +10,11 @@ import { c } from "zodiac-roles-sdk"
 import { Condition, Operator, ParameterType } from "../../types"
 import {
   ExecutionFlags,
-  PresetFullyClearedTarget,
-  PresetFunction,
-  PresetFunctionCoerced,
+  TargetPermission,
+  FunctionPermission,
+  FunctionPermissionCoerced,
 } from "../types"
-import { coercePresetFunction } from "../utils"
+import { coerceFunctionPermission } from "../utils"
 
 import {
   callWithinAllowance,
@@ -43,10 +43,10 @@ const makeAllowFunction = <
 
   return (
     ...args: MapParams<Parameters<typeof ethersFunction>>
-  ): PresetFunction => {
+  ): FunctionPermission => {
     const scopings = args.slice(0, functionInputs.length) as any[]
     const options = (args[functionInputs.length] || {}) as Options
-    const presetFunction: PresetFunction = {
+    const presetFunction: FunctionPermission = {
       targetAddress: contract.address,
       signature: functionFragment.format("sighash"),
       condition:
@@ -54,7 +54,7 @@ const makeAllowFunction = <
           ? c.calldataMatches(scopings, functionInputs)()
           : undefined,
     }
-    return applyOptions(coercePresetFunction(presetFunction), options)
+    return applyOptions(coerceFunctionPermission(presetFunction), options)
   }
 }
 
@@ -66,9 +66,9 @@ type Options = {
 }
 
 const applyOptions = (
-  entry: PresetFunctionCoerced,
+  entry: FunctionPermissionCoerced,
   options: Options
-): PresetFunctionCoerced => {
+): FunctionPermissionCoerced => {
   const conditions: Condition[] = []
 
   if (entry.condition) {
@@ -110,18 +110,16 @@ export const EVERYTHING = Symbol("EVERYTHING")
 type AllowFunctions<C extends BaseContract> = {
   [key in keyof C["functions"]]: (
     ...args: MapParams<Parameters<C["functions"][key]>>
-  ) => PresetFunction
+  ) => FunctionPermission
 }
 type AllowContract<C extends BaseContract> = {
-  [EVERYTHING]: (options?: Options) => PresetFullyClearedTarget
+  [EVERYTHING]: (options?: Options) => TargetPermission
 } & AllowFunctions<C>
 
 const makeAllowContract = <C extends BaseContract>(
   contract: C
 ): AllowContract<C> => {
-  const allowEverything = (
-    options?: ExecutionFlags
-  ): PresetFullyClearedTarget => {
+  const allowEverything = (options?: ExecutionFlags): TargetPermission => {
     return {
       targetAddress: contract.address,
       ...options,

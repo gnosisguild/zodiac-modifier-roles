@@ -3,11 +3,11 @@ import { Clearance, Target } from "../types"
 import { Call } from "./types"
 
 /**
- * It will return the most fine-grained call to revoke the passed permissions:
+ * Returns the most fine-grained calls to revoke the passed targets:
  *  - call revokeFunction for each function
  *  - call revokeTarget for each target without any functions
  */
-export const revokePermissions = (targets: Target[]): Call[] => {
+export const revoke = (targets: Target[]): Call[] => {
   const calls: Call[] = []
 
   targets.forEach((target) => {

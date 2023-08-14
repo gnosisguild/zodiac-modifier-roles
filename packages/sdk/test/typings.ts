@@ -1,7 +1,7 @@
 import { BigNumberish } from "ethers"
 
-import * as c from "../src/presets/authoring/conditions"
-import { Scoping } from "../src/presets/authoring/conditions/types"
+import * as c from "../src/permissions/authoring/conditions"
+import { Scoping } from "../src/permissions/authoring/conditions/types"
 
 // These are tests of the typing system, not the runtime behavior.
 // There's nothing to run here, but the code should not have any TypeScript errors.

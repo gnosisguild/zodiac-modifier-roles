@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import { diffPermissions } from "../src/diffPermissions"
+import { diffTargets } from "../src/diffTargets"
 import {
   Clearance,
   ExecutionOptions,
@@ -41,7 +41,7 @@ describe("diffPermissions", () => {
       },
     ]
 
-    expect(diffPermissions(a, b)).to.deep.equal([
+    expect(diffTargets(a, b)).to.deep.equal([
       {
         address: "0x2",
         clearance: Clearance.Target,
@@ -49,7 +49,7 @@ describe("diffPermissions", () => {
         functions: [],
       },
     ])
-    expect(diffPermissions(b, a)).to.deep.equal([
+    expect(diffTargets(b, a)).to.deep.equal([
       {
         address: "0x2",
         clearance: Clearance.Target,
@@ -99,7 +99,7 @@ describe("diffPermissions", () => {
       },
     ]
 
-    expect(diffPermissions(a, a)).to.deep.equal([])
-    expect(diffPermissions(a, b)).to.deep.equal(a)
+    expect(diffTargets(a, a)).to.deep.equal([])
+    expect(diffTargets(a, b)).to.deep.equal(a)
   })
 })
