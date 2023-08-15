@@ -14,7 +14,7 @@ interface RoleSummary {
   targets: `0x${string}`[];
 }
 
-const RolesTable: React.FC<{ roles: RoleSummary[]; mod: string }> = ({
+const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
   roles,
   mod,
 }) => {
@@ -50,4 +50,4 @@ const RolesTable: React.FC<{ roles: RoleSummary[]; mod: string }> = ({
   );
 };
 
-export default RolesTable;
+export default RolesList;

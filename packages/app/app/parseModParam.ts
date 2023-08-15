@@ -13,5 +13,5 @@ export default function parseModParam(mod: string | string[] | undefined) {
     return null;
   }
 
-  return { chainPrefix, address };
+  return { chainId: chain.id, address };
 }

@@ -23,7 +23,7 @@
   box-sizing: border-box;
 }
 
-button.appName {
+a.appName {
   display: flex;
   align-items: center;
   padding: var(--spacing-2);

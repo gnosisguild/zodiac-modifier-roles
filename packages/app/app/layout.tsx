@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import Flex from "@/components/Flex";
 import Box from "@/components/Box";
 import ConnectWallet from "@/components/ConnectWallet";
-import Button from "@/components/Button";
+import Button, { LinkButton } from "@/components/Button";
 
 export const metadata: Metadata = {
   title: "Zodiac Roles",
@@ -25,14 +25,16 @@ export default function RootLayout({
             <Flex gap={4} justifyContent="space-between" alignItems="center">
               <Box>
                 <Flex gap={1}>
-                  <Button className={classes.appName}>Zodiac Roles</Button>
+                  <LinkButton className={classes.appName} href="/">
+                    Zodiac Roles
+                  </LinkButton>
                 </Flex>
               </Box>
               <ConnectWallet />
             </Flex>
           </div>
 
-          {children}
+          <div className={classes.main}>{children}</div>
         </div>
       </body>
     </html>

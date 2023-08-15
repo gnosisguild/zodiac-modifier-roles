@@ -25,6 +25,10 @@
   cursor: pointer;
   border-color: rgba(217, 212, 173, 0.8);
 }
+a.button:hover {
+  color: white;
+  border-color: rgba(217, 212, 173, 0.8);
+}
 
 .button:disabled {
   opacity: 0.6;

@@ -1,0 +1,22 @@
+.container {
+  height: 40px;
+}
+
+.blockies {
+  height: 100%;
+}
+
+.address {
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+}
+
+.link {
+  text-decoration: none;
+}
+
+.blockieContainer {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
+}

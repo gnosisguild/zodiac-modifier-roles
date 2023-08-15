@@ -1,3 +1,4 @@
 .main {
-  padding: 0 var(--spacing-4) var(--spacing-5) var(--spacing-4);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-1);
 }

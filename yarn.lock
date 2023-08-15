@@ -9201,6 +9201,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ethereum-blockies-base64@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "ethereum-blockies-base64@npm:1.0.2"
+  dependencies:
+    pnglib: 0.0.1
+  checksum: 326cb27f36c03c8857853dfaa024a4ab3c09ea90989579a84dd138a12930773bbf0d89cbac951a844e28d32a5b540d82ac6fcafad2d06219b9acd0ee68054bfc
+  languageName: node
+  linkType: hard
+
 "ethereum-bloom-filters@npm:^1.0.6":
   version: 1.0.10
   resolution: "ethereum-bloom-filters@npm:1.0.10"
@@ -16922,6 +16931,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pnglib@npm:0.0.1":
+  version: 0.0.1
+  resolution: "pnglib@npm:0.0.1"
+  checksum: 48b5ef961a257f7653e6bc4d03aac1a817e4590d048cddee4f09a63cb3ed4ac120d15470725d4e37e087d57b231915d0563b16e596dd88d69a72ed669746c2bd
+  languageName: node
+  linkType: hard
+
 "posix-character-classes@npm:^0.1.0":
   version: 0.1.1
   resolution: "posix-character-classes@npm:0.1.1"
@@ -19634,18 +19650,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"swr@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "swr@npm:2.2.1"
-  dependencies:
-    client-only: ^0.0.1
-    use-sync-external-store: ^1.2.0
-  peerDependencies:
-    react: ^16.11.0 || ^17.0.0 || ^18.0.0
-  checksum: 62ff1b8132966fc977df192cf4452bab94c73dbea304a1438745f27041917154dad32448d8a65fb40d5e3de0b1751ef3fd57b1d71ba450e031517f009d0fc052
-  languageName: node
-  linkType: hard
-
 "sync-request@npm:6.1.0, sync-request@npm:^6.0.0":
   version: 6.1.0
   resolution: "sync-request@npm:6.1.0"
@@ -22206,14 +22210,15 @@ __metadata:
     "@types/react": ^18.2.8
     "@types/react-dom": ^18.2.4
     classnames: ^2.3.2
+    copy-to-clipboard: ^3.3.3
     eslint: ^8.41.0
     eslint-config-next: ^13.4.4
+    ethereum-blockies-base64: ^1.0.2
     ethers: ^5.4.7
     next: ^13.4.16
     react: ^18.2.0
     react-dom: ^18.2.0
     react-icons: ^4.10.1
-    swr: ^2.2.1
     typescript: ^5.1.6
     viem: ^1.6.0
     wagmi: ^1.3.10

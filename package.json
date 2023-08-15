@@ -11,8 +11,9 @@
     "test": "yarn workspaces foreach run test",
     "build": "yarn workspaces foreach run build",
     "build:evm": "yarn workspace @gnosis.pm/zodiac-modifier-roles run build",
+    "build:sdk": "yarn workspace zodiac-roles-sdk run build",
     "coverage": "yarn workspace @gnosis.pm/zodiac-modifier-roles run coverage",
-    "dev": "yarn workspace zodiac-modifier-roles-app run dev"
+    "dev": "yarn build:sdk && yarn workspace zodiac-modifier-roles-app run dev"
   },
   "repository": {
     "type": "git",
