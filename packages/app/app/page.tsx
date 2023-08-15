@@ -7,7 +7,7 @@ import Flex from "@/components/Flex";
 import Button from "@/components/Button";
 import Field from "@/components/Field";
 import ChainSelect from "@/components/ChainSelect";
-import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/chains";
+import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/app/chains";
 import { useRouter } from "next/navigation";
 
 const chains = Object.values(CHAINS);
@@ -21,7 +21,7 @@ export default function AttachMod() {
       <Flex gap={0} justifyContent="center" alignItems="center">
         <Box bg p={3}>
           <Flex direction="column" gap={3}>
-            <h3>Attach to a Roles Mod</h3>
+            <h3>Connect a Roles Mod</h3>
             <p>
               Once a Roles Mod is connected you can manage roles and
               permissions.

@@ -1,5 +1,5 @@
 import { SelectHTMLAttributes } from "react";
-import { CHAINS, ChainId } from "../../chains";
+import { CHAINS, ChainId } from "../../app/chains";
 
 const chains = Object.values(CHAINS);
 

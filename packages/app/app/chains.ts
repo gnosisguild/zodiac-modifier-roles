@@ -8,7 +8,19 @@ import {
   polygon,
   polygonMumbai,
   gnosis,
-} from "wagmi/chains";
+} from "@wagmi/core/chains"; // cannot import from wagmi/chains because that one declares "use client;"
+
+export {
+  mainnet,
+  goerli,
+  sepolia,
+  avalanche,
+  arbitrum,
+  bsc,
+  polygon,
+  polygonMumbai,
+  gnosis,
+};
 
 export const CHAINS = {
   [mainnet.id]: { ...mainnet, prefix: "eth" },
