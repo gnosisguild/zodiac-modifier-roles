@@ -1,12 +1,12 @@
 import styles from "./page.module.css";
 // import { fetchRole } from "zodiac-roles-sdk";
 import { notFound } from "next/navigation";
-import RolesList from "@/components/RolesList";
 import parseModParam from "@/app/parseModParam";
 import { Role, fetchRolesMod } from "zodiac-roles-sdk";
 import Flex from "@/components/Flex";
 import Box from "@/components/Box";
 import MembersList from "@/components/MembersList";
+import { testTargets, testAnnotations } from "./testData";
 
 // TODO replace with real fetch once the subgraphs are available
 const fetchRole = async ({
@@ -22,9 +22,9 @@ const fetchRole = async ({
       "0xCC03A88d617A9FcCad51aA9658FDC5a09e62597e",
       "0xDE70A3184C235a86D6355658F863c28cF3dbceed",
     ],
-    targets: [],
+    targets: testTargets,
     allowances: [],
-    annotations: [],
+    annotations: testAnnotations,
   } as Role);
 };
 
@@ -53,6 +53,11 @@ export default async function RolePage({
         </Box>
         <Box>
           <h5>Permissions</h5>
+          <PermissionsList
+            targets={data.targets}
+            annotations={data.annotations}
+            chainId={mod.chainId}
+          />
         </Box>
       </Flex>
     </main>

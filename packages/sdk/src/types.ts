@@ -78,6 +78,7 @@ export interface Role {
   members: string[]
   targets: Target[]
   allowances: Allowance[]
+  annotations: Annotation[]
 }
 
 export interface Target {
@@ -108,4 +109,9 @@ export interface Allowance {
   refillTimestamp: number
   maxBalance: BigNumber
   balance: BigNumber
+}
+
+export interface Annotation {
+  url: string
+  schema: string
 }
