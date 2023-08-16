@@ -3,9 +3,10 @@ import styles from "./page.module.css";
 import { notFound } from "next/navigation";
 import parseModParam from "@/app/parseModParam";
 import { Role, fetchRolesMod } from "zodiac-roles-sdk";
-import Flex from "@/components/Flex";
-import Box from "@/components/Box";
+import Flex from "@/ui/Flex";
+import Box from "@/ui/Box";
 import MembersList from "@/components/MembersList";
+import PermissionsList from "@/components/PermissionsList";
 import { testTargets, testAnnotations } from "./testData";
 
 // TODO replace with real fetch once the subgraphs are available

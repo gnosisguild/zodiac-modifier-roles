@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { RiArrowRightSLine } from "react-icons/ri";
-import Flex from "../Flex";
-import { LinkButton } from "../Button";
+import Flex from "@/ui/Flex";
+import { LinkButton } from "@/ui/Button";
 import { useRouter } from "next/navigation";
-import { IconLinkButton } from "../IconButton";
+import { IconLinkButton } from "@/ui/IconButton";
 import classes from "./style.module.css";
 import Link from "next/link";
 

@@ -1,7 +1,7 @@
 "use client";
-import Address from "../Address";
 import { ChainId } from "@/app/chains";
-import Flex from "../Flex";
+import Flex from "@/ui/Flex";
+import Address from "@/ui/Address";
 
 const MembersList: React.FC<{ members: string[]; chainId: ChainId }> = ({
   members,

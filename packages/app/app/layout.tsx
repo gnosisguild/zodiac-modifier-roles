@@ -2,10 +2,10 @@ import "./globals.css";
 import classes from "./layout.module.css";
 import { roboto_mono, spectral } from "./fonts";
 import type { Metadata } from "next";
-import Flex from "@/components/Flex";
-import Box from "@/components/Box";
+import Flex from "@/ui/Flex";
+import Box from "@/ui/Box";
 import ConnectWallet from "@/components/ConnectWallet";
-import Button, { LinkButton } from "@/components/Button";
+import Button, { LinkButton } from "@/ui/Button";
 
 export const metadata: Metadata = {
   title: "Zodiac Roles",

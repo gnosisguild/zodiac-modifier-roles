@@ -2,10 +2,10 @@
 import { isAddress } from "viem";
 import { useState } from "react";
 import styles from "./page.module.css";
-import Box from "@/components/Box";
-import Flex from "@/components/Flex";
-import Button from "@/components/Button";
-import Field from "@/components/Field";
+import Box from "@/ui/Box";
+import Flex from "@/ui/Flex";
+import Button from "@/ui/Button";
+import Field from "@/ui/Field";
 import ChainSelect from "@/components/ChainSelect";
 import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/app/chains";
 import { useRouter } from "next/navigation";
