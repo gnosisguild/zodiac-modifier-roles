@@ -1,4 +1,27 @@
 import z from "zod"
+import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+
+const zCondition: z.ZodType<Condition> = z.object({
+  paramType: z.nativeEnum(ParameterType),
+  operator: z.nativeEnum(Operator),
+  compValue: z.string().optional(),
+  children: z.lazy(() => z.array(zCondition)).optional(),
+})
+
+export const zPermission = z.union([
+  z.object({
+    targetAddress: z.string(),
+    send: z.boolean().optional(),
+    delegateCall: z.boolean().optional(),
+  }),
+  z.object({
+    targetAddress: z.string(),
+    selector: z.string(),
+    condition: zCondition.optional(),
+    send: z.boolean().optional(),
+    delegateCall: z.boolean().optional(),
+  }),
+])
 
 // zod schema for the OpenAPI schema types (OpenAPI spec v3.1.0)
 // https://swagger.io/specification/#oas-document
@@ -35,6 +58,7 @@ export const zOpenApiOperation = z.object({
     )
     .default([]),
 })
+export type OpenApiOperation = z.infer<typeof zOpenApiOperation>
 
 export const zOpenApiObject = z.object({
   openapi: z.string(),
@@ -47,7 +71,7 @@ export const zOpenApiObject = z.object({
         name: z.string().optional(),
         url: z.string().optional(),
       })
-      .optional(),
+      .default({}),
   }),
   servers: z.array(z.object({ url: z.string() })).default([]),
   paths: z.record(
@@ -56,3 +80,4 @@ export const zOpenApiObject = z.object({
     })
   ),
 })
+export type OpenApiObject = z.infer<typeof zOpenApiObject>

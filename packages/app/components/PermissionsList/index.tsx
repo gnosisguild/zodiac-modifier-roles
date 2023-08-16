@@ -1,8 +1,9 @@
+import z from "zod"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
 import { Permission } from "./types"
-import { parse } from "path"
+import { zOpenApiObject, zPermission } from "./schema"
 
 interface Props {
   targets: Target[]
@@ -39,15 +40,25 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
 export default PermissionsList
 
 const resolveAnnotation = async (annotation: Annotation) => {
-  const [permissions, schema] = await Promise.all([
-    fetch(annotation.url)
-      .then((res) => res.json())
-      .then(zPermissions.parse),
-    fetch(annotation.schema)
-      .then((res) => res.json())
-      .then(zOpenApiSchema.parse),
-    ,
-  ])
+  try {
+    const [permissions, schema] = await Promise.all([
+      fetch(annotation.url)
+        .then((res) => res.json())
+        .then(z.array(zPermission).parse)
+        .catch((e) =>
+          console.error(`Error resolving annotation ${annotation.url}`, e)
+        ),
+      fetch(annotation.schema)
+        .then((res) => res.json())
+        .then(zOpenApiObject.parse),
+      ,
+    ])
+  } catch (e) {
+    console.error(
+      `Error resolving annotation ${annotation.url} with schema ${annotation.schema}`,
+      e
+    )
+  }
 }
 
 const processAnnotations = (permissions: Permission[], annotations: any) => {
