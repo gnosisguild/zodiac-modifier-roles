@@ -22202,6 +22202,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"zod@npm:^3.22.1":
+  version: 3.22.1
+  resolution: "zod@npm:3.22.1"
+  checksum: 05b62cc1069da6e6349ad2325ec6b7d0c00699f0796e0fd071bcc2b44ac711679e52ad00bc563019504c7e64bbf0bf73737f31366d882a856962cd6e2882cf0e
+  languageName: node
+  linkType: hard
+
 "zodiac-modifier-roles-app@workspace:packages/app":
   version: 0.0.0-use.local
   resolution: "zodiac-modifier-roles-app@workspace:packages/app"
@@ -22268,6 +22275,7 @@ __metadata:
     typechain: ^8.1.1
     typescript: ^5.1.3
     yargs: ^16.1.1
+    zod: ^3.22.1
   peerDependencies:
     "@dethcrypto/eth-sdk-client": ^0.1.6
   peerDependenciesMeta:

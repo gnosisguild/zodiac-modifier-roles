@@ -46,7 +46,8 @@
   },
   "dependencies": {
     "ethers": "^5.4.7",
-    "type-fest": "^3.7.1"
+    "type-fest": "^3.7.1",
+    "zod": "^3.22.1"
   },
   "peerDependencies": {
     "@dethcrypto/eth-sdk-client": "^0.1.6"
