@@ -3,10 +3,10 @@ import { OpenApiObject, OpenApiOperation } from "./schema"
 
 export type Permission = ReturnType<typeof reconstructPermissions>[number]
 
-export interface ResolvedAnnotation {
+export interface Preset {
   permissions: Permission[]
   apiInfo: OpenApiObject["info"]
-  server: string
+  serverUrl: string
   path: string
   operation: OpenApiOperation
 }
