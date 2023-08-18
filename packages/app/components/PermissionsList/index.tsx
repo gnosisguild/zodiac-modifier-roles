@@ -5,7 +5,7 @@ import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
 import { Permission, Preset } from "./types"
 import { OpenApiObject, zOpenApiObject, zPermission } from "./schema"
 import PresetItem from "./PresetItem"
-import { FunctionPermissionItem, TargetPermissionItem } from "./PermissionItem"
+import TargetItem from "./TargetItem"
 
 interface Props {
   targets: Target[]
@@ -20,24 +20,39 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
     annotations
   )
 
+  const permissionGroups = groupPermissions(permissions)
+
   return (
     <Flex direction="column" gap={1}>
       {presets.map((preset, i) => (
         <PresetItem key={`${preset.serverUrl}${preset.path}`} {...preset} />
       ))}
 
-      {permissions.map((permission, i) =>
-        "selector" in permission ? (
-          <FunctionPermissionItem key={i} {...permission} />
-        ) : (
-          <TargetPermissionItem key={i} {...permission} />
-        )
-      )}
+      {permissionGroups.map(([targetAddress, permissions]) => (
+        <TargetItem
+          key={targetAddress}
+          targetAddress={targetAddress}
+          permissions={permissions}
+        />
+      ))}
     </Flex>
   )
 }
 
 export default PermissionsList
+
+/** Group permissions by targetAddress */
+const groupPermissions = (permissions: Permission[]) => {
+  return Object.entries(
+    permissions.reduce((groups, permission) => {
+      if (!groups[permission.targetAddress]) {
+        groups[permission.targetAddress] = []
+      }
+      groups[permission.targetAddress].push(permission)
+      return groups
+    }, {} as Record<string, Permission[]>)
+  )
+}
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 const processAnnotations = async (
