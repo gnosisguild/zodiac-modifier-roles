@@ -1,5 +1,5 @@
-import { checkRootConditionIntegrity } from "./conditions"
-import { Clearance, Function, Target } from "./types"
+import { checkRootConditionIntegrity } from "../conditions"
+import { Clearance, Function, Target } from "../types"
 
 export const checkIntegrity = (targets: Target[]): void => {
   const uniqueAddresses = new Set(
@@ -38,7 +38,7 @@ const checkTargetIntegrity = (target: Target): void => {
   target.functions.forEach(checkFunctionIntegrity)
 }
 
-export const checkFunctionIntegrity = (func: Function): void => {
+const checkFunctionIntegrity = (func: Function): void => {
   if (func.wildcarded && func.condition) {
     throw new Error(
       `Wildcarded functions cannot have conditions (function in violation: ${func.selector})`

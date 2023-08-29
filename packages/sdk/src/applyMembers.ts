@@ -60,6 +60,8 @@ export const applyMembers = async (
       return extendMembers(roleKey, currentMembers, members)
     case "remove":
       return removeMembers(roleKey, currentMembers, members)
+    default:
+      throw new Error(`Invalid mode: ${options.mode}`)
   }
 }
 

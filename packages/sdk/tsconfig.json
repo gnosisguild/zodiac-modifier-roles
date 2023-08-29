@@ -15,5 +15,5 @@
     }
   },
   "include": ["./src", "./test"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts", "src/utils/groupBy.ts"]
 }

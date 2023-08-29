@@ -1,10 +1,16 @@
-import { Call, encodeCalls, logCall } from "./calls"
+import {
+  Call,
+  encodeCalls,
+  grant,
+  logCall,
+  removeObsoleteCalls,
+  revoke,
+} from "../calls"
+import { fetchRole } from "../fetchRole"
+import { ChainId, Target } from "../types"
+
 import { checkIntegrity } from "./checkIntegrity"
-import { extendTargets } from "./extendTargets"
-import { fetchRole } from "./fetchRole"
-import { removeTargets } from "./removeTargets"
-import { replaceTargets } from "./replaceTargets"
-import { ChainId, Target } from "./types"
+import { diffTargets } from "./diffTargets"
 
 type Options = (
   | {
@@ -84,4 +90,36 @@ export const applyTargets = async (
   }
 
   return encodeCalls(roleKey, calls)
+}
+
+const extendTargets = (current: Target[], add: Target[]): Call[] => {
+  // TODO if current grants a fully-cleared target, we need to remove function-scoped permissions to that target from add
+  // TODO merge permissions to same target+function by joining their conditions with OR
+  return grant(diffTargets(add, current))
+}
+
+/**
+ * Computes the set of calls to update the current targets of a role to no longer include the targets passed for `subtract`.
+ * @param current targets of the role that shall be updated
+ * @param subtract targets to subtract from the current targets of the role
+ * @returns The set of calls to make to the Roles modifier owning the role
+ */
+const removeTargets = (current: Target[], subtract: Target[]): Call[] => {
+  const notGranted = diffTargets(subtract, current)
+  const toRevoke = diffTargets(subtract, notGranted)
+  // TODO throw, if subtract contains a function to a target that is fully-cleared in current
+  return revoke(toRevoke)
+}
+
+/**
+ * Computes the set of calls to update the targets of a role
+ * @param current targets of the role that shall be updated
+ * @param next targets of the role describing the desired target state
+ * @returns The set of calls to make to the Roles modifier owning the role
+ */
+const replaceTargets = (current: Target[], next: Target[]): Call[] => {
+  return removeObsoleteCalls([
+    ...revoke(diffTargets(current, next)),
+    ...grant(diffTargets(next, current)),
+  ])
 }

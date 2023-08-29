@@ -112,6 +112,8 @@ export interface Allowance {
 }
 
 export interface Annotation {
-  url: string
+  /** The URI serves as ID for the annotation. An http get request will be made to fetch the targeted permissions. */
+  uri: string
+  /** The OpenAPI schema that describes the API endpoint at uri. */
   schema: string
 }

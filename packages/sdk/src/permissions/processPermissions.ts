@@ -1,5 +1,6 @@
 import { normalizeCondition } from "../conditions"
 import { Clearance, ExecutionOptions, Target } from "../types"
+import { groupBy } from "../utils/groupBy"
 
 import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
 import {
@@ -100,9 +101,3 @@ const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
     )
   }
 }
-
-const groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
-  arr.reduce((groups, item) => {
-    ;(groups[key(item)] ||= []).push(item)
-    return groups
-  }, {} as Record<K, T[]>)
