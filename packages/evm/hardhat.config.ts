@@ -1,9 +1,9 @@
+import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 
-import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
