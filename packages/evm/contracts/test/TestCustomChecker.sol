@@ -5,6 +5,7 @@ import "../adapters/Types.sol";
 
 contract TestCustomChecker is ICustomCondition {
     function check(
+        address,
         uint256,
         bytes calldata data,
         uint256 location,
