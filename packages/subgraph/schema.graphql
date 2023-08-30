@@ -86,7 +86,7 @@ type Role @entity {
   rolesModifier: RolesModifier!
   targets: [Target!]! @derivedFrom(field: "role")
   members: [RoleAssignment!]! @derivedFrom(field: "role")
-  annotations: [PermissionAnnotation!]! @derivedFrom(field: "role")
+  annotations: [Annotation!]! @derivedFrom(field: "role")
 }
 
 type Target @entity {
@@ -158,8 +158,9 @@ type UnwrapAdapter @entity {
   adapterAddress: Bytes!
 }
 
-type PermissionAnnotation @entity {
+type Annotation @entity {
+  id: ID!
   role: Role!
-  url: String! # URL to a REST endpoint providing the permissions to annotate
+  uri: String! # URL to a REST endpoint providing the permissions to annotate
   schema: String! # URL to the OpenAPI schema describing the `url` REST endpoint
 }

@@ -1,5 +1,15 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { Function, Role, RolesModifier, Target, Condition, Member, Allowance, UnwrapAdapter } from "../generated/schema"
+import {
+  Function,
+  Role,
+  RolesModifier,
+  Target,
+  Condition,
+  Member,
+  Allowance,
+  UnwrapAdapter,
+  Annotation,
+} from "../generated/schema"
 import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys, Operator, OperatorKeys } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
@@ -13,6 +23,7 @@ export const getAllowanceId = (allowanceKey: Bytes, rolesModifierId: string): st
   rolesModifierId + "-ALLOWANCE-" + allowanceKey.toHex()
 export const getUnwrapAdapterId = (targetAddress: Address, selector: Bytes, rolesModifierId: string): string =>
   rolesModifierId + "-ADAPTER-" + targetAddress.toHex() + "." + selector.toHex()
+export const getAnnotationId = (uri: string, rolesModifierId: string): string => rolesModifierId + "-ANNOTATION-" + uri
 
 export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: Bytes): Role => {
   let role = Role.load(roleId)
@@ -73,24 +84,6 @@ export const getOrCreateFunction = (functionId: string, targetId: string, select
   }
 
   return func
-}
-
-/**
- * For created Conditions:
- *  - operator is Pass
- */
-export const getOrCreateCondition = (conditionId: string): Condition => {
-  let condition = Condition.load(conditionId)
-
-  if (!condition) {
-    condition = new Condition(conditionId)
-    condition.operator = OperatorKeys[Operator.Pass]
-    condition.save()
-    log.info("Created new condition #{}", [conditionId])
-  } else {
-    log.debug("Loaded existing condition #{}", [conditionId])
-  }
-  return condition
 }
 
 /**
@@ -163,4 +156,22 @@ export const getOrCreateUnwrapAdapter = (
   }
 
   return adapter
+}
+
+export const getOrCreateAnnotation = (uri: string, roleId: string): Annotation => {
+  const id = getAnnotationId(uri, roleId)
+  let annotation = Annotation.load(id)
+
+  // save annotation the first time we encounter it
+  if (!annotation) {
+    annotation = new Annotation(id)
+    annotation.role = roleId
+    annotation.uri = uri
+    annotation.save()
+    log.info("Created new Annotation #{}", [id])
+  } else {
+    log.debug("Loaded existing Annotation #{}", [id])
+  }
+
+  return annotation
 }

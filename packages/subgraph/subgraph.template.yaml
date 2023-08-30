@@ -120,3 +120,25 @@ dataSources:
         - event: SetUnwrapAdapter(address,bytes4,address)
           handler: handleSetUnwrapAdapter
       file: ./src/periphery.mapping.ts
+  - kind: ethereum
+    name: Poster
+    # prettier-ignore
+    network: {{network}}
+    source:
+      address: "0x000000000000cd17345801aa8147b8D3950260FF"
+      abi: Poster
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NewPost
+      abis:
+        - name: Poster
+          file: ./abisExternal/Poster.json
+      eventHandlers:
+        - event: NewPost(indexed address,string,indexed string)
+          handler: handleNewPost
+      file: ./src/poster.mapping.ts
