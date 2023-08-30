@@ -36,11 +36,24 @@ async function run() {
     [AddressZero, AddressZero, AddressZero]
   );
 
-  await deployMastercopyWithInitData(
+  const rolesMastercopyAddress = await deployMastercopyWithInitData(
     deployer,
     `${Roles.bytecode}${args.substring(2)}`,
     SaltZero
   );
+
+  await hre.run("verify", {
+    address: packerLibraryAddress,
+  });
+
+  await hre.run("verify", {
+    address: integrityLibraryAddress,
+  });
+
+  await hre.run("verify", {
+    address: rolesMastercopyAddress,
+    constructorArgsParams: [AddressZero, AddressZero, AddressZero],
+  });
 }
 
 run();

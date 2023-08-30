@@ -20,7 +20,14 @@ const argv = yargs
 
 // Load environment variables.
 dotenv.config();
-const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env;
+const {
+  INFURA_KEY,
+  MNEMONIC,
+  ETHERSCAN_API_KEY,
+  GNOSISSCAN_API_KEY,
+  POLYGONSCAN_API_KEY,
+  PK,
+} = process.env;
 
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
@@ -94,7 +101,40 @@ const config: HardhatUserConfig = {
     timeout: 2000000,
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
+      goerli: ETHERSCAN_API_KEY,
+      sepolia: ETHERSCAN_API_KEY,
+      gnosis: GNOSISSCAN_API_KEY,
+      matic: POLYGONSCAN_API_KEY,
+      mumbai: POLYGONSCAN_API_KEY,
+    } as Record<string, string>,
+    customChains: [
+      {
+        network: "gnosis",
+        chainId: 100,
+        urls: {
+          apiURL: "https://api.gnosisscan.io/api",
+          browserURL: "https://www.gnosisscan.io",
+        },
+      },
+      {
+        network: "matic",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://www.polygonscan.com",
+        },
+      },
+      {
+        network: "mumbai",
+        chainId: 80001,
+        urls: {
+          apiURL: "https://api-testnet.polygonscan.com/api",
+          browserURL: "https://mumbai.polygonscan.com",
+        },
+      },
+    ],
   },
 };
 
