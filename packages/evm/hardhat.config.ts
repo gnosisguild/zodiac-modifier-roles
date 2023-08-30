@@ -8,7 +8,8 @@ import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import yargs from "yargs";
 
-import "./src/deploy";
+import "./src/deploy-standalone";
+import "./src/deploy-proxy";
 
 const argv = yargs
   .option("network", {

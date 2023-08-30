@@ -8,8 +8,10 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
-    "deploy:standalone": "hardhat run deploy-standalone --network",
+    "deploy:standalone": "hardhat deploy-standalone --network",
     "deploy:mastercopy": "hardhat run src/deploy-mastercopy.ts --network",
+    "deploy:proxy": "hardhat deploy-proxy --network",
+    "verify:standalone": "hardhat verify-standalone --network",
     "coverage": "hardhat coverage",
     "fmt": "yarn fmt:sol && yarn fmt:ts",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
