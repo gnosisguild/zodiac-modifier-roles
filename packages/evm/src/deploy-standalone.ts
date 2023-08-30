@@ -7,7 +7,7 @@ interface RolesTaskArgs {
   target: string;
 }
 
-task("deploy", "Deploys a Roles modifier")
+task("deploy-standalone", "Deploys a Roles modifier")
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
     "avatar",
