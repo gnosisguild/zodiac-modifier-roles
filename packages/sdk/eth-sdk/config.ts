@@ -3,7 +3,7 @@ import { defineConfig } from "@dethcrypto/eth-sdk"
 export default defineConfig({
   etherscanURLs: {
     mainnet: "https://api.etherscan.io/api",
-    gnosis: "https://api.gnosisscan.io/api"
+    gnosis: "https://api.gnosisscan.io/api",
     //gnosis: "https://blockscout.com/xdai/mainnet/api",
   },
   rpc: {
@@ -21,12 +21,12 @@ export default defineConfig({
         pool_v3: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
       },
       across_v2: {
-        hub_pool_v2: "0xc186fA914353c44b2E33eBE05f21846F1048bEda"
+        hub_pool_v2: "0xc186fA914353c44b2E33eBE05f21846F1048bEda",
       },
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
         auraB_stETH_stable_rewarder:
-          "0x59D66C58E83A26d6a0E35114323f65c3945c89c1",
+          "0x2a14dB8D09dB0542f6A371c0cB308A768227D67D",
         auraB_auraBAL_stable_rewarder:
           "0x89D3D732da8bf0f88659Cf3738E5E44e553f9ED7",
         auraB_rETH_stable_rewarder:
@@ -55,7 +55,7 @@ export default defineConfig({
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
         relayer: "0xfeA793Aa415061C483D2390414275AD314B3F621",
-        B_stETH_stable_gauge: "0xcD4722B7c24C29e0413BDCd9e51404B4539D14aE",
+        B_stETH_stable_gauge: "0x5C0F23A5c1be65Fa710d385814a7Fd1Bda480b1C",
         B_auraBAL_stable_gauge: "0x0312AA8D0BA4a1969Fddb382235870bF55f7f242",
         B_rETH_stable_gauge: "0x79eF6103A513951a3b25743DB509E267685726B7",
         B_80GNO_20WETH_gauge: "0xCB664132622f29943f67FA56CCfD1e24CC8B4995",
@@ -93,7 +93,7 @@ export default defineConfig({
         claim_zap: "0x3f29cb4111cbda8081642da1f75b3c12decf2516",
       },
       cowswap: {
-        order_signer: "0xdEb83d81d4a9758A7bAec5749DA863C409ea6C6B"
+        order_signer: "0xdEb83d81d4a9758A7bAec5749DA863C409ea6C6B",
       },
       curve: {
         crv_minter: "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",
@@ -114,21 +114,21 @@ export default defineConfig({
       lido: {
         stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
-        unstETH: "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1"
+        unstETH: "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
       },
       maker: {
-        dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb"
+        dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb",
       },
       mstable_v2: {
-        stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7"
+        stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7",
       },
       rocket_pool: {
         deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture
         rETH: "0xae78736Cd615f374D3085123A210448E74Fc6393",
-        swap_router: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C"
+        swap_router: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C",
       },
       silo_v2: {
-        router: "0x8658047e48CC09161f4152c79155Dac1d710Ff0a"
+        router: "0x8658047e48CC09161f4152c79155Dac1d710Ff0a",
       },
       spark: {
         sparkLendingPoolV3: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
@@ -144,7 +144,7 @@ export default defineConfig({
       },
       sushiswap: {
         router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-        route_processor_3: "0x827179dD56d07A7eeA32e3873493835da2866976"
+        route_processor_3: "0x827179dD56d07A7eeA32e3873493835da2866976",
       },
       uniswapv3: {
         positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
@@ -167,11 +167,14 @@ export default defineConfig({
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
         relayer: "0x3536fD480CA495Ac91E698A703248A8915c137a3",
-        child_chain_gauge_reward_helper: "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
-        B_50bbagGNO_50bbagWETH_gauge: "0xf752dd899F87a91370C1C8ac1488Aef6be687505",
+        child_chain_gauge_reward_helper:
+          "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
+        B_50bbagGNO_50bbagWETH_gauge:
+          "0xf752dd899F87a91370C1C8ac1488Aef6be687505",
         bb_ag_USD_gauge: "0xDe3B7eC86B67B05D312ac8FD935B6F59836F2c41",
         agUSD_agWETH_agWBTC_gauge: "0x7eA8B4e2CaBA854C3dD6bf9c5ebABa143BE7Fe9E",
-        B_50bbagGNO_50bbagUSD_gauge: "0x7E13b8b95d887c2326C25e71815F33Ea10A2674e",
+        B_50bbagGNO_50bbagUSD_gauge:
+          "0x7E13b8b95d887c2326C25e71815F33Ea10A2674e",
       },
       curve: {
         crvEUReUSD_pool: "0x056C6C5e684CeC248635eD86033378Cc444459B0",
