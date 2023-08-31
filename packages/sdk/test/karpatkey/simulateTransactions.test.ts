@@ -3,7 +3,6 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-
 import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
 
 // import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
@@ -13,28 +12,22 @@ import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/Gnosi
 
 import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
 import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
-
 import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
-
 import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
-
 import { RolePreset } from "../../src/presets/types"
-import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
-import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
 import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
 import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
+import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
+import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
-import gnosisRevokeGnosisLTDTransactions from "./testTransactions/gnosisRevokeGnosisLTD"
-
-import balancerManageTransactions from "./testTransactions/balancerManage"
 import balancerAlternativeManageTransactions from "./testTransactions/balancerAlternativeManage"
-
+import balancerManageTransactions from "./testTransactions/balancerManage"
 import ensManageTransactions from "./testTransactions/ensManage"
-
 import harvestMainnetTransactions from "./testTransactions/ethHarvest"
 import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
 import manageGnosisChainTransactions from "./testTransactions/gnoManage"
+import gnosisRevokeGnosisLTDTransactions from "./testTransactions/gnosisRevokeGnosisLTD"
 
 interface Config {
   AVATAR: string
@@ -103,6 +96,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       value?: string
       data: string
       to: string
+      operation?: 0 | 1
       expectRevert?: boolean
     }[]
   }) => {
@@ -143,14 +137,18 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     for (let i = 0; i < transactions.length; i++) {
       const tx = transactions[i]
-
-      console.log(`Simulating call ${tx.data} to ${tx.to} ...`)
+      const operation = tx.operation || 0
+      console.log(
+        `Simulating ${operation === 1 ? "delegate call" : "call"} to ${
+          tx.to
+        } with data: ${tx.data}`
+      )
       try {
         await modifier.execTransactionWithRole(
           tx.to,
           tx.value || "0x00",
           tx.data || "0x00",
-          "0",
+          tx.operation || 0,
           ROLE_ID,
           false
         )
