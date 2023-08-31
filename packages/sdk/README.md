@@ -1,6 +1,6 @@
 # Zodiac Roles SDK
 
-This package offers an SDK for managing role permissions, based on presets.
+This package offers an SDK for managing role permissions.
 
 ## Getting started
 

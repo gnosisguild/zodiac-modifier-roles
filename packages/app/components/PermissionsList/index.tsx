@@ -78,7 +78,7 @@ const resolveAnnotation = async (
 ): Promise<Preset | null> => {
   try {
     const [permissions, schema] = await Promise.all([
-      fetch(annotation.url)
+      fetch(annotation.uri)
         .then((res) => res.json())
         .then(z.array(zPermission).parse),
       fetch(annotation.schema)
@@ -88,16 +88,16 @@ const resolveAnnotation = async (
     ])
 
     const { serverUrl, path } = resolveAnnotationPath(
-      annotation.url,
+      annotation.uri,
       schema,
       annotation.schema
     )
 
-    // TODO resolve annotation.url using the schema and produce the following object:
+    // TODO resolve annotation.uri using the schema and produce the following object:
     const operation = schema.paths[path].get // TODO: instead of path we must use matching the path *pattern*
     if (!operation) {
       throw new Error(
-        `No get operation found for ${annotation.url}, using schema ${annotation.schema}`
+        `No get operation found for ${annotation.uri}, using schema ${annotation.schema}`
       )
     }
 
@@ -110,7 +110,7 @@ const resolveAnnotation = async (
     }
   } catch (e) {
     console.error(
-      `Error resolving annotation ${annotation.url} with schema ${annotation.schema}`,
+      `Error resolving annotation ${annotation.uri} with schema ${annotation.schema}`,
       e
     )
   }

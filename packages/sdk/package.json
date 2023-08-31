@@ -11,8 +11,8 @@
       "import": "./build/esm/sdk/src/index.js"
     },
     "./kit": {
-      "require": "./build/cjs/sdk/src/presets/authoring/kit.js",
-      "import": "./build/esm/sdk/src/presets/authoring/kit.js"
+      "require": "./build/cjs/sdk/src/permissions/authoring/kit.js",
+      "import": "./build/esm/sdk/src/permissions/authoring/kit.js"
     }
   },
   "typesVersions": {
@@ -21,7 +21,7 @@
         "./build/cjs/sdk/src/index.d.ts"
       ],
       "kit": [
-        "./build/cjs/sdk/src/presets/authoring/kit.d.ts"
+        "./build/cjs/sdk/src/permissions/authoring/kit.d.ts"
       ]
     }
   },
