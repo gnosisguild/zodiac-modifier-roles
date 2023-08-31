@@ -11,35 +11,34 @@ import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 
 // GnosisDAO in Gnosis Chain
+import gnosisDeFiDisassembleGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiDisassembleGnosisDAO"
+import gnosisDeFiHarvestGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiHarvestGnosisDAO"
+import gnosisDeFiManageGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiManageGnosisDAO"
+import gnosisDeFiRevokeGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiRevokeGnosisDAO"
+import gnosisDeFiSwapGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiSwapGnosisDAO"
+import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiDisassembleGnosisLTD"
+import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
+import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
+import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
+import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
+import mainnetDeFiDisassembleGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiDisassembleGnosisDAO"
+import mainnetDeFiHarvestGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiHarvestGnosisDAO"
 import mainnetDeFiManageGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiManageGnosisDAO"
 import mainnetDeFiRevokeGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiRevokeGnosisDAO"
-import mainnetDeFiHarvestGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiHarvestGnosisDAO"
-import mainnetDeFiDisassembleGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiDisassembleGnosisDAO"
 import mainnetDeFiSwapGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiSwapGnosisDAO"
 
 // GnosisLTD in Gnosis Chain
+import mainnetDeFiDisassembleGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiDisassembleGnosisLTD"
+import mainnetDeFiHarvestGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiHarvestGnosisLTD"
 import mainnetDeFiManageGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiManageGnosisLTD"
 import mainnetDeFiRevokeGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiRevokeGnosisLTD"
-import mainnetDeFiHarvestGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiHarvestGnosisLTD"
-import mainnetDeFiDisassembleGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiDisassembleGnosisLTD"
 import mainnetDeFiSwapGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiSwapGnosisLTD"
 
 // GnosisDAO in Gnosis Chain
-import gnosisDeFiManageGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiManageGnosisDAO"
-import gnosisDeFiRevokeGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiRevokeGnosisDAO"
-import gnosisDeFiHarvestGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiHarvestGnosisDAO"
-import gnosisDeFiDisassembleGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiDisassembleGnosisDAO"
-import gnosisDeFiSwapGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiSwapGnosisDAO"
 
 // GnosisLTD in Gnosis Chain
-import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
-import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
-import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
-import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiDisassembleGnosisLTD"
-import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
-
-import { NetworkId } from "../src/types"
 import { AVATAR } from "../src/presets/placeholders"
+import { NetworkId } from "../src/types"
 
 interface Config {
   AVATAR: string
@@ -49,7 +48,7 @@ interface Config {
   HARVESTER: string
   DISASSEMBLER: string
   SWAPPER: string
-  NETWORK: number
+  NETWORK: NetworkId
   BRIDGED_SAFE: string
 }
 

@@ -40,7 +40,7 @@ export const KARPATKEY_ADDRESSES = {
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
   },
-}
+} as const
 
 const task = (name: string) =>
   baseTask(name)

@@ -9,11 +9,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS"
 import mainnetDeFiHarvestENSPreset from "../src/presets/mainnet/ENS/deFiHarvestENS"
+import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS"
 import mainnetDeFiSwapENSPreset from "../src/presets/mainnet/ENS/deFiSwapENS"
 import sparkRepayDebtDAI from "../src/presets/mainnet/ENS/sparkRepayDebtDAI"
-
 import { NetworkId } from "../src/types"
 
 interface Config {
@@ -24,8 +23,15 @@ interface Config {
   HARVESTER: string
   DISASSEMBLER: string
   SWAPPER: string
-  NETWORK: number
+  NETWORK: NetworkId
   BRIDGED_SAFE: string
+  ROLE_IDS: {
+    MANAGER: number
+    REVOKER: number
+    HARVESTER: number
+    DISASSEMBLER: number
+    SWAPPER: number
+  }
 }
 
 export const ENS_ADDRESSES = {
@@ -39,6 +45,13 @@ export const ENS_ADDRESSES = {
     SWAPPER: "0x14c2d2d64c4860acf7cf39068eb467d7556197de",
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
 } satisfies { [key: string]: Config }
 
@@ -95,7 +108,11 @@ task("setEnsMultisend").setAction(async (taskArgs, hre) => {
 task("assignEnsManagementRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const tx = await roles.assignRoles(config.MANAGER, [1], [true])
+  const tx = await roles.assignRoles(
+    config.MANAGER,
+    [config.ROLE_IDS.MANAGER],
+    [true]
+  )
   console.log(JSON.stringify({ to: tx.to, data: tx.data }, null, 2))
   if (dryRun) return
 
@@ -108,7 +125,7 @@ task("assignEnsManagementRole").setAction(async (taskArgs, hre) => {
 // task("assignEnsRevokeRole").setAction(async (taskArgs, hre) => {
 //     const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-//     const txData = await addMembers(config.MODULE, 2, [config.REVOKER])
+//     const txData = await addMembers(config.MODULE, config.ROLE_IDS.REVOKER, [config.REVOKER])
 //     console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
 //     if (dryRun) return
 
@@ -122,7 +139,9 @@ task("assignEnsManagementRole").setAction(async (taskArgs, hre) => {
 task("assignEnsHarvestRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const txData = await addMembers(config.MODULE, 3, [config.HARVESTER])
+  const txData = await addMembers(config.MODULE, config.ROLE_IDS.HARVESTER, [
+    config.HARVESTER,
+  ])
   console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
   if (dryRun) return
 
@@ -136,7 +155,7 @@ task("assignEnsHarvestRole").setAction(async (taskArgs, hre) => {
 // task("assignEnsDisassembleRole").setAction(async (taskArgs, hre) => {
 //     const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-//     const txData = await addMembers(config.MODULE, 4, [config.DISASSEMBLER])
+//     const txData = await addMembers(config.MODULE, config.ROLE_IDS.DISASSEMBLER, [config.DISASSEMBLER])
 //     console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
 //     if (dryRun) return
 
@@ -150,7 +169,9 @@ task("assignEnsHarvestRole").setAction(async (taskArgs, hre) => {
 task("assignEnsSwapRole").setAction(async (taskArgs, hre) => {
   const { dryRun, roles, config } = await processArgs(taskArgs, hre)
 
-  const txData = await addMembers(config.MODULE, 5, [config.SWAPPER])
+  const txData = await addMembers(config.MODULE, config.ROLE_IDS.SWAPPER, [
+    config.SWAPPER,
+  ])
   console.log(JSON.stringify({ to: txData.to, data: txData.data }, null, 2))
   if (dryRun) return
 
@@ -169,7 +190,7 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
-    1,
+    config.ROLE_IDS.MANAGER,
     mainnetDeFiManageENSPreset,
     { AVATAR: config.AVATAR },
     {
@@ -192,39 +213,37 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
   console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
-task("encodeApplyPresetsSpark").setAction(
-  async (taskArgs, hre) => {
-    const { config } = await processArgs(taskArgs, hre)
-    const txBatches = await encodeApplyPresetTxBuilder(
-      config.MODULE,
-      2,
-      sparkRepayDebtDAI,
-      { AVATAR: config.AVATAR },
-      {
-        network: config.NETWORK as NetworkId,
-      }
-    )
-
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "/presets-output/mainnet/ENS/txSparkRepayDebtDAI.json"
-    )
-    if (!existsSync(filePath)) {
-      // Create the directory structure if it doesn't exist
-      mkdirSync(path.dirname(filePath), { recursive: true })
+task("encodeApplyPresetsSpark").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    config.ROLE_IDS.SPARK,
+    sparkRepayDebtDAI,
+    { AVATAR: config.AVATAR },
+    {
+      network: config.NETWORK as NetworkId,
     }
-    // Write the JSON data to the file
-    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
-    console.log(`Transaction builder JSON written to  ${filePath}`)
+  )
+
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "/presets-output/mainnet/ENS/txSparkRepayDebtDAI.json"
+  )
+  if (!existsSync(filePath)) {
+    // Create the directory structure if it doesn't exist
+    mkdirSync(path.dirname(filePath), { recursive: true })
   }
-)
+  // Write the JSON data to the file
+  writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+  console.log(`Transaction builder JSON written to  ${filePath}`)
+})
 
 task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
-    3,
+    config.ROLE_IDS.HARVESTER,
     mainnetDeFiHarvestENSPreset,
     { AVATAR: config.AVATAR },
     {
@@ -251,7 +270,7 @@ task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
 //         const { config } = await processArgs(taskArgs, hre)
 //         const txBatches = await encodeApplyPresetTxBuilder(
 //             config.MODULE,
-//             4,
+//             config.ROLE_IDS.DISASSEMBLER,
 //             mainnetDeFiDisassembleENSPreset,
 //             { AVATAR: config.AVATAR },
 //             {
@@ -273,7 +292,7 @@ task("encodeApplyPresetSwapENS").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
-    5,
+    config.ROLE_IDS.SWAPPER,
     mainnetDeFiSwapENSPreset,
     { AVATAR: config.AVATAR },
     {

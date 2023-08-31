@@ -42,7 +42,7 @@ if (["goerli", "mainnet"].includes(argv.network) && INFURA_KEY === undefined) {
   )
 }
 
-const config: HardhatUserConfig = {
+export default {
   paths: {
     root: "../evm",
     artifacts: "build/artifacts",
@@ -85,6 +85,4 @@ const config: HardhatUserConfig = {
   mocha: {
     timeout: 2000000,
   },
-}
-
-export default config
+} satisfies HardhatUserConfig

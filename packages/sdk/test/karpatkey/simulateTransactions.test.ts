@@ -1,3 +1,4 @@
+import helpers from "@nomicfoundation/hardhat-toolbox/network-helpers"
 import { BigNumber } from "ethers"
 import hre, { deployments, waffle } from "hardhat"
 
@@ -15,6 +16,7 @@ import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/
 import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
 import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
 import { RolePreset } from "../../src/presets/types"
+import { NetworkId } from "../../src/types"
 import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
 import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
 import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
@@ -37,7 +39,7 @@ interface Config {
   HARVESTER: string
   DISASSEMBLER: string
   SWAPPER: string
-  NETWORK: number
+  NETWORK: NetworkId
   BRIDGED_SAFE: string
 }
 
@@ -87,16 +89,18 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   const simulateTransactions = async ({
     preset,
     config,
+    fromBlankSlate,
     transactions,
   }: {
     preset: RolePreset
     config: Config
+    fromBlankSlate?: boolean
     transactions: {
       from: string
       value?: string
       data: string
       to: string
-      operation?: 0 | 1
+      operation?: number
       expectRevert?: boolean
     }[]
   }) => {
@@ -113,7 +117,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       placeholderValues,
       {
         currentPermissions: { targets: [] },
-        network: 100, // this value won't be used
+        network: config.NETWORK,
       }
     )
 
@@ -187,6 +191,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       await simulateTransactions({
         config: GNOSIS_ADDRESSES.GNOSIS_LTD_GNO,
         preset: gnosisDeFiRevokeGnosisLTDPreset,
+        fromBlankSlate: true,
         transactions: gnosisRevokeGnosisLTDTransactions,
       })
     })
@@ -195,11 +200,12 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   //---------------------------------------------------------------------------------------------------------------------------------
   // Mainnet - Balancer
   //---------------------------------------------------------------------------------------------------------------------------------
-  describe("Balancer Manage  preset [balancer:manage]", () => {
+  describe("Balancer Manage preset [balancer:manage]", () => {
     it("allows executing all listed management transactions from the Balancer Safe", async () => {
       await simulateTransactions({
         config: BALANCER_ADDRESSES.BALANCER_ETH,
         preset: balancerManagePreset,
+        fromBlankSlate: true,
         transactions: balancerManageTransactions,
       })
     })
@@ -213,6 +219,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       await simulateTransactions({
         config: BALANCER_ADDRESSES.BALANCER_ALTERNATIVE_ETH,
         preset: balancerAlternativeManagePreset,
+        fromBlankSlate: true,
         transactions: balancerAlternativeManageTransactions,
       })
     })
@@ -222,10 +229,20 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   // Mainnet - ENS
   //---------------------------------------------------------------------------------------------------------------------------------
   describe("ENS Manage preset [ens:manage]", () => {
-    it("allows executing all listed management transactions from the ENS Safe", async () => {
+    it("allows executing all listed management transactions from the ENS Safe (from blank slate)", async () => {
       await simulateTransactions({
         config: ENS_ADDRESSES.ENS_ETH,
         preset: ensManagePreset,
+        fromBlankSlate: true,
+        transactions: ensManageTransactions,
+      })
+    })
+
+    it("allows executing all listed management transactions from the ENS Safe (patching the current permissions)", async () => {
+      await simulateTransactions({
+        config: ENS_ADDRESSES.ENS_ETH,
+        preset: ensManagePreset,
+        fromBlankSlate: false,
         transactions: ensManageTransactions,
       })
     })
@@ -276,6 +293,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       await simulateTransactions({
         config: KARPATKEY_ADDRESSES.TEST_ETH,
         preset: testManagePreset,
+        fromBlankSlate: true,
         transactions: balancerManageTransactions,
       })
     })

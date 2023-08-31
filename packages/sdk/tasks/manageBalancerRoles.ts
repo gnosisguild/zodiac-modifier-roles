@@ -9,12 +9,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
-import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/Balancer/deFiManageBalancer"
 import mainnetDeFiHarvestBalancerPreset from "../src/presets/mainnet/Balancer/deFiHarvestBalancer"
-import mainnetDeFiSwapBalancerPreset from "../src/presets/mainnet/Balancer/deFiSwapBalancer"
-
+import mainnetDeFiManageBalancerPreset from "../src/presets/mainnet/Balancer/deFiManageBalancer"
 import mainnetDeFiManageBalancerAlternativePreset from "../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
-
+import mainnetDeFiSwapBalancerPreset from "../src/presets/mainnet/Balancer/deFiSwapBalancer"
 import { NetworkId } from "../src/types"
 
 interface Config {
@@ -25,7 +23,7 @@ interface Config {
   HARVESTER: string
   DISASSEMBLER: string
   SWAPPER: string
-  NETWORK: number
+  NETWORK: NetworkId
   BRIDGED_SAFE: string
 }
 
