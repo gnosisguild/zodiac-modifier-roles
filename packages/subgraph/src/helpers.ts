@@ -104,7 +104,7 @@ export const getOrCreateMember = (memberId: string, rolesModifierId: string, mem
 export const getRolesModifier = (rolesModifierId: string): RolesModifier | null => {
   let rolesModifier = RolesModifier.load(rolesModifierId)
   if (!rolesModifier) {
-    log.warning("RolesModifier {} does not exist", [rolesModifierId])
+    log.info("{} is not a Roles modifier", [rolesModifierId])
     return null
   }
   return rolesModifier

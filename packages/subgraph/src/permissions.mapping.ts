@@ -28,7 +28,6 @@ export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 
@@ -52,7 +51,6 @@ export function handleScopeTarget(event: ScopeTarget): void {
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 
@@ -94,7 +92,6 @@ export function handleAllowFunction(event: AllowFunction): void {
   const rolesModifierId = getRolesModifierId(event.address)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 
@@ -121,7 +118,6 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const rolesModifierId = getRolesModifierId(event.address)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 
@@ -166,7 +162,6 @@ export function handleSetAllowance(event: SetAllowance): void {
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier does not exist: {}", [rolesModifierId])
     return
   }
 

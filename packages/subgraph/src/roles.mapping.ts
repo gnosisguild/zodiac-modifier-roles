@@ -17,16 +17,15 @@ import {
   getOrCreateRole,
   getRoleId,
   getRolesModifierId,
+  getRolesModifier,
 } from "./helpers"
 
 export function handleAssignRoles(event: AssignRoles): void {
   // add and remove member from roles
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.warning("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
@@ -72,10 +71,8 @@ export function handleChangedGuard(event: ChangedGuard): void {}
 export function handleDisabledModule(event: DisabledModule): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
@@ -89,10 +86,8 @@ export function handleDisabledModule(event: DisabledModule): void {
 export function handleEnabledModule(event: EnabledModule): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.error("RolesModifier {} does not exist", [rolesModifierId])
     return
   }
 
