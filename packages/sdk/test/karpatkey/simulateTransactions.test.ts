@@ -4,7 +4,7 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
 import { Permission, processPermissions } from "../../src"
-import { applyTargets } from "../../src/applyTargets"
+import { applyTargets } from "../../src/targets/applyTargets"
 import { deployContracts } from "../deployContracts"
 
 import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"

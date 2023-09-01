@@ -1,9 +1,9 @@
 import { expect } from "chai"
 
-import { replaceTargets } from "../src/replaceTargets"
+import { replaceTargets } from "../src/targets/applyTargets"
 import { Operator, ParameterType, Target } from "../src/types"
 
-describe("replacePermissions", () => {
+describe("replaceTargets", () => {
   it("should revoke function-scoped targets", () => {
     const before: Target[] = [
       {

@@ -117,7 +117,7 @@ const removeTargets = (current: Target[], subtract: Target[]): Call[] => {
  * @param next targets of the role describing the desired target state
  * @returns The set of calls to make to the Roles modifier owning the role
  */
-const replaceTargets = (current: Target[], next: Target[]): Call[] => {
+export const replaceTargets = (current: Target[], next: Target[]): Call[] => {
   return removeObsoleteCalls([
     ...revoke(diffTargets(current, next)),
     ...grant(diffTargets(next, current)),

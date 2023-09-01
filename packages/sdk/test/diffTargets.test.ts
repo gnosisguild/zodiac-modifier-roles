@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import { diffTargets } from "../src/diffTargets"
+import { diffTargets } from "../src/targets/diffTargets"
 import {
   Clearance,
   ExecutionOptions,
@@ -9,7 +9,7 @@ import {
   Target,
 } from "../src/types"
 
-describe("diffPermissions", () => {
+describe("diffTargets", () => {
   it("should correctly diff target-cleared targets", () => {
     const a: Target[] = [
       {
