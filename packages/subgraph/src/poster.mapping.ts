@@ -5,10 +5,9 @@ import { getAnnotationId, getOrCreateAnnotation, getRoleId, getRolesModifier, ge
 export function handleNewPost(event: NewPost): void {
   const tagParts = event.params.tag.toString().split("-")
   if (tagParts.length != 2) return
+  if (!isAddress(tagParts[0])) return
 
   const modifierAddress = Address.fromString(tagParts[0])
-  const roleKey = Bytes.fromUTF8(tagParts[1])
-
   const rolesModifierId = getRolesModifierId(modifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
@@ -23,6 +22,11 @@ export function handleNewPost(event: NewPost): void {
     return
   }
 
+  const roleKey = Bytes.fromUTF8(tagParts[1])
+  if (roleKey.length > 32) {
+    log.warning("Role key {} is invalid (too long), annotation update post will be ignored", [tagParts[1]])
+    return
+  }
   const roleId = getRoleId(rolesModifierId, roleKey)
 
   const parsedJson = json.try_fromString(event.params.content)
@@ -77,4 +81,13 @@ export function handleNewPost(event: NewPost): void {
       log.info("Annotation #{} has been added", [annotation.id])
     }
   }
+}
+
+function isAddress(value: string): bool {
+  const chars = value.slice(2).toLowerCase().split("")
+  return (
+    value.length == 42 &&
+    value.startsWith("0x") &&
+    chars.every((char) => (char >= "0" && char <= "9") || (char >= "a" && char <= "f"))
+  )
 }
