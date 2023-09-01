@@ -8,4 +8,5 @@ export { fetchRolesMod } from "./fetchRolesMod"
 export * from "./targets"
 export { applyMembers } from "./applyMembers"
 
+export * from "./abi"
 export * from "./types"
