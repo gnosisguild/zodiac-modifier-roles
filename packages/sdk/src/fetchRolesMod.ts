@@ -33,10 +33,13 @@ export const fetchRolesMod = async ({
 }: Props): Promise<RolesModifier> => {
   const res = await fetch(SUBGRAPH[chainId], {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       query: QUERY,
       variables: { id: address.toLowerCase() },
-      operationName: "Roles",
+      operationName: "RolesMod",
     }),
   })
   const { data, error } = await res.json()

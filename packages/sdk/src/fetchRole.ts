@@ -54,6 +54,9 @@ export const fetchRole = async ({
 }: Props): Promise<Role> => {
   const res = await fetch(SUBGRAPH[chainId], {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       query: QUERY,
       variables: { id: getRoleId(address, roleKey) },
