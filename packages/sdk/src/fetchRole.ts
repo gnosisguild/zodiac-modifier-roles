@@ -6,9 +6,6 @@ import {
   ExecutionOptions,
   Function,
   Target,
-  ParameterType,
-  Operator,
-  Condition,
 } from "./types"
 
 interface Props {
@@ -18,42 +15,34 @@ interface Props {
 }
 
 const QUERY = `
-  fragment ConditionFragment on Condition {
-    paramType
-    operator
-    compValue
-    children {
-      ...ConditionFragment
-    }
-  }
-
-  query Role($id: String) {
-    role(id: $id) {
-      members {
-        member {
-          address
-        }
-      }
-      targets {
+query Role($id: String) {
+  role(id: $id) {
+    members {
+      member {
         address
-        clearance
-        executionOptions
-        functions {
-          selector
-          executionOptions
-          wildcarded
-          condition {
-            ...ConditionFragment
-          }
-        }
-      }
-      annotations {
-        url
-        schema
       }
     }
+    targets {
+      address
+      clearance
+      executionOptions
+      functions {
+        selector
+        executionOptions
+        wildcarded
+        condition {
+          id
+          json
+        }
+      }
+    }
+    annotations {
+      uri
+      schema
+    }
   }
-`
+}
+`.trim()
 
 const getRoleId = (address: string, roleKey: string) =>
   `${address.toLowerCase()}-ROLE-${roleKey}`
@@ -101,18 +90,9 @@ const mapGraphQl = (role: any): Role => ({
               func.executionOptions as keyof typeof ExecutionOptions
             ],
           wildcarded: func.wildcarded,
-          condition: mapGraphQlCondition(func.condition),
+          condition: func.condition && JSON.parse(func.condition.json),
         })
       ),
     })
   ),
 })
-
-const mapGraphQlCondition = (condition: any): Condition => {
-  return {
-    paramType: ParameterType[condition.paramType as keyof typeof ParameterType],
-    operator: Operator[condition.operator as keyof typeof Operator],
-    compValue: condition.compValue,
-    children: condition.children?.map(mapGraphQlCondition),
-  }
-}

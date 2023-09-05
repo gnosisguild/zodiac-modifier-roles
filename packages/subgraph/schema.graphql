@@ -108,13 +108,8 @@ type Function @entity {
 }
 
 type Condition @entity {
-  id: ID! # Derived from hash of the condition, matches the storage address (for conditions without parent)
-  index: Int!
-  paramType: ParameterType!
-  operator: Operator!
-  compValue: Bytes!
-  parent: Condition
-  children: [Condition!]! @derivedFrom(field: "parent")
+  id: ID! # Derived from hash of the condition, matches the storage address
+  json: String! # JSON representation of the condition
 }
 
 type Member @entity {

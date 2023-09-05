@@ -20,7 +20,7 @@ import {
   getRolesModifierId,
   getTargetId,
 } from "./helpers"
-import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys, Operator, ParameterType } from "./enums"
+import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys } from "./enums"
 import { storeConditions } from "./conditions"
 
 export function handleAllowTarget(event: AllowTarget): void {

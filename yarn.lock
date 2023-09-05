@@ -4781,6 +4781,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"assemblyscript-json@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "assemblyscript-json@npm:1.1.0"
+  checksum: 06e6df1b7b668f02e698af4c0713191220ac21573b9e945f81fb37666d25ca574b88e6ae01ead7363f2dd6c11a71c542e1f7e7abd9200a6e0ef55e3786e0e4b0
+  languageName: node
+  linkType: hard
+
 "assemblyscript@npm:0.19.10":
   version: 0.19.10
   resolution: "assemblyscript@npm:0.19.10"
@@ -22705,6 +22712,7 @@ __metadata:
   dependencies:
     "@graphprotocol/graph-cli": ^0.56.0
     "@graphprotocol/graph-ts": ^0.31.0
+    assemblyscript-json: ^1.1.0
     mustache: ^4.2.0
     prettier: ^2.5.1
   languageName: unknown

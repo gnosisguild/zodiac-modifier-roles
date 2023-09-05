@@ -10,7 +10,7 @@ import {
   UnwrapAdapter,
   Annotation,
 } from "../generated/schema"
-import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys, Operator, OperatorKeys } from "./enums"
+import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys } from "./enums"
 
 export const getRolesModifierId = (rolesModifier: Address): string => rolesModifier.toHex()
 export const getRoleId = (roleModifierId: string, roleKey: Bytes): string => roleModifierId + "-ROLE-" + roleKey.toHex()

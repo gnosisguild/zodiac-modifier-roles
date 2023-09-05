@@ -1,47 +1,92 @@
-import { Address, Bytes, crypto } from "@graphprotocol/graph-ts"
+import { Address, Bytes, crypto, log } from "@graphprotocol/graph-ts"
+import { JSONEncoder } from "assemblyscript-json"
+
 import { ScopeFunctionConditionsStruct } from "../generated/PermissionBuilder/PermissionBuilder"
 import { Condition } from "../generated/schema"
-import { Operator, OperatorKeys, ParameterTypeKeys } from "./enums"
+import { Operator, ParameterType } from "./enums"
 
 export const storeConditions = (conditions: ScopeFunctionConditionsStruct[]): Condition => {
   assert(conditions.length > 0, "Conditions array is empty")
 
-  const rootId = getRootConditionId(conditions)
-  let rootCondition = Condition.load(rootId)
-  if (rootCondition) {
+  const id = getConditionId(conditions)
+  const existingCondition = Condition.load(id)
+  if (existingCondition) {
     // condition is already stored, we can just use it
-    return rootCondition
+    return existingCondition
   }
 
-  for (let i = 0; i < conditions.length; i++) {
-    const id = i == 0 ? rootId : rootId + "-" + i.toString()
-    const parentId: string | null = i == 0 ? null : rootId + "-" + (conditions[i].parent - 1).toString()
-    assert(i == 0 || parentId != "", "Parent missing")
+  const newCondition = new Condition(id)
 
-    const condition = new Condition(id)
-    condition.index = i
-    condition.parent = parentId
-    condition.operator = OperatorKeys[conditions[i].operator]
-    condition.paramType = ParameterTypeKeys[conditions[i].paramType]
-    condition.compValue = conditions[i].compValue
-    condition.save()
+  const tree = conditions.length > 0 ? toTree(conditions) : null
+  if (tree) {
+    const encoder = new JSONEncoder()
+    jsonStringify(tree, encoder)
+    newCondition.json = encoder.toString()
+  }
 
-    if (i == 0) {
-      rootCondition = condition
+  newCondition.save()
+  return newCondition
+}
+
+class ConditionTree {
+  // children: ConditionTree[] = []
+  constructor(
+    public paramType: ParameterType,
+    public operator: Operator,
+    public compValue: string,
+    public children: ConditionTree[],
+  ) {}
+}
+
+function toTree(flatConditions: ScopeFunctionConditionsStruct[]): ConditionTree | null {
+  const conditions: ConditionTree[] = []
+
+  for (let i = 0; i < flatConditions.length; i++) {
+    const flatCondition = flatConditions[i]
+    const condition = new ConditionTree(
+      flatCondition.paramType,
+      flatCondition.operator,
+      flatCondition.compValue.toHexString(),
+      [],
+    )
+    conditions.push(condition)
+
+    if (flatCondition.parent != i) {
+      if (flatCondition.parent >= conditions.length) {
+        log.error("conditions flat list is not ordered breadth-first, violation at index {} referencing parent {}", [
+          i.toString(),
+          flatCondition.parent.toString(),
+        ])
+        return null
+      }
+      conditions[flatCondition.parent].children.push(condition)
     }
   }
 
-  if (!rootCondition) {
-    throw new Error("Root condition is null")
-  }
+  return conditions[0]
+}
 
-  return rootCondition
+function jsonStringify(tree: ConditionTree, encoder: JSONEncoder): void {
+  encoder.pushObject(null)
+  encoder.setInteger("operator", tree.operator)
+  encoder.setInteger("paramType", tree.paramType)
+  if (tree.compValue != "0x") {
+    encoder.setString("compValue", tree.compValue)
+  }
+  if (tree.children.length > 0) {
+    encoder.pushArray("children")
+    for (let i = 0; i < tree.children.length; i++) {
+      jsonStringify(tree.children[i], encoder)
+    }
+    encoder.popArray()
+  }
+  encoder.popObject()
 }
 
 export const ERC2470_SINGLETON_FACTORY_ADDRESS = Address.fromString("0xce0042b868300000d44a59004da54a005ffdcf9f")
 export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0))
 
-export function getRootConditionId(conditions: ScopeFunctionConditionsStruct[]): string {
+export function getConditionId(conditions: ScopeFunctionConditionsStruct[]): string {
   const packed = conditions
     .map<Bytes>((condition) => packCondition(condition))
     .reduce((acc, item) => acc.concat(item), new Bytes(0))
