@@ -11,6 +11,7 @@
     "deploy:standalone": "hardhat deploy-standalone --network",
     "deploy:mastercopy": "hardhat run src/deploy-mastercopy.ts --network",
     "deploy:proxy": "hardhat deploy-proxy --network",
+    "deploy:adapters": "hardhat run src/deploy-adapters.ts --network",
     "verify:standalone": "hardhat verify-standalone --network",
     "coverage": "hardhat coverage",
     "fmt": "yarn fmt:sol && yarn fmt:ts",
