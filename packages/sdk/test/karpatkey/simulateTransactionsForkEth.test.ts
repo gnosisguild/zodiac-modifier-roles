@@ -3,12 +3,16 @@ import hre, { deployments, waffle } from "hardhat"
 
 import { Roles__factory } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
 import { RolePreset } from "../../src/presets/types"
 import { NetworkId } from "../../src/types"
-import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
 
+import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
+import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
 import ensManageTransactions from "./testTransactions/ensManage"
+
+import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
+import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
+import balancerManageTransactions from "./testTransactions/balancerManage"
 
 interface Config {
   AVATAR: string
@@ -157,6 +161,21 @@ describe("Karpatkey: Simulate Transactions Test (patching current config in main
         roleId: ENS_ADDRESSES.ENS_ETH.ROLE_IDS.MANAGER,
         roleMember: ENS_ADDRESSES.ENS_ETH.MANAGER,
         transactions: ensManageTransactions,
+      })
+    })
+  })
+
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // Balancer
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("Balancer Manage preset [balancer:manage]", () => {
+    it("allows executing all listed management transactions from the Balancer Safe after patching the current permissions", async () => {
+      await simulateTransactions({
+        config: BALANCER_ADDRESSES.BALANCER_ETH,
+        preset: balancerManagePreset,
+        roleId: BALANCER_ADDRESSES.BALANCER_ETH.ROLE_IDS.MANAGER,
+        roleMember: BALANCER_ADDRESSES.BALANCER_ETH.MANAGER,
+        transactions: balancerManageTransactions,
       })
     })
   })

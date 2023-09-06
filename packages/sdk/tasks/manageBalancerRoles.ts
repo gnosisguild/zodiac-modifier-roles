@@ -25,6 +25,13 @@ interface Config {
   SWAPPER: string
   NETWORK: NetworkId
   BRIDGED_SAFE: string
+  ROLE_IDS: {
+    MANAGER: number
+    REVOKER: number
+    HARVESTER: number
+    DISASSEMBLER: number
+    SWAPPER: number
+  }
 }
 
 export const BALANCER_ADDRESSES = {
@@ -38,6 +45,13 @@ export const BALANCER_ADDRESSES = {
     SWAPPER: "0x19f2ab2c11d818d40b227557d3935ded9e1d201a",
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
   BALANCER_ALTERNATIVE_ETH: {
     AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1",
@@ -49,6 +63,13 @@ export const BALANCER_ADDRESSES = {
     SWAPPER: "0x14c2d2d64c4860acf7cf39068eb467d7556197de",
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
 } satisfies { [key: string]: Config }
 

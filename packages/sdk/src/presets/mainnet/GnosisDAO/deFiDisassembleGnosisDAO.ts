@@ -1,105 +1,129 @@
 import { allow } from "../../allow"
 import {
-  ZERO_ADDRESS, AURA, auraBAL, BAL, COW, WETH, GNO, LDO, USDC, wstETH,
+  ZERO_ADDRESS,
+  AURA,
+  auraBAL,
+  BAL,
+  COW,
+  WETH,
+  GNO,
+  LDO,
+  USDC,
+  wstETH,
+  aura,
   balancer,
   compound_v2,
-  compound_v3
+  compound_v3,
 } from "../addresses"
-import {
-  staticEqual,
-  staticOneOf,
-} from "../../helpers/utils"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-
+import { auraExitStrategy1 } from "../../helpers/ExitStrategies/AuraExitStrategies"
 
 const preset = {
   network: 1,
   allow: [
-
     //---------------------------------------------------------------------------------------------------------------------------------
-    // AURA
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura wstETH/WETH pool
+    // Aura wstETH/WETH pool + Balancer wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: auraB_stETH_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.auraB_stETH_STABLE_REWARDER,
+      balancer.B_stETH_STABLE_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura B-80BAL-20WETH/auraBAL
+    // Aura B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: auraB_auraBAL_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.auraB_auraBAL_stable_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.auraB_auraBAL_STABLE_REWARDER,
+      balancer.B_auraBAL_STABLE_pId
+    ),
+
+    // Remove Liquidity from Balancer B-80BAL-20WETH
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(balancer.B_80BAL_20WETH_pId, "bytes32"), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+      },
+    },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura rETH/WETH
+    // Aura rETH/WETH + Balancer rETH/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: auraB_rETH_STABLE_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.auraB_rETH_stable_rewarder["withdrawAllAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.auraB_rETH_STABLE_REWARDER,
+      balancer.B_rETH_STABLE_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura GNO/WETH
+    // Aura GNO/WETH + Balancer GNO/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: auraB_80GNO_20WETH_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.auraB_80GNO_20WETH_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.auraB_80GNO_20WETH_REWARDER,
+      balancer.B_80GNO_20WETH_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura GNO/COW
+    // Aura GNO/COW + Balancer GNO/COW
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: aura50COW_50GNO_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.aura50COW_50GNO_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.aura50COW_50GNO_REWARDER,
+      balancer.B_50COW_50GNO_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura LDO/wstETH
+    // Aura LDO/wstETH + Balancer LDO/wstETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: aura50WSTETH_50LDO_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.aura50WSTETH_50LDO_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.aura50WSTETH_50LDO_REWARDER,
+      balancer.B_50WSTETH_50LDO_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura WETH/AURA
+    // Aura WETH/AURA + Balancer WETH/AURA
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: aura50WETH_50AURA_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.aura50WETH_50AURA_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.aura50WETH_50AURA_REWARDER,
+      balancer.B_50WETH_50AURA_pId
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura WETH/COW
+    // Aura WETH/COW + Balancer WETH/COW
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // {
-    //   targetAddress: aura50COW_50WETH_REWARDER,
-    //   signature: "withdrawAndUnwrap(uint256,bool)",
-    // },
-    allow.mainnet.aura.aura50COW_50WETH_rewarder["withdrawAndUnwrap"](),
+    ...auraExitStrategy1(
+      aura.aura50COW_50WETH_REWARDER,
+      balancer.B_50COW_50WETH_pId
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aura GHO/3pool + Balancer GHO/3pool + Balancer 3pool
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    ...auraExitStrategy1(aura.auraGHO_3POOL_REWARDER, balancer.B_GHO_3POOL_pId),
+
+    // Remove Liquidity from 3pool
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+      params: {
+        [0]: staticEqual(balancer.B_USDC_DAI_USDT_pId, "bytes32"), // Balancer PoolId
+        [1]: staticEqual(AVATAR),
+        [2]: staticEqual(AVATAR),
+      },
+    },
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Staking auraBAL
@@ -122,6 +146,9 @@ const preset = {
     // },
     allow.mainnet.aura.aura_locker["processExpiredLocks"](),
 
+    // Withdraw funds in emergency state (isShutdown = True)
+    allow.mainnet.aura.aura_locker["emergencyWithdraw"](),
+
     //---------------------------------------------------------------------------------------------------------------------------------
     // BALANCER
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -130,114 +157,12 @@ const preset = {
     // Balancer wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(wstETH, "address"),
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
-
     // Unstake
     allow.mainnet.balancer.B_stETH_stable_gauge["withdraw(uint256)"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer B-80BAL-20WETH/auraBAL pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(balancer.B_80BAL_20WETH, "address"),
-        [10]: staticEqual(auraBAL, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
 
     // Unstake
     allow.mainnet.balancer.B_auraBAL_stable_gauge["withdraw(uint256)"](),
@@ -246,114 +171,12 @@ const preset = {
     // Balancer rETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(wstETH, "address"),
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
-
     // Unstake
     allow.mainnet.balancer.B_rETH_stable_gauge["withdraw(uint256)"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer GNO/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(GNO, "address"),
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
 
     // Unstake
     allow.mainnet.balancer.B_80GNO_20WETH_gauge["withdraw(uint256)"](),
@@ -362,114 +185,12 @@ const preset = {
     // Balancer GNO/COW pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x92762b42a06dcdddc5b7362cfb01e631c4d44b40000200000000000000000182",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(GNO, "address"),
-        [10]: staticEqual(COW, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
-
     // Unstake
     allow.mainnet.balancer.B_50COW_50GNO_gauge["withdraw(uint256)"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer LDO/wstETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x5f1f4e50ba51d723f12385a8a9606afc3a0555f5000200000000000000000465",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(LDO, "address"),
-        [10]: staticEqual(wstETH, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
 
     // Unstake
     allow.mainnet.balancer.B_50WSTETH_50LDO_gauge["withdraw(uint256)"](),
@@ -478,114 +199,12 @@ const preset = {
     // Balancer WETH/AURA pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0xcfca23ca9ca720b6e98e3eb9b6aa0ffc4a5c08b9000200000000000000000274",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [10]: staticEqual(AURA, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
-
     // Unstake
     allow.mainnet.balancer.B_50WETH_50AURA_gauge["withdraw(uint256)"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer WETH/COW pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0xde8c195aa41c11a0c4787372defbbddaa31306d2000200000000000000000181",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [10]: staticEqual(COW, "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
-      },
-    },
 
     // Unstake
     allow.mainnet.balancer.B_50COW_50WETH_gauge["withdraw(uint256)"](),
@@ -606,42 +225,6 @@ const preset = {
         ), // Balancer PoolId
         [1]: staticEqual(AVATAR),
         [2]: staticEqual(AVATAR),
-        [3]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
-        [5]: staticEqual(
-          "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
-        [8]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of address[] = 2
-        [9]: staticEqual(BAL, "address"),
-        [10]: staticOneOf([WETH, ZERO_ADDRESS], "address"),
-        [11]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "bytes32"
-        ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
-          "bytes32"
-        ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
-          "bytes32"
-        ), // Join Kind
       },
     },
 
@@ -674,7 +257,7 @@ const preset = {
     // Withdraw
     allow.mainnet.convex.booster["withdraw"](
       {
-        oneOf: [0]
+        oneOf: [0],
       } // poolId (If you don't specify a poolId you can withdraw funds in any pool)
     ),
 
@@ -742,7 +325,9 @@ const preset = {
     allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_imbalance"](),
 
     // Removing Liquidity of One Coin (Underlying, using ZAP)
-    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+    allow.mainnet.curve.cDAIcUSDC_zap[
+      "remove_liquidity_one_coin(uint256,int128,uint256)"
+    ](),
 
     // Unstake
     allow.mainnet.curve.cDAIcUSDC_gauge["withdraw"](),
@@ -762,9 +347,7 @@ const preset = {
     allow.mainnet.compound_v2.cUSDC["redeemUnderlying"](),
 
     // Stop using as Collateral
-    allow.mainnet.compound_v2.comptroller["exitMarket"](
-      compound_v2.cUSDC
-    ),
+    allow.mainnet.compound_v2.comptroller["exitMarket"](compound_v2.cUSDC),
 
     // Repay specified borrowed amount of underlying asset (uint256)
     allow.mainnet.compound_v2.cUSDC["repayBorrow"](),
@@ -780,9 +363,7 @@ const preset = {
     allow.mainnet.compound_v2.cDAI["redeemUnderlying"](),
 
     // Stop using as Collateral
-    allow.mainnet.compound_v2.comptroller["exitMarket"](
-      compound_v2.cDAI
-    ),
+    allow.mainnet.compound_v2.comptroller["exitMarket"](compound_v2.cDAI),
 
     // Repay specified borrowed amount of underlying asset (uint256)
     allow.mainnet.compound_v2.cDAI["repayBorrow"](),
@@ -796,9 +377,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Withdraw/Borrow
-    allow.mainnet.compound_v3.cUSDCv3["withdraw"](
-      USDC
-    ),
+    allow.mainnet.compound_v3.cUSDCv3["withdraw"](USDC),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V3 - ETH
@@ -807,8 +386,7 @@ const preset = {
     // Withdraw
     {
       targetAddress: compound_v3.MainnetBulker,
-      signature:
-        "invoke(bytes32[],bytes[])",
+      signature: "invoke(bytes32[],bytes[])",
       params: {
         [0]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000040",
@@ -839,7 +417,7 @@ const preset = {
           "bytes32"
         ), // Length of the first element of the bytes[] 96=32*3
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
-        [8]: staticEqual(AVATAR)
+        [8]: staticEqual(AVATAR),
       },
     },
   ],
