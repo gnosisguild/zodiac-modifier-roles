@@ -1,6 +1,7 @@
 import hre from "hardhat";
 import { deployMastercopyWithInitData } from "@gnosis.pm/zodiac";
 import { defaultAbiCoder } from "ethers/lib/utils";
+import { calculateMastercopyAddress } from "./helpers";
 
 const SaltZero =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -11,18 +12,18 @@ async function run() {
   const deployer = hre.ethers.provider.getSigner(signer.address);
 
   const Packer = await hre.ethers.getContractFactory("Packer");
-  const packerLibraryAddress = await deployMastercopyWithInitData(
-    deployer,
+  const packerLibraryAddress = calculateMastercopyAddress(
     Packer.bytecode,
     SaltZero
   );
+  await deployMastercopyWithInitData(deployer, Packer.bytecode, SaltZero);
 
   const Integrity = await hre.ethers.getContractFactory("Integrity");
-  const integrityLibraryAddress = await deployMastercopyWithInitData(
-    deployer,
+  const integrityLibraryAddress = calculateMastercopyAddress(
     Integrity.bytecode,
     SaltZero
   );
+  await deployMastercopyWithInitData(deployer, Integrity.bytecode, SaltZero);
 
   const Roles = await hre.ethers.getContractFactory("Roles", {
     libraries: {
@@ -36,7 +37,11 @@ async function run() {
     [AddressZero, AddressZero, AddressZero]
   );
 
-  const rolesMastercopyAddress = await deployMastercopyWithInitData(
+  const rolesMastercopyAddress = calculateMastercopyAddress(
+    `${Roles.bytecode}${args.substring(2)}`,
+    SaltZero
+  );
+  await deployMastercopyWithInitData(
     deployer,
     `${Roles.bytecode}${args.substring(2)}`,
     SaltZero

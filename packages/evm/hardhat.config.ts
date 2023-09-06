@@ -88,7 +88,7 @@ const config: HardhatUserConfig = {
     },
     gnosis: {
       ...sharedNetworkConfig,
-      url: "https://rpc.gnosischain.com/",
+      url: "https://rpc.gnosis.gateway.fm",
     },
     matic: {
       ...sharedNetworkConfig,
