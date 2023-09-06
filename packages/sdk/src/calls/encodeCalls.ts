@@ -5,7 +5,10 @@ import { Call } from "./types"
 
 const rolesInterface = Roles__factory.createInterface()
 
-export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
+export const encodeCalls = (
+  roleKey: string,
+  calls: Call[]
+): `0x${string}`[] => {
   return calls.map((call) => {
     switch (call.call) {
       case "allowTarget": {
@@ -60,5 +63,5 @@ export const encodeCalls = (roleKey: string, calls: Call[]): string[] => {
         ])
       }
     }
-  })
+  }) as `0x${string}`[]
 }

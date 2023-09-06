@@ -17,5 +17,8 @@ const posterInterface = new Interface([
 ])
 
 export const encodePost = (content: string, tag: string) => {
-  return posterInterface.encodeFunctionData("post", [content, tag])
+  return posterInterface.encodeFunctionData("post", [
+    content,
+    tag,
+  ]) as `0x${string}`
 }

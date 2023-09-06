@@ -97,7 +97,7 @@ const addMember = (roleKey: string, member: string) => {
     member,
     [roleKey],
     [true],
-  ])
+  ]) as `0x${string}`
 }
 
 const removeMember = (roleKey: string, member: string) => {
@@ -105,5 +105,5 @@ const removeMember = (roleKey: string, member: string) => {
     member,
     [roleKey],
     [false],
-  ])
+  ]) as `0x${string}`
 }
