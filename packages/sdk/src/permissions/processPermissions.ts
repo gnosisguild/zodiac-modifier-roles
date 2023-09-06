@@ -1,5 +1,5 @@
 import { normalizeCondition } from "../conditions"
-import { Clearance, ExecutionOptions, Target } from "../types"
+import { Annotation, Clearance, ExecutionOptions, Target } from "../types"
 import { groupBy } from "../utils/groupBy"
 
 import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
@@ -7,6 +7,7 @@ import {
   FunctionPermissionCoerced,
   Permission,
   PermissionCoerced,
+  PermissionSet,
 } from "./types"
 import { execOptions, permissionId, isFunctionScoped } from "./utils"
 
@@ -15,9 +16,13 @@ import { execOptions, permissionId, isFunctionScoped } from "./utils"
  * @param permissions to process
  * @returns The resulting list of allowed targets
  */
-export const processPermissions = (permissions: Permission[]): Target[] => {
+export const processPermissions = (
+  permissions: (Permission | PermissionSet)[]
+): { targets: Target[]; annotations: Annotation[] } => {
+  const flatPermissions = permissions.flat()
+
   // first we merge permissions addressing the same target functions so every entry will be unique
-  const uniquePermissions = mergeFunctionPermissions(permissions)
+  const uniquePermissions = mergeFunctionPermissions(flatPermissions)
   sanityCheck(uniquePermissions)
 
   // collect all fully cleared targets
@@ -51,7 +56,20 @@ export const processPermissions = (permissions: Permission[]): Target[] => {
     }),
   }))
 
-  return [...fullyClearedTargets, ...functionScopedTargets]
+  // collect all annotations
+  const annotations = permissions
+    .filter(isPermissionSet)
+    .map((permissionSet) => permissionSet.annotation)
+    .filter((annotation): annotation is Annotation => !!annotation)
+
+  return {
+    targets: [...fullyClearedTargets, ...functionScopedTargets],
+
+    // make annotations unique
+    annotations: annotations.filter((annotation) =>
+      annotations.findIndex((a) => a.uri === annotation.uri)
+    ),
+  }
 }
 
 const sanityCheck = (permissions: PermissionCoerced[]) => {
@@ -101,3 +119,6 @@ const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
     )
   }
 }
+
+const isPermissionSet = (p: Permission | PermissionSet): p is PermissionSet =>
+  Array.isArray(p)

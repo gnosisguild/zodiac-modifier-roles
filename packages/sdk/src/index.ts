@@ -6,6 +6,7 @@ export { fetchRole } from "./fetchRole"
 export { fetchRolesMod } from "./fetchRolesMod"
 
 export * from "./targets"
+export * from "./annotations"
 export { applyMembers } from "./applyMembers"
 
 export * from "./abi"

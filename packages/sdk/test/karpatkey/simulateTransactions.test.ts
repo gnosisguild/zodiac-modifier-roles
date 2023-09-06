@@ -98,7 +98,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
     const transactionsData = await applyTargets(
       ROLE_KEY,
-      processPermissions(permissions),
+      processPermissions(permissions).targets,
       {
         currentTargets: [],
         mode: "replace",

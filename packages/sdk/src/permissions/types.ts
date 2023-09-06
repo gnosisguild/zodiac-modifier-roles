@@ -1,6 +1,6 @@
 import { BytesLike, ParamType } from "ethers/lib/utils"
 
-import { Condition } from "../types"
+import { Annotation, Condition } from "../types"
 
 import { ConditionFunction } from "./authoring/conditions/types"
 
@@ -33,3 +33,5 @@ export type FunctionPermissionCoerced = {
 
 export type Permission = TargetPermission | FunctionPermission
 export type PermissionCoerced = TargetPermission | FunctionPermissionCoerced
+
+export type PermissionSet = Permission[] & { annotation?: Annotation }
