@@ -65,7 +65,9 @@ export const applyAnnotations = async (
 
   const tag = `${address.toLowerCase()}-${roleKey.toLowerCase()}}`
 
-  return encodePost(JSON.stringify(updatePost), tag)
+  return isEmptyPost(updatePost)
+    ? []
+    : [encodePost(JSON.stringify(updatePost), tag)]
 }
 
 const replaceAnnotations = (
@@ -124,3 +126,7 @@ const groupAnnotations = (annotations: Annotation[]) =>
       uris: annotations.map((annotation) => annotation.uri),
     })
   )
+
+const isEmptyPost = (post: UpdateAnnotationsPost) =>
+  (!post.addAnnotations || post.addAnnotations.length === 0) &&
+  (!post.removeAnnotations || post.removeAnnotations.length === 0)
