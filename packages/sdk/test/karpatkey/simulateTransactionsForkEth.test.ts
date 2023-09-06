@@ -33,6 +33,7 @@ interface SimulateTransaction {
   to: string
   operation?: number
   expectRevert?: boolean
+  revertOnFailingExecution?: boolean
 }
 
 describe("Karpatkey: Simulate Transactions Test (patching current config in mainnet fork)", async () => {
@@ -123,14 +124,14 @@ describe("Karpatkey: Simulate Transactions Test (patching current config in main
       )
       try {
         await modifier
-          .connect(memberSigner)
+          .connect(memberSigner as any)
           .execTransactionWithRole(
             tx.to,
             tx.value || "0x00",
             tx.data || "0x00",
             tx.operation || 0,
             roleId,
-            true
+            tx.revertOnFailingExecution || false
           )
 
         if (tx.expectRevert) {
