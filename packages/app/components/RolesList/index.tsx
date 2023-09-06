@@ -1,25 +1,26 @@
-"use client";
-import { useState } from "react";
-import { RiArrowRightSLine } from "react-icons/ri";
-import Flex from "@/ui/Flex";
-import { LinkButton } from "@/ui/Button";
-import { useRouter } from "next/navigation";
-import { IconLinkButton } from "@/ui/IconButton";
-import classes from "./style.module.css";
-import Link from "next/link";
+"use client"
+import { useState } from "react"
+import { RiArrowRightSLine } from "react-icons/ri"
+import Flex from "@/ui/Flex"
+import { LinkButton } from "@/ui/Button"
+import { useRouter } from "next/navigation"
+import { IconLinkButton } from "@/ui/IconButton"
+import classes from "./style.module.css"
+import Link from "next/link"
+import { parseBytes32String } from "ethers/lib/utils"
 
 interface RoleSummary {
-  key: string;
-  members: `0x${string}`[];
-  targets: `0x${string}`[];
+  key: string
+  members: `0x${string}`[]
+  targets: `0x${string}`[]
 }
 
 const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
   roles,
   mod,
 }) => {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
+  const router = useRouter()
+  const [query, setQuery] = useState("")
 
   return (
     <Flex direction="column" gap={2}>
@@ -31,23 +32,30 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
       />
 
       <Flex direction="column" gap={0}>
-        {roles.map((role) => (
-          <Link
-            key={role.key}
-            href={`/${mod}/roles/${role.key}`}
-            className={classes.row}
-          >
-            <div className={classes.key}>{role.key}</div>
-            <div className={classes.members}>{role.members.length} Members</div>
-            <div className={classes.targets}>{role.targets.length} Targets</div>
-            <div className={classes.meta}>
-              <RiArrowRightSLine />
-            </div>
-          </Link>
-        ))}
+        {roles.map((role) => {
+          const parsedKey = parseBytes32String(role.key)
+          return (
+            <Link
+              key={role.key}
+              href={`/${mod}/roles/${encodeURIComponent(parsedKey)}`}
+              className={classes.row}
+            >
+              <div className={classes.key}>{parsedKey}</div>
+              <div className={classes.members}>
+                {role.members.length} Members
+              </div>
+              <div className={classes.targets}>
+                {role.targets.length} Targets
+              </div>
+              <div className={classes.meta}>
+                <RiArrowRightSLine />
+              </div>
+            </Link>
+          )
+        })}
       </Flex>
     </Flex>
-  );
-};
+  )
+}
 
-export default RolesList;
+export default RolesList

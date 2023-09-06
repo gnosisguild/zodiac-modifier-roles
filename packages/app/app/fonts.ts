@@ -1,15 +1,15 @@
-import { Spectral, Roboto_Mono } from "next/font/google";
+import { Spectral, Roboto_Mono } from "next/font/google"
 
-export const spectral = Spectral({
+export const body = Spectral({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap",
-  variable: "--font-spectral",
-});
+  variable: "--font-body",
+})
 
-export const roboto_mono = Roboto_Mono({
+export const mono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap",
-  variable: "--font-roboto-mono",
-});
+  variable: "--font-mono",
+})

@@ -17,6 +17,7 @@ interface Props {
 const QUERY = `
 query Role($id: String) {
   role(id: $id) {
+    key
     members {
       member {
         address
@@ -51,7 +52,7 @@ export const fetchRole = async ({
   address,
   roleKey,
   chainId,
-}: Props): Promise<Role> => {
+}: Props): Promise<Role | null> => {
   const res = await fetch(SUBGRAPH[chainId], {
     method: "POST",
     headers: {
@@ -67,8 +68,9 @@ export const fetchRole = async ({
   if (error) {
     throw new Error(error)
   }
+
   if (!data || !data.role) {
-    throw new Error(`Role ${roleKey} not found on ${address}`)
+    return null
   }
 
   return mapGraphQl(data.role)

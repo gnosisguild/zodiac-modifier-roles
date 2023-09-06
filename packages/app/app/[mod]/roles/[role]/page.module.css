@@ -2,3 +2,12 @@
   border: 1px solid var(--border-color);
   padding: var(--spacing-1);
 }
+
+.roleKey {
+  width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}

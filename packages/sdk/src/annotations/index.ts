@@ -37,6 +37,9 @@ export const applyAnnotations = async (
         address: address,
         roleKey,
       })
+      if (!role) {
+        throw new Error(`Role ${roleKey} not found on chain ${options.chainId}`)
+      }
       currentAnnotations = role.annotations
     } else {
       throw new Error(

@@ -45,6 +45,9 @@ export const applyMembers = async (
         address: options.address,
         roleKey,
       })
+      if (!role) {
+        throw new Error(`Role ${roleKey} not found on chain ${options.chainId}`)
+      }
       currentMembers = role.members
     } else {
       throw new Error(

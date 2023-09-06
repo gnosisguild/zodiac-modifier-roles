@@ -14,6 +14,7 @@ const QUERY = `
       avatar
       target 
       roles {
+        key
         members {
           member {
             address
@@ -30,7 +31,7 @@ const QUERY = `
 export const fetchRolesMod = async ({
   address,
   chainId,
-}: Props): Promise<RolesModifier> => {
+}: Props): Promise<RolesModifier | null> => {
   const res = await fetch(SUBGRAPH[chainId], {
     method: "POST",
     headers: {
@@ -46,8 +47,9 @@ export const fetchRolesMod = async ({
   if (error) {
     throw new Error(error)
   }
+
   if (!data || !data.rolesModifier) {
-    throw new Error(`Roles modifier ${address} not found on chain #${chainId}`)
+    return null
   }
 
   return mapGraphQl(data.rolesModifier)

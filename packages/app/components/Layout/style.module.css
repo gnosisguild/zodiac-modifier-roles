@@ -23,13 +23,18 @@
   box-sizing: border-box;
 }
 
-a.appName {
+a.breadcrumb {
   display: flex;
   align-items: center;
   padding: var(--spacing-2);
-  width: 140px;
+  height: 50px;
   white-space: nowrap;
   background: none;
   border-width: 1px;
   background-color: rgba(217, 212, 173, 0.1);
+}
+
+.appLogo {
+  width: 140px;
+  text-align: center;
 }

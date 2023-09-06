@@ -53,6 +53,9 @@ export const applyTargets = async (
         address: options.address,
         roleKey,
       })
+      if (!role) {
+        throw new Error(`Role ${roleKey} not found on chain ${options.chainId}`)
+      }
       currentTargets = role.targets
     } else {
       throw new Error(

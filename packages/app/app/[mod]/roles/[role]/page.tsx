@@ -1,66 +1,73 @@
-import styles from "./page.module.css";
-// import { fetchRole } from "zodiac-roles-sdk";
-import { notFound } from "next/navigation";
-import parseModParam from "@/app/parseModParam";
-import { Role, fetchRolesMod } from "zodiac-roles-sdk";
-import Flex from "@/ui/Flex";
-import Box from "@/ui/Box";
-import MembersList from "@/components/MembersList";
-import PermissionsList from "@/components/PermissionsList";
-import { testTargets, testAnnotations } from "./testData";
+import { Role, fetchRole, fetchRolesMod } from "zodiac-roles-sdk"
 
-// TODO replace with real fetch once the subgraphs are available
-const fetchRole = async ({
-  address,
-  roleKey,
-}: {
-  address: `0x${string}`;
-  roleKey: string;
-}) => {
-  return Promise.resolve({
-    key: roleKey,
-    members: [
-      "0xCC03A88d617A9FcCad51aA9658FDC5a09e62597e",
-      "0xDE70A3184C235a86D6355658F863c28cF3dbceed",
-    ],
-    targets: testTargets,
-    allowances: [],
-    annotations: testAnnotations,
-  } as Role);
-};
+import styles from "./page.module.css"
+import { notFound } from "next/navigation"
+import { parseModParam, parseRoleParam } from "@/app/params"
+import Flex from "@/ui/Flex"
+import Box from "@/ui/Box"
+import MembersList from "@/components/MembersList"
+import PermissionsList from "@/components/PermissionsList"
+import Layout, { Breadcrumb } from "@/components/Layout"
 
 export default async function RolePage({
   params,
 }: {
-  params: { mod: string; role: string };
+  params: { mod: string; role: string }
 }) {
-  const mod = parseModParam(params.mod);
-  if (!mod) {
-    notFound();
+  const mod = parseModParam(params.mod)
+  const roleKey = parseRoleParam(params.role)
+  if (!mod || !roleKey) {
+    notFound()
   }
 
-  const data = await fetchRole({ ...mod, roleKey: params.role });
+  let data = await fetchRole({ ...mod, roleKey })
   if (!data) {
-    const modExists = await fetchRolesMod(mod);
-    if (!modExists) notFound();
+    // If the role doesn't exist, we check if the mod exists.
+    // In that case we show an empty role page so the user can start populating it.
+    // Otherwise we show a 404.
+    const modExists = await fetchRolesMod(mod)
+    if (!modExists) {
+      notFound()
+    }
+
+    data = newRole(roleKey)
   }
 
   return (
-    <main className={styles.main}>
-      <Flex gap={1}>
-        <Box>
-          <h5>Members</h5>
-          <MembersList members={data.members} chainId={mod.chainId} />
-        </Box>
-        <Box>
-          <h5>Permissions</h5>
-          <PermissionsList
-            targets={data.targets}
-            annotations={data.annotations}
-            chainId={mod.chainId}
-          />
-        </Box>
-      </Flex>
-    </main>
-  );
+    <Layout
+      head={
+        <Breadcrumb href={`/${params.mod}/roles/${params.role}`}>
+          <Flex direction="column" gap={0}>
+            {params.role}
+            <small className={styles.roleKey}>{roleKey}</small>
+          </Flex>
+        </Breadcrumb>
+      }
+    >
+      <main className={styles.main}>
+        <Flex gap={1}>
+          <Box>
+            <h5>Members</h5>
+            <MembersList members={data.members} chainId={mod.chainId} />
+          </Box>
+          <Box>
+            <h5>Permissions</h5>
+            <PermissionsList
+              targets={data.targets}
+              annotations={data.annotations}
+              chainId={mod.chainId}
+            />
+          </Box>
+        </Flex>
+      </main>
+    </Layout>
+  )
 }
+
+const newRole = (roleKey: `0x${string}`): Role => ({
+  key: roleKey,
+  members: [],
+  targets: [],
+  annotations: [],
+  allowances: [],
+})
