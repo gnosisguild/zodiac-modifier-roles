@@ -14,7 +14,6 @@ import "./packers/BufferPacker.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionBuilder is Core {
-    error UnsuitableMaxBalanceForAllowance();
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
@@ -165,10 +164,6 @@ abstract contract PermissionBuilder is Core {
         uint64 refillTimestamp
     ) external onlyOwner {
         maxBalance = maxBalance > 0 ? maxBalance : type(uint128).max;
-
-        if (balance > maxBalance) {
-            revert UnsuitableMaxBalanceForAllowance();
-        }
 
         allowances[key] = Allowance({
             refillAmount: refillAmount,

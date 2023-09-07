@@ -150,13 +150,6 @@ describe("OnlyOwner", async () => {
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier.connect(owner).setAllowance(allowanceKey, 100, 10, 0, 0, 0)
-    ).to.be.revertedWithCustomError(
-      modifier,
-      "UnsuitableMaxBalanceForAllowance"
-    );
-
-    await expect(
       modifier.connect(owner).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
     ).to.not.be.reverted;
   });
