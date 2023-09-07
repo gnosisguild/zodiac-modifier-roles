@@ -3,7 +3,7 @@ import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
 
 import { Condition, Operator, ParameterType } from "../../../types"
 import { AbiType, FunctionPermission } from "../../types"
-import { coerceFunctionPermission } from "../../utils"
+import { coercePermission } from "../../utils"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
@@ -145,7 +145,7 @@ const calldataMatchesFunctionPermission =
       )
     }
 
-    const { selector, condition } = coerceFunctionPermission(functionPermission)
+    const { selector, condition } = coercePermission(functionPermission)
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||

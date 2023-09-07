@@ -8,6 +8,7 @@ import {
   FunctionPermission,
   FunctionPermissionCoerced,
   ExecutionFlags,
+  TargetPermission,
 } from "./types"
 
 export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
@@ -20,22 +21,28 @@ export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
 const sighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
-export const coerceFunctionPermission = (
-  permission: FunctionPermission
-): FunctionPermissionCoerced => {
-  return {
-    targetAddress: permission.targetAddress.toLowerCase(),
-    selector:
-      "selector" in permission
-        ? permission.selector.toLowerCase()
-        : sighash(permission.signature),
-    condition:
-      typeof permission.condition === "function"
-        ? permission.condition(ParamType.from("bytes"))
-        : permission.condition,
-    send: permission.send,
-    delegatecall: permission.delegatecall,
+export const coercePermission = <P extends Permission>(
+  permission: P
+): P extends FunctionPermission
+  ? FunctionPermissionCoerced
+  : TargetPermission => {
+  if (isFunctionScoped(permission)) {
+    return {
+      targetAddress: permission.targetAddress.toLowerCase(),
+      selector:
+        "selector" in permission
+          ? permission.selector.toLowerCase()
+          : sighash(permission.signature),
+      condition:
+        typeof permission.condition === "function"
+          ? permission.condition(ParamType.from("bytes"))
+          : permission.condition,
+      send: permission.send,
+      delegatecall: permission.delegatecall,
+    } as FunctionPermissionCoerced
   }
+
+  return permission as any
 }
 
 export const isFunctionScoped = (

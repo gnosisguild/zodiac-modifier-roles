@@ -14,7 +14,7 @@ import {
   FunctionPermission,
   FunctionPermissionCoerced,
 } from "../types"
-import { coerceFunctionPermission } from "../utils"
+import { coercePermission } from "../utils"
 
 import {
   callWithinAllowance,
@@ -54,7 +54,7 @@ const makeAllowFunction = <
           ? c.calldataMatches(scopings, functionInputs)()
           : undefined,
     }
-    return applyOptions(coerceFunctionPermission(presetFunction), options)
+    return applyOptions(coercePermission(presetFunction), options)
   }
 }
 

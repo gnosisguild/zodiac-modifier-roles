@@ -5,11 +5,7 @@ import {
   FunctionPermissionCoerced,
   Permission,
 } from "./types"
-import {
-  coerceFunctionPermission,
-  permissionId,
-  isFunctionScoped,
-} from "./utils"
+import { coercePermission, permissionId, isFunctionScoped } from "./utils"
 
 /**
  * Processes the permissions and merges entries addressing the same function into a single entry.
@@ -27,7 +23,7 @@ export const mergeFunctionPermissions = (permissions: Permission[]) =>
       return result
     }
 
-    const coercedEntry = coerceFunctionPermission(entry)
+    const coercedEntry = coercePermission(entry)
 
     const matchingEntry = result.find(
       (existingEntry) =>
