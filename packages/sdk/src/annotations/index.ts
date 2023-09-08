@@ -63,7 +63,7 @@ export const applyAnnotations = async (
       throw new Error(`Invalid mode: ${options.mode}`)
   }
 
-  const tag = `${address.toLowerCase()}-${roleKey.toLowerCase()}}`
+  const tag = `${address.toLowerCase()}-${roleKey.toLowerCase()}`
 
   return isEmptyPost(updatePost)
     ? []
