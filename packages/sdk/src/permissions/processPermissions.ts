@@ -66,8 +66,9 @@ export const processPermissions = (
     targets: [...fullyClearedTargets, ...functionScopedTargets],
 
     // make annotations unique
-    annotations: annotations.filter((annotation) =>
-      annotations.findIndex((a) => a.uri === annotation.uri)
+    annotations: annotations.filter(
+      (annotation, i) =>
+        annotations.findIndex((a) => a.uri === annotation.uri) === i
     ),
   }
 }
