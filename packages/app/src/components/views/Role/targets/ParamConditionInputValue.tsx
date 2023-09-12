@@ -38,6 +38,7 @@ const PlaceholderPerType: Record<ParamNativeType, string> = {
   [ParamNativeType.ADDRESS]: "0xABF...123",
   [ParamNativeType.STRING]: "Enter a string",
   [ParamNativeType.BYTES]: "0x...",
+  [ParamNativeType.BYTES_FIXED]: "0x...",
   [ParamNativeType.UNSUPPORTED]: "0x...",
 }
 
