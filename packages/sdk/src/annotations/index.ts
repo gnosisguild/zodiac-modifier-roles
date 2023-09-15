@@ -63,11 +63,17 @@ export const applyAnnotations = async (
       throw new Error(`Invalid mode: ${options.mode}`)
   }
 
-  const tag = `${address.toLowerCase()}-${roleKey.toLowerCase()}`
-
   return isEmptyPost(updatePost)
     ? []
-    : [encodePost(JSON.stringify(updatePost), tag)]
+    : [
+        encodePost(
+          JSON.stringify({
+            rolesMod: address,
+            roleKey,
+            ...updatePost,
+          })
+        ),
+      ]
 }
 
 const replaceAnnotations = (
