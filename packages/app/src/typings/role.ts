@@ -56,6 +56,7 @@ export enum ParamNativeType {
   INT,
   BOOLEAN,
   BYTES,
+  BYTES_FIXED,
   ADDRESS,
   STRING,
   ARRAY,

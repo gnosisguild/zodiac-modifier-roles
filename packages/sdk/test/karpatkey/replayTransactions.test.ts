@@ -94,7 +94,7 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     network,
   }: {
     preset: RolePreset
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
+    config: (typeof KARPATKEY_ADDRESSES)["DAO_GNO"]
     transactionsJson: {
       success: string[]
       fail: string[]
@@ -112,8 +112,8 @@ describe("Karpatkey: Replay Transactions Test", async () => {
     const safeService = new SafeServiceClient({
       txServiceUrl:
         network === 100
-          ? "https://safe-transaction.xdai.gnosis.io"
-          : "https://safe-transaction.mainnet.gnosis.io/",
+          ? "https://safe-transaction-gnosis-chain.safe.global"
+          : "https://safe-transaction-mainnet.safe.global",
       ethAdapter: ethAdapter as EthAdapter,
     })
 

@@ -10,8 +10,8 @@ import {
   ScopeRevokeFunction,
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
-import { Role, Target, RolesModifier, Function, Parameter } from "../generated/schema"
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
+import { Target, Parameter } from "../generated/schema"
+import { store, TypedMapEntry, Value } from "@graphprotocol/graph-ts"
 import {
   CLEARANCE,
   CLEARANCE__FUNCTION,
@@ -139,9 +139,9 @@ export function handleScopeFunction(event: ScopeFunction): void {
 
   if (theFunction.parameters != null) {
     // remove old parameters if it exists
-    const parameters: string[] = theFunction.parameters!
+    const parameters: TypedMapEntry<string, Value>[] = theFunction.parameters.entries
     for (let i = 0; i < parameters.length; i++) {
-      const parameterId = parameters[i]
+      const parameterId = parameters[i].key
       store.remove("Parameter", parameterId)
     }
   }

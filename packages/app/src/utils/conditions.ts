@@ -27,6 +27,9 @@ export function getNativeType(param: ethers.utils.ParamType | null): ParamNative
     if (param.arrayChildren.baseType === "array") return ParamNativeType.UNSUPPORTED
     return ParamNativeType.ARRAY
   }
+  if(param.baseType.startsWith('bytes') && param.baseType !== 'bytes') {
+    return ParamNativeType.BYTES_FIXED
+  }
   return ParamNativeType.BYTES
 }
 
