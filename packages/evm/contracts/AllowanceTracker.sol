@@ -74,9 +74,6 @@ abstract contract AllowanceTracker is Core {
             allowance.balance = balance - consumed;
             allowance.refillTimestamp = refillTimestamp;
 
-            // Emit an event to signal the total consumed amount.
-            emit ConsumeAllowance(key, consumed, balance - consumed);
-
             unchecked {
                 ++i;
             }
