@@ -43,27 +43,20 @@ describe("Operator - EtherWithinAllowance", async () => {
       key,
       balance,
       maxBalance,
-      refillAmount,
-      refillInterval,
-      refillTimestamp,
+      refill,
+      period,
+      timestamp,
     }: {
       key: string;
       balance: BigNumberish;
       maxBalance?: BigNumberish;
-      refillAmount: BigNumberish;
-      refillInterval: BigNumberish;
-      refillTimestamp: BigNumberish;
+      refill: BigNumberish;
+      period: BigNumberish;
+      timestamp: BigNumberish;
     }) {
       await roles
         .connect(owner)
-        .setAllowance(
-          key,
-          balance,
-          maxBalance || 0,
-          refillAmount,
-          refillInterval,
-          refillTimestamp
-        );
+        .setAllowance(key, balance, maxBalance || 0, refill, period, timestamp);
     }
 
     await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
@@ -131,9 +124,9 @@ describe("Operator - EtherWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: initialBalance,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(
@@ -159,9 +152,9 @@ describe("Operator - EtherWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 250,
-        refillInterval: 500,
-        refillAmount: 100,
-        refillTimestamp: timestamp - 750,
+        period: 500,
+        refill: 100,
+        timestamp: timestamp - 750,
       });
 
       await expect(sendEthAndDoNothing(351))
@@ -181,9 +174,9 @@ describe("Operator - EtherWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 9,
-        refillInterval: 1000,
-        refillAmount: 1,
-        refillTimestamp: timestamp - 50,
+        period: 1000,
+        refill: 1,
+        timestamp: timestamp - 50,
       });
 
       await expect(sendEthAndDoNothing(10))
@@ -219,17 +212,17 @@ describe("Operator - EtherWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey1,
         balance: allowanceAmount1,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       await setAllowance({
         key: allowanceKey2,
         balance: allowanceAmount2,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       await roles.connect(owner).scopeFunction(

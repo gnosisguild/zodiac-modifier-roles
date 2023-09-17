@@ -27,8 +27,8 @@ abstract contract Core is Modifier {
 
     function _accruedAllowance(
         Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure virtual returns (uint128 balance, uint64 refillTimestamp);
+        uint256 blockTimestamp
+    ) internal pure virtual returns (uint128 balance, uint64 timestamp);
 
     function _key(
         address targetAddress,

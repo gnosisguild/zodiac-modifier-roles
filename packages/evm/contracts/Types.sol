@@ -123,19 +123,28 @@ struct Role {
 }
 
 struct Allowance {
-    // refillInterval - duration of the period in seconds, 0 for one-time allowance
-    // refillAmount - amount that will be replenished "at the start of every period" (replace with: per period)
-    // refillTimestamp - timestamp of the last interval refilled for;
-    // maxBalance - max accrual amount, replenishing stops once the unused allowance hits this value
-    // balance - unused allowance;
+    /*
+     * period:     Duration, in seconds, before a refill occurs. If set to 0, the allowance is
+     *             for one-time use and won't be replenished.
+     *
+     * refill:     Amount added to balance after each period elapses.
+     *
+     * timestamp:  Records the moment when the last refill occurred.
+     *
+     * maxBalance: Maximum allowable accumulated allowance. Refill stops when unused allowance
+     *             reaches this value.
+     *
+     * balance:    Remaining, unused allowance available for use. It decreases with usage and
+     *             increases after each refill according to the specified refill amount.
+     */
 
-    // order matters
-    uint128 refillAmount;
-    uint128 maxBalance;
-    uint64 refillInterval;
-    // only these these two fields are updated on accrual, should live in the same word
-    uint128 balance;
-    uint64 refillTimestamp;
+    // The order is significant; fields updated during accrual are on the second word.
+    uint128 refill; // Amount added per accrual.
+    uint128 maxBalance; // Maximum allowable accumulated amount.
+    uint64 period; // Duration before a refill occurs.
+    // These two fields are the only ones updated during accrual and should reside in the same word.
+    uint128 balance; // Remaining unused amount.
+    uint64 timestamp; // Timestamp of the last refilled period.
 }
 
 struct Consumption {
