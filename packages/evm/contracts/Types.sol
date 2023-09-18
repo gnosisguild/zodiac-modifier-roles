@@ -126,7 +126,7 @@ struct Role {
 /// @notice The order of members in the `Allowance` struct is significant; members updated during accrual (`balance` and `timestamp`) should be stored in the same word.
 /// @custom:member refill Amount added to balance after each period elapses.
 /// @custom:member maxBalance Maximum allowable accumulated allowance. Refill stops when unused allowance reaches this value.
-/// @custom:member perdio Duration, in seconds, before a refill occurs. If set to 0, the allowance is for one-time use and won't be replenished.
+/// @custom:member period Duration, in seconds, before a refill occurs. If set to 0, the allowance is for one-time use and won't be replenished.
 /// @custom:member balance Remaining allowance available for use. Decreases with usage and increases after each refill by the specified refill amount.
 /// @custom:member timestamp Timestamp when the last refill occurred.
 struct Allowance {
