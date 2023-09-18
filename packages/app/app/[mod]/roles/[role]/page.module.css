@@ -4,6 +4,11 @@
 }
 
 .roleKey {
+  height: 16px;
+  margin-right: calc(-1 * var(--spacing-2));
+}
+
+.roleKey small {
   width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;

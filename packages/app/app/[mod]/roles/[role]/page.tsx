@@ -8,6 +8,8 @@ import Box from "@/ui/Box"
 import MembersList from "@/components/MembersList"
 import PermissionsList from "@/components/PermissionsList"
 import Layout, { Breadcrumb } from "@/components/Layout"
+import Address from "@/ui/Address"
+import CopyButton from "@/ui/CopyButton"
 
 export default async function RolePage({
   params,
@@ -36,12 +38,24 @@ export default async function RolePage({
   return (
     <Layout
       head={
-        <Breadcrumb href={`/${params.mod}/roles/${params.role}`}>
-          <Flex direction="column" gap={0}>
-            {params.role}
-            <small className={styles.roleKey}>{roleKey}</small>
-          </Flex>
-        </Breadcrumb>
+        <>
+          <Breadcrumb href={`/${decodeURIComponent(params.mod)}`}>
+            <Flex direction="column" gap={0}>
+              <Address address={mod.address} />
+            </Flex>
+          </Breadcrumb>
+          <Breadcrumb
+            href={`/${decodeURIComponent(params.mod)}/roles/${params.role}`}
+          >
+            <Flex direction="column" gap={0}>
+              {params.role}
+              <Flex gap={0} alignItems="center" className={styles.roleKey}>
+                <small>{roleKey}</small>
+                <CopyButton value={roleKey} />
+              </Flex>
+            </Flex>
+          </Breadcrumb>
+        </>
       }
     >
       <main className={styles.main}>
