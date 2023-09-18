@@ -51,7 +51,6 @@ export default async function RolePage({
               {params.role}
               <Flex gap={0} alignItems="center" className={styles.roleKey}>
                 <small>{roleKey}</small>
-                <CopyButton value={roleKey} />
               </Flex>
             </Flex>
           </Breadcrumb>

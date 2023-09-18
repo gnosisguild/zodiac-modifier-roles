@@ -8,6 +8,7 @@ import { IconLinkButton } from "@/ui/IconButton"
 import classes from "./style.module.css"
 import Link from "next/link"
 import { parseBytes32String } from "ethers/lib/utils"
+import CopyButton from "@/ui/CopyButton"
 
 interface RoleSummary {
   key: string
@@ -40,7 +41,11 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
               href={`/${mod}/roles/${encodeURIComponent(parsedKey)}`}
               className={classes.row}
             >
-              <div className={classes.key}>{parsedKey}</div>
+              <div className={classes.parseKey}>{parsedKey}</div>
+              <Flex className={classes.key} gap={1}>
+                <code>{role.key}</code>
+                <CopyButton small value={role.key} />
+              </Flex>
               <div className={classes.members}>
                 {role.members.length} Members
               </div>

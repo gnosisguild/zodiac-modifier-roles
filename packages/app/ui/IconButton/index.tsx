@@ -1,32 +1,40 @@
-import cn from "classnames";
-import React from "react";
+import cn from "classnames"
+import React from "react"
 
-import classes from "./style.module.css";
-import Link from "next/link";
+import classes from "./style.module.css"
+import Link from "next/link"
 
 type Props = React.DetailedHTMLProps<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   HTMLButtonElement
 > & {
-  danger?: boolean;
-};
+  danger?: boolean
+  small?: boolean
+}
 
-const IconButton: React.FC<Props> = ({ className, danger, ...rest }) => (
+const IconButton: React.FC<Props> = ({ className, danger, small, ...rest }) => (
   <button
-    className={cn(classes.button, className, { [classes.danger]: danger })}
+    className={cn(classes.button, className, {
+      [classes.danger]: danger,
+      [classes.small]: small,
+    })}
     {...rest}
   />
-);
+)
 
-export default IconButton;
+export default IconButton
 
 export const IconLinkButton: React.FC<
   React.ComponentProps<typeof Link> & {
-    danger?: boolean;
+    danger?: boolean
+    small?: boolean
   }
-> = ({ className, danger, ...rest }) => (
+> = ({ className, danger, small, ...rest }) => (
   <Link
-    className={cn(classes.button, className, { [classes.danger]: danger })}
+    className={cn(classes.button, className, {
+      [classes.danger]: danger,
+      [classes.small]: small,
+    })}
     {...rest}
   />
-);
+)

@@ -16,8 +16,17 @@
   padding: var(--spacing-3);
 }
 
-.key {
-  flex-grow: 3;
+.parsedKey {
+  flex-grow: 1;
+}
+
+.key code {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .members {
