@@ -158,7 +158,7 @@ export const getOrCreateUnwrapAdapter = (
   return adapter
 }
 
-export const getOrCreateAnnotation = (uri: string, roleId: string): Annotation => {
+export const getOrCreateAnnotation = (uri: string, schema: string, roleId: string): Annotation => {
   const id = getAnnotationId(uri, roleId)
   let annotation = Annotation.load(id)
 
@@ -167,6 +167,7 @@ export const getOrCreateAnnotation = (uri: string, roleId: string): Annotation =
     annotation = new Annotation(id)
     annotation.role = roleId
     annotation.uri = uri
+    annotation.schema = schema
     annotation.save()
     log.info("Created new Annotation #{}", [id])
   } else {

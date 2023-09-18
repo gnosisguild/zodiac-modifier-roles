@@ -107,7 +107,7 @@ type Function @entity {
   condition: Condition
 }
 
-type Condition @entity {
+type Condition @entity(immutable: true) {
   id: ID! # Derived from hash of the condition, matches the storage address
   json: String! # JSON representation of the condition
 }

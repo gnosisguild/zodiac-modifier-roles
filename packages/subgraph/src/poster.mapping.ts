@@ -3,31 +3,8 @@ import { NewPost } from "../generated/Poster/Poster"
 import { getAnnotationId, getOrCreateAnnotation, getRoleId, getRolesModifier, getRolesModifierId } from "./helpers"
 
 export function handleNewPost(event: NewPost): void {
-  const tagParts = event.params.tag.toString().split("-")
-  if (tagParts.length != 2) return
-  if (!isAddress(tagParts[0])) return
-
-  const modifierAddress = Address.fromString(tagParts[0])
-  const rolesModifierId = getRolesModifierId(modifierAddress)
-  const rolesModifier = getRolesModifier(rolesModifierId)
-  if (!rolesModifier) {
-    return
-  }
-
-  if (!rolesModifier.owner.equals(event.params.user)) {
-    log.warning("RolesModifier {} is not owned by {}, annotation update post will be ignored", [
-      rolesModifierId,
-      event.params.user.toHexString(),
-    ])
-    return
-  }
-
-  const roleKey = Bytes.fromUTF8(tagParts[1])
-  if (roleKey.length > 32) {
-    log.warning("Role key {} is invalid (too long), annotation update post will be ignored", [tagParts[1]])
-    return
-  }
-  const roleId = getRoleId(rolesModifierId, roleKey)
+  // only listen for events with the tag keccak256("ROLES_PERMISSION_ANNOTATION")
+  if (event.params.tag.toHexString() != "0xf8dcb30866f5e03a8ceb94d3a8bddff9952a5180ed69685773549bf21c526a1b") return
 
   const parsedJson = json.try_fromString(event.params.content)
   if (parsedJson.isError || parsedJson.value.kind != JSONValueKind.OBJECT) {
@@ -35,6 +12,39 @@ export function handleNewPost(event: NewPost): void {
     return
   }
   const parsedPost = parsedJson.value.toObject()
+
+  const modifierAddress =
+    parsedPost.get("rolesMod") && parsedPost.get("rolesMod")!.kind == JSONValueKind.STRING
+      ? Address.fromString(parsedPost.get("rolesMod")!.toString())
+      : null
+  const roleKey =
+    parsedPost.get("roleKey") && parsedPost.get("roleKey")!.kind == JSONValueKind.STRING
+      ? Bytes.fromHexString(parsedPost.get("roleKey")!.toString())
+      : null
+
+  if (!modifierAddress || !roleKey) {
+    log.warning("Invalid update annotation post: {}", [event.params.content])
+    return
+  }
+
+  const rolesModifierId = getRolesModifierId(modifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    log.warning("RolesModifier #{} not found", [rolesModifierId])
+    return
+  }
+
+  if (!rolesModifier.owner.equals(event.params.user)) {
+    log.warning("RolesModifier #{} is not owned by {} but by {}", [
+      rolesModifierId,
+      event.params.user.toHexString(),
+      rolesModifier.owner.toHexString(),
+    ])
+    return
+  }
+
+  const roleId = getRoleId(rolesModifierId, roleKey)
+
   const removeAnnotationsEntries =
     parsedPost.get("removeAnnotations") && parsedPost.get("removeAnnotations")!.kind == JSONValueKind.ARRAY
       ? parsedPost.get("removeAnnotations")!.toArray()
@@ -75,19 +85,8 @@ export function handleNewPost(event: NewPost): void {
         log.warning("Failed to parse uris of update annotation post add entry #{}", [i.toString()])
         continue
       }
-      const annotation = getOrCreateAnnotation(uriEntry.toString(), roleId)
-      annotation.schema = schema.toString()
-      annotation.save()
+      const annotation = getOrCreateAnnotation(uriEntry.toString(), schema.toString(), roleId)
       log.info("Annotation #{} has been added", [annotation.id])
     }
   }
-}
-
-function isAddress(value: string): bool {
-  const chars = value.slice(2).toLowerCase().split("")
-  return (
-    value.length == 42 &&
-    value.startsWith("0x") &&
-    chars.every((char) => (char >= "0" && char <= "9") || (char >= "a" && char <= "f"))
-  )
 }
