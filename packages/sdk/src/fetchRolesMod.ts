@@ -28,13 +28,17 @@ const QUERY = `
   }
 `
 
-export const fetchRolesMod = async ({
-  address,
-  chainId,
-}: Props): Promise<RolesModifier | null> => {
+type FetchOptions = Omit<RequestInit, "method" | "body">
+
+export const fetchRolesMod = async (
+  { address, chainId }: Props,
+  options?: FetchOptions
+): Promise<RolesModifier | null> => {
   const res = await fetch(SUBGRAPH[chainId], {
+    ...options,
     method: "POST",
     headers: {
+      ...options?.headers,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

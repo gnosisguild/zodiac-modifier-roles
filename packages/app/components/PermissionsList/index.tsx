@@ -1,7 +1,7 @@
 import z from "zod"
+import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
-import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
 import { Permission, Preset } from "./types"
 import { OpenApiObject, zOpenApiObject, zPermission } from "./schema"
 import PresetItem from "./PresetItem"

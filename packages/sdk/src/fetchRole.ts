@@ -48,14 +48,17 @@ query Role($id: String) {
 const getRoleId = (address: string, roleKey: string) =>
   `${address.toLowerCase()}-ROLE-${roleKey}`
 
-export const fetchRole = async ({
-  address,
-  roleKey,
-  chainId,
-}: Props): Promise<Role | null> => {
+type FetchOptions = Omit<RequestInit, "method" | "body">
+
+export const fetchRole = async (
+  { address, roleKey, chainId }: Props,
+  options?: FetchOptions
+): Promise<Role | null> => {
   const res = await fetch(SUBGRAPH[chainId], {
+    ...options,
     method: "POST",
     headers: {
+      ...options?.headers,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

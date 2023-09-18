@@ -1,7 +1,9 @@
-"use client";
-import { ChainId } from "@/app/chains";
-import Flex from "@/ui/Flex";
-import Address from "@/ui/Address";
+"use client"
+import { ChainId } from "@/app/chains"
+import Flex from "@/ui/Flex"
+import Address from "@/ui/Address"
+import classes from "./style.module.css"
+import Box from "@/ui/Box"
 
 const MembersList: React.FC<{ members: string[]; chainId: ChainId }> = ({
   members,
@@ -10,16 +12,19 @@ const MembersList: React.FC<{ members: string[]; chainId: ChainId }> = ({
   return (
     <Flex direction="column" gap={1}>
       {members.map((member) => (
-        <Address
-          chainId={chainId}
-          key={member}
-          address={member}
-          explorerLink
-          copyToClipboard
-        />
+        <Box key={member} bg p={2}>
+          <Address
+            chainId={chainId}
+            address={member}
+            explorerLink
+            copyToClipboard
+          />
+        </Box>
       ))}
-    </Flex>
-  );
-};
 
-export default MembersList;
+      {members.length === 0 && <i className={classes.empty}>No members</i>}
+    </Flex>
+  )
+}
+
+export default MembersList

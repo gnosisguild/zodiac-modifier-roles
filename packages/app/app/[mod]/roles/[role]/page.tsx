@@ -22,12 +22,12 @@ export default async function RolePage({
     notFound()
   }
 
-  let data = await fetchRole({ ...mod, roleKey })
+  let data = await fetchRole({ ...mod, roleKey }, { next: { revalidate: 1 } })
   if (!data) {
     // If the role doesn't exist, we check if the mod exists.
     // In that case we show an empty role page so the user can start populating it.
     // Otherwise we show a 404.
-    const modExists = await fetchRolesMod(mod)
+    const modExists = await fetchRolesMod(mod, { next: { revalidate: 1 } })
     if (!modExists) {
       notFound()
     }
@@ -60,11 +60,11 @@ export default async function RolePage({
     >
       <main className={styles.main}>
         <Flex gap={1}>
-          <Box>
+          <Box p={3}>
             <h5>Members</h5>
             <MembersList members={data.members} chainId={mod.chainId} />
           </Box>
-          <Box>
+          <Box p={3} className={styles.permissions}>
             <h5>Permissions</h5>
             <PermissionsList
               targets={data.targets}

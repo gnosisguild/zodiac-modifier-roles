@@ -3,7 +3,7 @@
   color: white;
   border-bottom: 1px solid rgba(217, 212, 173, 0.3);
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
   align-items: normal;
 }
 
@@ -27,4 +27,10 @@
 .meta {
   display: flex;
   align-items: center;
+}
+
+.empty {
+  padding: var(--spacing-3);
+  text-align: center;
+  opacity: 0.8;
 }

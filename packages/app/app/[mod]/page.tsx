@@ -14,7 +14,7 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
     notFound()
   }
 
-  const data = await fetchRolesMod(mod)
+  const data = await fetchRolesMod(mod, { next: { revalidate: 1 } })
   if (!data) {
     notFound()
   }

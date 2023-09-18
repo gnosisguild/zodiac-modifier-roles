@@ -16,3 +16,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
 }
+
+.permissions {
+  flex-grow: 1;
+}
