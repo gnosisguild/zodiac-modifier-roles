@@ -9,15 +9,18 @@ const zCondition: z.ZodType<Condition> = z.object({
 })
 
 export const zPermission = z.union([
-  z.object({
-    targetAddress: z.string(),
-    send: z.boolean().optional(),
-    delegateCall: z.boolean().optional(),
-  }),
+  // order in the union matters! parse will use the first matching union member
+
   z.object({
     targetAddress: z.string(),
     selector: z.string(),
     condition: zCondition.optional(),
+    send: z.boolean().optional(),
+    delegateCall: z.boolean().optional(),
+  }),
+
+  z.object({
+    targetAddress: z.string(),
     send: z.boolean().optional(),
     delegateCall: z.boolean().optional(),
   }),

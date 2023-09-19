@@ -1,5 +1,5 @@
 import z from "zod"
-import { Annotation, Permission } from "zodiac-roles-sdk"
+import { Annotation, Permission, permissionId } from "zodiac-roles-sdk"
 import { OpenApiObject, zOpenApiObject, zPermission } from "./schema"
 import { Preset } from "./types"
 
@@ -8,22 +8,29 @@ export const processAnnotations = async (
   permissions: Permission[],
   annotations: Annotation[]
 ) => {
-  console.log("processAnnotations", annotations)
-  // const presets = await Promise.all(annotations.map(resolveAnnotation))
+  const permissionIds = permissions.map(permissionId)
 
-  // const filteredPresets = presets.filter(Boolean).map((preset) => {
-  //   // TODO remove all preset.permissions that are not included in `permissions`
-  //   return preset
-  // })
-  const filteredPresets: Preset[] = []
+  const presets = await Promise.all(annotations.map(resolveAnnotation))
 
-  // TODO remove all permissions that are already included in any preset
-  const filteredPermissions = permissions
+  // only consider those presets whose full set of permissions are actually enabled on the role
+  const confirmedPresets = presets.filter((preset) =>
+    preset?.permissions.every((permission) =>
+      permissionIds.includes(permissionId(permission))
+    )
+  ) as Preset[]
 
-  return { presets: filteredPresets, permissions: filteredPermissions }
+  // calculate remaining permissions that are not part of any preset
+  const permissionIdsInPresets = confirmedPresets.flatMap((preset) =>
+    preset.permissions.map(permissionId)
+  )
+  const remainingPermissions = permissions.filter(
+    (permission) => !permissionIdsInPresets.includes(permissionId(permission))
+  )
+
+  return { presets: confirmedPresets, permissions: remainingPermissions }
 }
 
-export const resolveAnnotation = async (
+const resolveAnnotation = async (
   annotation: Annotation
 ): Promise<Preset | null> => {
   try {
@@ -36,7 +43,7 @@ export const resolveAnnotation = async (
         .then(zOpenApiObject.parse),
     ])
 
-    const { serverUrl, path } = resolveAnnotationPath(
+    const { serverUrl, path, query } = resolveAnnotationPath(
       annotation.uri,
       schema,
       annotation.schema
@@ -59,6 +66,7 @@ export const resolveAnnotation = async (
       permissions,
       apiInfo: schema.info,
       path,
+      query,
       pathPattern,
       serverUrl,
       operation,
@@ -99,11 +107,15 @@ const resolveAnnotationPath = (
     )
   }
 
+  const pathAndQuery = new URL(annotationUrl, matchingServerUrl).href.slice(
+    matchingServerUrl.length
+  )
+  const [path, query] = pathAndQuery.split("?", 2)
+
   return {
     serverUrl: matchingServerUrl,
-    path: new URL(annotationUrl, matchingServerUrl).href.slice(
-      matchingServerUrl.length
-    ),
+    path,
+    query,
   }
 }
 

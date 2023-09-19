@@ -15,8 +15,7 @@ describe("processAnnotations()", () => {
 
   it("returns presets (resolved annotated permissions)", async () => {
     const result = await processAnnotations(preset1.permissions, [annotation1])
-
-    expect(result.presets).toEqual([])
+    expect(result.presets).toEqual([preset1])
   })
 
   it("returns the remaining, un-annotated permissions", async () => {
@@ -36,8 +35,6 @@ describe("processAnnotations()", () => {
     ])
   })
 })
-
-describe.only("resolveAnnotation()", () => {})
 
 const annotation1 = {
   uri: "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
@@ -148,6 +145,8 @@ const preset1: Preset = {
       },
     ],
   },
-  path: "/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  path: "/permissions/gor/cowswap/swap",
+  query:
+    "buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   pathPattern: "/permissions/gor/cowswap/swap",
 }
