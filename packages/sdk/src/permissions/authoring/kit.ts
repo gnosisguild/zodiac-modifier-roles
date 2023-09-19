@@ -89,19 +89,20 @@ const applyOptions = (
     conditions.push(callWithinAllowance(options.callWithinAllowance)())
   }
 
-  if (conditions.length === 0) {
-    return entry
-  }
+  const condition =
+    conditions.length > 1
+      ? {
+          paramType: ParameterType.None,
+          operator: Operator.And,
+          children: conditions,
+        }
+      : conditions[0]
 
   return {
     ...entry,
     send: options.send,
     delegatecall: options.delegatecall,
-    condition: {
-      paramType: ParameterType.None,
-      operator: Operator.And,
-      children: conditions,
-    },
+    condition,
   }
 }
 
