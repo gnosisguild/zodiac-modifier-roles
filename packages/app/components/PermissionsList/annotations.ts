@@ -123,7 +123,7 @@ const resolveAnnotationPath = (
  * Matches a given path `/foo/bar/baz` against an OpenAPI path pattern `/foo/{placeholder}/baz`.
  * Returns an object of placeholder values if the path matches the pattern, `null` otherwise.
  **/
-const matchPath = (pattern: string, path: string) => {
+export const matchPath = (pattern: string, path: string) => {
   // split and filter(Boolean) to ignore leading and trailing slashes
   const patternParts = pattern.split("/").filter(Boolean)
   const pathParts = path.split("/").filter(Boolean)

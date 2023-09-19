@@ -1,14 +1,21 @@
+import Box from "@/ui/Box"
 import { Preset } from "../types"
+import IndividualPermissions from "./IndividualPermissions"
 
 const PresetItem: React.FC<Preset> = ({
   permissions,
   operation,
   apiInfo,
   path,
+  query,
+  pathPattern,
   serverUrl,
 }) => {
-  // TODO render an interface based on the OpenAPI schema info in `operation`
-  return null
+  return (
+    <Box p={2}>
+      <IndividualPermissions permissions={permissions} />
+    </Box>
+  )
 }
 
 export default PresetItem

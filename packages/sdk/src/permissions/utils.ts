@@ -1,6 +1,6 @@
 import { keccak256, ParamType, toUtf8Bytes } from "ethers/lib/utils"
 
-import { conditionId } from "../conditions"
+import { conditionId, normalizeCondition } from "../conditions"
 import { ExecutionOptions as ExecutionOptionsEnum } from "../types"
 
 import {
@@ -60,7 +60,7 @@ export const targetId = (permission: PermissionCoerced) =>
 export const permissionId = (permission: PermissionCoerced) => {
   const cid =
     "condition" in permission && permission.condition
-      ? conditionId(permission.condition)
+      ? conditionId(normalizeCondition(permission.condition))
       : ""
   return `${targetId(permission)}:${execOptions(permission)}:${cid}`
 }

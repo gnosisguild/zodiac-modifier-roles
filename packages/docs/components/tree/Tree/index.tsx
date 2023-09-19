@@ -49,7 +49,6 @@ const Tree: React.FC<Props> = ({
           onSelect?.(childProps.id);
         },
         onMouseEnter: () => {
-          console.log("enter");
           if (highlightOnHover) {
             onHighlight?.(childProps.id);
           }

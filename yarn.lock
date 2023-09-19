@@ -9088,6 +9088,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"drange@npm:^1.0.2":
+  version: 1.1.1
+  resolution: "drange@npm:1.1.1"
+  checksum: 7e6ed639f9ab4d826e79717e2b0685a7ab02ecd39dac6483305dcc43ea2a27dc78b538e10adaba35c086efab216ef1f53f22bc402abfd0d29454b1c5f48fecd1
+  languageName: node
+  linkType: hard
+
 "duplexer3@npm:^0.1.4":
   version: 0.1.5
   resolution: "duplexer3@npm:0.1.5"
@@ -18079,6 +18086,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi-enforcer@npm:^1.22.3":
+  version: 1.22.3
+  resolution: "openapi-enforcer@npm:1.22.3"
+  dependencies:
+    js-yaml: ^4.1.0
+    randexp: ^0.5.3
+  checksum: 2edf59c771bb03bfc9ca13cc31fd836daacafba3768e2c1dab6e52b65c0ea4abf3e7b101a5e3dfc4a132f34e803272a2253497a7b597bdb089b2f5550dc6348c
+  languageName: node
+  linkType: hard
+
 "optionator@npm:^0.8.1":
   version: 0.8.3
   resolution: "optionator@npm:0.8.3"
@@ -19250,6 +19267,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"randexp@npm:^0.5.3":
+  version: 0.5.3
+  resolution: "randexp@npm:0.5.3"
+  dependencies:
+    drange: ^1.0.2
+    ret: ^0.2.0
+  checksum: 9a4011b4b012debea545fc379a18208876fffc1179d2ac211351caf7626a3956efc4bc41e329bc5b241a671553eda58e0703933a9bcfdf90dde501ba1a2cf40a
+  languageName: node
+  linkType: hard
+
 "randombytes@npm:^2.0.0, randombytes@npm:^2.0.1, randombytes@npm:^2.0.5, randombytes@npm:^2.0.6, randombytes@npm:^2.1.0":
   version: 2.1.0
   resolution: "randombytes@npm:2.1.0"
@@ -20039,6 +20066,13 @@ __metadata:
   dependencies:
     through: ~2.3.4
   checksum: 21b1c257aac24840643fae9bc99ca6447a71a0039e7c6dcf64d0ead447ce511eff158d529f1b6258ad12668e66ee3e49ff14932d2b88a3bd578f483e79708104
+  languageName: node
+  linkType: hard
+
+"ret@npm:^0.2.0":
+  version: 0.2.2
+  resolution: "ret@npm:0.2.2"
+  checksum: 774964bb413a3525e687bca92d81c1cd75555ec33147c32ecca22f3d06409e35df87952cfe3d57afff7650a0f7e42139cf60cb44e94c29dde390243bc1941f16
   languageName: node
   linkType: hard
 
@@ -24309,6 +24343,7 @@ __metadata:
     ethers: ^5.4.7
     jest: ^29.7.0
     next: ^13.4.16
+    openapi-enforcer: ^1.22.3
     react: ^18.2.0
     react-dom: ^18.2.0
     react-icons: ^4.10.1

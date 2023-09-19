@@ -1,4 +1,4 @@
-import { conditionId } from "../conditions/conditionId"
+import { conditionId } from "../conditions"
 import { ExecutionOptions } from "../types"
 
 import { Call } from "./types"
