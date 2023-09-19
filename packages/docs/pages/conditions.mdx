@@ -79,3 +79,11 @@ For the `assetIn` and `assetOut` fields we require the values to be either `WETH
 For `swapInfo` we require the `sender` and `recipient` fields to be set to the address of the avatar using `Operator.EqualToAvatar`.
 
 This example shows `Operator.Matches` being used to set conditions on specific fields of a tuple type value.
+
+## Custom conditions
+
+Custom conditions can be defined by implementing the `ICustomCondition` interface.
+For an example of a custom condition, check out the `AvatarIsOwnerOfERC721.sol` contract.
+
+An important restricting to be aware of is that custom conditions must not keep a state that is updated for every transaction passing through the check.
+The reason is that at the level of the custom condition there is no way to tell whether the transaction will finally be executed or not.

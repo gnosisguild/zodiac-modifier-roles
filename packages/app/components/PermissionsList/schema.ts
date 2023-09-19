@@ -54,6 +54,7 @@ export const zOpenApiOperation = z.object({
         required: z.boolean().default(false),
         name: z.string(),
         in: z.enum(["query", "header", "path", "cookie"]),
+        explode: z.boolean().default(true),
       })
     )
     .default([]),
@@ -64,7 +65,7 @@ export const zOpenApiObject = z.object({
   openapi: z.string(),
   info: z.object({
     title: z.string(),
-    summary: z.string().optional(),
+    description: z.string().optional(),
     version: z.string(),
     contact: z
       .object({

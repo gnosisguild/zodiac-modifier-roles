@@ -12,6 +12,9 @@
   "allowances": {
     "title": "Allowances"
   },
+  "annotations": {
+    "title": "Annotations"
+  },
   "unwrapping": {
     "title": "Transaction Unwrapping"
   }

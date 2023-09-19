@@ -8,5 +8,6 @@ export interface Preset {
   apiInfo: OpenApiObject["info"]
   serverUrl: string
   path: string
+  pathPattern: string
   operation: OpenApiOperation
 }
