@@ -9,7 +9,7 @@ import {
   PermissionCoerced,
   PermissionSet,
 } from "./types"
-import { execOptions, permissionId, isFunctionScoped } from "./utils"
+import { execOptions, targetId, isFunctionScoped } from "./utils"
 
 /**
  * Processes permissions returning the resulting list of allowed targets. Merges permission entries addressing the same function and performs sanity checks.
@@ -102,7 +102,7 @@ const assertNoWildcardScopedIntersection = (
 }
 
 const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
-  const allowFunctions = permissions.filter(isFunctionScoped).map(permissionId)
+  const allowFunctions = permissions.filter(isFunctionScoped).map(targetId)
 
   const counts = allowFunctions.reduce(
     (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),

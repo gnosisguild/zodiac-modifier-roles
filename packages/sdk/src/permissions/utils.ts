@@ -51,7 +51,7 @@ export const isFunctionScoped = (
   return "selector" in permission || "signature" in permission
 }
 
-export const permissionId = (permission: PermissionCoerced) =>
+export const targetId = (permission: PermissionCoerced) =>
   "selector" in permission
     ? `${permission.targetAddress.toLowerCase()}.${permission.selector}`
     : permission.targetAddress.toLowerCase()

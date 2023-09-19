@@ -5,10 +5,10 @@ import {
   FunctionPermissionCoerced,
   Permission,
 } from "./types"
-import { coercePermission, permissionId, isFunctionScoped } from "./utils"
+import { coercePermission, targetId, isFunctionScoped } from "./utils"
 
 /**
- * Processes the permissions and merges entries addressing the same function into a single entry.
+ * Processes the permissions and merges entries addressing the same target (targetAddress+selector) into a single entry.
  * This is done by merging the conditions using a logical OR.
  * @param permissions The permissions to process
  * @returns The updated permissions
@@ -26,8 +26,7 @@ export const mergeFunctionPermissions = (permissions: Permission[]) =>
     const coercedEntry = coercePermission(entry)
 
     const matchingEntry = result.find(
-      (existingEntry) =>
-        permissionId(existingEntry) === permissionId(coercedEntry)
+      (existingEntry) => targetId(existingEntry) === targetId(coercedEntry)
     ) as FunctionPermissionCoerced | undefined
 
     if (!matchingEntry) {
@@ -58,9 +57,9 @@ const mergeConditions = (
   b: FunctionPermissionCoerced
 ): Condition | undefined => {
   if (!!a.condition !== !!b.condition) {
-    const targetId = permissionId(a)
+    const id = targetId(a)
     console.warn(
-      `Target ${targetId} is allowed with and without conditions. It will be allowed without conditions.`
+      `Target ${id} is allowed with and without conditions. It will be allowed without conditions.`
     )
     return undefined
   }
