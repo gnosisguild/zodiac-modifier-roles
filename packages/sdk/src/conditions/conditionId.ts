@@ -32,7 +32,7 @@ export const conditionId = (condition: Condition) => {
     ERC2470_SINGLETON_FACTORY_ADDRESS,
     CREATE2_SALT,
     keccak256(initCode)
-  )
+  ).toLowerCase()
 }
 
 // 8    bits -> parent
