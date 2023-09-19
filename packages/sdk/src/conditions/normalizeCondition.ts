@@ -2,7 +2,7 @@ import { BigNumber } from "ethers"
 
 import { Condition, Operator, ParameterType } from "../types"
 
-import { getConditionId } from "./getConditionId"
+import { conditionId } from "./conditionId"
 
 // maybe add bool formula minimization, for example move OR conditions as far down as possible, e.g.: or(and(a, b), and(a, c)) -> and(a, or(b, c))
 export const normalizeCondition = (condition: Condition): Condition => {
@@ -107,7 +107,7 @@ const dedupeBranches = (condition: Condition): Condition => {
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const childId = getConditionId(child)
+      const childId = conditionId(child)
       const isDuplicate = !childIds.has(childId)
       childIds.add(childId)
       return isDuplicate
@@ -141,7 +141,7 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
     if (!condition.children) return condition
 
     const pairs = condition.children.map(
-      (child) => [BigNumber.from(getConditionId(child)), child] as const
+      (child) => [BigNumber.from(conditionId(child)), child] as const
     )
     // sort is in-place
     pairs.sort(([a], [b]) => (a.lt(b) ? -1 : 1))

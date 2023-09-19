@@ -1,4 +1,4 @@
-import { getConditionId } from "../conditions/getConditionId"
+import { conditionId } from "../conditions/conditionId"
 import { ExecutionOptions } from "../types"
 
 import { Call } from "./types"
@@ -38,9 +38,9 @@ export const logCall = (
 
     case "scopeFunction": {
       const { targetAddress, selector, executionOptions, condition } = call
-      const conditionId = getConditionId(condition)
+      const cid = conditionId(condition)
       log(
-        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${conditionId}`
+        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${cid}`
       )
       break
     }

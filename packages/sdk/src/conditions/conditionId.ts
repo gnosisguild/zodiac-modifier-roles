@@ -20,7 +20,7 @@ const ERC2470_SINGLETON_FACTORY_ADDRESS =
 const CREATE2_SALT =
   "0xbadfed0000000000000000000000000000000000000000000000000000badfed"
 
-export const getConditionId = (condition: Condition) => {
+export const conditionId = (condition: Condition) => {
   const conditions = flattenCondition(condition)
   const packed = hexConcat([
     ...conditions.map((condition) => packCondition(condition)),

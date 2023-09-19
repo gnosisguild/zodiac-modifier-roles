@@ -1,5 +1,5 @@
 export { flattenCondition } from "./flattenCondition"
-export { getConditionId } from "./getConditionId"
+export { conditionId } from "./conditionId"
 export { normalizeCondition } from "./normalizeCondition"
 export {
   checkConditionIntegrity,
