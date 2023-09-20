@@ -1,14 +1,24 @@
+import { OpenAPIV3 } from "openapi-types"
 import type { reconstructPermissions } from "zodiac-roles-sdk"
-import { OpenApiObject, OpenApiOperation } from "./schema"
 
 export type Permission = ReturnType<typeof reconstructPermissions>[number]
 
+export type OpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
+  schema: OpenAPIV3.SchemaObject
+}
+
 export interface Preset {
   permissions: Permission[]
-  apiInfo: OpenApiObject["info"]
-  serverUrl: string
-  path: string
-  query: string
-  pathPattern: string
-  operation: OpenApiOperation
+  uri: String
+  serverUrl: String
+  apiInfo: OpenAPIV3.InfoObject
+  pathKey: string
+  pathParams: Record<string, string | number>
+  queryParams: Record<string, string | number | string[] | number[]>
+  operation: {
+    summary?: string
+    description?: string
+    tags?: string[]
+    parameters: OpenAPIParameter[]
+  }
 }

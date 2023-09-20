@@ -1,7 +1,9 @@
 import z from "zod"
 import { Annotation, Permission, permissionId } from "zodiac-roles-sdk"
-import { OpenApiObject, zOpenApiObject, zPermission } from "./schema"
+import { Enforcer } from "openapi-enforcer"
+import { zPermission } from "./schema"
 import { Preset } from "./types"
+import { OpenAPIV3 } from "openapi-types"
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
@@ -33,49 +35,71 @@ export const processAnnotations = async (
 const resolveAnnotation = async (
   annotation: Annotation
 ): Promise<Preset | null> => {
-  try {
-    const [permissions, schema] = await Promise.all([
-      fetch(annotation.uri)
-        .then((res) => res.json())
-        .then(z.array(zPermission).parse),
-      fetch(annotation.schema)
-        .then((res) => res.json())
-        .then(zOpenApiObject.parse),
-    ])
-
-    const { serverUrl, path, query } = resolveAnnotationPath(
-      annotation.uri,
-      schema,
-      annotation.schema
-    )
-
-    const matchingEntry = Object.entries(schema.paths).find(
-      ([pathPattern, operations]) =>
-        matchPath(pathPattern, path) && operations.get
-    )
-    if (!matchingEntry) {
-      throw new Error(
-        `No matching path with get operation found for ${annotation.uri}`
+  const [permissions, schema] = await Promise.all([
+    fetch(annotation.uri)
+      .then((res) => res.json())
+      .then(z.array(zPermission).parse)
+      .catch((e: Error) => {
+        console.error(`Error resolving annotation ${annotation.uri}`, e)
+        return []
+      }),
+    fetch(annotation.schema)
+      .then((res) => res.json())
+      .then((json) =>
+        Enforcer(json, {
+          componentOptions: {
+            exceptionSkipCodes: ["EDEV001"], // ignore error: "Property not allowed: webhooks"
+          },
+        })
       )
-    }
+      .catch((e) => {
+        console.error(
+          `Error resolving annotation schema ${annotation.schema}`,
+          e
+        )
+        return null
+      }),
+  ])
 
-    const pathPattern = matchingEntry[0]
-    const operation = matchingEntry[1].get!
+  if (permissions.length === 0 || !schema) return null
 
-    return {
-      permissions,
-      apiInfo: schema.info,
-      path,
-      query,
-      pathPattern,
-      serverUrl,
-      operation,
-    }
-  } catch (e) {
-    console.error(
-      `Error resolving annotation ${annotation.uri} with schema ${annotation.schema}`,
-      e
-    )
+  const { serverUrl, path } = resolveAnnotationPath(
+    annotation.uri,
+    schema,
+    annotation.schema
+  )
+
+  const { value, error, warning } = schema.request({
+    method: "GET",
+    path,
+  })
+
+  if (error) {
+    console.error(error)
+  }
+  if (warning) {
+    console.warn(warning)
+  }
+
+  if (!value) {
+    return null
+  }
+
+  return {
+    permissions,
+    uri: annotation.uri,
+    serverUrl,
+    apiInfo: schema.info?.toObject() || { title: "", version: "" },
+    pathKey: value.pathKey,
+    pathParams: value.path,
+    queryParams: value.query,
+    operation: {
+      summary: value.operation?.summary,
+      tags: value.operation?.tags,
+      parameters:
+        value.operation?.parameters?.map((param: any) => param.toObject()) ||
+        [],
+    },
   }
 
   return null
@@ -84,13 +108,13 @@ const resolveAnnotation = async (
 /** Returns the annotation's path relative to the API server's base URL */
 const resolveAnnotationPath = (
   annotationUrl: string,
-  schema: OpenApiObject,
+  schema: OpenAPIV3.Document,
   schemaUrl: string
 ) => {
   // Server urls may be relative, to indicate that the host location is relative to the location where the OpenAPI document is being served.
   // We resolve them to absolute urls.
   const serverUrls =
-    schema.servers.length === 0
+    !schema.servers || schema.servers.length === 0
       ? ["/"]
       : schema.servers.map((server) => server.url)
   const absoluteServerUrls = serverUrls.map(
@@ -110,39 +134,9 @@ const resolveAnnotationPath = (
   const pathAndQuery = new URL(annotationUrl, matchingServerUrl).href.slice(
     matchingServerUrl.length
   )
-  const [path, query] = pathAndQuery.split("?", 2)
 
   return {
     serverUrl: matchingServerUrl,
-    path,
-    query,
+    path: pathAndQuery,
   }
-}
-
-/**
- * Matches a given path `/foo/bar/baz` against an OpenAPI path pattern `/foo/{placeholder}/baz`.
- * Returns an object of placeholder values if the path matches the pattern, `null` otherwise.
- **/
-export const matchPath = (pattern: string, path: string) => {
-  // split and filter(Boolean) to ignore leading and trailing slashes
-  const patternParts = pattern.split("/").filter(Boolean)
-  const pathParts = path.split("/").filter(Boolean)
-
-  if (patternParts.length !== pathParts.length) return null
-
-  const params: Record<string, string> = {}
-
-  for (let i = 0; i < patternParts.length; i++) {
-    const patternPart = patternParts[i]
-    const pathPart = pathParts[i]
-
-    if (patternPart.startsWith("{") && patternPart.endsWith("}")) {
-      const paramName = patternPart.slice(1, -1)
-      params[paramName] = pathPart
-    } else if (patternPart !== pathPart) {
-      return null
-    }
-  }
-
-  return params
 }

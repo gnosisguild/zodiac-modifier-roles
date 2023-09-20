@@ -26,3 +26,7 @@
 .gap5 {
   gap: var(--spacing-5);
 }
+
+.wrap {
+  flex-wrap: wrap;
+}

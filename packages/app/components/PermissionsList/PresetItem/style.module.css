@@ -1,0 +1,7 @@
+.operation {
+  flex-grow: 1;
+}
+
+.apiInfo {
+  align-self: flex-end;
+}

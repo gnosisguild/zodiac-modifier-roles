@@ -18096,6 +18096,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi-types@npm:^12.1.3":
+  version: 12.1.3
+  resolution: "openapi-types@npm:12.1.3"
+  checksum: 7fa5547f87a58d2aa0eba6e91d396f42d7d31bc3ae140e61b5d60b47d2fd068b48776f42407d5a8da7280cf31195aa128c2fc285e8bb871d1105edee5647a0bb
+  languageName: node
+  linkType: hard
+
 "optionator@npm:^0.8.1":
   version: 0.8.3
   resolution: "optionator@npm:0.8.3"
@@ -24344,6 +24351,7 @@ __metadata:
     jest: ^29.7.0
     next: ^13.4.16
     openapi-enforcer: ^1.22.3
+    openapi-types: ^12.1.3
     react: ^18.2.0
     react-dom: ^18.2.0
     react-icons: ^4.10.1

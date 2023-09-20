@@ -106,15 +106,16 @@ const preset1: Preset = {
       },
     },
   ],
-
+  uri: "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   serverUrl: "https://kit.karpatkey.com/api/v1",
   apiInfo: {
     version: "1.0.0",
     title: "DeFi Kit",
     description:
       "Permissions for Zodiac Roles covering interactions with DeFi protocols",
-    contact: {},
   },
+
+  pathKey: "/permissions/gor/cowswap/swap",
   operation: {
     summary: "Permissions for making swaps on cowswap",
     tags: ["cowswap permissions"],
@@ -124,29 +125,50 @@ const preset1: Preset = {
           type: "array",
           items: {
             type: "string",
+            deprecated: false,
+            nullable: false,
           },
+          deprecated: false,
+          nullable: false,
         },
         required: false,
         name: "sell",
         in: "query",
         explode: false,
+        style: "form",
+        allowEmptyValue: false,
+        allowReserved: false,
       },
       {
         schema: {
           type: "array",
           items: {
             type: "string",
+            deprecated: false,
+            nullable: false,
           },
+          deprecated: false,
+          nullable: false,
         },
         required: false,
         name: "buy",
         in: "query",
         explode: false,
+        style: "form",
+        allowEmptyValue: false,
+        allowReserved: false,
       },
     ],
   },
-  path: "/permissions/gor/cowswap/swap",
-  query:
-    "buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  pathPattern: "/permissions/gor/cowswap/swap",
+  pathParams: {},
+  queryParams: {
+    buy: [
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    ],
+    sell: [
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    ],
+  },
 }

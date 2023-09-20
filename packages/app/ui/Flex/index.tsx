@@ -1,22 +1,23 @@
-import cn from "classnames";
-import React, { forwardRef } from "react";
+import cn from "classnames"
+import React, { forwardRef } from "react"
 
-import classes from "./style.module.css";
+import classes from "./style.module.css"
 
 interface Props {
-  direction?: "row" | "column";
+  direction?: "row" | "column"
   justifyContent?:
     | "space-around"
     | "space-between"
     | "center"
     | "end"
     | "start"
-    | "right";
-  alignItems?: "normal" | "stretch" | "center" | "end" | "start" | "baseline";
-  gap: 0 | 1 | 2 | 3 | 4 | 5;
-  className?: string;
-  children?: React.ReactNode;
-  style?: React.CSSProperties;
+    | "right"
+  alignItems?: "normal" | "stretch" | "center" | "end" | "start" | "baseline"
+  gap: 0 | 1 | 2 | 3 | 4 | 5
+  wrap?: boolean
+  className?: string
+  children?: React.ReactNode
+  style?: React.CSSProperties
 }
 
 const Flex = forwardRef<HTMLDivElement | null, Props>(
@@ -26,6 +27,7 @@ const Flex = forwardRef<HTMLDivElement | null, Props>(
       direction = "row",
       justifyContent = "start",
       alignItems = "normal",
+      wrap = false,
       children,
       className,
       style,
@@ -38,7 +40,8 @@ const Flex = forwardRef<HTMLDivElement | null, Props>(
         classes.flex,
         classes[`gap${gap}`],
         classes[direction],
-        className
+        className,
+        wrap && classes.wrap
       )}
       style={{
         justifyContent,
@@ -49,7 +52,7 @@ const Flex = forwardRef<HTMLDivElement | null, Props>(
       {children}
     </div>
   )
-);
-Flex.displayName = "Flex";
+)
+Flex.displayName = "Flex"
 
-export default Flex;
+export default Flex
