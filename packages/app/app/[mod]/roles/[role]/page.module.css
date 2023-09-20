@@ -16,7 +16,7 @@
   flex-grow: 1;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 920px) {
   .members {
     width: 100%;
   }

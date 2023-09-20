@@ -12,13 +12,16 @@ const IndividualPermissions: React.FC<{
   chainId: ChainId
 }> = ({ permissions, chainId }) => {
   const [expanded, setExpanded] = useState(false)
+  const [hover, setHover] = useState(false)
 
   const permissionGroups = groupPermissions(permissions)
 
   return (
-    <Box borderless p={3} className={classes.permissions}>
+    <Box borderless bg={hover} p={3} className={classes.permissions}>
       <div
         onClick={() => setExpanded((val) => !val)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
         className={classes.toggleButton}
       >
         {expanded ? "Hide permissions" : "Show permissions"}

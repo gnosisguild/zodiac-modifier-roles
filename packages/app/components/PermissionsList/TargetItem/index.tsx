@@ -3,10 +3,11 @@ import {
   FunctionPermissionCoerced,
 } from "zodiac-roles-sdk/build/cjs/sdk/src/permissions/types"
 import { Permission } from "../types"
-import Box from "@/ui/Box"
+import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
+import Box from "@/ui/Box"
 
 const TargetItem: React.FC<{
   targetAddress: string
@@ -18,19 +19,24 @@ const TargetItem: React.FC<{
   )
 
   return (
-    <Box p={2}>
-      <Address
-        address={targetAddress}
-        chainId={chainId}
-        displayFull
-        copyToClipboard
-        explorerLink
-      />
-      {wildcardPermission && <WildcardPermissionItem {...wildcardPermission} />}
-      {!wildcardPermission &&
-        (permissions as FunctionPermissionCoerced[]).map((permission) => (
-          <FunctionPermissionItem key={permission.selector} {...permission} />
-        ))}
+    <Box bg p={3}>
+      <Flex direction="column" gap={3}>
+        <Address
+          address={targetAddress}
+          chainId={chainId}
+          displayFull
+          copyToClipboard
+          explorerLink
+        />
+
+        {wildcardPermission && (
+          <WildcardPermissionItem {...wildcardPermission} />
+        )}
+        {!wildcardPermission &&
+          (permissions as FunctionPermissionCoerced[]).map((permission) => (
+            <FunctionPermissionItem key={permission.selector} {...permission} />
+          ))}
+      </Flex>
     </Box>
   )
 }
@@ -41,10 +47,12 @@ const WildcardPermissionItem: React.FC<TargetPermission> = ({
   send,
 }) => {
   return (
-    <div>
-      ALL FUNCTIONS
-      <ExecutionOptions delegatecall={delegatecall} send={send} />
-    </div>
+    <Box p={3}>
+      <Flex direction="column" gap={3}>
+        <div>ALL FUNCTIONS</div>
+        <ExecutionOptions delegatecall={delegatecall} send={send} />
+      </Flex>
+    </Box>
   )
 }
 
@@ -56,9 +64,13 @@ const FunctionPermissionItem: React.FC<FunctionPermissionCoerced> = ({
   send,
 }) => {
   return (
-    <div>
-      <code>{selector}</code>
-      <ExecutionOptions delegatecall={delegatecall} send={send} />
-    </div>
+    <Box p={3}>
+      <Flex direction="column" gap={3}>
+        <div>
+          <code>{selector}</code>
+        </div>
+        <ExecutionOptions delegatecall={delegatecall} send={send} />
+      </Flex>
+    </Box>
   )
 }
