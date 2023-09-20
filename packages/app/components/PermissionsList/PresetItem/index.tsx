@@ -3,8 +3,11 @@ import { Preset } from "../types"
 import IndividualPermissions from "./IndividualPermissions"
 import PresetInfo from "./PresetInfo"
 import Parameter from "./Parameter"
+import { ChainId } from "@/app/chains"
+import Flex from "@/ui/Flex"
 
-const PresetItem: React.FC<Preset> = ({
+const PresetItem: React.FC<Preset & { chainId: ChainId }> = ({
+  chainId,
   permissions,
   apiInfo,
   operation,
@@ -12,19 +15,23 @@ const PresetItem: React.FC<Preset> = ({
   pathParams,
 }) => {
   return (
-    <Box p={2}>
-      <PresetInfo apiInfo={apiInfo} operation={operation} />
+    <Box bg p={3}>
+      <Flex direction="column" gap={3}>
+        <PresetInfo apiInfo={apiInfo} operation={operation} />
 
-      {operation.parameters.map((parameter) => (
-        <Parameter
-          key={parameter.name}
-          parameter={parameter}
-          pathParams={pathParams}
-          queryParams={queryParams}
-        />
-      ))}
+        <Flex direction="column" gap={3}>
+          {operation.parameters.map((parameter) => (
+            <Parameter
+              key={parameter.name}
+              parameter={parameter}
+              pathParams={pathParams}
+              queryParams={queryParams}
+            />
+          ))}
+        </Flex>
 
-      <IndividualPermissions permissions={permissions} />
+        <IndividualPermissions chainId={chainId} permissions={permissions} />
+      </Flex>
     </Box>
   )
 }

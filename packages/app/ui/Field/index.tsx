@@ -12,7 +12,7 @@ const Field: React.FC<{
   children: ReactNode
   disabled?: boolean
 }> = ({ label, title, labelFor, children, disabled = false }) => (
-  <Box double bg p={3} className={classNames({ [classes.disabled]: disabled })}>
+  <div className={classNames({ [classes.disabled]: disabled })}>
     {label ? (
       <label htmlFor={labelFor} title={title}>
         <div className={classes.fieldLabel}>{label}</div>
@@ -21,7 +21,7 @@ const Field: React.FC<{
     ) : (
       children
     )}
-  </Box>
+  </div>
 )
 
 export default Field

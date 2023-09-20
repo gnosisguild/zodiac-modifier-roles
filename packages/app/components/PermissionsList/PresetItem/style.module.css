@@ -5,3 +5,17 @@
 .apiInfo {
   align-self: flex-end;
 }
+
+.permissions {
+  margin: 0 calc(-1 * var(--spacing-3)) calc(-1 * var(--spacing-3));
+  border-top: 1px solid var(--border-color);
+}
+.toggleButton {
+  margin: calc(-1 * var(--spacing-3));
+  padding: var(--spacing-3);
+  text-align: center;
+  cursor: pointer;
+}
+.permissions .targetItems {
+  margin-top: var(--spacing-3);
+}

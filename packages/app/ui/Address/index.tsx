@@ -1,47 +1,51 @@
-import cn from "classnames";
-import copy from "copy-to-clipboard";
-import React from "react";
-import { RiExternalLinkLine, RiFileCopyLine } from "react-icons/ri";
+import cn from "classnames"
+import copy from "copy-to-clipboard"
+import React from "react"
+import { RiExternalLinkLine, RiFileCopyLine } from "react-icons/ri"
 
-import Blockie from "../Blockie";
-import Box from "../Box";
-import IconButton, { IconLinkButton } from "../IconButton";
+import Blockie from "../Blockie"
+import Box from "../Box"
+import IconButton, { IconLinkButton } from "../IconButton"
 
-import classes from "./style.module.css";
-import { getAddress } from "viem";
-import { CHAINS, ChainId } from "@/app/chains";
-import Flex from "../Flex";
+import classes from "./style.module.css"
+import { getAddress } from "viem"
+import { CHAINS, ChainId } from "@/app/chains"
+import Flex from "../Flex"
 
 interface Props {
-  address: string;
-  explorerLink?: boolean;
-  chainId?: ChainId;
-  copyToClipboard?: boolean;
-  className?: string;
+  address: string
+  explorerLink?: boolean
+  displayFull?: boolean
+  chainId?: ChainId
+  copyToClipboard?: boolean
+  className?: string
 }
 
-const VISIBLE_START = 4;
-const VISIBLE_END = 4;
+const VISIBLE_START = 4
+const VISIBLE_END = 4
 
 export const shortenAddress = (address: string): string => {
-  const checksumAddress = getAddress(address);
-  const start = checksumAddress.substring(0, VISIBLE_START + 2);
-  const end = checksumAddress.substring(42 - VISIBLE_END, 42);
-  return `${start}...${end}`;
-};
+  const checksumAddress = getAddress(address)
+  const start = checksumAddress.substring(0, VISIBLE_START + 2)
+  const end = checksumAddress.substring(42 - VISIBLE_END, 42)
+  return `${start}...${end}`
+}
 
 const Address: React.FC<Props> = ({
   address,
   chainId,
   explorerLink,
   copyToClipboard,
+  displayFull,
   className,
 }) => {
   const explorer =
-    explorerLink && chainId && CHAINS[chainId]?.blockExplorers.default;
+    explorerLink && chainId && CHAINS[chainId]?.blockExplorers.default
 
-  const checksumAddress = getAddress(address);
-  const displayAddress = shortenAddress(checksumAddress);
+  const checksumAddress = getAddress(address)
+  const displayAddress = displayFull
+    ? checksumAddress
+    : shortenAddress(checksumAddress)
 
   return (
     <Flex className={classes.container} gap={2} alignItems="center">
@@ -56,7 +60,7 @@ const Address: React.FC<Props> = ({
           <IconButton
             title="Copy to clipboard"
             onClick={() => {
-              copy(checksumAddress);
+              copy(checksumAddress)
             }}
           >
             <RiFileCopyLine />
@@ -75,7 +79,7 @@ const Address: React.FC<Props> = ({
         )}
       </Flex>
     </Flex>
-  );
-};
+  )
+}
 
-export default Address;
+export default Address

@@ -56,7 +56,7 @@ p {
   margin: 0;
 }
 
-input,
+input:not([type="checkbox"]),
 select {
   font-size: 14px;
   background-color: transparent;
