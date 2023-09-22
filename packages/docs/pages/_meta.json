@@ -12,10 +12,14 @@
   "allowances": {
     "title": "Allowances"
   },
-  "annotations": {
-    "title": "Annotations"
-  },
   "unwrapping": {
     "title": "Transaction Unwrapping"
+  },
+  "-- Auxiliary Concepts": {
+    "type": "separator",
+    "title": "Auxiliary Concepts"
+  },
+  "annotations": {
+    "title": "Annotations"
   }
 }

@@ -40,13 +40,13 @@ There are three different ways allowances can be used:
 
 ### Allowance on a `uint` field
 
-To define an allowance on any `uint` field in the transaction call data, use an `WithinAllowance` condition.
+To define an allowance on any `uint` field in the transaction call data, use a `WithinAllowance` condition.
 
-### Allowance on the ether `value`
+### Allowance on the Ether `value`
 
-To define an allowance on the ether `value` sent with the transaction, use an `EtherWithinAllowance` condition.
+To define an allowance on the Ether `value` sent with the transaction, use an `EtherWithinAllowance` condition.
 
 ### Call rate limits
 
-It's also possible to enforce a rate limit on the number of calls to a function using an `CallWithinAllowance` condition.
+It's also possible to enforce a rate limit on the number of calls to a function using a `CallWithinAllowance` condition.
 Each call to the function will decrement the allowance balance by `1`.
