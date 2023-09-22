@@ -1,18 +1,13 @@
-import {
-  Condition,
-  Operator,
-  ParameterType,
-  conditionId,
-} from "zodiac-roles-sdk"
+import { Condition, Operator, conditionId } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import { RiArrowDropDownLine } from "react-icons/ri"
-import { PiDotBold } from "react-icons/pi"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
 import Indent from "./Indent"
+import { ConditionHeader } from "./ConditionHeader"
+import { PassConditionView } from "./PassConditionView"
 
-interface Props {
+export interface Props {
   condition: Condition
   paramIndex?: number
 }
@@ -83,13 +78,6 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
 
 export default ConditionView
 
-const PassConditionView: React.FC<Props> = ({ condition, paramIndex }) => (
-  <Box p={2} borderless className={classes.pass} title="No condition set">
-    <ConditionHeader condition={condition} paramIndex={paramIndex} />
-    <ChildConditions condition={condition} paramIndex={paramIndex} />
-  </Box>
-)
-
 const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   const { operator, children } = condition
   const childrenLength = children?.length || 0
@@ -127,7 +115,7 @@ const ComplexConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   )
 }
 
-const ChildConditions: React.FC<
+export const ChildConditions: React.FC<
   Props & {
     separator?: ReactNode
   }
@@ -211,57 +199,4 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
       <pre>{JSON.stringify(condition, undefined, 2)}</pre>
     </Box>
   )
-}
-
-const ConditionHeader: React.FC<Props & { children?: ReactNode }> = ({
-  condition,
-  paramIndex,
-  children,
-}) => {
-  const { operator, paramType } = condition
-
-  const paramName = paramIndex !== undefined ? `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
-  const paramTypeLabel = ParameterType[paramType]
-  const operatorLabel = OperatorLabels[operator] || Operator[operator]
-
-  const isComplexType = paramType >= ParameterType.Tuple
-
-  return (
-    <Flex gap={2} alignItems="center">
-      <div className={classes.bullet}>
-        {isComplexType ? (
-          <RiArrowDropDownLine size={16} />
-        ) : (
-          <PiDotBold size={16} />
-        )}
-      </div>
-      <div className={classes.param}>
-        <Flex gap={2} alignItems="center">
-          {paramName && <div>{paramName}</div>}
-          <div>
-            <span className={classes.paramType}>{paramTypeLabel}</span>
-          </div>
-        </Flex>
-      </div>
-      {operator !== Operator.Pass && (
-        <div className={classes.operator}>{operatorLabel}</div>
-      )}
-      {children}
-    </Flex>
-  )
-}
-
-const OperatorLabels: Record<number, string> = {
-  [Operator.Matches]: "matches",
-  [Operator.ArraySome]: "has at least one element that",
-  [Operator.ArrayEvery]: "only has elements that",
-  [Operator.ArraySubset]:
-    "for each sub condition, has at least one element that meets it",
-
-  [Operator.EqualToAvatar]: "is equal to the avatar",
-  [Operator.EqualTo]: "is equal to",
-  [Operator.GreaterThan]: "is greater than",
-  [Operator.LessThan]: "is less than",
-  [Operator.SignedIntGreaterThan]: "is greater than (signed int)",
-  [Operator.SignedIntLessThan]: "is less than (signed int)",
 }
