@@ -14,7 +14,7 @@ export const every =
     elementScoping: S
   ): ConditionFunction<T> =>
   (abiType: ParamType) => {
-    if (abiType.type !== "array") {
+    if (abiType.baseType !== "array") {
       throw new Error("every() can only be used on array types")
     }
     if (elementScoping === undefined) {
@@ -38,7 +38,7 @@ export const some =
     elementScoping: S
   ): ConditionFunction<T> =>
   (abiType: ParamType) => {
-    if (abiType.type !== "array") {
+    if (abiType.baseType !== "array") {
       throw new Error("some() can only be used on array types")
     }
     if (elementScoping === undefined) {
