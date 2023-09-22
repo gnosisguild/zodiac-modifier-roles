@@ -2,18 +2,17 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import { RiArrowDropDownLine } from "react-icons/ri"
 import { PiDotBold } from "react-icons/pi"
-import cn from "classnames"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
+import Indent from "./Indent"
 
 interface Props {
   condition: Condition
   paramIndex?: number
-  isChild?: boolean
 }
 
-const ConditionView: React.FC<Props> = ({ condition, isChild, paramIndex }) => {
+const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   if (condition.operator === Operator.Pass) {
     return <PassConditionView condition={condition} paramIndex={paramIndex} />
   }
@@ -23,11 +22,7 @@ const ConditionView: React.FC<Props> = ({ condition, isChild, paramIndex }) => {
     condition.operator <= Operator.Nor
   ) {
     return (
-      <LogicalConditionView
-        condition={condition}
-        paramIndex={paramIndex}
-        isChild={isChild}
-      />
+      <LogicalConditionView condition={condition} paramIndex={paramIndex} />
     )
   }
 
@@ -89,36 +84,30 @@ const PassConditionView: React.FC<Props> = ({ condition, paramIndex }) => (
   </Box>
 )
 
-const LogicalConditionView: React.FC<Props> = ({
-  condition,
-  paramIndex,
-  isChild,
-}) => {
+const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   const { operator, children } = condition
+  const childrenLength = children?.length || 0
   const operatorLabel =
-    operator === Operator.Nor && children?.length === 1
+    operator === Operator.Nor && childrenLength === 1
       ? "Not"
       : Operator[operator]
+
   return (
-    <Box
-      p={2}
-      className={cn(classes.logicalCondition, isChild && classes.isChild)}
-    >
-      <div className={classes.logicalOperator}>{operatorLabel}</div>
-      <div className={classes.childConditions}>
-        {children?.map((condition, index) => (
-          <Fragment key={index}>
-            <ConditionView
-              isChild
-              condition={condition}
-              paramIndex={paramIndex}
-            />
-            {index < children.length - 1 && (
-              <div className={classes.logicalBranchSeparator} />
-            )}
-          </Fragment>
-        ))}
-      </div>
+    <Box p={2} className={classes.logicalCondition}>
+      <div className={classes.logicalConditionBar} />
+      {childrenLength <= 1 && (
+        <div className={classes.singleItemOperatorLabel}>{operatorLabel}</div>
+      )}
+
+      <ChildConditions
+        condition={condition}
+        paramIndex={paramIndex}
+        separator={
+          <div className={classes.logicalBranchSeparator}>
+            <div className={classes.operatorLabel}>{operatorLabel}</div>
+          </div>
+        }
+      />
     </Box>
   )
 }
@@ -132,7 +121,6 @@ const ComplexConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
         <Flex direction="column" gap={1}>
           {children?.map((condition, index) => (
             <ConditionView
-              isChild
               key={index}
               condition={condition}
               paramIndex={operator === Operator.Matches ? index : undefined}
@@ -143,6 +131,40 @@ const ComplexConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
     </Box>
   )
 }
+
+const ChildConditions: React.FC<
+  Props & {
+    separator: ReactNode
+  }
+> = ({ condition, paramIndex, separator }) => {
+  const { children, operator } = condition
+  const childrenLength = children?.length || 0
+
+  return (
+    <div className={classes.childConditions}>
+      <Flex direction="column" gap={1}>
+        {children?.map((condition, index) => (
+          <Fragment key={index}>
+            <ConditionView
+              condition={condition}
+              paramIndex={
+                operator === Operator.Matches
+                  ? index
+                  : isLogicalOperator(operator)
+                  ? paramIndex
+                  : undefined
+              }
+            />
+            {index < childrenLength - 1 && separator}
+          </Fragment>
+        ))}
+      </Flex>
+    </div>
+  )
+}
+
+const isLogicalOperator = (operator: Operator) =>
+  operator >= Operator.And && operator <= Operator.Nor
 
 const ComparisonConditionView: React.FC<Props> = ({
   condition,
@@ -192,7 +214,7 @@ const ConditionHeader: React.FC<Props & { children?: ReactNode }> = ({
       </div>
       <div className={classes.param}>
         <Flex gap={2} alignItems="center">
-          <div>{paramName}</div>
+          {paramName && <div>{paramName}</div>}
           <div>
             <span className={classes.paramType}>{paramTypeLabel}</span>
           </div>

@@ -1,14 +1,12 @@
 import { OpenAPIV3 } from "openapi-types"
-import type { reconstructPermissions } from "zodiac-roles-sdk"
-
-export type Permission = ReturnType<typeof reconstructPermissions>[number]
+import { PermissionCoerced } from "zodiac-roles-sdk"
 
 export type OpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
 }
 
 export interface Preset {
-  permissions: Permission[]
+  permissions: PermissionCoerced[]
   uri: String
   serverUrl: String
   apiInfo: OpenAPIV3.InfoObject

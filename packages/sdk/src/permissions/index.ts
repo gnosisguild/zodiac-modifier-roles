@@ -3,4 +3,11 @@ export { processPermissions } from "./processPermissions"
 export { reconstructPermissions } from "./reconstructPermissions"
 export { coercePermission, permissionId } from "./utils"
 
-export type { Permission, PermissionSet } from "./types"
+export type {
+  Permission,
+  PermissionSet,
+  PermissionCoerced,
+  TargetPermission,
+  FunctionPermission,
+  FunctionPermissionCoerced,
+} from "./types"

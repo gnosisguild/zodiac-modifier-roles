@@ -4,7 +4,7 @@ import { useState } from "react"
 import styles from "./page.module.css"
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
-import Button from "@/ui/Button"
+import Button, { LinkButton } from "@/ui/Button"
 import Field from "@/ui/Field"
 import ChainSelect from "@/components/ChainSelect"
 import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/app/chains"
@@ -61,12 +61,11 @@ export default function AttachMod() {
                   }}
                 />
               </Field>
-              <Button
-                disabled={!isAddress(unprefix(address))}
-                onClick={() => router.push("/" + address)}
+              <LinkButton
+                href={isAddress(unprefix(address)) ? "/" + address : ""}
               >
                 Attach
-              </Button>
+              </LinkButton>
             </Flex>
           </Box>
         </Flex>

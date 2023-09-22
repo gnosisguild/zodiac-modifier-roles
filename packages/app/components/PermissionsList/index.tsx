@@ -23,7 +23,7 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
   const permissionGroups = groupPermissions(permissions)
 
   return (
-    <Flex direction="column" gap={1}>
+    <Flex direction="column" gap={3}>
       {presets.map((preset, i) => (
         <PresetItem key={`${preset.uri}`} {...preset} chainId={chainId} />
       ))}

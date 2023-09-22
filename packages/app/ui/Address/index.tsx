@@ -1,3 +1,4 @@
+"use client"
 import cn from "classnames"
 import copy from "copy-to-clipboard"
 import React from "react"
@@ -48,7 +49,11 @@ const Address: React.FC<Props> = ({
     : shortenAddress(checksumAddress)
 
   return (
-    <Flex className={classes.container} gap={2} alignItems="center">
+    <Flex
+      className={cn(className, classes.container)}
+      gap={2}
+      alignItems="center"
+    >
       <Box rounded className={classes.blockieContainer}>
         {address && <Blockie address={address} className={classes.blockies} />}
       </Box>

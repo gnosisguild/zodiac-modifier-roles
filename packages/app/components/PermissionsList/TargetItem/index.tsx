@@ -1,8 +1,8 @@
 import {
   TargetPermission,
   FunctionPermissionCoerced,
-} from "zodiac-roles-sdk/build/cjs/sdk/src/permissions/types"
-import { Permission } from "../types"
+  PermissionCoerced,
+} from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
@@ -12,7 +12,7 @@ import ConditionView from "../ConditionView"
 
 const TargetItem: React.FC<{
   targetAddress: string
-  permissions: Permission[]
+  permissions: PermissionCoerced[]
   chainId: ChainId
 }> = ({ targetAddress, chainId, permissions }) => {
   const wildcardPermission = permissions.find(

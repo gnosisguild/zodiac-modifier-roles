@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { Permission } from "../types"
+import { PermissionCoerced } from "zodiac-roles-sdk"
 import { groupPermissions } from "../groupPermissions"
 import TargetItem from "../TargetItem"
 import classes from "./style.module.css"
@@ -8,7 +8,7 @@ import { ChainId } from "@/app/chains"
 import Box from "@/ui/Box"
 
 const IndividualPermissions: React.FC<{
-  permissions: Permission[]
+  permissions: PermissionCoerced[]
   chainId: ChainId
 }> = ({ permissions, chainId }) => {
   const [expanded, setExpanded] = useState(false)
