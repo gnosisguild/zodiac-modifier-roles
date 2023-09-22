@@ -1,4 +1,9 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+import {
+  Condition,
+  Operator,
+  ParameterType,
+  conditionId,
+} from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import { RiArrowDropDownLine } from "react-icons/ri"
 import { PiDotBold } from "react-icons/pi"
@@ -81,6 +86,7 @@ export default ConditionView
 const PassConditionView: React.FC<Props> = ({ condition, paramIndex }) => (
   <Box p={2} borderless className={classes.pass} title="No condition set">
     <ConditionHeader condition={condition} paramIndex={paramIndex} />
+    <ChildConditions condition={condition} paramIndex={paramIndex} />
   </Box>
 )
 
@@ -113,48 +119,40 @@ const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
 }
 
 const ComplexConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
-  const { operator, children } = condition
   return (
     <Box p={2} borderless>
       <ConditionHeader condition={condition} paramIndex={paramIndex} />
-      <div className={classes.childConditions}>
-        <Flex direction="column" gap={1}>
-          {children?.map((condition, index) => (
-            <ConditionView
-              key={index}
-              condition={condition}
-              paramIndex={operator === Operator.Matches ? index : undefined}
-            />
-          ))}
-        </Flex>
-      </div>
+      <ChildConditions condition={condition} paramIndex={paramIndex} />
     </Box>
   )
 }
 
 const ChildConditions: React.FC<
   Props & {
-    separator: ReactNode
+    separator?: ReactNode
   }
 > = ({ condition, paramIndex, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
+  const indentLevels = calcChildrenIndentLevels(condition)
 
   return (
     <div className={classes.childConditions}>
       <Flex direction="column" gap={1}>
         {children?.map((condition, index) => (
           <Fragment key={index}>
-            <ConditionView
-              condition={condition}
-              paramIndex={
-                operator === Operator.Matches
-                  ? index
-                  : isLogicalOperator(operator)
-                  ? paramIndex
-                  : undefined
-              }
-            />
+            <Indent level={indentLevels[index]}>
+              <ConditionView
+                condition={condition}
+                paramIndex={
+                  operator === Operator.Matches
+                    ? index
+                    : isLogicalOperator(operator)
+                    ? paramIndex
+                    : undefined
+                }
+              />
+            </Indent>
             {index < childrenLength - 1 && separator}
           </Fragment>
         ))}
@@ -165,6 +163,31 @@ const ChildConditions: React.FC<
 
 const isLogicalOperator = (operator: Operator) =>
   operator >= Operator.And && operator <= Operator.Nor
+
+const calcMaxLogicalDepth = (condition: Condition): number => {
+  const { children, operator } = condition
+  if (!children) return 0
+  return isLogicalOperator(operator)
+    ? 1
+    : 0 +
+        Math.max(
+          ...children.map((child) => {
+            return isLogicalOperator(child.operator)
+              ? 1 + calcMaxLogicalDepth(child)
+              : 0
+          })
+        )
+}
+
+const calcChildrenIndentLevels = (condition: Condition): number[] => {
+  const { children } = condition
+  if (!children) return []
+
+  const childrenDepths = children.map(calcMaxLogicalDepth)
+  const maxDepth = Math.max(...childrenDepths)
+
+  return childrenDepths.map((depth) => maxDepth - depth)
+}
 
 const ComparisonConditionView: React.FC<Props> = ({
   condition,

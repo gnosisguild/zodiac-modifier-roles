@@ -1,10 +1,10 @@
-const Indent: React.FC<{ indent?: number; children: React.ReactNode }> = ({
-  indent = 0,
+const Indent: React.FC<{ level: number; children: React.ReactNode }> = ({
+  level,
   children,
 }) => (
   <div
     style={{
-      paddingLeft: `calc(${indent} * (var(--condition-indent) + var(--spacing-2))`,
+      paddingLeft: `calc(${level} * (var(--condition-indent) + var(--spacing-2))`,
     }}
   >
     {children}

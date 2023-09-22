@@ -1,6 +1,9 @@
 .pass {
   opacity: 0.7;
 }
+.pass .pass {
+  opacity: 1;
+}
 
 .logicalCondition {
   min-height: 40px;
