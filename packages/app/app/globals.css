@@ -6,6 +6,8 @@
   --spacing-5: 48px;
 
   --border-color: rgba(217, 212, 173, 0.3);
+
+  --condition-indent: 24px;
 }
 
 body {

@@ -19,3 +19,7 @@
 .permissions .targetItems {
   margin-top: var(--spacing-3);
 }
+
+.arrayItem:not(:first-child) {
+  margin-top: -1px;
+}

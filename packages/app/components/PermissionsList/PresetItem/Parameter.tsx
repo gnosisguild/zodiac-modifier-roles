@@ -1,6 +1,6 @@
 import { OpenAPIParameter, Preset } from "../types"
 import Field from "@/ui/Field"
-import Flex from "@/ui/Flex"
+import classes from "./style.module.css"
 
 const Parameter: React.FC<{
   parameter: OpenAPIParameter
@@ -41,15 +41,16 @@ const ArrayInput: React.FC<{
   value: string[] | number[]
 }> = ({ readOnly, value }) => {
   return (
-    <Flex gap={1} direction="column">
+    <div>
       {value.map((item, i) => (
         <input
           key={i}
           type="text"
           readOnly={readOnly}
           value={item.toString()}
+          className={classes.arrayItem}
         />
       ))}
-    </Flex>
+    </div>
   )
 }

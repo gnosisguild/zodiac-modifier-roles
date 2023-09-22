@@ -1,18 +1,19 @@
-import cn from "classnames";
-import React, { forwardRef, ReactNode } from "react";
+import cn from "classnames"
+import React, { forwardRef, ReactNode } from "react"
 
-import classes from "./style.module.css";
+import classes from "./style.module.css"
 
 interface Props {
-  className?: string;
-  double?: boolean;
-  borderless?: boolean;
-  bg?: boolean;
-  rounded?: boolean;
-  roundedLeft?: boolean;
-  roundedRight?: boolean;
-  p?: 1 | 2 | 3;
-  children?: ReactNode;
+  className?: string
+  double?: boolean
+  borderless?: boolean
+  bg?: boolean
+  rounded?: boolean
+  roundedLeft?: boolean
+  roundedRight?: boolean
+  p?: 1 | 2 | 3
+  children?: ReactNode
+  title?: string
 }
 
 const Box = forwardRef<HTMLDivElement, Props>(
@@ -27,11 +28,13 @@ const Box = forwardRef<HTMLDivElement, Props>(
       roundedLeft,
       roundedRight,
       p = 1,
+      title,
     },
     ref
   ) => (
     <div
       ref={ref}
+      title={title}
       className={cn(
         classes.box,
         classes[`p${p}`],
@@ -49,7 +52,7 @@ const Box = forwardRef<HTMLDivElement, Props>(
       {children}
     </div>
   )
-);
-Box.displayName = "Box";
+)
+Box.displayName = "Box"
 
-export default Box;
+export default Box

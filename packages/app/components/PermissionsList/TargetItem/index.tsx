@@ -8,6 +8,7 @@ import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
 import Box from "@/ui/Box"
+import ConditionView from "../ConditionView"
 
 const TargetItem: React.FC<{
   targetAddress: string
@@ -69,6 +70,11 @@ const FunctionPermissionItem: React.FC<FunctionPermissionCoerced> = ({
         <div>
           <code>{selector}</code>
         </div>
+        {condition ? (
+          <ConditionView condition={condition} />
+        ) : (
+          <div>No condition set</div>
+        )}
         <ExecutionOptions delegatecall={delegatecall} send={send} />
       </Flex>
     </Box>

@@ -1,0 +1,62 @@
+.pass {
+  opacity: 0.7;
+}
+
+.logicalCondition {
+  min-height: 40px;
+}
+.logicalCondition.isChild {
+  margin-left: calc(
+    -1 * var(--condition-indent) - var(--spacing-2) + var(--spacing-1)
+  );
+  padding: calc(var(--spacing-2) - var(--spacing-1) - 1px);
+}
+
+.logicalOperator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--condition-indent);
+  background-color: rgba(217, 212, 173, 0.1);
+  writing-mode: vertical-lr;
+  transform: rotate(-180deg);
+  text-transform: uppercase;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: var(--condition-indent);
+}
+
+.logicalBranchSeparator {
+  border-top: 1px dashed var(--border-color);
+  width: 100%;
+  margin: var(--spacing-1) 0;
+}
+
+.childConditions {
+  margin-left: var(--condition-indent);
+}
+
+.bullet {
+  width: 16px;
+}
+
+.paramName {
+  flex-grow: 1;
+}
+
+.paramType {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(217, 212, 173, 0.3);
+  position: relative;
+  top: -2px;
+}
+
+.operator {
+  white-space: nowrap;
+  text-align: right;
+}
