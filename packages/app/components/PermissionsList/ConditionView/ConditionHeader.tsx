@@ -5,14 +5,14 @@ import { PiDotBold } from "react-icons/pi"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
 
-export interface Props {
+interface Props {
   condition: Condition
   paramIndex?: number
   children?: ReactNode
   collapsed?: boolean
 }
 
-export const ConditionHeader: React.FC<Props> = ({
+const ConditionHeader: React.FC<Props> = ({
   condition,
   paramIndex,
   children,
@@ -54,6 +54,9 @@ export const ConditionHeader: React.FC<Props> = ({
     </Flex>
   )
 }
+
+export default ConditionHeader
+
 const OperatorLabels: Record<number, string> = {
   [Operator.Matches]: "matches",
   [Operator.ArraySome]: "has at least one element that",
@@ -67,4 +70,6 @@ const OperatorLabels: Record<number, string> = {
   [Operator.LessThan]: "is less than",
   [Operator.SignedIntGreaterThan]: "is greater than (signed int)",
   [Operator.SignedIntLessThan]: "is less than (signed int)",
+
+  [Operator.Bitmask]: "bytes match the bitmask",
 }

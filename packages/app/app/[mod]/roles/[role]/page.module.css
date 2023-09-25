@@ -12,12 +12,9 @@
   font-size: 10px;
 }
 
-.permissions {
+.members {
   flex-grow: 1;
 }
-
-@media (max-width: 920px) {
-  .members {
-    width: 100%;
-  }
+.permissions {
+  flex-grow: 9999;
 }

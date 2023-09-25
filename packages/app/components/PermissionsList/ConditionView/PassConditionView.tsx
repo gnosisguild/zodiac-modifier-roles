@@ -1,20 +1,17 @@
 "use client"
+import { Condition } from "zodiac-roles-sdk"
+import { useState } from "react"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
-import { ConditionHeader } from "./ConditionHeader"
-import { Condition } from "zodiac-roles-sdk/."
-import { useState } from "react"
+import ConditionHeader from "./ConditionHeader"
 import { ChildConditions } from "."
 
-export interface Props {
+interface Props {
   condition: Condition
   paramIndex?: number
 }
 
-export const PassConditionView: React.FC<Props> = ({
-  condition,
-  paramIndex,
-}) => {
+const PassConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   const [collapsed, setCollapsed] = useState(true)
   return (
     <Box p={2} borderless className={classes.pass} title="No condition set">
@@ -31,3 +28,5 @@ export const PassConditionView: React.FC<Props> = ({
     </Box>
   )
 }
+
+export default PassConditionView

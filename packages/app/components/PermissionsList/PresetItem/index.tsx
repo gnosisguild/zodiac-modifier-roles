@@ -19,7 +19,7 @@ const PresetItem: React.FC<Preset & { chainId: ChainId }> = ({
       <Flex direction="column" gap={3}>
         <PresetInfo apiInfo={apiInfo} operation={operation} />
 
-        <Flex direction="column" gap={3}>
+        <Flex direction="column" gap={2}>
           {operation.parameters.map((parameter) => (
             <Parameter
               key={parameter.name}

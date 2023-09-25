@@ -49,7 +49,7 @@
   line-height: var(--condition-indent);
 }
 
-.childConditions {
+.conditionBody {
   margin-left: var(--condition-indent);
 }
 

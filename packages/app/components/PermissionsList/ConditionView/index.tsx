@@ -1,11 +1,12 @@
-import { Condition, Operator, conditionId } from "zodiac-roles-sdk"
+import { Condition, Operator } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
 import Indent from "./Indent"
-import { ConditionHeader } from "./ConditionHeader"
-import { PassConditionView } from "./PassConditionView"
+import ConditionHeader from "./ConditionHeader"
+import PassConditionView from "./PassConditionView"
+import BitmaskConditionView from "./BitmaskConditionView"
 
 export interface Props {
   condition: Condition
@@ -44,9 +45,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
     )
   }
 
-  //   if (condition.operator === Operator.Bitmask) {
-  //     return <BitmaskConditionView condition={condition} paramIndex={paramIndex} />
-  //   }
+  if (condition.operator === Operator.Bitmask) {
+    return (
+      <BitmaskConditionView condition={condition} paramIndex={paramIndex} />
+    )
+  }
   //   if (condition.operator === Operator.Custom) {
   //     return <CustomConditionView condition={condition} paramIndex={paramIndex} />
   //   }
@@ -125,7 +128,7 @@ export const ChildConditions: React.FC<
   const indentLevels = calcChildrenIndentLevels(condition)
 
   return (
-    <div className={classes.childConditions}>
+    <div className={classes.conditionBody}>
       <Flex direction="column" gap={1}>
         {children?.map((condition, index) => (
           <Fragment key={index}>

@@ -1,5 +1,23 @@
+.labelContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
 .fieldLabel {
-  margin-bottom: 0.3em;
+  margin: var(--spacing-2) var(--spacing-2) 0 0;
+  flex-grow: 1;
+  width: 100px;
+  /* text-align: right; */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fieldBody {
+  width: 300px;
+  flex-grow: 4;
 }
 
 .disabled {
