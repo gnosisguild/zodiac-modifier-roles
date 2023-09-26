@@ -7,7 +7,7 @@
 }
 
 .address {
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 14px;
 }
 

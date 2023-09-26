@@ -1,4 +1,5 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+import { FunctionFragment, ParamType } from "ethers/lib/utils"
 import { ReactNode } from "react"
 import { RiArrowDropDownLine, RiArrowDropRightLine } from "react-icons/ri"
 import { PiDotBold } from "react-icons/pi"
@@ -8,6 +9,7 @@ import Flex from "@/ui/Flex"
 interface Props {
   condition: Condition
   paramIndex?: number
+  abi?: FunctionFragment | ParamType
   children?: ReactNode
   collapsed?: boolean
 }
@@ -15,13 +17,16 @@ interface Props {
 const ConditionHeader: React.FC<Props> = ({
   condition,
   paramIndex,
+  abi,
   children,
   collapsed,
 }) => {
   const { operator, paramType } = condition
 
-  const paramName = paramIndex !== undefined ? `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
-  const paramTypeLabel = ParameterType[paramType]
+  const paramName =
+    paramIndex !== undefined ? abi?.name || `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
+  const paramTypeLabel =
+    !abi || "inputs" in abi ? ParameterType[paramType] : abi.type
   const operatorLabel = OperatorLabels[operator] || Operator[operator]
 
   const isComplexType = paramType >= ParameterType.Tuple

@@ -18,7 +18,9 @@ const PresetInfo: React.FC<{
           <div>
             by{" "}
             {apiInfo.contact.url ? (
-              <a href={apiInfo.contact.url}>{apiInfo.contact.name}</a>
+              <a href={apiInfo.contact.url} target="_blank">
+                {apiInfo.contact.name}
+              </a>
             ) : (
               apiInfo.contact.name
             )}

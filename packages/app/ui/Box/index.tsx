@@ -3,7 +3,7 @@ import React, { forwardRef, ReactNode } from "react"
 
 import classes from "./style.module.css"
 
-interface Props {
+export interface Props {
   className?: string
   double?: boolean
   borderless?: boolean

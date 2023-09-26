@@ -1,0 +1,15 @@
+.box {
+  margin: 0 calc(-1 * var(--spacing-3)) calc(-1 * var(--spacing-3));
+  border-top: 1px solid var(--border-color);
+}
+
+.toggle {
+  margin: calc(-1 * var(--spacing-3));
+  padding: var(--spacing-3);
+  text-align: center;
+  cursor: pointer;
+}
+
+.body {
+  margin-top: var(--spacing-3);
+}

@@ -1,5 +1,6 @@
 import { Condition, Operator } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
+import { FunctionFragment, ParamType } from "ethers/lib/utils"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -11,11 +12,18 @@ import BitmaskConditionView from "./BitmaskConditionView"
 export interface Props {
   condition: Condition
   paramIndex?: number
+  abi?: FunctionFragment | ParamType
 }
 
-const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
+const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   if (condition.operator === Operator.Pass) {
-    return <PassConditionView condition={condition} paramIndex={paramIndex} />
+    return (
+      <PassConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
+    )
   }
 
   if (
@@ -23,7 +31,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
     condition.operator <= Operator.Nor
   ) {
     return (
-      <LogicalConditionView condition={condition} paramIndex={paramIndex} />
+      <LogicalConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
     )
   }
 
@@ -32,7 +44,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
     condition.operator <= Operator.ArraySubset
   ) {
     return (
-      <ComplexConditionView condition={condition} paramIndex={paramIndex} />
+      <ComplexConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
     )
   }
 
@@ -41,7 +57,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
     condition.operator <= Operator.SignedIntLessThan
   ) {
     return (
-      <ComparisonConditionView condition={condition} paramIndex={paramIndex} />
+      <ComparisonConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
     )
   }
 
@@ -81,7 +101,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
 
 export default ConditionView
 
-const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
+const LogicalConditionView: React.FC<Props> = ({
+  condition,
+  paramIndex,
+  abi,
+}) => {
   const { operator, children } = condition
   const childrenLength = children?.length || 0
   const operatorLabel =
@@ -99,6 +123,7 @@ const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
       <ChildConditions
         condition={condition}
         paramIndex={paramIndex}
+        abi={abi}
         separator={
           <div className={classes.logicalBranchSeparator}>
             <div className={classes.operatorLabel}>{operatorLabel}</div>
@@ -109,11 +134,23 @@ const LogicalConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
   )
 }
 
-const ComplexConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
+const ComplexConditionView: React.FC<Props> = ({
+  condition,
+  paramIndex,
+  abi,
+}) => {
   return (
     <Box p={2} borderless>
-      <ConditionHeader condition={condition} paramIndex={paramIndex} />
-      <ChildConditions condition={condition} paramIndex={paramIndex} />
+      <ConditionHeader
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
+      <ChildConditions
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
     </Box>
   )
 }
@@ -122,7 +159,7 @@ export const ChildConditions: React.FC<
   Props & {
     separator?: ReactNode
   }
-> = ({ condition, paramIndex, separator }) => {
+> = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
   const indentLevels = calcChildrenIndentLevels(condition)
@@ -130,23 +167,46 @@ export const ChildConditions: React.FC<
   return (
     <div className={classes.conditionBody}>
       <Flex direction="column" gap={1}>
-        {children?.map((condition, index) => (
-          <Fragment key={index}>
-            <Indent level={indentLevels[index]}>
-              <ConditionView
-                condition={condition}
-                paramIndex={
-                  operator === Operator.Matches
-                    ? index
-                    : isLogicalOperator(operator)
-                    ? paramIndex
-                    : undefined
-                }
-              />
-            </Indent>
-            {index < childrenLength - 1 && separator}
-          </Fragment>
-        ))}
+        {children?.map((condition, index) => {
+          let childParamIndex: number | undefined = undefined
+          let childAbi: FunctionFragment | ParamType | undefined = undefined
+          if (isLogicalOperator(operator)) {
+            // preserve scoped param
+            childParamIndex = paramIndex
+            childAbi = abi
+          } else {
+            // drill down to the fields
+            if (operator === Operator.Matches || operator === Operator.Pass) {
+              childParamIndex = index
+            }
+
+            if (abi) {
+              if ("inputs" in abi) {
+                // function fragment
+                childAbi = abi.inputs[index]
+              } else if (abi.baseType === "array") {
+                // array
+                childAbi = abi.arrayChildren
+              } else {
+                // tuple
+                childAbi = abi.components[index]
+              }
+            }
+          }
+
+          return (
+            <Fragment key={index}>
+              <Indent level={indentLevels[index]}>
+                <ConditionView
+                  condition={condition}
+                  paramIndex={childParamIndex}
+                  abi={childAbi}
+                />
+              </Indent>
+              {index < childrenLength - 1 && separator}
+            </Fragment>
+          )
+        })}
       </Flex>
     </div>
   )
@@ -183,10 +243,11 @@ const calcChildrenIndentLevels = (condition: Condition): number[] => {
 const ComparisonConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
+  abi,
 }) => {
   return (
     <Box p={2} borderless>
-      <ConditionHeader condition={condition} paramIndex={paramIndex}>
+      <ConditionHeader condition={condition} paramIndex={paramIndex} abi={abi}>
         {condition.operator !== Operator.EqualToAvatar && (
           <input type="text" readOnly value={condition.compValue} />
         )}

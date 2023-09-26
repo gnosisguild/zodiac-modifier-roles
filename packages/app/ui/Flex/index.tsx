@@ -40,8 +40,8 @@ const Flex = forwardRef<HTMLDivElement | null, Props>(
         classes.flex,
         classes[`gap${gap}`],
         classes[direction],
-        className,
-        wrap && classes.wrap
+        wrap && classes.wrap,
+        className
       )}
       style={{
         justifyContent,

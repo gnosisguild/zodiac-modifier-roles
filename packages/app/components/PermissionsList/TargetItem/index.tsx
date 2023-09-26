@@ -8,7 +8,7 @@ import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
 import Box from "@/ui/Box"
-import ConditionView from "../ConditionView"
+import FunctionPermissionItem from "./FunctionPermissionItem"
 
 const TargetItem: React.FC<{
   targetAddress: string
@@ -35,7 +35,11 @@ const TargetItem: React.FC<{
         )}
         {!wildcardPermission &&
           (permissions as FunctionPermissionCoerced[]).map((permission) => (
-            <FunctionPermissionItem key={permission.selector} {...permission} />
+            <FunctionPermissionItem
+              key={permission.selector}
+              {...permission}
+              chainId={chainId}
+            />
           ))}
       </Flex>
     </Box>
@@ -51,30 +55,6 @@ const WildcardPermissionItem: React.FC<TargetPermission> = ({
     <Box p={3}>
       <Flex direction="column" gap={3}>
         <div>ALL FUNCTIONS</div>
-        <ExecutionOptions delegatecall={delegatecall} send={send} />
-      </Flex>
-    </Box>
-  )
-}
-
-const FunctionPermissionItem: React.FC<FunctionPermissionCoerced> = ({
-  targetAddress,
-  selector,
-  condition,
-  delegatecall,
-  send,
-}) => {
-  return (
-    <Box p={3}>
-      <Flex direction="column" gap={3}>
-        <div>
-          <code>{selector}</code>
-        </div>
-        {condition ? (
-          <ConditionView condition={condition} />
-        ) : (
-          <div>No condition set</div>
-        )}
         <ExecutionOptions delegatecall={delegatecall} send={send} />
       </Flex>
     </Box>
