@@ -33,8 +33,3 @@ a.button:hover {
 .button:disabled {
   opacity: 0.6;
 }
-
-.button img {
-  height: 16px;
-  margin-right: 10px;
-}

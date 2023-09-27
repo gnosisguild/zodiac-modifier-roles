@@ -53,7 +53,7 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
     <Box p={3}>
       <Flex direction="column" gap={3}>
         <div>
-          <code class={classes.functionName}>{selector}</code>
+          <code>{selector}</code>
         </div>
         {condition ? (
           <ConditionView condition={condition} />

@@ -58,7 +58,7 @@ export default async function RolePage({
       }
     >
       <main className={styles.main}>
-        <Flex gap={1} wrap>
+        <Flex gap={1} className={styles.container}>
           <Box p={3} className={styles.members}>
             <h5>Members</h5>
             <MembersList members={data.members} chainId={mod.chainId} />
