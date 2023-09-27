@@ -8,7 +8,11 @@ import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
 import Button from "@/ui/Button"
 import Layout from "@/components/Layout"
-import { zPermission, zTarget } from "@/components/PermissionsList/schema"
+import {
+  zAnnotation,
+  zPermission,
+  zTarget,
+} from "@/components/PermissionsList/schema"
 import ChainSelect from "@/components/ChainSelect"
 import { ChainId, DEFAULT_CHAIN } from "../chains"
 
@@ -33,18 +37,30 @@ export default function PermissionsPage() {
   let annotations: Annotation[] = []
   if (json) {
     try {
-      targets = z.array(zTarget).parse(json)
-    } catch (eP) {
+      // {targets: [...], annotations: [...]}
+      ;({ targets, annotations } = z
+        .object({
+          targets: z.array(zTarget),
+          annotations: z.array(zAnnotation),
+        })
+        .parse(json))
+    } catch (e) {
       try {
-        const permissions = z.array(zPermission).parse(json)
-        const result = processPermissions(permissions)
-        targets = result.targets
-        annotations = result.annotations
+        // [...targets]
+        targets = z.array(zTarget).parse(json)
       } catch (eT) {
-        console.error(eP)
-        console.error(eT)
-        errorMessage =
-          "Json input is neither a valid set of targets nor a valid permissions array"
+        try {
+          // [...permissions]
+          const permissions = z.array(zPermission).parse(json)
+          const result = processPermissions(permissions)
+          targets = result.targets
+          annotations = result.annotations
+        } catch (eP) {
+          console.error(eP)
+          console.error(eT)
+          errorMessage =
+            "Json input is neither a valid set of targets nor a valid permissions array"
+        }
       }
     }
   }

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const json = await req.json()
 
   const zParams = z.object({
-    target: z.array(zTarget),
+    targets: z.array(zTarget),
     annotations: z.array(zAnnotation),
   })
 
@@ -17,20 +17,22 @@ export async function POST(req: Request) {
     validated = zParams.parse(json)
   } catch (e) {
     return NextResponse.json({
-      error:
-        "Json input is neither a valid permissions array nor a valid targets array",
+      error: "Json is invalid",
     })
   }
 
   const stringValue = JSON.stringify(validated)
-  const key = await kv.set(hash(stringValue), stringValue)
+  const key = hash(stringValue)
+  await kv.set(key, stringValue)
+
+  console.log("Stored permissions", key)
 
   return NextResponse.json({ hash: key })
 }
 
 /** URL-safe hash function */
-export default function hash(value: string) {
+function hash(value: string) {
   const b64 = createHash("sha256").update(value).digest("base64")
   // Make URL safe
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+  return b64.replace(/\+/g, "").replace(/\//g, "").replace(/=+$/, "")
 }

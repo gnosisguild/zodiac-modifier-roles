@@ -1,4 +1,5 @@
 import { Annotation, Target } from "zodiac-roles-sdk"
+import { MdOutlinePolicy } from "react-icons/md"
 
 import styles from "./page.module.css"
 import { notFound } from "next/navigation"
@@ -7,6 +8,7 @@ import PermissionsList from "@/components/PermissionsList"
 import Layout, { Breadcrumb } from "@/components/Layout"
 import { kv } from "@vercel/kv"
 import { CHAINS, ChainId } from "@/app/chains"
+import Flex from "@/ui/Flex"
 
 export default async function RolePage({
   params: { hash, chain },
@@ -18,22 +20,25 @@ export default async function RolePage({
     notFound()
   }
 
-  const json = await kv.get<string>(hash)
-  if (!json) {
+  const entry = await kv.get<{
+    targets: Target[]
+    annotations: Annotation[]
+  }>(hash)
+  if (!entry) {
     notFound()
   }
 
-  const { targets, annotations } = JSON.parse(json) as {
-    targets: Target[]
-    annotations: Annotation[]
-  }
+  const { targets, annotations } = entry
 
   return (
     <Layout
       head={
         <>
-          <Breadcrumb href={`/${hash}`}>
-            Permissions: <code>${hash}</code>
+          <Breadcrumb href={`/permissions/${chainId}/${hash}`}>
+            <Flex gap={2} alignItems="center">
+              <MdOutlinePolicy />
+              <code className={styles.hash}>{hash}</code>
+            </Flex>
           </Breadcrumb>
         </>
       }
