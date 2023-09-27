@@ -8,6 +8,11 @@
 .bg {
   background-color: rgba(217, 212, 173, 0.1);
   background-clip: padding-box;
+  backdrop-filter: blur(8px);
+}
+
+.bg .bg {
+  backdrop-filter: none;
 }
 
 .borderless {
@@ -15,7 +20,7 @@
 }
 
 .double:before {
-  content: ' ';
+  content: " ";
   position: absolute;
   z-index: 1;
   top: 3px;

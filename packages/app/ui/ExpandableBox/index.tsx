@@ -9,11 +9,11 @@ const IndividualPermissions: React.FC<
     labelExpanded: ReactNode
     children: ReactNode
   }
-> = ({ labelCollapsed, labelExpanded, children, ...rest }) => {
+> = ({ labelCollapsed, labelExpanded, className, children, ...rest }) => {
   const [expanded, setExpanded] = useState(false)
   const [hover, setHover] = useState(false)
   return (
-    <Box {...rest} bg={hover} className={classes.box}>
+    <Box {...rest} bg={hover} className={className}>
       <div
         onClick={() => setExpanded((val) => !val)}
         onMouseEnter={() => setHover(true)}

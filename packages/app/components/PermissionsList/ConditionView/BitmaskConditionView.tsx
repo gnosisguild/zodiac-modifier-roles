@@ -33,7 +33,7 @@ const BitmaskConditionView: React.FC<Props> = ({ condition, paramIndex }) => {
           <input type="text" readOnly value={mask} />
         </Field>
 
-        <Field label="value">
+        <Field label="expected value">
           <input type="text" readOnly value={value} />
         </Field>
       </Flex>

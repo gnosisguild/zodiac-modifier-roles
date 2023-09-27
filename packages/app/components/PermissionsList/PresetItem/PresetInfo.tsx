@@ -12,10 +12,10 @@ const PresetInfo: React.FC<{
         {operation.summary || operation.description}
       </p>
 
-      <Flex gap={1} className={classes.apiInfo}>
-        <div title={apiInfo.description}>{apiInfo.title}</div>
+      <Flex gap={2} className={classes.apiInfo} alignItems="center">
+        <code title={apiInfo.description}>{apiInfo.title}</code>
         {apiInfo.contact?.name && (
-          <div>
+          <div className={classes.contact}>
             by{" "}
             {apiInfo.contact.url ? (
               <a href={apiInfo.contact.url} target="_blank">

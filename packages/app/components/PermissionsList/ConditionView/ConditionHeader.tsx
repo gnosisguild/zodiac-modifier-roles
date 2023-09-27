@@ -62,14 +62,18 @@ const ConditionHeader: React.FC<Props> = ({
 
 export default ConditionHeader
 
-const OperatorLabels: Record<number, string> = {
+const OperatorLabels: Record<number, ReactNode> = {
   [Operator.Matches]: "matches",
   [Operator.ArraySome]: "has at least one element that",
   [Operator.ArrayEvery]: "only has elements that",
   [Operator.ArraySubset]:
     "for each sub condition, has at least one element that meets it",
 
-  [Operator.EqualToAvatar]: "is equal to the avatar",
+  [Operator.EqualToAvatar]: (
+    <>
+      is equal to &nbsp;<code>AVATAR</code>
+    </>
+  ),
   [Operator.EqualTo]: "is equal to",
   [Operator.GreaterThan]: "is greater than",
   [Operator.LessThan]: "is less than",
