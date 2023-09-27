@@ -8,7 +8,7 @@ describe("processAnnotations()", () => {
         targetAddress: "0xc0ffee254729296a45a3885639AC7E10F9d54979",
         selector: "0x1234abcd",
       },
-    ]
+    ] as const
     const result = await processAnnotations(permissions, [])
     expect(result.permissions).toEqual(permissions)
   })
@@ -185,7 +185,7 @@ describe("processAnnotations()", () => {
         selector: "0x1234abcd",
       },
       ...permissionsForPreset1,
-    ]
+    ] as const
     const result = await processAnnotations(permissions, [annotation1])
     expect(result.permissions).toEqual([
       {

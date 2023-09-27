@@ -47,7 +47,7 @@ const makeAllowFunction = <
     const scopings = args.slice(0, functionInputs.length) as any[]
     const options = (args[functionInputs.length] || {}) as Options
     const presetFunction: FunctionPermission = {
-      targetAddress: contract.address,
+      targetAddress: contract.address as `0x${string}`,
       signature: functionFragment.format("sighash"),
       condition:
         scopings.length > 0
@@ -61,8 +61,8 @@ const makeAllowFunction = <
 type Options = {
   send?: boolean
   delegatecall?: boolean
-  etherWithinAllowance?: string
-  callWithinAllowance?: string
+  etherWithinAllowance?: `0x${string}`
+  callWithinAllowance?: `0x${string}`
 }
 
 const applyOptions = (
@@ -122,7 +122,7 @@ const makeAllowContract = <C extends BaseContract>(
 ): AllowContract<C> => {
   const allowEverything = (options?: ExecutionFlags): TargetPermission => {
     return {
-      targetAddress: contract.address,
+      targetAddress: contract.address as `0x${string}`,
       ...options,
     }
   }

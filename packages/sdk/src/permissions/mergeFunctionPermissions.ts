@@ -18,7 +18,7 @@ export const mergeFunctionPermissions = (permissions: Permission[]) =>
     if (!isFunctionScoped(entry)) {
       result.push({
         ...entry,
-        targetAddress: entry.targetAddress.toLowerCase(),
+        targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
       })
       return result
     }

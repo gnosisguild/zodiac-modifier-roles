@@ -7,8 +7,8 @@ import { OpenAPIV3 } from "openapi-types"
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
-  permissions: Permission[],
-  annotations: Annotation[]
+  permissions: readonly Permission[],
+  annotations: readonly Annotation[]
 ) => {
   const permissionIds = permissions.map(permissionId)
 

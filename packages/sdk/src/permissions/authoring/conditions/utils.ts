@@ -2,8 +2,8 @@ import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
 
 import { ParameterType, Condition, Operator } from "../../../types"
 
-export const encodeValue = (value: any, type: ParamType): string => {
-  return defaultAbiCoder.encode([type], [value])
+export const encodeValue = (value: any, type: ParamType) => {
+  return defaultAbiCoder.encode([type], [value]) as `0x${string}`
 }
 
 export const parameterType = (type: ParamType): ParameterType => {

@@ -29,7 +29,7 @@ export const processPermissions = (
   const fullyClearedTargets = uniquePermissions
     .filter((entry) => !isFunctionScoped(entry))
     .map((entry) => ({
-      address: entry.targetAddress.toLowerCase(),
+      address: entry.targetAddress.toLowerCase() as `0x${string}`,
       clearance: Clearance.Target,
       executionOptions: execOptions(entry),
       functions: [],
@@ -42,7 +42,7 @@ export const processPermissions = (
   const functionScopedTargets = Object.entries(
     groupBy(functionPermissions, (entry) => entry.targetAddress)
   ).map(([targetAddress, allowFunctions]) => ({
-    address: targetAddress.toLowerCase(),
+    address: targetAddress.toLowerCase() as `0x${string}`,
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
     functions: allowFunctions.map((allowFunction) => {

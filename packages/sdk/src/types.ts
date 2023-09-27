@@ -74,22 +74,22 @@ export enum Operator {
 }
 
 export interface Role {
-  key: string
-  members: string[]
+  key: `0x${string}`
+  members: `0x${string}`[]
   targets: Target[]
   allowances: Allowance[]
   annotations: Annotation[]
 }
 
 export interface Target {
-  address: string
+  address: `0x${string}`
   clearance: Clearance
   executionOptions: ExecutionOptions
   functions: Function[]
 }
 
 export interface Function {
-  selector: string
+  selector: `0x${string}`
   executionOptions: ExecutionOptions
   wildcarded: boolean
   condition?: Condition
@@ -98,12 +98,12 @@ export interface Function {
 export interface Condition {
   paramType: ParameterType
   operator: Operator
-  compValue?: string
+  compValue?: `0x${string}`
   children?: Condition[]
 }
 
 export interface Allowance {
-  key: string
+  key: `0x${string}`
   refillInterval: number
   refillAmount: BigNumber
   refillTimestamp: number

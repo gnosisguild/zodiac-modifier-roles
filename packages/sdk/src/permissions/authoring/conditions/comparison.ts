@@ -115,7 +115,7 @@ export const bitmask =
           zeroPadRight(maskBytes, 15),
           zeroPadRight(valueBytes, 15),
         ])
-      ),
+      ) as `0x${string}`,
     }
   }
 

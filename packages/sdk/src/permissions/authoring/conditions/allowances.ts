@@ -15,22 +15,31 @@ export const withinAllowance =
     return {
       paramType: ParameterType.Static,
       operator: Operator.WithinAllowance,
-      compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+      compValue: defaultAbiCoder.encode(
+        ["bytes32"],
+        [allowanceKey]
+      ) as `0x${string}`,
     }
   }
 
-export const callWithinAllowance = (allowanceKey: string) => () => {
+export const callWithinAllowance = (allowanceKey: `0x${string}`) => () => {
   return {
     paramType: ParameterType.None,
     operator: Operator.CallWithinAllowance,
-    compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+    compValue: defaultAbiCoder.encode(
+      ["bytes32"],
+      [allowanceKey]
+    ) as `0x${string}`,
   }
 }
 
-export const etherWithinAllowance = (allowanceKey: string) => () => {
+export const etherWithinAllowance = (allowanceKey: `0x${string}`) => () => {
   return {
     paramType: ParameterType.None,
     operator: Operator.EtherWithinAllowance,
-    compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+    compValue: defaultAbiCoder.encode(
+      ["bytes32"],
+      [allowanceKey]
+    ) as `0x${string}`,
   }
 }
