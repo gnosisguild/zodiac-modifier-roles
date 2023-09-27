@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "hardhat compile",
+    "clean": "hardhat clean",
     "test": "hardhat test",
     "deploy:standalone": "hardhat deploy-standalone --network",
     "deploy:mastercopy": "hardhat run src/deploy-mastercopy.ts --network",

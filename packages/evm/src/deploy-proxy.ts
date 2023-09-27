@@ -1,7 +1,7 @@
 import { deployAndSetUpCustomModule } from "@gnosis.pm/zodiac";
+import { getContractFactory } from "@nomiclabs/hardhat-ethers/types";
 import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { Roles__factory } from "../typechain-types";
 
 interface TaskArgs {
   owner: string;
@@ -38,6 +38,8 @@ task("deploy-proxy", "Deploys a Roles modifier proxy instance")
       const [signer] = await hre.ethers.getSigners();
       const deployer = hre.ethers.provider.getSigner(signer.address);
 
+      const { abi: rolesAbi } = await hre.artifacts.readArtifact("Roles");
+
       const { chainId } = await hre.ethers.provider.getNetwork();
       if (!chainId) throw new Error("No chainId found");
       console.log(`Deploying Roles proxy instance on chain #${chainId}...`);
@@ -45,7 +47,7 @@ task("deploy-proxy", "Deploys a Roles modifier proxy instance")
       const { expectedModuleAddress, transaction } =
         await deployAndSetUpCustomModule(
           MASTERCOPY_ADDRESS,
-          Roles__factory.abi,
+          rolesAbi,
           {
             types: ["address", "address", "address"],
             values: [owner, avatar, target],
