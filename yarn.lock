@@ -24401,9 +24401,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zodiac-modifier-roles-app@workspace:packages/app":
+"zodiac-roles-app@workspace:packages/app":
   version: 0.0.0-use.local
-  resolution: "zodiac-modifier-roles-app@workspace:packages/app"
+  resolution: "zodiac-roles-app@workspace:packages/app"
   dependencies:
     "@shazow/whatsabi": ^0.8.5
     "@types/jest": ^29.5.5
