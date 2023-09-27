@@ -4212,6 +4212,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@upstash/redis@npm:1.22.0":
+  version: 1.22.0
+  resolution: "@upstash/redis@npm:1.22.0"
+  dependencies:
+    isomorphic-fetch: ^3.0.0
+  checksum: 894b7d4e318c55fdcbf0f322efd9ace94a37f1b8f9d7cb2cdf8b8b4859814379665c7e00feef3565578455d98492710d14ed4a2b043ec412b5d640a4d5a2dd55
+  languageName: node
+  linkType: hard
+
+"@vercel/kv@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@vercel/kv@npm:0.2.3"
+  dependencies:
+    "@upstash/redis": 1.22.0
+  checksum: 3a2b1e3a0ebf605b69341b449bd81edde94f9d00393cc6971759b950c90cff782e1e4fa5daf672f4769aa8301e00f7b7fdec07cdd98d40530652d83c043125ed
+  languageName: node
+  linkType: hard
+
 "@wagmi/chains@npm:1.7.0":
   version: 1.7.0
   resolution: "@wagmi/chains@npm:1.7.0"
@@ -13936,6 +13954,16 @@ __metadata:
   version: 3.0.1
   resolution: "isobject@npm:3.0.1"
   checksum: db85c4c970ce30693676487cca0e61da2ca34e8d4967c2e1309143ff910c207133a969f9e4ddb2dc6aba670aabce4e0e307146c310350b298e74a31f7d464703
+  languageName: node
+  linkType: hard
+
+"isomorphic-fetch@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "isomorphic-fetch@npm:3.0.0"
+  dependencies:
+    node-fetch: ^2.6.1
+    whatwg-fetch: ^3.4.1
+  checksum: e5ab79a56ce5af6ddd21265f59312ad9a4bc5a72cebc98b54797b42cb30441d5c5f8d17c5cd84a99e18101c8af6f90c081ecb8d12fd79e332be1778d58486d75
   languageName: node
   linkType: hard
 
@@ -23705,6 +23733,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"whatwg-fetch@npm:^3.4.1":
+  version: 3.6.19
+  resolution: "whatwg-fetch@npm:3.6.19"
+  checksum: 2896bc9ca867ea514392c73e2a272f65d5c4916248fe0837a9df5b1b92f247047bc76cf7c29c28a01ac6c5fb4314021d2718958c8a08292a96d56f72b2f56806
+  languageName: node
+  linkType: hard
+
 "whatwg-url@npm:^5.0.0":
   version: 5.0.0
   resolution: "whatwg-url@npm:5.0.0"
@@ -24390,6 +24425,7 @@ __metadata:
     "@types/node": ^20.2.5
     "@types/react": ^18.2.8
     "@types/react-dom": ^18.2.4
+    "@vercel/kv": ^0.2.3
     classnames: ^2.3.2
     copy-to-clipboard: ^3.3.3
     eslint: ^8.41.0

@@ -59,6 +59,7 @@ p {
 }
 
 input:not([type="checkbox"]),
+textarea,
 select {
   font-size: 14px;
   background-color: transparent;
@@ -75,13 +76,15 @@ select {
 }
 
 input:hover:enabled,
-select:hover:enabled {
+textarea:hover:enabled. select:hover:enabled {
   border-color: white;
 }
 
 input:active,
+textarea:active,
 select:active,
 input:focus,
+textarea:focus,
 select:focus {
   border: 1px solid white;
   outline: none;

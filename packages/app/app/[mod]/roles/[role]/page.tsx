@@ -9,7 +9,6 @@ import MembersList from "@/components/MembersList"
 import PermissionsList from "@/components/PermissionsList"
 import Layout, { Breadcrumb } from "@/components/Layout"
 import Address from "@/ui/Address"
-import CopyButton from "@/ui/CopyButton"
 
 export default async function RolePage({
   params,
@@ -40,9 +39,7 @@ export default async function RolePage({
       head={
         <>
           <Breadcrumb href={`/${decodeURIComponent(params.mod)}`}>
-            <Flex direction="column" gap={0}>
-              <Address address={mod.address} />
-            </Flex>
+            <Address address={mod.address} />
           </Breadcrumb>
           <Breadcrumb
             href={`/${decodeURIComponent(params.mod)}/roles/${params.role}`}

@@ -23,9 +23,7 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
     <Layout
       head={
         <Breadcrumb href={`/${decodeURIComponent(params.mod)}`}>
-          <Flex direction="column" gap={0}>
-            <Address address={mod.address} />
-          </Flex>
+          <Address address={mod.address} />
         </Breadcrumb>
       }
     >

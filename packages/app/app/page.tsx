@@ -8,13 +8,11 @@ import Button, { LinkButton } from "@/ui/Button"
 import Field from "@/ui/Field"
 import ChainSelect from "@/components/ChainSelect"
 import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/app/chains"
-import { useRouter } from "next/navigation"
 import Layout from "@/components/Layout"
 
 const chains = Object.values(CHAINS)
 
 export default function AttachMod() {
-  const router = useRouter()
   const [chainId, setChainId] = useState<ChainId>(DEFAULT_CHAIN.id)
   const [address, setAddress] = useState("")
   return (
