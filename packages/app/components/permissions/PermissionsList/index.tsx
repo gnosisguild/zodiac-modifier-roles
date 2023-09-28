@@ -1,10 +1,16 @@
-import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
+import {
+  Annotation,
+  PermissionCoerced,
+  Target,
+  reconstructPermissions,
+} from "zodiac-roles-sdk"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
-import PresetItem from "./PresetItem"
-import TargetItem from "./TargetItem"
-import { processAnnotations } from "./annotations"
-import { groupPermissions } from "./groupPermissions"
+import PresetItem from "../PresetItem"
+import TargetItem from "../TargetItem"
+import { processAnnotations } from "../annotations"
+import { groupPermissions } from "../groupPermissions"
+import { Preset, DiffFlag } from "../types"
 
 interface Props {
   targets: Target[]
@@ -20,6 +26,28 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
     annotations
   )
 
+  return (
+    <PresetsAndPermissionsView
+      presets={presets}
+      permissions={permissions}
+      chainId={chainId}
+    />
+  )
+}
+
+export default PermissionsList
+
+interface PresetsAndPermissionsViewProps {
+  permissions: PermissionCoerced[]
+  presets: Preset[]
+  chainId: ChainId
+  diff?: Map<PermissionCoerced, DiffFlag>
+}
+export const PresetsAndPermissionsView = ({
+  permissions,
+  presets,
+  chainId,
+}: PresetsAndPermissionsViewProps) => {
   const permissionGroups = groupPermissions(permissions)
 
   return (
@@ -39,5 +67,3 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
     </Flex>
   )
 }
-
-export default PermissionsList

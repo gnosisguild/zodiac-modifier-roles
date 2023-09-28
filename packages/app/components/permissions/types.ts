@@ -20,3 +20,11 @@ export interface Preset {
     parameters: OpenAPIParameter[]
   }
 }
+
+export enum DiffFlag {
+  Added = "Added",
+  Removed = "Removed",
+  Modified = "Modified",
+  Identical = "Identical",
+  Hidden = "Hidden",
+}

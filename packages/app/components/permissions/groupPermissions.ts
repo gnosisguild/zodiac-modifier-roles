@@ -1,4 +1,4 @@
-import { PermissionCoerced } from "zodiac-roles-sdk"
+import { PermissionCoerced, permissionId } from "zodiac-roles-sdk"
 
 /** Group permissions by targetAddress and sort everything in ascending order */
 export const groupPermissions = (permissions: PermissionCoerced[]) => {
@@ -13,18 +13,15 @@ export const groupPermissions = (permissions: PermissionCoerced[]) => {
   ) as [`0x${string}`, PermissionCoerced[]][]
 
   return entries
-    .sort(compareKeys)
-    .map(([targetAddress, permissions]) => [
-      targetAddress,
-      permissions.sort(compareSelectors),
-    ])
+    .sort(compareKeys) // sort groups ascending by target address
+    .map(
+      ([targetAddress, permissions]) =>
+        [targetAddress, permissions.sort(comparePermissionIds)] as const // sort permissions ascending by ID
+    )
 }
 
 const compareKeys = (a: [`0x${string}`, any], b: [`0x${string}`, any]) =>
   BigInt(a[0]) > BigInt(b[0]) ? 1 : -1
 
-const compareSelectors = (a: PermissionCoerced, b: PermissionCoerced) =>
-  ("selector" in a ? BigInt(a.selector) : 0) >
-  ("selector" in b ? BigInt(b.selector) : 0)
-    ? 1
-    : -1
+const comparePermissionIds = (a: PermissionCoerced, b: PermissionCoerced) =>
+  permissionId(a) > permissionId(b) ? 1 : -1

@@ -6,7 +6,7 @@ import { parseModParam, parseRoleParam } from "@/app/params"
 import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
 import MembersList from "@/components/MembersList"
-import PermissionsList from "@/components/PermissionsList"
+import PermissionsList from "@/components/permissions/PermissionsList"
 import Layout, { Breadcrumb } from "@/components/Layout"
 import Address from "@/ui/Address"
 

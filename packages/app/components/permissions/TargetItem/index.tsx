@@ -11,7 +11,7 @@ import Box from "@/ui/Box"
 import FunctionPermissionItem from "./FunctionPermissionItem"
 
 const TargetItem: React.FC<{
-  targetAddress: string
+  targetAddress: `0x${string}`
   permissions: PermissionCoerced[]
   chainId: ChainId
 }> = ({ targetAddress, chainId, permissions }) => {

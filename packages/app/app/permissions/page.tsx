@@ -12,7 +12,7 @@ import {
   zAnnotation,
   zPermission,
   zTarget,
-} from "@/components/PermissionsList/schema"
+} from "@/components/permissions/schema"
 import ChainSelect from "@/components/ChainSelect"
 import { ChainId, DEFAULT_CHAIN } from "../chains"
 
