@@ -12,7 +12,9 @@ import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 import mainnetDeFiHarvestENSPreset from "../src/presets/mainnet/ENS/deFiHarvestENS"
 import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS"
 import mainnetDeFiSwapENSPreset from "../src/presets/mainnet/ENS/deFiSwapENS"
-import sparkRepayDebtDAI from "../src/presets/mainnet/ENS/sparkRepayDebtDAI"
+// import sparkRepayDebtDAI from "../src/presets/mainnet/ENS/sparkRepayDebtDAI"
+// import test_payload_balancer from "../src/presets/mainnet/ENS/test_payload_balancer"
+import test_payload_maker from "../src/presets/mainnet/ENS/test_payload_maker"
 import { NetworkId } from "../src/types"
 
 interface Config {
@@ -36,8 +38,8 @@ interface Config {
 
 export const ENS_ADDRESSES = {
   ENS_ETH: {
-    AVATAR: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64", //"0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1", //"0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    MODULE: "0xf20325cf84b72e8BBF8D8984B8f0059B984B390B", //"0x1ffAdc16726dd4F91fF275b4bF50651801B06a86", //"0xf20325cf84b72e8BBF8D8984B8f0059B984B390B",
+    AVATAR: "0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1", //"0xC01318baB7ee1f5ba734172bF7718b5DC6Ec90E1", //"0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+    MODULE: "0x1ffAdc16726dd4F91fF275b4bF50651801B06a86", //"0x1ffAdc16726dd4F91fF275b4bF50651801B06a86", //"0xf20325cf84b72e8BBF8D8984B8f0059B984B390B",
     MANAGER: "0xb423e0f6E7430fa29500c5cC9bd83D28c8BD8978",
     REVOKER: "",
     HARVESTER: "0x14c2d2d64c4860acf7cf39068eb467d7556197de",
@@ -213,12 +215,12 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
   console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
-task("encodeApplyPresetsSpark").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetsTestMaker").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
-    config.ROLE_IDS.SPARK,
-    sparkRepayDebtDAI,
+    config.ROLE_IDS.REVOKER,
+    test_payload_maker,
     { AVATAR: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
@@ -228,7 +230,7 @@ task("encodeApplyPresetsSpark").setAction(async (taskArgs, hre) => {
   const filePath = path.join(
     __dirname,
     "..",
-    "/presets-output/mainnet/ENS/txSparkRepayDebtDAI.json"
+    "/presets-output/mainnet/ENS/test_payload_maker.json"
   )
   if (!existsSync(filePath)) {
     // Create the directory structure if it doesn't exist
@@ -238,6 +240,58 @@ task("encodeApplyPresetsSpark").setAction(async (taskArgs, hre) => {
   writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
   console.log(`Transaction builder JSON written to  ${filePath}`)
 })
+
+// task("encodeApplyPresetsTestBalancer").setAction(async (taskArgs, hre) => {
+//   const { config } = await processArgs(taskArgs, hre)
+//   const txBatches = await encodeApplyPresetTxBuilder(
+//     config.MODULE,
+//     config.ROLE_IDS.REVOKER,
+//     test_payload_balancer,
+//     { AVATAR: config.AVATAR },
+//     {
+//       network: config.NETWORK as NetworkId,
+//     }
+//   )
+
+//   const filePath = path.join(
+//     __dirname,
+//     "..",
+//     "/presets-output/mainnet/ENS/test_payload_balancer.json"
+//   )
+//   if (!existsSync(filePath)) {
+//     // Create the directory structure if it doesn't exist
+//     mkdirSync(path.dirname(filePath), { recursive: true })
+//   }
+//   // Write the JSON data to the file
+//   writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+//   console.log(`Transaction builder JSON written to  ${filePath}`)
+// })
+
+// task("encodeApplyPresetsSpark").setAction(async (taskArgs, hre) => {
+//   const { config } = await processArgs(taskArgs, hre)
+//   const txBatches = await encodeApplyPresetTxBuilder(
+//     config.MODULE,
+//     config.ROLE_IDS.REVOKER,
+//     sparkRepayDebtDAI,
+//     { AVATAR: config.AVATAR },
+//     {
+//       network: config.NETWORK as NetworkId,
+//     }
+//   )
+
+//   const filePath = path.join(
+//     __dirname,
+//     "..",
+//     "/presets-output/mainnet/ENS/txSparkRepayDebtDAI.json"
+//   )
+//   if (!existsSync(filePath)) {
+//     // Create the directory structure if it doesn't exist
+//     mkdirSync(path.dirname(filePath), { recursive: true })
+//   }
+//   // Write the JSON data to the file
+//   writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+//   console.log(`Transaction builder JSON written to  ${filePath}`)
+// })
 
 task("encodeApplyPresetHarvestENS").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)

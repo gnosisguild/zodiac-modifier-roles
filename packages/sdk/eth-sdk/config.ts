@@ -118,6 +118,7 @@ export default defineConfig({
       },
       maker: {
         dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb",
+        ds_proxy: "0xD758500ddEc05172aaA035911387C8E0e789CF6a", // GnosisDAO DSProxy
       },
       mstable_v2: {
         stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7",

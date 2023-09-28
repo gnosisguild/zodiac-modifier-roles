@@ -1,27 +1,13 @@
 import { PresetAllowEntry } from "../../types"
 import { allow } from "../../allow"
 import { AVATAR } from "../../placeholders"
-import { staticEqual } from "../../helpers/utils"
+import { staticEqual } from "../utils"
 import { balancer } from "../../mainnet/addresses"
 
-export const auraExitStrategy1 = (rewarder: string): PresetAllowEntry[] => {
-  return [
-    {
-      ...allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
-      targetAddress: rewarder,
-    },
-  ]
-}
-
-export const auraExitStrategy2 = (
-  rewarder: string,
+export const balancerExitStrategy1 = (
   balancerPoolId: string
 ): PresetAllowEntry[] => {
   return [
-    {
-      ...allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
-      targetAddress: rewarder,
-    },
     {
       targetAddress: balancer.VAULT,
       signature:

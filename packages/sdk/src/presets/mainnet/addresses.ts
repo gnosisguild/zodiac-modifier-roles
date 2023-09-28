@@ -224,6 +224,8 @@ export const lido = {
 
 export const maker = {
   DSR_MANAGER: "0x373238337Bfe1146fb49989fc222523f83081dDb",
+  DS_PROXY: "0xD758500ddEc05172aaA035911387C8E0e789CF6a", // GnosisDAO DSProxy
+  PROXY_ACTIONS: "0x82ecD135Dce65Fbc6DbdD0e4237E0AF93FFD5038",
 }
 
 export const mstable_v2 = {
