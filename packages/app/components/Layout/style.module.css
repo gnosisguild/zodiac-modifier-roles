@@ -21,8 +21,10 @@
 
 .main {
   padding: 16px 32px 32px 32px;
-  height: calc(100vh - 102px);
   box-sizing: border-box;
+}
+.main.noScroll {
+  height: calc(100vh - 102px);
 }
 
 a.breadcrumb {

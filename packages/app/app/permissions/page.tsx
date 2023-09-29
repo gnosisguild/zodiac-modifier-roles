@@ -2,7 +2,12 @@
 import { useState } from "react"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { Annotation, Target, processPermissions } from "zodiac-roles-sdk"
+import {
+  Annotation,
+  Target,
+  checkIntegrity,
+  processPermissions,
+} from "zodiac-roles-sdk"
 import styles from "./page.module.css"
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
@@ -65,6 +70,17 @@ export default function PermissionsPage() {
     }
   }
 
+  if (targets) {
+    try {
+      checkIntegrity(targets)
+    } catch (e) {
+      errorMessage =
+        e instanceof Error
+          ? e.message
+          : "Invalid targets (integrity check failed)"
+    }
+  }
+
   const submit = async () => {
     setSubmitPending(true)
     const res = await fetch("/api/permissions", {
@@ -80,7 +96,7 @@ export default function PermissionsPage() {
   }
 
   return (
-    <Layout>
+    <Layout noScroll>
       <main className={styles.main}>
         <Box bg p={3} className={styles.box}>
           <Flex direction="column" gap={3} className={styles.flex}>

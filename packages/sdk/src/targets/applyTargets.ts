@@ -85,9 +85,7 @@ export const applyTargets = async (
     calls.forEach((call) =>
       logCall(
         call,
-        options.log === true
-          ? console.log
-          : (options.log as (message: string) => void)
+        options.log === true ? console.log : options.log || undefined
       )
     )
   }

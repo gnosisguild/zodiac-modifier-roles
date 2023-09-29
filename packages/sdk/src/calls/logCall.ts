@@ -18,13 +18,13 @@ export const logCall = (
 
     case "scopeTarget": {
       const { targetAddress } = call
-      log(`✅ Allow executing selected functions of ${targetAddress}`)
+      log(`✅ Allow calling selected functions of ${targetAddress}`)
       break
     }
 
     case "revokeTarget": {
       const { targetAddress } = call
-      log(`⛔ Revoke permissions to execute any function of ${targetAddress}`)
+      log(`⛔ Revoke permissions to call any function of ${targetAddress}`)
       break
     }
 
@@ -47,7 +47,7 @@ export const logCall = (
 
     case "revokeFunction": {
       const { targetAddress, selector } = call
-      log(`⛔ Revoke permissions to execute ${targetAddress}.${selector}`)
+      log(`⛔ Revoke permissions to call ${targetAddress}.${selector}`)
       break
     }
   }

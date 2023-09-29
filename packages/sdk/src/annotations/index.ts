@@ -13,6 +13,7 @@ type Options = {
    *  - "remove": All passed members will be removed from the role
    */
   mode: "replace" | "extend" | "remove"
+  log?: boolean | ((message: string) => void)
 } & (
   | {
       currentAnnotations: Annotation[]
@@ -26,6 +27,7 @@ export const applyAnnotations = async (
   options: Options
 ) => {
   const { address, mode } = options
+  const log = options.log === true ? console.log : options.log || undefined
 
   let currentAnnotations =
     "currentAnnotations" in options && options.currentAnnotations
@@ -63,17 +65,35 @@ export const applyAnnotations = async (
       throw new Error(`Invalid mode: ${options.mode}`)
   }
 
-  return isEmptyPost(updatePost)
-    ? []
-    : [
-        encodePost(
-          JSON.stringify({
-            rolesMod: address,
-            roleKey,
-            ...updatePost,
-          })
-        ),
-      ]
+  const addCount = updatePost.addAnnotations?.length || 0
+  const removeCount = updatePost.removeAnnotations?.length || 0
+
+  if (addCount === 0 && removeCount === 0) {
+    return []
+  }
+
+  if (log) {
+    const message = [
+      addCount > 0 ? "add " + pluralize(addCount, "annotation") : undefined,
+      removeCount > 0
+        ? "remove " + pluralize(removeCount, "annotation")
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(" ,")
+
+    log(`💬 ${message[0].toUpperCase()}${message.slice(1)}`)
+  }
+
+  return [
+    encodePost(
+      JSON.stringify({
+        rolesMod: address,
+        roleKey,
+        ...updatePost,
+      })
+    ),
+  ]
 }
 
 const replaceAnnotations = (
@@ -133,6 +153,13 @@ const groupAnnotations = (annotations: Annotation[]) =>
     })
   )
 
-const isEmptyPost = (post: UpdateAnnotationsPost) =>
-  (!post.addAnnotations || post.addAnnotations.length === 0) &&
-  (!post.removeAnnotations || post.removeAnnotations.length === 0)
+const pluralize = (
+  count: number,
+  singular: string,
+  plural = `${singular}s`
+) => {
+  if (count === 1) {
+    return `1 ${singular}`
+  }
+  return `${count} ${plural}`
+}

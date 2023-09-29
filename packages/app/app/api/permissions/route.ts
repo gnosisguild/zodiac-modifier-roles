@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { checkIntegrity } from "zodiac-roles-sdk"
 import { kv } from "@vercel/kv"
 import { createHash } from "crypto"
 import { z } from "zod"
@@ -18,6 +19,14 @@ export async function POST(req: Request) {
   } catch (e) {
     return NextResponse.json({
       error: "Json is invalid",
+    })
+  }
+
+  try {
+    checkIntegrity(validated.targets)
+  } catch (e) {
+    return NextResponse.json({
+      error: "Targets integrity check failed",
     })
   }
 

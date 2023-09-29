@@ -16,7 +16,7 @@ export default function AttachMod() {
   const [chainId, setChainId] = useState<ChainId>(DEFAULT_CHAIN.id)
   const [address, setAddress] = useState("")
   return (
-    <Layout>
+    <Layout noScroll>
       <main className={styles.main}>
         <Flex gap={0} justifyContent="center" alignItems="center">
           <Box bg p={3}>
