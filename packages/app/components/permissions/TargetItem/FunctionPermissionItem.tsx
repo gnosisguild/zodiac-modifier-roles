@@ -5,13 +5,14 @@ import { ethers } from "ethers"
 import { FunctionFragment, Interface } from "ethers/lib/utils"
 import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
-import Box from "@/ui/Box"
 import ConditionView from "../ConditionView"
 import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
+import { DiffFlag } from "../types"
+import DiffBox from "../DiffBox"
 
 const FunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { chainId: ChainId }
+  FunctionPermissionCoerced & { diff?: DiffFlag; chainId: ChainId }
 > = async ({ chainId, targetAddress, selector, ...rest }) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
   let functionAbi: FunctionFragment | undefined = undefined
@@ -43,14 +44,11 @@ const FunctionPermissionItem: React.FC<
 
 export default FunctionPermissionItem
 
-const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
-  selector,
-  condition,
-  delegatecall,
-  send,
-}) => {
+const RawFunctionPermissionItem: React.FC<
+  FunctionPermissionCoerced & { diff?: DiffFlag }
+> = async ({ selector, condition, delegatecall, send, diff }) => {
   return (
-    <Box p={3}>
+    <DiffBox diff={diff}>
       <Flex direction="column" gap={3}>
         <div>
           <code>{selector}</code>
@@ -62,20 +60,20 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
         )}
         <ExecutionOptions delegatecall={delegatecall} send={send} />
       </Flex>
-    </Box>
+    </DiffBox>
   )
 }
 
 const AbiFunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { abi: FunctionFragment }
-> = async ({ condition, delegatecall, send, abi }) => {
+  FunctionPermissionCoerced & { abi: FunctionFragment; diff?: DiffFlag }
+> = async ({ condition, delegatecall, send, abi, diff }) => {
   const signature = abi.format("full")
   const params =
     abi.inputs.length === 0
       ? undefined
       : signature.slice(signature.indexOf("(") + 1, signature.lastIndexOf(")"))
   return (
-    <Box p={3}>
+    <DiffBox diff={diff}>
       <Flex direction="column" gap={3}>
         <div>
           <code className={classes.functionName}>
@@ -98,7 +96,7 @@ const AbiFunctionPermissionItem: React.FC<
         )}
         <ExecutionOptions delegatecall={delegatecall} send={send} />
       </Flex>
-    </Box>
+    </DiffBox>
   )
 }
 

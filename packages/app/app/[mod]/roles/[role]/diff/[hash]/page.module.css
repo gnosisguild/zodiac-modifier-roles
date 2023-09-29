@@ -1,0 +1,17 @@
+.main {
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-1);
+}
+
+.diffIcon {
+  padding: 0 var(--spacing-1) 0;
+  height: 16px;
+}
+
+.hash {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}

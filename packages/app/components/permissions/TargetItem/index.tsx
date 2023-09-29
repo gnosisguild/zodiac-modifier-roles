@@ -9,18 +9,33 @@ import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
 import Box from "@/ui/Box"
 import FunctionPermissionItem from "./FunctionPermissionItem"
+import { DiffFlag } from "../types"
+import { groupDiff } from "../PermissionsDiff/diff"
+import DiffBox from "../DiffBox"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
   permissions: PermissionCoerced[]
   chainId: ChainId
-}> = ({ targetAddress, chainId, permissions }) => {
+  diff?: Map<PermissionCoerced, DiffFlag>
+}> = ({ targetAddress, chainId, permissions, diff }) => {
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
 
+  const targetDiff =
+    diff &&
+    groupDiff(
+      permissions.map((p) => {
+        if (!diff.has(p)) {
+          throw new Error("Missing diff entry")
+        }
+        return diff.get(p)!
+      })
+    )
+
   return (
-    <Box bg p={3}>
+    <DiffBox bg diff={targetDiff}>
       <Flex direction="column" gap={3}>
         <Address
           address={targetAddress}
@@ -31,32 +46,35 @@ const TargetItem: React.FC<{
         />
 
         {wildcardPermission && (
-          <WildcardPermissionItem {...wildcardPermission} />
+          <WildcardPermissionItem
+            {...wildcardPermission}
+            diff={diff?.get(wildcardPermission)}
+          />
         )}
         {!wildcardPermission &&
           (permissions as FunctionPermissionCoerced[]).map((permission) => (
             <FunctionPermissionItem
               key={permission.selector}
               {...permission}
+              diff={diff?.get(permission)}
               chainId={chainId}
             />
           ))}
       </Flex>
-    </Box>
+    </DiffBox>
   )
 }
 export default TargetItem
 
-const WildcardPermissionItem: React.FC<TargetPermission> = ({
-  delegatecall,
-  send,
-}) => {
+const WildcardPermissionItem: React.FC<
+  TargetPermission & { diff?: DiffFlag }
+> = ({ delegatecall, send, diff }) => {
   return (
-    <Box p={3}>
+    <DiffBox diff={diff}>
       <Flex direction="column" gap={3}>
         <div>ALL FUNCTIONS</div>
         <ExecutionOptions delegatecall={delegatecall} send={send} />
       </Flex>
-    </Box>
+    </DiffBox>
   )
 }

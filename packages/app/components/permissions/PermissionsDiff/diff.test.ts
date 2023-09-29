@@ -17,7 +17,7 @@ describe("diff", () => {
 
     it("marks missing permissions as Removed / Hidden", () => {
       const [left, right] = diffPermissions([PERMISSION], [])
-      expect([...left.entries()]).toEqual([[PERMISSION, DiffFlag.Added]])
+      expect([...left.entries()]).toEqual([[PERMISSION, DiffFlag.Removed]])
       expect([...right.entries()]).toEqual([[PERMISSION, DiffFlag.Hidden]])
     })
 
@@ -33,7 +33,9 @@ describe("diff", () => {
   })
 
   describe("diffPresets", () => {
-    it("returns the combined set of all presets and a map of diff flags", () => {})
+    it("returns the combined set of all presets and a map of diff flags", () => {
+      throw new Error("TODO")
+    })
     it("marks new endpoints as Added", () => {})
     it("marks missing endpoints as Removed", () => {})
     it("marks same endpoints with different params as Modified", () => {})

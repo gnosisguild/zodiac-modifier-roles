@@ -5,6 +5,7 @@ import Box from "@/ui/Box"
 import { processAnnotations } from "../annotations"
 import { diffPermissions } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
+import classes from "./style.module.css"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -36,7 +37,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
 
   return (
     <Flex direction="row" gap={1}>
-      <Box p={3}>
+      <Box p={3} className={classes.left}>
         <PresetsAndPermissionsView
           presets={leftPresets}
           // presets={[...presetsDiffLeft.keys()]}
@@ -45,7 +46,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
           chainId={chainId}
         />
       </Box>
-      <Box p={3}>
+      <Box p={3} className={classes.left}>
         <PresetsAndPermissionsView
           presets={rightPresets}
           // presets={[...presetsDiffRight.keys()]}

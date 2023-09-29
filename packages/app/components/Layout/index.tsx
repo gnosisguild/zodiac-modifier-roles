@@ -13,7 +13,7 @@ const Layout: React.FC<{ head?: ReactNode; children: ReactNode }> = ({
     <div className={classes.topBar}>
       <Flex gap={4} justifyContent="space-between" alignItems="center">
         <Box>
-          <Flex gap={1} alignItems="start">
+          <Flex gap={1} alignItems="center">
             <Breadcrumb href="/">
               <div className={classes.appLogo}>Zodiac Roles</div>
             </Breadcrumb>

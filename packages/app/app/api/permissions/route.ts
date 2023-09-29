@@ -2,10 +2,7 @@ import { NextResponse } from "next/server"
 import { kv } from "@vercel/kv"
 import { createHash } from "crypto"
 import { z } from "zod"
-import {
-  zAnnotation,
-  zTarget,
-} from "@/components/permissions/PermissionsList/schema"
+import { zAnnotation, zTarget } from "@/components/permissions/schema"
 
 export async function POST(req: Request) {
   const json = await req.json()

@@ -42,7 +42,7 @@ export const diffPermissions = (
     const ids = leftIds[i]
     const j = rightIds.findIndex((r) => r.target === ids.target)
     if (j === -1) {
-      diffLeft.set(permission, DiffFlag.Added)
+      diffLeft.set(permission, DiffFlag.Removed)
       diffRight.set(permission, DiffFlag.Hidden)
     }
   })
@@ -104,4 +104,22 @@ export const diffPresets = (
 ) => {
   const diffLeft = new Map<PermissionCoerced, DiffFlag>()
   const diffRight = new Map<PermissionCoerced, DiffFlag>()
+}
+
+/** Return the diff status summarizing the statuses of a group of items */
+export const groupDiff = (itemFlags: DiffFlag[]) => {
+  if (itemFlags.every((flag) => flag === DiffFlag.Identical)) {
+    return DiffFlag.Identical
+  }
+  if (itemFlags.every((flag) => flag === DiffFlag.Added)) {
+    return DiffFlag.Added
+  }
+  if (itemFlags.every((flag) => flag === DiffFlag.Removed)) {
+    return DiffFlag.Removed
+  }
+  if (itemFlags.every((flag) => flag === DiffFlag.Hidden)) {
+    return DiffFlag.Hidden
+  }
+
+  return DiffFlag.Modified
 }

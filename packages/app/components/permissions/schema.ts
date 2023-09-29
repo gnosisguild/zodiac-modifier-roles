@@ -10,7 +10,7 @@ import {
 
 const zAddress = z.string().transform((val, ctx) => {
   try {
-    return getAddress(val) as `0x${string}`
+    return getAddress(val).toLowerCase() as `0x${string}`
   } catch (e) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

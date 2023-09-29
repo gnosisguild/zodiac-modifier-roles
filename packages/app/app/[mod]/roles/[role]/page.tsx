@@ -7,8 +7,8 @@ import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
 import MembersList from "@/components/MembersList"
 import PermissionsList from "@/components/permissions/PermissionsList"
-import Layout, { Breadcrumb } from "@/components/Layout"
-import Address from "@/ui/Address"
+import Layout from "@/components/Layout"
+import PageBreadcrumbs from "./breadcrumbs"
 
 export default async function RolePage({
   params,
@@ -35,25 +35,7 @@ export default async function RolePage({
   }
 
   return (
-    <Layout
-      head={
-        <>
-          <Breadcrumb href={`/${decodeURIComponent(params.mod)}`}>
-            <Address address={mod.address} />
-          </Breadcrumb>
-          <Breadcrumb
-            href={`/${decodeURIComponent(params.mod)}/roles/${params.role}`}
-          >
-            <Flex direction="column" gap={0}>
-              {params.role}
-              <Flex gap={0} alignItems="center" className={styles.roleKey}>
-                <small>{roleKey}</small>
-              </Flex>
-            </Flex>
-          </Breadcrumb>
-        </>
-      }
-    >
+    <Layout head={<PageBreadcrumbs mod={params.mod} role={params.role} />}>
       <main className={styles.main}>
         <Flex gap={1} className={styles.container}>
           <Box p={3} className={styles.members}>

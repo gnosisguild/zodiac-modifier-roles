@@ -10,7 +10,7 @@ import { kv } from "@vercel/kv"
 import { CHAINS, ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 
-export default async function RolePage({
+export default async function PermissionPage({
   params: { hash, chain },
 }: {
   params: { hash: string; chain: string }

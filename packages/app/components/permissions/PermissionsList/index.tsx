@@ -47,6 +47,7 @@ export const PresetsAndPermissionsView = ({
   permissions,
   presets,
   chainId,
+  diff,
 }: PresetsAndPermissionsViewProps) => {
   const permissionGroups = groupPermissions(permissions)
 
@@ -62,6 +63,7 @@ export const PresetsAndPermissionsView = ({
           targetAddress={targetAddress}
           permissions={permissions}
           chainId={chainId}
+          diff={diff}
         />
       ))}
     </Flex>
