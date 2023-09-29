@@ -42,12 +42,14 @@ interface PresetsAndPermissionsViewProps {
   presets: Preset[]
   chainId: ChainId
   diff?: Map<PermissionCoerced, DiffFlag>
+  modifiedPairs?: Map<PermissionCoerced, PermissionCoerced>
 }
 export const PresetsAndPermissionsView = ({
   permissions,
   presets,
   chainId,
   diff,
+  modifiedPairs,
 }: PresetsAndPermissionsViewProps) => {
   const permissionGroups = groupPermissions(permissions)
 
@@ -64,6 +66,7 @@ export const PresetsAndPermissionsView = ({
           permissions={permissions}
           chainId={chainId}
           diff={diff}
+          modifiedPairs={modifiedPairs}
         />
       ))}
     </Flex>

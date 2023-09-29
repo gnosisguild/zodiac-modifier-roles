@@ -23,5 +23,7 @@ export const groupPermissions = (permissions: PermissionCoerced[]) => {
 const compareKeys = (a: [`0x${string}`, any], b: [`0x${string}`, any]) =>
   BigInt(a[0]) > BigInt(b[0]) ? 1 : -1
 
-const comparePermissionIds = (a: PermissionCoerced, b: PermissionCoerced) =>
-  permissionId(a) > permissionId(b) ? 1 : -1
+export const comparePermissionIds = (
+  a: PermissionCoerced,
+  b: PermissionCoerced
+) => (permissionId(a) > permissionId(b) ? 1 : -1)

@@ -18,7 +18,8 @@ const TargetItem: React.FC<{
   permissions: PermissionCoerced[]
   chainId: ChainId
   diff?: Map<PermissionCoerced, DiffFlag>
-}> = ({ targetAddress, chainId, permissions, diff }) => {
+  modifiedPairs?: Map<PermissionCoerced, PermissionCoerced>
+}> = ({ targetAddress, chainId, permissions, diff, modifiedPairs }) => {
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
@@ -57,6 +58,9 @@ const TargetItem: React.FC<{
               key={permission.selector}
               {...permission}
               diff={diff?.get(permission)}
+              modified={
+                modifiedPairs?.get(permission) as FunctionPermissionCoerced
+              }
               chainId={chainId}
             />
           ))}

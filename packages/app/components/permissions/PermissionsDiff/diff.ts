@@ -1,34 +1,39 @@
 import { PermissionCoerced, targetId, permissionId } from "zodiac-roles-sdk"
 import { DiffFlag, Preset } from "../types"
+import { comparePermissionIds } from "../groupPermissions"
 
 export const diffPermissions = (
   left: readonly PermissionCoerced[],
   right: readonly PermissionCoerced[]
 ) => {
+  // upfront sorting is required for deterministic Modified / Modified pairings in step 4)
+  const leftSorted = [...left].sort(comparePermissionIds)
+  const rightSorted = [...right].sort(comparePermissionIds)
+
   const diffLeft = new Map<PermissionCoerced, DiffFlag>()
   const diffRight = new Map<PermissionCoerced, DiffFlag>()
 
-  const leftIds = left.map((p) => ({
+  const leftIds = leftSorted.map((p) => ({
     target: targetId(p),
     permission: permissionId(p),
   }))
-  const rightIds = right.map((p) => ({
+  const rightIds = rightSorted.map((p) => ({
     target: targetId(p),
     permission: permissionId(p),
   }))
 
-  // * same permission ID in both lists: Identical / Identical
-  left.forEach((permission, i) => {
+  // 1) same permission ID in both lists: Identical / Identical
+  leftSorted.forEach((permission, i) => {
     const ids = leftIds[i]
     const j = rightIds.findIndex((r) => r.permission === ids.permission)
     if (j >= 0) {
       diffLeft.set(permission, DiffFlag.Identical)
-      diffRight.set(right[j], DiffFlag.Identical)
+      diffRight.set(rightSorted[j], DiffFlag.Identical)
     }
   })
 
-  // * new target ID in right: Hidden / Added
-  right.forEach((permission, i) => {
+  // 2) new target ID in right: Hidden / Added
+  rightSorted.forEach((permission, i) => {
     const ids = rightIds[i]
     const j = leftIds.findIndex((l) => l.target === ids.target)
     if (j === -1) {
@@ -37,8 +42,8 @@ export const diffPermissions = (
     }
   })
 
-  // * missing target ID in right: Removed / Hidden
-  left.forEach((permission, i) => {
+  // 3) missing target ID in right: Removed / Hidden
+  leftSorted.forEach((permission, i) => {
     const ids = leftIds[i]
     const j = rightIds.findIndex((r) => r.target === ids.target)
     if (j === -1) {
@@ -47,14 +52,14 @@ export const diffPermissions = (
     }
   })
 
-  // * same target ID in both, different permission ID:
+  // 4) same target ID in both, different permission ID:
   //    - Modified / Modified until depleted
   //    - Removed / Hidden for remaining left
-  left.forEach((permissionLeft, i) => {
+  leftSorted.forEach((permissionLeft, i) => {
     if (diffLeft.has(permissionLeft)) return
 
     const ids = leftIds[i]
-    const match = right.find(
+    const match = rightSorted.find(
       (permissionRight, j) =>
         !diffRight.has(permissionRight) &&
         rightIds[j].target === ids.target &&
@@ -70,13 +75,13 @@ export const diffPermissions = (
     }
   })
 
-  // * same target ID in both, different permission ID:
+  // *5) same target ID in both, different permission ID:
   //    - Hidden / Added for remaining right
-  right.forEach((permissionRight, i) => {
+  rightSorted.forEach((permissionRight, i) => {
     if (diffRight.has(permissionRight)) return
 
     const ids = rightIds[i]
-    const match = left.find(
+    const match = leftSorted.find(
       (permissionLeft, j) =>
         !diffLeft.has(permissionLeft) &&
         leftIds[j].target === ids.target &&
@@ -96,6 +101,31 @@ export const diffPermissions = (
   })
 
   return [diffLeft, diffRight] as const
+}
+
+/** Given the diffPermissions result as input, returns all modified pairs in a map */
+export const pairModified = (
+  left: Map<PermissionCoerced, DiffFlag>,
+  right: Map<PermissionCoerced, DiffFlag>
+) => {
+  const modifiedLeft = [...left.entries()].filter(
+    ([_, flag]) => flag === DiffFlag.Modified
+  )
+  const modifiedRight = [...right.entries()].filter(
+    ([_, flag]) => flag === DiffFlag.Modified
+  )
+
+  // Due to the deterministic order of items in the maps that diffPermissions guarantees, we can build pairs by index
+  const entries = modifiedLeft.map(
+    ([permission, _], i) => [permission, modifiedRight[i][0]] as const
+  )
+  // We include each pair twice, once for each direction, so the pair lookup can be done in both directions
+  const entriesFlipped = entries.map(([left, right]) => [right, left] as const)
+
+  return new Map<PermissionCoerced, PermissionCoerced>([
+    ...entries,
+    ...entriesFlipped,
+  ])
 }
 
 export const diffPresets = (

@@ -12,8 +12,12 @@ import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
 
 const FunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { diff?: DiffFlag; chainId: ChainId }
-> = async ({ chainId, targetAddress, selector, ...rest }) => {
+  FunctionPermissionCoerced & {
+    diff?: DiffFlag
+    modified?: FunctionPermissionCoerced
+    chainId: ChainId
+  }
+> = async ({ chainId, targetAddress, selector, diff, modified, ...rest }) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
   let functionAbi: FunctionFragment | undefined = undefined
   try {
@@ -22,81 +26,85 @@ const FunctionPermissionItem: React.FC<
     console.error(e)
   }
 
-  if (!functionAbi) {
-    return (
-      <RawFunctionPermissionItem
-        targetAddress={targetAddress}
-        selector={selector}
-        {...rest}
-      />
-    )
-  } else {
-    return (
-      <AbiFunctionPermissionItem
-        targetAddress={targetAddress}
-        selector={selector}
-        abi={functionAbi}
-        {...rest}
-      />
-    )
-  }
-}
-
-export default FunctionPermissionItem
-
-const RawFunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { diff?: DiffFlag }
-> = async ({ selector, condition, delegatecall, send, diff }) => {
   return (
-    <DiffBox diff={diff}>
-      <Flex direction="column" gap={3}>
-        <div>
-          <code>{selector}</code>
-        </div>
-        {condition ? (
-          <ConditionView condition={condition} />
-        ) : (
-          <div>No condition set</div>
-        )}
-        <ExecutionOptions delegatecall={delegatecall} send={send} />
-      </Flex>
+    <DiffBox
+      diff={diff}
+      modified={
+        modified && <FunctionPermissionItem {...modified} chainId={chainId} />
+      }
+    >
+      {functionAbi ? (
+        <AbiFunctionPermissionItem
+          targetAddress={targetAddress}
+          selector={selector}
+          abi={functionAbi}
+          {...rest}
+        />
+      ) : (
+        <RawFunctionPermissionItem
+          targetAddress={targetAddress}
+          selector={selector}
+          {...rest}
+        />
+      )}
     </DiffBox>
   )
 }
 
+export default FunctionPermissionItem
+
+const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
+  selector,
+  condition,
+  delegatecall,
+  send,
+}) => {
+  return (
+    <Flex direction="column" gap={3}>
+      <div>
+        <code>{selector}</code>
+      </div>
+      {condition ? (
+        <ConditionView condition={condition} />
+      ) : (
+        <div>No condition set</div>
+      )}
+      <ExecutionOptions delegatecall={delegatecall} send={send} />
+    </Flex>
+  )
+}
+
 const AbiFunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { abi: FunctionFragment; diff?: DiffFlag }
-> = async ({ condition, delegatecall, send, abi, diff }) => {
+  FunctionPermissionCoerced & { abi: FunctionFragment }
+> = async ({ condition, delegatecall, send, abi }) => {
   const signature = abi.format("full")
   const params =
     abi.inputs.length === 0
       ? undefined
       : signature.slice(signature.indexOf("(") + 1, signature.lastIndexOf(")"))
   return (
-    <DiffBox diff={diff}>
-      <Flex direction="column" gap={3}>
-        <div>
-          <code className={classes.functionName}>
-            <Flex gap={2} alignItems="center" className={classes.signature}>
-              <div>{abi.name}</div>
-              {params && (
-                <>
-                  <div className={classes.params}>(</div>
-                  <div className={classes.params}>{params}</div>
-                  <div className={classes.params}>)</div>
-                </>
-              )}
-            </Flex>
-          </code>
-        </div>
-        {condition ? (
-          <ConditionView condition={condition} abi={abi} />
-        ) : (
-          <div>No condition set</div>
-        )}
-        <ExecutionOptions delegatecall={delegatecall} send={send} />
-      </Flex>
-    </DiffBox>
+    <Flex direction="column" gap={3}>
+      <div>
+        <code className={classes.functionName}>
+          <Flex gap={2} alignItems="center" className={classes.signature}>
+            <div>{abi.name}</div>
+            {params && (
+              <>
+                <div className={classes.params}>(</div>
+                <div className={classes.params}>{params}</div>
+                <div className={classes.params}>)</div>
+              </>
+            )}
+          </Flex>
+        </code>
+      </div>
+      {condition ? (
+        <ConditionView condition={condition} abi={abi} />
+      ) : (
+        <div>No condition set</div>
+      )}
+      <ExecutionOptions delegatecall={delegatecall} send={send} />
+    </Flex>
   )
 }
 

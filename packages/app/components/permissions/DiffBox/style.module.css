@@ -5,21 +5,36 @@
   visibility: hidden;
 }
 
-.identical {
-  opacity: 0.8;
-}
+/* .identical:not(.identical .identical) {
+  opacity: 0.6;
+} */
 
 .added:not(.added .added) {
   background-color: #35774861;
-  border: 2px solid #357748;
+  border: 1px solid #357748;
 }
 
 .removed:not(.removed .removed) {
-  background-color: #ab1d1d61;
-  border: 2px solid #ab1d1d;
+  background-color: #88242461;
+  border: 1px solid #882424;
 }
 
 .modified .modified {
   background-color: #2b477e61;
-  border: 2px solid #2b477e;
+  border: 1px solid #2b477e;
+}
+
+.placeholderContainer {
+  overflow-x: hidden;
+  position: relative;
+}
+.placeholderFlex {
+  width: 200%;
+}
+.placeholderVisible,
+.placeholderHidden {
+  width: 100%;
+}
+.placeholderHidden {
+  visibility: hidden;
 }

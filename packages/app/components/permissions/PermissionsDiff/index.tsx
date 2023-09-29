@@ -3,9 +3,10 @@ import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
 import { processAnnotations } from "../annotations"
-import { diffPermissions } from "./diff"
+import { diffPermissions, pairModified } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
+import { DiffFlag } from "../types"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -30,6 +31,8 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
     leftPermissions,
     rightPermissions
   )
+  const modifiedPairs = pairModified(permissionsDiffLeft, permissionsDiffRight)
+
   // const [presetsDiffLeft, presetsDiffRight] = diffPresets(
   //   leftPresets,
   //   rightPresets
@@ -43,6 +46,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
           // presets={[...presetsDiffLeft.keys()]}
           permissions={[...permissionsDiffLeft.keys()]}
           diff={permissionsDiffLeft}
+          modifiedPairs={modifiedPairs}
           chainId={chainId}
         />
       </Box>
@@ -52,6 +56,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
           // presets={[...presetsDiffRight.keys()]}
           permissions={[...permissionsDiffRight.keys()]}
           diff={permissionsDiffRight}
+          modifiedPairs={modifiedPairs}
           chainId={chainId}
         />
       </Box>
