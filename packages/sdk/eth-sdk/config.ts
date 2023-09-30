@@ -117,7 +117,12 @@ export default defineConfig({
         unstETH: "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
       },
       maker: {
+        cdp_manager: "0x5ef30b9986345249bc32d8928B7ee64DE9435E39",
         dsr_manager: "0x373238337Bfe1146fb49989fc222523f83081dDb",
+        jug: "0x19c0976f590D67707E62397C87829d896Dc0f1F1",
+        vat: "0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B",
+        dai_join: "0x9759A6Ac90977b93B58547b4A71c78317f391A28",
+        gem_join: "0x10CD5fbe1b404B7E19Ef964B63939907bdaf42E2",
         ds_proxy: "0xD758500ddEc05172aaA035911387C8E0e789CF6a", // GnosisDAO DSProxy
       },
       mstable_v2: {
