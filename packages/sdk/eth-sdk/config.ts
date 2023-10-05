@@ -19,9 +19,14 @@ export default defineConfig({
       },
       aave_v3: {
         pool_v3: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+        wrapped_token_gateway_v3: "0xD322A49006FC828F9B5B37Ab215F99B4E5caB19C",
       },
       across_v2: {
         hub_pool_v2: "0xc186fA914353c44b2E33eBE05f21846F1048bEda",
+      },
+      ankr: {
+        ETH2_Staking: "0x84db6ee82b7cf3b47e8f19270abde5718b936670",
+        swap_pool: "0xf047f23ACFdB1315cF63Ad8aB5146d5fDa4267Af",
       },
       aura: {
         booster: "0xA57b8d98dAE62B26Ec3bcC4a365338157060B234",
@@ -78,6 +83,7 @@ export default defineConfig({
       },
       compound_v3: {
         cUSDCv3: "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+        cWETHv3: "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
         MainnetBulker: "0xa397a8C2086C554B531c02E29f3291c9704B00c7",
         CometRewards: "0x1b0e765f6224c21223aea2af16c1c46e38885a40",
       },

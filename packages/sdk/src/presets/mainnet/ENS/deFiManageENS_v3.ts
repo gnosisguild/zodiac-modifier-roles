@@ -23,7 +23,6 @@ import {
   WETH,
   wstETH,
   aave_v3,
-  ankr,
   aura,
   balancer,
   compound_v2,
@@ -188,64 +187,6 @@ const preset = {
     ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Compound V3 - ETH
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // IMPORTANT: the allow function is not present in the abi (reason unknown). The function was added manually to the Comet abis
-    allow.mainnet.compound_v3.cWETHv3["allow"](compound_v3.MainnetBulker),
-
-    // Supply/Repay - Withdraw/Borrow
-    {
-      targetAddress: compound_v3.MainnetBulker,
-      signature: "invoke(bytes32[],bytes[])",
-      params: {
-        [0]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "bytes32"
-        ), // Offset of array bytes32[] from the beginning 40=32*2
-        [1]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"
-        ), // Offset of array bytes[] from the beginning 80=32*4
-        [2]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"
-        ), // Length of array bytes32[] = 1
-        [3]: staticOneOf(
-          [
-            "0x414354494f4e5f535550504c595f4e41544956455f544f4b454e000000000000", // ACTION_SUPPLY_NATIVE_TOKEN
-            "0x414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000", // ACTION_WITHDRAW_NATIVE_TOKEN
-          ],
-          "bytes32"
-        ),
-        [4]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "bytes32"
-        ), // Length of array bytes[] = 1
-        [5]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000020",
-          "bytes32"
-        ), // Offset of the first elements of bytes[] from the beginning of the array
-        [6]: staticEqual(
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "bytes32"
-        ), // Length of the first elements of bytes[] from the beginning of the array 60=32*3
-        // ACTION_SUPPLY_NATIVE_TOKEN abi = (address comet, address to, uint amount)
-        // ACTION_WITHDRAW_NATIVE_TOKEN abi = (address comet, address to, uint amount)
-        [7]: staticEqual(compound_v3.cWETHv3, "address"),
-        [8]: staticEqual(AVATAR),
-      },
-      send: true,
-    },
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Compound V3 - Claiming of rewards
-    //---------------------------------------------------------------------------------------------------------------------------------
-    allow.mainnet.compound_v3.CometRewards["claim"](
-      compound_v3.cWETHv3,
-      AVATAR
-    ),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -270,29 +211,6 @@ const preset = {
 
     // Withdraw
     allow.mainnet.aave_v3.pool_v3["withdraw"](USDC, undefined, AVATAR),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aave V3 - ETH
-    //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve(
-      [aave_v3.aEthWETH],
-      [aave_v3.WRAPPED_TOKEN_GATEWAY_V3]
-    ),
-
-    // Supply
-    allow.mainnet.aave_v3.wrapped_token_gateway_v3["depositETH"](
-      aave_v3.POOL_V3,
-      AVATAR,
-      undefined,
-      { send: true }
-    ),
-
-    // Withdraw
-    allow.mainnet.aave_v3.wrapped_token_gateway_v3["withdrawETH"](
-      aave_v3.POOL_V3,
-      undefined,
-      AVATAR
-    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Stakewise
@@ -1349,25 +1267,6 @@ const preset = {
     // Swap rETH for ETH through SWAP_ROUTER - When there is not enough ETH on the DEPOSIT_POOL in exchange for the
     // rETH you are withdrawing, the SWAP_ROUTER swaps the rETH for ETH in secondary markets (Balancer and Uniswap).
     allow.mainnet.rocket_pool.swap_router["swapFrom"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Ankr
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Flash unstake uses a pool to swap your Liquid Staking tokens for your original assets, which means instant release of your funds
-    // While it offers instant release of your funds, it poses a few limitations:
-    // 1- You have to pay a technical service fee for a flash unstake — 0.5% of the unstaked amount.
-    // 2- Your unstake is limited by the current capacity of the flash-unstake pool. If you exceed it,
-    // the interface switches to the standard unstake with its regular release time.
-    ...allowErc20Approve([ankr.ankrETH], [ankr.SWAP_POOL]),
-    allow.mainnet.ankr.swap_pool["swapEth"](undefined, AVATAR),
-
-    // Standard unstake, it may be split into several parts, but all the parts that constitute the unstaked amount will be released
-    // to your account within the 6 days days period
-    // Stake
-    allow.mainnet.ankr.ETH2_Staking["stakeAndClaimAethC"]({ send: true }),
-
-    // Unstake
-    allow.mainnet.ankr.ETH2_Staking["unstakeAETH"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of tokens COMP, CRV, LDO, WETH, USDC, DAI and USDT in Uniswap
