@@ -7,9 +7,8 @@ import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
-import Box from "@/ui/Box"
 import FunctionPermissionItem from "./FunctionPermissionItem"
-import { DiffFlag } from "../types"
+import { DiffFlag, PermissionsDiff } from "../types"
 import { groupDiff } from "../PermissionsDiff/diff"
 import DiffBox from "../DiffBox"
 
@@ -17,9 +16,8 @@ const TargetItem: React.FC<{
   targetAddress: `0x${string}`
   permissions: PermissionCoerced[]
   chainId: ChainId
-  diff?: Map<PermissionCoerced, DiffFlag>
-  modifiedPairs?: Map<PermissionCoerced, PermissionCoerced>
-}> = ({ targetAddress, chainId, permissions, diff, modifiedPairs }) => {
+  diff?: PermissionsDiff
+}> = ({ targetAddress, chainId, permissions, diff }) => {
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
@@ -29,9 +27,9 @@ const TargetItem: React.FC<{
     groupDiff(
       permissions.map((p) => {
         if (!diff.has(p)) {
-          throw new Error("Missing diff entry")
+          throw new Error("Missing permissions diff entry")
         }
-        return diff.get(p)!
+        return diff.get(p)!.flag
       })
     )
 
@@ -49,7 +47,7 @@ const TargetItem: React.FC<{
         {wildcardPermission && (
           <WildcardPermissionItem
             {...wildcardPermission}
-            diff={diff?.get(wildcardPermission)}
+            diff={diff?.get(wildcardPermission)?.flag}
           />
         )}
         {!wildcardPermission &&
@@ -57,9 +55,11 @@ const TargetItem: React.FC<{
             <FunctionPermissionItem
               key={permission.selector}
               {...permission}
-              diff={diff?.get(permission)}
+              diff={diff?.get(permission)?.flag}
               modified={
-                modifiedPairs?.get(permission) as FunctionPermissionCoerced
+                diff?.get(permission)?.modified as
+                  | FunctionPermissionCoerced
+                  | undefined
               }
               chainId={chainId}
             />

@@ -10,7 +10,7 @@ import PresetItem from "../PresetItem"
 import TargetItem from "../TargetItem"
 import { processAnnotations } from "../annotations"
 import { groupPermissions } from "../groupPermissions"
-import { Preset, DiffFlag } from "../types"
+import { PermissionsDiff, Preset, PresetsDiff } from "../types"
 
 interface Props {
   targets: Target[]
@@ -25,6 +25,8 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
     allPermissions,
     annotations
   )
+
+  console.log(JSON.stringify(presets))
 
   return (
     <PresetsAndPermissionsView
@@ -41,22 +43,25 @@ interface PresetsAndPermissionsViewProps {
   permissions: PermissionCoerced[]
   presets: Preset[]
   chainId: ChainId
-  diff?: Map<PermissionCoerced, DiffFlag>
-  modifiedPairs?: Map<PermissionCoerced, PermissionCoerced>
+  diff?: { permissions: PermissionsDiff; presets: PresetsDiff }
 }
 export const PresetsAndPermissionsView = ({
   permissions,
   presets,
   chainId,
   diff,
-  modifiedPairs,
 }: PresetsAndPermissionsViewProps) => {
   const permissionGroups = groupPermissions(permissions)
 
   return (
     <Flex direction="column" gap={3}>
       {presets.map((preset, i) => (
-        <PresetItem key={`${preset.uri}`} {...preset} chainId={chainId} />
+        <PresetItem
+          key={`${preset.uri}`}
+          preset={preset}
+          chainId={chainId}
+          diff={diff?.presets}
+        />
       ))}
 
       {permissionGroups.map(([targetAddress, permissions]) => (
@@ -65,8 +70,7 @@ export const PresetsAndPermissionsView = ({
           targetAddress={targetAddress}
           permissions={permissions}
           chainId={chainId}
-          diff={diff}
-          modifiedPairs={modifiedPairs}
+          diff={diff?.permissions}
         />
       ))}
     </Flex>

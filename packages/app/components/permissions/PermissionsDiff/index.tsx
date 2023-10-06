@@ -3,10 +3,9 @@ import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
 import { processAnnotations } from "../annotations"
-import { diffPermissions, pairModified } from "./diff"
+import { diffPermissions, diffPresets } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
-import { DiffFlag } from "../types"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -31,32 +30,33 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
     leftPermissions,
     rightPermissions
   )
-  const modifiedPairs = pairModified(permissionsDiffLeft, permissionsDiffRight)
 
-  // const [presetsDiffLeft, presetsDiffRight] = diffPresets(
-  //   leftPresets,
-  //   rightPresets
-  // )
+  const [presetsDiffLeft, presetsDiffRight] = diffPresets(
+    leftPresets,
+    rightPresets
+  )
 
   return (
     <Flex direction="row" gap={1}>
       <Box p={3} className={classes.left}>
         <PresetsAndPermissionsView
-          presets={leftPresets}
-          // presets={[...presetsDiffLeft.keys()]}
+          presets={[...presetsDiffLeft.keys()]}
           permissions={[...permissionsDiffLeft.keys()]}
-          diff={permissionsDiffLeft}
-          modifiedPairs={modifiedPairs}
+          diff={{
+            permissions: permissionsDiffLeft,
+            presets: presetsDiffLeft,
+          }}
           chainId={chainId}
         />
       </Box>
       <Box p={3} className={classes.left}>
         <PresetsAndPermissionsView
-          presets={rightPresets}
-          // presets={[...presetsDiffRight.keys()]}
+          presets={[...presetsDiffRight.keys()]}
           permissions={[...permissionsDiffRight.keys()]}
-          diff={permissionsDiffRight}
-          modifiedPairs={modifiedPairs}
+          diff={{
+            permissions: permissionsDiffRight,
+            presets: presetsDiffRight,
+          }}
           chainId={chainId}
         />
       </Box>

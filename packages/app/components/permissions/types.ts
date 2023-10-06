@@ -28,3 +28,13 @@ export enum DiffFlag {
   Identical = "Identical",
   Hidden = "Hidden",
 }
+
+export type PermissionsDiff = Map<
+  PermissionCoerced,
+  { flag: DiffFlag; modified?: PermissionCoerced }
+>
+
+export type PresetsDiff = Map<
+  Preset,
+  { flag: DiffFlag; modified?: Preset; permissions?: PermissionsDiff }
+>

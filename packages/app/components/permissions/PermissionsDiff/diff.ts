@@ -1,5 +1,10 @@
-import { PermissionCoerced, targetId, permissionId } from "zodiac-roles-sdk"
-import { DiffFlag, Preset } from "../types"
+import {
+  PermissionCoerced,
+  targetId,
+  permissionId,
+  conditionId,
+} from "zodiac-roles-sdk"
+import { DiffFlag, PermissionsDiff, Preset } from "../types"
 import { comparePermissionIds } from "../groupPermissions"
 
 export const diffPermissions = (
@@ -10,8 +15,14 @@ export const diffPermissions = (
   const leftSorted = [...left].sort(comparePermissionIds)
   const rightSorted = [...right].sort(comparePermissionIds)
 
-  const diffLeft = new Map<PermissionCoerced, DiffFlag>()
-  const diffRight = new Map<PermissionCoerced, DiffFlag>()
+  const diffLeft = new Map<
+    PermissionCoerced,
+    { flag: DiffFlag; modified?: PermissionCoerced }
+  >()
+  const diffRight = new Map<
+    PermissionCoerced,
+    { flag: DiffFlag; modified?: PermissionCoerced }
+  >()
 
   const leftIds = leftSorted.map((p) => ({
     target: targetId(p),
@@ -27,8 +38,8 @@ export const diffPermissions = (
     const ids = leftIds[i]
     const j = rightIds.findIndex((r) => r.permission === ids.permission)
     if (j >= 0) {
-      diffLeft.set(permission, DiffFlag.Identical)
-      diffRight.set(rightSorted[j], DiffFlag.Identical)
+      diffLeft.set(permission, { flag: DiffFlag.Identical })
+      diffRight.set(rightSorted[j], { flag: DiffFlag.Identical })
     }
   })
 
@@ -37,8 +48,8 @@ export const diffPermissions = (
     const ids = rightIds[i]
     const j = leftIds.findIndex((l) => l.target === ids.target)
     if (j === -1) {
-      diffLeft.set(permission, DiffFlag.Hidden)
-      diffRight.set(permission, DiffFlag.Added)
+      diffLeft.set(permission, { flag: DiffFlag.Hidden })
+      diffRight.set(permission, { flag: DiffFlag.Added })
     }
   })
 
@@ -47,8 +58,8 @@ export const diffPermissions = (
     const ids = leftIds[i]
     const j = rightIds.findIndex((r) => r.target === ids.target)
     if (j === -1) {
-      diffLeft.set(permission, DiffFlag.Removed)
-      diffRight.set(permission, DiffFlag.Hidden)
+      diffLeft.set(permission, { flag: DiffFlag.Removed })
+      diffRight.set(permission, { flag: DiffFlag.Hidden })
     }
   })
 
@@ -67,15 +78,18 @@ export const diffPermissions = (
     )
 
     if (match) {
-      diffLeft.set(permissionLeft, DiffFlag.Modified)
-      diffRight.set(match, DiffFlag.Modified)
+      diffLeft.set(permissionLeft, { flag: DiffFlag.Modified, modified: match })
+      diffRight.set(match, {
+        flag: DiffFlag.Modified,
+        modified: permissionLeft,
+      })
     } else {
-      diffLeft.set(permissionLeft, DiffFlag.Removed)
-      diffRight.set(permissionLeft, DiffFlag.Hidden)
+      diffLeft.set(permissionLeft, { flag: DiffFlag.Removed })
+      diffRight.set(permissionLeft, { flag: DiffFlag.Hidden })
     }
   })
 
-  // *5) same target ID in both, different permission ID:
+  // 5) same target ID in both, different permission ID:
   //    - Hidden / Added for remaining right
   rightSorted.forEach((permissionRight, i) => {
     if (diffRight.has(permissionRight)) return
@@ -95,45 +109,131 @@ export const diffPermissions = (
         )})`
       )
     } else {
-      diffLeft.set(permissionRight, DiffFlag.Hidden)
-      diffRight.set(permissionRight, DiffFlag.Added)
+      diffLeft.set(permissionRight, { flag: DiffFlag.Hidden })
+      diffRight.set(permissionRight, { flag: DiffFlag.Added })
     }
   })
 
   return [diffLeft, diffRight] as const
 }
 
-/** Given the diffPermissions result as input, returns all modified pairs in a map */
-export const pairModified = (
-  left: Map<PermissionCoerced, DiffFlag>,
-  right: Map<PermissionCoerced, DiffFlag>
-) => {
-  const modifiedLeft = [...left.entries()].filter(
-    ([_, flag]) => flag === DiffFlag.Modified
-  )
-  const modifiedRight = [...right.entries()].filter(
-    ([_, flag]) => flag === DiffFlag.Modified
-  )
-
-  // Due to the deterministic order of items in the maps that diffPermissions guarantees, we can build pairs by index
-  const entries = modifiedLeft.map(
-    ([permission, _], i) => [permission, modifiedRight[i][0]] as const
-  )
-  // We include each pair twice, once for each direction, so the pair lookup can be done in both directions
-  const entriesFlipped = entries.map(([left, right]) => [right, left] as const)
-
-  return new Map<PermissionCoerced, PermissionCoerced>([
-    ...entries,
-    ...entriesFlipped,
-  ])
-}
-
 export const diffPresets = (
   left: readonly Preset[],
   right: readonly Preset[]
 ) => {
-  const diffLeft = new Map<PermissionCoerced, DiffFlag>()
-  const diffRight = new Map<PermissionCoerced, DiffFlag>()
+  // upfront sorting is required for deterministic Modified / Modified pairings in steps 1+2
+  const leftSorted = [...left].sort(comparePresetUris)
+  const rightSorted = [...right].sort(comparePresetUris)
+
+  const diffLeft = new Map<
+    Preset,
+    { flag: DiffFlag; modified?: Preset; permissions?: PermissionsDiff }
+  >()
+  const diffRight = new Map<
+    Preset,
+    { flag: DiffFlag; modified?: Preset; permissions?: PermissionsDiff }
+  >()
+
+  // 1) same uri in both lists: Identical / Identical or Modified / Modified if permissions changed
+  leftSorted.forEach((l) => {
+    const r = rightSorted.find((r) => r.uri === l.uri)
+    if (r) {
+      const [permissionsLeft, permissionsRight] = diffPermissions(
+        l.permissions,
+        r.permissions
+      )
+      const somePermissionsChanged =
+        groupDiff([...permissionsLeft.values()].map((v) => v.flag)) !==
+        DiffFlag.Identical
+
+      if (somePermissionsChanged) {
+        diffLeft.set(l, {
+          flag: DiffFlag.Modified,
+          modified: r,
+          permissions: permissionsLeft,
+        })
+        diffRight.set(r, {
+          flag: DiffFlag.Modified,
+          modified: l,
+          permissions: permissionsRight,
+        })
+      } else {
+        diffLeft.set(l, { flag: DiffFlag.Identical })
+        diffRight.set(r, { flag: DiffFlag.Identical })
+      }
+    }
+  })
+
+  // 2) new path key in right: Hidden / Added
+  rightSorted.forEach((r) => {
+    if (!leftSorted.some((l) => l.pathKey === r.pathKey)) {
+      diffLeft.set(r, { flag: DiffFlag.Hidden })
+      diffRight.set(r, { flag: DiffFlag.Added })
+    }
+  })
+
+  // 3) missing path key in right: Removed / Hidden
+  leftSorted.forEach((l) => {
+    if (!rightSorted.some((r) => r.pathKey === l.pathKey)) {
+      diffLeft.set(l, { flag: DiffFlag.Removed })
+      diffRight.set(l, { flag: DiffFlag.Hidden })
+    }
+  })
+
+  // 4) same path key in both, different uri
+  //    - Modified / Modified until depleted
+  //    - Removed / Hidden for remaining left
+  leftSorted.forEach((l) => {
+    if (diffLeft.has(l)) return
+
+    const r = rightSorted.find(
+      (r) => !diffRight.has(r) && r.pathKey === l.pathKey && r.uri !== l.uri
+    )
+
+    if (r) {
+      const [permissionsLeft, permissionsRight] = diffPermissions(
+        l.permissions,
+        r.permissions
+      )
+
+      diffLeft.set(l, {
+        flag: DiffFlag.Modified,
+        modified: r,
+        permissions: permissionsLeft,
+      })
+      diffRight.set(r, {
+        flag: DiffFlag.Modified,
+        modified: l,
+        permissions: permissionsRight,
+      })
+    } else {
+      diffLeft.set(l, { flag: DiffFlag.Removed })
+      diffRight.set(l, { flag: DiffFlag.Hidden })
+    }
+  })
+
+  // 5) same path key in both, different uri:
+  //    - Hidden / Added for remaining right
+  rightSorted.forEach((r) => {
+    if (diffRight.has(r)) return
+
+    const l = leftSorted.find(
+      (l) => !diffLeft.has(l) && l.pathKey === r.pathKey && l.uri !== r.uri
+    )
+
+    if (l) {
+      throw new Error(
+        `invariant violation: match should have been added to diff already in the step before (match: ${JSON.stringify(
+          l
+        )})`
+      )
+    } else {
+      diffLeft.set(r, { flag: DiffFlag.Hidden })
+      diffRight.set(r, { flag: DiffFlag.Added })
+    }
+  })
+
+  return [diffLeft, diffRight] as const
 }
 
 /** Return the diff status summarizing the statuses of a group of items */
@@ -153,3 +253,5 @@ export const groupDiff = (itemFlags: DiffFlag[]) => {
 
   return DiffFlag.Modified
 }
+
+const comparePresetUris = (a: Preset, b: Preset) => (a.uri > b.uri ? 1 : -1)

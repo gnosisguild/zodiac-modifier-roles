@@ -4,11 +4,13 @@ import TargetItem from "../TargetItem"
 import classes from "./style.module.css"
 import { ChainId } from "@/app/chains"
 import ExpandableBox from "@/ui/ExpandableBox"
+import { PermissionsDiff } from "../types"
 
 const IndividualPermissions: React.FC<{
   permissions: PermissionCoerced[]
   chainId: ChainId
-}> = ({ permissions, chainId }) => {
+  diff?: PermissionsDiff
+}> = ({ permissions, chainId, diff }) => {
   const permissionGroups = groupPermissions(permissions)
   return (
     <ExpandableBox
@@ -24,6 +26,7 @@ const IndividualPermissions: React.FC<{
           targetAddress={targetAddress}
           permissions={permissions}
           chainId={chainId}
+          diff={diff}
         />
       ))}
     </ExpandableBox>
