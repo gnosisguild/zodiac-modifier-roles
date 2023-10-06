@@ -1,10 +1,30 @@
 import { allow } from "../../allow"
 import {
-  ZERO_ADDRESS, E_ADDRESS, AAVE, AURA, auraBAL, BAL, COW, CRV,
-  CVX, DAI, WETH, GNO, LDO, rETH, rETH2, sETH2, stETH, SWISE, USDC, WBTC, wstETH,
+  ZERO_ADDRESS,
+  E_ADDRESS,
+  AAVE,
+  AURA,
+  auraBAL,
+  BAL,
+  COW,
+  CRV,
+  CVX,
+  DAI,
+  WETH,
+  GNO,
+  LDO,
+  rETH,
+  rETH2,
+  sETH2,
+  stETH,
+  SWISE,
+  USDC,
+  WBTC,
+  wstETH,
   OMNI_BRIDGE,
   aave_v2,
   aave_v3,
+  ankr,
   aura,
   balancer,
   compound_v2,
@@ -16,54 +36,38 @@ import {
   uniswapv3,
   votium,
 } from "../addresses"
-import {
-  curve as curve_gc
-} from "../../gnosisChain/addresses"
+import { curve as curve_gc } from "../../gnosisChain/addresses"
 import { allowErc20Approve } from "../../helpers/erc20"
-import {
-  staticEqual,
-  staticOneOf,
-} from "../../helpers/utils"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
 import { RolePreset } from "../../types"
-
 
 const preset = {
   network: 1,
   allow: [
-
     //---------------------------------------------------------------------------------------------------------------------------------
     // LIDO
     //---------------------------------------------------------------------------------------------------------------------------------
 
     ...allowErc20Approve([stETH], [wstETH]),
 
-    allow.mainnet.lido.stETH["submit"](
-      ZERO_ADDRESS,
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.lido.stETH["submit"](ZERO_ADDRESS, {
+      send: true,
+    }),
 
     allow.mainnet.lido.wstETH["wrap"](),
 
     allow.mainnet.lido.wstETH["unwrap"](),
 
-    // Request stETH Withdrawal - Locks your stETH in the queue. In exchange you receive an NFT, that represents your position 
+    // Request stETH Withdrawal - Locks your stETH in the queue. In exchange you receive an NFT, that represents your position
     // in the queue
-    allow.mainnet.lido.unstETH["requestWithdrawals"](
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.lido.unstETH["requestWithdrawals"](undefined, AVATAR),
 
     // Request wstETH Withdrawal - Transfers the wstETH to the unstETH to be burned in exchange for stETH. Then it locks your stETH
     // in the queue. In exchange you receive an NFT, that represents your position in the queue
-    allow.mainnet.lido.unstETH["requestWithdrawalsWstETH"](
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.lido.unstETH["requestWithdrawalsWstETH"](undefined, AVATAR),
 
-    // Claim ETH - Once the request is finalized by the oracle report and becomes claimable, 
+    // Claim ETH - Once the request is finalized by the oracle report and becomes claimable,
     // this function claims your ether and burns the NFT
     allow.mainnet.lido.unstETH["claimWithdrawals"](),
 
@@ -77,8 +81,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_stETH_STABLE], [aura.BOOSTER]),
     ...allowErc20Approve([wstETH, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      115), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](115), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -132,10 +135,12 @@ const preset = {
     // Aura B-80BAL-20WETH/auraBAL
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([balancer.B_auraBAL_STABLE], [aura.BOOSTER]),
-    ...allowErc20Approve([balancer.B_80BAL_20WETH, auraBAL], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
+    ...allowErc20Approve(
+      [balancer.B_80BAL_20WETH, auraBAL],
+      [aura.REWARD_POOL_DEPOSIT_WRAPPER]
+    ),
 
-    allow.mainnet.aura.booster["deposit"](
-      101), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](101), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -191,8 +196,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_rETH_STABLE], [aura.BOOSTER]),
     ...allowErc20Approve([rETH, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      109), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](109), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -248,8 +252,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_80GNO_20WETH], [aura.BOOSTER]),
     ...allowErc20Approve([GNO, WETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      116), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](116), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -305,8 +308,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_50COW_50GNO], [aura.BOOSTER]),
     ...allowErc20Approve([GNO, COW], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      104), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](104), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -362,8 +364,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_50WSTETH_50LDO], [aura.BOOSTER]),
     ...allowErc20Approve([LDO, wstETH], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      68), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](68), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -419,9 +420,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_50WETH_50AURA], [aura.BOOSTER]),
     ...allowErc20Approve([WETH, AURA], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      100
-    ), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](100), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -477,8 +476,7 @@ const preset = {
     ...allowErc20Approve([balancer.B_50COW_50WETH], [aura.BOOSTER]),
     ...allowErc20Approve([WETH, COW], [aura.REWARD_POOL_DEPOSIT_WRAPPER]),
 
-    allow.mainnet.aura.booster["deposit"](
-      105), // Aura poolId
+    allow.mainnet.aura.booster["deposit"](105), // Aura poolId
 
     {
       targetAddress: aura.REWARD_POOL_DEPOSIT_WRAPPER,
@@ -540,18 +538,19 @@ const preset = {
     allow.mainnet.aura.auraBAL_staking_rewarder["withdraw"](),
 
     // Using 80BAL-20WETH
-    ...allowErc20Approve([balancer.B_80BAL_20WETH], [aura.auraBAL_B_80BAL_20WETH_DEPOSITOR]),
-
-    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
-      undefined,
-      undefined,
-      {
-        oneOf: [
-          ZERO_ADDRESS, // When Minting ONLY
-          aura.auraBAL_STAKING_REWARDER // When Minting + Staking
-        ]
-      }
+    ...allowErc20Approve(
+      [balancer.B_80BAL_20WETH],
+      [aura.auraBAL_B_80BAL_20WETH_DEPOSITOR]
     ),
+
+    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor[
+      "deposit(uint256,bool,address)"
+    ](undefined, undefined, {
+      oneOf: [
+        ZERO_ADDRESS, // When Minting ONLY
+        aura.auraBAL_STAKING_REWARDER, // When Minting + Staking
+      ],
+    }),
 
     // Using BAL
     ...allowErc20Approve([BAL], [aura.auraBAL_BAL_DEPOSITOR]),
@@ -563,8 +562,8 @@ const preset = {
       {
         oneOf: [
           ZERO_ADDRESS, // When Minting ONLY
-          aura.auraBAL_STAKING_REWARDER // When Minting + Staking
-        ]
+          aura.auraBAL_STAKING_REWARDER, // When Minting + Staking
+        ],
       }
     ),
 
@@ -579,36 +578,23 @@ const preset = {
     ...allowErc20Approve([auraBAL], [aura.stkauraBAL]),
 
     // Stake
-    allow.mainnet.aura.stkauraBAL["deposit"](
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.aura.stkauraBAL["deposit"](undefined, AVATAR),
 
     // Unstake
-    allow.mainnet.aura.stkauraBAL["withdraw"](
-      undefined,
-      AVATAR,
-      AVATAR
-    ),
+    allow.mainnet.aura.stkauraBAL["withdraw"](undefined, AVATAR, AVATAR),
 
     // When the MAX amount is unstaked
-    allow.mainnet.aura.stkauraBAL["redeem"](
-      undefined,
-      AVATAR,
-      AVATAR
-    ),
+    allow.mainnet.aura.stkauraBAL["redeem"](undefined, AVATAR, AVATAR),
 
     // Mint auraBAL and Stake
-    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor["deposit(uint256,bool,address)"](
-      undefined,
-      undefined,
-      {
-        oneOf: [
-          ZERO_ADDRESS, // When Minting ONLY
-          aura.auraBAL_STAKER // When Minting + Staking
-        ]
-      }
-    ),
+    allow.mainnet.aura.auraBAL_B_80BAL_20WETH_depositor[
+      "deposit(uint256,bool,address)"
+    ](undefined, undefined, {
+      oneOf: [
+        ZERO_ADDRESS, // When Minting ONLY
+        aura.auraBAL_STAKER, // When Minting + Staking
+      ],
+    }),
 
     // Mint auraBAL and Stake
     allow.mainnet.aura.auraBAL_BAL_depositor["deposit"](
@@ -618,8 +604,8 @@ const preset = {
       {
         oneOf: [
           ZERO_ADDRESS, // When Minting ONLY
-          aura.auraBAL_STAKER // When Minting + Staking
-        ]
+          aura.auraBAL_STAKER, // When Minting + Staking
+        ],
       }
     ),
 
@@ -632,14 +618,10 @@ const preset = {
     ...allowErc20Approve([AURA], [aura.AURA_LOCKER]),
 
     // Locking AURA
-    allow.mainnet.aura.aura_locker["lock"](
-      AVATAR
-    ),
+    allow.mainnet.aura.aura_locker["lock"](AVATAR),
 
     // Claiming Locking AURA Rewards
-    allow.mainnet.aura.aura_locker["getReward(address)"](
-      AVATAR
-    ),
+    allow.mainnet.aura.aura_locker["getReward(address)"](AVATAR),
 
     // Process Expired AURA Locks - True -> Relock Expired Locks / False -> Withdraw Expired Locks
     allow.mainnet.aura.aura_locker["processExpiredLocks"](),
@@ -663,7 +645,10 @@ const preset = {
     // Balancer wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([wstETH, WETH], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_stETH_STABLE], [balancer.B_stETH_STABLE_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_stETH_STABLE],
+      [balancer.B_stETH_STABLE_GAUGE]
+    ),
 
     // Add Liquidity (using WETH)
     {
@@ -679,16 +664,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -700,20 +689,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -734,16 +725,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -754,18 +749,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -781,15 +778,16 @@ const preset = {
     allow.mainnet.balancer.B_stETH_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_stETH_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_stETH_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer B-80BAL-20WETH/auraBAL pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([balancer.B_80BAL_20WETH, auraBAL], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_auraBAL_STABLE], [balancer.B_auraBAL_STABLE_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_auraBAL_STABLE],
+      [balancer.B_auraBAL_STABLE_GAUGE]
+    ),
 
     // Add Liquidity
     {
@@ -805,16 +803,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -825,20 +827,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -858,16 +862,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -878,18 +886,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -905,15 +915,16 @@ const preset = {
     allow.mainnet.balancer.B_auraBAL_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_auraBAL_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_auraBAL_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer rETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([rETH, WETH], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_rETH_STABLE], [balancer.B_rETH_STABLE_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_rETH_STABLE],
+      [balancer.B_rETH_STABLE_GAUGE]
+    ),
 
     // Add Liquidity (using WETH)
     {
@@ -929,16 +940,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -950,20 +965,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -984,16 +1001,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1004,18 +1025,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1031,15 +1054,16 @@ const preset = {
     allow.mainnet.balancer.B_rETH_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_rETH_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_rETH_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer GNO/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([GNO, WETH], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_80GNO_20WETH], [balancer.B_80GNO_20WETH_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_80GNO_20WETH],
+      [balancer.B_80GNO_20WETH_GAUGE]
+    ),
 
     // Add Liquidity (using WETH)
     {
@@ -1055,16 +1079,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1076,20 +1104,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1110,16 +1140,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1130,18 +1164,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1157,15 +1193,16 @@ const preset = {
     allow.mainnet.balancer.B_80GNO_20WETH_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_80GNO_20WETH_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_80GNO_20WETH_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer GNO/COW pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([GNO, COW], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_50COW_50GNO], [balancer.B_50COW_50GNO_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_50COW_50GNO],
+      [balancer.B_50COW_50GNO_GAUGE]
+    ),
 
     // Add Liquidity
     {
@@ -1181,16 +1218,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1201,20 +1242,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1234,16 +1277,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1254,18 +1301,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1281,15 +1330,16 @@ const preset = {
     allow.mainnet.balancer.B_50COW_50GNO_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50COW_50GNO_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50COW_50GNO_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer LDO/wstETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([LDO, wstETH], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_50WSTETH_50LDO], [balancer.B_50WSTETH_50LDO_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_50WSTETH_50LDO],
+      [balancer.B_50WSTETH_50LDO_GAUGE]
+    ),
 
     // Add Liquidity
     {
@@ -1305,16 +1355,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1325,20 +1379,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1358,16 +1414,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1378,18 +1438,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1405,15 +1467,16 @@ const preset = {
     allow.mainnet.balancer.B_50WSTETH_50LDO_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50WSTETH_50LDO_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50WSTETH_50LDO_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer WETH/AURA pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([WETH, AURA], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_50WETH_50AURA], [balancer.B_50WETH_50AURA_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_50WETH_50AURA],
+      [balancer.B_50WETH_50AURA_GAUGE]
+    ),
 
     // Add Liquidity (using WETH)
     {
@@ -1429,16 +1492,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1450,20 +1517,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1484,16 +1553,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1504,18 +1577,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1531,15 +1606,16 @@ const preset = {
     allow.mainnet.balancer.B_50WETH_50AURA_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50WETH_50AURA_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50WETH_50AURA_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer WETH/COW pool
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([WETH, COW], [balancer.VAULT]),
-    ...allowErc20Approve([balancer.B_50COW_50WETH], [balancer.B_50COW_50WETH_GAUGE]),
+    ...allowErc20Approve(
+      [balancer.B_50COW_50WETH],
+      [balancer.B_50COW_50WETH_GAUGE]
+    ),
 
     // Add Liquidity (using WETH)
     {
@@ -1555,16 +1631,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1576,20 +1656,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1610,16 +1692,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1630,18 +1716,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1657,9 +1745,7 @@ const preset = {
     allow.mainnet.balancer.B_50COW_50WETH_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50COW_50WETH_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50COW_50WETH_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer BAL/WETH pool
@@ -1680,16 +1766,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1701,20 +1791,22 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x00000000000000000000000000000000000000000000000000000000000000a0",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040"
-        ],
+        [14]: staticOneOf(
+          [
+            "0x00000000000000000000000000000000000000000000000000000000000000a0",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x0000000000000000000000000000000000000000000000000000000000000003"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1735,16 +1827,20 @@ const preset = {
         [2]: staticEqual(AVATAR),
         [3]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of tuple from beginning 128=32*4
+          "bytes32"
+        ), // Offset of tuple from beginning 128=32*4
         [4]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000080",
-          "bytes32"), // Offset of address[] from beginning of tuple 128=32*4
+          "bytes32"
+        ), // Offset of address[] from beginning of tuple 128=32*4
         [5]: staticEqual(
           "0x00000000000000000000000000000000000000000000000000000000000000e0",
-          "bytes32"), // Offset of uint256[] from beginning of tuple 224=32*7
+          "bytes32"
+        ), // Offset of uint256[] from beginning of tuple 224=32*7
         [6]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000140",
-          "bytes32"), // Offset of bytes from beginning of tuple 320=32*10
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 320=32*10
         [8]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
@@ -1755,18 +1851,20 @@ const preset = {
           "0x0000000000000000000000000000000000000000000000000000000000000002",
           "bytes32"
         ), // Length of unit256[] = 2
-        [14]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000060",
-          "0x0000000000000000000000000000000000000000000000000000000000000040",
-          "0x00000000000000000000000000000000000000000000000000000000000000c0",
-        ],
+        [14]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000060",
+            "0x0000000000000000000000000000000000000000000000000000000000000040",
+            "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          ],
           "bytes32"
         ), // Length of bytes
-        [15]: staticOneOf([
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x0000000000000000000000000000000000000000000000000000000000000001",
-          "0x0000000000000000000000000000000000000000000000000000000000000002"
-        ],
+        [15]: staticOneOf(
+          [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+          ],
           "bytes32"
         ), // Join Kind
       },
@@ -1785,14 +1883,10 @@ const preset = {
     allow.mainnet.balancer.veBAL["withdraw"](),
 
     // Claim locking rewards (single token)
-    allow.mainnet.balancer.fee_distributor["claimToken"](
-      AVATAR
-    ),
+    allow.mainnet.balancer.fee_distributor["claimToken"](AVATAR),
 
     // Claim locking rewards (multiple tokens)
-    allow.mainnet.balancer.fee_distributor["claimTokens"](
-      AVATAR
-    ),
+    allow.mainnet.balancer.fee_distributor["claimTokens"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // CONVEX
@@ -1827,9 +1921,7 @@ const preset = {
     allow.mainnet.convex.cvxsteCRV_rewarder["withdrawAndUnwrap"](),
 
     // Claim Rewards
-    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - cDAI/cUSDC
@@ -1840,19 +1932,19 @@ const preset = {
     // Deposit
     allow.mainnet.convex.booster["depositAll"](
       {
-        oneOf: [0]
+        oneOf: [0],
       } // poolId (If you don't specify a poolId you can deposit funds in any pool)
     ),
     allow.mainnet.convex.booster["deposit"](
       {
-        oneOf: [0]
+        oneOf: [0],
       } // poolId (If you don't specify a poolId you can deposit funds in any pool)
     ),
 
     // Withdraw
     allow.mainnet.convex.booster["withdraw"](
       {
-        oneOf: [0]
+        oneOf: [0],
       } // poolId (If you don't specify a poolId you can withdraw funds in any pool)
     ),
 
@@ -1880,10 +1972,7 @@ const preset = {
     allow.mainnet.convex.crv_depositor["deposit(uint256,bool)"](),
 
     // Stake cvxCRV
-    allow.mainnet.convex.stkCvxCrv["stake"](
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.convex.stkCvxCrv["stake"](undefined, AVATAR),
 
     // Convert CRV to cvxCRV and Stake cvxCRV
     allow.mainnet.convex.crv_depositor["deposit(uint256,bool,address)"](
@@ -1899,9 +1988,7 @@ const preset = {
     allow.mainnet.convex.stkCvxCrv["setRewardWeight"](),
 
     // Claim Rewards
-    allow.mainnet.convex.stkCvxCrv["getReward(address)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.stkCvxCrv["getReward(address)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - Stake CVX
@@ -1923,17 +2010,13 @@ const preset = {
     ...allowErc20Approve([CVX], [convex.vlCVX]),
 
     // Lock CVX
-    allow.mainnet.convex.vlCVX["lock"](
-      AVATAR
-    ),
+    allow.mainnet.convex.vlCVX["lock"](AVATAR),
 
     // Process Expired Locks (Withdraw = False or Relock = True)
     allow.mainnet.convex.vlCVX["processExpiredLocks"](),
 
     // Claim Rewards
-    allow.mainnet.convex.vlCVX["getReward(address,bool)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.vlCVX["getReward(address,bool)"](AVATAR),
 
     // // Clear Delegate
     // allow.mainnet.convex.snapshot_delegation["clearDelegate"](),
@@ -1961,13 +2044,9 @@ const preset = {
     ...allowErc20Approve([stETH], [curve.STAKE_DEPOSIT_ZAP]),
 
     // Add Liquidity
-    allow.mainnet.curve.steth_eth_pool["add_liquidity"](
-      undefined,
-      undefined,
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.curve.steth_eth_pool["add_liquidity"](undefined, undefined, {
+      send: true,
+    }),
 
     // Remove Liquidity
     allow.mainnet.curve.steth_eth_pool["remove_liquidity"](),
@@ -1985,7 +2064,7 @@ const preset = {
       undefined,
       undefined,
       {
-        send: true
+        send: true,
       }
     ),
 
@@ -1999,9 +2078,7 @@ const preset = {
     allow.mainnet.curve.steth_eth_gauge["claim_rewards()"](),
 
     // Claim CRV Rewards
-    allow.mainnet.curve.crv_minter["mint"](
-      curve.stETH_ETH_GAUGE
-    ),
+    allow.mainnet.curve.crv_minter["mint"](curve.stETH_ETH_GAUGE),
 
     // Deposit and Stake using a special ZAP
     allow.mainnet.curve.steth_eth_gauge["set_approve_deposit"](
@@ -2027,10 +2104,16 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - cDAI/cUSDC
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC], [curve.cDAIcUSDC_POOL]),
+    ...allowErc20Approve(
+      [compound_v2.cDAI, compound_v2.cUSDC],
+      [curve.cDAIcUSDC_POOL]
+    ),
     ...allowErc20Approve([curve.crvcDAIcUSDC], [curve.cDAIcUSDC_GAUGE]),
     ...allowErc20Approve([DAI, USDC], [curve.cDAIcUSDC_ZAP]),
-    ...allowErc20Approve([compound_v2.cDAI, compound_v2.cUSDC, DAI, USDC], [curve.STAKE_DEPOSIT_ZAP]),
+    ...allowErc20Approve(
+      [compound_v2.cDAI, compound_v2.cUSDC, DAI, USDC],
+      [curve.STAKE_DEPOSIT_ZAP]
+    ),
 
     // Add Liquidity
     allow.mainnet.curve.cDAIcUSDC_pool["add_liquidity"](),
@@ -2051,7 +2134,9 @@ const preset = {
     allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_imbalance"](),
 
     // Removing Liquidity of One Coin (Underlying, using ZAP)
-    allow.mainnet.curve.cDAIcUSDC_zap["remove_liquidity_one_coin(uint256,int128,uint256)"](),
+    allow.mainnet.curve.cDAIcUSDC_zap[
+      "remove_liquidity_one_coin(uint256,int128,uint256)"
+    ](),
 
     // Exchange
     allow.mainnet.curve.cDAIcUSDC_pool["exchange"](),
@@ -2066,9 +2151,7 @@ const preset = {
     allow.mainnet.curve.cDAIcUSDC_gauge["withdraw"](),
 
     // Claim CRV Rewards - This pool gauge does not grant any rewards
-    allow.mainnet.curve.crv_minter["mint"](
-      curve.cDAIcUSDC_GAUGE
-    ),
+    allow.mainnet.curve.crv_minter["mint"](curve.cDAIcUSDC_GAUGE),
 
     // Deposit and Stake using a special ZAP
     allow.mainnet.curve.cDAIcUSDC_gauge["set_approve_deposit"](
@@ -2098,30 +2181,42 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - Deposit and Stake using a special ZAP
     //---------------------------------------------------------------------------------------------------------------------------------
-    allow.mainnet.curve.stake_deposit_zap["deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"](
+    allow.mainnet.curve.stake_deposit_zap[
+      "deposit_and_stake(address,address,address,uint256,address[5],uint256[5],uint256,bool,address)"
+    ](
       {
-        oneOf: [curve.stETH_ETH_POOL, curve.cDAIcUSDC_POOL, curve.cDAIcUSDC_ZAP]
+        oneOf: [
+          curve.stETH_ETH_POOL,
+          curve.cDAIcUSDC_POOL,
+          curve.cDAIcUSDC_ZAP,
+        ],
       },
       {
-        oneOf: [curve.steCRV, curve.crvcDAIcUSDC]
+        oneOf: [curve.steCRV, curve.crvcDAIcUSDC],
       },
       {
-        oneOf: [curve.stETH_ETH_GAUGE, curve.cDAIcUSDC_GAUGE]
+        oneOf: [curve.stETH_ETH_GAUGE, curve.cDAIcUSDC_GAUGE],
       },
       2,
       {
         oneOf: [
           [E_ADDRESS, stETH, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
           [DAI, USDC, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-          [compound_v2.cUSDC, compound_v2.cDAI, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-        ]
+          [
+            compound_v2.cUSDC,
+            compound_v2.cDAI,
+            ZERO_ADDRESS,
+            ZERO_ADDRESS,
+            ZERO_ADDRESS,
+          ],
+        ],
       },
       undefined,
       undefined,
       undefined,
       ZERO_ADDRESS,
       {
-        send: true
+        send: true,
       }
     ),
 
@@ -2162,9 +2257,7 @@ const preset = {
     },
 
     // Stop using as Collateral
-    allow.mainnet.compound_v2.comptroller["exitMarket"](
-      compound_v2.cUSDC
-    ),
+    allow.mainnet.compound_v2.comptroller["exitMarket"](compound_v2.cUSDC),
 
     // Borrow specified amount of underlying asset (uint256)
     allow.mainnet.compound_v2.cUSDC["borrow"](),
@@ -2205,9 +2298,7 @@ const preset = {
     },
 
     // Stop using as Collateral
-    allow.mainnet.compound_v2.comptroller["exitMarket"](
-      compound_v2.cDAI
-    ),
+    allow.mainnet.compound_v2.comptroller["exitMarket"](compound_v2.cDAI),
 
     // Borrow specified amount of underlying asset (uint256)
     allow.mainnet.compound_v2.cDAI["borrow"](),
@@ -2221,7 +2312,9 @@ const preset = {
     allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
       AVATAR,
       {
-        subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+        subsetOf: [compound_v2.cDAI, compound_v2.cUSDC]
+          .map((address) => address.toLowerCase())
+          .sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
     ),
@@ -2236,28 +2329,21 @@ const preset = {
     ...allowErc20Approve([USDC], [compound_v3.cUSDCv3]),
 
     // Supply/Repay
-    allow.mainnet.compound_v3.cUSDCv3["supply"](
-      USDC
-    ),
+    allow.mainnet.compound_v3.cUSDCv3["supply"](USDC),
 
     // Withdraw/Borrow
-    allow.mainnet.compound_v3.cUSDCv3["withdraw"](
-      USDC
-    ),
+    allow.mainnet.compound_v3.cUSDCv3["withdraw"](USDC),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V3 - ETH
     //---------------------------------------------------------------------------------------------------------------------------------
     // You need to approve the Compound III proxy (MainnetBulker) contract first. You only need to do this once.
-    allow.mainnet.compound_v3.cUSDCv3["allow"](
-      compound_v3.MainnetBulker
-    ),
+    allow.mainnet.compound_v3.cUSDCv3["allow"](compound_v3.MainnetBulker),
 
     // Supply
     {
       targetAddress: compound_v3.MainnetBulker,
-      signature:
-        "invoke(bytes32[],bytes[])",
+      signature: "invoke(bytes32[],bytes[])",
       params: {
         [0]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000040",
@@ -2288,16 +2374,15 @@ const preset = {
           "bytes32"
         ), // Length of the first element of the bytes[] 96=32*3
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
-        [8]: staticEqual(AVATAR)
+        [8]: staticEqual(AVATAR),
       },
-      send: true
+      send: true,
     },
 
     // Withdraw
     {
       targetAddress: compound_v3.MainnetBulker,
-      signature:
-        "invoke(bytes32[],bytes[])",
+      signature: "invoke(bytes32[],bytes[])",
       params: {
         [0]: staticEqual(
           "0x0000000000000000000000000000000000000000000000000000000000000040",
@@ -2328,9 +2413,9 @@ const preset = {
           "bytes32"
         ), // Length of the first element of the bytes[] 96=32*3
         [7]: staticEqual(compound_v3.cUSDCv3, "address"),
-        [8]: staticEqual(AVATAR)
+        [8]: staticEqual(AVATAR),
       },
-      send: true
+      send: true,
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -2351,23 +2436,13 @@ const preset = {
     ...allowErc20Approve([stETH], [aave_v2.LENDING_POOL]),
 
     // Deposit
-    allow.mainnet.aave_v2.lending_pool["deposit"](
-      stETH,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v2.lending_pool["deposit"](stETH, undefined, AVATAR),
 
     // Withdraw
-    allow.mainnet.aave_v2.lending_pool["withdraw"](
-      stETH,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v2.lending_pool["withdraw"](stETH, undefined, AVATAR),
 
     // Set/Unset Asset as Collateral
-    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](
-      stETH
-    ),
+    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](stETH),
 
     // Borrow (Should we add this functionality for stETH?)
     allow.mainnet.aave_v2.lending_pool["borrow"](
@@ -2392,23 +2467,13 @@ const preset = {
     ...allowErc20Approve([WBTC], [aave_v2.LENDING_POOL]),
 
     // Deposit (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v2.lending_pool["deposit"](
-      WBTC,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v2.lending_pool["deposit"](WBTC, undefined, AVATAR),
 
     // Withdraw (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v2.lending_pool["withdraw"](
-      WBTC,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v2.lending_pool["withdraw"](WBTC, undefined, AVATAR),
 
     // Set/Unset Asset as Collateral (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](
-      WBTC
-    ),
+    allow.mainnet.aave_v2.lending_pool["setUserUseReserveAsCollateral"](WBTC),
 
     // Borrow
     allow.mainnet.aave_v2.lending_pool["borrow"](
@@ -2433,22 +2498,16 @@ const preset = {
     ...allowErc20Approve([AAVE], [aave_v2.stkAAVE]),
 
     // Stake
-    allow.mainnet.aave_v2.stkAave["stake"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["stake"](AVATAR),
 
     // Initiates 10 days cooldown period, once this is over the 2 days unstaking window opens:
     allow.mainnet.aave_v2.stkAave["cooldown"](),
 
     // Unstakes, can only be called during the 2 days unstaking window after the 10 days cooldown period
-    allow.mainnet.aave_v2.stkAave["redeem"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["redeem"](AVATAR),
 
     // Claim Rewards
-    allow.mainnet.aave_v2.stkAave["claimRewards"](
-      AVATAR
-    ),
+    allow.mainnet.aave_v2.stkAave["claimRewards"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3
@@ -2460,23 +2519,13 @@ const preset = {
     ...allowErc20Approve([stETH], [aave_v3.POOL_V3]),
 
     // Deposit
-    allow.mainnet.aave_v3.pool_v3["supply"](
-      stETH,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v3.pool_v3["supply"](stETH, undefined, AVATAR),
 
     // Withdraw
-    allow.mainnet.aave_v3.pool_v3["withdraw"](
-      stETH,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v3.pool_v3["withdraw"](stETH, undefined, AVATAR),
 
     // Set/Unset Asset as Collateral
-    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](
-      stETH
-    ),
+    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](stETH),
 
     // Borrow (Should we add this functionality for stETH?)
     allow.mainnet.aave_v3.pool_v3["borrow"](
@@ -2488,12 +2537,7 @@ const preset = {
     ),
 
     // Repay (Should we add this functionality for stETH?)
-    allow.mainnet.aave_v3.pool_v3["repay"](
-      stETH,
-      undefined,
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.aave_v3.pool_v3["repay"](stETH, undefined, undefined, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3 - WBTC
@@ -2501,23 +2545,13 @@ const preset = {
     ...allowErc20Approve([WBTC], [aave_v3.POOL_V3]),
 
     // Deposit (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v3.pool_v3["supply"](
-      WBTC,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v3.pool_v3["supply"](WBTC, undefined, AVATAR),
 
     // Withdraw (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v3.pool_v3["withdraw"](
-      WBTC,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.aave_v3.pool_v3["withdraw"](WBTC, undefined, AVATAR),
 
     // Set/Unset Asset as Collateral (Should we add this functionality for WBTC?)
-    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](
-      WBTC
-    ),
+    allow.mainnet.aave_v3.pool_v3["setUserUseReserveAsCollateral"](WBTC),
 
     // Borrow
     allow.mainnet.aave_v3.pool_v3["borrow"](
@@ -2529,30 +2563,22 @@ const preset = {
     ),
 
     // Repay
-    allow.mainnet.aave_v3.pool_v3["repay"](
-      WBTC,
-      undefined,
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.aave_v3.pool_v3["repay"](WBTC, undefined, undefined, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Stakewise
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // When staking ETH one receives sETH2
-    allow.mainnet.stakewise.eth2_staking["stake"](
-      {
-        send: true
-      }
-    ),
+    allow.mainnet.stakewise.eth2_staking["stake"]({
+      send: true,
+    }),
 
     // By having staked ETH one receives rETH2 as rewards that are claimed by calling the claim function
-    allow.mainnet.stakewise.merkle_distributor["claim"](
-      undefined,
-      AVATAR,
-      [rETH2, SWISE]
-    ),
+    allow.mainnet.stakewise.merkle_distributor["claim"](undefined, AVATAR, [
+      rETH2,
+      SWISE,
+    ]),
 
     // The exactInputSingle is needed for the reinvest option, which swaps rETH2 for sETH2 in the Uniswap V3 pool.
     // But as of now it is not considered within the strategy scope
@@ -2649,18 +2675,10 @@ const preset = {
     ...allowErc20Approve([GNO], [spark.LENDING_POOL]),
 
     // Deposit
-    allow.mainnet.spark.sparkLendingPoolV3["supply"](
-      GNO,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.spark.sparkLendingPoolV3["supply"](GNO, undefined, AVATAR),
 
     // Withdraw
-    allow.mainnet.spark.sparkLendingPoolV3["withdraw"](
-      GNO,
-      undefined,
-      AVATAR,
-    ),
+    allow.mainnet.spark.sparkLendingPoolV3["withdraw"](GNO, undefined, AVATAR),
 
     // Set/Unset Asset as Collateral
     allow.mainnet.spark.sparkLendingPoolV3["setUserUseReserveAsCollateral"](
@@ -2695,17 +2713,10 @@ const preset = {
     ...allowErc20Approve([DAI], [spark.sDAI]),
 
     // Deposit
-    allow.mainnet.spark.sDAI["deposit"](
-      undefined,
-      AVATAR
-    ),
+    allow.mainnet.spark.sDAI["deposit"](undefined, AVATAR),
 
     // Withdraw
-    allow.mainnet.spark.sDAI["redeem"](
-      undefined,
-      AVATAR,
-      AVATAR
-    ),
+    allow.mainnet.spark.sDAI["redeem"](undefined, AVATAR, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // OMNI BRIDGE
@@ -2757,6 +2768,27 @@ const preset = {
       undefined
     ),
 
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Ankr
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Flash unstake uses a pool to swap your Liquid Staking tokens for your original assets, which means instant release of your funds
+    // While it offers instant release of your funds, it poses a few limitations:
+    // 1- You have to pay a technical service fee for a flash unstake — 0.5% of the unstaked amount.
+    // 2- Your unstake is limited by the current capacity of the flash-unstake pool. If you exceed it,
+    // the interface switches to the standard unstake with its regular release time.
+    ...allowErc20Approve([ankr.ankrETH], [ankr.SWAP_POOL]),
+    allow.mainnet.ankr.swap_pool["swapEth"](undefined, AVATAR),
+
+    // Standard unstake, it may be split into several parts, but all the parts that constitute the unstaked amount will be released
+    // to your account within the 6 days days period.
+    // Stake
+    allow.mainnet.ankr.ETH2_Staking["stakeAndClaimAethC"]({ send: true }),
+
+    // Unstake
+    // The unstake burns the ankrETH.
+    // Then once per day the distributeRewards() function is called and transfers different amounts of ETH
+    // to the users on the Ethereum unstake queue, until it completes the total unstaked amount of each (within the 6 day window).
+    allow.mainnet.ankr.ETH2_Staking["unstakeAETH"](),
   ],
   placeholders: { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN },
 } satisfies RolePreset

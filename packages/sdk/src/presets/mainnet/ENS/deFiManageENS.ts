@@ -190,7 +190,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V3 - ETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    // IMPORTANT: the allow function is not present in the abi (reason unknown). The function was added manually to the Comet abis
+    // IMPORTANT: the Comet implementation does not have the allow function, but if you take a look to the fallback() function
+    // https://etherscan.io/address/0x7a1316220a46dce22fd5c6d55a39513367e6c967#code#F1#L1314
+    // function extensionDelegate() virtual external view returns (address) -> Read function
+    // The extensionDelegate() function retrieves the CometExt address = 0xe2C1F54aFF6b38fD9DF7a69F22cB5fd3ba09F030
+    // which has the allow() function in it
     allow.mainnet.compound_v3.cWETHv3["allow"](compound_v3.MainnetBulker),
 
     // Supply/Repay - Withdraw/Borrow
@@ -293,6 +297,17 @@ const preset = {
       undefined,
       AVATAR
     ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Aave V3 - WETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    ...allowErc20Approve([WETH], [aave_v3.POOL_V3]),
+
+    // Supply
+    allow.mainnet.aave_v3.pool_v3["supply"](WETH, undefined, AVATAR),
+
+    // Withdraw
+    allow.mainnet.aave_v3.pool_v3["withdraw"](WETH, undefined, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Stakewise
@@ -1362,11 +1377,14 @@ const preset = {
     allow.mainnet.ankr.swap_pool["swapEth"](undefined, AVATAR),
 
     // Standard unstake, it may be split into several parts, but all the parts that constitute the unstaked amount will be released
-    // to your account within the 6 days days period
+    // to your account within the 6 days days period.
     // Stake
     allow.mainnet.ankr.ETH2_Staking["stakeAndClaimAethC"]({ send: true }),
 
     // Unstake
+    // The unstake burns the ankrETH.
+    // Then once per day the distributeRewards() function is called and transfers different amounts of ETH
+    // to the users on the Ethereum unstake queue, until it completes the total unstaked amount of each (within the 6 day window).
     allow.mainnet.ankr.ETH2_Staking["unstakeAETH"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------

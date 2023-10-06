@@ -14,6 +14,10 @@ import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageB
 import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
 import balancerManageTransactions from "./testTransactions/balancerManage"
 
+import gnosisDAOManagePreset from "../../src/presets/mainnet/GnosisDAO/deFiManageGnosisDAO"
+import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
+import gnosisDAOTransactions from "./testTransactions/ethManage"
+
 interface Config {
   AVATAR: string
   MODULE: string
@@ -33,7 +37,6 @@ interface SimulateTransaction {
   to: string
   operation?: number
   expectRevert?: boolean
-  revertOnFailingExecution?: boolean
 }
 
 describe("Karpatkey: Simulate Transactions Test (patching current config in mainnet fork)", async () => {
@@ -131,7 +134,7 @@ describe("Karpatkey: Simulate Transactions Test (patching current config in main
             tx.data || "0x00",
             tx.operation || 0,
             roleId,
-            tx.revertOnFailingExecution || false
+            true
           )
 
         if (tx.expectRevert) {
@@ -177,6 +180,21 @@ describe("Karpatkey: Simulate Transactions Test (patching current config in main
         roleId: BALANCER_ADDRESSES.BALANCER_ETH.ROLE_IDS.MANAGER,
         roleMember: BALANCER_ADDRESSES.BALANCER_ETH.MANAGER,
         transactions: balancerManageTransactions,
+      })
+    })
+  })
+
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // GnosisDAO
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("GnosisDAO Manage preset [gnosisdao:manage]", () => {
+    it("allows executing all listed management transactions from the Balancer Safe after patching the current permissions", async () => {
+      await simulateTransactions({
+        config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
+        preset: gnosisDAOManagePreset,
+        roleId: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH.ROLE_IDS.MANAGER,
+        roleMember: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH.MANAGER,
+        transactions: gnosisDAOTransactions,
       })
     })
   })

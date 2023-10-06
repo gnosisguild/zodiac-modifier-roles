@@ -504,16 +504,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "who",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "status",
-        "type": "bool"
-      }
+      { "internalType": "address", "name": "manager", "type": "address" },
+      { "internalType": "bool", "name": "isAllowed_", "type": "bool" }
     ],
     "name": "allow",
     "outputs": [],

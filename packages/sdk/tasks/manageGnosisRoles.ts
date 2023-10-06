@@ -50,6 +50,13 @@ interface Config {
   SWAPPER: string
   NETWORK: NetworkId
   BRIDGED_SAFE: string
+  ROLE_IDS: {
+    MANAGER: number
+    REVOKER: number
+    HARVESTER: number
+    DISASSEMBLER: number
+    SWAPPER: number
+  }
 }
 
 export const GNOSIS_ADDRESSES = {
@@ -63,6 +70,13 @@ export const GNOSIS_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 100,
     BRIDGED_SAFE: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
   GNOSIS_LTD_GNO: {
     AVATAR: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
@@ -74,6 +88,13 @@ export const GNOSIS_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 100,
     BRIDGED_SAFE: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
   GNOSIS_DAO_ETH: {
     AVATAR: "0x849D52316331967b6fF1198e5E32A0eB168D039d",
@@ -85,6 +106,13 @@ export const GNOSIS_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 1,
     BRIDGED_SAFE: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
   GNOSIS_LTD_ETH: {
     AVATAR: "0x4971DD016127F390a3EF6b956Ff944d0E2e1e462",
@@ -96,6 +124,13 @@ export const GNOSIS_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 1,
     BRIDGED_SAFE: "0x10E4597fF93cbee194F4879f8f1d54a370DB6969",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
 } satisfies { [key: string]: Config }
 
