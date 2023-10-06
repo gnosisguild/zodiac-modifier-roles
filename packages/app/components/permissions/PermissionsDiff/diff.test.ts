@@ -98,7 +98,6 @@ describe("diff", () => {
       const edited = copy(PRESET)
       delete edited.permissions[0].condition
       const [left, right] = diffPresets([PRESET], [edited])
-
       expect([...left.get(PRESET)!.permissions!.values()]).toEqual("TODO")
       expect([...right.get(edited)!.permissions!.values()]).toEqual("TODO")
     })

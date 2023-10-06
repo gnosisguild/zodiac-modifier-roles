@@ -19,7 +19,7 @@
   border: 1px solid #882424;
 }
 
-.modified .modified {
+.modified {
   background-color: #2b477e61;
   border: 1px solid #2b477e;
 }
@@ -37,4 +37,8 @@
 }
 .placeholderHidden {
   visibility: hidden;
+}
+
+.stretch {
+  min-height: 100%;
 }

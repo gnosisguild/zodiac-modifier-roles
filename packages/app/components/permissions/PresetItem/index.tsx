@@ -6,14 +6,41 @@ import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import DiffBox from "../DiffBox"
 
-const PresetItem: React.FC<{
+interface Props {
   preset: Preset
   chainId: ChainId
   diff?: PresetsDiff
-}> = ({ preset, chainId, diff }) => {
+}
+
+const PresetItem: React.FC<Props> = ({ preset, chainId, diff }) => {
   const presetDiff = diff?.get(preset)
   return (
-    <DiffBox bg diff={presetDiff?.flag}>
+    <div>
+      <PresetItemMain {...{ preset, chainId, diff }} />
+      <IndividualPermissions
+        chainId={chainId}
+        permissions={preset.permissions}
+        diff={presetDiff?.permissions}
+      />
+    </div>
+  )
+}
+
+export default PresetItem
+
+const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
+  const presetDiff = diff?.get(preset)
+  return (
+    <DiffBox
+      bg
+      stretch
+      diff={presetDiff?.flag}
+      modified={
+        presetDiff?.modified && (
+          <PresetItemMain preset={presetDiff.modified} chainId={chainId} />
+        )
+      }
+    >
       <Flex direction="column" gap={3}>
         <PresetInfo apiInfo={preset.apiInfo} operation={preset.operation} />
 
@@ -27,15 +54,7 @@ const PresetItem: React.FC<{
             />
           ))}
         </Flex>
-
-        <IndividualPermissions
-          chainId={chainId}
-          permissions={preset.permissions}
-          diff={presetDiff?.permissions}
-        />
       </Flex>
     </DiffBox>
   )
 }
-
-export default PresetItem

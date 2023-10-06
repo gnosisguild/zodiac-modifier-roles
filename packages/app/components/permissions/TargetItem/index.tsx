@@ -34,7 +34,10 @@ const TargetItem: React.FC<{
     )
 
   return (
-    <DiffBox bg diff={targetDiff}>
+    <DiffBox
+      bg
+      diff={targetDiff === DiffFlag.Modified ? undefined : targetDiff} // we don't highlight the modified target since this would get a bit too colorful
+    >
       <Flex direction="column" gap={3}>
         <Address
           address={targetAddress}

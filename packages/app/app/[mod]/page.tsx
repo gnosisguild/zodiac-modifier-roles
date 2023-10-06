@@ -4,9 +4,8 @@ import { notFound } from "next/navigation"
 import styles from "./page.module.css"
 import { parseModParam } from "@/app/params"
 import RolesList from "@/components/RolesList"
-import Layout, { Breadcrumb } from "@/components/Layout"
-import Flex from "@/ui/Flex"
-import Address from "@/ui/Address"
+import Layout from "@/components/Layout"
+import PageBreadcrumbs from "./breadcrumbs"
 
 export default async function ModPage({ params }: { params: { mod: string } }) {
   const mod = parseModParam(params.mod)
@@ -20,13 +19,7 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
   }
 
   return (
-    <Layout
-      head={
-        <Breadcrumb href={`/${decodeURIComponent(params.mod)}`}>
-          <Address address={mod.address} />
-        </Breadcrumb>
-      }
-    >
+    <Layout head={<PageBreadcrumbs mod={params.mod} />}>
       <main className={styles.main}>
         <RolesList roles={data.roles} mod={params.mod} />
       </main>

@@ -14,7 +14,7 @@ const IndividualPermissions: React.FC<{
   const permissionGroups = groupPermissions(permissions)
   return (
     <ExpandableBox
-      borderless
+      bg
       p={3}
       className={classes.permissions}
       labelCollapsed="Show permissions"

@@ -10,13 +10,19 @@ const DiffBox: React.FC<{
   modified?: ReactNode
   bg?: boolean
   children: ReactNode
-}> = ({ diff, modified, bg, children }) => (
-  <Placeholder hidden={diff === DiffFlag.Modified && modified}>
+  stretch?: boolean
+}> = ({ diff, modified, bg, children, stretch }) => (
+  <Placeholder hidden={modified}>
     <Box
       bg={bg}
       p={3}
       className={
-        diff && cn(classes.diff, classes[DiffFlag[diff].toLowerCase()])
+        diff &&
+        cn(
+          classes.diff,
+          classes[DiffFlag[diff].toLowerCase()],
+          stretch && classes.stretch
+        )
       }
     >
       {children}
