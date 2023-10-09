@@ -278,10 +278,10 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3 - ETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve(
-      [aave_v3.aEthWETH],
-      [aave_v3.WRAPPED_TOKEN_GATEWAY_V3]
-    ),
+    // ...allowErc20Approve(
+    //   [aave_v3.aEthWETH],
+    //   [aave_v3.WRAPPED_TOKEN_GATEWAY_V3]
+    // ),
 
     // Supply
     allow.mainnet.aave_v3.wrapped_token_gateway_v3["depositETH"](
@@ -301,7 +301,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3 - WETH
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([WETH], [aave_v3.POOL_V3]),
+    // ...allowErc20Approve([WETH], [aave_v3.POOL_V3]),
 
     // Supply
     allow.mainnet.aave_v3.pool_v3["supply"](WETH, undefined, AVATAR),
@@ -1373,7 +1373,7 @@ const preset = {
     // 1- You have to pay a technical service fee for a flash unstake — 0.5% of the unstaked amount.
     // 2- Your unstake is limited by the current capacity of the flash-unstake pool. If you exceed it,
     // the interface switches to the standard unstake with its regular release time.
-    ...allowErc20Approve([ankr.ankrETH], [ankr.SWAP_POOL]),
+    // ...allowErc20Approve([ankr.ankrETH], [ankr.SWAP_POOL]),
     allow.mainnet.ankr.swap_pool["swapEth"](undefined, AVATAR),
 
     // Standard unstake, it may be split into several parts, but all the parts that constitute the unstaked amount will be released
