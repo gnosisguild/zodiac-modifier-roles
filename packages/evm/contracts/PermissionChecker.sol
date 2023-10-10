@@ -123,12 +123,7 @@ abstract contract PermissionChecker is Core, Periphery {
             revert FunctionSignatureTooShort();
         }
 
-        if (role.targets[to].clearance == Clearance.Target) {
-            return (
-                _executionOptions(value, operation, role.targets[to].options),
-                Result({consumptions: consumptions, info: 0})
-            );
-        } else if (role.targets[to].clearance == Clearance.Function) {
+        if (role.targets[to].clearance == Clearance.Function) {
             bytes32 key = _key(to, bytes4(data));
             {
                 bytes32 header = role.scopeConfig[key];
@@ -168,6 +163,11 @@ abstract contract PermissionChecker is Core, Periphery {
                     data,
                     Context({to: to, value: value, consumptions: consumptions})
                 );
+        } else if (role.targets[to].clearance == Clearance.Target) {
+            return (
+                _executionOptions(value, operation, role.targets[to].options),
+                Result({consumptions: consumptions, info: 0})
+            );
         } else {
             return (
                 Status.TargetAddressNotAllowed,
