@@ -366,7 +366,7 @@ describe("Operator - WithinAllowance", async () => {
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
-    it("Updates timestamp starting from zero", async () => {
+    it("Updates timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
         setupOneParamStatic
       );
@@ -391,21 +391,21 @@ describe("Operator - WithinAllowance", async () => {
       ]);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
-        balance: 1,
+        balance: 100,
         period: interval,
         refill: 0,
-        timestamp: 0,
+        timestamp: 1,
       });
 
       let allowance = await roles.allowances(allowanceKey);
-      expect(allowance.balance).to.equal(1);
-      expect(allowance.timestamp).to.equal(0);
+      expect(allowance.balance).to.equal(100);
+      expect(allowance.timestamp).to.equal(1);
 
       await expect(invoke(0)).to.not.be.reverted;
       const now = await time.latest();
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.timestamp.toNumber()).to.be.greaterThan(0);
+      expect(allowance.timestamp.toNumber()).to.be.greaterThan(1);
       expect(now - allowance.timestamp.toNumber()).to.be.lessThanOrEqual(
         interval * 2
       );
@@ -434,13 +434,13 @@ describe("Operator - WithinAllowance", async () => {
         balance: 1,
         period: 0,
         refill: 0,
-        timestamp: 0,
+        timestamp: 123,
       });
 
       await expect(invoke(0)).to.not.be.reverted;
 
       const allowance = await roles.allowances(allowanceKey);
-      expect(allowance.timestamp).to.equal(0);
+      expect(allowance.timestamp).to.equal(123);
     });
     it("Updates timestamp from past timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(

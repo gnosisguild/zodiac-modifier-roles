@@ -19,7 +19,7 @@ abstract contract AllowanceTracker is Core {
 
     function _accruedAllowance(
         Allowance memory allowance,
-        uint256 blockTimestamp
+        uint64 blockTimestamp
     ) internal pure override returns (uint128 balance, uint64 timestamp) {
         if (
             allowance.period == 0 ||
@@ -28,16 +28,18 @@ abstract contract AllowanceTracker is Core {
             return (allowance.balance, allowance.timestamp);
         }
 
-        uint64 elapsedIntervals = (uint64(blockTimestamp) -
+        uint64 elapsedIntervals = (blockTimestamp -
             allowance.timestamp) / allowance.period;
 
-        uint128 balanceUncapped = allowance.balance +
-            allowance.refill *
-            elapsedIntervals;
+        if (allowance.balance < allowance.maxRefill) {
+            balance = allowance.balance + allowance.refill * elapsedIntervals;
 
-        balance = balanceUncapped < allowance.maxBalance
-            ? balanceUncapped
-            : allowance.maxBalance;
+            balance = balance < allowance.maxRefill
+                ? balance
+                : allowance.maxRefill;
+        } else {
+            balance = allowance.balance;
+        }
 
         timestamp = allowance.timestamp + elapsedIntervals * allowance.period;
     }
@@ -62,7 +64,7 @@ abstract contract AllowanceTracker is Core {
             Allowance storage allowance = allowances[key];
             (uint128 balance, uint64 timestamp) = _accruedAllowance(
                 allowance,
-                block.timestamp
+                uint64(block.timestamp)
             );
 
             assert(balance == consumption.balance);
