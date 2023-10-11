@@ -53,11 +53,6 @@ type PrimitiveParamScoping<T extends PrimitiveValue> =
   | T
   | Placeholder<T>
   | { oneOf: (T | Placeholder<T>)[] }
-
-type BigNumberishParamScoping<T extends BigNumberish> =
-  | T
-  | Placeholder<T>
-  | { oneOf: (T | Placeholder<T>)[] }
   | { greaterThan: T | Placeholder<T> }
   | { lessThan: T | Placeholder<T> }
 
