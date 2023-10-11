@@ -663,6 +663,43 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(35);
   });
+  it("balance above maxRefill gets consumed", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupFnThatMaybeReturns
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles
+      .connect(owner)
+      .setAllowance(allowanceKey, 1300, 1000, 100, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.WithinAllowance,
+          compValue: allowanceKey,
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+    });
+    await scopeFunction(conditionsFlat);
+    const maybe = false;
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1300);
+
+    await expect(invoke(1200, maybe)).to.emit(roles, "ConsumeAllowance");
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
+  });
 
   describe("multiEntrypoint", async () => {
     async function setup() {

@@ -44,7 +44,7 @@ abstract contract PermissionBuilder is Core {
     event SetAllowance(
         bytes32 allowanceKey,
         uint128 balance,
-        uint128 maxBalance,
+        uint128 maxRefill,
         uint128 refill,
         uint64 period,
         uint64 timestamp
@@ -158,20 +158,21 @@ abstract contract PermissionBuilder is Core {
     function setAllowance(
         bytes32 key,
         uint128 balance,
-        uint128 maxBalance,
+        uint128 maxRefill,
         uint128 refill,
         uint64 period,
         uint64 timestamp
     ) external onlyOwner {
-        maxBalance = maxBalance > 0 ? maxBalance : type(uint128).max;
+        maxRefill = maxRefill != 0 ? maxRefill : type(uint128).max;
+        timestamp = timestamp != 0 ? timestamp : uint64(block.timestamp);
 
         allowances[key] = Allowance({
             refill: refill,
+            maxRefill: maxRefill,
             period: period,
             timestamp: timestamp,
-            balance: balance,
-            maxBalance: maxBalance
+            balance: balance
         });
-        emit SetAllowance(key, balance, maxBalance, refill, period, timestamp);
+        emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }
 }
