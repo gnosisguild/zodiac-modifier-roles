@@ -270,6 +270,7 @@ export const stakedao = {
 export const sushiswap = {
   ROUTER: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
   ROUTE_PROCESSOR_3: "0x827179dD56d07A7eeA32e3873493835da2866976",
+  ROUTE_PROCESSOR_3_2: "0x5550D13389bB70F45fCeF58f19f6b6e87F6e747d",
 }
 
 export const uniswapv3 = {

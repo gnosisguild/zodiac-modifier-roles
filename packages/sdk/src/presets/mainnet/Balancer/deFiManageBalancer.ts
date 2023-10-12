@@ -26,6 +26,7 @@ import {
   mstable_v2,
   rocket_pool,
   silo_v2,
+  sushiswap,
   uniswapv3,
 } from "../addresses"
 import { staticEqual, staticOneOf } from "../../helpers/utils"
@@ -36,6 +37,9 @@ import { allowErc20Approve } from "../../helpers/erc20"
 
 // mStable
 const DELEGATE_ADDRESS = "0xd6e96e437b8d42406a64440226b77a51c74e26b1"
+
+// governance.karpatkey.eth
+const GOVERNANCE_KPK = "0x8787FC2De4De95c53e5E3a4e5459247D9773ea52"
 
 const preset = {
   network: 1,
@@ -116,6 +120,12 @@ const preset = {
     //   },
     // },
     allow.mainnet.aave_v2.stkAave["redeem"](AVATAR),
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Delegate Aave and stkAave to governance.karpatkey.eth
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // allow.mainnet.aave_v2.aave["delegate"](GOVERNANCE_KPK),
+    // allow.mainnet.aave_v2.stkAave["delegate"](GOVERNANCE_KPK),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3
@@ -1028,46 +1038,63 @@ const preset = {
       },
     },
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Cowswap
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([AAVE, COMP, DAI, rETH, rETH2, sETH2, stETH, SWISE, USDC, USDT, WBTC, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Swap of COMP in SushiSwap
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([COMP], [sushiswap.ROUTE_PROCESSOR_3_2]),
 
-    allow.mainnet.cowswap.order_signer["signOrder"](
-      {
-        oneOf: [
-          AAVE,
-          COMP,
-          DAI,
-          rETH,
-          rETH2,
-          sETH2,
-          stETH,
-          SWISE,
-          USDC,
-          USDT,
-          WBTC,
-          WETH,
-          wstETH,
-        ],
-      },
-      {
-        oneOf: [DAI, rETH, sETH2, stETH, USDC, USDT, WBTC, WETH, wstETH],
-      },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      {
-        delegatecall: true,
-      }
-    ),
+    // allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
+    //   COMP,
+    //   undefined,
+    //   {
+    //     oneOf: [WETH, USDC, DAI],
+    //   },
+    //   undefined,
+    //   AVATAR
+    // ),
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Cowswap
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([AAVE, COMP, DAI, rETH, rETH2, sETH2, stETH, SWISE, USDC, USDT, WBTC, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
+
+    // allow.mainnet.cowswap.order_signer["signOrder"](
+    //   {
+    //     oneOf: [
+    //       AAVE,
+    //       COMP,
+    //       DAI,
+    //       rETH,
+    //       rETH2,
+    //       sETH2,
+    //       stETH,
+    //       SWISE,
+    //       USDC,
+    //       USDT,
+    //       WBTC,
+    //       WETH,
+    //       wstETH,
+    //     ],
+    //   },
+    //   {
+    //     oneOf: [DAI, rETH, sETH2, stETH, USDC, USDT, WBTC, WETH, wstETH],
+    //   },
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   {
+    //     lessThan: 2000,
+    //   },
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   undefined,
+    //   {
+    //     delegatecall: true,
+    //   }
+    // ),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset

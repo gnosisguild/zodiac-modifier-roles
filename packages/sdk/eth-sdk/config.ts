@@ -15,6 +15,7 @@ export default defineConfig({
     mainnet: {
       aave_v2: {
         lending_pool: "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
+        aave: "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
         stkAave: "0x4da27a545c0c5B758a6BA100e3a049001de870f5",
       },
       aave_v3: {
@@ -157,6 +158,7 @@ export default defineConfig({
       sushiswap: {
         router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
         route_processor_3: "0x827179dD56d07A7eeA32e3873493835da2866976",
+        route_processor_3_2: "0x5550D13389bB70F45fCeF58f19f6b6e87F6e747d",
       },
       uniswapv3: {
         positions_nft: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
