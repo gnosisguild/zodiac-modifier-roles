@@ -1,3 +1,4 @@
+import { BigNumberish } from "ethers"
 import { solidityPack } from "ethers/lib/utils"
 
 import { Comparison, ParameterType } from "../../types"
@@ -31,6 +32,12 @@ export const staticEqual = (value: any, type?: string): PresetScopeParam => ({
   comparison: Comparison.EqualTo,
   type: ParameterType.Static,
   value: encodeValue(value, type),
+})
+
+export const staticLessThan = (value: BigNumberish): PresetScopeParam => ({
+  comparison: Comparison.LessThan,
+  type: ParameterType.Static,
+  value: encodeValue(value, "uint256"),
 })
 
 // for string & bytes
