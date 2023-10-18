@@ -18,7 +18,7 @@ import {
 import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-import { auraExitStrategy1 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
 
 const preset = {
   network: 1,
@@ -27,7 +27,7 @@ const preset = {
     // Aura wstETH/WETH pool + Balancer wstETH/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.auraB_stETH_STABLE_REWARDER,
       balancer.B_stETH_STABLE_pId
     ),
@@ -36,7 +36,7 @@ const preset = {
     // Aura B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.auraB_auraBAL_STABLE_REWARDER,
       balancer.B_auraBAL_STABLE_pId
     ),
@@ -57,7 +57,7 @@ const preset = {
     // Aura rETH/WETH + Balancer rETH/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.auraB_rETH_STABLE_REWARDER,
       balancer.B_rETH_STABLE_pId
     ),
@@ -66,7 +66,7 @@ const preset = {
     // Aura GNO/WETH + Balancer GNO/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.auraB_80GNO_20WETH_REWARDER,
       balancer.B_80GNO_20WETH_pId
     ),
@@ -75,7 +75,7 @@ const preset = {
     // Aura GNO/COW + Balancer GNO/COW
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.aura50COW_50GNO_REWARDER,
       balancer.B_50COW_50GNO_pId
     ),
@@ -84,7 +84,7 @@ const preset = {
     // Aura LDO/wstETH + Balancer LDO/wstETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.aura50WSTETH_50LDO_REWARDER,
       balancer.B_50WSTETH_50LDO_pId
     ),
@@ -93,7 +93,7 @@ const preset = {
     // Aura WETH/AURA + Balancer WETH/AURA
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.aura50WETH_50AURA_REWARDER,
       balancer.B_50WETH_50AURA_pId
     ),
@@ -102,7 +102,7 @@ const preset = {
     // Aura WETH/COW + Balancer WETH/COW
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(
+    ...auraExitStrategy2(
       aura.aura50COW_50WETH_REWARDER,
       balancer.B_50COW_50WETH_pId
     ),
@@ -111,7 +111,7 @@ const preset = {
     // Aura GHO/3pool + Balancer GHO/3pool + Balancer 3pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy1(aura.auraGHO_3POOL_REWARDER, balancer.B_GHO_3POOL_pId),
+    ...auraExitStrategy2(aura.auraGHO_3POOL_REWARDER, balancer.B_GHO_3POOL_pId),
 
     // Remove Liquidity from 3pool
     {

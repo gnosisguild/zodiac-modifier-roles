@@ -121,11 +121,14 @@ const preset = {
     // },
     allow.mainnet.aave_v2.stkAave["redeem"](AVATAR),
 
-    // //---------------------------------------------------------------------------------------------------------------------------------
-    // // Delegate Aave and stkAave to governance.karpatkey.eth
-    // //---------------------------------------------------------------------------------------------------------------------------------
-    // allow.mainnet.aave_v2.aave["delegate"](GOVERNANCE_KPK),
-    // allow.mainnet.aave_v2.stkAave["delegate"](GOVERNANCE_KPK),
+    // Restake
+    allow.mainnet.aave_v2.stkAave["claimRewardsAndStake"](AVATAR),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Delegate Aave and stkAave to governance.karpatkey.eth
+    //---------------------------------------------------------------------------------------------------------------------------------
+    allow.mainnet.aave_v2.aave["delegate"](GOVERNANCE_KPK),
+    allow.mainnet.aave_v2.stkAave["delegate"](GOVERNANCE_KPK),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aave V3
@@ -1038,20 +1041,25 @@ const preset = {
       },
     },
 
-    // //---------------------------------------------------------------------------------------------------------------------------------
-    // // Swap of COMP in SushiSwap
-    // //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([COMP], [sushiswap.ROUTE_PROCESSOR_3_2]),
-
-    // allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
-    //   COMP,
-    //   undefined,
-    //   {
-    //     oneOf: [WETH, USDC, DAI],
-    //   },
-    //   undefined,
-    //   AVATAR
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Swap of COMP in SushiSwap
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve(
+    //   [COMP, DAI, USDC, USDT, WETH],
+    //   [sushiswap.ROUTE_PROCESSOR_3_2]
     // ),
+
+    allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
+      {
+        oneOf: [COMP, DAI, USDC, USDT, WETH],
+      },
+      undefined,
+      {
+        oneOf: [DAI, USDC, USDT, WETH],
+      },
+      undefined,
+      AVATAR
+    ),
 
     // //---------------------------------------------------------------------------------------------------------------------------------
     // // Cowswap

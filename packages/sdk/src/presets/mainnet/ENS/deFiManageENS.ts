@@ -32,6 +32,8 @@ import {
   lido,
   maker,
   rocket_pool,
+  spark,
+  stader,
   sushiswap,
   uniswapv3,
 } from "../addresses"
@@ -1394,6 +1396,60 @@ const preset = {
     allow.mainnet.ankr.ETH2_Staking["unstakeAETH"](),
 
     //---------------------------------------------------------------------------------------------------------------------------------
+    // Stader
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([stader.ETHx], [stader.USER_WITHDRAWAL_MANAGER]),
+
+    // Stake
+    allow.mainnet.stader.stake_pools_manager["deposit(address)"](AVATAR, {
+      send: true,
+    }),
+
+    // Unstake
+    // The unstaked ETH will not be immediately added to your wallet as there is an unstaking period of 7-10 days,
+    // subject to entry and exit queues on the Ethereum network
+    allow.mainnet.stader.user_withdrawal_manager[
+      "requestWithdraw(uint256,address)"
+    ](undefined, AVATAR),
+
+    // Claim
+    // All your active unstake requests will be listed in the Withdraw tab
+    // Those available to be withdrawn will have an active withdraw button
+    // Those unavailable to be withdrawn will have the release date and time mentioned along-with your timezone
+    allow.mainnet.stader.user_withdrawal_manager["claim"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark - ETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([spark.spWETH], [spark.WRAPPED_TOKEN_GATEWAY_V3]),
+
+    // Deposit
+    allow.mainnet.spark.wrappedTokenGatewayV3["depositETH"](
+      spark.LENDING_POOL_V3,
+      AVATAR,
+      undefined,
+      { send: true }
+    ),
+
+    // Withdraw
+    allow.mainnet.spark.wrappedTokenGatewayV3["withdrawETH"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Spark - WETH
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([WETH], [spark.LENDING_POOL_V3]),
+
+    // Deposit
+    allow.mainnet.spark.sparkLendingPoolV3["supply"](WETH, undefined, AVATAR),
+
+    // Withdraw
+    allow.mainnet.spark.sparkLendingPoolV3["withdraw"](WETH, undefined, AVATAR),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of tokens COMP, CRV, LDO, WETH, USDC, DAI and USDT in Uniswap
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -1756,7 +1812,6 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of COMP, BAL, LDO, CRV, WETH, USDC, USDT and DAI in SushiSwap
     //---------------------------------------------------------------------------------------------------------------------------------
-
     //  ...allowErc20Approve(
     //       [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
     //       [sushiswap.ROUTER]
@@ -1845,12 +1900,12 @@ const preset = {
       AVATAR
     ),
 
-    // Swaps using ROUTE_PROCESSOR_3
+    // Swaps using ROUTE_PROCESSOR_3_2
     // ...allowErc20Approve(
     //     [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
-    //     [sushiswap.ROUTE_PROCESSOR_3]
+    //     [sushiswap.ROUTE_PROCESSOR_3_2]
     //   ),
-    allow.mainnet.sushiswap.route_processor_3["processRoute"](
+    allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
       {
         oneOf: [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
       },
@@ -1865,7 +1920,6 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of ETH and stETH in Curve
     //---------------------------------------------------------------------------------------------------------------------------------
-
     // // ...allowErc20Approve([stETH], [CURVE_stETH_ETH_POOL]),
     // {
     //     targetAddress: CURVE_stETH_ETH_POOL,
@@ -1886,7 +1940,6 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping in Curve's 3pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
     // ...allowErc20Approve([DAI, USDC, USDT], [CURVE_3POOL]),
     // {
     //     targetAddress: CURVE_3POOL,
@@ -1897,7 +1950,6 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping in Curve's CVX-ETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
-
     // ...allowErc20Approve([CVX], [cvxETH_pool]),
 
     //Swap CVX for WETH

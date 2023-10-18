@@ -2672,7 +2672,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Spark - GNO
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([GNO], [spark.LENDING_POOL]),
+    ...allowErc20Approve([GNO], [spark.LENDING_POOL_V3]),
 
     // Deposit
     allow.mainnet.spark.sparkLendingPoolV3["supply"](GNO, undefined, AVATAR),
@@ -2688,7 +2688,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Spark - DAI
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([DAI], [spark.LENDING_POOL]),
+    ...allowErc20Approve([DAI], [spark.LENDING_POOL_V3]),
 
     // Borrow
     allow.mainnet.spark.sparkLendingPoolV3["borrow"](

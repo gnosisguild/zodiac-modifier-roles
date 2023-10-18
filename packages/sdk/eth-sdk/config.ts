@@ -148,6 +148,10 @@ export default defineConfig({
         wrappedTokenGatewayV3: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
         sDAI: "0x83F20F44975D03b1b09e64809B757c47f942BEeA",
       },
+      stader: {
+        stake_pools_manager: "0xcf5EA1b38380f6aF39068375516Daf40Ed70D299",
+        user_withdrawal_manager: "0x9F0491B32DBce587c50c4C43AB303b06478193A7",
+      },
       stakedao: {
         bribe: "0x0000000BE1d98523B5469AfF51A1e7b4891c6225",
       },
