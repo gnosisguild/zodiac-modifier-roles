@@ -112,6 +112,7 @@ export default defineConfig({
         cDAIcUSDC_zap: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06",
         x3CRV_pool: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
         cvxETH_pool: "0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4",
+        ankrETH_pool: "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
       },
       idle: {
         stEthCdo: "0x34dCd573C5dE4672C8248cd12A99f875Ca112Ad8",
@@ -134,6 +135,9 @@ export default defineConfig({
       },
       mstable_v2: {
         stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7",
+      },
+      pankake_swap: {
+        smart_router: "0x13f4EA83D0bd40E75C8222255bc855a974568Dd4",
       },
       rocket_pool: {
         deposit_pool: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8", // This address might due to Rocket Pool's Architecture

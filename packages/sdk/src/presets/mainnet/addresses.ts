@@ -223,7 +223,11 @@ export const curve = {
   cDAIcUSDC_GAUGE: "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
   cDAIcUSDC_ZAP: "0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06",
 
+  x3CRV_POOL: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
+
   cxvETH_POOL: "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4",
+
+  ankrETH_POOL: "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
 }
 
 export const lido = {
@@ -244,6 +248,10 @@ export const maker = {
 export const mstable_v2 = {
   MTA: "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
   stkMTA: "0x8f2326316eC696F6d023E37A9931c2b2C177a3D7",
+}
+
+export const pancake_swap = {
+  SMART_ROUTER: "0x13f4EA83D0bd40E75C8222255bc855a974568Dd4",
 }
 
 export const rocket_pool = {

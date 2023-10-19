@@ -31,6 +31,7 @@ import {
   curve,
   lido,
   maker,
+  pancake_swap,
   rocket_pool,
   spark,
   stader,
@@ -1436,7 +1437,11 @@ const preset = {
     ),
 
     // Withdraw
-    allow.mainnet.spark.wrappedTokenGatewayV3["withdrawETH"](),
+    allow.mainnet.spark.wrappedTokenGatewayV3["withdrawETH"](
+      spark.LENDING_POOL_V3,
+      undefined,
+      AVATAR
+    ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Spark - WETH
@@ -1540,7 +1545,20 @@ const preset = {
         "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
       params: {
         [0]: staticOneOf(
-          [COMP, CRV, CVX, DAI, LDO, rETH2, sETH2, SWISE, USDC, USDT, WETH],
+          [
+            COMP,
+            CRV,
+            CVX,
+            DAI,
+            LDO,
+            rETH,
+            rETH2,
+            sETH2,
+            SWISE,
+            USDC,
+            USDT,
+            WETH,
+          ],
           "address"
         ),
         [1]: staticOneOf([DAI, USDC, USDT, sETH2, WETH], "address"),
@@ -1549,7 +1567,7 @@ const preset = {
     },
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Swapping AURA, BAL, COMP, WETH and wstETH in Balancer: https://dev.balancer.fi/guides/swaps/single-swaps
+    // Swapping ankrETH, AURA, BAL, COMP, ETHx, rETH, WETH and wstETH in Balancer: https://dev.balancer.fi/guides/swaps/single-swaps
     //---------------------------------------------------------------------------------------------------------------------------------
 
     /*     
@@ -1809,6 +1827,210 @@ const preset = {
       },
     },
 
+    // Swap rETH for WETH
+    // ...allowErc20Approve([rETH], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // rETH-WETH pool ID
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "bytes32"
+        // ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(rETH, "address"), // Asset in
+        [10]: staticEqual(WETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
+    // Swap WETH for rETH
+    // ...allowErc20Approve([WETH], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+          "bytes32"
+        ), // rETH-WETH pool ID
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "bytes32"
+        // ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(WETH, "address"), // Asset in
+        [10]: staticEqual(rETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
+    // Swap wstETH for ankrETH
+    // ...allowErc20Approve([wstETH], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0xdfe6e7e18f6cc65fa13c8d8966013d4fda74b6ba000000000000000000000558",
+          "bytes32"
+        ), // wstETH-ankrETH pool ID
+        //[8]: staticEqual(
+        //  "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //  "bytes32"
+        //), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(wstETH, "address"), // Asset in
+        [10]: staticEqual(ankr.ankrETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
+    // Swap ankrETH for wstETH
+    // ...allowErc20Approve([ankr.ankrETH], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0xdfe6e7e18f6cc65fa13c8d8966013d4fda74b6ba000000000000000000000558",
+          "bytes32"
+        ), // wstETH-ankrETH pool ID
+        //[8]: staticEqual(
+        //  "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //  "bytes32"
+        //), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(ankr.ankrETH, "address"), // Asset in
+        [10]: staticEqual(wstETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
+    // Swap ETHx for WETH
+    // ...allowErc20Approve([stader.ETHx], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0x37b18b10ce5635a84834b26095a0ae5639dcb7520000000000000000000005cb",
+          "bytes32"
+        ), // ETHx-WETH pool ID
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "bytes32"
+        // ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(stader.ETHx, "address"), // Asset in
+        [10]: staticEqual(WETH, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
+    // Swap WETH for ETHx
+    // ...allowErc20Approve([WETH], [balancer.VAULT]),
+    {
+      targetAddress: balancer.VAULT,
+      signature:
+        "swap((bytes32,uint8,address,address,uint256,bytes),(address,bool,address,bool),uint256,uint256)",
+      params: {
+        [0]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000e0",
+          "bytes32"
+        ), // Offset of the tuple from beginning 224=32*7
+        [1]: staticEqual(AVATAR), // recipient
+        [3]: staticEqual(AVATAR), // sender
+        [7]: staticEqual(
+          "0x37b18b10ce5635a84834b26095a0ae5639dcb7520000000000000000000005cb",
+          "bytes32"
+        ), // ETHx-WETH pool ID
+        // [8]: staticEqual(
+        //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //   "bytes32"
+        // ), // enum SwapKind { GIVEN_IN, GIVEN_OUT } -> In this case GIVEN_IN
+        [9]: staticEqual(WETH, "address"), // Asset in
+        [10]: staticEqual(stader.ETHx, "address"), // Asset out
+        [12]: staticEqual(
+          "0x00000000000000000000000000000000000000000000000000000000000000c0",
+          "bytes32"
+        ), // Offset of bytes from beginning of tuple 192=32*6
+        [13]: staticEqual(
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "bytes32"
+        ), // bytes (userData) = for all current Balancer pools this can be left empty
+      },
+    },
+
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of COMP, BAL, LDO, CRV, WETH, USDC, USDT and DAI in SushiSwap
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -1920,9 +2142,9 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of ETH and stETH in Curve
     //---------------------------------------------------------------------------------------------------------------------------------
-    // // ...allowErc20Approve([stETH], [CURVE_stETH_ETH_POOL]),
+    // // ...allowErc20Approve([stETH], [curve.stETH_ETH_POOL]),
     // {
-    //     targetAddress: CURVE_stETH_ETH_POOL,
+    //     targetAddress: curve.stETH_ETH_POOL,
     //     signature: "exchange(int128,int128,uint256,uint256)",
     //     send: true,
     // },
@@ -1940,9 +2162,9 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping in Curve's 3pool
     //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([DAI, USDC, USDT], [CURVE_3POOL]),
+    // ...allowErc20Approve([DAI, USDC, USDT], [curve.x3CRV_POOL]),
     // {
-    //     targetAddress: CURVE_3POOL,
+    //     targetAddress: curve.x3CRV_POOL,
     //     signature: "exchange(int128,int128,uint256,uint256)",
     // },
     allow.mainnet.curve.x3CRV_pool["exchange"](),
@@ -1950,7 +2172,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping in Curve's CVX-ETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([CVX], [cvxETH_pool]),
+    // ...allowErc20Approve([CVX], [curve.cvxETH_POOL]),
 
     //Swap CVX for WETH
     allow.mainnet.curve.cvxETH_pool[
@@ -1959,6 +2181,38 @@ const preset = {
 
     //Swap CVX for ETH
     //allow.mainnet.curve.cvxETH_pool["exchange_underlying"](1, 0),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Swapping in Curve's ankrETH-ETH pool
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([ankr.ankrETH], [curve.ankrETH_POOL]),
+
+    // Swap ankrETH <> ETH
+    allow.mainnet.curve.ankrETH_pool["exchange"](
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        send: true,
+      }
+    ),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // PancakeSwap
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // ...allowErc20Approve([stader.ETHx, WETH], [pancake_swap.SMART_ROUTER]),
+
+    {
+      targetAddress: pancake_swap.SMART_ROUTER,
+      signature:
+        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+      params: {
+        [0]: staticOneOf([stader.ETHx, WETH], "address"),
+        [1]: staticOneOf([stader.ETHx, WETH], "address"),
+        [3]: staticEqual(AVATAR),
+      },
+    },
 
     // //---------------------------------------------------------------------------------------------------------------------------------
     // // Cowswap
