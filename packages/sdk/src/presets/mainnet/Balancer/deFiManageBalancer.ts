@@ -692,7 +692,7 @@ const preset = {
     // Withdraw ETH - Burns rETH in exchange for ETH
     allow.mainnet.rocket_pool.rETH["burn"](),
 
-    // Swap ETH for rETH through SWAP_ROUTER - When there is not enough rETH on the DEPOSIT_POOL in exchange for the
+    // Swap ETH for rETH through SWAP_ROUTER - When there is not enough rETH in the DEPOSIT_POOL in exchange for the
     // ETH you are depositing, the SWAP_ROUTER swaps the ETH for rETH in secondary markets (Balancer and Uniswap).
     allow.mainnet.rocket_pool.swap_router["swapTo"](
       undefined,
@@ -704,7 +704,7 @@ const preset = {
       }
     ),
 
-    // Swap rETH for ETH through SWAP_ROUTER - When there is not enough ETH on the DEPOSIT_POOL in exchange for the
+    // Swap rETH for ETH through SWAP_ROUTER - When there is not enough ETH in the DEPOSIT_POOL in exchange for the
     // rETH you are withdrawing, the SWAP_ROUTER swaps the rETH for ETH in secondary markets (Balancer and Uniswap).
     allow.mainnet.rocket_pool.swap_router["swapFrom"](),
 
@@ -1137,7 +1137,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of ETH and stETH in Curve
     //---------------------------------------------------------------------------------------------------------------------------------
-    ...allowErc20Approve([stETH], [curve.stETH_ETH_POOL]),
+    // ...allowErc20Approve([stETH], [curve.stETH_ETH_POOL]),
     // {
     //     targetAddress: curve.stETH_ETH_POOL,
     //     signature: "exchange(int128,int128,uint256,uint256)",

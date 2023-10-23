@@ -46,6 +46,7 @@
     "apply:ens:eth:spark": "hardhat encodeApplyPresetsSpark --network mainnet --safe ENS_ETH",
     "apply:ens:eth:balancer": "hardhat encodeApplyPresetsTestBalancer --network mainnet --safe ENS_ETH",
     "apply:ens:eth:maker": "hardhat encodeApplyPresetsTestMaker --network mainnet --safe ENS_ETH",
+    "apply:ens:eth:rocket": "hardhat encodeApplyPresetsTestRocket --network mainnet --safe ENS_ETH",
     "test": "hardhat test",
     "test:simulate": "hardhat test ./test/karpatkey/simulateTransactions.test.ts --grep",
     "test:simulate:fork:eth": "hardhat test ./test/karpatkey/simulateTransactionsForkEth.test.ts --config hardhat.config.fork.eth.ts --grep",

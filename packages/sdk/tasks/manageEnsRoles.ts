@@ -14,7 +14,8 @@ import mainnetDeFiManageENSPreset from "../src/presets/mainnet/ENS/deFiManageENS
 import mainnetDeFiSwapENSPreset from "../src/presets/mainnet/ENS/deFiSwapENS"
 // import sparkRepayDebtDAI from "../src/presets/mainnet/ENS/sparkRepayDebtDAI"
 // import test_payload_balancer from "../src/presets/mainnet/ENS/test_payload_balancer"
-import test_payload_maker from "../src/presets/mainnet/ENS/test_payload_maker"
+// import test_payload_maker from "../src/presets/mainnet/ENS/test_payload_maker"
+import test_payload_rocket from "../src/presets/mainnet/ENS/test_payload_rocket"
 import { NetworkId } from "../src/types"
 
 interface Config {
@@ -215,12 +216,12 @@ task("encodeApplyPresetManageENS").setAction(async (taskArgs, hre) => {
   console.log(`Transaction builder JSON written to  ${filePath}`)
 })
 
-task("encodeApplyPresetsTestMaker").setAction(async (taskArgs, hre) => {
+task("encodeApplyPresetsTestRocket").setAction(async (taskArgs, hre) => {
   const { config } = await processArgs(taskArgs, hre)
   const txBatches = await encodeApplyPresetTxBuilder(
     config.MODULE,
     config.ROLE_IDS.REVOKER,
-    test_payload_maker,
+    test_payload_rocket,
     { AVATAR: config.AVATAR },
     {
       network: config.NETWORK as NetworkId,
@@ -230,7 +231,7 @@ task("encodeApplyPresetsTestMaker").setAction(async (taskArgs, hre) => {
   const filePath = path.join(
     __dirname,
     "..",
-    "/presets-output/mainnet/ENS/test_payload_maker.json"
+    "/presets-output/mainnet/ENS/test_payload_rocket.json"
   )
   if (!existsSync(filePath)) {
     // Create the directory structure if it doesn't exist

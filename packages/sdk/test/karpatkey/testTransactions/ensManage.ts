@@ -48,7 +48,6 @@ export default [
   //   to: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
   //   data: "0x69328dec000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64",
   // },
-
   // //---------------------------------------------------------------------------------------------------------------------------------
   // // COMPOUND V3 - ETH
   // //---------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +76,6 @@ export default [
   //   to: "0xa397a8c2086c554b531c02e29f3291c9704b00c7",
   //   data: "0x555029a6000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000a17581a9e3356d9a858b789d68b4d866e593ae940000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
   // },
-
   // //---------------------------------------------------------------------------------------------------------------------------------
   // // ANKR - ETH (Standard)
   // //---------------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +114,6 @@ export default [
   //   to: "0xf047f23ACFdB1315cF63Ad8aB5146d5fDa4267Af",
   //   data: "0xe28079be000000000000000000000000000000000000000000000000002386f26fc100000000000000000000000000004F2083f5fBede34C2714aFfb3105539775f7FE64",
   // },
-
   // //---------------------------------------------------------------------------------------------------------------------------------
   // // STADER - ETH
   // //---------------------------------------------------------------------------------------------------------------------------------
@@ -139,54 +136,69 @@ export default [
   //   to: "0x9F0491B32DBce587c50c4C43AB303b06478193A7",
   //   data: "0xccc143b800000000000000000000000000000000000000000000000000038D7EA4C680000000000000000000000000004F2083f5fBede34C2714aFfb3105539775f7FE64",
   // },
-
+  // //---------------------------------------------------------------------------------------------------------------------------------
+  // // Spark - ETH
+  // //---------------------------------------------------------------------------------------------------------------------------------
+  // // Supply ETH - depositETH(address,address,uint16)
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
+  //   data: "0x474cf53d000000000000000000000000c13e21b648a5ee794902342038ff3adab66be9870000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe640000000000000000000000000000000000000000000000000000000000000000",
+  //   value: "1000000000000000",
+  // },
+  // // Approve spETH with WRAPPED_TOKEN_GATEWAY_V3 as spender - "approve(address,uint256)"
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB",
+  //   data: "0x095ea7b3000000000000000000000000bd7d6a9ad7865463de44b05f04559f65e3b11704ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  // },
+  // // Withdraw ETH - withdrawETH(address,uint256,address)
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
+  //   data: "0x80500d20000000000000000000000000c13e21b648a5ee794902342038ff3adab66be987ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64",
+  // },
+  // //---------------------------------------------------------------------------------------------------------------------------------
+  // // Spark V3 - WETH
+  // //---------------------------------------------------------------------------------------------------------------------------------
+  // // Approve WETH
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  //   data: "0x095ea7b3000000000000000000000000c13e21b648a5ee794902342038ff3adab66be987ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  // },
+  // // Supply WETH - supply(address,uint256,address,uint16)
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
+  //   data: "0x617ba037000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000016345785d8a00000000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe640000000000000000000000000000000000000000000000000000000000000000",
+  // },
+  // // Approve spETH with WRAPPED_TOKEN_GATEWAY_V3 as spender - "approve(address,uint256)"
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB",
+  //   data: "0x095ea7b3000000000000000000000000bd7d6a9ad7865463de44b05f04559f65e3b11704ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  // },
+  // // Withdraw WETH - withdraw(address,uint256,address)
+  // {
+  //   from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
+  //   to: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
+  //   data: "0x69328dec000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64",
+  // },
   //---------------------------------------------------------------------------------------------------------------------------------
-  // Spark - ETH
+  // ROCKET - ETH
   //---------------------------------------------------------------------------------------------------------------------------------
-  // Supply ETH - depositETH(address,address,uint16)
+  // Stake ETH - swapTo(uint256,uint256,uint256,uint256)
   {
     from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
-    data: "0x474cf53d000000000000000000000000c13e21b648a5ee794902342038ff3adab66be9870000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe640000000000000000000000000000000000000000000000000000000000000000",
-    value: "1000000000000000",
+    to: "0x16D5A408e807db8eF7c578279BEeEe6b228f1c1C",
+    data: "0x55362f4d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000ca2aefe0c7888ec0000000000000000000000000000000000000000000000000cc35b6d388e7073",
+    value: "1000000000000000000",
   },
-  // Approve spETH with WRAPPED_TOKEN_GATEWAY_V3 as spender - "approve(address,uint256)"
+  // Unstake ETH - burn(uint256)
   {
     from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB",
-    data: "0x095ea7b3000000000000000000000000bd7d6a9ad7865463de44b05f04559f65e3b11704ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-  },
-  // Withdraw ETH - withdrawETH(address,uint256,address)
-  {
-    from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0xBD7D6a9ad7865463DE44B05F04559f65e3B11704",
-    data: "0x80500d20000000000000000000000000c13e21b648a5ee794902342038ff3adab66be987ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64",
-  },
-  //---------------------------------------------------------------------------------------------------------------------------------
-  // Spark V3 - WETH
-  //---------------------------------------------------------------------------------------------------------------------------------
-  // Approve WETH
-  {
-    from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    data: "0x095ea7b3000000000000000000000000c13e21b648a5ee794902342038ff3adab66be987ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-  },
-  // Supply WETH - supply(address,uint256,address,uint16)
-  {
-    from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
-    data: "0x617ba037000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000016345785d8a00000000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe640000000000000000000000000000000000000000000000000000000000000000",
-  },
-  // Approve spETH with WRAPPED_TOKEN_GATEWAY_V3 as spender - "approve(address,uint256)"
-  {
-    from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB",
-    data: "0x095ea7b3000000000000000000000000bd7d6a9ad7865463de44b05f04559f65e3b11704ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-  },
-  // Withdraw WETH - withdraw(address,uint256,address)
-  {
-    from: "0x4F2083f5fBede34C2714aFfb3105539775f7FE64",
-    to: "0xC13e21B648A5Ee794902342038FF3aDAB66BE987",
-    data: "0x69328dec000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000004f2083f5fbede34c2714affb3105539775f7fe64",
+    to: "0xae78736Cd615f374D3085123A210448E74Fc6393",
+    data: "0x42966c680000000000000000000000000000000000000000000000000de0b6b3a7640000",
   },
 ]
