@@ -453,15 +453,15 @@
   resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-contracts/-/safe-contracts-1.3.0.tgz#316741a7690d8751a1f701538cfc9ec80866eedc"
   integrity sha512-1p+1HwGvxGUVzVkFjNzglwHrLNA67U/axP0Ct85FzzH8yhGJb4t9jDjPYocVMzLorDoWAfKicGy1akPY9jXRVw==
 
-"@gnosis.pm/zodiac@3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/zodiac/-/zodiac-3.2.0.tgz#4cc59023332076ede901cb39563a09b8c5625568"
-  integrity sha512-eMkaezpwzNMhxr4sXR4fFjgUKtF7K6QxUM3j66pe4tsmdQ1gCqO1MERpGo8z1ggwEga3MwKGMuWvjkfaXJh3vQ==
+"@gnosis.pm/zodiac@3.4.0":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/zodiac/-/zodiac-3.4.0.tgz#64e0dcd6b9298fcdae2e501000820b4430daeeab"
+  integrity sha512-jiJXNn1EFO9CQ5P275eB7liSgivwyvO3f8nBbdpwFAMx4SlwRjzeGgxgR7S6ah4F0pHrWy6aFvjtWvH6JIW2xw==
   dependencies:
     "@gnosis.pm/mock-contract" "^4.0.0"
     "@gnosis.pm/safe-contracts" "1.3.0"
-    "@openzeppelin/contracts" "^4.8.1"
-    "@openzeppelin/contracts-upgradeable" "^4.8.1"
+    "@openzeppelin/contracts" "^5.0.0"
+    "@openzeppelin/contracts-upgradeable" "^5.0.0"
     ethers "^5.7.1"
 
 "@humanwhocodes/config-array@^0.11.8":
@@ -804,20 +804,10 @@
     table "^6.8.0"
     undici "^5.14.0"
 
-"@openzeppelin/contracts-upgradeable@^4.8.1":
-  version "4.9.3"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.3.tgz#ff17a80fb945f5102571f8efecb5ce5915cc4811"
-  integrity sha512-jjaHAVRMrE4UuZNfDwjlLGDxTHWIOwTJS2ldnc278a0gevfXfPr8hxKEVBGFBE96kl2G3VHDZhUimw/+G3TG2A==
-
 "@openzeppelin/contracts-upgradeable@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-5.0.0.tgz#859c00c55f04b6dda85b3c88bce507d65019888f"
   integrity sha512-D54RHzkOKHQ8xUssPgQe2d/U92mwaiBDY7qCCVGq6VqwQjsT3KekEQ3bonev+BLP30oZ0R1U6YC8/oLpizgC5Q==
-
-"@openzeppelin/contracts@^4.8.1":
-  version "4.9.3"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
-  integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
 
 "@openzeppelin/contracts@^5.0.0":
   version "5.0.0"
