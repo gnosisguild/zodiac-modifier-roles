@@ -24,7 +24,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Consumption[] memory) {
+    ) internal moduleOnly returns (Consumption[] memory) {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
         if (roleKey == 0) {

@@ -105,7 +105,7 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) public override moduleOnly returns (bool success) {
+    ) public override returns (bool success) {
         Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
@@ -129,12 +129,7 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    )
-        public
-        override
-        moduleOnly
-        returns (bool success, bytes memory returnData)
-    {
+    ) public override returns (bool success, bytes memory returnData) {
         Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
             to,
@@ -162,7 +157,7 @@ contract Roles is
         Enum.Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public moduleOnly returns (bool success) {
+    ) public returns (bool success) {
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -193,7 +188,7 @@ contract Roles is
         Enum.Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public moduleOnly returns (bool success, bytes memory returnData) {
+    ) public returns (bool success, bytes memory returnData) {
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,

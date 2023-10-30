@@ -28,8 +28,8 @@ abstract contract AllowanceTracker is Core {
             return (allowance.balance, allowance.timestamp);
         }
 
-        uint64 elapsedIntervals = (blockTimestamp -
-            allowance.timestamp) / allowance.period;
+        uint64 elapsedIntervals = (blockTimestamp - allowance.timestamp) /
+            allowance.period;
 
         if (allowance.balance < allowance.maxRefill) {
             balance = allowance.balance + allowance.refill * elapsedIntervals;
