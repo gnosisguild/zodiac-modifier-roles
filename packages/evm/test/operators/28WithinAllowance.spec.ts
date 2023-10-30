@@ -14,13 +14,13 @@ describe("Operator - WithinAllowance", async () => {
     allowanceKey: string,
     {
       balance,
-      maxBalance,
+      maxRefill,
       refill,
       period,
       timestamp,
     }: {
       balance: BigNumberish;
-      maxBalance?: BigNumberish;
+      maxRefill?: BigNumberish;
       refill: BigNumberish;
       period: BigNumberish;
       timestamp: BigNumberish;
@@ -29,7 +29,7 @@ describe("Operator - WithinAllowance", async () => {
     return roles.setAllowance(
       allowanceKey,
       balance,
-      maxBalance || 0,
+      maxRefill || 0,
       refill,
       period,
       timestamp
@@ -194,7 +194,7 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
-    it("passes a check with balance from refill and bellow maxBalance", async () => {
+    it("passes a check with balance from refill and bellow maxRefill", async () => {
       const { owner, roles, scopeFunction, invoke } = await loadFixture(
         setupOneParamStatic
       );
@@ -221,7 +221,7 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 0,
-        maxBalance: 1000,
+        maxRefill: 1000,
         period: interval,
         refill: 9999999,
         timestamp: timestamp - interval * 10,
@@ -233,7 +233,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1000)).to.not.be.reverted;
     });
-    it("fails a check with balance from refill but capped by maxBalance", async () => {
+    it("fails a check with balance from refill but capped by maxRefill", async () => {
       const { owner, roles, scopeFunction, invoke } = await loadFixture(
         setupOneParamStatic
       );
@@ -258,7 +258,7 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 0,
-        maxBalance: 9000,
+        maxRefill: 9000,
         period: 1000,
         refill: 10000,
         timestamp: timestamp - 5000,

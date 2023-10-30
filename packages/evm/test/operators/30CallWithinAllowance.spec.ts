@@ -38,21 +38,21 @@ describe("Operator - CallWithinAllowance", async () => {
     async function setAllowance({
       key,
       balance,
-      maxBalance,
+      maxRefill,
       refill,
       period,
       timestamp,
     }: {
       key: string;
       balance: BigNumberish;
-      maxBalance?: BigNumberish;
+      maxRefill?: BigNumberish;
       refill: BigNumberish;
       period: BigNumberish;
       timestamp: BigNumberish;
     }) {
       await roles
         .connect(owner)
-        .setAllowance(key, balance, maxBalance || 0, refill, period, timestamp);
+        .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
 
     await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
