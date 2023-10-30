@@ -32,7 +32,7 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         Role storage role = roles[roleKey];
-        if (!role.members[msg.sender]) {
+        if (!role.members[sentOrSignedBy()]) {
             revert NoMembership();
         }
 
