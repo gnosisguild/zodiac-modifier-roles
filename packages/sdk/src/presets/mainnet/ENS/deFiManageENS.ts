@@ -2123,21 +2123,22 @@ const preset = {
     ),
 
     // Swaps using ROUTE_PROCESSOR_3_2
+    // Removed after Nick's comment on TG about not constraining the "route"
     // ...allowErc20Approve(
     //     [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
     //     [sushiswap.ROUTE_PROCESSOR_3_2]
     //   ),
-    allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
-      {
-        oneOf: [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
-      },
-      undefined,
-      {
-        oneOf: [WETH, USDC, USDT, DAI],
-      },
-      undefined,
-      AVATAR
-    ),
+    // allow.mainnet.sushiswap.route_processor_3_2["processRoute"](
+    //   {
+    //     oneOf: [COMP, BAL, LDO, CRV, WETH, USDC, USDT, DAI],
+    //   },
+    //   undefined,
+    //   {
+    //     oneOf: [WETH, USDC, USDT, DAI],
+    //   },
+    //   undefined,
+    //   AVATAR
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Swapping of ETH and stETH in Curve
