@@ -56,6 +56,16 @@ task("deploy:mastercopy", "Deploys and verifies Delay mastercopy").setAction(
     await new Promise((resolve) => setTimeout(resolve, 60000));
 
     await hre.run("verify:verify", {
+      address: packerLibraryAddress,
+      constructorArguments: [],
+    });
+
+    await hre.run("verify:verify", {
+      address: integrityLibraryAddress,
+      constructorArguments: [],
+    });
+
+    await hre.run("verify:verify", {
       address: rolesAddress,
       constructorArguments: [AddressZero, AddressZero, AddressZero],
     });
