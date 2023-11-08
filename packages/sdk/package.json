@@ -20,6 +20,7 @@
     "apply:dao:eth:revoke": "hardhat encodeApplyPresetRevokeGnosisDAOmainnet --network mainnet --safe GNOSIS_DAO_ETH",
     "apply:dao:eth:harvest": "hardhat encodeApplyPresetHarvestGnosisDAOmainnet --network mainnet --safe GNOSIS_DAO_ETH",
     "apply:dao:eth:disassemble": "hardhat encodeApplyPresetDisassembleGnosisDAOmainnet --network mainnet --safe GNOSIS_DAO_ETH",
+    "apply:dao:eth:antiliquidation": "hardhat encodeApplyPresetAntiliquidationGnosisDAOmainnet --network mainnet --safe GNOSIS_DAO_ETH",
     "apply:dao:eth:swap": "hardhat encodeApplyPresetSwapGnosisDAOmainnet --network mainnet --safe GNOSIS_DAO_ETH",
     "apply:ltd:eth:manage": "hardhat encodeApplyPresetManageGnosisLTDmainnet --network mainnet --safe GNOSIS_LTD_ETH",
     "apply:ltd:eth:revoke": "hardhat encodeApplyPresetRevokeGnosisLTDmainnet --network mainnet --safe GNOSIS_LTD_ETH",

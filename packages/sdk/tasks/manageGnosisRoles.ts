@@ -10,34 +10,35 @@ import { Roles } from "../../evm/typechain-types"
 import addMembers from "../src/addMembers"
 import { encodeApplyPresetTxBuilder } from "../src/applyPreset"
 
+// GnosisDAO in Mainnet
+import mainnetDeFiDisassembleGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiDisassembleGnosisDAO"
+import mainnetDeFiHarvestGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiHarvestGnosisDAO"
+import mainnetDeFiManageGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiManageGnosisDAO"
+import mainnetDeFiRevokeGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiRevokeGnosisDAO"
+import mainnetDeFiAntiliquidationGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiAntiliquidationGnosisDAO"
+import mainnetDeFiSwapGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiSwapGnosisDAO"
+
 // GnosisDAO in Gnosis Chain
 import gnosisDeFiDisassembleGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiDisassembleGnosisDAO"
 import gnosisDeFiHarvestGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiHarvestGnosisDAO"
 import gnosisDeFiManageGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiManageGnosisDAO"
 import gnosisDeFiRevokeGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiRevokeGnosisDAO"
 import gnosisDeFiSwapGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiSwapGnosisDAO"
-import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiDisassembleGnosisLTD"
-import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
-import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
-import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
-import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
-import mainnetDeFiDisassembleGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiDisassembleGnosisDAO"
-import mainnetDeFiHarvestGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiHarvestGnosisDAO"
-import mainnetDeFiManageGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiManageGnosisDAO"
-import mainnetDeFiRevokeGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiRevokeGnosisDAO"
-import mainnetDeFiSwapGnosisDAOPreset from "../src/presets/mainnet/GnosisDAO/deFiSwapGnosisDAO"
 
-// GnosisLTD in Gnosis Chain
+// GnosisLTD in Mainnet
 import mainnetDeFiDisassembleGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiDisassembleGnosisLTD"
 import mainnetDeFiHarvestGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiHarvestGnosisLTD"
 import mainnetDeFiManageGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiManageGnosisLTD"
 import mainnetDeFiRevokeGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiRevokeGnosisLTD"
 import mainnetDeFiSwapGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiSwapGnosisLTD"
 
-// GnosisDAO in Gnosis Chain
-
 // GnosisLTD in Gnosis Chain
-import { AVATAR } from "../src/presets/placeholders"
+import gnosisDeFiDisassembleGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiDisassembleGnosisLTD"
+import gnosisDeFiHarvestGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiHarvestGnosisLTD"
+import gnosisDeFiManageGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiManageGnosisLTD"
+import gnosisDeFiRevokeGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
+import gnosisDeFiSwapGnosisLTDPreset from "../src/presets/gnosisChain/GnosisLTD/deFiSwapGnosisLTD"
+
 import { NetworkId } from "../src/types"
 
 interface Config {
@@ -56,6 +57,7 @@ interface Config {
     HARVESTER: number
     DISASSEMBLER: number
     SWAPPER: number
+    ANTILIQUIDATION: number
   }
 }
 
@@ -76,6 +78,7 @@ export const GNOSIS_ADDRESSES = {
       HARVESTER: 3,
       DISASSEMBLER: 4,
       SWAPPER: 5,
+      ANTILIQUIDATION: 6,
     },
   },
   GNOSIS_LTD_GNO: {
@@ -94,6 +97,7 @@ export const GNOSIS_ADDRESSES = {
       HARVESTER: 3,
       DISASSEMBLER: 4,
       SWAPPER: 5,
+      ANTILIQUIDATION: 6,
     },
   },
   GNOSIS_DAO_ETH: {
@@ -111,7 +115,8 @@ export const GNOSIS_ADDRESSES = {
       REVOKER: 2,
       HARVESTER: 3,
       DISASSEMBLER: 4,
-      SWAPPER: 5,
+      SWAPPER: 6,
+      ANTILIQUIDATION: 5,
     },
   },
   GNOSIS_LTD_ETH: {
@@ -130,6 +135,7 @@ export const GNOSIS_ADDRESSES = {
       HARVESTER: 3,
       DISASSEMBLER: 4,
       SWAPPER: 5,
+      ANTILIQUIDATION: 6,
     },
   },
 } satisfies { [key: string]: Config }
@@ -381,12 +387,41 @@ task("encodeApplyPresetDisassembleGnosisDAOmainnet").setAction(
   }
 )
 
-task("encodeApplyPresetSwapGnosisDAOmainnet").setAction(
+task("encodeApplyPresetAntiliquidationGnosisDAOmainnet").setAction(
   async (taskArgs, hre) => {
     const { config } = await processArgs(taskArgs, hre)
     const txBatches = await encodeApplyPresetTxBuilder(
       config.MODULE,
       5,
+      mainnetDeFiAntiliquidationGnosisDAOPreset,
+      { AVATAR: config.AVATAR },
+      {
+        network: config.NETWORK as NetworkId,
+      }
+    )
+
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "/presets-output/mainnet/GnosisDAO/txDataAntiliquidationGnosisDAOmainnet.json"
+    )
+    // Check if the file exists
+    if (!existsSync(filePath)) {
+      // Create the directory structure if it doesn't exist
+      mkdirSync(path.dirname(filePath), { recursive: true })
+    }
+    // Write the JSON data to the file
+    writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+    console.log(`Transaction builder JSON written to  ${filePath}`)
+  }
+)
+
+task("encodeApplyPresetSwapGnosisDAOmainnet").setAction(
+  async (taskArgs, hre) => {
+    const { config } = await processArgs(taskArgs, hre)
+    const txBatches = await encodeApplyPresetTxBuilder(
+      config.MODULE,
+      6,
       mainnetDeFiSwapGnosisDAOPreset,
       { AVATAR: config.AVATAR },
       {
