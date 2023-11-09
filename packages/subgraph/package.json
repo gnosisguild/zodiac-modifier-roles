@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "mustache": "^4.2.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.8.8"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.56.0",

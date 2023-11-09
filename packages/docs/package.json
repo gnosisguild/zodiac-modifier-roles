@@ -9,18 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@types/node": "^20.2.5",
+    "@types/node": "^20.9.0",
     "@types/react": "^18.2.8",
     "@types/react-dom": "^18.2.4",
-    "eslint": "^8.41.0",
+    "eslint": "^8.53.0",
     "eslint-config-next": "^13.4.4",
-    "ethers": "^5.4.7",
+    "ethers": "^5.7.2",
     "next": "^13.4.16",
     "nextra": "^2.11.0",
     "nextra-theme-docs": "^2.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.1.6",
+    "typescript": "^5.2.2",
     "zodiac-roles-sdk": "workspace:*"
   }
 }
