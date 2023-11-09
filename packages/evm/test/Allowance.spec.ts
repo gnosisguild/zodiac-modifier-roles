@@ -14,6 +14,7 @@ import {
 import { BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
+  setupFnThatMaybeReturns,
   setupOneParamArrayOfDynamicTuple,
   setupOneParamStatic,
   setupOneParamStaticTuple,
@@ -21,7 +22,7 @@ import {
 } from "./operators/setup";
 
 describe("Allowance", async () => {
-  it("Unexistent allowance produces error", async () => {
+  it("unexistent allowance produces error", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
       setupTwoParamsStatic
     );
@@ -53,6 +54,76 @@ describe("Allowance", async () => {
     await expect(invoke(100, 100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+  });
+  it("raises ConsumeAllowance event", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupFnThatMaybeReturns
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.WithinAllowance,
+          compValue: allowanceKey,
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+    });
+    await scopeFunction(conditionsFlat);
+    const maybe = false;
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+
+    await expect(invoke(100, maybe)).to.emit(roles, "ConsumeAllowance");
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(900);
+  });
+  it("does not raise ConsumeAllowance, when inner transaction reverts, shouldRevert=false", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupFnThatMaybeReturns
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.WithinAllowance,
+          compValue: allowanceKey,
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+    });
+    await scopeFunction(conditionsFlat);
+    const maybe = true;
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
+
+    await expect(invoke(100, true)).to.not.emit(roles, "ConsumeAllowance");
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
   });
   it("consumption in truthy And branch bleeds to other branches", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
@@ -591,6 +662,43 @@ describe("Allowance", async () => {
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(35);
+  });
+  it("balance above maxRefill gets consumed", async () => {
+    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+      setupFnThatMaybeReturns
+    );
+
+    const allowanceKey =
+      "0x000000000000000000000000000000000000000000000000000000000000000f";
+    await roles
+      .connect(owner)
+      .setAllowance(allowanceKey, 1300, 1000, 100, 0, 0);
+
+    const conditionsFlat = toConditionsFlat({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      compValue: "0x",
+      children: [
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.WithinAllowance,
+          compValue: allowanceKey,
+        },
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+    });
+    await scopeFunction(conditionsFlat);
+    const maybe = false;
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(1300);
+
+    await expect(invoke(1200, maybe)).to.emit(roles, "ConsumeAllowance");
+
+    expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
   });
 
   describe("multiEntrypoint", async () => {

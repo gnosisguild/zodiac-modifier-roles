@@ -90,6 +90,16 @@ contract TestContract {
         revert AnError();
     }
 
+    function fnThatMaybeReverts(
+        uint256 a,
+        bool maybe
+    ) public pure returns (uint256) {
+        if (maybe) {
+            revert AnError();
+        }
+        return a;
+    }
+
     function emitTheSender() public {
         emit EmitTheSender(msg.sender);
     }

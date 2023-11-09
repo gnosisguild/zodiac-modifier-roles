@@ -14,7 +14,6 @@ import "./packers/BufferPacker.sol";
  * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionBuilder is Core {
-    error UnsuitableMaxBalanceForAllowance();
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
@@ -45,10 +44,10 @@ abstract contract PermissionBuilder is Core {
     event SetAllowance(
         bytes32 allowanceKey,
         uint128 balance,
-        uint128 maxBalance,
-        uint128 refillAmount,
-        uint64 refillInterval,
-        uint64 refillTimestamp
+        uint128 maxRefill,
+        uint128 refill,
+        uint64 period,
+        uint64 timestamp
     );
 
     /// @dev Allows transactions to a target address.
@@ -159,31 +158,21 @@ abstract contract PermissionBuilder is Core {
     function setAllowance(
         bytes32 key,
         uint128 balance,
-        uint128 maxBalance,
-        uint128 refillAmount,
-        uint64 refillInterval,
-        uint64 refillTimestamp
+        uint128 maxRefill,
+        uint128 refill,
+        uint64 period,
+        uint64 timestamp
     ) external onlyOwner {
-        maxBalance = maxBalance > 0 ? maxBalance : type(uint128).max;
-
-        if (balance > maxBalance) {
-            revert UnsuitableMaxBalanceForAllowance();
-        }
+        maxRefill = maxRefill != 0 ? maxRefill : type(uint128).max;
+        timestamp = timestamp != 0 ? timestamp : uint64(block.timestamp);
 
         allowances[key] = Allowance({
-            refillAmount: refillAmount,
-            refillInterval: refillInterval,
-            refillTimestamp: refillTimestamp,
-            balance: balance,
-            maxBalance: maxBalance
+            refill: refill,
+            maxRefill: maxRefill,
+            period: period,
+            timestamp: timestamp,
+            balance: balance
         });
-        emit SetAllowance(
-            key,
-            balance,
-            maxBalance,
-            refillAmount,
-            refillInterval,
-            refillTimestamp
-        );
+        emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }
 }

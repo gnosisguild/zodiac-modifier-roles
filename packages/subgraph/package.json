@@ -23,7 +23,7 @@
     "prepare:avalanche": "mustache networks/avalanche.json subgraph.template.yaml > subgraph.yaml",
     "prepare:bsc": "mustache networks/bsc.json subgraph.template.yaml > subgraph.yaml",
     "prepare:optimism": "mustache networks/optimism.json subgraph.template.yaml > subgraph.yaml",
-    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml"
   },
   "devDependencies": {
     "mustache": "^4.2.0",

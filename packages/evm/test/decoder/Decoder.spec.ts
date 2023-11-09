@@ -6,6 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
 import { Operator, ParameterType } from "../utils";
+import { AddressOne } from "@gnosis.pm/safe-contracts";
 
 const YesRemoveOffset = true;
 const DontRemoveOffset = false;
@@ -106,7 +107,349 @@ describe("Decoder library", async () => {
   it.skip("plucks Tuple from top level");
   it.skip("plucks Tuple from Tuple");
   it.skip("plucks Tuple from Array");
-  it.skip("plucks Tuple from nested Calldata");
+
+  it("plucks StaticTuple from nested Calldata", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data: inner } = await testEncoder.populateTransaction.staticTuple(
+      {
+        a: 999,
+        b: AddressOne,
+      },
+      123
+    );
+    assert(inner);
+
+    const { data } = await testEncoder.populateTransaction.dynamic(inner);
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const calldata = result.children[0];
+    const tuple = calldata.children[0];
+    const tupleField1 = tuple.children[0];
+    const tupleField2 = tuple.children[1];
+    const arg = calldata.children[1];
+
+    expect(
+      await decoder.pluck(data as string, tuple.location, tuple.size)
+    ).to.equal(
+      defaultAbiCoder.encode(["tuple(uint256,address)"], [[999, AddressOne]])
+    );
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField1.location,
+        tupleField1.size
+      )
+    ).to.equal(defaultAbiCoder.encode(["uint256"], [999]));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField2.location,
+        tupleField2.size
+      )
+    ).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
+  });
+  it("plucks DynamicTuple from nested Calldata", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const { data: inner } = await testEncoder.populateTransaction.dynamicTuple({
+      dynamic: "0xbadfed",
+      _static: 123,
+      dynamic32: [456, 789],
+    });
+    assert(inner);
+
+    const { data } = await testEncoder.populateTransaction.dynamic(inner);
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const calldata = result.children[0];
+    const tuple = calldata.children[0];
+    const tupleField1 = tuple.children[0];
+    const tupleField2 = tuple.children[1];
+    const tupleField3 = tuple.children[2];
+
+    expect(
+      await decoder.pluck(data as string, tuple.location, tuple.size)
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256,uint256[])"],
+        [["0xbadfed", 123, [456, 789]]],
+        YesRemoveOffset
+      )
+    );
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField1.location,
+        tupleField1.size
+      )
+    ).to.equal(encode(["bytes"], ["0xbadfed"], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField2.location,
+        tupleField2.size
+      )
+    ).to.equal(encode(["uint256"], [123]));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField3.location,
+        tupleField3.size
+      )
+    ).to.equal(encode(["uint256[]"], [[456, 789]], YesRemoveOffset));
+  });
+  it("plucks StaticTuple from nested AbiEncoded", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const inner = encode(
+      ["tuple(uint256,address)", "uint256"],
+      [[999, AddressOne], 123]
+    );
+
+    const { data } = await testEncoder.populateTransaction.dynamic(inner);
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const calldata = result.children[0];
+    const tuple = calldata.children[0];
+    const tupleField1 = tuple.children[0];
+    const tupleField2 = tuple.children[1];
+    const arg = calldata.children[1];
+
+    expect(
+      await decoder.pluck(data as string, tuple.location, tuple.size)
+    ).to.equal(
+      defaultAbiCoder.encode(["tuple(uint256,address)"], [[999, AddressOne]])
+    );
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField1.location,
+        tupleField1.size
+      )
+    ).to.equal(defaultAbiCoder.encode(["uint256"], [999]));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField2.location,
+        tupleField2.size
+      )
+    ).to.equal(defaultAbiCoder.encode(["address"], [AddressOne]));
+  });
+  it("plucks DynamicTuple from nested AbiEncoded", async () => {
+    const { decoder, testEncoder } = await loadFixture(setup);
+
+    const inner = encode(
+      ["tuple(bytes,uint256,uint256[])"],
+      [["0xbadfed", 123, [456, 789]]]
+    );
+
+    const { data } = await testEncoder.populateTransaction.dynamic(inner);
+    assert(data);
+
+    const layout = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.AbiEncoded,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: ParameterType.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    {
+                      paramType: ParameterType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await decoder.inspect(data as string, layout);
+
+    const calldata = result.children[0];
+    const tuple = calldata.children[0];
+    const tupleField1 = tuple.children[0];
+    const tupleField2 = tuple.children[1];
+    const tupleField3 = tuple.children[2];
+
+    expect(
+      await decoder.pluck(data as string, tuple.location, tuple.size)
+    ).to.equal(
+      encode(
+        ["tuple(bytes,uint256,uint256[])"],
+        [["0xbadfed", 123, [456, 789]]],
+        YesRemoveOffset
+      )
+    );
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField1.location,
+        tupleField1.size
+      )
+    ).to.equal(encode(["bytes"], ["0xbadfed"], YesRemoveOffset));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField2.location,
+        tupleField2.size
+      )
+    ).to.equal(encode(["uint256"], [123]));
+
+    expect(
+      await decoder.pluck(
+        data as string,
+        tupleField3.location,
+        tupleField3.size
+      )
+    ).to.equal(encode(["uint256[]"], [[456, 789]], YesRemoveOffset));
+  });
   it("plucks Tuple with multiple dynamic fields", async () => {
     const { decoder, testEncoder } = await loadFixture(setup);
 
@@ -186,6 +529,7 @@ describe("Decoder library", async () => {
   it.skip("plucks Array from Tuple");
   it.skip("plucks Array from Array");
   it.skip("plucks Array from nested Calldata");
+  it.skip("plucks Array from nested AbiEncoded");
 
   describe("TypeTree", async () => {
     it("top level variants get unfolded to its entrypoint form", async () => {

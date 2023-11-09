@@ -19,30 +19,29 @@ abstract contract AllowanceTracker is Core {
 
     function _accruedAllowance(
         Allowance memory allowance,
-        uint256 timestamp
-    ) internal pure override returns (uint128 balance, uint64 refillTimestamp) {
+        uint64 blockTimestamp
+    ) internal pure override returns (uint128 balance, uint64 timestamp) {
         if (
-            allowance.refillInterval == 0 ||
-            timestamp < allowance.refillTimestamp + allowance.refillInterval
+            allowance.period == 0 ||
+            blockTimestamp < (allowance.timestamp + allowance.period)
         ) {
-            return (allowance.balance, allowance.refillTimestamp);
+            return (allowance.balance, allowance.timestamp);
         }
 
-        uint64 elapsedIntervals = (uint64(timestamp) -
-            allowance.refillTimestamp) / allowance.refillInterval;
+        uint64 elapsedIntervals = (blockTimestamp - allowance.timestamp) /
+            allowance.period;
 
-        uint128 uncappedBalance = allowance.balance +
-            allowance.refillAmount *
-            elapsedIntervals;
+        if (allowance.balance < allowance.maxRefill) {
+            balance = allowance.balance + allowance.refill * elapsedIntervals;
 
-        balance = uncappedBalance < allowance.maxBalance
-            ? uncappedBalance
-            : allowance.maxBalance;
+            balance = balance < allowance.maxRefill
+                ? balance
+                : allowance.maxRefill;
+        } else {
+            balance = allowance.balance;
+        }
 
-        refillTimestamp =
-            allowance.refillTimestamp +
-            elapsedIntervals *
-            allowance.refillInterval;
+        timestamp = allowance.timestamp + elapsedIntervals * allowance.period;
     }
 
     /**
@@ -63,19 +62,16 @@ abstract contract AllowanceTracker is Core {
             // Retrieve the allowance and calculate its current updated balance
             // and next refill timestamp.
             Allowance storage allowance = allowances[key];
-            (uint128 balance, uint64 refillTimestamp) = _accruedAllowance(
+            (uint128 balance, uint64 timestamp) = _accruedAllowance(
                 allowance,
-                block.timestamp
+                uint64(block.timestamp)
             );
 
             assert(balance == consumption.balance);
             assert(consumed <= balance);
             // Flush
             allowance.balance = balance - consumed;
-            allowance.refillTimestamp = refillTimestamp;
-
-            // Emit an event to signal the total consumed amount.
-            emit ConsumeAllowance(key, consumed, balance - consumed);
+            allowance.timestamp = timestamp;
 
             unchecked {
                 ++i;

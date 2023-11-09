@@ -23,26 +23,22 @@ library WriteOnce {
   */
     function store(bytes memory data) internal returns (address pointer) {
         bytes memory creationBytecode = creationBytecodeFor(data);
-        address calculatedAddress = addressFor(creationBytecode);
+        pointer = addressFor(creationBytecode);
 
         uint256 size;
         assembly {
-            size := extcodesize(calculatedAddress)
+            size := extcodesize(pointer)
         }
 
-        address actualAddress;
         if (size == 0) {
-            actualAddress = ISingletonFactory(SINGLETON_FACTORY).deploy(
-                creationBytecode,
-                SALT
+            assert(
+                pointer ==
+                    ISingletonFactory(SINGLETON_FACTORY).deploy(
+                        creationBytecode,
+                        SALT
+                    )
             );
-        } else {
-            actualAddress = calculatedAddress;
         }
-
-        assert(calculatedAddress == actualAddress);
-
-        pointer = calculatedAddress;
     }
 
     /**

@@ -24,7 +24,7 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) internal view returns (Consumption[] memory) {
+    ) internal moduleOnly returns (Consumption[] memory) {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
         if (roleKey == 0) {
@@ -32,7 +32,7 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         Role storage role = roles[roleKey];
-        if (!role.members[msg.sender]) {
+        if (!role.members[sentOrSignedByModule()]) {
             revert NoMembership();
         }
 
@@ -123,12 +123,7 @@ abstract contract PermissionChecker is Core, Periphery {
             revert FunctionSignatureTooShort();
         }
 
-        if (role.targets[to].clearance == Clearance.Target) {
-            return (
-                _executionOptions(value, operation, role.targets[to].options),
-                Result({consumptions: consumptions, info: 0})
-            );
-        } else if (role.targets[to].clearance == Clearance.Function) {
+        if (role.targets[to].clearance == Clearance.Function) {
             bytes32 key = _key(to, bytes4(data));
             {
                 bytes32 header = role.scopeConfig[key];
@@ -168,6 +163,11 @@ abstract contract PermissionChecker is Core, Periphery {
                     data,
                     Context({to: to, value: value, consumptions: consumptions})
                 );
+        } else if (role.targets[to].clearance == Clearance.Target) {
+            return (
+                _executionOptions(value, operation, role.targets[to].options),
+                Result({consumptions: consumptions, info: 0})
+            );
         } else {
             return (
                 Status.TargetAddressNotAllowed,

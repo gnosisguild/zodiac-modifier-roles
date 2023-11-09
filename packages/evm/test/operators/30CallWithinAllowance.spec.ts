@@ -38,28 +38,21 @@ describe("Operator - CallWithinAllowance", async () => {
     async function setAllowance({
       key,
       balance,
-      maxBalance,
-      refillAmount,
-      refillInterval,
-      refillTimestamp,
+      maxRefill,
+      refill,
+      period,
+      timestamp,
     }: {
       key: string;
       balance: BigNumberish;
-      maxBalance?: BigNumberish;
-      refillAmount: BigNumberish;
-      refillInterval: BigNumberish;
-      refillTimestamp: BigNumberish;
+      maxRefill?: BigNumberish;
+      refill: BigNumberish;
+      period: BigNumberish;
+      timestamp: BigNumberish;
     }) {
       await roles
         .connect(owner)
-        .setAllowance(
-          key,
-          balance,
-          maxBalance || 0,
-          refillAmount,
-          refillInterval,
-          refillTimestamp
-        );
+        .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
 
     await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
@@ -124,9 +117,9 @@ describe("Operator - CallWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 1,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
@@ -149,9 +142,9 @@ describe("Operator - CallWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 2,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
@@ -177,9 +170,9 @@ describe("Operator - CallWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 0,
-        refillInterval: 1000,
-        refillAmount: 1,
-        refillTimestamp: timestamp - 1010,
+        period: 1000,
+        refill: 1,
+        timestamp: timestamp - 1010,
       });
 
       await expect(invoke()).to.not.be.reverted;
@@ -196,9 +189,9 @@ describe("Operator - CallWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey,
         balance: 0,
-        refillInterval: 1000,
-        refillAmount: 1,
-        refillTimestamp: timestamp,
+        period: 1000,
+        refill: 1,
+        timestamp: timestamp,
       });
 
       await expect(invoke())
@@ -228,17 +221,17 @@ describe("Operator - CallWithinAllowance", async () => {
       await setAllowance({
         key: allowanceKey1,
         balance: 0,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       await setAllowance({
         key: allowanceKey2,
         balance: 1,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       async function invoke(p: BigNumberish) {
