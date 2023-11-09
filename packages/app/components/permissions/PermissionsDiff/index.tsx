@@ -1,4 +1,5 @@
 import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
+import cn from "classnames"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
@@ -6,6 +7,7 @@ import { processAnnotations } from "../annotations"
 import { diffPermissions, diffPresets } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
+import { DIFF_CONTAINER_CLASS } from "../PresetItem/IndividualPermissions"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -38,7 +40,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
 
   return (
     <Flex direction="row" gap={1}>
-      <Box p={3} className={classes.left}>
+      <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
         <PresetsAndPermissionsView
           presets={[...presetsDiffLeft.keys()]}
           permissions={[...permissionsDiffLeft.keys()]}
@@ -49,7 +51,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
           chainId={chainId}
         />
       </Box>
-      <Box p={3} className={classes.left}>
+      <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
         <PresetsAndPermissionsView
           presets={[...presetsDiffRight.keys()]}
           permissions={[...permissionsDiffRight.keys()]}

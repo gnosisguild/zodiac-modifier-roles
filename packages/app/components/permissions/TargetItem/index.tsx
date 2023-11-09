@@ -27,6 +27,7 @@ const TargetItem: React.FC<{
     groupDiff(
       permissions.map((p) => {
         if (!diff.has(p)) {
+          console.log({ diff, p })
           throw new Error("Missing permissions diff entry")
         }
         return diff.get(p)!.flag

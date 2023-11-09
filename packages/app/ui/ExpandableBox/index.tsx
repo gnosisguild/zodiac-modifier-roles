@@ -4,13 +4,24 @@ import cn from "classnames"
 import classes from "./style.module.css"
 import Box, { Props as BoxProps } from "@/ui/Box"
 
-const IndividualPermissions: React.FC<
+const ExpandableBox: React.FC<
   BoxProps & {
     labelCollapsed: ReactNode
     labelExpanded: ReactNode
     children: ReactNode
+    toggleClassName?: string
+    onToggle?: (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
   }
-> = ({ labelCollapsed, labelExpanded, className, bg, children, ...rest }) => {
+> = ({
+  labelCollapsed,
+  labelExpanded,
+  className,
+  bg,
+  children,
+  toggleClassName,
+  onToggle,
+  ...rest
+}) => {
   const [expanded, setExpanded] = useState(false)
   const [hover, setHover] = useState(false)
   return (
@@ -20,10 +31,14 @@ const IndividualPermissions: React.FC<
       className={cn(className, hover && (bg ? classes.doubleBg : classes.bg))}
     >
       <div
-        onClick={() => setExpanded((val) => !val)}
+        onClick={(ev) => {
+          setExpanded((val) => !val)
+          if (onToggle) onToggle(ev)
+        }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className={classes.toggle}
+        className={cn(classes.toggle, toggleClassName)}
+        role="button"
       >
         {expanded ? labelExpanded : labelCollapsed}
       </div>
@@ -33,4 +48,4 @@ const IndividualPermissions: React.FC<
   )
 }
 
-export default IndividualPermissions
+export default ExpandableBox
