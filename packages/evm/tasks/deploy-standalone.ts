@@ -11,7 +11,7 @@ interface RolesTaskArgs {
 const ZeroHash =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-task("deploy-standalone", "Deploys a Roles modifier")
+task("deploy:standalone", "Deploys a Roles modifier")
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
     "avatar",
@@ -73,7 +73,7 @@ task("deploy-standalone", "Deploys a Roles modifier")
     }
   );
 
-task("verify-standalone", "Verifies the contract on etherscan")
+task("verify:standalone", "Verifies the contract on etherscan")
   .addParam("roles", "Address of the Roles mod", undefined, types.string)
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(

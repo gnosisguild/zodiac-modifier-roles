@@ -1,11 +1,14 @@
-import hre from "hardhat";
 import { deployMastercopyWithInitData } from "@gnosis.pm/zodiac";
 import { calculateDeployAddress } from "./EIP2470";
+import { task } from "hardhat/config";
 
 const SaltZero =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-async function run() {
+task(
+  "deploy:adapters",
+  "Deploys the MultiSendUnwrapper and AvatarIsOwnerOfERC721"
+).setAction(async (_, hre) => {
   const [signer] = await hre.ethers.getSigners();
   const deployer = hre.ethers.provider.getSigner(signer.address);
 
@@ -42,6 +45,4 @@ async function run() {
   await hre.run("verify", {
     address: avatarIsOwnerOfAddress,
   });
-}
-
-run();
+});

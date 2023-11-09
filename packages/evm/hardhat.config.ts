@@ -7,8 +7,10 @@ import "hardhat-gas-reporter";
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 
-import "./tasks/deploy-standalone";
+import "./tasks/deploy-adapters";
+import "./tasks/deploy-mastercopy";
 import "./tasks/deploy-proxy";
+import "./tasks/deploy-standalone";
 
 // Load environment variables.
 dotenv.config();

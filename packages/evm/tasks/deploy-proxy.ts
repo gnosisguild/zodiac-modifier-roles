@@ -10,10 +10,10 @@ interface TaskArgs {
 }
 
 // TODO update this if we make any changes to the Roles contract
-const MASTERCOPY_ADDRESS = "0x425363362c2b9c7eb9E19078492698E5CBA5730A";
+const MASTERCOPY_ADDRESS = "0x26DA7F5a385BA7c96456Ea6273d715ebF90feba8";
 // TODO in the future we should deploy through the @gnosis.pm/zodiac module
 
-task("deploy-proxy", "Deploys a Roles modifier proxy instance")
+task("deploy:proxy", "Deploys a Roles modifier proxy instance")
   .addParam("owner", "Address of the owner", undefined, types.string)
   .addParam(
     "avatar",
