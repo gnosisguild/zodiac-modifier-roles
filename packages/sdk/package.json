@@ -78,7 +78,7 @@
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^4.2.1",
     "ethereum-waffle": "^3.4.4",
-    "hardhat": "^2.17.2",
+    "hardhat": "^2.19.0",
     "hardhat-deploy": "^0.11.26",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
