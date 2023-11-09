@@ -104,10 +104,10 @@ export interface Condition {
 
 export interface Allowance {
   key: `0x${string}`
-  refillInterval: number
-  refillAmount: BigNumber
-  refillTimestamp: number
-  maxBalance: BigNumber
+  period: number
+  refill: BigNumber
+  timestamp: number
+  maxRefill: BigNumber
   balance: BigNumber
 }
 

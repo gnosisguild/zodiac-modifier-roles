@@ -1,7 +1,6 @@
 import {
   AssignRoles,
   AvatarSet,
-  ChangedGuard,
   DisabledModule,
   EnabledModule,
   RolesModSetup,
@@ -65,8 +64,6 @@ export function handleAssignRoles(event: AssignRoles): void {
 }
 
 export function handleAvatarSet(event: AvatarSet): void {}
-
-export function handleChangedGuard(event: ChangedGuard): void {}
 
 export function handleDisabledModule(event: DisabledModule): void {
   const rolesModifierAddress = event.address

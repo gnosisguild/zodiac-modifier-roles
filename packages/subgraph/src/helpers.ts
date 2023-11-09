@@ -113,10 +113,10 @@ export const getRolesModifier = (rolesModifierId: string): RolesModifier | null 
 /**
  * For created Allowance:
  *  - balance is 0
- *  - maxBalance is 0
- *  - refillAmount is 0
- *  - refillInterval is 0
- *  - refillTimestamp is 0
+ *  - maxRefill is 0
+ *  - refill is 0
+ *  - period is 0
+ *  - timestamp is 0
  */
 export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: string): Allowance => {
   const id = getAllowanceId(allowanceKey, rolesModifierId)
@@ -126,10 +126,10 @@ export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: strin
     allowance.key = allowanceKey
     allowance.rolesModifier = rolesModifierId
     allowance.balance = BigInt.fromU32(0)
-    allowance.maxBalance = BigInt.fromU32(0)
-    allowance.refillAmount = BigInt.fromU32(0)
-    allowance.refillInterval = 0
-    allowance.refillTimestamp = 0
+    allowance.maxRefill = BigInt.fromU32(0)
+    allowance.refill = BigInt.fromU32(0)
+    allowance.period = 0
+    allowance.timestamp = 0
     allowance.save()
   }
   return allowance

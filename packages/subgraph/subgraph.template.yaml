@@ -27,8 +27,6 @@ dataSources:
           handler: handleAssignRoles
         - event: AvatarSet(indexed address,indexed address)
           handler: handleAvatarSet
-        - event: ChangedGuard(address)
-          handler: handleChangedGuard
         - event: DisabledModule(address)
           handler: handleDisabledModule
         - event: EnabledModule(address)

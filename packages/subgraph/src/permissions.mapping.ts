@@ -167,10 +167,10 @@ export function handleSetAllowance(event: SetAllowance): void {
 
   const allowance = getOrCreateAllowance(event.params.allowanceKey, rolesModifierId)
   allowance.balance = event.params.balance
-  allowance.maxBalance = event.params.balance
-  allowance.refillAmount = event.params.refillAmount
-  allowance.refillInterval = event.params.refillInterval.toU32()
-  allowance.refillTimestamp = event.params.refillTimestamp.toU32()
+  allowance.refill = event.params.refill
+  allowance.maxRefill = event.params.maxRefill
+  allowance.period = event.params.period.toU32()
+  allowance.timestamp = event.params.timestamp.toU32()
   allowance.save()
 
   log.info("Allowance {} has been set", [allowance.id])
