@@ -2,6 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./adapters/Types.sol";
 
 /**
