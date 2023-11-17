@@ -24,6 +24,7 @@ import gnosisDeFiHarvestGnosisDAOPreset from "../src/presets/gnosisChain/GnosisD
 import gnosisDeFiManageGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiManageGnosisDAO"
 import gnosisDeFiRevokeGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiRevokeGnosisDAO"
 import gnosisDeFiSwapGnosisDAOPreset from "../src/presets/gnosisChain/GnosisDAO/deFiSwapGnosisDAO"
+import test_preset from "../src/presets/gnosisChain/GnosisDAO/test_preset"
 
 // GnosisLTD in Mainnet
 import mainnetDeFiDisassembleGnosisLTDPreset from "../src/presets/mainnet/GnosisLTD/deFiDisassembleGnosisLTD"
@@ -63,8 +64,8 @@ interface Config {
 
 export const GNOSIS_ADDRESSES = {
   GNOSIS_DAO_GNO: {
-    AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f",
-    MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058",
+    AVATAR: "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f", // 0x9a18b276e86844A05587e1C822D2311D51d1c7F9 / 0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f
+    MODULE: "0x10785356E66b93432e9E8D6F9e532Fa55e4fc058", // 0xB6CeDb9603e7992A5d42ea2246B3ba0a21342503 / 0x10785356E66b93432e9E8D6F9e532Fa55e4fc058
     MANAGER: "0xe4387D4e45F65240Daaf5e046d5AE592566a5076",
     REVOKER: "0x3E93B731364A31BdEFaA7B96F4ae48e5F058cD41",
     HARVESTER: "0x4f767b852782C2e2e17CF2150051F622b8892F77",
@@ -629,6 +630,33 @@ task("encodeApplyPresetManageGnosisDAOgnosis").setAction(
     console.log(`Transaction builder JSON written to  ${filePath}`)
   }
 )
+
+task("encodeApplyPresetTest").setAction(async (taskArgs, hre) => {
+  const { config } = await processArgs(taskArgs, hre)
+  const txBatches = await encodeApplyPresetTxBuilder(
+    config.MODULE,
+    1,
+    test_preset,
+    { AVATAR: config.AVATAR },
+    {
+      network: config.NETWORK as NetworkId,
+    }
+  )
+
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "/presets-output/gnosis/GnosisDAO/test_preset.json"
+  )
+  // Check if the file exists
+  if (!existsSync(filePath)) {
+    // Create the directory structure if it doesn't exist
+    mkdirSync(path.dirname(filePath), { recursive: true })
+  }
+  // Write the JSON data to the file
+  writeFileSync(filePath, JSON.stringify(txBatches, undefined, 2))
+  console.log(`Transaction builder JSON written to  ${filePath}`)
+})
 
 task("encodeApplyPresetRevokeGnosisDAOgnosis").setAction(
   async (taskArgs, hre) => {

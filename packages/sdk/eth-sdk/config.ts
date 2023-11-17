@@ -198,6 +198,9 @@ export default defineConfig({
         B_50bbagGNO_50bbagUSD_gauge:
           "0x7E13b8b95d887c2326C25e71815F33Ea10A2674e",
       },
+      cowswap: {
+        order_signer: "0xE522f854b978650Dc838Ade0e39FbC1417A2FfB0",
+      },
       curve: {
         crvEUReUSD_pool: "0x056C6C5e684CeC248635eD86033378Cc444459B0",
         crvEUReUSD_gauge: "0xd91770E868c7471a9585d1819143063A40c54D00",

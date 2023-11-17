@@ -32,6 +32,7 @@
     "apply:dao:gno:harvest": "hardhat encodeApplyPresetHarvestGnosisDAOgnosis --network xdai --safe GNOSIS_DAO_GNO",
     "apply:dao:gno:disassemble": "hardhat encodeApplyPresetDisassembleGnosisDAOgnosis --network xdai --safe GNOSIS_DAO_GNO",
     "apply:dao:gno:swap": "hardhat encodeApplyPresetSwapGnosisDAOgnosis --network xdai --safe GNOSIS_DAO_GNO",
+    "apply:dao:gno:test": "hardhat encodeApplyPresetTest --network xdai --safe GNOSIS_DAO_GNO",
     "apply:ltd:gno:manage": "hardhat encodeApplyPresetManageGnosisLTDgnosis --network xdai --safe GNOSIS_LTD_GNO",
     "apply:ltd:gno:revoke": "hardhat encodeApplyPresetRevokeGnosisLTDgnosis --network xdai --safe GNOSIS_LTD_GNO",
     "apply:ltd:gno:harvest": "hardhat encodeApplyPresetHarvestGnosisLTDgnosis --network xdai --safe GNOSIS_LTD_GNO",
