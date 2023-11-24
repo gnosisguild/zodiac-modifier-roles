@@ -16,8 +16,6 @@ Each condition node is defined by the following properties:
 
 Informs how to pluck to value from call data. Can be one of the following:
 
-**`AbiEncoded`** – Decode the value using standard ABI decoding. The `children` condition nodes inform the individual field types.
-
 **`Static`** – Interpret the word currently in scope as a static value, i.e., a value with a fixed length padded to 32 bytes.
 
 **`Dynamic`** – Interpret the word currently in scope as an offset to a dynamic length value, i.e., `bytes` or `string`.
@@ -26,11 +24,15 @@ Informs how to pluck to value from call data. Can be one of the following:
 
 **`Array`** – Interpret the word as an offset to an dynamic length array. The `children` condition nodes inform the array element type.
 
+**`AbiEncoded`** – Decode the value using standard ABI decoding. The `children` condition nodes inform the individual field types.
+
+**`Calldata`** – Like `AbiEncoded`, but skips over the first 4 bytes (function selector).
+
 ### `children`
 
 An array of sub conditions, used for any of the following purposes:
 
-- Inform the decoding of complex types by defining types of their fields or elements (required for `ParamType.AbiEncoded`, `ParamType.Tuple`, `ParamType.Array`)
+- Inform the decoding of complex types by defining types of their fields or elements (required for `ParamType.AbiEncoded`, `ParamType.Calldata`, `ParamType.Tuple`, `ParamType.Array`)
 - Set conditions on specific fields of a tuple type value (via `Operator.Matches`)
 - Set conditions on elements of an array type value (via `Operator.ArraySome`, `Operator.ArrayEvery`, `Operator.ArraySubset`)
 - Define branch conditions for n-ary logical operators (`Operator.And`, `Operator.Or`, `Operator.Nor`)
