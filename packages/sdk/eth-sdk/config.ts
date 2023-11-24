@@ -100,7 +100,7 @@ export default defineConfig({
         claim_zap: "0x3f29cb4111cbda8081642da1f75b3c12decf2516",
       },
       cowswap: {
-        order_signer: "0xdEb83d81d4a9758A7bAec5749DA863C409ea6C6B",
+        order_signer: "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB",
       },
       curve: {
         crv_minter: "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",

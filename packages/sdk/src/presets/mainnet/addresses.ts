@@ -207,7 +207,7 @@ export const convex = {
 
 export const cowswap = {
   GPv2_VAULT_RELAYER: "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110",
-  ORDER_SIGNER: "0xdEb83d81d4a9758A7bAec5749DA863C409ea6C6B",
+  ORDER_SIGNER: "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB",
 }
 
 export const curve = {
