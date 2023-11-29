@@ -111,7 +111,7 @@ export async function setupOneParamStatic() {
   const { owner, invoker, roles, testContract, scopeFunction } =
     await baseSetup("oneParamStatic");
 
-  async function invoke(a: BigNumberish) {
+  async function invoke(a: BigNumberish, operation: 0 | 1 = 0) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
@@ -119,7 +119,7 @@ export async function setupOneParamStatic() {
         0,
         (await testContract.populateTransaction.oneParamStatic(a))
           .data as string,
-        0
+        operation
       );
   }
 
