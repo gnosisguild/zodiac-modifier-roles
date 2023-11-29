@@ -6,7 +6,7 @@ const ZeroHash =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 const AddressZero = "0x0000000000000000000000000000000000000001";
 
-task("deploy:mastercopy", "Deploys and verifies Delay mastercopy").setAction(
+task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
   async (_, hre) => {
     const [deployer] = await hre.ethers.getSigners();
 

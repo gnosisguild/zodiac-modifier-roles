@@ -30,6 +30,7 @@ interface ICustomCondition {
         address to,
         uint256 value,
         bytes calldata data,
+        Enum.Operation operation,
         uint256 location,
         uint256 size,
         bytes12 extra

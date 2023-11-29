@@ -161,7 +161,12 @@ abstract contract PermissionChecker is Core, Periphery {
                     role,
                     key,
                     data,
-                    Context({to: to, value: value, consumptions: consumptions})
+                    Context({
+                        to: to,
+                        value: value,
+                        operation: operation,
+                        consumptions: consumptions
+                    })
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
             return (
@@ -304,6 +309,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     to: context.to,
                     value: context.value,
+                    operation: context.operation,
                     consumptions: result.consumptions
                 })
             );
@@ -340,6 +346,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     to: context.to,
                     value: context.value,
+                    operation: context.operation,
                     consumptions: result.consumptions
                 })
             );
@@ -375,6 +382,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     to: context.to,
                     value: context.value,
+                    operation: context.operation,
                     consumptions: result.consumptions
                 })
             );
@@ -433,6 +441,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     to: context.to,
                     value: context.value,
+                    operation: context.operation,
                     consumptions: result.consumptions
                 })
             );
@@ -465,6 +474,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     to: context.to,
                     value: context.value,
+                    operation: context.operation,
                     consumptions: result.consumptions
                 })
             );
@@ -509,6 +519,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     Context({
                         to: context.to,
                         value: context.value,
+                        operation: context.operation,
                         consumptions: result.consumptions
                     })
                 );
@@ -626,6 +637,7 @@ abstract contract PermissionChecker is Core, Periphery {
             context.to,
             context.value,
             data,
+            context.operation,
             payload.location,
             payload.size,
             extra
@@ -704,6 +716,7 @@ abstract contract PermissionChecker is Core, Periphery {
         address to;
         uint256 value;
         Consumption[] consumptions;
+        Enum.Operation operation;
     }
 
     struct Result {
