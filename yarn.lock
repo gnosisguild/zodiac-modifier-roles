@@ -1215,7 +1215,7 @@ __metadata:
     eslint-plugin-import: 2.29.0
     eslint-plugin-prettier: 4.2.1
     ethers: 5.7.2
-    hardhat: 2.19.0
+    hardhat: 2.19.1
     hardhat-contract-sizer: 2.10.0
     hardhat-gas-reporter: 1.0.9
     prettier: 2.8.8
@@ -12061,9 +12061,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat-deploy@npm:^0.11.26":
-  version: 0.11.43
-  resolution: "hardhat-deploy@npm:0.11.43"
+"hardhat-deploy@npm:^0.11.44":
+  version: 0.11.44
+  resolution: "hardhat-deploy@npm:0.11.44"
   dependencies:
     "@ethersproject/abi": ^5.7.0
     "@ethersproject/abstract-signer": ^5.7.0
@@ -12089,7 +12089,7 @@ __metadata:
     murmur-128: ^0.2.1
     qs: ^6.9.4
     zksync-web3: ^0.14.3
-  checksum: 498c9b1485fa73161cef24eeeaaab749097df8c5a53df3f22e3c23cb825adf3006289778f0f5a433a7efcd58df3e18034f09dd4650d714d8f0b08c1e79527590
+  checksum: c37ec9bcba32abb3f81bf40480b5523b6825e27b344e11ccbc3d121655f41dba09debfa70f7ad871c7d5fa7d14d7a65938f9415cfd2a18293f12a39763cf2d31
   languageName: node
   linkType: hard
 
@@ -12106,9 +12106,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat@npm:2.19.0, hardhat@npm:^2.19.0":
-  version: 2.19.0
-  resolution: "hardhat@npm:2.19.0"
+"hardhat@npm:2.19.1, hardhat@npm:^2.19.1":
+  version: 2.19.1
+  resolution: "hardhat@npm:2.19.1"
   dependencies:
     "@ethersproject/abi": ^5.1.2
     "@metamask/eth-sig-util": ^4.0.0
@@ -12168,7 +12168,7 @@ __metadata:
       optional: true
   bin:
     hardhat: internal/cli/bootstrap.js
-  checksum: 99b7ee89c5898aa410298f48269360e414c5471c2cab56d382a08fd9d639db540c5d242ab9b1189bcffb4ac7847fbfc5b30c047cbc91fb802f2806e8e8c19e8f
+  checksum: 0c12069e8eae47419d595e38d22716049136cf74390f9e89121ae73fdc716ffcb6cd3283e3ca8676ce00e3ff90804dfa95473830d96340ec01860dfa6237d8d3
   languageName: node
   linkType: hard
 
@@ -24045,8 +24045,8 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     ethereum-waffle: ^3.4.4
     ethers: ^5.7.2
-    hardhat: ^2.19.0
-    hardhat-deploy: ^0.11.26
+    hardhat: ^2.19.1
+    hardhat-deploy: ^0.11.44
     prettier: ^2.8.8
     rimraf: ^3.0.2
     ts-node: ^10.8.0
