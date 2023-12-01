@@ -38,6 +38,10 @@ task(
     SaltZero
   );
 
+  console.log("Waiting 1 minute before etherscan verification start...");
+  // Etherscan needs some time to process before trying to verify.
+  await new Promise((resolve) => setTimeout(resolve, 60000));
+
   await hre.run("verify", {
     address: unwrapperAddress,
   });

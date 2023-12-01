@@ -66,15 +66,6 @@ task("deploy:proxy", "Deploys a Roles modifier proxy instance")
           `Roles proxy instance deployed to: ${expectedModuleAddress}, transaction hash: ${response.hash}`
         );
       }
-
-      //   await hre.run("verify", {
-      //     address: taskArgs.roles,
-      //     constructorArgsParams: [
-      //       taskArgs.owner,
-      //       taskArgs.avatar,
-      //       taskArgs.target,
-      //     ],
-      //   });
     }
   );
 
