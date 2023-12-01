@@ -78,6 +78,10 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: "https://rpc-mainnet.maticvigil.com",
     },
+    mumbai: {
+      ...sharedNetworkConfig,
+      url: "https://rpc.ankr.com/polygon_mumbai",
+    },
   },
   etherscan: {
     apiKey: {
