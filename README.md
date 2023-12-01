@@ -36,6 +36,38 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - Assign the role to an address with `assignRoles()`
 - Address can now trigger the safe to call those targets, functions, and parameters via `execTransactionWithRole()`
 
+### Deployments
+
+#### Roles
+
+Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
+
+- [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Gnosis](https://gnosisscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Görli](https://goerli.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+
+#### MultiSendUnwrapper (transaction unwrapper)
+
+Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
+
+- [Mainnet](https://etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Gnosis](https://gnosisscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Görli](https://goerli.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+
+#### AvatarIsOwnerOfERC721 (custom condition)
+
+Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
+
+- [Mainnet](https://etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Gnosis](https://gnosisscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Görli](https://goerli.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+
 ### Development environment setup
 
 1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
