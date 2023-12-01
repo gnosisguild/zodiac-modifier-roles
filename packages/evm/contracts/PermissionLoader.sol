@@ -144,7 +144,7 @@ abstract contract PermissionLoader is Core {
             result[insert].allowanceKey = key;
             (result[insert].balance, ) = _accruedAllowance(
                 allowances[key],
-                block.timestamp
+                uint64(block.timestamp)
             );
             insert++;
         }

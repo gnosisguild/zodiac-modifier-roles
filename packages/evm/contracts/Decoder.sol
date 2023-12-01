@@ -76,10 +76,13 @@ library Decoder {
                 result
             );
             result.size += 32;
-        } else if (paramType == ParameterType.AbiEncoded) {
+        } else if (
+            paramType == ParameterType.Calldata ||
+            paramType == ParameterType.AbiEncoded
+        ) {
             __block__(
                 data,
-                location + 32 + 4,
+                location + 32 + (paramType == ParameterType.Calldata ? 4 : 0),
                 node,
                 node.children.length,
                 false,

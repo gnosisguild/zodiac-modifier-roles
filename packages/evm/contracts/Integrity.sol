@@ -63,6 +63,7 @@ library Integrity {
             if (
                 paramType != ParameterType.Tuple &&
                 paramType != ParameterType.Array &&
+                paramType != ParameterType.Calldata &&
                 paramType != ParameterType.AbiEncoded
             ) {
                 revert UnsuitableParameterType(index);
@@ -162,7 +163,7 @@ library Integrity {
                 (conditions[i].operator == Operator.EtherWithinAllowance ||
                     conditions[i].operator == Operator.CallWithinAllowance) &&
                 conditions[conditions[i].parent].paramType !=
-                ParameterType.AbiEncoded
+                ParameterType.Calldata
             ) {
                 revert UnsuitableParent(i);
             }
@@ -201,6 +202,7 @@ library Integrity {
                 }
             } else if (
                 condition.paramType == ParameterType.Tuple ||
+                condition.paramType == ParameterType.Calldata ||
                 condition.paramType == ParameterType.AbiEncoded
             ) {
                 if (childBounds.length == 0) {
@@ -236,7 +238,7 @@ library Integrity {
                     condition.paramType == ParameterType.Array) &&
                 childrenBounds[i].length > 1
             ) {
-                compatiblechildTypeTree(conditions, i, childrenBounds);
+                _compatibleSiblingTypes(conditions, i, childrenBounds);
             }
         }
 
@@ -246,12 +248,12 @@ library Integrity {
             childrenBounds
         );
 
-        if (typeTree.paramType != ParameterType.AbiEncoded) {
+        if (typeTree.paramType != ParameterType.Calldata) {
             revert UnsuitableRootNode();
         }
     }
 
-    function compatiblechildTypeTree(
+    function _compatibleSiblingTypes(
         ConditionFlat[] memory conditions,
         uint256 index,
         Topology.Bounds[] memory childrenBounds
@@ -259,17 +261,41 @@ library Integrity {
         uint256 start = childrenBounds[index].start;
         uint256 end = childrenBounds[index].end;
 
-        bytes32 id = typeTreeId(
-            Topology.typeTree(conditions, start, childrenBounds)
-        );
         for (uint256 j = start + 1; j < end; ++j) {
             if (
-                id !=
-                typeTreeId(Topology.typeTree(conditions, j, childrenBounds))
+                !_isTypeMatch(conditions, start, j, childrenBounds) &&
+                !_isTypeEquivalent(conditions, start, j, childrenBounds)
             ) {
                 revert UnsuitableChildTypeTree(index);
             }
         }
+    }
+
+    function _isTypeMatch(
+        ConditionFlat[] memory conditions,
+        uint256 i,
+        uint256 j,
+        Topology.Bounds[] memory childrenBounds
+    ) private pure returns (bool) {
+        return
+            typeTreeId(Topology.typeTree(conditions, i, childrenBounds)) ==
+            typeTreeId(Topology.typeTree(conditions, j, childrenBounds));
+    }
+
+    function _isTypeEquivalent(
+        ConditionFlat[] memory conditions,
+        uint256 i,
+        uint256 j,
+        Topology.Bounds[] memory childrenBounds
+    ) private pure returns (bool) {
+        ParameterType leftParamType = Topology
+            .typeTree(conditions, i, childrenBounds)
+            .paramType;
+        return
+            (leftParamType == ParameterType.Calldata ||
+                leftParamType == ParameterType.AbiEncoded) &&
+            Topology.typeTree(conditions, j, childrenBounds).paramType ==
+            ParameterType.Dynamic;
     }
 
     function typeTreeId(

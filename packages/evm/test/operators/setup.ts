@@ -8,6 +8,7 @@ import { TestContract } from "../../typechain-types/contracts/test/";
 
 export async function baseSetup(
   functioName:
+    | "fnThatMaybeReverts"
     | "oneParamStatic"
     | "twoParamsStatic"
     | "oneParamStaticTuple"
@@ -82,11 +83,35 @@ export async function baseSetup(
   };
 }
 
+export async function setupFnThatMaybeReturns() {
+  const { owner, invoker, roles, testContract, scopeFunction } =
+    await baseSetup("fnThatMaybeReverts");
+
+  async function invoke(a: BigNumberish, b: boolean) {
+    return roles
+      .connect(invoker)
+      .execTransactionFromModule(
+        testContract.address,
+        0,
+        (await testContract.populateTransaction.fnThatMaybeReverts(a, b))
+          .data as string,
+        0
+      );
+  }
+
+  return {
+    owner,
+    roles,
+    scopeFunction,
+    invoke,
+  };
+}
+
 export async function setupOneParamStatic() {
   const { owner, invoker, roles, testContract, scopeFunction } =
     await baseSetup("oneParamStatic");
 
-  async function invoke(a: BigNumberish) {
+  async function invoke(a: BigNumberish, operation: 0 | 1 = 0) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
@@ -94,7 +119,7 @@ export async function setupOneParamStatic() {
         0,
         (await testContract.populateTransaction.oneParamStatic(a))
           .data as string,
-        0
+        operation
       );
   }
 

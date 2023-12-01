@@ -24,7 +24,7 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -68,7 +68,7 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -107,7 +107,7 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -151,7 +151,7 @@ describe("Operator - Matches", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -165,7 +165,7 @@ describe("Operator - Matches", async () => {
     ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
-  it("evaluates operator Matches for AbiEncoded", async () => {
+  it("evaluates operator Matches for Calldata", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupTwoParamsStatic
     );
@@ -173,7 +173,7 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },

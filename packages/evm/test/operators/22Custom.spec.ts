@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { setupOneParamStatic } from "./setup";
 import {
   BYTES32_ZERO,
+  ExecutionOptions,
   Operator,
   ParameterType,
   PermissionCheckerStatus,
@@ -31,7 +32,7 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -55,7 +56,7 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -75,13 +76,45 @@ describe("Operator - Custom", async () => {
         `0xaabbccddeeff1122334455660000000000000000000000000000000000000000`
       );
   });
+  it("evaluates operator Custom - result is check fail due to operation", async () => {
+    const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
+      setup
+    );
+
+    const extra = "aabbccddeeff112233445566";
+    await scopeFunction(
+      [
+        {
+          parent: 0,
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: ParameterType.Static,
+          operator: Operator.Custom,
+          compValue: `${customChecker.address}${extra}`,
+        },
+      ],
+      ExecutionOptions.Both
+    );
+
+    await expect(invoke(101, 1))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(
+        PermissionCheckerStatus.CustomConditionViolation,
+        `0x0000000000000000000000000000000000000000000000000000000000000000`
+      );
+  });
+
   it.skip("adapter does not implement ICustomChecker", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(setup);
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.AbiEncoded,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },

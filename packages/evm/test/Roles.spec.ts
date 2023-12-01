@@ -70,7 +70,7 @@ describe("Roles", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -129,7 +129,9 @@ describe("Roles", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
         roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      )
+        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
+        .withArgs(alice.address);
     });
     it("assigns roles to a module", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
@@ -237,9 +239,9 @@ describe("Roles", async () => {
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
-      await expect(
-        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1))
+        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
+        .withArgs(alice.address);
     });
     it("sets default role", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
@@ -637,7 +639,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -658,7 +660,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.AbiEncoded,
+            paramType: ParameterType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -689,7 +691,7 @@ describe("Roles", async () => {
       await expect(invoke(testContract2.address, 0)).to.be.reverted;
     });
 
-    it("a permission with fields insided a nested AbiEncoded", async () => {
+    it("a permission with fields insided a nested Calldata", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
@@ -705,12 +707,12 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.AbiEncoded,
+              paramType: ParameterType.Calldata,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
@@ -776,7 +778,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -787,7 +789,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
@@ -817,7 +819,7 @@ describe("Roles", async () => {
           testContract.interface.getFunction("dynamic")
         ),
         toConditionsFlat({
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -828,7 +830,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.AbiEncoded,
+                  paramType: ParameterType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [

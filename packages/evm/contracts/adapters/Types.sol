@@ -27,10 +27,12 @@ interface ITransactionUnwrapper {
 
 interface ICustomCondition {
     function check(
+        address to,
         uint256 value,
         bytes calldata data,
+        Enum.Operation operation,
         uint256 location,
         uint256 size,
         bytes12 extra
-    ) external pure returns (bool success, bytes32 reason);
+    ) external view returns (bool success, bytes32 reason);
 }

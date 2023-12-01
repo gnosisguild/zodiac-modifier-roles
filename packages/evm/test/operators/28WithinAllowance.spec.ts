@@ -14,25 +14,25 @@ describe("Operator - WithinAllowance", async () => {
     allowanceKey: string,
     {
       balance,
-      maxBalance,
-      refillAmount,
-      refillInterval,
-      refillTimestamp,
+      maxRefill,
+      refill,
+      period,
+      timestamp,
     }: {
       balance: BigNumberish;
-      maxBalance?: BigNumberish;
-      refillAmount: BigNumberish;
-      refillInterval: BigNumberish;
-      refillTimestamp: BigNumberish;
+      maxRefill?: BigNumberish;
+      refill: BigNumberish;
+      period: BigNumberish;
+      timestamp: BigNumberish;
     }
   ) {
     return roles.setAllowance(
       allowanceKey,
       balance,
-      maxBalance || 0,
-      refillAmount,
-      refillInterval,
-      refillTimestamp
+      maxRefill || 0,
+      refill,
+      period,
+      timestamp
     );
   }
 
@@ -47,15 +47,15 @@ describe("Operator - WithinAllowance", async () => {
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -87,7 +87,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -102,9 +102,9 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 333,
-        refillInterval: 1000,
-        refillAmount: 100,
-        refillTimestamp: timestamp,
+        period: 1000,
+        refill: 100,
+        timestamp: timestamp,
       });
 
       await expect(invoke(334))
@@ -126,7 +126,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -141,9 +141,9 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 250,
-        refillInterval: 500,
-        refillAmount: 100,
-        refillTimestamp: timestamp - 750,
+        period: 500,
+        refill: 100,
+        timestamp: timestamp - 750,
       });
 
       await expect(invoke(351))
@@ -165,7 +165,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -180,9 +180,9 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 250,
-        refillInterval: 1000,
-        refillAmount: 100,
-        refillTimestamp: timestamp - 50,
+        period: 1000,
+        refill: 100,
+        timestamp: timestamp - 50,
       });
 
       await expect(invoke(251))
@@ -194,7 +194,7 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
-    it("passes a check with balance from refill and bellow maxBalance", async () => {
+    it("passes a check with balance from refill and bellow maxRefill", async () => {
       const { owner, roles, scopeFunction, invoke } = await loadFixture(
         setupOneParamStatic
       );
@@ -206,7 +206,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -221,10 +221,10 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 0,
-        maxBalance: 1000,
-        refillInterval: interval,
-        refillAmount: 9999999,
-        refillTimestamp: timestamp - interval * 10,
+        maxRefill: 1000,
+        period: interval,
+        refill: 9999999,
+        timestamp: timestamp - interval * 10,
       });
 
       await expect(invoke(1001))
@@ -233,7 +233,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1000)).to.not.be.reverted;
     });
-    it("fails a check with balance from refill but capped by maxBalance", async () => {
+    it("fails a check with balance from refill but capped by maxRefill", async () => {
       const { owner, roles, scopeFunction, invoke } = await loadFixture(
         setupOneParamStatic
       );
@@ -243,7 +243,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -258,10 +258,10 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 0,
-        maxBalance: 9000,
-        refillInterval: 1000,
-        refillAmount: 10000,
-        refillTimestamp: timestamp - 5000,
+        maxRefill: 9000,
+        period: 1000,
+        refill: 10000,
+        timestamp: timestamp - 5000,
       });
 
       await expect(invoke(9001))
@@ -284,7 +284,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -304,9 +304,9 @@ describe("Operator - WithinAllowance", async () => {
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 3000,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       let allowance = await roles.allowances(allowanceKey);
@@ -332,7 +332,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -352,9 +352,9 @@ describe("Operator - WithinAllowance", async () => {
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 3000,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
       });
 
       let allowance = await roles.allowances(allowanceKey);
@@ -366,7 +366,7 @@ describe("Operator - WithinAllowance", async () => {
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
-    it("Updates refillTimestamp starting from zero", async () => {
+    it("Updates timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
         setupOneParamStatic
       );
@@ -378,7 +378,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -391,26 +391,26 @@ describe("Operator - WithinAllowance", async () => {
       ]);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
-        balance: 1,
-        refillInterval: interval,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        balance: 100,
+        period: interval,
+        refill: 0,
+        timestamp: 1,
       });
 
       let allowance = await roles.allowances(allowanceKey);
-      expect(allowance.balance).to.equal(1);
-      expect(allowance.refillTimestamp).to.equal(0);
+      expect(allowance.balance).to.equal(100);
+      expect(allowance.timestamp).to.equal(1);
 
       await expect(invoke(0)).to.not.be.reverted;
       const now = await time.latest();
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(0);
-      expect(now - allowance.refillTimestamp.toNumber()).to.be.lessThanOrEqual(
+      expect(allowance.timestamp.toNumber()).to.be.greaterThan(1);
+      expect(now - allowance.timestamp.toNumber()).to.be.lessThanOrEqual(
         interval * 2
       );
     });
-    it("Does not updates refillTimestamp if interval is zero", async () => {
+    it("Does not updates timestamp if interval is zero", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
         setupOneParamStatic
       );
@@ -419,7 +419,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -432,17 +432,17 @@ describe("Operator - WithinAllowance", async () => {
       ]);
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1,
-        refillInterval: 0,
-        refillAmount: 0,
-        refillTimestamp: 0,
+        period: 0,
+        refill: 0,
+        timestamp: 123,
       });
 
       await expect(invoke(0)).to.not.be.reverted;
 
       const allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp).to.equal(0);
+      expect(allowance.timestamp).to.equal(123);
     });
-    it("Updates refillTimestamp from past timestamp", async () => {
+    it("Updates timestamp from past timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
         setupOneParamStatic
       );
@@ -455,7 +455,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -470,20 +470,20 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = (await time.latest()) - 2400;
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1,
-        refillInterval: interval,
-        refillAmount: 0,
-        refillTimestamp: timestamp,
+        period: interval,
+        refill: 0,
+        timestamp: timestamp,
       });
 
       let allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp).to.equal(timestamp);
+      expect(allowance.timestamp).to.equal(timestamp);
 
       await expect(invoke(0)).to.not.be.reverted;
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp.toNumber()).to.be.greaterThan(timestamp);
+      expect(allowance.timestamp.toNumber()).to.be.greaterThan(timestamp);
     });
-    it("Does not update refillTimestamp from future timestamp", async () => {
+    it("Does not update timestamp from future timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
         setupOneParamStatic
       );
@@ -494,7 +494,7 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.AbiEncoded,
+          paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -508,18 +508,18 @@ describe("Operator - WithinAllowance", async () => {
       const timestamp = (await time.latest()) + 1200;
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1,
-        refillInterval: interval,
-        refillAmount: 0,
-        refillTimestamp: timestamp,
+        period: interval,
+        refill: 0,
+        timestamp: timestamp,
       });
 
       let allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp).to.equal(timestamp);
+      expect(allowance.timestamp).to.equal(timestamp);
 
       await expect(invoke(0)).to.not.be.reverted;
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.refillTimestamp).to.equal(timestamp);
+      expect(allowance.timestamp).to.equal(timestamp);
     });
   });
 });
