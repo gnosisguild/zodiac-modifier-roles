@@ -5,17 +5,21 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          path: |
+            **/node_modules
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
       - run: yarn
-      - run: yarn build
+      - run: yarn prepare
       - run: yarn test
+      - run: yarn build # check that all builds succeed
       - run: yarn coverage
       - name: Coveralls
         uses: coverallsapp/github-action@master

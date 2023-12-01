@@ -1,0 +1,19 @@
+.head {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.compValue {
+  white-space: nowrap;
+  color: hsl(var(--nextra-primary-hue) 100% 32% / var(--tw-text-opacity));
+  font-size: 0.875rem;
+}
+
+.type {
+  font-size: 0.7rem;
+  padding: 0 4px;
+  border: 1px solid #e2e2e2;
+  border-radius: 3px;
+  align-self: center;
+}

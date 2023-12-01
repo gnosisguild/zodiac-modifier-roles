@@ -1,0 +1,23 @@
+.operation {
+  flex-grow: 1;
+}
+
+.apiInfo {
+  align-self: flex-end;
+}
+
+.permissions {
+  border-top: 0px none;
+}
+
+.arrayItem:not(:first-child) {
+  margin-top: -1px;
+}
+
+.contact {
+  font-size: 12px;
+}
+
+.underline {
+  text-decoration: underline;
+}

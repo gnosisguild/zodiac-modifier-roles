@@ -9,8 +9,10 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2020",
-    "typeRoots": ["node_modules/@types"]
+    "typeRoots": ["node_modules/@types"],
+    "paths": {
+      "zodiac-roles-sdk": ["./src/index.ts"]
+    }
   },
-  "include": ["./src", "./test"],
-  "files": ["./hardhat.config.ts"]
+  "include": ["./src", "./test"]
 }

@@ -1,59 +1,43 @@
-import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  Roles,
   AssignRoles,
   AvatarSet,
-  ChangedGuard,
   DisabledModule,
   EnabledModule,
-  OwnershipTransferred,
   RolesModSetup,
   SetDefaultRole,
-  SetMultisendAddress,
   TargetSet,
 } from "../generated/Roles/Roles"
-import { RolesModifier, Role, Member, RoleAssignment } from "../generated/schema"
+import { RolesModifier, RoleAssignment } from "../generated/schema"
 import { log, store } from "@graphprotocol/graph-ts"
 import {
-  CLEARANCE,
-  CLEARANCE__FUNCTION,
-  CLEARANCE__NONE,
-  CLEARANCE__TARGET,
-  EXECUTION_OPTIONS,
-  EXECUTION_OPTIONS__NONE,
-  getFunctionId,
   getMemberId,
   getAssignmentId,
   getOrCreateMember,
   getOrCreateRole,
   getRoleId,
   getRolesModifierId,
-  getTargetId,
+  getRolesModifier,
 } from "./helpers"
 
 export function handleAssignRoles(event: AssignRoles): void {
   // add and remove member from roles
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
     return
   }
 
   const memberAddress = event.params.module
   const memberId = getMemberId(rolesModifierId, memberAddress)
-  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress)
+  getOrCreateMember(memberId, rolesModifierId, memberAddress) // create member if it does not exist
 
-  const rolesArray = event.params.roles
+  const roleKeys = event.params.roleKeys
   const memberOfArray = event.params.memberOf
 
-  for (let i = 0; i < rolesArray.length; i++) {
-    const roleId = getRoleId(rolesModifierId, rolesArray[i])
-    const role = getOrCreateRole(roleId, rolesModifierId, rolesArray[i])
+  for (let i = 0; i < roleKeys.length; i++) {
+    const roleId = getRoleId(rolesModifierId, roleKeys[i])
+    const role = getOrCreateRole(roleId, rolesModifierId, roleKeys[i])
     const assignmentId = getAssignmentId(memberId, roleId)
     let assignment = RoleAssignment.load(assignmentId)
     if (!assignment) {
@@ -65,12 +49,12 @@ export function handleAssignRoles(event: AssignRoles): void {
         assignment.save()
       } else {
         // nothing to do the member - role relationship does not exist
-        log.info("trying to remove a member from a role it is not a member of", [memberId, roleId])
+        log.warning("Trying to remove member {} from role #{}, but it's not a member", [memberId, roleId])
       }
     } else {
       if (memberOfArray[i]) {
         // adding a member that is already a member
-        log.info("trying to add a member to a role it is already a member of", [memberId, roleId])
+        log.warning("Trying to add member {} to role #{}, but it already is a member", [memberId, roleId])
       } else {
         // removing a member-role relationship
         store.remove("RoleAssignment", assignmentId)
@@ -81,17 +65,11 @@ export function handleAssignRoles(event: AssignRoles): void {
 
 export function handleAvatarSet(event: AvatarSet): void {}
 
-export function handleChangedGuard(event: ChangedGuard): void {}
-
 export function handleDisabledModule(event: DisabledModule): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
     return
   }
 
@@ -105,12 +83,8 @@ export function handleDisabledModule(event: DisabledModule): void {
 export function handleEnabledModule(event: EnabledModule): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-
-  let rolesModifier = RolesModifier.load(rolesModifierId)
+  const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
-    log.info("This event is not for any of our rolesModifiers. A roles modifier with that address does not exist", [
-      rolesModifierId,
-    ])
     return
   }
 
@@ -134,13 +108,11 @@ export function handleRolesModSetup(event: RolesModSetup): void {
     rolesModifier.target = event.params.target
     rolesModifier.save()
   } else {
-    log.error("RolesModifier already exists", [rolesModifierId])
+    log.error("RolesModifier {} already exists", [rolesModifierId])
     return
   }
 }
 
 export function handleSetDefaultRole(event: SetDefaultRole): void {}
-
-export function handleSetMultisendAddress(event: SetMultisendAddress): void {}
 
 export function handleTargetSet(event: TargetSet): void {}

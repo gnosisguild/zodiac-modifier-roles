@@ -1,0 +1,25 @@
+{
+  "index": {
+    "title": "Introduction"
+  },
+  "-- General Concepts": {
+    "type": "separator",
+    "title": "General Concepts"
+  },
+  "conditions": {
+    "title": "Conditions"
+  },
+  "allowances": {
+    "title": "Allowances"
+  },
+  "unwrapping": {
+    "title": "Transaction Unwrapping"
+  },
+  "-- Auxiliary Concepts": {
+    "type": "separator",
+    "title": "Auxiliary Concepts"
+  },
+  "annotations": {
+    "title": "Annotations"
+  }
+}

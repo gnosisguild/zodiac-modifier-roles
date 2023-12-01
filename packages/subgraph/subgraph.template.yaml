@@ -15,45 +15,35 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - AssignRoles
-        - AvatarSet
-        - ChangedGuard
-        - DisabledModule
-        - EnabledModule
-        - OwnershipTransferred
-        - RolesModSetup
-        - SetDefaultRole
-        - SetMultisendAddress
-        - TargetSet
+        - RolesModifier
+        - Role
+        - Member
+        - RoleAssignment
       abis:
         - name: Roles
-          file: ./abis/Roles.json
+          file: ./abis/Roles.sol/Roles.json
       eventHandlers:
-        - event: AssignRoles(address,uint16[],bool[])
+        - event: AssignRoles(address,bytes32[],bool[])
           handler: handleAssignRoles
         - event: AvatarSet(indexed address,indexed address)
           handler: handleAvatarSet
-        - event: ChangedGuard(address)
-          handler: handleChangedGuard
         - event: DisabledModule(address)
           handler: handleDisabledModule
         - event: EnabledModule(address)
           handler: handleEnabledModule
         - event: RolesModSetup(indexed address,indexed address,indexed address,address)
           handler: handleRolesModSetup
-        - event: SetDefaultRole(address,uint16)
+        - event: SetDefaultRole(address,bytes32)
           handler: handleSetDefaultRole
-        - event: SetMultisendAddress(address)
-          handler: handleSetMultisendAddress
         - event: TargetSet(indexed address,indexed address)
           handler: handleTargetSet
       file: ./src/roles.mapping.ts
   - kind: ethereum
-    name: Permissions
+    name: PermissionBuilder
     # prettier-ignore
     network: {{network}}
     source:
-      abi: Permissions
+      abi: PermissionBuilder
       # prettier-ignore
       startBlock: {{startBlock}}
     mapping:
@@ -61,38 +51,92 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - AllowTarget
-        - ScopeTarget
-        - RevokeTarget
-        - ScopeAllowFunction
-        - ScopeFunction
-        - ScopeFunctionExecutionOptions
-        - ScopeParameter
-        - ScopeParameterAsOneOf
-        - ScopeRevokeFunction
-        - UnscopeParameter
+        - RolesModifier
+        - Role
+        - Target
+        - Function
+        - Condition
+        - Allowance
       abis:
-        - name: Permissions
-          file: ./abis/Permissions.json
+        - name: PermissionBuilder
+          file: ./abis/PermissionBuilder.sol/PermissionBuilder.json
       eventHandlers:
-        - event: AllowTarget(uint16,address,uint8)
+        - event: AllowTarget(bytes32,address,uint8)
           handler: handleAllowTarget
-        - event: ScopeTarget(uint16,address)
+        - event: ScopeTarget(bytes32,address)
           handler: handleScopeTarget
-        - event: RevokeTarget(uint16,address)
+        - event: RevokeTarget(bytes32,address)
           handler: handleRevokeTarget
-        - event: ScopeAllowFunction(uint16,address,bytes4,uint8,uint256)
-          handler: handleScopeAllowFunction
-        - event: ScopeFunction(uint16,address,bytes4,bool[],uint8[],uint8[],bytes[],uint8,uint256)
+        - event: AllowFunction(bytes32,address,bytes4,uint8)
+          handler: handleAllowFunction
+        - event: ScopeFunction(bytes32,address,bytes4,(uint8,uint8,uint8,bytes)[],uint8)
           handler: handleScopeFunction
-        - event: ScopeFunctionExecutionOptions(uint16,address,bytes4,uint8,uint256)
-          handler: handleScopeFunctionExecutionOptions
-        - event: ScopeParameter(uint16,address,bytes4,uint256,uint8,uint8,bytes,uint256)
-          handler: handleScopeParameter
-        - event: ScopeParameterAsOneOf(uint16,address,bytes4,uint256,uint8,bytes[],uint256)
-          handler: handleScopeParameterAsOneOf
-        - event: ScopeRevokeFunction(uint16,address,bytes4,uint256)
-          handler: handleScopeRevokeFunction
-        - event: UnscopeParameter(uint16,address,bytes4,uint256,uint256)
-          handler: handleUnscopeParameter
+        - event: RevokeFunction(bytes32,address,bytes4)
+          handler: handleRevokeFunction
+        - event: SetAllowance(bytes32,uint128,uint128,uint128,uint64,uint64)
+          handler: handleSetAllowance
       file: ./src/permissions.mapping.ts
+  - kind: ethereum
+    name: AllowanceTracker
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: AllowanceTracker
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Allowance
+      abis:
+        - name: AllowanceTracker
+          file: ./abis/AllowanceTracker.sol/AllowanceTracker.json
+      eventHandlers:
+        - event: ConsumeAllowance(bytes32,uint128,uint128)
+          handler: handleConsumeAllowance
+      file: ./src/allowances.mapping.ts
+  - kind: ethereum
+    name: Periphery
+    # prettier-ignore
+    network: {{network}}
+    source:
+      abi: Periphery
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - UnwrapAdapter
+      abis:
+        - name: Periphery
+          file: ./abis/Periphery.sol/Periphery.json
+      eventHandlers:
+        - event: SetUnwrapAdapter(address,bytes4,address)
+          handler: handleSetUnwrapAdapter
+      file: ./src/periphery.mapping.ts
+  - kind: ethereum
+    name: Poster
+    # prettier-ignore
+    network: {{network}}
+    source:
+      address: "0x000000000000cd17345801aa8147b8D3950260FF"
+      abi: Poster
+      # prettier-ignore
+      startBlock: {{startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NewPost
+      abis:
+        - name: Poster
+          file: ./abisExternal/Poster.json
+      eventHandlers:
+        - event: NewPost(indexed address,string,indexed string)
+          handler: handleNewPost
+      file: ./src/poster.mapping.ts

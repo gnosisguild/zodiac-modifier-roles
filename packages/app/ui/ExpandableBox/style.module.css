@@ -1,0 +1,17 @@
+.toggle {
+  margin: calc(-1 * var(--spacing-3));
+  padding: var(--spacing-3);
+  text-align: center;
+  cursor: pointer;
+}
+
+.body {
+  margin-top: var(--spacing-3);
+}
+
+.bg {
+  background-color: rgba(217, 212, 173, 0.1);
+}
+.doubleBg {
+  background-color: rgba(217, 212, 173, 0.2);
+}

@@ -4,10 +4,11 @@ import { Contract, Signer } from "ethers";
 import { getCreate2Address, keccak256, parseEther } from "ethers/lib/utils";
 
 export async function deployViaFactory(
-  creationBytecode: string,
+  initCode: string,
   salt: string,
   deployer: Signer,
-  displayName?: string
+  displayName?: string,
+  gasLimit = 10000000
 ): Promise<string> {
   await maybeDeployFactory(deployer);
 
@@ -22,11 +23,7 @@ export async function deployViaFactory(
     deployer
   );
 
-  const computedAddress = getCreate2Address(
-    factoryInfo.address,
-    salt,
-    keccak256(creationBytecode)
-  );
+  const computedAddress = calculateDeployAddress(initCode, salt);
 
   if ((await provider.getCode(computedAddress)) != "0x") {
     console.log(
@@ -36,7 +33,7 @@ export async function deployViaFactory(
   }
 
   const receipt = await (
-    await factory.deploy(creationBytecode, salt, { gasLimit: 10000000 })
+    await factory.deploy(initCode, salt, { gasLimit })
   ).wait();
 
   if (receipt?.status == 1) {
@@ -53,6 +50,10 @@ export async function deployViaFactory(
 
   return computedAddress;
 }
+
+export const calculateDeployAddress = (initCode: string, salt: string) => {
+  return getCreate2Address(factoryInfo.address, salt, keccak256(initCode));
+};
 
 const factoryInfo = {
   address: "0xce0042b868300000d44a59004da54a005ffdcf9f",

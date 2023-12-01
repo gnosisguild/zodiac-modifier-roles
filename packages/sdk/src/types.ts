@@ -1,28 +1,8 @@
-import { BigNumberish } from "ethers"
+import { BigNumber } from "ethers"
 
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./presets/placeholders"
 import SUBGRAPH from "./subgraph"
 
-export type NetworkId = keyof typeof SUBGRAPH
-
-export enum ParameterType {
-  Static,
-  Dynamic,
-  Dynamic32,
-}
-
-export enum Comparison {
-  EqualTo,
-  GreaterThan,
-  LessThan,
-  OneOf,
-}
-
-export enum Clearance {
-  None,
-  Target,
-  Function,
-}
+export type ChainId = keyof typeof SUBGRAPH
 
 export enum ExecutionOptions {
   None = 0,
@@ -31,112 +11,109 @@ export enum ExecutionOptions {
   Both = 3,
 }
 
-export interface RolePermissions {
+export enum Clearance {
+  None = 0,
+  Target = 1,
+  Function = 2,
+}
+
+export enum ParameterType {
+  None = 0,
+  Static = 1,
+  Dynamic = 2,
+  Tuple = 3,
+  Array = 4,
+  Calldata = 5,
+  AbiEncoded = 6,
+}
+
+export enum Operator {
+  // 00:    EMPTY EXPRESSION (default, always passes)
+  //          paramType: Static / Dynamic / Tuple / Array
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
+  //          🚫 compValue
+  Pass = 0,
+  // ------------------------------------------------------------
+  // 01-04: LOGICAL EXPRESSIONS
+  //          paramType: None
+  //          ✅ children
+  //          🚫 compValue
+  And = 1,
+  Or = 2,
+  Nor = 3,
+  // ------------------------------------------------------------
+  // 05-14: COMPLEX EXPRESSIONS
+  //          paramType: Calldata / AbiEncoded / Tuple / Array,
+  //          ✅ children
+  //          🚫 compValue
+  Matches = 5,
+  ArraySome = 6,
+  ArrayEvery = 7,
+  ArraySubset = 8,
+  // ------------------------------------------------------------
+  // 15:    SPECIAL COMPARISON (without compValue)
+  //          paramType: Static
+  //          🚫 children
+  //          🚫 compValue
+  EqualToAvatar = 15,
+  // ------------------------------------------------------------
+  // 16-31: COMPARISON EXPRESSIONS
+  //          paramType: Static / Dynamic / Tuple / Array
+  //          🚫 children
+  //          ✅ compValue
+  EqualTo = 16, // paramType: Static / Dynamic / Tuple / Array
+  GreaterThan = 17, // paramType: Static
+  LessThan = 18, // paramType: Static
+  SignedIntGreaterThan = 19, // paramType: Static
+  SignedIntLessThan = 20, // paramType: Static
+  Bitmask = 21, // paramType: Static / Dynamic
+  Custom = 22, // paramType: Static / Dynamic / Tuple / Array
+  WithinAllowance = 28, // paramType: Static
+  EtherWithinAllowance = 29, // paramType: None
+  CallWithinAllowance = 30, // paramType: None
+}
+
+export interface Role {
+  key: `0x${string}`
+  members: `0x${string}`[]
   targets: Target[]
+  allowances: Allowance[]
+  annotations: Annotation[]
 }
 
 export interface Target {
-  address: string
+  address: `0x${string}`
   clearance: Clearance
   executionOptions: ExecutionOptions
   functions: Function[]
 }
 
 export interface Function {
-  sighash: string
+  selector: `0x${string}`
   executionOptions: ExecutionOptions
   wildcarded: boolean
-  parameters: Parameter[]
+  condition?: Condition
 }
 
-export interface Parameter {
-  index: number
-  type: ParameterType
-  comparison: Comparison
-  comparisonValue: string[]
+export interface Condition {
+  paramType: ParameterType
+  operator: Operator
+  compValue?: `0x${string}`
+  children?: Condition[]
 }
 
-export interface RolePreset {
-  network: number
-  allowTargets: PresetTarget[] // allows all calls to targets
-  allowFunctions: PresetFunction[] // allows calls to specific functions, optionally with parameter scoping
-}
-export interface PresetTarget {
-  targetAddress: string
-  options?: ExecutionOptions
-}
-
-export type PresetFunction = ({ sighash: string } | { signature: string }) & {
-  targetAddresses: string[]
-  params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
-  options?: ExecutionOptions
+export interface Allowance {
+  key: `0x${string}`
+  period: number
+  refill: BigNumber
+  timestamp: number
+  maxRefill: BigNumber
+  balance: BigNumber
 }
 
-type ComparisonValue = string | symbol
-export interface PresetScopeParam {
-  type: ParameterType
-  comparison: Comparison
-  value: ComparisonValue | ComparisonValue[]
+export interface Annotation {
+  /** The URI serves as ID for the annotation. An http get request will be made to fetch the targeted permissions. */
+  uri: string
+  /** The OpenAPI schema that describes the API endpoint at uri. */
+  schema: string
 }
-
-interface AllowTargetCall {
-  call: "allowTarget"
-  targetAddress: string
-  options: ExecutionOptions
-}
-interface ScopeTargetCall {
-  call: "scopeTarget"
-  targetAddress: string
-}
-interface ScopeAllowFunctionCall {
-  call: "scopeAllowFunction"
-  targetAddress: string
-  functionSig: string
-  options: ExecutionOptions
-}
-interface ScopeFunctionCall {
-  call: "scopeFunction"
-  targetAddress: string
-  functionSig: string
-  isParamScoped: boolean[]
-  paramType: ParameterType[]
-  paramComp: (
-    | Comparison.EqualTo
-    | Comparison.GreaterThan
-    | Comparison.LessThan
-  )[]
-  compValue: string[]
-  options: ExecutionOptions
-}
-interface ScopeParameterAsOneOfCall {
-  call: "scopeParameterAsOneOf"
-  targetAddress: string
-  functionSig: string
-  paramIndex: number
-  type: ParameterType
-  value: string[]
-}
-interface UnscopeParameterCall {
-  call: "unscopeParameter"
-  targetAddress: string
-  functionSig: string
-  paramIndex: number
-}
-interface ScopeRevokeFunctionCall {
-  call: "scopeRevokeFunction"
-  targetAddress: string
-  functionSig: string
-}
-interface RevokeTargetCall {
-  call: "revokeTarget"
-  targetAddress: string
-}
-
-export type Call =
-  | AllowTargetCall
-  | ScopeTargetCall
-  | ScopeAllowFunctionCall
-  | ScopeFunctionCall
-  | ScopeParameterAsOneOfCall
-  | ScopeRevokeFunctionCall
-  | RevokeTargetCall

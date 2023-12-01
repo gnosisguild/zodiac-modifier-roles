@@ -4,5 +4,8 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
+  },
+  "search.exclude": {
+    "**/build": true
   }
 }

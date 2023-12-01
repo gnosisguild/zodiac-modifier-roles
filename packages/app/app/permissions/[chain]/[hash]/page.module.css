@@ -1,0 +1,12 @@
+.main {
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-1);
+}
+
+.hash {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}

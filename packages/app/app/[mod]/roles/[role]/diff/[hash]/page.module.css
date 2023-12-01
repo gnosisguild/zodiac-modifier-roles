@@ -1,0 +1,37 @@
+.main {
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-1);
+}
+
+.diffIcon {
+  padding: 0 var(--spacing-1) 0;
+  height: 16px;
+}
+
+.hash {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.index {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  user-select: none;
+}
+
+.calldata {
+  width: 66%;
+  flex-grow: 3;
+}
+
+.comment {
+  width: 33%;
+  flex-grow: 1;
+  font-size: 12px;
+  padding-left: 1.3em;
+  text-indent: -1.3em;
+  user-select: none;
+}

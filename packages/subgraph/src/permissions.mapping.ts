@@ -2,36 +2,26 @@ import {
   AllowTarget,
   ScopeTarget,
   RevokeTarget,
-  ScopeAllowFunction,
   ScopeFunction,
-  ScopeFunctionExecutionOptions,
-  ScopeParameter,
-  ScopeParameterAsOneOf,
-  ScopeRevokeFunction,
-  UnscopeParameter,
-} from "../generated/Permissions/Permissions"
-import { Role, Target, RolesModifier, Function, Parameter } from "../generated/schema"
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
+  RevokeFunction,
+  SetAllowance,
+  AllowFunction,
+} from "../generated/PermissionBuilder/PermissionBuilder"
+import { Target } from "../generated/schema"
+import { log, store } from "@graphprotocol/graph-ts"
 import {
-  CLEARANCE,
-  CLEARANCE__FUNCTION,
-  CLEARANCE__NONE,
-  CLEARANCE__TARGET,
-  EXECUTION_OPTIONS,
-  EXECUTION_OPTIONS__NONE,
   getFunctionId,
+  getOrCreateAllowance,
   getOrCreateFunction,
   getOrCreateRole,
   getOrCreateTarget,
-  getParameterId,
   getRoleId,
   getRolesModifier,
   getRolesModifierId,
   getTargetId,
-  PARAMETER_COMPARISON,
-  PARAMETER_COMPARISON__ONE_OF,
-  PARAMETER_TYPE,
 } from "./helpers"
+import { Clearance, ClearanceKeys, ExecutionOptions, ExecutionOptionsKeys } from "./enums"
+import { storeConditions } from "./conditions"
 
 export function handleAllowTarget(event: AllowTarget): void {
   const rolesModifierAddress = event.address
@@ -41,15 +31,18 @@ export function handleAllowTarget(event: AllowTarget): void {
     return
   }
 
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  // Make sure the role exists
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  target.clearance = CLEARANCE[CLEARANCE__TARGET]
+  target.executionOptions = ExecutionOptionsKeys[event.params.options]
+  target.clearance = ClearanceKeys[Clearance.Target]
   target.save()
+
+  log.info("Permission has been granted to call any function of target {}", [targetId])
 }
 
 export function handleScopeTarget(event: ScopeTarget): void {
@@ -61,205 +54,110 @@ export function handleScopeTarget(event: ScopeTarget): void {
     return
   }
 
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  // Make sure the role exists
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   const target = getOrCreateTarget(targetId, targetAddress, roleId)
-  target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-  target.clearance = CLEARANCE[CLEARANCE__FUNCTION]
+  target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
+  target.clearance = ClearanceKeys[Clearance.Function]
   target.save()
+
+  log.info("Target {} has been set to scoped", [targetId])
 }
 
 export function handleRevokeTarget(event: RevokeTarget): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierId, event.params.role)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
 
   const targetId = getTargetId(roleId, targetAddress)
   let target = Target.load(targetId)
 
   if (target) {
-    target.executionOptions = EXECUTION_OPTIONS[EXECUTION_OPTIONS__NONE]
-    target.clearance = CLEARANCE[CLEARANCE__NONE]
+    target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
+    target.clearance = ClearanceKeys[Clearance.None]
     target.save()
+  } else {
+    log.warning("Target does not exist: {}", [targetId])
   }
+
+  log.info("Permission to call target {} has been revoked", [targetId])
 }
 
-export function handleScopeAllowFunction(event: ScopeAllowFunction): void {
-  // allow function
-  const rolesModifierAddress = event.address
-  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+export function handleAllowFunction(event: AllowFunction): void {
+  const rolesModifierId = getRolesModifierId(event.address)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
     return
   }
 
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  // Make sure the role exists
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
+  // Make sure the target exists
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
-  const target = getOrCreateTarget(targetId, targetAddress, roleId)
+  getOrCreateTarget(targetId, targetAddress, roleId)
 
-  const sighash = event.params.selector
-  const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  theFunction.wildcarded = true
-  theFunction.save()
+  const functionId = getFunctionId(targetId, event.params.selector)
+  const func = getOrCreateFunction(functionId, targetId, event.params.selector)
+  func.wildcarded = true
+  func.executionOptions = ExecutionOptionsKeys[event.params.options]
+  func.condition = null
+  func.save()
+
+  log.info("Wildcard permission to call {} has been granted", [functionId])
 }
 
 export function handleScopeFunction(event: ScopeFunction): void {
-  // if role does not exist? create it
-  const rolesModifierAddress = event.address
-  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifierId = getRolesModifierId(event.address)
   const rolesModifier = getRolesModifier(rolesModifierId)
   if (!rolesModifier) {
     return
   }
 
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const role = getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  // Make sure the role exists
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
+  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
 
-  // if target does not exist? create it with clearance and executionOptions set to None
-  const targetAddress = event.params.targetAddress
-  const targetId = getTargetId(roleId, targetAddress)
-  const target = getOrCreateTarget(targetId, targetAddress, roleId)
-
-  // if function does not exist? create it with the info from the event
-  const sighash = event.params.functionSig
-  const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  theFunction.wildcarded = false
-  theFunction.save()
-
-  if (theFunction.parameters != null) {
-    // remove old parameters if it exists
-    const parameters: string[] = theFunction.parameters!
-    for (let i = 0; i < parameters.length; i++) {
-      const parameterId = parameters[i]
-      store.remove("Parameter", parameterId)
-    }
-  }
-
-  for (let i = 0; i < event.params.paramType.length; i++) {
-    // create new parameters
-    if (event.params.isParamScoped[i]) {
-      const paramType = PARAMETER_TYPE[event.params.paramType[i]]
-      const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
-      const compValue = event.params.compValue[i]
-
-      const parameterId = getParameterId(functionId, i)
-      const parameter = new Parameter(parameterId)
-      parameter.owningFunction = functionId
-      parameter.index = i
-      parameter.type = paramType
-      parameter.comparison = paramComp
-      parameter.comparisonValue = [compValue]
-      parameter.save()
-    }
-  }
-}
-
-export function handleScopeFunctionExecutionOptions(event: ScopeFunctionExecutionOptions): void {
-  const rolesModifierAddress = event.address
-  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const rolesModifier = getRolesModifier(rolesModifierId)
-  if (!rolesModifier) {
-    return
-  }
-
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
+  // Make sure the target exists
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
   getOrCreateTarget(targetId, targetAddress, roleId)
-  const sighash = event.params.functionSig
-  const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-  theFunction.executionOptions = EXECUTION_OPTIONS[event.params.options]
-  theFunction.save()
+
+  // If function does not exist, create it with executionOptions set to None and wildcarded set to false
+  const selector = event.params.selector
+  const functionId = getFunctionId(targetId, selector)
+  const func = getOrCreateFunction(functionId, targetId, selector)
+
+  // Store the conditions and reference the root condition from the function
+  assert(event.params.conditions.length > 0, "Conditions must not be empty")
+  const rootCondition = storeConditions(event.params.conditions)
+  func.condition = rootCondition.id
+  func.save()
+
+  log.info("Function {} has been scoped with condition {}", [functionId, rootCondition.id])
 }
 
-export function handleScopeParameter(event: ScopeParameter): void {
-  const rolesModifierAddress = event.address
-  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const rolesModifier = getRolesModifier(rolesModifierId)
-  if (!rolesModifier) {
-    return
-  }
-
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
-  const targetAddress = event.params.targetAddress
-  const targetId = getTargetId(roleId, targetAddress)
-  getOrCreateTarget(targetId, targetAddress, roleId)
-  const sighash = event.params.functionSig
-  const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-
-  const parameterId = getParameterId(functionId, event.params.index.toI32())
-  const parameter = new Parameter(parameterId) // will always overwrite the parameter
-  const paramType = PARAMETER_TYPE[event.params.paramType]
-  const paramComp = PARAMETER_COMPARISON[event.params.paramComp]
-  const compValue = event.params.compValue // Can't be decode here, we do not have the required info (target ABI), must be done in frontend.
-  parameter.owningFunction = functionId
-  parameter.index = event.params.index.toI32()
-  parameter.type = paramType
-  parameter.comparison = paramComp
-  parameter.comparisonValue = [compValue]
-  parameter.save()
-}
-
-export function handleScopeParameterAsOneOf(event: ScopeParameterAsOneOf): void {
-  const rolesModifierAddress = event.address
-  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
-  const rolesModifier = getRolesModifier(rolesModifierId)
-  if (!rolesModifier) {
-    return
-  }
-
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  getOrCreateRole(roleId, rolesModifierId, event.params.role)
-  const targetAddress = event.params.targetAddress
-  const targetId = getTargetId(roleId, targetAddress)
-  getOrCreateTarget(targetId, targetAddress, roleId)
-  const sighash = event.params.functionSig
-  const functionId = getFunctionId(targetId, sighash)
-  const theFunction = getOrCreateFunction(functionId, targetId, sighash)
-
-  const parameterId = getParameterId(functionId, event.params.index.toI32())
-  const parameter = new Parameter(parameterId) // will always overwrite the parameter
-  const paramType = PARAMETER_TYPE[event.params.paramType]
-  const paramComp = PARAMETER_COMPARISON[PARAMETER_COMPARISON__ONE_OF]
-  const compValues = event.params.compValues
-
-  parameter.owningFunction = functionId
-  parameter.index = event.params.index.toI32()
-  parameter.type = paramType
-  parameter.comparison = paramComp
-  parameter.comparisonValue = compValues
-  parameter.save()
-}
-
-export function handleScopeRevokeFunction(event: ScopeRevokeFunction): void {
-  // remove function
+export function handleRevokeFunction(event: RevokeFunction): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const targetAddress = event.params.targetAddress
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const targetId = getTargetId(roleId, targetAddress)
-  const sighash = event.params.selector
-  const functionId = getFunctionId(targetId, sighash)
+  const roleId = getRoleId(rolesModifierId, event.params.roleKey)
 
+  const targetId = getTargetId(roleId, targetAddress)
+  const functionId = getFunctionId(targetId, event.params.selector)
   store.remove("Function", functionId)
+
+  log.info("Permissions to call function {} have been revoked", [functionId])
 }
 
-export function handleUnscopeParameter(event: UnscopeParameter): void {
+export function handleSetAllowance(event: SetAllowance): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
   const rolesModifier = getRolesModifier(rolesModifierId)
@@ -267,12 +165,13 @@ export function handleUnscopeParameter(event: UnscopeParameter): void {
     return
   }
 
-  const roleId = getRoleId(rolesModifierId, event.params.role)
-  const targetAddress = event.params.targetAddress
-  const targetId = getTargetId(roleId, targetAddress)
-  const sighash = event.params.functionSig
-  const functionId = getFunctionId(targetId, sighash)
-  const parameterId = getParameterId(functionId, event.params.index.toI32())
+  const allowance = getOrCreateAllowance(event.params.allowanceKey, rolesModifierId)
+  allowance.balance = event.params.balance
+  allowance.refill = event.params.refill
+  allowance.maxRefill = event.params.maxRefill
+  allowance.period = event.params.period.toU32()
+  allowance.timestamp = event.params.timestamp.toU32()
+  allowance.save()
 
-  store.remove("Parameter", parameterId)
+  log.info("Allowance {} has been set", [allowance.id])
 }

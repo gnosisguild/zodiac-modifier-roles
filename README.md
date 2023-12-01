@@ -1,4 +1,4 @@
-** 📯 Legacy Zodiac Roles v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosis/zodiac-modifier-roles-v1)**
+**📯 Legacy Zodiac Roles v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosis/zodiac-modifier-roles-v1)**
 
 ---
 
@@ -20,13 +20,15 @@ Modules that have been granted a role are able to unilaterally make calls to any
 
 The interface mirrors the relevant parts of the Safe's interface, so this contract can be placed between Safe modules and the Safe itself to enforce role-based permissions.
 
+The contracts have been developed with [Solidity 0.8.21](https://github.com/ethereum/solidity/releases/tag/v0.8.21) targeting evm version shanghai.
+
 ### Features
 
 - Create multiple roles
 - Assign roles to addresses
 - Allow roles access to call, delegate call, and/or send to address
 - Scope which functions a role can call on given address
-- Scope which paramters are allowed on a given function
+- Define conditions on function parameters
 
 ### Flow
 
@@ -34,17 +36,54 @@ The interface mirrors the relevant parts of the Safe's interface, so this contra
 - Assign the role to an address with `assignRoles()`
 - Address can now trigger the safe to call those targets, functions, and parameters via `execTransactionWithRole()`
 
+### Deployments
+
+#### Roles
+
+Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
+
+- [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Gnosis](https://gnosisscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Görli](https://goerli.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+
+#### MultiSendUnwrapper (transaction unwrapper)
+
+Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
+
+- [Mainnet](https://etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Gnosis](https://gnosisscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Görli](https://goerli.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+
+#### AvatarIsOwnerOfERC721 (custom condition)
+
+Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
+
+- [Mainnet](https://etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Gnosis](https://gnosisscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Görli](https://goerli.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Mumbai](https://mumbai.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+
 ### Development environment setup
 
 1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
 2. From the repo root run `yarn`
-3. From the repo root run `yarn build`
+3. From the repo root run `yarn prepare`
 
 After that, you can start working on the different packages.
 
-### Solidity Compiler
+### Packages
 
-The contracts have been developed with [Solidity 0.8.21](https://github.com/ethereum/solidity/releases/tag/v0.8.21) targeting evm version shanghai.
+This monorepo uses [yarn workspaces](https://yarnpkg.com/features/workspaces) and is comprised of:
+
+- **evm**: Roles mod smart contracts
+- **subgraph**: a subgraph indexing deployed Roles mod instances
+- **sdk**: a TypeScript SDK for managing roles
+- **app**: a webapp for editing roles
 
 ### Audits
 

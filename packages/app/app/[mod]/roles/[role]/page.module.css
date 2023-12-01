@@ -1,0 +1,28 @@
+.main {
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-1);
+}
+
+.roleKey small {
+  width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+@media (max-width: 960px) {
+  .container {
+    flex-wrap: wrap;
+  }
+}
+
+.members {
+  width: 350px;
+  min-width: 300px;
+  flex-grow: 1;
+}
+.permissions {
+  flex-grow: 9999;
+}

@@ -1,0 +1,12 @@
+.functionName {
+  display: inline-block;
+}
+
+.signature {
+  display: inline-flex;
+}
+
+.params {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+}
