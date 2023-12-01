@@ -17,7 +17,8 @@ task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
       Packer.bytecode,
       salt,
       deployer,
-      "Packer"
+      "Packer",
+      2000000
     );
 
     const Integrity = await hre.ethers.getContractFactory("Integrity");
@@ -25,7 +26,8 @@ task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
       Integrity.bytecode,
       salt,
       deployer,
-      "Integrity"
+      "Integrity",
+      2000000
     );
 
     const Roles = await hre.ethers.getContractFactory("Roles", {
@@ -44,7 +46,8 @@ task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
       `${Roles.bytecode}${args.substring(2)}`,
       salt,
       deployer,
-      "Roles Mastercopy"
+      "Roles Mastercopy",
+      6000000
     );
 
     if (hre.network.name == "hardhat") {

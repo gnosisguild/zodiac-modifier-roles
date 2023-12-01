@@ -7,7 +7,8 @@ export async function deployViaFactory(
   initCode: string,
   salt: string,
   deployer: Signer,
-  displayName?: string
+  displayName?: string,
+  gasLimit = 10000000
 ): Promise<string> {
   await maybeDeployFactory(deployer);
 
@@ -32,7 +33,7 @@ export async function deployViaFactory(
   }
 
   const receipt = await (
-    await factory.deploy(initCode, salt, { gasLimit: 10000000 })
+    await factory.deploy(initCode, salt, { gasLimit })
   ).wait();
 
   if (receipt?.status == 1) {

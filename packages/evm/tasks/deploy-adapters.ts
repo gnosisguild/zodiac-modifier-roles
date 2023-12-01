@@ -1,5 +1,4 @@
-import { deployMastercopyWithInitData } from "@gnosis.pm/zodiac";
-import { calculateDeployAddress } from "./EIP2470";
+import { calculateDeployAddress, deployViaFactory } from "./EIP2470";
 import { task } from "hardhat/config";
 
 const SaltZero =
@@ -19,10 +18,12 @@ task(
     MultiSendUnwrapper.bytecode,
     SaltZero
   );
-  await deployMastercopyWithInitData(
-    deployer,
+  await deployViaFactory(
     MultiSendUnwrapper.bytecode,
-    SaltZero
+    SaltZero,
+    deployer,
+    "MultiSendUnwrapper",
+    2000000
   );
 
   const AvatarIsOwnerOfERC721 = await hre.ethers.getContractFactory(
@@ -32,10 +33,12 @@ task(
     AvatarIsOwnerOfERC721.bytecode,
     SaltZero
   );
-  await deployMastercopyWithInitData(
-    deployer,
+  await deployViaFactory(
     AvatarIsOwnerOfERC721.bytecode,
-    SaltZero
+    SaltZero,
+    deployer,
+    "AvatarIsOwnerOfERC721",
+    1000000
   );
 
   console.log("Waiting 1 minute before etherscan verification start...");
