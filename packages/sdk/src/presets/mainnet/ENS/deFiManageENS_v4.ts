@@ -28,7 +28,6 @@ import {
   balancer,
   compound_v2,
   compound_v3,
-  cowswap,
   curve,
   lido,
   maker,
@@ -2216,10 +2215,10 @@ const preset = {
       },
     },
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Cowswap
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH, SWISE, USDC, USDT, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Cowswap
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([AURA, BAL, COMP, CRV, CVX, DAI, LDO, rETH, SWISE, USDC, USDT, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
 
     // allow.mainnet.cowswap.order_signer["signOrder"](
     //   {
@@ -2256,38 +2255,6 @@ const preset = {
     //     delegatecall: true,
     //   }
     // ),
-
-    {
-      targetAddress: cowswap.ORDER_SIGNER,
-      signature:
-        "signOrder((address,address,address,uint256,uint256,uint32,bytes32,uint256,bytes32,bool,bytes32,bytes32),uint32,uint256)",
-      params: {
-        [0]: staticOneOf(
-          [
-            AURA,
-            BAL,
-            COMP,
-            CRV,
-            CVX,
-            DAI,
-            LDO,
-            rETH,
-            SWISE,
-            USDC,
-            USDT,
-            WETH,
-            wstETH,
-          ],
-          "address"
-        ),
-        [1]: staticOneOf(
-          [DAI, USDC, USDT, rETH, stETH, WETH, wstETH],
-          "address"
-        ),
-        [2]: staticEqual(AVATAR),
-      },
-      delegatecall: true,
-    },
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset

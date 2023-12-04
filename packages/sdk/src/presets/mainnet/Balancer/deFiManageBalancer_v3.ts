@@ -1154,10 +1154,10 @@ const preset = {
       }
     ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Cowswap
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // ...allowErc20Approve([AAVE, COMP, DAI, rETH, rETH2, sETH2, stETH, SWISE, USDC, USDT, WBTC, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Cowswap
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // ...allowErc20Approve([AAVE, COMP, DAI, rETH, rETH2, sETH2, stETH, SWISE, USDC, USDT, WBTC, WETH, wstETH], [cowswap.GPv2_VAULT_RELAYER]),
 
     // allow.mainnet.cowswap.order_signer["signOrder"](
     //   {
@@ -1196,38 +1196,6 @@ const preset = {
     //     delegatecall: true,
     //   }
     // ),
-
-    {
-      targetAddress: cowswap.ORDER_SIGNER,
-      signature:
-        "signOrder((address,address,address,uint256,uint256,uint32,bytes32,uint256,bytes32,bool,bytes32,bytes32),uint32,uint256)",
-      params: {
-        [0]: staticOneOf(
-          [
-            AAVE,
-            COMP,
-            DAI,
-            rETH,
-            rETH2,
-            sETH2,
-            stETH,
-            SWISE,
-            USDC,
-            USDT,
-            WBTC,
-            WETH,
-            wstETH,
-          ],
-          "address"
-        ),
-        [1]: staticOneOf(
-          [DAI, rETH, sETH2, stETH, USDC, USDT, WBTC, WETH, wstETH],
-          "address"
-        ),
-        [2]: staticEqual(AVATAR),
-      },
-      delegatecall: true,
-    },
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset
