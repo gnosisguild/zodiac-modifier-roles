@@ -1,4 +1,4 @@
 {
   "network": "optimism",
-  "startBlock": 26431
+  "startBlock": 0 // TODO
 }
