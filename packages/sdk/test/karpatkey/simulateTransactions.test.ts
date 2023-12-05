@@ -1,6 +1,6 @@
 import { BigNumber } from "ethers"
 import { formatBytes32String } from "ethers/lib/utils"
-import hre, { deployments, waffle } from "hardhat"
+import hre, { deployments, ethers } from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
 import { Permission, processPermissions } from "../../src"
@@ -38,7 +38,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
 
   const setup = deployments.createFixture(async () => {
     await deployments.fixture()
-    const [owner] = waffle.provider.getWallets()
+    const [owner] = await ethers.getSigners()
 
     const MultiSend = await hre.ethers.getContractFactory("MultiSend")
     const multiSend = await MultiSend.deploy()
