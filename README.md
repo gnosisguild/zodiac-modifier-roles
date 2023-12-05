@@ -68,6 +68,14 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Görli](https://goerli.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 
+#### Subgraphs
+
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.0)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.1.0)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.0)
+- [Görli](https://api.studio.thegraph.com/query/23167/zodiac-roles-goerli/v2.1.0)
+- [Mumbai](https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.0)
+
 ### Development environment setup
 
 1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
