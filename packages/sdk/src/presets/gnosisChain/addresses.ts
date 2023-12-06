@@ -105,7 +105,7 @@ export const balancer = {
 
 export const cowswap = {
   GPv2_VAULT_RELAYER: "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110",
-  ORDER_SIGNER: "0xE522f854b978650Dc838Ade0e39FbC1417A2FfB0",
+  ORDER_SIGNER: "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB",
 }
 
 export const curve = {
