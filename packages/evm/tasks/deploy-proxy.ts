@@ -9,9 +9,7 @@ interface TaskArgs {
   nonce: number;
 }
 
-// TODO update this if we make any changes to the Roles contract
-const MASTERCOPY_ADDRESS = "0x26DA7F5a385BA7c96456Ea6273d715ebF90feba8";
-// TODO in the future we should deploy through the @gnosis.pm/zodiac module
+const MASTERCOPY_ADDRESS = "0x9646fDAD06d3e24444381f44362a3B0eB343D337";
 
 task("deploy:proxy", "Deploys a Roles modifier proxy instance")
   .addParam("owner", "Address of the owner", undefined, types.string)
