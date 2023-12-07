@@ -4,7 +4,7 @@ import { deployViaFactory } from "./EIP2470";
 
 const ZeroHash =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
-const AddressZero = "0x0000000000000000000000000000000000000001";
+const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
   async (_, hre) => {
@@ -39,7 +39,7 @@ task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
 
     const args = defaultAbiCoder.encode(
       ["address", "address", "address"],
-      [AddressZero, AddressZero, AddressZero]
+      [AddressOne, AddressOne, AddressOne]
     );
 
     const rolesAddress = await deployViaFactory(
@@ -70,7 +70,7 @@ task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
 
     await hre.run("verify:verify", {
       address: rolesAddress,
-      constructorArguments: [AddressZero, AddressZero, AddressZero],
+      constructorArguments: [AddressOne, AddressOne, AddressOne],
     });
   }
 );
