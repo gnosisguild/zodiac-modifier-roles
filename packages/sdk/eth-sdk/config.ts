@@ -188,15 +188,7 @@ export default defineConfig({
       },
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-        relayer: "0x3536fD480CA495Ac91E698A703248A8915c137a3",
-        child_chain_gauge_reward_helper:
-          "0xf7D5DcE55E6D47852F054697BAB6A1B48A00ddbd",
-        B_50bbagGNO_50bbagWETH_gauge:
-          "0xf752dd899F87a91370C1C8ac1488Aef6be687505",
-        bb_ag_USD_gauge: "0xDe3B7eC86B67B05D312ac8FD935B6F59836F2c41",
-        agUSD_agWETH_agWBTC_gauge: "0x7eA8B4e2CaBA854C3dD6bf9c5ebABa143BE7Fe9E",
-        B_50bbagGNO_50bbagUSD_gauge:
-          "0x7E13b8b95d887c2326C25e71815F33Ea10A2674e",
+        bal_minter: "0xA8920455934Da4D853faac1f94Fe7bEf72943eF1",
       },
       cowswap: {
         order_signer: "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB",

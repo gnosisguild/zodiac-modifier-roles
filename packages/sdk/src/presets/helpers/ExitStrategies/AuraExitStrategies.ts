@@ -6,6 +6,8 @@ import { balancer } from "../../mainnet/addresses"
 
 export const auraExitStrategy1 = (rewarder: string): PresetAllowEntry[] => {
   return [
+    // It doesn't matter the blockchain we use, since we are overwriting
+    // the address of the rewarder (abis are the same indistinctively of the blockchain)
     {
       ...allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
       targetAddress: rewarder,
@@ -18,6 +20,8 @@ export const auraExitStrategy2 = (
   balancerPoolId: string
 ): PresetAllowEntry[] => {
   return [
+    // It doesn't matter the blockchain we use, since we are overwriting
+    // the address of the rewarder (abis are the same indistinctively of the blockchain)
     {
       ...allow.mainnet.aura.auraB_stETH_stable_rewarder["withdrawAndUnwrap"](),
       targetAddress: rewarder,

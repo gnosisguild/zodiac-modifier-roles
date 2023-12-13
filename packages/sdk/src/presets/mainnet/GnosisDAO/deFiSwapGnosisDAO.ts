@@ -11,28 +11,6 @@ const preset = {
     // Cowswap
     //---------------------------------------------------------------------------------------------------------------------------------
     ...allowErc20Approve([GNO], [cowswap.GPv2_VAULT_RELAYER]),
-
-    allow.mainnet.cowswap.order_signer["signOrder"](
-      {
-        oneOf: [GNO],
-      },
-      {
-        oneOf: [],
-      },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      {
-        delegatecall: true,
-      }
-    ),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset

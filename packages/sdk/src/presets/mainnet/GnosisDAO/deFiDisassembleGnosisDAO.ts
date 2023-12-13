@@ -5,32 +5,52 @@ import {
   auraBAL,
   BAL,
   COW,
-  WETH,
+  DAI,
   GNO,
   LDO,
   USDC,
+  WBTC,
+  WETH,
   wstETH,
   aura,
+  aave_v3,
   balancer,
   compound_v2,
   compound_v3,
+  spark,
 } from "../addresses"
 import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
+import { lidoExitStrategyAll } from "../../helpers/ExitStrategies/LidoExitStrategies"
+import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
 import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { balancerExitStrategy1 } from "../../helpers/ExitStrategies/BalancerExitStrategies"
+import { allowErc20Approve } from "../../helpers/erc20"
 
 const preset = {
   network: 1,
   allow: [
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura wstETH/WETH pool + Balancer wstETH/WETH pool
+    // Lido
     //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy2(
-      aura.auraB_stETH_STABLE_REWARDER,
-      balancer.B_stETH_STABLE_pId
-    ),
+    ...lidoExitStrategyAll(),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Holdings
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    ...HoldingsExitStrategy(1), // 1 = mainnet
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aura wstETH/WETH  + Balancer wstETH/WETH
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // ...auraExitStrategy2(
+    //   aura.auraB_stETH_STABLE_REWARDER,
+    //   balancer.B_stETH_STABLE_pId
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH/auraBAL + Balancer B-80BAL-20WETH
@@ -42,16 +62,7 @@ const preset = {
     ),
 
     // Remove Liquidity from Balancer B-80BAL-20WETH
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(balancer.B_80BAL_20WETH_pId, "bytes32"), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-      },
-    },
+    ...balancerExitStrategy1(balancer.B_80BAL_20WETH_pId),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura rETH/WETH + Balancer rETH/WETH
@@ -62,14 +73,14 @@ const preset = {
       balancer.B_rETH_STABLE_pId
     ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura GNO/WETH + Balancer GNO/WETH
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aura GNO/WETH + Balancer GNO/WETH
+    // //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy2(
-      aura.auraB_80GNO_20WETH_REWARDER,
-      balancer.B_80GNO_20WETH_pId
-    ),
+    // ...auraExitStrategy2(
+    //   aura.auraB_80GNO_20WETH_REWARDER,
+    //   balancer.B_80GNO_20WETH_pId
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura GNO/COW + Balancer GNO/COW
@@ -80,23 +91,23 @@ const preset = {
       balancer.B_50COW_50GNO_pId
     ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura LDO/wstETH + Balancer LDO/wstETH
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aura LDO/wstETH + Balancer LDO/wstETH
+    // //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy2(
-      aura.aura50WSTETH_50LDO_REWARDER,
-      balancer.B_50WSTETH_50LDO_pId
-    ),
+    // ...auraExitStrategy2(
+    //   aura.aura50WSTETH_50LDO_REWARDER,
+    //   balancer.B_50WSTETH_50LDO_pId
+    // ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura WETH/AURA + Balancer WETH/AURA
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aura WETH/AURA + Balancer WETH/AURA
+    // //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy2(
-      aura.aura50WETH_50AURA_REWARDER,
-      balancer.B_50WETH_50AURA_pId
-    ),
+    // ...auraExitStrategy2(
+    //   aura.aura50WETH_50AURA_REWARDER,
+    //   balancer.B_50WETH_50AURA_pId
+    // ),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura WETH/COW + Balancer WETH/COW
@@ -107,43 +118,42 @@ const preset = {
       balancer.B_50COW_50WETH_pId
     ),
 
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Aura GHO/3pool + Balancer GHO/3pool + Balancer 3pool
-    //---------------------------------------------------------------------------------------------------------------------------------
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aura GHO/3pool + Balancer GHO/3pool + Balancer 3pool
+    // //---------------------------------------------------------------------------------------------------------------------------------
 
-    ...auraExitStrategy2(aura.auraGHO_3POOL_REWARDER, balancer.B_GHO_3POOL_pId),
+    // ...auraExitStrategy2(aura.auraGHO_3POOL_REWARDER, balancer.B_GHO_3POOL_pId),
 
-    // Remove Liquidity from 3pool
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(balancer.B_USDC_DAI_USDT_pId, "bytes32"), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-      },
-    },
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Staking auraBAL
-    //---------------------------------------------------------------------------------------------------------------------------------
-
+    // // Remove Liquidity from 3pool
     // {
-    //   targetAddress: auraBAL_STAKING_REWARDER,
-    //   signature: "withdraw(uint256,bool)",
+    //   targetAddress: balancer.VAULT,
+    //   signature:
+    //     "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+    //   params: {
+    //     [0]: staticEqual(balancer.B_USDC_DAI_USDT_pId, "bytes32"), // Balancer PoolId
+    //     [1]: staticEqual(AVATAR),
+    //     [2]: staticEqual(AVATAR),
+    //   },
     // },
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Classic auraBAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+
     allow.mainnet.aura.auraBAL_staking_rewarder["withdraw"](),
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    // Compounding auraBAL
+    //---------------------------------------------------------------------------------------------------------------------------------
+
+    allow.mainnet.aura.stkauraBAL["withdraw"](undefined, AVATAR, AVATAR),
+    allow.mainnet.aura.stkauraBAL["redeem"](undefined, AVATAR, AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Locking AURA
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Process Expired AURA Locks - True -> Relock Expired Locks / False -> Withdraw Expired Locks
-    // {
-    //   targetAddress: AURA_LOCKER,
-    //   signature: "processExpiredLocks(bool)",
-    // },
     allow.mainnet.aura.aura_locker["processExpiredLocks"](),
 
     // Withdraw funds in emergency state (isShutdown = True)
@@ -154,79 +164,11 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer wstETH/WETH pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_stETH_stable_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer B-80BAL-20WETH/auraBAL pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_auraBAL_stable_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer rETH/WETH pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_rETH_stable_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer GNO/WETH pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_80GNO_20WETH_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer GNO/COW pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_50COW_50GNO_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer LDO/wstETH pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_50WSTETH_50LDO_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer WETH/AURA pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_50WETH_50AURA_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer WETH/COW pool
-    //---------------------------------------------------------------------------------------------------------------------------------
-
-    // Unstake
-    allow.mainnet.balancer.B_50COW_50WETH_gauge["withdraw(uint256)"](),
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // Balancer BAL/WETH pool
+    // Balancer BAL/WETH
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Remove Liquidity
-    {
-      targetAddress: balancer.VAULT,
-      signature:
-        "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-      params: {
-        [0]: staticEqual(
-          "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
-          "bytes32"
-        ), // Balancer PoolId
-        [1]: staticEqual(AVATAR),
-        [2]: staticEqual(AVATAR),
-      },
-    },
+    ...balancerExitStrategy1(balancer.B_80BAL_20WETH_pId),
 
     // Unlock
     allow.mainnet.balancer.veBAL["withdraw"](),
@@ -420,6 +362,45 @@ const preset = {
         [8]: staticEqual(AVATAR),
       },
     },
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Spark
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Spark - wstETH
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // // Withdraw
+    // allow.mainnet.spark.sparkLendingPoolV3["withdraw"](
+    //   wstETH,
+    //   undefined,
+    //   AVATAR
+    // ),
+
+    // // Repay - DAI
+    // ...allowErc20Approve([DAI], [spark.LENDING_POOL_V3]),
+    // allow.mainnet.spark.sparkLendingPoolV3["repay"](
+    //   DAI,
+    //   undefined,
+    //   undefined,
+    //   AVATAR
+    // ),
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aave V3
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // //---------------------------------------------------------------------------------------------------------------------------------
+    // // Aave V3 - wstETH
+    // //---------------------------------------------------------------------------------------------------------------------------------
+
+    // // Withdraw
+    // allow.mainnet.aave_v3.pool_v3["withdraw"](wstETH, undefined, AVATAR),
+
+    // // Repay - WBTC
+    // ...allowErc20Approve([WBTC], [aave_v3.POOL_V3]),
+    // allow.mainnet.aave_v3.pool_v3["repay"](WBTC, undefined, undefined, AVATAR),
   ],
   placeholders: { AVATAR },
 } satisfies RolePreset
