@@ -10,6 +10,7 @@ import {
   // polygonMumbai,
   gnosis,
 } from "@wagmi/core/chains" // cannot import from wagmi/chains because that one declares "use client;"
+import { polygonMumbai } from "viem/chains"
 
 export const CHAINS = {
   [mainnet.id]: {
@@ -62,7 +63,12 @@ export const CHAINS = {
     blockExplorerApiKey: "N53BKW6ABNX7CNUK8QIXGRAQS2NME92YAN",
   },
   // [sepolia.id]: { ...sepolia, prefix: "sep", blockExplorerApiKey: '6RJ8KT4B1S9V7E3CIYECNY7HFW8IPWQ3C4' },
-  // [polygonMumbai.id]: { ...polygonMumbai, prefix: "maticmum", blockExplorerApiKey: 'NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ' },
+  [polygonMumbai.id]: {
+    ...polygonMumbai,
+    prefix: "maticmum",
+    blockExplorerAbiUrl: "https://api-mumbai.polygonscan.com/api",
+    blockExplorerApiKey: "NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ",
+  },
 }
 
 export type ChainId = keyof typeof CHAINS
