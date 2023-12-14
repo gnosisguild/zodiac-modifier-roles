@@ -11,6 +11,8 @@ const SUBGRAPH = {
   [43114]: "",
   [80001]:
     "https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.0",
+  [11155111]:
+    "https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.0",
 }
 
 export default SUBGRAPH
