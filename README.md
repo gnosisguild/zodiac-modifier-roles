@@ -45,6 +45,7 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Gnosis](https://gnosisscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Görli](https://goerli.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
@@ -55,6 +56,7 @@ Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
 - [Mainnet](https://etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Gnosis](https://gnosisscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Görli](https://goerli.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 
@@ -65,6 +67,7 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Mainnet](https://etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Gnosis](https://gnosisscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Görli](https://goerli.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 
@@ -73,6 +76,7 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.0)
 - [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.1.0)
 - [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.0)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.0)
 - [Görli](https://api.studio.thegraph.com/query/23167/zodiac-roles-goerli/v2.1.0)
 - [Mumbai](https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.0)
 
