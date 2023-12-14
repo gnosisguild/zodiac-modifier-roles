@@ -1,13 +1,13 @@
 import { expect } from "chai"
-import { defaultAbiCoder } from "ethers/lib/utils"
 
 import { normalizeCondition } from "../src/conditions"
 import { Condition, Operator, ParameterType } from "../src/types"
+import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number): Condition => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: defaultAbiCoder.encode(["uint256"], [id]),
+  compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
 describe("normalizeCondition()", () => {
@@ -162,7 +162,7 @@ describe("normalizeCondition()", () => {
   })
 
   it("should collapse condition subtrees unnecessarily describing static tuple structures", () => {
-    const compValue = defaultAbiCoder.encode(["(uint256)"], [[123]])
+    const compValue = encodeAbiParameters(["(uint256)"], [[123]])
     expect(
       normalizeCondition({
         paramType: ParameterType.Tuple,

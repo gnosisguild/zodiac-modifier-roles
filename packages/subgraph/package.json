@@ -10,27 +10,31 @@
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gnosis/zodiac-roles-local",
     "deploy:mainnet": "yarn prepare:mainnet && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_MAINNET'",
     "deploy:goerli": "yarn prepare:goerli && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_GOERLI'",
+    "deploy:sepolia": "yarn prepare:sepolia && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_SEPOLIA'",
     "deploy:gnosis": "yarn prepare:gnosis && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_GNOSIS'",
     "deploy:arbitrum-one": "yarn prepare:arbitrum-one && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_ARBITRUM_ONE'",
     "deploy:avalanche": "yarn prepare:avalanche && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_AVALANCHE'",
     "deploy:bsc": "yarn prepare:bsc && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_BSC'",
     "deploy:optimism": "yarn prepare:optimism && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_OPTIMISM'",
-    "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_POLYGON'",
+    "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_POLYGON'",
+    "deploy:mumbai": "yarn prepare:mumbai && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_MUMBAI'",
     "prepare:mainnet": "mustache networks/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache networks/goerli.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:sepolia": "mustache networks/sepolia.json subgraph.template.yaml > subgraph.yaml",
     "prepare:gnosis": "mustache networks/gnosis.json subgraph.template.yaml > subgraph.yaml",
     "prepare:arbitrum-one": "mustache networks/arbitrum-one.json subgraph.template.yaml > subgraph.yaml",
     "prepare:avalanche": "mustache networks/avalanche.json subgraph.template.yaml > subgraph.yaml",
     "prepare:bsc": "mustache networks/bsc.json subgraph.template.yaml > subgraph.yaml",
     "prepare:optimism": "mustache networks/optimism.json subgraph.template.yaml > subgraph.yaml",
-    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml"
+    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:mumbai": "mustache networks/mumbai.json subgraph.template.yaml > subgraph.yaml"
   },
   "devDependencies": {
     "mustache": "^4.2.0",
     "prettier": "^2.8.8"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.56.0",
+    "@graphprotocol/graph-cli": "^0.62.0",
     "@graphprotocol/graph-ts": "^0.31.0",
     "assemblyscript-json": "^1.1.0"
   }

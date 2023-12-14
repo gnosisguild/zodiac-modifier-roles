@@ -1,11 +1,11 @@
 import { expect } from "chai"
-import { defaultAbiCoder } from "ethers/lib/utils"
 
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
 } from "../src/conditions"
 import { Operator, ParameterType } from "../src/types"
+import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
 describe("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {
@@ -32,7 +32,7 @@ describe("checkConditionIntegrity()", () => {
       checkConditionIntegrity({
         paramType: ParameterType.None,
         operator: Operator.And,
-        compValue: defaultAbiCoder.encode(["uint256"], [0]),
+        compValue: encodeAbiParameters(["uint256"], [0]),
         children: [
           { paramType: ParameterType.Static, operator: Operator.Pass },
         ],

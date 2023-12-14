@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.2.15",
+  "version": "2.2.17",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -33,7 +33,8 @@
     "build": "rimraf build && yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "check": "yarn check:prettier && yarn check:lint",
+    "check": "yarn check:types && yarn check:prettier && yarn check:lint",
+    "check:types": "tsc --noEmit",
     "check:lint": "eslint src test --ext .ts",
     "check:prettier": "prettier \"src/**/*.ts\" --list-different",
     "fix": "yarn fix:prettier && yarn fix:lint",
@@ -70,7 +71,6 @@
     "@types/chai": "^4.3.1",
     "@types/mocha": "^10.0.4",
     "@types/node": "^20.9.0",
-    "@types/yargs": "^16.0.8",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "chai": "^4.3.10",
@@ -79,16 +79,15 @@
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "ethereum-waffle": "^3.4.4",
     "hardhat": "^2.19.1",
     "hardhat-contract-sizer": "2.10.0",
+    "hardhat-deploy": "^0.11.44",
     "hardhat-gas-reporter": "1.0.9",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",
     "typechain": "^8.3.2",
-    "typescript": "^5.2.2",
-    "yargs": "^16.1.1"
+    "typescript": "^5.2.2"
   },
   "resolutions": {
     "typechain": "^8.3.2"

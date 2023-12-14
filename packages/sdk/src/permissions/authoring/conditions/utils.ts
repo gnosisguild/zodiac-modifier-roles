@@ -1,9 +1,10 @@
-import { defaultAbiCoder, ParamType } from "ethers/lib/utils"
+import { ParamType } from "ethers/lib/utils"
 
 import { ParameterType, Condition, Operator } from "../../../types"
+import { encodeAbiParameters } from "../../../utils/encodeAbiParameters"
 
 export const encodeValue = (value: any, type: ParamType) => {
-  return defaultAbiCoder.encode([type], [value]) as `0x${string}`
+  return encodeAbiParameters([type], [value]) as `0x${string}`
 }
 
 export const parameterType = (type: ParamType): ParameterType => {

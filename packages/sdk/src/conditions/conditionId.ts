@@ -2,7 +2,6 @@ import { BigNumber } from "ethers"
 import {
   BytesLike,
   concat,
-  defaultAbiCoder,
   getCreate2Address,
   hexDataLength,
   hexlify,
@@ -11,6 +10,7 @@ import {
 } from "ethers/lib/utils"
 
 import { Condition, Operator } from "../types"
+import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 import { flattenCondition } from "./flattenCondition"
 import { ConditionFlat } from "./types"
@@ -59,7 +59,7 @@ const packCompValue = (condition: ConditionFlat) => {
 
   return condition.operator == Operator.EqualTo
     ? keccak256(condition.compValue)
-    : defaultAbiCoder.encode(["bytes32"], [condition.compValue])
+    : encodeAbiParameters(["bytes32"], [condition.compValue])
 }
 
 const initCodeFor = (bytecode: BytesLike) =>
