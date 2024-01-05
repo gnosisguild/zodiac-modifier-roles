@@ -24,41 +24,46 @@ const checkConsistentChildrenTypes = (condition: Condition): ParameterType => {
     return condition.paramType
   }
 
-  let expectedType: ParameterType | undefined = undefined
-  condition.children?.forEach((child) => {
+  const [first, ...rest] = condition.children || []
+  const expectedType = first
+    ? checkConsistentChildrenTypes(first)
+    : ParameterType.None
+
+  rest.forEach((child) => {
     const childType = checkConsistentChildrenTypes(child)
-    if (childType === ParameterType.None) return
-    if (!expectedType) {
-      expectedType = childType
-      return
-    }
-
-    if (childType === expectedType) return
-
-    if (
-      childType === ParameterType.Dynamic &&
-      (expectedType === ParameterType.Calldata ||
-        expectedType === ParameterType.AbiEncoded)
-    ) {
-      return
-    }
-
-    if (
-      (childType === ParameterType.Calldata ||
-        childType === ParameterType.AbiEncoded) &&
-      expectedType === ParameterType.Dynamic
-    ) {
-      throw new Error(
-        `Mixed children types: \`${ParameterType[childType]}\` must appear before \`${ParameterType[expectedType]}\``
-      )
-    }
-
-    throw new Error(
-      `Inconsistent children types (\`${ParameterType[expectedType]}\` and \`${ParameterType[childType]}\`)`
-    )
+    checkParameterTypeCompatibility(expectedType, childType)
   })
 
-  return expectedType || ParameterType.None
+  return expectedType
+}
+
+export const checkParameterTypeCompatibility = (
+  left: ParameterType,
+  right: ParameterType
+): void => {
+  if (right === ParameterType.None) return
+
+  if (right === left) return
+
+  if (
+    right === ParameterType.Dynamic &&
+    (left === ParameterType.Calldata || left === ParameterType.AbiEncoded)
+  ) {
+    return
+  }
+
+  if (
+    (right === ParameterType.Calldata || right === ParameterType.AbiEncoded) &&
+    left === ParameterType.Dynamic
+  ) {
+    throw new Error(
+      `Mixed children types: \`${ParameterType[right]}\` must appear before \`${ParameterType[left]}\``
+    )
+  }
+
+  throw new Error(
+    `Inconsistent children types (\`${ParameterType[left]}\` and \`${ParameterType[right]}\`)`
+  )
 }
 
 const checkConditionIntegrityRecursive = (condition: Condition): void => {

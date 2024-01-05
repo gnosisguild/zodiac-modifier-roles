@@ -1,6 +1,7 @@
 import { BigNumber, BigNumberish } from "ethers"
 import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
 
+import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
 import { Condition, Operator, ParameterType } from "../../../types"
 import { AbiType, FunctionPermission } from "../../types"
 import { coercePermission } from "../../utils"
@@ -393,14 +394,12 @@ const checkScopedType = (condition: Condition): ParameterType => {
     const [first, ...rest] = condition.children
     const result = checkScopedType(first)
 
-    // assert uniform children types
-    if (rest.some((child) => checkScopedType(child) !== result)) {
-      throw new Error(
-        `Invalid \`${
-          Operator[condition.operator]
-        }\` condition: mixed children types`
-      )
-    }
+    // assert that all following children have compatible types
+    rest.forEach((child) => {
+      const childType = checkScopedType(child)
+      checkParameterTypeCompatibility(result, childType)
+    })
+
     return result
   }
 
