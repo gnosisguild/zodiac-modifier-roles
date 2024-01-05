@@ -54,6 +54,7 @@ export enum ParameterType {
 
 export enum ParamNativeType {
   INT,
+  UINT,
   BOOLEAN,
   BYTES,
   BYTES_FIXED,

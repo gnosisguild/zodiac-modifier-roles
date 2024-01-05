@@ -22,12 +22,13 @@ export function getNativeType(param: ethers.utils.ParamType | null): ParamNative
   if (param.baseType === "string") return ParamNativeType.STRING
   if (param.baseType === "bool") return ParamNativeType.BOOLEAN
   if (param.baseType === "tuple") return ParamNativeType.TUPLE
-  if (param.baseType.startsWith("uint") || param.baseType.startsWith("int")) return ParamNativeType.INT
+  if (param.baseType.startsWith("uint")) return ParamNativeType.UINT
+  if (param.baseType.startsWith("int")) return ParamNativeType.INT
   if (param.baseType === "array") {
     if (param.arrayChildren.baseType === "array") return ParamNativeType.UNSUPPORTED
     return ParamNativeType.ARRAY
   }
-  if(param.baseType.startsWith('bytes') && param.baseType !== 'bytes') {
+  if (param.baseType.startsWith("bytes") && param.baseType !== "bytes") {
     return ParamNativeType.BYTES_FIXED
   }
   return ParamNativeType.BYTES
@@ -35,7 +36,7 @@ export function getNativeType(param: ethers.utils.ParamType | null): ParamNative
 
 export function getConditionsPerType(type: ParamNativeType): ParamComparison[] {
   switch (type) {
-    case ParamNativeType.INT:
+    case ParamNativeType.UINT:
       return [ParamComparison.EQUAL_TO, ParamComparison.ONE_OF, ParamComparison.LESS_THAN, ParamComparison.GREATER_THAN]
 
     case ParamNativeType.BOOLEAN:

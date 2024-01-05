@@ -55,7 +55,9 @@
       "symbol": "OETH",
       "decimals": 18
     },
-    "rpc": ["https://mainnet.optimism.io/"],
+    "rpc": [
+      "https://mainnet.optimism.io/"
+    ],
     "explorers": [
       {
         "name": "etherscan",
@@ -74,7 +76,11 @@
       "symbol": "BNB",
       "decimals": 18
     },
-    "rpc": ["https://bsc-dataseed1.binance.org", "https://bsc-dataseed2.binance.org", "wss://bsc-ws-node.nariox.org"],
+    "rpc": [
+      "https://bsc-dataseed1.binance.org",
+      "https://bsc-dataseed2.binance.org",
+      "wss://bsc-ws-node.nariox.org"
+    ],
     "explorers": [
       {
         "name": "bscscan",
@@ -97,22 +103,18 @@
       "decimals": 18
     },
     "rpc": [
-      "https://rpc.xdaichain.com",
-      "https://xdai.poanetwork.dev",
-      "wss://rpc.xdaichain.com/wss",
-      "wss://xdai.poanetwork.dev/wss",
-      "http://xdai.poanetwork.dev",
-      "https://dai.poa.network",
-      "ws://xdai.poanetwork.dev:8546"
+      "https://rpc.gnosischain.com",
+      "https://rpc.gnosis.gateway.fm",
+      "wss://rpc.gnosischain.com/wss"
     ],
     "explorers": [
       {
-        "name": "blockscout",
-        "url": "https://blockscout.com/xdai/mainnet",
+        "name": "gnosisscan",
+        "url": "https:/gnosisscan.io",
         "standard": "EIP3091"
       }
     ],
-    "infoURL": "https://forum.poa.network/c/xdai-chain"
+    "infoURL": "https://gnosis.io"
   },
   "137": {
     "name": "Polygon Mainnet",
@@ -149,7 +151,10 @@
       "symbol": "EWT",
       "decimals": 18
     },
-    "rpc": ["https://rpc.energyweb.org", "wss://rpc.energyweb.org/ws"],
+    "rpc": [
+      "https://rpc.energyweb.org",
+      "wss://rpc.energyweb.org/ws"
+    ],
     "explorers": [
       {
         "name": "blockscout",
@@ -168,7 +173,10 @@
       "symbol": "xDAI",
       "decimals": 18
     },
-    "rpc": ["https://optimism.gnosischain.com", "wss://optimism.gnosischain.com/wss"],
+    "rpc": [
+      "https://optimism.gnosischain.com",
+      "wss://optimism.gnosischain.com/wss"
+    ],
     "explorers": [
       {
         "name": "blockscout",
@@ -178,7 +186,6 @@
     ],
     "infoURL": "https://www.gnosischain.com/"
   },
-
   "42161": {
     "name": "Arbitrum One",
     "chainId": 42161,
@@ -217,7 +224,9 @@
       "symbol": "AVAX",
       "decimals": 18
     },
-    "rpc": ["https://api.avax.network/ext/bc/C/rpc"],
+    "rpc": [
+      "https://api.avax.network/ext/bc/C/rpc"
+    ],
     "explorers": [
       {
         "name": "snowtrace",
@@ -243,7 +252,10 @@
         "standard": "none"
       }
     ],
-    "rpc": ["https://volta-rpc.energyweb.org", "wss://volta-rpc.energyweb.org/ws"],
+    "rpc": [
+      "https://volta-rpc.energyweb.org",
+      "wss://volta-rpc.energyweb.org/ws"
+    ],
     "infoURL": "https://energyweb.org"
   },
   "1313161554": {
@@ -255,7 +267,9 @@
       "symbol": "aETH",
       "decimals": 18
     },
-    "rpc": ["https://mainnet.aurora.dev"],
+    "rpc": [
+      "https://mainnet.aurora.dev"
+    ],
     "explorers": [
       {
         "name": "explorer.aurora.dev",

@@ -34,7 +34,8 @@ const PlaceholderPerType: Record<ParamNativeType, string> = {
   [ParamNativeType.ARRAY]: "[value 1, value 2, ...]",
   [ParamNativeType.TUPLE]: "(1,2,3)",
   [ParamNativeType.BOOLEAN]: "true",
-  [ParamNativeType.INT]: "235000000",
+  [ParamNativeType.INT]: "-235000000",
+  [ParamNativeType.UINT]: "235000000",
   [ParamNativeType.ADDRESS]: "0xABF...123",
   [ParamNativeType.STRING]: "Enter a string",
   [ParamNativeType.BYTES]: "0x...",
@@ -149,9 +150,11 @@ const tryAbiEncode = (param: ethers.utils.ParamType | null, value: string) => {
 }
 
 const tryAbiDecode = (param: string, value: string, onDecodingError?: (err: Error) => void) => {
+  if (!value) return value
   try {
     return ethers.utils.defaultAbiCoder.decode([param], value).toString()
   } catch (err) {
+    console.error("Error decoding value", err, { param, value })
     if (onDecodingError) onDecodingError(err as Error)
     return value
   }

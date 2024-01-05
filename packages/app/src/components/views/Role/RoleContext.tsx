@@ -186,13 +186,10 @@ function handleTargetConditions(state: RoleContextState, payload: SetTargetCondi
     if (type !== ConditionType.WILDCARDED) {
       const hasWildcardedFunction = conditionTypes.some((condition) => condition === ConditionType.WILDCARDED)
       const hasScopedFunction = conditionTypes.some((condition) => condition === ConditionType.SCOPED)
-      const hasBlockedFunction = conditionTypes.some((condition) => condition === ConditionType.BLOCKED)
 
       type = ConditionType.SCOPED
-      if (hasBlockedFunction && !hasScopedFunction && !hasWildcardedFunction) {
+      if (!hasScopedFunction && !hasWildcardedFunction) {
         type = ConditionType.BLOCKED
-      } else if (!hasBlockedFunction && !hasScopedFunction && hasWildcardedFunction) {
-        type = ConditionType.WILDCARDED
       }
     }
 

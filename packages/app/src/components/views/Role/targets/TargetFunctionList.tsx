@@ -30,6 +30,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   disabledArea: {
+    pointerEvents: "none",
     opacity: 0.5,
     "&::after": {
       content: "''",

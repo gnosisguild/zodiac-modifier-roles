@@ -4,6 +4,7 @@ import memoize from "lodash.memoize"
 import { ethers } from "ethers"
 
 const ETHERSCAN_KEY = process.env.REACT_APP_ETHERSCAN_KEY as string
+const GNOSISSCAN_KEY = process.env.REACT_APP_GNOSISSCAN_KEY as string
 const POLYGONSCAN_KEY = process.env.REACT_APP_POLYGONSCAN_KEY as string
 const ARBISCAN_KEY = process.env.REACT_APP_ARBISCAN_KEY as string
 const BSCSCAN_KEY = process.env.REACT_APP_BSCSCAN_KEY as string
@@ -11,6 +12,7 @@ const OPTIMISTICSCAN_KEY = process.env.REACT_APP_OPTIMISTICSCAN_KEY as string
 const SNOWTRACE_KEY = process.env.REACT_APP_SNOWTRACE_KEY as string
 
 if (!ETHERSCAN_KEY) throw new Error("ETHERSCAN_KEY env is not set")
+if (!GNOSISSCAN_KEY) throw new Error("GNOSISSCAN_KEY env is not set")
 if (!POLYGONSCAN_KEY) throw new Error("POLYGONSCAN_KEY env is not set")
 if (!ARBISCAN_KEY) throw new Error("ARBISCAN_KEY env is not set")
 if (!BSCSCAN_KEY) throw new Error("BSCSCAN_KEY env is not set")
@@ -38,7 +40,8 @@ const explorerConfig: Record<Network, ExplorerConfig> = {
     apiKey: ARBISCAN_KEY,
   },
   [Network.GNOSIS]: {
-    apiUrl: "https://blockscout.com/xdai/mainnet/api",
+    apiUrl: "https://api.gnosisscan.io/api",
+    apiKey: GNOSISSCAN_KEY,
   },
   [Network.BINANCE]: {
     apiUrl: "https://api.bscscan.com/api",
