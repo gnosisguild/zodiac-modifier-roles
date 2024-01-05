@@ -116,7 +116,7 @@ const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
     throw new Error(
       `The following functions appear multiple times and cannot be merged: ${duplicates.join(
         ", "
-      )}`
+      )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
     )
   }
 }
