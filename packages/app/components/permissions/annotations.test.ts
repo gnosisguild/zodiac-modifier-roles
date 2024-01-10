@@ -37,7 +37,7 @@ describe("processAnnotations()", () => {
                 "explode": false,
                 "in": "query",
                 "name": "sell",
-                "required": false,
+                "required": true,
                 "schema": {
                   "deprecated": false,
                   "items": {
@@ -75,75 +75,127 @@ describe("processAnnotations()", () => {
               "cowswap permissions",
             ],
           },
-          "pathKey": "/permissions/gor/cowswap/swap",
+          "pathKey": "/permissions/eth/cowswap/swap",
           "pathParams": {},
           "permissions": [
             {
               "condition": {
                 "children": [
                   {
+                    "compValue": "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+                    "operator": 16,
+                    "paramType": 1,
+                  },
+                  {
+                    "operator": 0,
+                    "paramType": 1,
+                  },
+                ],
+                "operator": 5,
+                "paramType": 5,
+              },
+              "selector": "0x095ea7b3",
+              "targetAddress": "0x6b175474e89094c44da98b954eedeac495271d0f",
+            },
+            {
+              "condition": {
+                "children": [
+                  {
+                    "compValue": "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+                    "operator": 16,
+                    "paramType": 1,
+                  },
+                  {
+                    "operator": 0,
+                    "paramType": 1,
+                  },
+                ],
+                "operator": 5,
+                "paramType": 5,
+              },
+              "selector": "0x095ea7b3",
+              "targetAddress": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            },
+            {
+              "condition": {
+                "children": [
+                  {
                     "children": [
                       {
-                        "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
-                        "operator": 16,
+                        "children": [
+                          {
+                            "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                          {
+                            "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                        ],
+                        "operator": 2,
+                        "paramType": 0,
+                      },
+                      {
+                        "children": [
+                          {
+                            "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                          {
+                            "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                        ],
+                        "operator": 2,
+                        "paramType": 0,
+                      },
+                      {
+                        "operator": 0,
                         "paramType": 1,
                       },
                       {
-                        "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                        "operator": 16,
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
                         "paramType": 1,
                       },
                     ],
-                    "operator": 2,
-                    "paramType": 0,
-                  },
-                  {
-                    "children": [
-                      {
-                        "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
-                        "operator": 16,
-                        "paramType": 1,
-                      },
-                      {
-                        "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                        "operator": 16,
-                        "paramType": 1,
-                      },
-                    ],
-                    "operator": 2,
-                    "paramType": 0,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
-                  },
-                  {
-                    "operator": 0,
-                    "paramType": 1,
+                    "operator": 5,
+                    "paramType": 3,
                   },
                   {
                     "operator": 0,
@@ -157,8 +209,98 @@ describe("processAnnotations()", () => {
                 "operator": 5,
                 "paramType": 5,
               },
-              "selector": "0x83afcefd",
-              "targetAddress": "0xdeb83d81d4a9758a7baec5749da863c409ea6c6b",
+              "delegatecall": true,
+              "selector": "0x569d3489",
+              "targetAddress": "0x23da9ade38e4477b23770ded512fd37b12381fab",
+            },
+            {
+              "condition": {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                          {
+                            "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                        ],
+                        "operator": 2,
+                        "paramType": 0,
+                      },
+                      {
+                        "children": [
+                          {
+                            "compValue": "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                          {
+                            "compValue": "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "operator": 16,
+                            "paramType": 1,
+                          },
+                        ],
+                        "operator": 2,
+                        "paramType": 0,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                      {
+                        "operator": 0,
+                        "paramType": 1,
+                      },
+                    ],
+                    "operator": 5,
+                    "paramType": 3,
+                  },
+                ],
+                "operator": 5,
+                "paramType": 5,
+              },
+              "delegatecall": true,
+              "selector": "0x5a66c223",
+              "targetAddress": "0x23da9ade38e4477b23770ded512fd37b12381fab",
             },
           ],
           "queryParams": {
@@ -172,7 +314,7 @@ describe("processAnnotations()", () => {
             ],
           },
           "serverUrl": "https://kit.karpatkey.com/api/v1",
-          "uri": "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "uri": "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
         },
       ]
     `)
@@ -197,20 +339,119 @@ describe("processAnnotations()", () => {
 })
 
 const annotation1 = {
-  uri: "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  uri: "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   schema: "https://kit.karpatkey.com/api/v1/openapi.json",
 }
 
 const permissionsForPreset1: PermissionCoerced[] = [
   {
-    targetAddress: "0xdeb83d81d4a9758a7baec5749da863c409ea6c6b",
-    selector: "0x83afcefd",
+    targetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    selector: "0x095ea7b3",
     condition: {
-      paramType: 0,
-      operator: 1,
+      paramType: 5,
+      operator: 5,
       children: [
         {
-          paramType: 5,
+          paramType: 1,
+          operator: 16,
+          compValue:
+            "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+        },
+        { paramType: 1, operator: 0 },
+      ],
+    },
+  },
+  {
+    targetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    selector: "0x095ea7b3",
+    condition: {
+      paramType: 5,
+      operator: 5,
+      children: [
+        {
+          paramType: 1,
+          operator: 16,
+          compValue:
+            "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+        },
+        { paramType: 1, operator: 0 },
+      ],
+    },
+  },
+  {
+    targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
+    selector: "0x569d3489",
+    condition: {
+      paramType: 5,
+      operator: 5,
+      children: [
+        {
+          paramType: 3,
+          operator: 5,
+          children: [
+            {
+              paramType: 0,
+              operator: 2,
+              children: [
+                {
+                  paramType: 1,
+                  operator: 16,
+                  compValue:
+                    "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                },
+                {
+                  paramType: 1,
+                  operator: 16,
+                  compValue:
+                    "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                },
+              ],
+            },
+            {
+              paramType: 0,
+              operator: 2,
+              children: [
+                {
+                  paramType: 1,
+                  operator: 16,
+                  compValue:
+                    "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                },
+                {
+                  paramType: 1,
+                  operator: 16,
+                  compValue:
+                    "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                },
+              ],
+            },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 0 },
+          ],
+        },
+        { paramType: 1, operator: 0 },
+        { paramType: 1, operator: 0 },
+      ],
+    },
+    delegatecall: true,
+  },
+  {
+    targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
+    selector: "0x5a66c223",
+    condition: {
+      paramType: 5,
+      operator: 5,
+      children: [
+        {
+          paramType: 3,
           operator: 5,
           children: [
             {
@@ -263,5 +504,6 @@ const permissionsForPreset1: PermissionCoerced[] = [
         },
       ],
     },
+    delegatecall: true,
   },
 ]

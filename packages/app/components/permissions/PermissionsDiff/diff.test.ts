@@ -110,7 +110,7 @@ const PERMISSION = {
   targetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
   selector: "0x095ea7b3",
   send: false,
-  delegateCall: false,
+  delegatecall: false,
   condition: {
     paramType: 5,
     operator: 5,

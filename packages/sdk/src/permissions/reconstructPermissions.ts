@@ -23,7 +23,7 @@ export const reconstructPermissions = (
       return {
         targetAddress: target.address,
         send: allowsSend(target.executionOptions),
-        delegateCall: allowsDelegateCall(target.executionOptions),
+        delegatecall: allowsDelegateCall(target.executionOptions),
       } as TargetPermission
     }
 
@@ -33,7 +33,7 @@ export const reconstructPermissions = (
           targetAddress: target.address,
           selector: func.selector,
           send: allowsSend(func.executionOptions),
-          delegateCall: allowsDelegateCall(func.executionOptions),
+          delegatecall: allowsDelegateCall(func.executionOptions),
           condition: !func.wildcarded ? func.condition : undefined,
         }))
         .map(splitFunctionPermission)
