@@ -2,13 +2,12 @@ import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { Box, makeStyles, Typography } from "@material-ui/core"
 import { KeyboardArrowDownSharp } from "@material-ui/icons"
 import classNames from "classnames"
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { TargetFunctionParams } from "./TargetFunctionParams"
 import { ConditionType, ExecutionOption, FunctionCondition } from "../../../../typings/role"
-import { getFunctionConditionType } from "../../../../utils/conditions"
 import { Checkbox } from "../../../commons/input/Checkbox"
 import { ZodiacPaper } from "zodiac-ui-components"
-import { ExecutionTypeSelect } from "./ExecutionTypeSelect"
+import { ExecutionOptions } from "./ExecutionOptions"
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -61,7 +60,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 interface TargetFunctionProps {
-  func: FunctionFragment
+  func: FunctionFragment | string
   functionConditions: FunctionCondition
 
   onChange(value: FunctionCondition): void
@@ -77,15 +76,33 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
 
   const [open, setOpen] = useState(false)
 
-  const paramsText = useMemo(() => getParamsTypesTitle(func), [func])
+  const functionName = typeof func === "string" ? func : func.name
+  const paramsText = typeof func === "string" ? "function not found in ABI" : getParamsTypesTitle(func)
+  const sighash = typeof func === "string" ? func : Interface.getSighash(func)
 
   const handleExecutionOption = (option: ExecutionOption) => {
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), executionOption: option })
+    let type = functionConditions.type
+    if (type === ConditionType.BLOCKED && option !== ExecutionOption.NONE) {
+      type = ConditionType.WILDCARDED
+    }
+    onChange({
+      ...functionConditions,
+      sighash,
+      executionOption: option,
+      type,
+    })
   }
 
   const handleFunctionCheck = (checked: boolean) => {
-    const type = checked ? ConditionType.WILDCARDED : getFunctionConditionType(functionConditions.params)
-    onChange({ ...functionConditions, sighash: Interface.getSighash(func), type })
+    const type =
+      checked && functionConditions?.type !== ConditionType.SCOPED ? ConditionType.WILDCARDED : ConditionType.BLOCKED
+
+    return onChange({
+      ...functionConditions,
+      params: [],
+      sighash,
+      type,
+    })
   }
 
   const handleOpen = () => setOpen(!open)
@@ -100,7 +117,7 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
           onClick={(evt) => evt.stopPropagation()}
         />
         <Typography variant="body1" className={classes.name}>
-          {func.name}
+          {functionName}
         </Typography>
         <Typography variant="body2" className={classes.type}>
           {paramsText}
@@ -111,10 +128,10 @@ export const TargetFunction = ({ func, functionConditions, onChange }: TargetFun
 
       <div className={classNames(classes.content, { [classes.hidden]: !open })}>
         <div className={classes.select}>
-          <ExecutionTypeSelect
+          <ExecutionOptions
             value={functionConditions.executionOption}
             onChange={handleExecutionOption}
-            SelectProps={{ disabled: functionConditions.type === ConditionType.BLOCKED }}
+            disabled={functionConditions.type === ConditionType.BLOCKED}
           />
         </div>
 

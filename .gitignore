@@ -20,4 +20,5 @@ packages/subgraph/abis/*.json
 
 # This will be generated from the themplate on deployment (to support multiple networks)
 packages/subgraph/subgraph.yaml
-.vscode/settings.json
+
+.vscode

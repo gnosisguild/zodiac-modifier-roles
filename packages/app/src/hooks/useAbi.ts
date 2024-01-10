@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { JsonFragment } from "@ethersproject/abi"
 import { getExplorer } from "../utils/explorer"
 import { useRootSelector } from "../store"
@@ -11,21 +11,25 @@ export const useAbi = (address: string) => {
   const [error, setError] = useState<string>()
   const [abi, setAbi] = useState<JsonFragment[]>()
 
-  useEffect(() => {
+  const fetchAbi = useCallback(async () => {
     const explorer = getExplorer(network)
     setLoading(true)
-    explorer
-      .abi(address)
-      .then((result) => {
-        setAbi(result)
-        setError(undefined)
-      })
-      .catch((err) => {
-        setAbi(undefined)
-        setError(err.message)
-      })
-      .finally(() => setLoading(false))
+    try {
+      const result = await explorer.abi(address)
+      setAbi(result)
+      setError(undefined)
+    } catch (err) {
+      setAbi(undefined)
+      console.error(err)
+      setError((err as any).message)
+    } finally {
+      setLoading(false)
+    }
   }, [network, address])
 
-  return { abi, setAbi, error, loading }
+  useEffect(() => {
+    fetchAbi()
+  }, [fetchAbi])
+
+  return { abi, setAbi, fetchAbi, error, loading }
 }

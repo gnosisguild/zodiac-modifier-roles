@@ -10,8 +10,8 @@ import {
   ScopeRevokeFunction,
   UnscopeParameter,
 } from "../generated/Permissions/Permissions"
-import { Role, Target, RolesModifier, Function, Parameter } from "../generated/schema"
-import { Address, Bytes, log, store } from "@graphprotocol/graph-ts"
+import { Target, Parameter } from "../generated/schema"
+import { store, TypedMapEntry, Value } from "@graphprotocol/graph-ts"
 import {
   CLEARANCE,
   CLEARANCE__FUNCTION,
@@ -137,20 +137,31 @@ export function handleScopeFunction(event: ScopeFunction): void {
   theFunction.wildcarded = false
   theFunction.save()
 
-  // create new parameter or override old one
-  for (let i = 0; i < event.params.paramType.length; i++) {
-    const paramType = PARAMETER_TYPE[event.params.paramType[i]]
-    const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
-    const compValue = event.params.compValue[i]
+  if (theFunction.parameters != null) {
+    // remove old parameters if it exists
+    const parameters: TypedMapEntry<string, Value>[] = theFunction.parameters.entries
+    for (let i = 0; i < parameters.length; i++) {
+      const parameterId = parameters[i].key
+      store.remove("Parameter", parameterId)
+    }
+  }
 
-    const parameterId = getParameterId(functionId, i)
-    const parameter = new Parameter(parameterId)
-    parameter.owningFunction = functionId
-    parameter.index = i
-    parameter.type = paramType
-    parameter.comparison = paramComp
-    parameter.comparisonValue = [compValue]
-    parameter.save()
+  for (let i = 0; i < event.params.paramType.length; i++) {
+    // create new parameters
+    if (event.params.isParamScoped[i]) {
+      const paramType = PARAMETER_TYPE[event.params.paramType[i]]
+      const paramComp = PARAMETER_COMPARISON[event.params.paramComp[i]]
+      const compValue = event.params.compValue[i]
+
+      const parameterId = getParameterId(functionId, i)
+      const parameter = new Parameter(parameterId)
+      parameter.owningFunction = functionId
+      parameter.index = i
+      parameter.type = paramType
+      parameter.comparison = paramComp
+      parameter.comparisonValue = [compValue]
+      parameter.save()
+    }
   }
 }
 
@@ -195,7 +206,7 @@ export function handleScopeParameter(event: ScopeParameter): void {
   const parameter = new Parameter(parameterId) // will always overwrite the parameter
   const paramType = PARAMETER_TYPE[event.params.paramType]
   const paramComp = PARAMETER_COMPARISON[event.params.paramComp]
-  const compValue = event.params.compValue
+  const compValue = event.params.compValue // Can't be decode here, we do not have the required info (target ABI), must be done in frontend.
   parameter.owningFunction = functionId
   parameter.index = event.params.index.toI32()
   parameter.type = paramType

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.6;
+pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
@@ -173,6 +173,7 @@ library Permissions {
      *
      */
 
+    /// @dev Entry point for checking the scope of a transaction.
     function check(
         Role storage role,
         address multisend,
@@ -236,6 +237,13 @@ library Permissions {
         }
     }
 
+    /// @dev Inspects an individual transaction and performs checks based on permission scoping.
+    /// Wildcarded indicates whether params need to be inspected or not. When true, only ExecutionOptions are checked.
+    /// @param role Role to check for.
+    /// @param targetAddress Destination address of transaction.
+    /// @param value Ether value of module transaction.
+    /// @param data Data payload of module transaction.
+    /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
     function checkTransaction(
         Role storage role,
         address targetAddress,
@@ -272,7 +280,7 @@ library Permissions {
 
             checkExecutionOptions(value, operation, options);
 
-            if (isWildcarded == false) {
+            if (!isWildcarded) {
                 checkParameters(role, scopeConfig, targetAddress, data);
             }
             return;
@@ -281,6 +289,10 @@ library Permissions {
         assert(false);
     }
 
+    /// @dev Examines the ether value and operation for a given role target.
+    /// @param value Ether value of module transaction.
+    /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
+    /// @param options Determines if a transaction can send ether and/or delegatecall to target.
     function checkExecutionOptions(
         uint256 value,
         Enum.Operation operation,
@@ -306,7 +318,8 @@ library Permissions {
     }
 
     /// @dev Will revert if a transaction has a parameter that is not allowed
-    /// @param role reference to role storage
+    /// @param role reference to role storage.
+    /// @param scopeConfig packed bytes representing the scope for a role.
     /// @param targetAddress Address to check.
     /// @param data the transaction data to check
     function checkParameters(
@@ -345,6 +358,10 @@ library Permissions {
         }
     }
 
+    /// @dev Will revert if a transaction has a parameter value that is not specifically allowed.
+    /// @param paramComp the type of comparision: equal, greater, or less than.
+    /// @param compValue the value to compare a param against.
+    /// @param value the param to be compared against the allowed value.
     function compare(
         Comparison paramComp,
         bytes32 compValue,
@@ -359,6 +376,9 @@ library Permissions {
         }
     }
 
+    /// @dev Will revert if a transaction has a parameter value that is not allowed in an allowlist.
+    /// @param compValue array of allowed params.
+    /// @param value the param to be compared against the allowlist.
     function compareOneOf(bytes32[] storage compValue, bytes32 value)
         internal
         view
@@ -375,6 +395,11 @@ library Permissions {
      *
      */
 
+    /// @dev Allows transactions to a target address.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         Role storage role,
         uint16 roleId,
@@ -385,6 +410,10 @@ library Permissions {
         emit AllowTarget(roleId, targetAddress, options);
     }
 
+    /// @dev Removes transactions to a target address.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
     function revokeTarget(
         Role storage role,
         uint16 roleId,
@@ -397,6 +426,10 @@ library Permissions {
         emit RevokeTarget(roleId, targetAddress);
     }
 
+    /// @dev Designates only specific functions can be called.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
     function scopeTarget(
         Role storage role,
         uint16 roleId,
@@ -409,6 +442,12 @@ library Permissions {
         emit ScopeTarget(roleId, targetAddress);
     }
 
+    /// @dev Specifies the functions that can be called.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeAllowFunction(
         Role storage role,
         uint16 roleId,
@@ -437,6 +476,11 @@ library Permissions {
         );
     }
 
+    /// @dev Removes the functions that can be called.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
     function scopeRevokeFunction(
         Role storage role,
         uint16 roleId,
@@ -447,6 +491,16 @@ library Permissions {
         emit ScopeRevokeFunction(roleId, targetAddress, functionSig, 0);
     }
 
+    /// @dev Defines the values that can be called for a given function for each param.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param isScoped marks which parameters are value restricted.
+    /// @param paramType provides information about the type of parameter.
+    /// @param paramComp the type of comparison for each parameter
+    /// @param compValue the values to compare a param against.
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunction(
         Role storage role,
         uint16 roleId,
@@ -484,7 +538,7 @@ library Permissions {
          *    0           -> start from a fresh scopeConfig
          *    options     -> externally provided options
          *    false       -> mark the function as not wildcarded
-         *    0           -> length
+         *    length      -> length
          * )
          */
         uint256 scopeConfig = packLeft(0, options, false, length);
@@ -522,6 +576,12 @@ library Permissions {
         );
     }
 
+    /// @dev Sets the execution options for a given function.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function scopeFunctionExecutionOptions(
         Role storage role,
         uint16 roleId,
@@ -547,6 +607,15 @@ library Permissions {
         );
     }
 
+    /// @dev Defines the value that can be called for a given function for single param.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param index the index of the param to scope.
+    /// @param paramType provides information about the type of parameter.
+    /// @param paramComp the type of comparison for each parameter.
+    /// @param compValue the value to compare a param against.
     function scopeParameter(
         Role storage role,
         uint16 roleId,
@@ -592,6 +661,14 @@ library Permissions {
         );
     }
 
+    /// @dev Defines the values that can be called for a given function for single param.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param index the index of the param to scope.
+    /// @param paramType provides information about the type of parameter.
+    /// @param compValues the values to compare a param against.
     function scopeParameterAsOneOf(
         Role storage role,
         uint16 roleId,
@@ -645,6 +722,12 @@ library Permissions {
         );
     }
 
+    /// @dev Removes the restrictions for a function param.
+    /// @param role reference to role storage.
+    /// @param roleId identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param functionSig 4 byte function selector.
+    /// @param index the index of the param to scope.
     function unscopeParameter(
         Role storage role,
         uint16 roleId,
@@ -676,6 +759,9 @@ library Permissions {
         );
     }
 
+    /// @dev Internal function that enforces a comparison type is valid.
+    /// @param paramType provides information about the type of parameter.
+    /// @param paramComp the type of comparison for each parameter.
     function enforceComp(ParameterType paramType, Comparison paramComp)
         internal
         pure
@@ -692,6 +778,9 @@ library Permissions {
         }
     }
 
+    /// @dev Internal function that enforces a param type is valid.
+    /// @param paramType provides information about the type of parameter.
+    /// @param compValue the value to compare a param against.
     function enforceCompValue(ParameterType paramType, bytes calldata compValue)
         internal
         pure
@@ -712,6 +801,11 @@ library Permissions {
      * HELPERS
      *
      */
+
+    /// @dev Helper function grab a specific dynamic parameter from data blob.
+    /// @param data the parameter data blob.
+    /// @param paramType provides information about the type of parameter.
+    /// @param index position of the parameter in the data.
     function pluckDynamicValue(
         bytes memory data,
         ParameterType paramType,
@@ -783,6 +877,9 @@ library Permissions {
         return keccak256(slice(data, start, end));
     }
 
+    /// @dev Helper function grab a specific static parameter from data blob.
+    /// @param data the parameter data blob.
+    /// @param index position of the parameter in the data.
     function pluckStaticValue(bytes memory data, uint256 index)
         internal
         pure
@@ -956,7 +1053,7 @@ library Permissions {
     }
 
     function keyForFunctions(address targetAddress, bytes4 functionSig)
-        public
+        internal
         pure
         returns (bytes32)
     {
@@ -967,7 +1064,8 @@ library Permissions {
         address targetAddress,
         bytes4 functionSig,
         uint256 index
-    ) public pure returns (bytes32) {
+    ) internal pure returns (bytes32) {
+        assert(index <= type(uint8).max);
         return
             bytes32(abi.encodePacked(targetAddress, functionSig, uint8(index)));
     }

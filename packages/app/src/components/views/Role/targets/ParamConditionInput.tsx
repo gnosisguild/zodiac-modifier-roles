@@ -4,7 +4,7 @@ import { Add } from "@material-ui/icons"
 import { ethers } from "ethers"
 import { ParamComparison, ParamCondition, ParamNativeType } from "../../../../typings/role"
 import { BooleanValue, getConditionsPerType, getConditionType, getNativeType } from "../../../../utils/conditions"
-import { ParamConditionInputValue } from "./ParamConditionInputValue"
+import { OneOfParamConditionInputValue, ParamConditionInputValue } from "./ParamConditionInputValue"
 import DeleteIcon from "@material-ui/icons/DeleteOutline"
 
 const useStyles = makeStyles((theme) => ({
@@ -44,21 +44,30 @@ const useStyles = makeStyles((theme) => ({
 
 export const ConditionLabel: Record<ParamComparison, string> = {
   [ParamComparison.EQUAL_TO]: "is equal to",
-  [ParamComparison.ONE_OF]: "contains",
+  [ParamComparison.ONE_OF]: "is one of",
   [ParamComparison.GREATER_THAN]: "is greater than",
   [ParamComparison.LESS_THAN]: "is less than",
 }
 
 interface ParamConditionInputProps {
   index: number
-  param: ethers.utils.ParamType
+  /** If null is specified, no decoding will be applied */
+  param: ethers.utils.ParamType | null
   condition?: ParamCondition
   disabled?: boolean
+  onDecodingError(err: Error): void
 
   onChange(value?: ParamCondition): void
 }
 
-export const ParamConditionInput = ({ index, param, condition, disabled, onChange }: ParamConditionInputProps) => {
+export const ParamConditionInput = ({
+  index,
+  param,
+  condition,
+  disabled,
+  onChange,
+  onDecodingError,
+}: ParamConditionInputProps) => {
   const classes = useStyles()
   const nativeType = getNativeType(param)
   const type = getConditionType(nativeType)
@@ -66,8 +75,6 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
 
   const handleChange = (condition: ParamComparison) => onChange({ index, type, condition, value: [""] })
   const handleRemove = () => onChange(undefined)
-
-  if (nativeType === ParamNativeType.UNSUPPORTED) return null
 
   if (!condition) {
     const handleClick = () => {
@@ -111,35 +118,41 @@ export const ParamConditionInput = ({ index, param, condition, disabled, onChang
     )
   }
 
-  const menuItems = options.map((option) => (
-    <MenuItem key={option} value={option}>
-      {ConditionLabel[option]}
-    </MenuItem>
-  ))
-  const select = (
-    <Select
-      classes={{ icon: classes.selectIcon }}
-      className={classes.select}
-      disabled={disabled}
-      value={condition.condition}
-      onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
-    >
-      {menuItems}
-    </Select>
-  )
-
-  if (!condition)
-    return (
-      <>
-        {select}
-        {removeButton}
-      </>
-    )
+  const handleValueChange = (value: string[]) => onChange({ ...condition, value })
 
   return (
     <>
-      {select}
-      <ParamConditionInputValue param={param} condition={condition} disabled={disabled} onChange={onChange} />
+      <Select
+        classes={{ icon: classes.selectIcon }}
+        className={classes.select}
+        disabled={disabled}
+        value={condition.condition}
+        onChange={(evt) => handleChange(evt.target.value as ParamComparison)}
+      >
+        {options.map((option) => (
+          <MenuItem key={option} value={option}>
+            {ConditionLabel[option]}
+          </MenuItem>
+        ))}
+      </Select>
+      {condition && condition.condition !== ParamComparison.ONE_OF && (
+        <ParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          value={condition.value}
+          disabled={disabled}
+          onChange={handleValueChange}
+        />
+      )}
+      {condition && condition.condition === ParamComparison.ONE_OF && (
+        <OneOfParamConditionInputValue
+          onDecodingError={onDecodingError}
+          param={param}
+          value={condition.value}
+          disabled={disabled}
+          onChange={handleValueChange}
+        />
+      )}
       {removeButton}
     </>
   )

@@ -1,7 +1,15 @@
 import { BigNumberish, BytesLike, ethers, PopulatedTransaction } from "ethers"
 import { Roles, Roles__factory } from "../contracts/type"
 import SafeAppsSDK, { BaseTransaction, GatewayTransactionDetails } from "@gnosis.pm/safe-apps-sdk"
-import { ConditionType, FuncParams, FunctionCondition, ParamComparison, ParamCondition, Target } from "../typings/role"
+import {
+  ConditionType,
+  FuncParams,
+  FunctionCondition,
+  ParamComparison,
+  ParamCondition,
+  ParameterType,
+  Target,
+} from "../typings/role"
 import { Level, RoleContextState } from "../components/views/Role/RoleContext"
 import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { _signer } from "../hooks/useWallet"
@@ -69,9 +77,9 @@ function getFunctionTransaction(
     const param = funcCondition.params.find((param) => param.index === i)
     if (param) {
       const type = func.inputs[param.index]
-      const value = ethers.utils.defaultAbiCoder.encode([type], [param.value])
+      const value = ethers.utils.defaultAbiCoder.encode([type], param.value)
       isParamScoped.push(true)
-      paramType.push(param.type)
+      paramType.push(getParameterTypeInt(param.type))
       paramComp.push(getParamComparisonInt(param.condition))
       compValue.push(value)
     } else {
@@ -210,14 +218,21 @@ export const updateRole = async (
         }
       }, {} as Record<string, ParamCondition[]>)
 
-    // TODO: implement unscope param UpdateEvent
-
     const paramLevelTxs: Promise<PopulatedTransaction>[] = Object.entries(paramEventsPerFunction)
       .map(([sighash, params]) => {
         return params.map((paramCondition) => {
           const param = functions[sighash].inputs[paramCondition.index]
 
-          if (paramCondition.condition !== ParamComparison.ONE_OF) {
+          if (paramCondition.type === ParameterType.NO_RESTRICTION) {
+            // unscopeParameter
+            console.log("[updateRole] unscope parameter", [role.id, target.address, sighash, paramCondition.index])
+            return rolesModifierContract.populateTransaction.unscopeParameter(
+              role.id,
+              target.address,
+              sighash,
+              paramCondition.index,
+            )
+          } else if (paramCondition.condition !== ParamComparison.ONE_OF) {
             const value = formatParamValue(param, paramCondition.value[0])
             const encodedValue = ethers.utils.defaultAbiCoder.encode([param], [value])
             console.log("[updateRole] scope parameter", [
@@ -225,8 +240,8 @@ export const updateRole = async (
               target.address,
               sighash,
               paramCondition.index,
-              paramCondition.type,
-              paramCondition.condition,
+              getParameterTypeInt(paramCondition.type),
+              getParamComparisonInt(paramCondition.condition),
               encodedValue,
             ])
             return rolesModifierContract.populateTransaction.scopeParameter(
@@ -234,8 +249,8 @@ export const updateRole = async (
               target.address,
               sighash,
               paramCondition.index,
-              paramCondition.type,
-              paramCondition.condition,
+              getParameterTypeInt(paramCondition.type),
+              getParamComparisonInt(paramCondition.condition),
               encodedValue,
             )
           } else {
@@ -248,7 +263,7 @@ export const updateRole = async (
               target.address,
               sighash,
               paramCondition.index,
-              paramCondition.type,
+              getParameterTypeInt(paramCondition.type),
               encodedValues || [],
             ])
             return rolesModifierContract.populateTransaction.scopeParameterAsOneOf(
@@ -256,7 +271,7 @@ export const updateRole = async (
               target.address,
               sighash,
               paramCondition.index,
-              paramCondition.type,
+              getParameterTypeInt(paramCondition.type),
               encodedValues || [],
             )
           }
@@ -322,5 +337,18 @@ function getParamComparisonInt(paramComparison: ParamComparison): number {
       return 2
     case ParamComparison.ONE_OF:
       return 3
+  }
+}
+
+function getParameterTypeInt(parameterType: ParameterType): number {
+  switch (parameterType) {
+    case ParameterType.STATIC:
+      return 0
+    case ParameterType.DYNAMIC:
+      return 1
+    case ParameterType.DYNAMIC32:
+      return 2
+    case ParameterType.NO_RESTRICTION:
+      throw new Error("No restriction should not go on chain. This should be unscoped via unscopeParameter")
   }
 }

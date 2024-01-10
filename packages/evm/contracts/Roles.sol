@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.6;
+pragma solidity >=0.7.0 <0.9.0;
 
 import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 import "./Permissions.sol";
@@ -20,14 +20,8 @@ contract Roles is Modifier {
     );
     event SetDefaultRole(address module, uint16 defaultRole);
 
-    /// `setUpModules` has already been called
-    error SetUpModulesAlreadyCalled();
-
     /// Arrays must be the same length
     error ArraysDifferentLength();
-
-    /// Sender is not a member of the role
-    error NoMembership();
 
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
@@ -44,6 +38,9 @@ contract Roles is Modifier {
         setUp(initParams);
     }
 
+    /// @dev There is no zero address check as solidty will check for
+    /// missing arguments and the space of invalid addresses is too large
+    /// to check. Invalid avatar or target address can be reset by owner.
     function setUp(bytes memory initParams) public override {
         (address _owner, address _avatar, address _target) = abi.decode(
             initParams,
@@ -61,9 +58,7 @@ contract Roles is Modifier {
     }
 
     function setupModules() internal {
-        if (modules[SENTINEL_MODULES] != address(0)) {
-            revert SetUpModulesAlreadyCalled();
-        }
+        assert(modules[SENTINEL_MODULES] == address(0));
         modules[SENTINEL_MODULES] = SENTINEL_MODULES;
     }
 
