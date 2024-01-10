@@ -21,6 +21,16 @@ const _t04: Scoping<{ a: Promise<string> }> = { a: Promise.resolve("a") }
 // @ts-expect-error - It should only be allowed to use gt on BigNumberish scopings
 const _t05: Scoping<string[]> = c.gt(0)
 
+const oneOf = (values: string[]) =>
+  values.length === 0
+    ? undefined
+    : values.length === 1
+    ? values[0]
+    : c.or(...(values as [string, string, ...string[]]))
+
+// It should be allowed to only define scoping for some struct fields
+const _t06: Scoping<{ a: string; b: number }> = { a: oneOf(["foo", "bar"]) }
+
 // calldataMatches should have an overload scopings and ABI types
 c.calldataMatches([], [])
 // calldataMatches should have an overload allowing to pass a PresetFunction

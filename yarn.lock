@@ -1136,7 +1136,7 @@ __metadata:
     solidity-coverage: 0.8.4
     ts-node: 10.9.1
     typechain: 8.3.2
-    typescript: ^5.2.2
+    typescript: ^5.3.3
   languageName: unknown
   linkType: soft
 
@@ -1153,16 +1153,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis.pm/zodiac@npm:^3.4.2":
-  version: 3.4.2
-  resolution: "@gnosis.pm/zodiac@npm:3.4.2"
+"@gnosis.pm/zodiac@npm:^3.5.2":
+  version: 3.5.2
+  resolution: "@gnosis.pm/zodiac@npm:3.5.2"
   dependencies:
     "@gnosis.pm/mock-contract": ^4.0.0
     "@gnosis.pm/safe-contracts": 1.3.0
     "@openzeppelin/contracts": ^5.0.0
     "@openzeppelin/contracts-upgradeable": ^5.0.0
     ethers: ^5.7.1
-  checksum: f261c9f118a410f5a843f400149a7f8a2fa3f4df393084dd91230bf5b3c1f26c8a866e0356524d2aa26485c29b1123a0b262b1fb626b6c59ef49cfe03652ae44
+  checksum: 06c56c6c42b339676ae3e178d696f7a7036a876bcf1d9d0d708e6e29eeb0cbb53fef5a5ad37608ef307ed755ed6c61ef81321c41e154f7eb12fa5726c5a35af8
   languageName: node
   linkType: hard
 
@@ -17705,10 +17705,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^3.7.1":
-  version: 3.13.1
-  resolution: "type-fest@npm:3.13.1"
-  checksum: c06b0901d54391dc46de3802375f5579868949d71f93b425ce564e19a428a0d411ae8d8cb0e300d330071d86152c3ea86e744c3f2860a42a79585b6ec2fdae8e
+"type-fest@npm:^4.9.0":
+  version: 4.9.0
+  resolution: "type-fest@npm:4.9.0"
+  checksum: 73383de23237b399a70397a53101152548846d919aebcc7d8733000c6c354dc2632fe37c4a70b8571b79fdbfa099e2d8304c5ac56b3254780acff93e4c7a797f
   languageName: node
   linkType: hard
 
@@ -17819,23 +17819,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.2.2":
-  version: 5.3.2
-  resolution: "typescript@npm:5.3.2"
+"typescript@npm:^5.3.3":
+  version: 5.3.3
+  resolution: "typescript@npm:5.3.3"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: d92534dda639eb825db013203404c1fabca8ac630564283c9e7dc9e64fd9c9346c2de95ecebdf3e6e8c1c32941bca1cfe0da37877611feb9daf8feeaea58d230
+  checksum: 2007ccb6e51bbbf6fde0a78099efe04dc1c3dfbdff04ca3b6a8bc717991862b39fd6126c0c3ebf2d2d98ac5e960bcaa873826bb2bb241f14277034148f41f6a2
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>":
-  version: 5.3.2
-  resolution: "typescript@patch:typescript@npm%3A5.3.2#~builtin<compat/typescript>::version=5.3.2&hash=e012d7"
+"typescript@patch:typescript@^5.3.3#~builtin<compat/typescript>":
+  version: 5.3.3
+  resolution: "typescript@patch:typescript@npm%3A5.3.3#~builtin<compat/typescript>::version=5.3.3&hash=e012d7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 47b2e63418ea7ef7dd0bf359ee41c6fca852c680826089269c5d03673ead471e052b172561f377f9e51212054e5f0fe19dd58085ff7db7b168449a6af704c784
+  checksum: 4e604a9e107ce0c23b16a2f8d79d0531d4d8fe9ebbb7a8c395c66998c39892f0e0a071ef0b0d4e66420a8ec2b8d6cfd9cdb29ba24f25b37cba072e9282376df9
   languageName: node
   linkType: hard
 
@@ -19120,7 +19120,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-icons: ^4.10.1
-    typescript: ^5.2.2
+    typescript: ^5.3.3
     viem: ^1.6.0
     wagmi: ^1.3.10
     zodiac-roles-sdk: "workspace:*"
@@ -19142,7 +19142,7 @@ __metadata:
     nextra-theme-docs: ^2.11.0
     react: ^18.2.0
     react-dom: ^18.2.0
-    typescript: ^5.2.2
+    typescript: ^5.3.3
     zodiac-roles-sdk: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -19159,7 +19159,7 @@ __metadata:
   dependencies:
     "@dethcrypto/eth-sdk": ^0.3.4
     "@dethcrypto/eth-sdk-client": ^0.1.6
-    "@gnosis.pm/zodiac": ^3.4.2
+    "@gnosis.pm/zodiac": ^3.5.2
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.6
     "@nomicfoundation/hardhat-network-helpers": ^1.0.9
     "@nomicfoundation/hardhat-toolbox": ^2.0.2
@@ -19186,9 +19186,9 @@ __metadata:
     prettier: ^2.8.8
     rimraf: ^3.0.2
     ts-node: ^10.8.0
-    type-fest: ^3.7.1
+    type-fest: ^4.9.0
     typechain: ^8.3.2
-    typescript: ^5.2.2
+    typescript: ^5.3.3
     zod: ^3.22.1
   peerDependencies:
     "@dethcrypto/eth-sdk-client": ^0.1.6

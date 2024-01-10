@@ -136,6 +136,7 @@ export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: strin
 }
 
 export const getOrCreateUnwrapAdapter = (
+  adapterAddress: Address,
   targetAddress: Address,
   selector: Bytes,
   rolesModifierId: string,
@@ -146,6 +147,7 @@ export const getOrCreateUnwrapAdapter = (
   // save adapter the first time we encounter it
   if (!adapter) {
     adapter = new UnwrapAdapter(id)
+    adapter.adapterAddress = adapterAddress
     adapter.rolesModifier = rolesModifierId
     adapter.targetAddress = targetAddress
     adapter.selector = selector

@@ -2,9 +2,6 @@
 import { useState } from "react"
 import { RiArrowRightSLine } from "react-icons/ri"
 import Flex from "@/ui/Flex"
-import { LinkButton } from "@/ui/Button"
-import { useRouter } from "next/navigation"
-import { IconLinkButton } from "@/ui/IconButton"
 import classes from "./style.module.css"
 import Link from "next/link"
 import { parseBytes32String } from "ethers/lib/utils"
@@ -20,8 +17,26 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
   roles,
   mod,
 }) => {
-  const router = useRouter()
   const [query, setQuery] = useState("")
+  const trimmedQuery = query.trim().toLowerCase()
+
+  const matchingRoles = trimmedQuery
+    ? roles.filter((role) =>
+        [
+          role.key,
+          parseBytes32String(role.key),
+          ...role.members,
+          ...role.targets,
+        ].some((str) => str.toLowerCase().includes(trimmedQuery))
+      )
+    : roles
+
+  let emptyMessage = ""
+  if (roles.length === 0) {
+    emptyMessage = "No roles have been created yet."
+  } else if (matchingRoles.length === 0) {
+    emptyMessage = "There's no role matching your query."
+  }
 
   return (
     <Flex direction="column" gap={2}>
@@ -33,7 +48,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
       />
 
       <Flex direction="column" gap={0}>
-        {roles.map((role) => {
+        {matchingRoles.map((role) => {
           const parsedKey = parseBytes32String(role.key)
           return (
             <Link
@@ -58,6 +73,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
             </Link>
           )
         })}
+        {emptyMessage && <div className={classes.empty}>{emptyMessage}</div>}
       </Flex>
     </Flex>
   )

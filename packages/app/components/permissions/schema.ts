@@ -40,13 +40,13 @@ export const zPermission = z.union([
     selector: zHex,
     condition: zCondition.optional(),
     send: z.boolean().optional(),
-    delegateCall: z.boolean().optional(),
+    delegatecall: z.boolean().optional(),
   }),
 
   z.object({
     targetAddress: zAddress,
     send: z.boolean().optional(),
-    delegateCall: z.boolean().optional(),
+    delegatecall: z.boolean().optional(),
   }),
 ])
 
