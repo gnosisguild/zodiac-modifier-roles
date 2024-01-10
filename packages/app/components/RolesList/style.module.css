@@ -37,3 +37,8 @@
   display: flex;
   align-items: center;
 }
+
+.empty {
+  text-align: center;
+  padding: var(--spacing-3) 0;
+}
