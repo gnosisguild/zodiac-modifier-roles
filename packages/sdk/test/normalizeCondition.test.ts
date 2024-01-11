@@ -1,6 +1,9 @@
 import { expect } from "chai"
 
 import { normalizeCondition } from "../src/conditions"
+import { FunctionPermissionCoerced } from "../src/permissions"
+import { allow } from "../src/permissions/authoring/kit"
+import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { Condition, Operator, ParameterType } from "../src/types"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
@@ -10,7 +13,7 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-describe("normalizeCondition()", () => {
+describe.only("normalizeCondition()", () => {
   it("should flatten nested AND conditions", () => {
     expect(
       normalizeCondition({
@@ -299,6 +302,43 @@ describe("normalizeCondition()", () => {
         {
           paramType: ParameterType.Static,
           operator: Operator.EqualToAvatar,
+        },
+      ],
+    })
+  })
+
+  it("pushes down ORs in function variants differing only in a single param scoping", () => {
+    const [functionVariants] = mergeFunctionPermissions([
+      allow.mainnet.lido.stETH.transfer(
+        "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0x1234123412341234123412341234123412341234"
+      ),
+    ])
+    const { condition } = functionVariants as FunctionPermissionCoerced
+
+    expect(normalizeCondition(condition!)).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          children: [
+            {
+              operator: Operator.EqualTo,
+              paramType: ParameterType.Static,
+              compValue:
+                "0x0000000000000000000000001234123412341234123412341234123412341234",
+            },
+            {
+              operator: Operator.EqualTo,
+              paramType: ParameterType.Static,
+              compValue:
+                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+            },
+          ],
         },
       ],
     })

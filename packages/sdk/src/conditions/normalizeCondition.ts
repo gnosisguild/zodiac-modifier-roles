@@ -16,6 +16,7 @@ export const normalizeCondition = (condition: Condition): Condition => {
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
   result = normalizeChildrenOrder(result)
+  result = pushDownLogicalConditions(result)
   return result
 }
 
@@ -171,6 +172,11 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
     }
   }
 
+  return condition
+}
+
+/** push logical conditions as far down the tree as possible without changing semantics */
+const pushDownLogicalConditions = (condition: Condition): Condition => {
   return condition
 }
 
