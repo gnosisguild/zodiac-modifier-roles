@@ -1,16 +1,11 @@
 import { ZERO_ADDRESS } from "../gnosisChain/addresses"
-import { allowErc20Approve } from "../helpers/erc20"
 import {
   dynamic32Equal,
-  dynamic32OneOf,
   staticEqual,
-  dynamicOneOf,
   subsetOf,
-  dynamicEqual,
   staticOneOf,
 } from "../helpers/utils"
 import { AVATAR } from "../placeholders"
-import { RolePreset } from "../types"
 
 //Tokens
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"

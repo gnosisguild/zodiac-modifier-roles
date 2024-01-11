@@ -1,8 +1,8 @@
-import { PresetAllowEntry } from "../../types"
 import { allow } from "../../allow"
-import { AVATAR } from "../../placeholders"
-import { staticEqual } from "../utils"
 import { balancer } from "../../mainnet/addresses"
+import { AVATAR } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
+import { staticEqual } from "../utils"
 
 export const balancerExitStrategy1 = (
   balancerPoolId: string

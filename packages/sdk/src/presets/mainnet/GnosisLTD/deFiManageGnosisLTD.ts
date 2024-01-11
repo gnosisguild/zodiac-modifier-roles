@@ -1,4 +1,8 @@
 import { allow } from "../../allow"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   ZERO_ADDRESS,
   AURA,
@@ -15,10 +19,6 @@ import {
   compound_v2,
   compound_v3,
 } from "../addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
-import { RolePreset } from "../../types"
 
 const preset = {
   network: 1,

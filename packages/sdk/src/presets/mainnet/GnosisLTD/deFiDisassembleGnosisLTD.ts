@@ -1,21 +1,9 @@
 import { allow } from "../../allow"
-import {
-  COW,
-  DAI,
-  GNO,
-  USDC,
-  USDT,
-  aura,
-  balancer,
-  compound_v2,
-  compound_v3,
-} from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { lidoExitStrategyAll } from "../../helpers/ExitStrategies/LidoExitStrategies"
-import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
 import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
+import { lidoExitStrategyAll } from "../../helpers/ExitStrategies/LidoExitStrategies"
+import { AVATAR } from "../../placeholders"
+import { USDC, aura, balancer } from "../addresses"
 
 const preset = {
   network: 1,

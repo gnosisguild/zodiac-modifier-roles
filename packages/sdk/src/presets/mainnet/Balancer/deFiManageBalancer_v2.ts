@@ -1,3 +1,7 @@
+import { allow } from "../../allow"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   ZERO_ADDRESS,
   AAVE,
@@ -15,10 +19,6 @@ import {
   compound_v2,
   uniswapv3,
 } from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { allow } from "../../allow"
 
 const preset = {
   network: 1,

@@ -1,7 +1,6 @@
-import { PresetAllowEntry } from "../../types"
 import { allow } from "../../allow"
-import { AVATAR } from "../../placeholders"
 import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual } from "../../helpers/utils"
 import {
   cowswap,
   E_ADDRESS,
@@ -9,7 +8,8 @@ import {
   wstETH,
   lido,
 } from "../../mainnet/addresses"
-import { staticEqual } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
 
 export const lidoExitStrategy1 = (): PresetAllowEntry[] => {
   return [

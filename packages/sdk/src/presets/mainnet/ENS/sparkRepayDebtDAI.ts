@@ -1,8 +1,8 @@
-import { DAI, spark } from "../addresses"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 import { allowErc20Approve } from "../../helpers/erc20"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
+import { DAI, spark } from "../addresses"
 
 const preset = {
   network: 1,

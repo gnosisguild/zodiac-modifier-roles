@@ -1,4 +1,9 @@
 import { allow } from "../../allow"
+import { curve as curve_gc } from "../../gnosisChain/addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   ZERO_ADDRESS,
   E_ADDRESS,
@@ -36,11 +41,6 @@ import {
   uniswapv3,
   votium,
 } from "../addresses"
-import { curve as curve_gc } from "../../gnosisChain/addresses"
-import { allowErc20Approve } from "../../helpers/erc20"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR, BRIDGE_RECIPIENT_GNOSIS_CHAIN } from "../../placeholders"
-import { RolePreset } from "../../types"
 
 const preset = {
   network: 1,

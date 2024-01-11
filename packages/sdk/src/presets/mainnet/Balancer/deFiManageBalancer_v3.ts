@@ -1,3 +1,8 @@
+import { allow } from "../../allow"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   ZERO_ADDRESS,
   AAVE,
@@ -30,11 +35,6 @@ import {
   sushiswap,
   uniswapv3,
 } from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { allow } from "../../allow"
-import { allowErc20Approve } from "../../helpers/erc20"
 
 // mStable
 const DELEGATE_ADDRESS = "0xd6e96e437b8d42406a64440226b77a51c74e26b1"

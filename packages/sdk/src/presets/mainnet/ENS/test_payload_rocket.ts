@@ -1,7 +1,7 @@
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 import { allowErc20Approve } from "../../helpers/erc20"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 import { rETH, rocket_pool } from "../addresses"
 
 const preset = {

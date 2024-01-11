@@ -1,32 +1,11 @@
 import { allow } from "../../allow"
-import {
-  ZERO_ADDRESS,
-  AURA,
-  auraBAL,
-  BAL,
-  COW,
-  DAI,
-  GNO,
-  LDO,
-  USDC,
-  WBTC,
-  WETH,
-  wstETH,
-  aura,
-  aave_v3,
-  balancer,
-  compound_v2,
-  compound_v3,
-  spark,
-} from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { lidoExitStrategyAll } from "../../helpers/ExitStrategies/LidoExitStrategies"
-import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
 import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
 import { balancerExitStrategy1 } from "../../helpers/ExitStrategies/BalancerExitStrategies"
-import { allowErc20Approve } from "../../helpers/erc20"
+import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
+import { lidoExitStrategyAll } from "../../helpers/ExitStrategies/LidoExitStrategies"
+import { staticEqual } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { USDC, aura, balancer, compound_v2, compound_v3 } from "../addresses"
 
 const preset = {
   network: 1,

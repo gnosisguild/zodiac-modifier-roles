@@ -1,11 +1,11 @@
-import { PresetAllowEntry } from "../../types"
-import { allow } from "../../allow"
-import { AVATAR } from "../../placeholders"
-import { allowErc20Approve } from "../../helpers/erc20"
-import * as mainnetAddresses from "../../mainnet/addresses"
-import * as gnoAddresses from "../../gnosisChain/addresses"
-import { staticEqual } from "../../helpers/utils"
 import { NetworkId } from "../../../types"
+import { allow } from "../../allow"
+import * as gnoAddresses from "../../gnosisChain/addresses"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual } from "../../helpers/utils"
+import * as mainnetAddresses from "../../mainnet/addresses"
+import { AVATAR } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
 
 export const DaiExitStrategy1 = (
   blockchainId: NetworkId

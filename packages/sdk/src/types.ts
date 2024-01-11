@@ -95,12 +95,12 @@ interface ScopeParameterAsOneOfCall {
   value: string[]
 }
 
-interface UnscopeParameterCall {
-  call: "unscopeParameter"
-  targetAddress: string
-  functionSig: string
-  paramIndex: number
-}
+// interface UnscopeParameterCall {
+//   call: "unscopeParameter"
+//   targetAddress: string
+//   functionSig: string
+//   paramIndex: number
+// }
 
 interface ScopeRevokeFunctionCall {
   call: "scopeRevokeFunction"

@@ -1,3 +1,8 @@
+import { allow } from "../../allow"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   ZERO_ADDRESS,
   E_ADDRESS,
@@ -29,11 +34,6 @@ import {
   sushiswap,
   uniswapv3,
 } from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { allowErc20Approve } from "../../helpers/erc20"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { allow } from "../../allow"
 
 const preset = {
   network: 1,

@@ -1,8 +1,8 @@
-import { PresetAllowEntry } from "../../types"
 import { allow } from "../../allow"
-import { AVATAR } from "../../placeholders"
 import { staticEqual } from "../../helpers/utils"
 import { balancer } from "../../mainnet/addresses"
+import { AVATAR } from "../../placeholders"
+import { PresetAllowEntry } from "../../types"
 
 export const auraExitStrategy1 = (rewarder: string): PresetAllowEntry[] => {
   return [

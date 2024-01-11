@@ -1,3 +1,12 @@
+import { network } from "hardhat"
+
+import { allow } from "../../allow"
+import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { balancerExitStrategy1 } from "../../helpers/ExitStrategies/BalancerExitStrategies"
+import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
 import {
   GNO,
   USDC,
@@ -8,14 +17,6 @@ import {
   aura,
   balancer,
 } from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
-import { allow } from "../../allow"
-import { HoldingsExitStrategy } from "../../helpers/ExitStrategies/HoldingsExitStrategies"
-import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
-import { balancerExitStrategy1 } from "../../helpers/ExitStrategies/BalancerExitStrategies"
-import { network } from "hardhat"
 
 const preset = {
   network: 100,

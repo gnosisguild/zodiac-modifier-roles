@@ -1,7 +1,7 @@
-import { agave, balancer, curve } from "../addresses"
+import { allow } from "../../allow"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-import { allow } from "../../allow"
+import { agave, balancer, curve } from "../addresses"
 
 const preset = {
   network: 100,

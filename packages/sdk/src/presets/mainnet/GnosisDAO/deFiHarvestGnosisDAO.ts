@@ -1,18 +1,11 @@
 import { allow } from "../../allow"
-import {
-  balancer,
-  compound_v2,
-  compound_v3,
-  curve
-} from "../addresses"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-
+import { balancer, compound_v2, compound_v3, curve } from "../addresses"
 
 const preset = {
   network: 1,
   allow: [
-
     //---------------------------------------------------------------------------------------------------------------------------------
     // AURA
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -120,9 +113,7 @@ const preset = {
     //     [0]: staticEqual(AVATAR),
     //   },
     // },
-    allow.mainnet.aura.aura_locker["getReward(address)"](
-      AVATAR
-    ),
+    allow.mainnet.aura.aura_locker["getReward(address)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Aura - General Rewards Claiming
@@ -146,9 +137,7 @@ const preset = {
     allow.mainnet.balancer.B_stETH_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_stETH_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_stETH_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer B-80BAL-20WETH/auraBAL pool
@@ -158,9 +147,7 @@ const preset = {
     allow.mainnet.balancer.B_auraBAL_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_auraBAL_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_auraBAL_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer rETH/WETH pool
@@ -170,9 +157,7 @@ const preset = {
     allow.mainnet.balancer.B_rETH_stable_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_rETH_STABLE_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_rETH_STABLE_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer GNO/WETH pool
@@ -182,9 +167,7 @@ const preset = {
     allow.mainnet.balancer.B_80GNO_20WETH_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_80GNO_20WETH_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_80GNO_20WETH_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer GNO/COW pool
@@ -194,9 +177,7 @@ const preset = {
     allow.mainnet.balancer.B_50COW_50GNO_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50COW_50GNO_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50COW_50GNO_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer LDO/wstETH pool
@@ -206,9 +187,7 @@ const preset = {
     allow.mainnet.balancer.B_50WSTETH_50LDO_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50WSTETH_50LDO_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50WSTETH_50LDO_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer WETH/AURA pool
@@ -218,9 +197,7 @@ const preset = {
     allow.mainnet.balancer.B_50WETH_50AURA_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50WETH_50AURA_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50WETH_50AURA_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer WETH/COW pool
@@ -230,23 +207,17 @@ const preset = {
     allow.mainnet.balancer.B_50COW_50WETH_gauge["claim_rewards()"](),
 
     // Claim BAL Rewards
-    allow.mainnet.balancer.BAL_minter["mint"](
-      balancer.B_50COW_50WETH_GAUGE
-    ),
+    allow.mainnet.balancer.BAL_minter["mint"](balancer.B_50COW_50WETH_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Balancer BAL/WETH pool
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Claim locking rewards (single token)
-    allow.mainnet.balancer.fee_distributor["claimToken"](
-      AVATAR
-    ),
+    allow.mainnet.balancer.fee_distributor["claimToken"](AVATAR),
 
     // Claim locking rewards (multiple tokens)
-    allow.mainnet.balancer.fee_distributor["claimTokens"](
-      AVATAR
-    ),
+    allow.mainnet.balancer.fee_distributor["claimTokens"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // CONVEX
@@ -257,9 +228,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Claim Rewards
-    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.cvxsteCRV_rewarder["getReward(address,bool)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - cDAI/cUSDC
@@ -278,9 +247,7 @@ const preset = {
     allow.mainnet.convex.stkCvxCrv["setRewardWeight"](),
 
     // Claim Rewards
-    allow.mainnet.convex.stkCvxCrv["getReward(address)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.stkCvxCrv["getReward(address)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - Stake CVX
@@ -294,9 +261,7 @@ const preset = {
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Claim Rewards
-    allow.mainnet.convex.vlCVX["getReward(address,bool)"](
-      AVATAR
-    ),
+    allow.mainnet.convex.vlCVX["getReward(address,bool)"](AVATAR),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Convex - General Rewards Claiming
@@ -315,18 +280,14 @@ const preset = {
     allow.mainnet.curve.steth_eth_gauge["claim_rewards()"](),
 
     // Claim CRV Rewards
-    allow.mainnet.curve.crv_minter["mint"](
-      curve.stETH_ETH_GAUGE
-    ),
+    allow.mainnet.curve.crv_minter["mint"](curve.stETH_ETH_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Curve - cDAI/cUSDC
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Claim CRV Rewards - This pool gauge does not grant any rewards
-    allow.mainnet.curve.crv_minter["mint"](
-      curve.cDAIcUSDC_GAUGE
-    ),
+    allow.mainnet.curve.crv_minter["mint"](curve.cDAIcUSDC_GAUGE),
 
     //---------------------------------------------------------------------------------------------------------------------------------
     // Compound V2
@@ -338,7 +299,9 @@ const preset = {
     allow.mainnet.compound_v2.comptroller["claimComp(address,address[])"](
       AVATAR,
       {
-        subsetOf: [compound_v2.cDAI, compound_v2.cUSDC].map((address) => address.toLowerCase()).sort(), // compound app will always pass tokens in ascending order
+        subsetOf: [compound_v2.cDAI, compound_v2.cUSDC]
+          .map((address) => address.toLowerCase())
+          .sort(), // compound app will always pass tokens in ascending order
         restrictOrder: true,
       }
     ),

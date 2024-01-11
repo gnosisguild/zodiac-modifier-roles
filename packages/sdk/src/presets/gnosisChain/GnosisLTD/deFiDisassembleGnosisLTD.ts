@@ -1,8 +1,8 @@
-import { aura, balancer, WXDAI, realt } from "../addresses"
-import { AVATAR } from "../../placeholders"
-import { RolePreset } from "../../types"
 import { allow } from "../../allow"
 import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { AVATAR } from "../../placeholders"
+import { RolePreset } from "../../types"
+import { aura, balancer, WXDAI, realt } from "../addresses"
 
 const preset = {
   network: 100,
