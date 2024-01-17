@@ -15,7 +15,45 @@ import gnosisChainDeFiManagePreset from "../src/presets/gnosisChain/deFiManageTe
 import mainnetDeFiManageTestPreset from "../src/presets/mainnet/deFiManageTest"
 import { NetworkId } from "../src/types"
 
+interface Config {
+  AVATAR: string
+  MODULE: string
+  MANAGER: string
+  REVOKER: string
+  HARVESTER: string
+  DISASSEMBLER: string
+  SWAPPER: string
+  NETWORK: NetworkId
+  BRIDGED_SAFE: string
+  ROLE_IDS: {
+    MANAGER: number
+    REVOKER: number
+    HARVESTER: number
+    DISASSEMBLER: number
+    SWAPPER: number
+  }
+}
+
 export const KARPATKEY_ADDRESSES = {
+  KPK_ETH: {
+    AVATAR: "0x58e6c7ab55Aa9012eAccA16d1ED4c15795669E1C",
+    MODULE: "",
+    MANAGER: "",
+    REVOKER: "",
+    HARVESTER: "",
+    DISASSEMBLER: "",
+    SWAPPER: "",
+    NETWORK: 1,
+    BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
+  },
+
   SANTI_TEST_GNO: {
     // AVATAR: "0x3AD295402978659427C179Fb30f319bF6a2c8678",
     AVATAR: "0x9a18b276e86844A05587e1C822D2311D51d1c7F9",
@@ -28,6 +66,13 @@ export const KARPATKEY_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 100,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
   TEST_ETH: {
     AVATAR: "0xA2372f3C9a26F45b5D69BD513BE0d553Ff9CC617",
@@ -39,8 +84,15 @@ export const KARPATKEY_ADDRESSES = {
     SWAPPER: "",
     NETWORK: 1,
     BRIDGED_SAFE: "0x0000000000000000000000000000000000000000",
+    ROLE_IDS: {
+      MANAGER: 1,
+      REVOKER: 2,
+      HARVESTER: 3,
+      DISASSEMBLER: 4,
+      SWAPPER: 5,
+    },
   },
-} as const
+} satisfies { [key: string]: Config }
 
 const task = (name: string) =>
   baseTask(name)
