@@ -25,6 +25,13 @@ const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
   },
+  badge: {
+    marginLeft: theme.spacing(2),
+  },
+  warning: {
+    color: theme.palette.warning.main,
+    textTransform: "uppercase",
+  },
 }))
 
 export const Header = () => {
@@ -40,7 +47,14 @@ export const Header = () => {
           Roles
         </Typography>
       </HeaderBox>
-      <HeaderBox className={classes.grow} />
+      <HeaderBox className={classes.grow}>
+        <div className={classes.badge}>
+          <Typography className={classes.warning}>Experimental</Typography>
+          <Typography variant="body2">
+            Use this app with caution and carefully review all applied permissions
+          </Typography>
+        </div>
+      </HeaderBox>
       <ChainPicker />
       <HeaderAddressBox address={module} emptyText="No Safe Attached" />
       <ConnectWalletBox />
