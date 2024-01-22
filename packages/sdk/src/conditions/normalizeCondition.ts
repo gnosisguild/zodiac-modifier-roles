@@ -4,10 +4,17 @@ import { Condition, Operator, ParameterType } from "../types"
 
 import { conditionId } from "./conditionId"
 
-// maybe add bool formula minimization, for example move OR conditions as far down as possible, e.g.: or(and(a, b), and(a, c)) -> and(a, or(b, c))
 export const normalizeCondition = (condition: Condition): Condition => {
+  let result = normalizeConditionRecursive(condition)
+  result = pruneTopLevelTrailingPass(result)
+  return result
+}
+
+const normalizeConditionRecursive = (condition: Condition): Condition => {
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
-  const normalizedChildren = condition.children?.map(normalizeCondition)
+  const normalizedChildren = condition.children?.map(
+    normalizeConditionRecursive
+  )
   let result: Condition = normalizedChildren
     ? { ...condition, children: normalizedChildren }
     : condition
@@ -51,6 +58,7 @@ const pruneTrailingStaticPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
+  // We must not apply this to static tuples since removing the trailing Static Pass node would cause word shifts in the encoding.
   const canPrune =
     condition.paramType === ParameterType.Calldata ||
     condition.paramType === ParameterType.AbiEncoded ||
@@ -68,6 +76,32 @@ const pruneTrailingStaticPass = (condition: Condition): Condition => {
       child.operator !== Operator.Pass ||
       child.paramType !== ParameterType.Static
     ) {
+      prunedChildren = condition.children.slice(0, i + 1)
+      break
+    }
+  }
+
+  return prunedChildren.length === condition.children.length
+    ? condition
+    : { ...condition, children: prunedChildren }
+}
+
+/**
+ * Remove any (static or dynamic) trailing Pass node from Matches.
+ *
+ * This must not be applied to nested nodes since a dynamic child "infects" its parent (causing it to be dynamically encoded).
+ * At the topmost Matches node we safely can prune any trailing Pass conditions, though.
+ */
+const pruneTopLevelTrailingPass = (condition: Condition): Condition => {
+  if (!condition.children) return condition
+  if (condition.operator !== Operator.Matches) return condition
+
+  // Start from the end and prune all trailing Pass nodes.
+  // Always keep the first child, even if it is a Static Pass, because children must not be empty.
+  let prunedChildren: Condition[] = condition.children.slice(0, 1)
+  for (let i = condition.children.length - 1; i >= 1; i--) {
+    const child = condition.children[i]
+    if (child.operator !== Operator.Pass) {
       prunedChildren = condition.children.slice(0, i + 1)
       break
     }

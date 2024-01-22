@@ -245,21 +245,61 @@ describe("normalizeCondition()", () => {
   it("should not prune trailing Static Pass nodes on static tuples", () => {
     expect(
       normalizeCondition({
-        paramType: ParameterType.Tuple,
+        paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
-          DUMMY_COMP(0),
-          { paramType: ParameterType.Static, operator: Operator.Pass },
-          { paramType: ParameterType.Static, operator: Operator.Pass },
+          {
+            paramType: ParameterType.Tuple,
+            operator: Operator.Matches,
+            children: [
+              DUMMY_COMP(0),
+              { paramType: ParameterType.Static, operator: Operator.Pass },
+              { paramType: ParameterType.Static, operator: Operator.Pass },
+            ],
+          },
+          DUMMY_COMP(1),
         ],
       })
     ).to.deep.equal({
-      paramType: ParameterType.Tuple,
+      paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
-        DUMMY_COMP(0),
-        { paramType: ParameterType.Static, operator: Operator.Pass },
-        { paramType: ParameterType.Static, operator: Operator.Pass },
+        {
+          paramType: ParameterType.Tuple,
+          operator: Operator.Matches,
+          children: [
+            DUMMY_COMP(0),
+            { paramType: ParameterType.Static, operator: Operator.Pass },
+            { paramType: ParameterType.Static, operator: Operator.Pass },
+          ],
+        },
+        DUMMY_COMP(1),
+      ],
+    })
+  })
+
+  it("should prune even dynamic trailing Pass nodes on the toplevel Matches", () => {
+    expect(
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualToAvatar,
+          },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+        ],
+      })
+    ).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.EqualToAvatar,
+        },
       ],
     })
   })
