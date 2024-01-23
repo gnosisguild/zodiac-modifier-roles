@@ -63,7 +63,7 @@ export default async function DiffPage({
   ]
 
   return (
-    <Layout head={<PageBreadcrumbs {...params} />}>
+    <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main className={styles.main}>
         <Flex direction="column" gap={1}>
           <PermissionsDiff

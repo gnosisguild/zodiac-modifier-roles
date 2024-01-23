@@ -4,13 +4,14 @@ import ParentPageBreadcrumbs from "../../breadcrumbs"
 import Flex from "@/ui/Flex"
 import { MdOutlinePolicy } from "react-icons/md"
 import styles from "./page.module.css"
+import { Mod } from "@/app/params"
 
 export default function PageBreadcrumbs({
   mod,
   role,
   hash,
 }: {
-  mod: string
+  mod: Mod
   role: string
   hash: string
 }) {
@@ -21,7 +22,7 @@ export default function PageBreadcrumbs({
         <VscGitCompare />
       </div>
       <Breadcrumb
-        href={`/${decodeURIComponent(mod)}/roles/${role}/diff/${hash}`}
+        href={`/${mod.chainPrefix}:${mod.address}/roles/${role}/diff/${hash}`}
       >
         <Flex gap={2} alignItems="center">
           <MdOutlinePolicy />

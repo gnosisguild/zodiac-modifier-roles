@@ -4,6 +4,12 @@ import { isAddress } from "viem"
 
 const chains = Object.values(CHAINS)
 
+export interface Mod {
+  chainId: number
+  chainPrefix: string
+  address: `0x${string}`
+}
+
 export function parseModParam(mod: string | string[] | undefined) {
   if (!mod || typeof mod !== "string") return null
 
@@ -14,7 +20,11 @@ export function parseModParam(mod: string | string[] | undefined) {
     return null
   }
 
-  return { chainId: chain.id, address }
+  return {
+    chainId: chain.id,
+    chainPrefix,
+    address: address.toLowerCase() as `0x${string}`,
+  }
 }
 
 export function parseRoleParam(role: string | string[] | undefined) {
@@ -23,6 +33,8 @@ export function parseRoleParam(role: string | string[] | undefined) {
   try {
     return formatBytes32String(role) as `0x${string}`
   } catch (e) {
-    return null
+    return role.startsWith("0x") && role.length === 66
+      ? (role as `0x${string}`)
+      : null
   }
 }

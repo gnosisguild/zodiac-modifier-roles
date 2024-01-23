@@ -1,15 +1,11 @@
 import { Breadcrumb } from "@/components/Layout"
 import Address from "@/ui/Address"
-import { parseModParam } from "../params"
+import { Mod } from "../params"
 
-export default function PageBreadcrumbs({ mod }: { mod: string }) {
-  const parsed = parseModParam(mod)
-  if (!parsed) {
-    throw new Error("Invalid mod param")
-  }
+export default function PageBreadcrumbs({ mod }: { mod: Mod }) {
   return (
-    <Breadcrumb href={`/${decodeURIComponent(mod)}`}>
-      <Address address={parsed.address} />
+    <Breadcrumb href={`/${mod.chainPrefix}:${mod.address}`}>
+      <Address address={mod.address} />
     </Breadcrumb>
   )
 }

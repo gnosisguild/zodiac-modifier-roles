@@ -19,9 +19,9 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
   }
 
   return (
-    <Layout head={<PageBreadcrumbs mod={params.mod} />}>
+    <Layout head={<PageBreadcrumbs mod={mod} />}>
       <main className={styles.main}>
-        <RolesList roles={data.roles} mod={params.mod} />
+        <RolesList roles={data.roles} mod={mod} />
       </main>
     </Layout>
   )
