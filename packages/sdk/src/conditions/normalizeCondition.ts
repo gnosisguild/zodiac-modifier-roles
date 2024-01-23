@@ -4,7 +4,6 @@ import { Condition, Operator, ParameterType } from "../types"
 
 import { conditionId } from "./conditionId"
 
-// maybe add bool formula minimization, for example move OR conditions as far down as possible, e.g.: or(and(a, b), and(a, c)) -> and(a, or(b, c))
 export const normalizeCondition = (condition: Condition): Condition => {
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
   const normalizedChildren = condition.children?.map(normalizeCondition)
@@ -12,7 +11,7 @@ export const normalizeCondition = (condition: Condition): Condition => {
     ? { ...condition, children: normalizedChildren }
     : condition
   result = collapseStaticTupleTypeTrees(result)
-  result = pruneTrailingStaticPass(result)
+  result = pruneTrailingPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
@@ -46,28 +45,36 @@ const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
   return condition
 }
 
-/** Removes trailing Static Pass nodes from Matches on dynamic tuples, Calldata, and AbiEncoded (they are useless) */
-const pruneTrailingStaticPass = (condition: Condition): Condition => {
+/** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
+const pruneTrailingPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
+  const isDynamicTuple =
+    condition.paramType === ParameterType.Tuple && isDynamicParamType(condition)
+
+  // We must not apply this to static tuples since removing Static Pass nodes would cause word shifts in the encoding.
   const canPrune =
     condition.paramType === ParameterType.Calldata ||
     condition.paramType === ParameterType.AbiEncoded ||
-    (condition.paramType === ParameterType.Tuple &&
-      isDynamicParamType(condition))
+    isDynamicTuple
 
   if (!canPrune) return condition
 
-  // Start from the end and prune all trailing Static Pass nodes.
-  // Always keep the first child, even if it is a Static Pass, because children must not be empty.
-  let prunedChildren: Condition[] = condition.children.slice(0, 1)
-  for (let i = condition.children.length - 1; i >= 1; i--) {
+  // Start from the end and prune all trailing Pass nodes.
+  // Always keep the first child, even if it is a Pass, because children must not be empty.
+  // For tuples keep all children up to the first dynamic child.
+  let keepChildrenUntil = 0
+  if (isDynamicTuple) {
+    keepChildrenUntil = condition.children.findIndex(isDynamicParamType)
+  }
+  let prunedChildren: Condition[] = condition.children.slice(
+    0,
+    keepChildrenUntil + 1
+  )
+  for (let i = condition.children.length - 1; i > keepChildrenUntil; i--) {
     const child = condition.children[i]
-    if (
-      child.operator !== Operator.Pass ||
-      child.paramType !== ParameterType.Static
-    ) {
+    if (child.operator !== Operator.Pass) {
       prunedChildren = condition.children.slice(0, i + 1)
       break
     }
