@@ -6,6 +6,7 @@ import classes from "./style.module.css"
 import Link from "next/link"
 import { parseBytes32String } from "ethers/lib/utils"
 import CopyButton from "@/ui/CopyButton"
+import { Mod } from "@/app/params"
 
 interface RoleSummary {
   key: string
@@ -13,7 +14,15 @@ interface RoleSummary {
   targets: `0x${string}`[]
 }
 
-const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
+const tryParseBytes32String = (str: string) => {
+  try {
+    return parseBytes32String(str)
+  } catch (err) {
+    return null
+  }
+}
+
+const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
   roles,
   mod,
 }) => {
@@ -24,7 +33,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
     ? roles.filter((role) =>
         [
           role.key,
-          parseBytes32String(role.key),
+          tryParseBytes32String(role.key) || "",
           ...role.members,
           ...role.targets,
         ].some((str) => str.toLowerCase().includes(trimmedQuery))
@@ -49,11 +58,13 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: string }> = ({
 
       <Flex direction="column" gap={0}>
         {matchingRoles.map((role) => {
-          const parsedKey = parseBytes32String(role.key)
+          const parsedKey = tryParseBytes32String(role.key)
           return (
             <Link
               key={role.key}
-              href={`/${mod}/roles/${encodeURIComponent(parsedKey)}`}
+              href={`/${mod.chainPrefix}:${
+                mod.address
+              }/roles/${encodeURIComponent(parsedKey || role.key)}`}
               className={classes.row}
             >
               <div className={classes.parseKey}>{parsedKey}</div>

@@ -2,13 +2,13 @@ import { Breadcrumb } from "@/components/Layout"
 import styles from "./page.module.css"
 import ParentPageBreadcrumbs from "../../breadcrumbs"
 import Flex from "@/ui/Flex"
-import { parseRoleParam } from "@/app/params"
+import { Mod, parseRoleParam } from "@/app/params"
 
 export default function PageBreadcrumbs({
   mod,
   role,
 }: {
-  mod: string
+  mod: Mod
   role: string
 }) {
   const roleKey = parseRoleParam(role)
@@ -18,9 +18,9 @@ export default function PageBreadcrumbs({
   return (
     <>
       <ParentPageBreadcrumbs mod={mod} />
-      <Breadcrumb href={`/${decodeURIComponent(mod)}/roles/${role}`}>
+      <Breadcrumb href={`/${mod.chainPrefix}:${mod.address}/roles/${role}`}>
         <Flex direction="column" gap={0}>
-          {role}
+          {role !== roleKey ? role : null}
           <Flex gap={0} alignItems="center" className={styles.roleKey}>
             <small>{roleKey}</small>
           </Flex>

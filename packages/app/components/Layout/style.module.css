@@ -5,12 +5,6 @@
   width: 100vw;
   min-width: 640px;
   overflow: auto;
-  background: linear-gradient(
-    108.86deg,
-    rgba(26, 33, 66, 0.85) 6.24%,
-    rgba(12, 19, 8, 0.85) 53.08%,
-    rgba(37, 6, 4, 0.85) 96.54%
-  );
 }
 
 .topBar {

@@ -35,7 +35,7 @@ export default async function RolePage({
   }
 
   return (
-    <Layout head={<PageBreadcrumbs mod={params.mod} role={params.role} />}>
+    <Layout head={<PageBreadcrumbs mod={mod} role={params.role} />}>
       <main className={styles.main}>
         <Flex gap={1} className={styles.container}>
           <Box p={3} className={styles.members}>
