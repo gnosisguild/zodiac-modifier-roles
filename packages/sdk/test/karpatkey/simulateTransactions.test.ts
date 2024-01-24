@@ -1,24 +1,47 @@
-import { defaultAbiCoder } from "ethers/lib/utils"
+import helpers from "@nomicfoundation/hardhat-toolbox/network-helpers"
+import { BigNumber } from "ethers"
 import hre, { deployments, waffle } from "hardhat"
 
 import { Roles, TestAvatar } from "../../../evm/typechain-types"
 import { encodeApplyPreset } from "../../src/applyPreset"
-import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
-import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
-import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
-import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
-import {
-  AVATAR_ADDRESS_PLACEHOLDER,
-  OMNI_BRIDGE_DATA_PLACEHOLDER,
-  OMNI_BRIDGE_RECEIVER_PLACEHOLDER,
-} from "../../src/presets/placeholders"
-import { RolePreset } from "../../src/types"
+import gnosisDeFiRevokeGnosisLTDPreset from "../../src/presets/gnosisChain/GnosisLTD/deFiRevokeGnosisLTD"
+
+// import gnosisChainDeFiHarvestPreset from "../../src/presets/gnosisChain/deFiHarvest"
+// import gnosisChainDeFiManagePreset from "../../src/presets/gnosisChain/deFiManage"
+// import mainnetDeFiHarvestPreset from "../../src/presets/mainnet/deFiHarvest"
+// import mainnetDeFiManagePreset from "../../src/presets/mainnet/deFiManage"
+
+import balancerManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancer"
+import balancerAlternativeManagePreset from "../../src/presets/mainnet/Balancer/deFiManageBalancerAlternative"
+import ensManagePreset from "../../src/presets/mainnet/ENS/deFiManageENS"
+import testManagePreset from "../../src/presets/mainnet/deFiManageTest"
+import { RolePreset } from "../../src/presets/types"
+import { NetworkId } from "../../src/types"
+import { BALANCER_ADDRESSES } from "../../tasks/manageBalancerRoles"
+import { ENS_ADDRESSES } from "../../tasks/manageEnsRoles"
+import { GNOSIS_ADDRESSES } from "../../tasks/manageGnosisRoles"
 import { KARPATKEY_ADDRESSES } from "../../tasks/manageKarpatkeyRoles"
 
+import balancerAlternativeManageTransactions from "./testTransactions/balancerAlternativeManage"
+import balancerManageTransactions from "./testTransactions/balancerManage"
+import ensManageTransactions from "./testTransactions/ensManage"
 import harvestMainnetTransactions from "./testTransactions/ethHarvest"
 import manageMainnetTransactions from "./testTransactions/ethManage"
 import harvestGnosisChainTransactions from "./testTransactions/gnoHarvest"
 import manageGnosisChainTransactions from "./testTransactions/gnoManage"
+import gnosisRevokeGnosisLTDTransactions from "./testTransactions/gnosisRevokeGnosisLTD"
+
+interface Config {
+  AVATAR: string
+  MODULE: string
+  MANAGER: string
+  REVOKER: string
+  HARVESTER: string
+  DISASSEMBLER: string
+  SWAPPER: string
+  NETWORK: NetworkId
+  BRIDGED_SAFE: string
+}
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
   const ROLE_ID = 1
@@ -31,7 +54,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     const multiSend = await MultiSend.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
-    const avatar = (await Avatar.deploy()) as TestAvatar
+    const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const Permissions = await hre.ethers.getContractFactory("Permissions")
     const permissions = await Permissions.deploy()
@@ -45,7 +68,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       owner.address,
       avatar.address,
       avatar.address
-    )) as Roles
+    )) as unknown as Roles
 
     await modifier.setMultisend("0x40A2aCCbd92BCA938b02010E17A5b8929b49130D")
 
@@ -66,38 +89,43 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
   const simulateTransactions = async ({
     preset,
     config,
+    fromBlankSlate,
     transactions,
   }: {
     preset: RolePreset
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
-    transactions: { from: string; value?: string; data: string; to: string }[]
+    config: Config
+    fromBlankSlate?: boolean
+    transactions: {
+      from: string
+      value?: string
+      data: string
+      to: string
+      operation?: number
+      expectRevert?: boolean
+    }[]
   }) => {
     const { owner, modifier } = await setup()
+    const placeholderValues = {
+      AVATAR: config.AVATAR,
+      BRIDGE_RECIPIENT_GNOSIS_CHAIN: config.BRIDGED_SAFE,
+      BRIDGE_RECIPIENT_MAINNET: config.BRIDGED_SAFE,
+    }
     const permissionUpdateTransactions = await encodeApplyPreset(
       modifier.address,
       ROLE_ID,
       preset,
-      {
-        [AVATAR_ADDRESS_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.AVATAR]
-        ),
-        [OMNI_BRIDGE_DATA_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["bytes"],
-          [config.BRIDGED_SAFE]
-        ),
-        [OMNI_BRIDGE_RECEIVER_PLACEHOLDER]: defaultAbiCoder.encode(
-          ["address"],
-          [config.BRIDGED_SAFE]
-        ),
-      },
+      placeholderValues,
       {
         currentPermissions: { targets: [] },
-        network: 100, // this value won't be used
+        network: config.NETWORK,
       }
     )
 
+    let totalGas = BigNumber.from(0)
     for (let i = 0; i < permissionUpdateTransactions.length; i++) {
+      totalGas = totalGas.add(
+        await owner.estimateGas(permissionUpdateTransactions[i])
+      )
       await owner.sendTransaction(permissionUpdateTransactions[i])
 
       console.log(
@@ -107,22 +135,36 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
       )
     }
 
-    console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------\n\n")
+    console.log("\n\n------- SUCCESSFULLY APPLIED PRESET -------")
+    console.log("Total gas used for permissions update:", totalGas.toString())
+    console.log("\n\n")
 
     for (let i = 0; i < transactions.length; i++) {
       const tx = transactions[i]
-
-      console.log(`Simulating call ${tx.data} to ${tx.to} ...`)
+      const operation = tx.operation || 0
+      console.log(
+        `Simulating ${operation === 1 ? "delegate call" : "call"} to ${
+          tx.to
+        } with data: ${tx.data}`
+      )
       try {
         await modifier.execTransactionWithRole(
           tx.to,
           tx.value || "0x00",
           tx.data || "0x00",
-          "0",
+          tx.operation || 0,
           ROLE_ID,
           false
         )
+
+        if (tx.expectRevert) {
+          throw new Error(`Expected revert, but tx #${i} did not revert`)
+        }
       } catch (e) {
+        if (tx.expectRevert) {
+          continue
+        }
+
         // tx failed
         console.log((e as Error).message + "\n")
         throw e
@@ -133,10 +175,7 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
 
-  const checkFrom = (
-    txs: { from: string }[],
-    config: typeof KARPATKEY_ADDRESSES["DAO_GNO"]
-  ) => {
+  const checkFrom = (txs: { from: string }[], config: Config) => {
     txs.forEach((tx) => {
       if (tx.from.toLowerCase() !== config.AVATAR.toLowerCase()) {
         throw new Error(`Transaction from ${tx.from} is not ${config.AVATAR}`)
@@ -144,42 +183,118 @@ describe("Karpatkey: Simulate Transactions Test", async () => {
     })
   }
 
-  describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // Gnosis Chain - GnosisLTD
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("Gnosis Chain DeFi Revoke preset [gnosis:gnosisltd:revoke]", () => {
+    it("allows executing all listed revoking transactions from the LTD Safe", async () => {
+      await simulateTransactions({
+        config: GNOSIS_ADDRESSES.GNOSIS_LTD_GNO,
+        preset: gnosisDeFiRevokeGnosisLTDPreset,
+        fromBlankSlate: true,
+        transactions: gnosisRevokeGnosisLTDTransactions,
+      })
+    })
+  })
+
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // Mainnet - Balancer
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("Balancer Manage preset [balancer:manage]", () => {
+    it("allows executing all listed management transactions from the Balancer Safe", async () => {
+      await simulateTransactions({
+        config: BALANCER_ADDRESSES.BALANCER_ETH,
+        preset: balancerManagePreset,
+        fromBlankSlate: true,
+        transactions: balancerManageTransactions,
+      })
+    })
+  })
+
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // Mainnet - Balancer Alternative
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("Balancer Alternative Manage preset [balancer_alternative:manage]", () => {
+    it("allows executing all listed management transactions from the Balancer Alternative Safe", async () => {
+      await simulateTransactions({
+        config: BALANCER_ADDRESSES.BALANCER_ALTERNATIVE_ETH,
+        preset: balancerAlternativeManagePreset,
+        fromBlankSlate: true,
+        transactions: balancerAlternativeManageTransactions,
+      })
+    })
+  })
+
+  //---------------------------------------------------------------------------------------------------------------------------------
+  // Mainnet - ENS
+  //---------------------------------------------------------------------------------------------------------------------------------
+  describe("ENS Manage preset [ens:manage]", () => {
+    it("allows executing all listed management transactions from the ENS Safe (from blank slate)", async () => {
+      await simulateTransactions({
+        config: ENS_ADDRESSES.ENS_ETH,
+        preset: ensManagePreset,
+        fromBlankSlate: true,
+        transactions: ensManageTransactions,
+      })
+    })
+
+    it("allows executing all listed management transactions from the ENS Safe (patching the current permissions)", async () => {
+      await simulateTransactions({
+        config: ENS_ADDRESSES.ENS_ETH,
+        preset: ensManagePreset,
+        fromBlankSlate: false,
+        transactions: ensManageTransactions,
+      })
+    })
+  })
+
+  // describe("Gnosis Chain DeFi Manage preset [gno:manage]", () => {
+  //   it("allows executing all listed management transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
+  //       preset: gnosisChainDeFiManagePreset,
+  //       transactions: manageGnosisChainTransactions,
+  //     })
+  //   })
+  // })
+
+  // describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
+  //   it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_GNO,
+  //       preset: gnosisChainDeFiHarvestPreset,
+  //       transactions: harvestGnosisChainTransactions,
+  //     })
+  //   })
+  // })
+
+  // describe("Mainnet DeFi Manage preset [eth:manage]", () => {
+  //   it("allows executing all listed management transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
+  //       preset: mainnetDeFiManagePreset,
+  //       transactions: manageMainnetTransactions,
+  //     })
+  //   })
+  // })
+
+  // describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
+  //   it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
+  //     await simulateTransactions({
+  //       config: GNOSIS_ADDRESSES.GNOSIS_DAO_ETH,
+  //       preset: mainnetDeFiHarvestPreset,
+  //       transactions: harvestMainnetTransactions,
+  //     })
+  //   })
+  // })
+
+  describe("Test Manage preset [test:manage]", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
       await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
-        preset: gnosisChainDeFiManagePreset,
-        transactions: manageGnosisChainTransactions,
-      })
-    })
-  })
-
-  describe("Gnosis Chain DeFi Harvest preset [gno:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_GNO,
-        preset: gnosisChainDeFiHarvestPreset,
-        transactions: harvestGnosisChainTransactions,
-      })
-    })
-  })
-
-  describe("Mainnet DeFi Manage preset [eth:manage]", () => {
-    it("allows executing all listed management transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
-        preset: mainnetDeFiManagePreset,
-        transactions: manageMainnetTransactions,
-      })
-    })
-  })
-
-  describe("Mainnet DeFi Harvest preset [eth:harvest]", () => {
-    it("allows executing all listed harvesting transactions from the DAO Safe", async () => {
-      await simulateTransactions({
-        config: KARPATKEY_ADDRESSES.DAO_ETH,
-        preset: mainnetDeFiHarvestPreset,
-        transactions: harvestMainnetTransactions,
+        config: KARPATKEY_ADDRESSES.TEST_ETH,
+        preset: testManagePreset,
+        fromBlankSlate: true,
+        transactions: balancerManageTransactions,
       })
     })
   })

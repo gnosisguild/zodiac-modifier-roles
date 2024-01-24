@@ -10,7 +10,10 @@ const encodeCalls = async (
   roleId: number,
   calls: Call[]
 ): Promise<PopulatedTransaction[]> => {
-  const contract = new Contract(rolesContractAddress, ROLES_ABI.abi) as Roles
+  const contract = new Contract(
+    rolesContractAddress,
+    ROLES_ABI.abi
+  ) as unknown as Roles
   return Promise.all(
     calls
       .map((call) => {

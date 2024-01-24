@@ -1,29 +1,22 @@
-import Safe from "@gnosis.pm/safe-core-sdk"
+import Safe from "@safe-global/safe-core-sdk"
 import {
   EthAdapter,
   MetaTransactionData,
   OperationType,
-} from "@gnosis.pm/safe-core-sdk-types"
-import EthersAdapter from "@gnosis.pm/safe-ethers-lib"
-import SafeServiceClient from "@gnosis.pm/safe-service-client"
-import {
-  ethers as defaultEthers,
-  Contract,
-  PopulatedTransaction,
-  Signer,
-} from "ethers"
+} from "@safe-global/safe-core-sdk-types"
+import EthersAdapter from "@safe-global/safe-ethers-lib"
+import SafeServiceClient from "@safe-global/safe-service-client"
+import { ethers as defaultEthers, PopulatedTransaction, Signer } from "ethers"
 import { encodeMulti } from "ethers-multisend"
-
-import ROLES_ABI from "../../evm/build/artifacts/contracts/Roles.sol/Roles.json"
-import { Roles } from "../../evm/typechain-types"
 
 import encodeCalls from "./encodeCalls"
 import fetchPermissions from "./fetchPermissions"
-import fillAndUnfoldPreset from "./fillAndUnfoldPreset"
 import logCall from "./logCall"
 import patchPermissions from "./patchPermissions"
+import fillPreset from "./presets/fillPreset"
+import { PlaceholderValues, RolePreset } from "./presets/types"
 import SAFE_TX_SERVICE from "./safeTxService"
-import { RolePermissions, RolePreset, NetworkId } from "./types"
+import { RolePermissions, NetworkId } from "./types"
 
 let nonce: number
 
@@ -44,11 +37,11 @@ const DEFAULT_BATCH_SIZE = 75
  * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
  *
  */
-export const applyPreset = async (
+export const applyPreset = async <P extends RolePreset>(
   address: string,
   roleId: number,
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  preset: P,
+  placeholderValues: PlaceholderValues<P>,
   options: {
     safeAddress: string
     signer: Signer
@@ -86,7 +79,7 @@ export const applyPreset = async (
 
   const ethAdapter = new EthersAdapter({
     ethers,
-    signer,
+    signerOrProvider: signer,
   })
   const txServiceUrl = SAFE_TX_SERVICE[network]
   const safeService = new SafeServiceClient({
@@ -100,16 +93,21 @@ export const applyPreset = async (
 
   nonce = await safeSdk.getNonce()
   for (let i = 0; i < batches.length; i++) {
-    const safeTransaction = await safeSdk.createTransaction(batches[i], {
-      nonce: nonce++,
+    const safeTransaction = await safeSdk.createTransaction({
+      safeTransactionData: batches[i],
+      onlyCalls: false,
+      options: {
+        nonce: nonce++,
+      },
     })
-    await safeSdk.signTransaction(safeTransaction)
     const safeTxHash = await safeSdk.getTransactionHash(safeTransaction)
+    const senderSignature = await safeSdk.signTransactionHash(safeTxHash)
     await safeService.proposeTransaction({
       safeAddress,
-      safeTransaction,
+      safeTransactionData: safeTransaction.data,
       safeTxHash,
       senderAddress: await signer.getAddress(),
+      senderSignature: senderSignature.data,
       origin: "Zodiac Roles SDK",
     })
   }
@@ -130,11 +128,11 @@ export const applyPreset = async (
  * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
  *
  */
-export const encodeApplyPreset = async (
+export const encodeApplyPreset = async <P extends RolePreset>(
   address: string,
   roleId: number,
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  preset: P,
+  placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
     currentPermissions?: RolePermissions
@@ -147,7 +145,7 @@ export const encodeApplyPreset = async (
       roleId,
       network: options.network,
     }))
-  const nextPermissions = fillAndUnfoldPreset(preset, placeholderValues)
+  const nextPermissions = fillPreset(preset, placeholderValues)
   const calls = patchPermissions(currentPermissions, nextPermissions)
   calls.forEach((call) => logCall(call, console.debug))
   return await encodeCalls(address, roleId, calls)
@@ -168,11 +166,11 @@ const MULTI_SEND_CALL_ONLY = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
  * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
  *
  */
-export const encodeApplyPresetMultisend = async (
+export const encodeApplyPresetMultisend = async <P extends RolePreset>(
   address: string,
   roleId: number,
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  preset: P,
+  placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
     multiSendAddress?: string
@@ -218,11 +216,11 @@ export const encodeApplyPresetMultisend = async (
  * @param [options.currentPermissions] The permissions that are currently set on the role. The new preset will be applied as a patch to these permissions.
  *
  */
-export const encodeApplyPresetTxBuilder = async (
+export const encodeApplyPresetTxBuilder = async <P extends RolePreset>(
   address: string,
   roleId: number,
-  preset: RolePreset,
-  placeholderValues: Record<symbol, string>,
+  preset: P,
+  placeholderValues: PlaceholderValues<P>,
   options: {
     network: NetworkId
     currentPermissions?: RolePermissions
@@ -256,15 +254,6 @@ export const encodeApplyPresetTxBuilder = async (
       value: tx.value?.toHexString() || "0",
     })),
   }
-}
-
-const readAvatar = async (address: string, network: NetworkId) => {
-  const contract = new Contract(
-    address,
-    ROLES_ABI.abi,
-    defaultEthers.getDefaultProvider(`${network}`)
-  ) as Roles
-  return await contract.avatar()
 }
 
 const asMetaTransaction = (

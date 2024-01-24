@@ -1,6 +1,3 @@
-import { BigNumberish } from "ethers"
-
-import { AVATAR_ADDRESS_PLACEHOLDER } from "./presets/placeholders"
 import SUBGRAPH from "./subgraph"
 
 export type NetworkId = keyof typeof SUBGRAPH
@@ -56,44 +53,24 @@ export interface Parameter {
   comparisonValue: string[]
 }
 
-export interface RolePreset {
-  network: number
-  allowTargets: PresetTarget[] // allows all calls to targets
-  allowFunctions: PresetFunction[] // allows calls to specific functions, optionally with parameter scoping
-}
-export interface PresetTarget {
-  targetAddress: string
-  options?: ExecutionOptions
-}
-
-export type PresetFunction = ({ sighash: string } | { signature: string }) & {
-  targetAddresses: string[]
-  params?: (PresetScopeParam | undefined)[] | Record<number, PresetScopeParam>
-  options?: ExecutionOptions
-}
-
-type ComparisonValue = string | symbol
-export interface PresetScopeParam {
-  type: ParameterType
-  comparison: Comparison
-  value: ComparisonValue | ComparisonValue[]
-}
-
 interface AllowTargetCall {
   call: "allowTarget"
   targetAddress: string
   options: ExecutionOptions
 }
+
 interface ScopeTargetCall {
   call: "scopeTarget"
   targetAddress: string
 }
+
 interface ScopeAllowFunctionCall {
   call: "scopeAllowFunction"
   targetAddress: string
   functionSig: string
   options: ExecutionOptions
 }
+
 interface ScopeFunctionCall {
   call: "scopeFunction"
   targetAddress: string
@@ -108,6 +85,7 @@ interface ScopeFunctionCall {
   compValue: string[]
   options: ExecutionOptions
 }
+
 interface ScopeParameterAsOneOfCall {
   call: "scopeParameterAsOneOf"
   targetAddress: string
@@ -116,17 +94,20 @@ interface ScopeParameterAsOneOfCall {
   type: ParameterType
   value: string[]
 }
-interface UnscopeParameterCall {
-  call: "unscopeParameter"
-  targetAddress: string
-  functionSig: string
-  paramIndex: number
-}
+
+// interface UnscopeParameterCall {
+//   call: "unscopeParameter"
+//   targetAddress: string
+//   functionSig: string
+//   paramIndex: number
+// }
+
 interface ScopeRevokeFunctionCall {
   call: "scopeRevokeFunction"
   targetAddress: string
   functionSig: string
 }
+
 interface RevokeTargetCall {
   call: "revokeTarget"
   targetAddress: string

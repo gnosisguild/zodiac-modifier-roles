@@ -1,8 +1,16 @@
 const SUBGRAPH = {
-  [1]: "https://api.thegraph.com/subgraphs/name/asgeir-eth/zodiac-modifier-roles-mainnet",
-  [5]: "https://api.thegraph.com/subgraphs/name/manboy-eth/zodiac-modifier-roles-goerli",
+  [1]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-mainnet",
+  [5]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-goerli",
+  // [10]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-optimism",
+  [56]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-bsc",
   [100]:
-    "https://api.thegraph.com/subgraphs/name/jfschwarz/zodiac-roles-gnosis-chain",
+    "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-gnosis-chain",
+  [137]:
+    "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-polygon",
+  [42161]:
+    "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-arbitrum",
+  // [43114]:
+  //   "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-avalanche",
 }
 
 export default SUBGRAPH
