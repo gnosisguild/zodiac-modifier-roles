@@ -1,10 +1,11 @@
 # Allowances
 
-Allowances are a mechanism for enforcing spending limits or other kind of quotas for individual roles.
+Allowances serve as a mechanism for enforcing spending limits or other types of quotas for individual roles.
 
 ## Structure
 
-Allowances are centrally defined and can be referenced from conditions.
+Allowances are centrally defined and can be referenced from conditions. 
+
 Each allowance is stored as a tuple of the following shape:
 
 ```solidity
@@ -28,7 +29,8 @@ struct Allowance {
 `balance` – Unused allowance that can be spent
 
 All fields can be manually updated.
-Upon consumption of an allowance, the `balance` and `timestamp` fields will be updated automatically:
+
+Upon consumption of an allowance, the `balance` and `timestamp` fields will automatically:
 
 - Update the balance to reflect the accrual since the last refill
 - Update the refill timestamp to the current interval's timestamp
@@ -40,7 +42,7 @@ There are three different ways allowances can be used:
 
 ### Allowance on a `uint` field
 
-To define an allowance on any `uint` field in the transaction call data, use a `WithinAllowance` condition.
+To define an allowance on any `uint` field in the transaction calldata, use a `WithinAllowance` condition.
 
 ### Allowance on the Ether `value`
 
@@ -48,5 +50,4 @@ To define an allowance on the Ether `value` sent with the transaction, use an `E
 
 ### Call rate limits
 
-It's also possible to enforce a rate limit on the number of calls to a function using a `CallWithinAllowance` condition.
-Each call to the function will decrement the allowance balance by `1`.
+To enforce a rate limit on the number of calls to a function, use a `CallWithinAllowance` condition. Each call to the function will decrement the allowance balance by `1`.
