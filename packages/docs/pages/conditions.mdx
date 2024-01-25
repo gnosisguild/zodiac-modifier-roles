@@ -26,6 +26,8 @@ Specifies how to pluck the parameter value from calldata. It can be one of the f
 
 **`Calldata`** – Decode the value like `AbiEncoded`, but skip the first 4 bytes (function selector).
 
+**`None`** – Used with logical expressions. The `children` condition nodes inform how to interpret the current scope.
+
 ### `children`
 
 An array of sub conditions, used for any of the following purposes:
@@ -45,19 +47,56 @@ Defines the value to compare against (only used with comparison operators).
 
 ## Operators
 
-### `EqualTo`
+### Comparisons
+
+#### `EqualTo`
 
 Checks equality of the plucked value to a given comparison value.
 
-### `EqualToAvatar`
+#### `EqualToAvatar`
 
-Equivalent to using `EqualTo` with the avatar address as `compValue`. 
+Equivalent to using `EqualTo` with the avatar address as `compValue`.
 
 This extra operator is provided for convenience and optimization, since comparing with the avatar address is a common operation. The avatar address is available to the condition evaluation function and therefore does not need to be stored as a comparison value.
 
+### `Matches`
+
+Allows setting conditions on selected fields of tuple type parameters.
+Used with a `paramType` of `Calldata` it allows setting conditions on specific parameters of the function call.
+Used with a `paramType` of `AbiEncoded` it allows setting conditions on selected ABI encoded variables within a bytes value.
+
+### Array Expressions
+
+#### `ArraySome`
+
+Checks that at least one element of the array matches the condition.
+
+#### `ArrayEvery`
+
+Checks that every element of the array matches the condition.
+
+#### `ArraySubset`
+
+Checks that every element of the array passes at least one child condition.
+Every child condition must only be taken into account once, meaning that if multiple elements are supposed to match the same condition that condition must appear multiple times in the children.
+
+### Logical Expressions
+
+#### `And`
+
+Checks that every child condition evaluates to `true`.
+
+#### `Or`
+
+Checks that at least one of the child conditions evaluates to `true`.
+
+#### `Nor`
+
+Checks that every child condition evaluates to `false`.
+
 ### `Pass`
 
-Allows any value. Used for condition nodes that are required solely for informing how to decode complex type value. 
+Allows any value. Used for condition nodes that are required solely for informing how to decode complex type value.
 
 For example, defining the types of all fields of a tuple is necessary for correct decoding.
 
@@ -69,9 +108,9 @@ The following condition enforces that the Balancer [single swap](https://docs.ba
 
 <BalancerSwapExample />
 
-The root condition node generally targets the entire calldata range after the 4 bytes function selector. It uses `ParamType.AbiEncoded` for defining how to decode the bytes in that range.
+The root condition node generally targets the entire calldata range after the 4 bytes function selector. It uses a `ParamType.Calldata` matches structure defining how to decode the bytes in that range.
 
-We define `Operator.Matches` checks on both tuples. 
+We define `Operator.Matches` checks on both tuples.
 
 - For `singleSwap` an exact match on the `poolId` fields is required.
 - For the `assetIn` and `assetOut` fields, the values must be either `WETH` or `DAI` using `Operator.Or`.
