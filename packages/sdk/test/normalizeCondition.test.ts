@@ -14,7 +14,7 @@ const DUMMY_COMP = (id: number): Condition => ({
 })
 
 describe.only("normalizeCondition()", () => {
-  it("should flatten nested AND conditions", () => {
+  it("flattens nested AND conditions", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -43,7 +43,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should not flatten ORs in ANDs", () => {
+  it("does not flatten ORs in ANDs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -71,7 +71,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune equal branches in ANDs", () => {
+  it("prunes equal branches in ANDs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -85,7 +85,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune nested equal branches in ANDs", () => {
+  it("prunes nested equal branches in ANDs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -107,7 +107,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune single-child ANDs", () => {
+  it("prunes single-child ANDs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -117,7 +117,7 @@ describe.only("normalizeCondition()", () => {
     ).to.deep.equal(DUMMY_COMP(0))
   })
 
-  it("should non prune single-child NORs", () => {
+  it("does not prune single-child NORs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -131,7 +131,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune ANDs that become single child due to equal branch pruning", () => {
+  it("prunes ANDs that become single child due to equal branch pruning", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -148,7 +148,7 @@ describe.only("normalizeCondition()", () => {
     ).to.deep.equal(DUMMY_COMP(0))
   })
 
-  it("should enforce a canonical order for children in ANDs", () => {
+  it("enforces a canonical order for children in ANDs", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -164,7 +164,7 @@ describe.only("normalizeCondition()", () => {
     )
   })
 
-  it("should collapse condition subtrees unnecessarily describing static tuple structures", () => {
+  it("collapses condition subtrees unnecessarily describing static tuple structures", () => {
     const compValue = encodeAbiParameters(["(uint256)"], [[123]])
     expect(
       normalizeCondition({
@@ -183,7 +183,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune trailing Static Pass nodes on Calldata", () => {
+  it("prunes trailing Static Pass nodes on Calldata", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.Calldata,
@@ -201,7 +201,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune trailing Static Pass nodes on AbiEncoded", () => {
+  it("prunes trailing Static Pass nodes on AbiEncoded", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.AbiEncoded,
@@ -219,7 +219,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune trailing Static Pass nodes on dynamic tuples", () => {
+  it("prunes trailing Static Pass nodes on dynamic tuples", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.Tuple,
@@ -245,7 +245,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should not prune trailing Static Pass nodes on static tuples", () => {
+  it("does not prune trailing Static Pass nodes on static tuples", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.Calldata,
@@ -281,7 +281,7 @@ describe.only("normalizeCondition()", () => {
     })
   })
 
-  it("should prune even dynamic trailing Pass nodes on the toplevel Matches", () => {
+  it("prunes even dynamic trailing Pass nodes on the toplevel Matches", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.Calldata,
@@ -357,8 +357,6 @@ describe.only("normalizeCondition()", () => {
     ])
     const { condition } = functionVariants as FunctionPermissionCoerced
 
-    console.log(JSON.stringify(normalizeCondition(condition!), null, 2))
-
     expect(normalizeCondition(condition!)).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Or,
@@ -401,5 +399,32 @@ describe.only("normalizeCondition()", () => {
         },
       ],
     })
+  })
+
+  it("keeps all other normalizations when pushing down ORs (idempotency is preserved)", () => {
+    const [functionVariants] = mergeFunctionPermissions([
+      // by using a greater number of branches we have a higher likelihood of differences in the normalized branch orders
+      allow.mainnet.lido.stETH.transfer(
+        "0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0x1234123412341234123412341234123412341234"
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0x9876987698769876987698769876987698769876"
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0xdef1def1def1def1def1def1def1def1def1def1"
+      ),
+    ])
+    const { condition } = functionVariants as FunctionPermissionCoerced
+
+    const normalized = normalizeCondition(condition!)
+
+    // assert idempotency
+    expect(normalizeCondition(normalized)).to.deep.equal(normalized)
   })
 })

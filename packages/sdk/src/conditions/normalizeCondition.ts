@@ -15,13 +15,13 @@ export const normalizeCondition = (condition: Condition): Condition => {
     ? { ...condition, children: normalizedChildren }
     : condition
   result = collapseStaticTupleTypeTrees(result)
-  result = pushDownLogicalConditions(result)
   result = pruneTrailingPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
   result = normalizeChildrenOrder(result)
   result = deleteUndefinedFields(result)
+  result = pushDownLogicalConditions(result)
   return result
 }
 
@@ -182,6 +182,35 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
 
 /** push AND and OR conditions as far down the tree as possible without changing semantics */
 const pushDownLogicalConditions = (condition: Condition): Condition => {
+  if (
+    condition.operator === Operator.And ||
+    condition.operator === Operator.Or
+  ) {
+    if (!condition.children?.length) return condition
+    // we should at least have two branches since this function runs after `unwrapSingleBranches()`
+    if (condition.children.length === 1) throw new Error("invariant violation")
+
+    // use first branch as reference and check if the others are equivalent beyond a single nested hinge node
+    const [first, ...others] = condition.children
+    if (first.operator === Operator.Matches) {
+      // bail on mixed expression types
+      if (!others.every((o) => o.operator === Operator.Matches)) {
+        return condition
+      }
+    }
+
+    if (first.operator === Operator.And) {
+      // bail on mixed expression types
+      if (!others.every((o) => o.operator === Operator.And)) {
+        return condition
+      }
+    }
+
+    // if we pushed down, we need to re-normalize the children
+
+    // (we need to push as far as possible in one go, otherwise we lose track of original branches
+  }
+
   return condition
 }
 
