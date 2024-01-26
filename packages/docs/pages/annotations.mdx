@@ -7,7 +7,7 @@ An annotation is defined by two fields:
 - `uri` - An identifier specifying the subset of permissions to be annotated. A `GET` request to this URI is expected to return an array of permissions.
 - `schema` - The URL of an OpenAPI v3 schema document describing the API, including the endpoint specified in `uri`.
 
-Annotations, being an auxiliary concept, are not stored in the Roles contract. Instead, they are accessible to the Roles subgraph via [Poster](https://eips.ethereum.org/EIPS/eip-3722).
+Annotations, being an auxiliary concept, are not stored in the Roles contract. Instead, they are posted to the blockchain via [Poster](https://eips.ethereum.org/EIPS/eip-3722) to become accessible to the Roles subgraph.
 
 ## Resolving Annotations
 
