@@ -1,18 +1,19 @@
 # Annotations
 
-Managing and auditing large sets of permissions can be difficult. To help with this, we've added the ability to add permission annotations to roles.
+Managing and auditing large sets of permissions can be difficult. To address this challenge, we've introduced the ability to add permission annotations to roles.
+
 An annotation is defined by two fields:
 
-- `uri` - The URI identifies the subset of permissions to be annotated. A `GET` request to this URI is expected to return an array of permissions.
-- `schema` - The URL of an OpenAPI v3 schema document describing the API including the endpoint given in `uri`.
+- `uri` - An identifier specifying the subset of permissions to be annotated. A `GET` request to this URI is expected to return an array of permissions.
+- `schema` - The URL of an OpenAPI v3 schema document describing the API, including the endpoint specified in `uri`.
 
-Annotations are an auxiliary concept and as such are not stored in the Roles contract.
-Instead, they are made available to the Roles subgraph via [Poster](https://eips.ethereum.org/EIPS/eip-3722).
+Annotations, being an auxiliary concept, are not stored in the Roles contract. Instead, they are posted to the blockchain via [Poster](https://eips.ethereum.org/EIPS/eip-3722) to become accessible to the Roles subgraph.
 
-## Resolving annotations
+## Resolving Annotations
 
-The Roles app resolves annotations by fetching both, the permissions to be annotated from `uri` and the `schema` document.
+The Roles app resolves annotations by fetching both the permissions to be annotated from `uri` and the `schema` document.
+
 If the given role is not granted all of the permissions scoped by the annotation, the annotation will be ignored.
 
 From the `schema` document, the Roles app extracts the [Operation object](https://swagger.io/specification/#operation-object) representing the `uri` endpoint.
-This information informs the generic rendering of the annotated permission set in the app.
+This information guides the generic rendering of the annotated permission set in the app.
