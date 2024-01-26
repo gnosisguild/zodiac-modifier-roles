@@ -19,7 +19,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           path-to-signatures: "signatures/version1/cla.json"
-          path-to-document: "https://github.com/gnosis/CLA"
+          path-to-document: "https://github.com/gnosisguild/CLA"
           # branch should not be protected
           branch: "cla-signatures"
           allowlist: auryn-macmillan, nginnever,*bot # may need to update this expression if we add new bots
