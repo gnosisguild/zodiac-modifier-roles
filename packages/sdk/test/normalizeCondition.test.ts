@@ -1,7 +1,7 @@
 import { expect } from "chai"
 
 import { normalizeCondition } from "../src/conditions"
-import { FunctionPermissionCoerced } from "../src/permissions"
+import { FunctionPermissionCoerced, c } from "../src/permissions"
 import { allow } from "../src/permissions/authoring/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { Condition, Operator, ParameterType } from "../src/types"
@@ -337,6 +337,65 @@ describe.only("normalizeCondition()", () => {
               paramType: ParameterType.Static,
               compValue:
                 "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+            },
+          ],
+        },
+      ],
+    })
+  })
+
+  it("does not change logical operator semantics when pushing down ORs", () => {
+    const [functionVariants] = mergeFunctionPermissions([
+      allow.mainnet.lido.stETH.transfer(
+        "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+        c.lt(1000)
+      ),
+      allow.mainnet.lido.stETH.transfer(
+        "0x1234123412341234123412341234123412341234",
+        c.lt(2000)
+      ),
+    ])
+    const { condition } = functionVariants as FunctionPermissionCoerced
+
+    console.log(JSON.stringify(normalizeCondition(condition!), null, 2))
+
+    expect(normalizeCondition(condition!)).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
+              compValue:
+                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.LessThan,
+              compValue:
+                "0x00000000000000000000000000000000000000000000000000000000000003e8",
+            },
+          ],
+        },
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
+              compValue:
+                "0x0000000000000000000000001234123412341234123412341234123412341234",
+            },
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.LessThan,
+              compValue:
+                "0x00000000000000000000000000000000000000000000000000000000000007d0",
             },
           ],
         },

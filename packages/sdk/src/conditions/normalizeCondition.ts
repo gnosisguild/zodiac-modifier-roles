@@ -4,6 +4,10 @@ import { Condition, Operator, ParameterType } from "../types"
 
 import { conditionId } from "./conditionId"
 
+/**
+ * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
+ * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
+ **/
 export const normalizeCondition = (condition: Condition): Condition => {
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
   const normalizedChildren = condition.children?.map(normalizeCondition)
@@ -11,12 +15,13 @@ export const normalizeCondition = (condition: Condition): Condition => {
     ? { ...condition, children: normalizedChildren }
     : condition
   result = collapseStaticTupleTypeTrees(result)
+  result = pushDownLogicalConditions(result)
   result = pruneTrailingPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
   result = normalizeChildrenOrder(result)
-  result = pushDownLogicalConditions(result)
+  result = deleteUndefinedFields(result)
   return result
 }
 
@@ -175,8 +180,15 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
   return condition
 }
 
-/** push logical conditions as far down the tree as possible without changing semantics */
+/** push AND and OR conditions as far down the tree as possible without changing semantics */
 const pushDownLogicalConditions = (condition: Condition): Condition => {
+  return condition
+}
+
+const deleteUndefinedFields = (condition: Condition): Condition => {
+  if ("children" in condition && !condition.children) delete condition.children
+  if ("compValue" in condition && !condition.compValue)
+    delete condition.compValue
   return condition
 }
 
