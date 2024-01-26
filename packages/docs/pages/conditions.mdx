@@ -134,7 +134,7 @@ Checks that every child condition evaluates to `false`.
 
 [Allowances](/allowances) serve as a mechanism for tracking quotas.
 Each allowance expression references a specific allowance in the `compValue` field by its `bytes32` key.
-After a call passes the _entire_ condition and has been successfully executed, all allowances consumed within the condition will be updated.
+After a call passes the condition and has been successfully executed, all allowances consumed within the condition will be updated.
 If the condition evaluates to `false` or executing the call reverts, allowances will not be updated.
 
 #### `WithinAllowance`
