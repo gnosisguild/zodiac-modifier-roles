@@ -9,7 +9,7 @@ const themeConfig = {
     link: "https://github.com/gnosis/zodiac-modifier-roles",
   },
   docsRepositoryBase:
-    "https://github.com/gnosis/zodiac-modifier-roles/tree/main/docs/pages",
+    "https://github.com/gnosis/zodiac-modifier-roles/tree/main/packages/docs",
   useNextSeoProps() {
     const { asPath } = useRouter();
     if (asPath !== "/") {
