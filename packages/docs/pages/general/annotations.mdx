@@ -17,3 +17,25 @@ If the given role is not granted all of the permissions scoped by the annotation
 
 From the `schema` document, the Roles app extracts the [Operation object](https://swagger.io/specification/#operation-object) representing the `uri` endpoint.
 This information guides the generic rendering of the annotated permission set in the app.
+
+## Example
+
+The [DeFi Kit]() project provides curates permission sets for common interactions with different DeFi protocols.
+It uses annotations to indicate which permissions belonging to a certain protocol action.
+
+For example, a `swap` action of the `cowswap` protocol would be annotated as follows:
+
+```json
+{
+  "uri": "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?sell=0x6B175474E89094C44Da98b954EedeAC495271d0F&buy=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  "schema": "https://kit.karpatkey.com/api/v1/openapi.json"
+}
+```
+
+The `uri` includes all parameters of the DeFi Kit action returns the resulting set of permissions:
+
+https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?sell=0x6B175474E89094C44Da98b954EedeAC495271d0F&buy=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+
+The schema information allows the Roles app to render the annotated permission set in an abstracted, user friendly way:
+
+< TODO: add Roles app screenshot showing the cowswap swap DeFi Kit action >
