@@ -1,14 +1,14 @@
-**📯 Legacy Zodiac Roles v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosis/zodiac-modifier-roles-v1)**
+**📯 Legacy Zodiac Roles v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosisguild/zodiac-modifier-roles-v1)**
 
 ---
 
 # Zodiac Roles Modifier
 
-[![Build Status](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosis/zodiac-modifier-roles/actions/workflows/ci.yml)
+[![Build Status](https://github.com/gnosisguild/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosisguild/zodiac-modifier-roles/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-modifier-roles/badge.svg?branch=main&cache_bust=1)](https://coveralls.io/github/gnosis/zodiac-modifier-roles?branch=main)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/gnosis/CODE_OF_CONDUCT)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/gnosisguild/CODE_OF_CONDUCT)
 
-The Roles Modifier belongs to the [Zodiac](https://github.com/gnosis/zodiac) collection of tools, which can be accessed through the Zodiac App available on [Safe](https://safe.global/).
+The Roles Modifier belongs to the [Zodiac](https://github.com/gnosisguild/zodiac) collection of tools, which can be accessed through the Zodiac App available on [Safe](https://safe.global/).
 
 If you have any questions about Zodiac, join the [Gnosis Guild Discord](https://discord.gg/wwmBWTgyEq). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates.
 
@@ -101,7 +101,7 @@ This monorepo uses [yarn workspaces](https://yarnpkg.com/features/workspaces) an
 
 Audits have been performed by the [G0 group](https://github.com/g0-group) and [Omniscia](https://omniscia.io).
 
-All identified issues have been resolved as of commit [a19c0ebda97f7d645335f2c386818546641f832b](https://github.com/gnosis/zodiac-modifier-roles/tree/a19c0ebda97f7d645335f2c386818546641f832b/packages/evm/contracts)
+All identified issues have been resolved as of commit [a19c0ebda97f7d645335f2c386818546641f832b](https://github.com/gnosisguild/zodiac-modifier-roles/tree/a19c0ebda97f7d645335f2c386818546641f832b/packages/evm/contracts)
 
 All audit reports are available at [packages/evm/docs](packages/evm/docs).
 

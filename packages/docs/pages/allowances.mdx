@@ -4,7 +4,7 @@ Allowances serve as a mechanism for enforcing spending limits or other types of 
 
 ## Structure
 
-Allowances are centrally defined and can be referenced from conditions. 
+Allowances are centrally defined and can be referenced from conditions.
 
 Each allowance is stored as a tuple of the following shape:
 
@@ -48,6 +48,6 @@ To define an allowance on any `uint` field in the transaction calldata, use a `W
 
 To define an allowance on the Ether `value` sent with the transaction, use an `EtherWithinAllowance` condition.
 
-### Call rate limits
+### Call Rate Limits
 
 To enforce a rate limit on the number of calls to a function, use a `CallWithinAllowance` condition. Each call to the function will decrement the allowance balance by `1`.

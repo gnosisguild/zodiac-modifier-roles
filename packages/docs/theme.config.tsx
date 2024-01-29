@@ -6,10 +6,10 @@ import styles from "./theme.module.css";
 const themeConfig = {
   logo: <span>Zodiac Roles</span>,
   project: {
-    link: "https://github.com/gnosis/zodiac-modifier-roles",
+    link: "https://github.com/gnosisguild/zodiac-modifier-roles",
   },
   docsRepositoryBase:
-    "https://github.com/gnosis/zodiac-modifier-roles/tree/main/docs/pages",
+    "https://github.com/gnosisguild/zodiac-modifier-roles/tree/main/packages/docs",
   useNextSeoProps() {
     const { asPath } = useRouter();
     if (asPath !== "/") {
