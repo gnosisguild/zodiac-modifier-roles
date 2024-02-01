@@ -23,7 +23,7 @@ task(
     SaltZero,
     deployer,
     "MultiSendUnwrapper",
-    2000000
+    2_000_000
   );
 
   const AvatarIsOwnerOfERC721 = await hre.ethers.getContractFactory(
@@ -38,7 +38,7 @@ task(
     SaltZero,
     deployer,
     "AvatarIsOwnerOfERC721",
-    1000000
+    1_000_000
   );
 
   console.log("Waiting 1 minute before etherscan verification start...");
