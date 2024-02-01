@@ -4,7 +4,7 @@ import { Contract, Signer } from "ethers";
 import { getCreate2Address, keccak256, parseEther } from "ethers/lib/utils";
 
 const GAS_LIMIT_FACTOR: { [key: number]: number } = {
-  42161: 10,
+  42161: 15,
 };
 
 export async function deployViaFactory(
