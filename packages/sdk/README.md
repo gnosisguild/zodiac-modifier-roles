@@ -46,7 +46,7 @@ Refer to the [eth-sdk docs](https://github.com/dethcrypto/eth-sdk#configuration)
 
 ### Define permissions
 
-You now have typed _allow kit_ at your disposal:
+You now have a typed _allow kit_ at your disposal:
 
 ```typescript
 import { allow } from "zodiac-roles-sdk/kit"
@@ -58,7 +58,7 @@ const permissions = [allow.mainnet.dai.approve(CURVE_3POOL)]
 
 ### Apply permissions
 
-Additional sdk function allow applying a set of permissions to a role:
+Additional SDK functions allow applying a set of permissions to a role:
 
 ```typescript
 import { applyPermissions } from "zodiac-roles-sdk"
