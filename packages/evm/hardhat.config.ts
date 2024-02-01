@@ -21,6 +21,7 @@ const {
   ETHERSCAN_API_KEY,
   GNOSISSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
+  ARBISCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -82,6 +83,10 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: "https://rpc.ankr.com/polygon_mumbai",
     },
+    arbitrum: {
+      ...sharedNetworkConfig,
+      url: "https://arb1.arbitrum.io/rpc",
+    },
   },
   etherscan: {
     apiKey: {
@@ -91,6 +96,7 @@ const config: HardhatUserConfig = {
       gnosis: GNOSISSCAN_API_KEY,
       matic: POLYGONSCAN_API_KEY,
       mumbai: POLYGONSCAN_API_KEY,
+      arbitrum: ARBISCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -115,6 +121,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-testnet.polygonscan.com/api",
           browserURL: "https://mumbai.polygonscan.com",
+        },
+      },
+      {
+        network: "arbitrum",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.arbiscan.io/api",
+          browserURL: "https://www.arbiscan.io",
         },
       },
     ],
