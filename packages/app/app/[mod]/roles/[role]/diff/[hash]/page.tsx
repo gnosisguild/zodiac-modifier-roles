@@ -16,6 +16,7 @@ import PageBreadcrumbs from "./breadcrumbs"
 import styles from "./page.module.css"
 import Flex from "@/ui/Flex"
 import CallData from "@/components/CallData"
+import { fetchOrInitRole } from "../../fetching"
 
 export default async function DiffPage({
   params,
@@ -28,13 +29,7 @@ export default async function DiffPage({
     notFound()
   }
 
-  let roleData = await fetchRole(
-    { ...mod, roleKey },
-    { next: { revalidate: 1 } }
-  )
-  if (!roleData) {
-    notFound()
-  }
+  let roleData = await fetchOrInitRole({ ...mod, roleKey })
 
   const entry = await kv.get<{
     targets: Target[]
