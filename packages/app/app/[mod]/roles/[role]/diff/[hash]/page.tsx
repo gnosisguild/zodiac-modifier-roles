@@ -206,6 +206,7 @@ const asTxBuilderInputValues = (result: Result) => {
   }
   return object
 }
+
 export interface ContractInput {
   internalType: string
   name: string
