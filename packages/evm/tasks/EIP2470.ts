@@ -3,17 +3,24 @@ import assert from "assert";
 import { Contract, Signer } from "ethers";
 import { getCreate2Address, keccak256, parseEther } from "ethers/lib/utils";
 
+const GAS_LIMIT_FACTOR: { [key: number]: number } = {
+  42161: 15,
+};
+
 export async function deployViaFactory(
   initCode: string,
   salt: string,
   deployer: Signer,
   displayName?: string,
-  gasLimit = 10000000
+  gasLimit = 10_000_000
 ): Promise<string> {
   await maybeDeployFactory(deployer);
 
   const provider = deployer.provider;
   assert(provider);
+
+  const { chainId } = await provider.getNetwork();
+  const gasLimitFactor = GAS_LIMIT_FACTOR[chainId] || 1;
 
   const factory = new Contract(
     factoryInfo.address,
@@ -33,7 +40,9 @@ export async function deployViaFactory(
   }
 
   const receipt = await (
-    await factory.deploy(initCode, salt, { gasLimit })
+    await factory.deploy(initCode, salt, {
+      gasLimit: gasLimit * gasLimitFactor,
+    })
   ).wait();
 
   if (receipt?.status == 1) {

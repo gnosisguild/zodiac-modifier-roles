@@ -15,6 +15,7 @@ export default function PageBreadcrumbs({
   if (!roleKey) {
     throw new Error("Invalid role param")
   }
+
   return (
     <>
       <ParentPageBreadcrumbs mod={mod} />

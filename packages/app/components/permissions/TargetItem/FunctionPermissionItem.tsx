@@ -1,7 +1,7 @@
 import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 import { whatsabi } from "@shazow/whatsabi"
 import { cache } from "react"
-import { ethers } from "ethers"
+import { createPublicClient, http } from "viem"
 import { FunctionFragment, Interface } from "ethers/lib/utils"
 import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
@@ -78,10 +78,17 @@ const AbiFunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & { abi: FunctionFragment }
 > = async ({ condition, delegatecall, send, abi }) => {
   const signature = abi.format("full")
+  const signatureWithoutReturns = signature.slice(
+    0,
+    signature.indexOf(" returns ") || undefined
+  )
   const params =
     abi.inputs.length === 0
       ? undefined
-      : signature.slice(signature.indexOf("(") + 1, signature.lastIndexOf(")"))
+      : signature.slice(
+          signatureWithoutReturns.indexOf("(") + 1,
+          signatureWithoutReturns.lastIndexOf(")")
+        )
   return (
     <Flex direction="column" gap={3}>
       <div>
@@ -110,10 +117,10 @@ const AbiFunctionPermissionItem: React.FC<
 
 const fetchAbi = cache(async (address: string, chainId: ChainId) => {
   const chain = CHAINS[chainId]
-  const provider = new ethers.providers.JsonRpcProvider(
-    chain.rpcUrls.default.http[0],
-    { chainId, name: chain.name }
-  )
+  const client = createPublicClient({
+    chain,
+    transport: http(),
+  })
 
   const abiLoader = new whatsabi.loaders.EtherscanABILoader({
     baseURL: chain.blockExplorerAbiUrl,
@@ -121,7 +128,7 @@ const fetchAbi = cache(async (address: string, chainId: ChainId) => {
   })
 
   const result = await whatsabi.autoload(address, {
-    provider,
+    provider: client,
 
     // * Optional loaders:
     abiLoader,
@@ -140,7 +147,6 @@ const fetchAbi = cache(async (address: string, chainId: ChainId) => {
     followProxies: true,
     // enableExperimentalMetadata: false,
   })
-
   const iface = new Interface(result.abi)
 
   return { address: result.address, abi: iface }

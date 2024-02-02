@@ -9,6 +9,7 @@ import MembersList from "@/components/MembersList"
 import PermissionsList from "@/components/permissions/PermissionsList"
 import Layout from "@/components/Layout"
 import PageBreadcrumbs from "./breadcrumbs"
+import { fetchOrInitRole } from "./fetching"
 
 export default async function RolePage({
   params,
@@ -21,18 +22,7 @@ export default async function RolePage({
     notFound()
   }
 
-  let data = await fetchRole({ ...mod, roleKey }, { next: { revalidate: 1 } })
-  if (!data) {
-    // If the role doesn't exist, we check if the mod exists.
-    // In that case we show an empty role page so the user can start populating it.
-    // Otherwise we show a 404.
-    const modExists = await fetchRolesMod(mod, { next: { revalidate: 1 } })
-    if (!modExists) {
-      notFound()
-    }
-
-    data = newRole(roleKey)
-  }
+  let data = await fetchOrInitRole({ ...mod, roleKey })
 
   return (
     <Layout head={<PageBreadcrumbs mod={mod} role={params.role} />}>
@@ -55,11 +45,3 @@ export default async function RolePage({
     </Layout>
   )
 }
-
-const newRole = (roleKey: `0x${string}`): Role => ({
-  key: roleKey,
-  members: [],
-  targets: [],
-  annotations: [],
-  allowances: [],
-})

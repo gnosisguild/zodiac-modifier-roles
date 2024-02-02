@@ -4,7 +4,7 @@ import {
   sepolia,
   // optimism,
   // avalanche,
-  // arbitrum,
+  arbitrum,
   // bsc,
   polygon,
   polygonMumbai,
@@ -42,12 +42,12 @@ export const CHAINS = {
   //   blockExplorerAbiUrl: "https://api.snowtrace.io/api",
   //   blockExplorerApiKey: "IAST9REKWMIW1QSE2M7K2IKKAZVNQPHC1U",
   // },
-  // [arbitrum.id]: {
-  //   ...arbitrum,
-  //   prefix: "arb1",
-  //   blockExplorerAbiUrl: "https://api.arbiscan.io/api",
-  //   blockExplorerApiKey: "CSITWCYI9UDAJ7QS92FNVJ2XQP5B23P4J9",
-  // },
+  [arbitrum.id]: {
+    ...arbitrum,
+    prefix: "arb1",
+    blockExplorerAbiUrl: "https://api.arbiscan.io/api",
+    blockExplorerApiKey: "CSITWCYI9UDAJ7QS92FNVJ2XQP5B23P4J9",
+  },
   // [bsc.id]: {
   //   ...bsc,
   //   prefix: "bnb",
