@@ -55,6 +55,7 @@ export default async function DiffPage({
       currentTargets: roleData.targets,
       log: logCall,
     })),
+
     // TODO: these calls go to a different contract, so must not be thrown into the same bag
     // ...(await applyAnnotations(roleKey, entry.annotations, {
     //   ...mod,
@@ -205,6 +206,7 @@ const asTxBuilderInputValues = (result: Result) => {
   }
   return object
 }
+
 export interface ContractInput {
   internalType: string
   name: string
