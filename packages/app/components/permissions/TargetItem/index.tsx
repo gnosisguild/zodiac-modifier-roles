@@ -58,7 +58,8 @@ const TargetItem: React.FC<{
           (permissions as FunctionPermissionCoerced[]).map((permission) => (
             <FunctionPermissionItem
               key={permission.selector}
-              {...permission}
+              targetAddress={permission.targetAddress}
+              selector={permission.selector}
               diff={diff?.get(permission)?.flag}
               modified={
                 diff?.get(permission)?.modified as
