@@ -31,7 +31,7 @@
     "react-icons": "^4.10.1",
     "typescript": "^5.3.3",
     "viem": "^2.7.1",
-    "wagmi": "^1.3.10",
+    "wagmi": "^2.5.5",
     "zodiac-roles-sdk": "workspace:*"
   }
 }
