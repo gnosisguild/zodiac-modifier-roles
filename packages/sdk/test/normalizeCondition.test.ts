@@ -330,13 +330,13 @@ describe.only("normalizeCondition()", () => {
               operator: Operator.EqualTo,
               paramType: ParameterType.Static,
               compValue:
-                "0x0000000000000000000000001234123412341234123412341234123412341234",
+                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
             },
             {
               operator: Operator.EqualTo,
               paramType: ParameterType.Static,
               compValue:
-                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+                "0x0000000000000000000000001234123412341234123412341234123412341234",
             },
           ],
         },
@@ -403,7 +403,7 @@ describe.only("normalizeCondition()", () => {
 
   it("keeps all other normalizations when pushing down ORs (idempotency is preserved)", () => {
     const [functionVariants] = mergeFunctionPermissions([
-      // by using a greater number of branches we have a higher likelihood of differences in the normalized branch orders
+      // by using a greater number of branches we increase likelihood of differences in the normalized branch orders
       allow.mainnet.lido.stETH.transfer(
         "0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"
       ),
