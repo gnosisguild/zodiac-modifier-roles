@@ -6,6 +6,7 @@
   --spacing-5: 48px;
 
   --border-color: rgba(217, 212, 173, 0.3);
+  --bg-color: rgba(217, 212, 173, 0.1);
 
   --condition-indent: 24px;
 }
@@ -27,9 +28,9 @@ body::before {
   width: 100vw;
   background: linear-gradient(
     108.86deg,
-    rgba(26, 33, 66, 0.85) 6.24%,
-    rgba(12, 19, 8, 0.85) 53.08%,
-    rgba(37, 6, 4, 0.85) 96.54%
+    rgb(12 16 32 / 85%) 6.24%,
+    rgb(8 14 5 / 85%) 53.08%,
+    rgb(24 4 3 / 85%) 96.54%
   );
 }
 
@@ -90,7 +91,7 @@ select {
 }
 
 input:hover:enabled,
-textarea:hover:enabled. select:hover:enabled {
+textarea:hover:enabled select:hover:enabled {
   border-color: white;
 }
 

@@ -6,7 +6,7 @@
   min-width: 0; /* prevent content from overflowing container (see: https://stackoverflow.com/questions/36230944/prevent-flex-items-from-overflowing-a-container) */
 }
 .bg {
-  background-color: rgba(217, 212, 173, 0.1);
+  background-color: var(--bg-color);
   background-clip: padding-box;
   backdrop-filter: blur(8px);
 }

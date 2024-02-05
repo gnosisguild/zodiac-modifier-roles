@@ -15,7 +15,7 @@
   bottom: 0;
   left: 0;
   width: var(--condition-indent);
-  background-color: rgba(217, 212, 173, 0.1);
+  background-color: var(--bg-color);
 }
 
 .logicalBranchSeparator {

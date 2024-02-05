@@ -1,10 +1,11 @@
 import { ReactNode } from "react"
 import cn from "classnames"
 import Flex from "@/ui/Flex"
-import Box from "@/ui/Box"
 import ConnectWallet from "@/components/ConnectWallet"
-import { LinkButton } from "@/ui/Button"
 import classes from "./style.module.css"
+import Image from "next/image"
+import BreadcrumbDivider from "@/ui/BreadcrumbDivider"
+import Link from "next/link"
 
 const Layout: React.FC<{
   head?: ReactNode
@@ -14,14 +15,21 @@ const Layout: React.FC<{
   <div className={classes.page}>
     <div className={classes.topBar}>
       <Flex gap={4} justifyContent="space-between" alignItems="center">
-        <Box>
-          <Flex gap={1} alignItems="center">
-            <Breadcrumb href="/">
-              <div className={classes.appLogo}>Zodiac Roles</div>
-            </Breadcrumb>
-            {head}
-          </Flex>
-        </Box>
+        <Flex gap={2} alignItems="center">
+          <Breadcrumb href="/" className={classes.homeBreadcrumb}>
+            <div className={classes.appLogo}>
+              <Image
+                src="/logo.svg"
+                alt="Zodiac Roles Icon"
+                width={40}
+                height={40}
+              />
+              Zodiac Roles
+            </div>
+          </Breadcrumb>
+          {head && <BreadcrumbDivider />}
+          {head}
+        </Flex>
         <ConnectWallet />
       </Flex>
     </div>
@@ -33,11 +41,18 @@ const Layout: React.FC<{
 
 export default Layout
 
-export const Breadcrumb: React.FC<{ href: string; children: ReactNode }> = ({
-  href,
-  children,
-}) => (
-  <LinkButton className={classes.breadcrumb} href={href}>
-    {children}
-  </LinkButton>
-)
+export const Breadcrumb: React.FC<{
+  href?: string
+  children: ReactNode
+  className?: string
+  isLink?: boolean
+}> = ({ href, children, className }) => {
+  if (href) {
+    return (
+      <Link className={cn(classes.breadcrumb, className)} href={href}>
+        {children}
+      </Link>
+    )
+  }
+  return <div className={cn(classes.breadcrumb, className)}>{children}</div>
+}

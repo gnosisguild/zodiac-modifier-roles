@@ -2,3 +2,13 @@
   border: 1px solid var(--border-color);
   padding: var(--spacing-1);
 }
+
+.breadcrumb .blockie {
+  height: 16px;
+  border: 0;
+  padding: 0;
+}
+
+.breadcrumb .addressContainer {
+  height: fit-content;
+}

@@ -10,7 +10,7 @@
 .topBar {
   flex-grow: 0;
   flex-shrink: 0;
-  padding: 32px 32px 16px 32px;
+  padding: 16px;
 }
 
 .main {
@@ -21,18 +21,51 @@
   height: calc(100vh - 102px);
 }
 
-a.breadcrumb {
-  display: flex;
+.homeBreadcrumb {
+  flex-direction: row;
   align-items: center;
-  padding: var(--spacing-2);
-  height: 50px;
+}
+
+.breadcrumb label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 0px 5px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: start;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  text-decoration: none;
+  padding: 0;
   white-space: nowrap;
   background: none;
-  border-width: 1px;
-  background-color: rgba(217, 212, 173, 0.1);
+  border: none;
+  padding: var(--spacing-2);
+}
+
+a.breadcrumb:hover {
+  background-color: var(--bg-color);
+  color: white;
+}
+
+.breadcrumb label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 0px 5px;
 }
 
 .appLogo {
-  width: 140px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appLogo img {
+  margin-left: -1%;
 }

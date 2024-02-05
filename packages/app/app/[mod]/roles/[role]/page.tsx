@@ -14,7 +14,7 @@ import { fetchOrInitRole } from "./fetching"
 export default async function RolePage({
   params,
 }: {
-  params: { mod: string; role: string }
+  params: { mod: string; role: string; hash?: string }
 }) {
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
@@ -25,7 +25,7 @@ export default async function RolePage({
   let data = await fetchOrInitRole({ ...mod, roleKey })
 
   return (
-    <Layout head={<PageBreadcrumbs mod={mod} role={params.role} />}>
+    <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main className={styles.main}>
         <Flex gap={1} className={styles.container}>
           <Box p={3} className={styles.members}>
