@@ -62,32 +62,31 @@ const Address: React.FC<Props> = ({
       <div className={classes.address} title={checksumAddress}>
         {displayAddress}
       </div>
-      {copyToClipboard ||
-        (explorerLink && (
-          <Flex gap={0} alignItems="center">
-            {copyToClipboard && (
-              <IconButton
-                title="Copy to clipboard"
-                onClick={() => {
-                  copy(checksumAddress)
-                }}
-              >
-                <RiFileCopyLine />
-              </IconButton>
-            )}
-            {explorer && (
-              <IconLinkButton
-                href={`${explorer.url}/search?q=${address}`}
-                target="_blank"
-                className={classes.link}
-                title={`View on ${explorer.name}`}
-                rel="noreferrer"
-              >
-                <RiExternalLinkLine />
-              </IconLinkButton>
-            )}
-          </Flex>
-        ))}
+      {(copyToClipboard || explorerLink) && (
+        <Flex gap={0} alignItems="center">
+          {copyToClipboard && (
+            <IconButton
+              title="Copy to clipboard"
+              onClick={() => {
+                copy(checksumAddress)
+              }}
+            >
+              <RiFileCopyLine />
+            </IconButton>
+          )}
+          {explorer && (
+            <IconLinkButton
+              href={`${explorer.url}/search?q=${address}`}
+              target="_blank"
+              className={classes.link}
+              title={`View on ${explorer.name}`}
+              rel="noreferrer"
+            >
+              <RiExternalLinkLine />
+            </IconLinkButton>
+          )}
+        </Flex>
+      )}
     </Flex>
   )
 }
