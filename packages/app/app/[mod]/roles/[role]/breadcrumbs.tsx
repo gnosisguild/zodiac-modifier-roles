@@ -33,12 +33,11 @@ export default function PageBreadcrumbs({
       >
         <label>Role</label>
         <Flex direction="column" gap={0}>
-          {role && (
-            <div className={classes.roleName}>{role !== roleKey && role}</div>
-          )}
-          <Flex gap={0} alignItems="center" className={classes.roleKey}>
+          {role && role !== roleKey ? (
+            <div className={classes.roleName}>{role}</div>
+          ) : (
             <small>{roleKey}</small>
-          </Flex>
+          )}
         </Flex>
       </Breadcrumb>
     </>

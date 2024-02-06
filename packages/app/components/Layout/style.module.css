@@ -58,6 +58,7 @@ a.breadcrumb:hover {
   background-color: var(--bg-color);
   width: fit-content;
   padding: 0px 5px;
+  margin-left: -2px;
 }
 
 .appLogo {
