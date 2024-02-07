@@ -30,6 +30,7 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
           <h1>
             <Address
               address={mod.address}
+              chainId={mod.chainId}
               explorerLink
               copyToClipboard
               displayFull
