@@ -21,7 +21,7 @@ export default function PageBreadcrumbs({
 
   return (
     <>
-      <ParentPageBreadcrumbs mod={mod} />
+      <ParentPageBreadcrumbs mod={mod} isLink={true} />
       <BreadcrumbDivider />
       <Breadcrumb
         href={

@@ -3,10 +3,16 @@ import Address from "@/ui/Address"
 import { Mod } from "../params"
 import classes from "./page.module.css"
 
-export default function PageBreadcrumbs({ mod }: { mod: Mod }) {
+export default function PageBreadcrumbs({
+  mod,
+  isLink = false,
+}: {
+  mod: Mod
+  isLink?: boolean
+}) {
   return (
     <Breadcrumb
-      href={`/${mod.chainPrefix}:${mod.address}`}
+      href={isLink ? `/${mod.chainPrefix}:${mod.address}` : undefined}
       className={classes.breadcrumb}
     >
       <label>Roles Instance</label>

@@ -21,6 +21,7 @@ interface Props {
   copyToClipboard?: boolean
   className?: string
   blockieClassName?: string
+  addressClassName?: string
 }
 
 const VISIBLE_START = 5
@@ -41,6 +42,7 @@ const Address: React.FC<Props> = ({
   displayFull,
   className,
   blockieClassName,
+  addressClassName,
 }) => {
   const explorer =
     explorerLink && chainId && CHAINS[chainId]?.blockExplorers.default
@@ -59,7 +61,10 @@ const Address: React.FC<Props> = ({
       <Box rounded className={cn(classes.blockieContainer, blockieClassName)}>
         {address && <Blockie address={address} className={classes.blockies} />}
       </Box>
-      <div className={classes.address} title={checksumAddress}>
+      <div
+        className={cn(classes.address, addressClassName)}
+        title={checksumAddress}
+      >
         {displayAddress}
       </div>
       {(copyToClipboard || explorerLink) && (

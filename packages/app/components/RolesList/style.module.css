@@ -1,14 +1,63 @@
+.header {
+  background: var(--bg-color);
+  padding: var(--spacing-3);
+}
+
+.header h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.roleFilter {
+  flex-grow: 1;
+  max-width: 400px;
+  background-color: var(--bg-color);
+  position: relative;
+}
+
+.roleFilter .magnifyingGlass {
+  height: 20px;
+  stroke: var(--border-color);
+  position: absolute;
+  left: 12px;
+  top: 12px;
+}
+
+.roleFilter input {
+  width: 100%;
+  height: auto;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 12px;
+  padding: 10px 10px;
+  padding-left: 50px;
+  border: 1px solid var(--border-color);
+  font-family: monospace;
+  box-sizing: border-box;
+}
+
+.roleFilter input:focus {
+  border: 1px solid white;
+  filter: brightness(1.5);
+}
+
+.roleFilter input:hover {
+  filter: brightness(1.5);
+}
+
 .row {
   text-decoration: none;
   color: white;
-  border-bottom: 1px solid rgba(217, 212, 173, 0.3);
   display: flex;
   justify-content: flex-start;
   align-items: normal;
+  cursor: pointer;
+  background: var(--bg-color);
 }
 
 .row:hover {
-  background-color: rgba(217, 212, 173, 0.02);
+  background: var(--bg-color-hover);
   color: white;
 }
 

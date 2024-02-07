@@ -48,15 +48,36 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
   }
 
   return (
-    <Flex direction="column" gap={2}>
-      <input
-        type="search"
-        placeholder="Filter by role key or member/target address"
-        value={query}
-        onChange={(ev) => setQuery(ev.target.value)}
-      />
+    <Flex direction="column" gap={2} className={classes.container}>
+      <Flex
+        className={classes.header}
+        justifyContent="space-between"
+        gap={0}
+        alignItems="center"
+      >
+        <h2>Roles</h2>
+        <div className={classes.roleFilter}>
+          <svg
+            viewBox="0 0 61 61"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={classes.magnifyingGlass}
+          >
+            <path
+              d="M58 58L37.2886 37.2886M37.2886 37.2886C40.8174 33.7598 43 28.8848 43 23.5C43 12.7304 34.2696 4 23.5 4C12.7304 4 4 12.7304 4 23.5C4 34.2696 12.7304 43 23.5 43C28.8848 43 33.7598 40.8174 37.2886 37.2886Z"
+              strokeWidth="8"
+            />
+          </svg>
+          <input
+            type="search"
+            placeholder="Filter by role key or member/target address"
+            value={query}
+            onChange={(ev) => setQuery(ev.target.value)}
+          />
+        </div>
+      </Flex>
 
-      <Flex direction="column" gap={0}>
+      <Flex direction="column" gap={2}>
         {matchingRoles.map((role) => {
           const parsedKey = tryParseBytes32String(role.key)
           return (

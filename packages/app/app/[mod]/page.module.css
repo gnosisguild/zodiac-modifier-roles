@@ -1,8 +1,3 @@
-.main {
-  border: 1px solid var(--border-color);
-  padding: var(--spacing-1);
-}
-
 .breadcrumb .blockie {
   height: 16px;
   border: 0;
@@ -11,4 +6,38 @@
 
 .breadcrumb .addressContainer {
   height: fit-content;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 24px;
+  line-height: normal;
+  text-align: left;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.header label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 0px 5px;
+  margin-bottom: 5px;
+  margin-left: -2px;
+  display: block;
+}
+
+.header .modBlockie {
+  height: 24px;
+  border: 0;
+  padding: 0;
+}
+
+.header .modAddress {
+  font-size: 20px;
 }
