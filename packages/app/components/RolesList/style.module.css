@@ -50,10 +50,12 @@
   text-decoration: none;
   color: white;
   display: flex;
-  justify-content: flex-start;
-  align-items: normal;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-3);
   cursor: pointer;
   background: var(--bg-color);
+  padding: var(--spacing-3);
 }
 
 .row:hover {
@@ -61,25 +63,19 @@
   color: white;
 }
 
-.row > div {
-  padding: var(--spacing-3);
-}
-
 .parsedKey {
-  flex-grow: 1;
+  font-size: 20px;
 }
 
 .key code {
   width: 100px;
+  height: fit-content;
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0.7;
   font-family: var(--font-mono);
   font-size: 10px;
-}
-
-.members {
-  flex-grow: 1;
+  padding: 2px 5px;
 }
 
 .meta {
@@ -90,4 +86,9 @@
 .empty {
   text-align: center;
   padding: var(--spacing-3) 0;
+}
+
+.roleName {
+  width: 30%;
+  min-width: 250px;
 }

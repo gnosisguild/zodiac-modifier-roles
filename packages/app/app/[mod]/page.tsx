@@ -10,6 +10,7 @@ import Address from "@/ui/Address"
 import ChainIcon from "@/ui/ChainIcon"
 import Flex from "@/ui/Flex"
 import { CHAINS } from "../chains"
+import LabeledData from "@/ui/LabeledData"
 
 export default async function ModPage({ params }: { params: { mod: string } }) {
   const mod = parseModParam(params.mod)
@@ -26,25 +27,25 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
     <Layout head={<PageBreadcrumbs mod={mod} />}>
       <main>
         <div className={classes.header}>
-          <label>Roles Instance</label>
-          <h1>
-            <Address
-              address={mod.address}
-              chainId={mod.chainId}
-              explorerLink
-              copyToClipboard
-              displayFull
-              blockieClassName={classes.modBlockie}
-              addressClassName={classes.modAddress}
-            />
-          </h1>
-          <Flex gap={1} direction="column">
-            <label>Chain</label>
+          <LabeledData label="Roles Instance">
+            <h1>
+              <Address
+                address={mod.address}
+                chainId={mod.chainId}
+                explorerLink
+                copyToClipboard
+                displayFull
+                blockieClassName={classes.modBlockie}
+                addressClassName={classes.modAddress}
+              />
+            </h1>
+          </LabeledData>
+          <LabeledData label="Chain">
             <Flex gap={2} alignItems="center">
               <ChainIcon chainId={mod.chainId} width={20} />
               {CHAINS[mod.chainId].name}
             </Flex>
-          </Flex>
+          </LabeledData>
         </div>
         <RolesList roles={data.roles} mod={mod} />
       </main>

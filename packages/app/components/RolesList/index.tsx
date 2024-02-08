@@ -7,6 +7,7 @@ import Link from "next/link"
 import { parseBytes32String } from "ethers/lib/utils"
 import CopyButton from "@/ui/CopyButton"
 import { Mod } from "@/app/params"
+import LabeledData from "@/ui/LabeledData"
 
 interface RoleSummary {
   key: string
@@ -88,17 +89,15 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
               }/roles/${encodeURIComponent(parsedKey || role.key)}`}
               className={classes.row}
             >
-              <div className={classes.parseKey}>{parsedKey}</div>
-              <Flex className={classes.key} gap={1}>
-                <code>{role.key}</code>
-                <CopyButton small value={role.key} />
+              <Flex direction="column" gap={0} className={classes.roleName}>
+                <div className={classes.parsedKey}>{parsedKey}</div>
+                <Flex className={classes.key} gap={1} alignItems="center">
+                  <code>{role.key}</code>
+                  <CopyButton small value={role.key} />
+                </Flex>
               </Flex>
-              <div className={classes.members}>
-                {role.members.length} Members
-              </div>
-              <div className={classes.targets}>
-                {role.targets.length} Targets
-              </div>
+              <LabeledData label="Members">{role.members.length}</LabeledData>
+              <LabeledData label="Targets">{role.targets.length}</LabeledData>
               <div className={classes.meta}>
                 <RiArrowRightSLine />
               </div>

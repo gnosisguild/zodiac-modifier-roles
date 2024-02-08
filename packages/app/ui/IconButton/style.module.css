@@ -11,10 +11,15 @@
   cursor: pointer;
   box-sizing: border-box;
   font-size: 14px;
+  opacity: 0.6;
 }
 .button[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button:hover {
+  opacity: 1;
 }
 
 .danger {
