@@ -12,7 +12,7 @@ const Field: React.FC<{
   children: ReactNode
   disabled?: boolean
 }> = ({ label, title, labelFor, children, disabled = false }) => (
-  <div className={classNames({ [classes.disabled]: disabled })}>
+  <div className={classNames(classes.field, { [classes.disabled]: disabled })}>
     {label !== undefined ? (
       <label
         htmlFor={labelFor}

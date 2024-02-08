@@ -1,23 +1,28 @@
+.field {
+  width: 100%;
+}
+
 .labelContainer {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--spacing-2);
   align-items: flex-start;
+  background-color: var(--bg-color);
+  padding: var(--spacing-1) var(--spacing-2) var(--spacing-2) var(--spacing-2);
 }
 
 .fieldLabel {
-  margin: var(--spacing-2) var(--spacing-2) 0 0;
-  flex-grow: 1;
-  width: 100px;
-  /* text-align: right; */
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.7);
+
+  width: fit-content;
+  display: block;
 }
 
 .fieldBody {
-  width: 300px;
-  flex-grow: 4;
+  width: 100%;
 }
 
 .disabled {

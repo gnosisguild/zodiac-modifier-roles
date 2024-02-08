@@ -8,7 +8,6 @@
 .bg {
   background-color: var(--bg-color);
   background-clip: padding-box;
-  backdrop-filter: blur(8px);
 }
 
 .bg .bg {
