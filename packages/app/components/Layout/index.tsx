@@ -13,29 +13,52 @@ const Layout: React.FC<{
   noScroll?: true
 }> = ({ head, children, noScroll }) => (
   <div className={classes.page}>
-    <div className={classes.topBar}>
-      <Flex gap={4} justifyContent="space-between" alignItems="center">
-        <Flex gap={2} alignItems="center">
-          <Breadcrumb href="/" className={classes.homeBreadcrumb}>
-            <div className={classes.appLogo}>
-              <Image
-                src="/logo.svg"
-                alt="Zodiac Roles Icon"
-                width={40}
-                height={40}
-              />
-              Zodiac Roles
-            </div>
-          </Breadcrumb>
-          {head && <BreadcrumbDivider />}
-          {head}
+    <div>
+      <div className={classes.topBar}>
+        <Flex gap={4} justifyContent="space-between" alignItems="center">
+          <Flex gap={2} alignItems="center">
+            <Breadcrumb href="/" className={classes.homeBreadcrumb}>
+              <div className={classes.appLogo}>
+                <Image
+                  src="/logo.svg"
+                  alt="Zodiac Roles Icon"
+                  width={40}
+                  height={40}
+                />
+                Zodiac Roles
+              </div>
+            </Breadcrumb>
+            {head && <BreadcrumbDivider />}
+            {head}
+          </Flex>
+          <ConnectWallet />
         </Flex>
-        <ConnectWallet />
+      </div>
+      <div className={cn(classes.main, noScroll && classes.noScroll)}>
+        {children}
+      </div>
+    </div>
+    <footer className={classes.footer}>
+      <Flex gap={2} justifyContent="space-between" alignItems="center">
+        <Link href="https://github.com/gnosisguild/zodiac-modifier-roles">
+          <Flex gap={2} alignItems="center">
+            <Image src="/github.svg" alt="github logo" width={20} height={20} />
+            View on GitHub
+          </Flex>
+        </Link>
+        <Link href="https://gnosisguild.org">
+          <Flex gap={2} alignItems="center">
+            <Image
+              src="/gnosisguild.png"
+              alt="guild logo"
+              width={20}
+              height={20}
+            />
+            Built by Gnosis Guild
+          </Flex>
+        </Link>
       </Flex>
-    </div>
-    <div className={cn(classes.main, noScroll && classes.noScroll)}>
-      {children}
-    </div>
+    </footer>
   </div>
 )
 

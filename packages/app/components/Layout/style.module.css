@@ -1,6 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   height: 100vh;
   width: 100vw;
   min-width: 640px;
@@ -16,9 +17,6 @@
 .main {
   padding: var(--spacing-4);
   box-sizing: border-box;
-}
-.main.noScroll {
-  height: calc(100vh - 102px);
 }
 
 .homeBreadcrumb {
@@ -69,4 +67,20 @@ a.breadcrumb:hover {
 
 .appLogo img {
   margin-left: -1%;
+}
+
+.footer {
+  border-top: 1px solid var(--border-color);
+  margin: 0 var(--spacing-3);
+  padding: var(--spacing-3);
+}
+
+.footer a {
+  opacity: 0.7;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  opacity: 1;
 }
