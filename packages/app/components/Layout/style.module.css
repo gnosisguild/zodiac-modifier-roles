@@ -5,6 +5,8 @@
   height: 100vh;
   width: 100vw;
   min-width: 640px;
+  max-width: 2000px;
+  margin: 0 auto;
   overflow: auto;
 }
 
@@ -72,7 +74,7 @@ a.breadcrumb:hover {
 .footer {
   border-top: 1px solid var(--border-color);
   margin: 0 var(--spacing-3);
-  padding: var(--spacing-3);
+  padding: var(--spacing-3) 0;
 }
 
 .footer a {
