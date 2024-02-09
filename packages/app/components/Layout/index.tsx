@@ -25,7 +25,7 @@ const Layout: React.FC<{
                   width={40}
                   height={40}
                 />
-                Zodiac Roles
+                Zodiac Roles Modifier
               </div>
             </Breadcrumb>
             {head && <BreadcrumbDivider />}

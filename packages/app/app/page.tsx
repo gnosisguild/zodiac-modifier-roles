@@ -20,7 +20,7 @@ export default function AttachMod() {
     <Layout>
       <main className={classes.main}>
         <Flex direction="column" gap={3} className={classes.about}>
-          <h2>Granular permissions for smart accounts</h2>
+          <h2>Onchain permissions for smart accounts</h2>
           <p>
             The Roles mod allows any account to act on behalf of a smart
             account. Specify contracts, functions and parameters to securely
@@ -84,7 +84,7 @@ export default function AttachMod() {
                   <figure>📜</figure>
                   <Flex gap={2} direction="column">
                     <h4>Read the docs</h4>
-                    <p>Learn what Roles are and how to create permissions</p>
+                    <p>Learn how to create Roles with granular permissions</p>
                   </Flex>
                 </Flex>
               </Link>
@@ -96,7 +96,7 @@ export default function AttachMod() {
                   <figure>📯</figure>
                   <Flex gap={2} direction="column">
                     <h4>Read the blog post</h4>
-                    <p>Roles v2 is more customizable and more gas efficient</p>
+                    <p>Discover the power and versatility of Roles v2</p>
                   </Flex>
                 </Flex>
               </Link>
