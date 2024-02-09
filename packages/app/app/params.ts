@@ -1,11 +1,12 @@
 import { CHAINS } from "@/app/chains"
 import { formatBytes32String } from "ethers/lib/utils"
 import { isAddress } from "viem"
+import { ChainId } from "zodiac-roles-sdk"
 
 const chains = Object.values(CHAINS)
 
 export interface Mod {
-  chainId: number
+  chainId: ChainId
   chainPrefix: string
   address: `0x${string}`
 }
