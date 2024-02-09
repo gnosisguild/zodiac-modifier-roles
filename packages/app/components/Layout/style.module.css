@@ -36,7 +36,7 @@
 
 .breadcrumb {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   flex-direction: column;
   gap: var(--spacing-2);
   text-decoration: none;

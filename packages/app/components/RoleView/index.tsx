@@ -1,42 +1,45 @@
-"use client"
-
-import { Fragment } from "react"
-import { Tab } from "@headlessui/react"
-
+import { fetchOrInitRole } from "@/components/RoleView/fetching"
+import { Mod } from "@/app/params"
+import TabGroup from "@/ui/TabGroup"
+import PermissionsList from "../permissions/PermissionsList"
+import MembersList from "../MembersList"
+import { Suspense } from "react"
 import classes from "./style.module.css"
-import cn from "classnames"
 
 interface RoleViewProps {
-  PermissionsChildren: React.ReactNode
-  MembersChildren: React.ReactNode
+  mod: Mod
+  roleKey: `0x${string}`
 }
 
-const RoleView: React.FC<RoleViewProps> = ({
-  PermissionsChildren,
-  MembersChildren,
-}) => {
+const RoleView: React.FC<RoleViewProps> = async ({ mod, roleKey }) => {
+  let data = await fetchOrInitRole({ ...mod, roleKey })
   return (
-    <Tab.Group>
-      <Tab.List className={classes.tabGroup}>
-        <TabButton>Permissions</TabButton>
-        <TabButton>Members</TabButton>
-      </Tab.List>
-      <Tab.Panels>
-        <Tab.Panel>{PermissionsChildren}</Tab.Panel>
-        <Tab.Panel>{MembersChildren}</Tab.Panel>
-      </Tab.Panels>
-    </Tab.Group>
+    <Suspense fallback={<RoleViewLoading />}>
+      <TabGroup
+        tabs={["Permissions", "Members"]}
+        panels={[
+          <PermissionsList
+            targets={data.targets}
+            annotations={data.annotations}
+            chainId={mod.chainId}
+          />,
+          <MembersList members={data.members} chainId={mod.chainId} />,
+        ]}
+      />
+    </Suspense>
   )
 }
 
 export default RoleView
 
-const TabButton: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const RoleViewLoading: React.FC = () => {
   return (
-    <Tab as={Fragment}>
-      {({ selected }) => (
-        <button className={cn(selected && classes.selected)}>{children}</button>
-      )}
-    </Tab>
+    <div className={classes.loading}>
+      <ul>
+        <li>Permissions</li>
+        <li>Members</li>
+      </ul>
+      <div className={classes.placeholder} />
+    </div>
   )
 }
