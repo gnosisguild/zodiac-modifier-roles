@@ -1,0 +1,14 @@
+{
+    "getting-started": {
+        "title": "Getting started"
+    },
+    "architecture": {
+        "title": "Architecture"
+    },
+    "conditions": {
+        "title": "Conditions"
+    },
+    "api": {
+        "title": "API"
+    }
+}

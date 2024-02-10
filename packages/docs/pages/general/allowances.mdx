@@ -42,12 +42,12 @@ There are three different ways allowances can be used:
 
 ### Allowance on a `uint` field
 
-To define an allowance on any `uint` field in the transaction calldata, use a `WithinAllowance` condition.
+To define an allowance on any `uint` field in the transaction calldata, use a [`WithinAllowance`](/general/conditions#withinallowance) condition.
 
 ### Allowance on the Ether `value`
 
-To define an allowance on the Ether `value` sent with the transaction, use an `EtherWithinAllowance` condition.
+To define an allowance on the Ether `value` sent with the transaction, use an [`EtherWithinAllowance`](/general/conditions#etherwithinallowance) condition.
 
 ### Call Rate Limits
 
-To enforce a rate limit on the number of calls to a function, use a `CallWithinAllowance` condition. Each call to the function will decrement the allowance balance by `1`.
+To enforce a rate limit on the number of calls to a function, use a [`CallWithinAllowance`](/general/conditions#callwithinallowance) condition. Each call to the function will decrement the allowance balance by `1`.
