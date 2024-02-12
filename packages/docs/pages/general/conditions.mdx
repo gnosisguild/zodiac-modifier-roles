@@ -17,19 +17,15 @@ Each condition node is defined by the following properties:
 
 Specifies how to decode and pluck the parameter value from calldata. It can be one of the following:
 
-**`Static`** – Interpret the word currently in scope as a static value, i.e., a value with a fixed length padded to 32 bytes.
-
-**`Dynamic`** – Interpret the word currently in scope as an offset to a dynamic length value, i.e., `bytes` or `string`.
-
-**`Tuple`** – Decode the value as a tuple. The `children` condition nodes inform the types of the tuple's fields.
-
-**`Array`** – Interpret the word as an offset to a dynamic length array. The `children` condition nodes inform the array element type.
-
-**`AbiEncoded`** – Decode the value using standard ABI decoding. The `children` condition nodes inform the individual field types.
-
-**`Calldata`** – Decode the value like `AbiEncoded`, but skip the first 4 bytes (function selector).
-
-**`None`** – Used with logical expressions. The `children` condition nodes inform how to interpret the current scope.
+| Value            | Description                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **`Static`**     | Interpret the word currently in scope as a static value, i.e., a value with a fixed length padded to 32 bytes.           |
+| **`Dynamic`**    | Interpret the word currently in scope as an offset to a dynamic length value, i.e., `bytes` or `string`.                 |
+| **`Tuple`**      | Decode the value as a tuple. The `children` condition nodes inform the types of the tuple's fields.                      |
+| **`Array`**      | Interpret the word as an offset to a dynamic length array. The `children` condition nodes inform the array element type. |
+| **`AbiEncoded`** | Decode the value using standard ABI decoding. The `children` condition nodes inform the individual field types.          |
+| **`Calldata`**   | Decode the value like `AbiEncoded`, but skip the first 4 bytes (function selector).                                      |
+| **`None`**       | Used with logical expressions. The `children` condition nodes inform how to interpret the current scope.                 |
 
 ### `children`
 
