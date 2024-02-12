@@ -1,10 +1,19 @@
-# Zodiac Roles
+# Zodiac Roles Modifier
 
-Zodiac Roles is a powerful smart account toolkit that extends secure transaction permissions to any member address through flexible, customizable roles, implementable on nearly every existing onchain system. Featuring a smart contract module that attaches to any Safe, along with an SDK and subgraph, Zodiac Roles enables onchain entities of all sizes to tailor roles and permissions to their organizational needs, ensuring robust, secure, and seamless web3 transactions.
+Zodiac Roles Modifier is an onchain permissions module for smart accounts. With Roles, onchain entities can extend secure transaction permissions to any address through flexible, customizable roles — implementable on nearly any existing onchain system. The smart contract module attaches to any avatar (a Safe or other web3 account), enabling onchain entities of all sizes to tailor roles and permissions to their needs, ensuring robust, secure, and seamless web3 transactions.
+
+## Overview
+
+- **Zodiac Roles Modifier:** A smart contract module that allows onchain entities to create roles with granular permissions and grant them to any address.
+- **Zodiac Roles Toolkit:** An accompanying kit for developers to make building with Roles more powerful and interacting with it simpler.
+    - **SDK:** A TypeScript software development kit to programmatically manage and navigate roles and permissions
+    - **Subgraph:** A specialized querying tool to easily explore roles and permissions associated with any Zodiac Roles Modifier
+    
+_Note: Zodiac Roles Modifier is designed to work seamlessly with [Zodiac Pilot](https://pilot.gnosisguild.org/), a new paradigm in wallet-dapp interaction that allows authorized roles to easily craft multi-send batch transactions on behalf of an onchain entity through a simple interface._
 
 ## Core Benefits
 
-- **Role-Based Access Control:** Extends transaction permissions beyond owners/signers, allowing professionals like treasury managers to efficiently manage an org’s critical functions
+- **Role-Based Access Control:** Extends onchain permissions beyond owners/signers, allowing professionals like treasury managers to efficiently manage an org’s critical functions
 - **Streamlined Transaction Execution:** Enables permissioned transactions with clear parameters, eliminating the need for Safe owners/signers to approve every transaction
 - **Hyper Compatibility:** Allows onchain entities to implement nearly any access control pattern on top of nearly any existing onchain system
 - **Robust Security:** Ensures secure transaction environments through meticulous permission scoping and access control safeguards
@@ -17,11 +26,3 @@ Zodiac Roles is a powerful smart account toolkit that extends secure transaction
 - **Set Rate and Threshold Limits:** Set limits on how frequently a given role or permission can be used, along with thresholds for the scoped parameters granted by a given permission
 - **Execute Secure Transactions:** Authorize role members to perform secure transactions on behalf of the avatar (e.g. a Safe or other compatible smart account)
 - **Manage Roles & Permissions:** Manage roles and query permissions using the TypeScript SDK and integrated subgraph
-
-## What's in the Toolkit
-
-- **Roles Modifier v2:** Create roles with granular permissions and grant them to any address, even if they’re not an owner
-- **Roles SDK:** Leverage the TypeScript SDK to efficiently manage and navigate roles and permissions
-- **Roles Subgraph:** Access a specialized querying tool to easily explore roles and permissions associated with any Roles mod
-
-_Note: The Zodiac Roles toolkit can be combined with [Pilot](https://pilot.gnosisguild.org/), a new paradigm in wallet-dapp interaction that allows authorized roles to easily craft multi-send batch transactions on behalf of an onchain entity through a simple interface._
