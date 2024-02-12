@@ -89,7 +89,7 @@ const splitConditionRecursive = (
   }
 
   // Process children of ANDs
-  // They need to be equal or splitable
+  // They need to be equal or splittable
   if (combined.operator === Operator.And) {
     if (!combined.children || !split.children) {
       throw new Error("input conditions not normalized")
@@ -125,7 +125,7 @@ const splitConditionRecursive = (
   }
 
   // Process all children of matches and array conditions
-  // They need to be equal or splitable
+  // They need to be equal or splittable
   let didSplit = false
   const remainderChildren = combined.children.map((child, index) => {
     const splitChild = split.children && split.children[index]

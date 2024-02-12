@@ -49,7 +49,7 @@ export const fetchRolesMod = async (
   })
   const { data, error, errors } = await res.json()
 
-  if (error || errors[0]) {
+  if (error || (errors && errors[0])) {
     throw new Error(error || errors[0])
   }
 

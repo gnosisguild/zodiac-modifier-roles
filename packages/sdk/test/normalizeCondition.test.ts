@@ -13,7 +13,7 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-describe.only("normalizeCondition()", () => {
+describe("normalizeCondition()", () => {
   it("flattens nested AND conditions", () => {
     expect(
       normalizeCondition({
