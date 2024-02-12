@@ -4,7 +4,12 @@ import { useRouter } from "next/router";
 import styles from "./theme.module.css";
 
 const themeConfig = {
-  logo: <span>Zodiac Roles</span>,
+  logo: (
+    <div className={styles.header}>
+      <Image src="/logo.png" alt="Zodiac Roles Logo" width={30} height={30} />
+      Zodiac Roles Modifier
+    </div>
+  ),
   project: {
     link: "https://github.com/gnosisguild/zodiac-modifier-roles",
   },
