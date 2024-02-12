@@ -20,10 +20,12 @@ interface Props {
   chainId?: ChainId
   copyToClipboard?: boolean
   className?: string
+  blockieClassName?: string
+  addressClassName?: string
 }
 
-const VISIBLE_START = 4
-const VISIBLE_END = 4
+const VISIBLE_START = 5
+const VISIBLE_END = 5
 
 export const shortenAddress = (address: string): string => {
   const checksumAddress = getAddress(address)
@@ -39,6 +41,8 @@ const Address: React.FC<Props> = ({
   copyToClipboard,
   displayFull,
   className,
+  blockieClassName,
+  addressClassName,
 }) => {
   const explorer =
     explorerLink && chainId && CHAINS[chainId]?.blockExplorers.default
@@ -54,35 +58,40 @@ const Address: React.FC<Props> = ({
       gap={2}
       alignItems="center"
     >
-      <Box rounded className={classes.blockieContainer}>
+      <Box rounded className={cn(classes.blockieContainer, blockieClassName)}>
         {address && <Blockie address={address} className={classes.blockies} />}
       </Box>
-      <div className={classes.address} title={checksumAddress}>
+      <div
+        className={cn(classes.address, addressClassName)}
+        title={checksumAddress}
+      >
         {displayAddress}
       </div>
-      <Flex gap={0} alignItems="center">
-        {copyToClipboard && (
-          <IconButton
-            title="Copy to clipboard"
-            onClick={() => {
-              copy(checksumAddress)
-            }}
-          >
-            <RiFileCopyLine />
-          </IconButton>
-        )}
-        {explorer && (
-          <IconLinkButton
-            href={`${explorer.url}/search?q=${address}`}
-            target="_blank"
-            className={classes.link}
-            title={`View on ${explorer.name}`}
-            rel="noreferrer"
-          >
-            <RiExternalLinkLine />
-          </IconLinkButton>
-        )}
-      </Flex>
+      {(copyToClipboard || explorerLink) && (
+        <Flex gap={0} alignItems="center">
+          {copyToClipboard && (
+            <IconButton
+              title="Copy to clipboard"
+              onClick={() => {
+                copy(checksumAddress)
+              }}
+            >
+              <RiFileCopyLine />
+            </IconButton>
+          )}
+          {explorer && (
+            <IconLinkButton
+              href={`${explorer.url}/search?q=${address}`}
+              target="_blank"
+              className={classes.link}
+              title={`View on ${explorer.name}`}
+              rel="noreferrer"
+            >
+              <RiExternalLinkLine />
+            </IconLinkButton>
+          )}
+        </Flex>
+      )}
     </Flex>
   )
 }

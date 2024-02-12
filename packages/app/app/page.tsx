@@ -1,7 +1,7 @@
 "use client"
 import { isAddress } from "viem"
 import { useState } from "react"
-import styles from "./page.module.css"
+import classes from "./page.module.css"
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
 import Button, { LinkButton } from "@/ui/Button"
@@ -9,6 +9,7 @@ import Field from "@/ui/Field"
 import ChainSelect from "@/components/ChainSelect"
 import { CHAINS, ChainId, DEFAULT_CHAIN } from "@/app/chains"
 import Layout from "@/components/Layout"
+import Link from "next/link"
 
 const chains = Object.values(CHAINS)
 
@@ -16,16 +17,21 @@ export default function AttachMod() {
   const [chainId, setChainId] = useState<ChainId>(DEFAULT_CHAIN.id)
   const [address, setAddress] = useState("")
   return (
-    <Layout noScroll>
-      <main className={styles.main}>
-        <Flex gap={0} justifyContent="center" alignItems="center">
-          <Box bg p={3}>
-            <Flex direction="column" gap={3}>
-              <h3>Connect a Roles mod</h3>
-              <p>
-                Once a Roles mod is connected you can manage roles and
-                permissions.
-              </p>
+    <Layout>
+      <main className={classes.main}>
+        <Flex direction="column" gap={3} className={classes.about}>
+          <h2>Onchain permissions for smart accounts</h2>
+          <p>
+            The Roles mod allows any account to act on behalf of a smart
+            account. Specify contracts, functions and parameters to securely
+            restrict the transactions a Role can execute.
+          </p>
+        </Flex>
+        <Flex gap={4}>
+          <Flex gap={2} direction="column" className={classes.viewRole}>
+            <h3>View a Roles mod instance</h3>
+
+            <Flex direction="column" gap={3} alignItems="end">
               <Field label="Chain">
                 <ChainSelect
                   value={chainId}
@@ -61,11 +67,41 @@ export default function AttachMod() {
               </Field>
               <LinkButton
                 href={isAddress(unprefix(address)) ? "/" + address : ""}
+                className={classes.attachButton}
               >
-                Attach
+                View instance
               </LinkButton>
             </Flex>
-          </Box>
+          </Flex>
+          <Flex direction="column" gap={2} className={classes.learn}>
+            <h3>Learn more about Roles</h3>
+            <Flex justifyContent="space-between" gap={3}>
+              <Link
+                href="https://docs.roles.gnosisguild.org"
+                className={classes.learnLink}
+              >
+                <Flex gap={3}>
+                  <figure>📜</figure>
+                  <Flex gap={2} direction="column">
+                    <h4>Read the docs</h4>
+                    <p>Learn how to create Roles with granular permissions</p>
+                  </Flex>
+                </Flex>
+              </Link>
+              <Link
+                href="https://docs.roles.gnosisguild.org"
+                className={classes.learnLink}
+              >
+                <Flex gap={3}>
+                  <figure>📯</figure>
+                  <Flex gap={2} direction="column">
+                    <h4>Read the blog post</h4>
+                    <p>Discover the power and versatility of Roles v2</p>
+                  </Flex>
+                </Flex>
+              </Link>
+            </Flex>
+          </Flex>
         </Flex>
       </main>
     </Layout>

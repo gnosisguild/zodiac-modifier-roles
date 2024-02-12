@@ -4,13 +4,8 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(
-    90deg,
-    rgba(43, 34, 101, 0.08) -26.61%,
-    #223265 49.61%,
-    rgba(43, 34, 101, 0.09) 119.72%
-  );
-  border: 3px double var(--border-color);
+  background: var(--bg-color);
+  border: 1px solid var(--bg-color);
   text-decoration: none;
   display: flex;
   flex-direction: row;
@@ -27,7 +22,7 @@
 }
 a.button:hover {
   color: white;
-  border-color: rgba(217, 212, 173, 0.8);
+  background-color: var(--bg-color-hover);
 }
 
 .button:disabled {

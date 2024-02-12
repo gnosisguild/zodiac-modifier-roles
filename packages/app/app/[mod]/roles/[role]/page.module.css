@@ -1,17 +1,23 @@
-.main {
-  border: 1px solid var(--border-color);
-  padding: var(--spacing-1);
-}
-
-.roleKey small {
+.breadcrumb small {
   width: 140px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.7;
   font-family: var(--font-mono);
-  font-size: 10px;
+  position: relative;
 }
 
+.breadcrumb small:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(270deg, black, transparent);
+  width: 32px;
+}
+
+.breadcrumb .roleName {
+  line-height: 18.5px;
+}
 @media (max-width: 960px) {
   .container {
     flex-wrap: wrap;
@@ -25,4 +31,37 @@
 }
 .permissions {
   flex-grow: 9999;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 24px;
+  line-height: normal;
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.header h1.rawRoleKey {
+  opacity: 0.7;
+  font-family: var(--font-mono);
+}
+
+.header label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 0px 5px;
+  margin-bottom: 5px;
+  margin-left: -2px;
+  display: block;
+}
+
+.roleKey p {
+  opacity: 0.7;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }

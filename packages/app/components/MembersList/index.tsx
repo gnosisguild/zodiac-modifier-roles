@@ -18,6 +18,7 @@ const MembersList: React.FC<{ members: string[]; chainId: ChainId }> = ({
             address={member}
             explorerLink
             copyToClipboard
+            displayFull
           />
         </Box>
       ))}
