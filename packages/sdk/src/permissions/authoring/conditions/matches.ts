@@ -203,8 +203,12 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   abiTypes?: AbiType[],
   selector?: `0x${string}`
 ): ((abiType?: ParamType) => Condition) => {
-  return Array.isArray(scopingsOrFunctionPermission) && abiTypes
-    ? calldataMatchesScopings(scopingsOrFunctionPermission, abiTypes, selector)
+  return abiTypes
+    ? calldataMatchesScopings(
+        scopingsOrFunctionPermission as S,
+        abiTypes,
+        selector
+      )
     : calldataMatchesFunctionPermission(
         scopingsOrFunctionPermission as unknown as FunctionPermission
       )
