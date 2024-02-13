@@ -16,7 +16,6 @@ import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
-import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -144,12 +143,8 @@ const fetchAbi = cache(async (address: string, chainId: ChainId) => {
     // enableExperimentalMetadata: false,
   })
 
-  const abi = parseAbi(
-    result.abi.map((item) => item.sig).filter(Boolean) as string[]
-  )
-
   return {
     address: result.address,
-    abi,
+    abi: result.abi.filter((item) => item.type === "function") as AbiFunction[],
   }
 })
