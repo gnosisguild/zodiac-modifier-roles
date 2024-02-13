@@ -1,8 +1,14 @@
 import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 import { whatsabi } from "@shazow/whatsabi"
 import { cache } from "react"
-import { createPublicClient, http } from "viem"
-import { FunctionFragment, Interface } from "ethers/lib/utils"
+import {
+  Abi,
+  AbiFunction,
+  createPublicClient,
+  http,
+  parseAbi,
+  toFunctionSelector,
+} from "viem"
 import Flex from "@/ui/Flex"
 import ExecutionOptions from "./ExecutionOptions"
 import ConditionView from "../ConditionView"
@@ -10,6 +16,7 @@ import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
+import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -19,12 +26,10 @@ const FunctionPermissionItem: React.FC<
   }
 > = async ({ chainId, targetAddress, selector, diff, modified, ...rest }) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
-  let functionAbi: FunctionFragment | undefined = undefined
-  try {
-    functionAbi = abi.getFunction(selector)
-  } catch (e) {
-    console.error(e)
-  }
+  const functionAbi = abi.find(
+    (fragment) =>
+      fragment.type === "function" && toFunctionSelector(fragment) === selector
+  ) as AbiFunction | undefined
 
   return (
     <DiffBox
@@ -75,20 +80,11 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 }
 
 const AbiFunctionPermissionItem: React.FC<
-  FunctionPermissionCoerced & { abi: FunctionFragment }
+  FunctionPermissionCoerced & { abi: AbiFunction }
 > = async ({ condition, delegatecall, send, abi }) => {
-  const signature = abi.format("full")
-  const signatureWithoutReturns = signature.slice(
-    0,
-    signature.indexOf(" returns ") || undefined
-  )
   const params =
-    abi.inputs.length === 0
-      ? undefined
-      : signature.slice(
-          signatureWithoutReturns.indexOf("(") + 1,
-          signatureWithoutReturns.lastIndexOf(")")
-        )
+    abi.inputs?.map((input) => input.type + " " + input.name).join(", ") || ""
+
   return (
     <Flex direction="column" gap={3}>
       <div>
@@ -147,7 +143,13 @@ const fetchAbi = cache(async (address: string, chainId: ChainId) => {
     followProxies: true,
     // enableExperimentalMetadata: false,
   })
-  const iface = new Interface(result.abi)
 
-  return { address: result.address, abi: iface }
+  const abi = parseAbi(
+    result.abi.map((item) => item.sig).filter(Boolean) as string[]
+  )
+
+  return {
+    address: result.address,
+    abi,
+  }
 })

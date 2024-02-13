@@ -12,6 +12,7 @@ export const fetchOrInitRole = async ({ address, chainId, roleKey }: Props) => {
     { address, chainId, roleKey },
     { next: { revalidate: 1 } }
   )
+
   if (!data) {
     // If the role doesn't exist, we check if the mod exists.
     // In that case we show an empty role page so the user can start populating it.

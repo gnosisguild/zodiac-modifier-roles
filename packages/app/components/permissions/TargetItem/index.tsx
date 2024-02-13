@@ -54,21 +54,23 @@ const TargetItem: React.FC<{
             diff={diff?.get(wildcardPermission)?.flag}
           />
         )}
+
         {!wildcardPermission &&
-          (permissions as FunctionPermissionCoerced[]).map((permission) => (
-            <FunctionPermissionItem
-              key={permission.selector}
-              targetAddress={permission.targetAddress}
-              selector={permission.selector}
-              diff={diff?.get(permission)?.flag}
-              modified={
-                diff?.get(permission)?.modified as
-                  | FunctionPermissionCoerced
-                  | undefined
-              }
-              chainId={chainId}
-            />
-          ))}
+          (permissions as FunctionPermissionCoerced[]).map(
+            (permission, index) => (
+              <FunctionPermissionItem
+                key={index} // selector is not unique, maybe use selector + conditionId?
+                {...permission}
+                diff={diff?.get(permission)?.flag}
+                modified={
+                  diff?.get(permission)?.modified as
+                    | FunctionPermissionCoerced
+                    | undefined
+                }
+                chainId={chainId}
+              />
+            )
+          )}
       </Flex>
     </DiffBox>
   )

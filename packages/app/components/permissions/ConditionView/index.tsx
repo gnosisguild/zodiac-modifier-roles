@@ -1,6 +1,6 @@
 import { Condition, Operator } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import { FunctionFragment, ParamType } from "ethers/lib/utils"
+import { AbiFunction, AbiParameter, parseAbiParameter } from "viem"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -12,7 +12,7 @@ import BitmaskConditionView from "./BitmaskConditionView"
 export interface Props {
   condition: Condition
   paramIndex?: number
-  abi?: FunctionFragment | ParamType
+  abi?: AbiFunction | AbiParameter
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
@@ -70,29 +70,30 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
       <BitmaskConditionView condition={condition} paramIndex={paramIndex} />
     )
   }
-  //   if (condition.operator === Operator.Custom) {
-  //     return <CustomConditionView condition={condition} paramIndex={paramIndex} />
-  //   }
 
-  //   if (condition.operator === Operator.WithinAllowance) {
-  //     return (
-  //       <WithinAllowanceConditionView
-  //         condition={condition}
-  //         paramIndex={paramIndex}
-  //       />
-  //     )
-  //   }
-  //   if (
-  //     condition.operator === Operator.EtherWithinAllowance ||
-  //     condition.operator === Operator.CallWithinAllowance
-  //   ) {
-  //     return (
-  //       <GlobalWithinAllowanceConditionView
-  //         condition={condition}
-  //         paramIndex={paramIndex}
-  //       />
-  //     )
-  //   }
+  // if (condition.operator === Operator.Custom) {
+  //   return <CustomConditionView condition={condition} paramIndex={paramIndex} />
+  // }
+
+  // if (condition.operator === Operator.WithinAllowance) {
+  //   return (
+  //     <WithinAllowanceConditionView
+  //       condition={condition}
+  //       paramIndex={paramIndex}
+  //     />
+  //   )
+  // }
+  // if (
+  //   condition.operator === Operator.EtherWithinAllowance ||
+  //   condition.operator === Operator.CallWithinAllowance
+  // ) {
+  //   return (
+  //     <GlobalWithinAllowanceConditionView
+  //       condition={condition}
+  //       paramIndex={paramIndex}
+  //     />
+  //   )
+  // }
 
   return (
     <UnsupportedConditionView condition={condition} paramIndex={paramIndex} />
@@ -169,7 +170,7 @@ export const ChildConditions: React.FC<
       <Flex direction="column" gap={1}>
         {children?.map((condition, index) => {
           let childParamIndex: number | undefined = undefined
-          let childAbi: FunctionFragment | ParamType | undefined = undefined
+          let childAbi: AbiFunction | AbiParameter | undefined = undefined
           if (isLogicalOperator(operator)) {
             // preserve scoped param
             childParamIndex = paramIndex
@@ -182,14 +183,25 @@ export const ChildConditions: React.FC<
 
             if (abi) {
               if ("inputs" in abi) {
-                // function fragment
+                // abi is AbiFunction
                 childAbi = abi.inputs[index]
-              } else if (abi.baseType === "array") {
-                // array
-                childAbi = abi.arrayChildren
               } else {
-                // tuple
-                childAbi = abi.components[index]
+                // abi is AbiParameter
+                if ("components" in abi) {
+                  // tuple type
+                  childAbi = abi.components[index]
+                } else {
+                  const arrayComponents = getArrayComponents(abi.type)
+                  if (arrayComponents) {
+                    // array type
+                    const [_length, elementType] = arrayComponents
+                    childAbi = parseAbiParameter(elementType)
+                  } else {
+                    throw new Error(
+                      "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple or array type AbiParameter"
+                    )
+                  }
+                }
               }
             }
           }
@@ -263,4 +275,11 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
       <pre>{JSON.stringify(condition, undefined, 2)}</pre>
     </Box>
   )
+}
+
+const getArrayComponents = (
+  type: string
+): [length: number | null, innerType: string] | null => {
+  const matches = type.match(/^(.*)\[(\d+)?\]$/)
+  return matches ? [matches[2] ? Number(matches[2]) : null, matches[1]] : null
 }

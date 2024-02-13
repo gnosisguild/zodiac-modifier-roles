@@ -1,5 +1,5 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
-import { FunctionFragment, ParamType } from "ethers/lib/utils"
+import { AbiFunction, AbiParameter } from "viem"
 import { ReactNode } from "react"
 import { RiArrowDropDownLine, RiArrowDropRightLine } from "react-icons/ri"
 import { PiDotBold } from "react-icons/pi"
@@ -9,7 +9,7 @@ import Flex from "@/ui/Flex"
 interface Props {
   condition: Condition
   paramIndex?: number
-  abi?: FunctionFragment | ParamType
+  abi?: AbiFunction | AbiParameter
   children?: ReactNode
   collapsed?: boolean
 }

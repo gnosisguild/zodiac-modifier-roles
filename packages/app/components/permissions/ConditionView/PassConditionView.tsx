@@ -1,6 +1,6 @@
 "use client"
 import { Condition } from "zodiac-roles-sdk"
-import { FunctionFragment, ParamType } from "ethers/lib/utils"
+import { AbiFunction, AbiParameter } from "viem"
 import { useState } from "react"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
@@ -10,7 +10,7 @@ import { ChildConditions } from "."
 interface Props {
   condition: Condition
   paramIndex?: number
-  abi?: FunctionFragment | ParamType
+  abi?: AbiFunction | AbiParameter
 }
 
 const PassConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {

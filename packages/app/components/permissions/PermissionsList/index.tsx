@@ -26,8 +26,6 @@ const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
     annotations
   )
 
-  console.log(JSON.stringify(presets))
-
   return (
     <PresetsAndPermissionsView
       presets={presets}
