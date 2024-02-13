@@ -5,8 +5,11 @@ describe("processAnnotations()", () => {
   it("returns the original set of permissions if no annotations are given", async () => {
     const permissions = [
       {
-        targetAddress: "0xc0ffee254729296a45a3885639AC7E10F9d54979",
+        targetAddress: "0xc0ffee254729296a45a3885639ac7e10f9d54979",
         selector: "0x1234abcd",
+        condition: undefined,
+        send: false,
+        delegatecall: false,
       },
     ] as const
     const result = await processAnnotations(permissions, [])
@@ -331,8 +334,11 @@ describe("processAnnotations()", () => {
     const result = await processAnnotations(permissions, [annotation1])
     expect(result.permissions).toEqual([
       {
-        targetAddress: "0xc0ffee254729296a45a3885639AC7E10F9d54979",
+        targetAddress: "0xc0ffee254729296a45a3885639ac7e10f9d54979",
         selector: "0x1234abcd",
+        condition: undefined,
+        send: false,
+        delegatecall: false,
       },
     ])
   })
