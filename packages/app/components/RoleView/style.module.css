@@ -1,32 +1,46 @@
-.tabGroup {
+.loading {
+  cursor: progress;
+}
+
+.loading ul {
+  padding: 0;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  list-style-type: none;
   margin-bottom: 20px;
   border-bottom: 2px solid var(--border-color);
+  opacity: 0.5;
 }
 
-.tabGroup button {
+.loading li {
   background: none;
   outline: none;
   border: none;
   color: white;
   font-family: var(--font-body);
-  cursor: pointer;
+  font-size: 14px;
+  cursor: progress;
   padding: 10px 20px;
   position: relative;
 }
 
-.tabGroup button:hover {
-  background: var(--bg-color);
+.loading .placeholder {
+  height: 150px;
+  width: 100%;
+  background: linear-gradient(
+    -45deg,
+    var(--bg-color) 40%,
+    var(--bg-color-hover) 50%,
+    var(--bg-color) 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
 }
 
-.tabGroup button.selected:after {
-  content: "";
-  height: 2px;
-  width: 100%;
-  bottom: -2px;
-  left: 0;
-  background: white;
-  position: absolute;
+@keyframes shimmer {
+  to {
+    background-position-x: 0%;
+  }
 }

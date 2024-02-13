@@ -21,7 +21,7 @@ import PageBreadcrumbs from "./breadcrumbs"
 import styles from "./page.module.css"
 import Flex from "@/ui/Flex"
 import CallData from "@/components/CallData"
-import { fetchOrInitRole } from "../../fetching"
+import { fetchOrInitRole } from "@/components/RoleView/fetching"
 import { ChainId } from "@/app/chains"
 
 export default async function DiffPage({

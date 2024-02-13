@@ -88,6 +88,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
                 mod.address
               }/roles/${encodeURIComponent(parsedKey || role.key)}`}
               className={classes.row}
+              prefetch={false}
             >
               <Flex direction="column" gap={0} className={classes.roleName}>
                 <div className={classes.parsedKey}>{parsedKey}</div>
