@@ -2,21 +2,21 @@ import { Callout } from "nextra/components";
 
 # Conditions
 
-The SDK provides a convenience API for defining conditions on targets. Function inputs can be constrained to exact values, matched against patterns, or checked against condition functions.
+The Roles SDK provides a convenient API for defining conditions on targets. Function inputs can be constrained to exact values, matched against patterns, or checked against condition functions.
 
-## Exact constraint
+## Exact values
 
-If a primitive, BigNumber, or array value is given it will be used for an equality check.
+If a primitive, BigNumber, or array value is given, it will be used for an equality check.
 This also applies to placeholders.
-A contract function call will have to use exactly this value to pass the condition.
+A contract function call will need to use this exact value to pass the condition.
 
-To set an exact constraint on tuples users can provide the expected tuple values as an array.
-For providing them as an object with named keys, it must be wrapped in an `c.eq({ name: 'foo', age: 30 })` condition function, to enforce an exact match rather than a pattern match.
+To set an exact constraint on tuples, users can provide the expected tuple values as an array.
+To provide them as an object with named keys, it must be wrapped in a `c.eq({ name: 'foo', age: 30 })` condition function, which enforces an exact match rather than a pattern match.
 
 ## Matching patterns
 
-If an object is given it will be used as a matching pattern on tuples.
-In a matching pattern the values to each key define the condition that shall be enforced on the respective parameter or tuple field.
+If an object is given, it will be used as a matching pattern on tuples.
+In a matching pattern, the values to each key define the condition that shall be enforced on the respective parameter or tuple field.
 Each field condition can be either an exact value, a nested matching pattern, or a condition function.
 
 Matching patterns can also be supplied as arrays using the `c.matches([ 1, undefined, 3 ])` condition function.
@@ -47,9 +47,9 @@ See [`EqualToAvatar`](/general/conditions#equaltoavatar) operator
   ❌ `c.avatar()`<br/>
   ✅ `c.avatar`
 
-Generally comparison condition helpers are functions to
-be invoked with the expected value. `c.avatar` is a special case since it does
-not take a comparison value. As such it is the only member of `c` that must
+Generally, comparison condition helpers are functions to
+be invoked with the expected value. `c.avatar` is a special case, because it does
+not take a comparison value. As such, it is the only member of `c` that must
 not be invoked.
 
 </Callout>
@@ -109,19 +109,20 @@ See [`Nor`](/general/conditions#nor) operator
 
 #### `c.matches`
 
-Allows defining a [matching pattern](#matching-patterns) to check the value in scope against.
+Allows defining a [matching pattern](#matching-patterns) to check the value against the current scope.
 
 #### `c.calldataMatches`
 
 The same as `c.matches` but skips over the first four bytes of the current scope, i.e. the function selector part of standard EVM call data.
 
-This condition is most commonly used at the root node of the conditions tree for defining the conditions structure to be applied on the parameters of the call.
+This condition is most commonly used at the root node of the conditions tree for defining the conditions structure to be applied on the call parameters.
+
 For this purpose, it takes the ABI types of all function parameters in the second argument.
 This information is required for encoding all sub conditions generated for the given matching pattern.
 
 Additionally, `c.calldataMatches` can be used for setting conditions on `bytes` parameters that store standard-encoded EVM call data.
 There is a function overload that takes a [permission object](/sdk/architecture#layer-2-permissions) instead of a matching pattern + ABI types.
-This makes it convenient to use typed allow kits for scoping bytes parameters.
+This feature makes it convenient to use typed allow kits for scoping bytes parameters.
 
 Example:
 
