@@ -6,11 +6,12 @@ import {
   diffTargets,
   splitCondition,
   reconstructPermissions,
+  Target,
 } from "zodiac-roles-sdk"
 import { Enforcer } from "openapi-enforcer"
+import { OpenAPIV3 } from "openapi-types"
 import { zPermission } from "./schema"
 import { Preset } from "./types"
-import { OpenAPIV3 } from "openapi-types"
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
@@ -28,10 +29,17 @@ export const processAnnotations = async (
   const confirmedPresets = presets.filter((preset) => {
     if (!preset) return false
 
-    const { targets: targetsWithPresetApplied } = processPermissions([
-      ...permissions,
-      ...preset.permissions,
-    ])
+    let targetsWithPresetApplied: Target[] = []
+    try {
+      const { targets } = processPermissions([
+        ...permissions,
+        ...preset.permissions,
+      ])
+      targetsWithPresetApplied = targets
+    } catch (e) {
+      // processPermissions throws if permissions and preset.permissions have entries addressing the same target function with different send/delegatecall options
+      return false
+    }
 
     // If targetsWithPresetApplied is a subset of targets, it means they are equal sets.
     return diffTargets(targetsWithPresetApplied, targets).length === 0
