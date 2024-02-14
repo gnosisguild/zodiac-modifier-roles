@@ -89,7 +89,7 @@ export default function AttachMod() {
                 </Flex>
               </Link>
               <Link
-                href="https://docs.roles.gnosisguild.org"
+                href="https://gnosisguild.mirror.xyz/oQcy_c62huwNkFS0cMIxXwQzrfG0ESQax8EBc_tWwwk"
                 className={classes.learnLink}
               >
                 <Flex gap={3}>
