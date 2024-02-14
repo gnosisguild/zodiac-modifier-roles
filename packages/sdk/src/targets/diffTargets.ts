@@ -68,6 +68,7 @@ const functionsEqual = (functionA: Function, functionB: Function) =>
 
 const conditionsEqual = (conditionA?: Condition, conditionB?: Condition) =>
   conditionA === conditionB ||
+  (!conditionA && !conditionB) ||
   (conditionA &&
     conditionB &&
     conditionId(normalizeCondition(conditionA)) ===
