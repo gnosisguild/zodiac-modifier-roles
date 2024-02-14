@@ -62,7 +62,7 @@ yarn eth-sdk
 
 This command will fetch the ABIs of the contracts listed in the config file and generate TypeScript types for them directly into your node_modules.
 If the ABI of any listed contract cannot be fetched automatically, the command will return an error code.
-In that case, you need to manually create a JSON file with the ABI at a location inside `eth-sdk/abi` matching the full name of the contract in the `eth-sdk/config.ts` file.
+In that case, you need to manually create a JSON file with the ABI at a location inside `eth-sdk/abi` matching the path of the contract in the `eth-sdk/config.ts` file.
 
 <Callout type="info">
   The VSCode TypeScript server may not automatically pick up the type updates
