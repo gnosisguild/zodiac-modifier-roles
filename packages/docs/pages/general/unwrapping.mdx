@@ -1,10 +1,10 @@
 # Transaction Unwrapping
 
-In certain scenarios the raw transaction data might not lend itself to be checked against the configured role permissions directly.
+In certain scenarios, the raw transaction data might not lend itself to be checked against the configured role permissions directly. 
 An example are batch transactions through the [MultiSend contract](https://github.com/safe-global/safe-smart-account/blob/main/contracts/libraries/MultiSendCallOnly.sol).
-Instead of scoping the data encoding the full batch of transactions, permissions should rather we checked individually for each call in the batch.
+Instead of scoping the data encoding the full batch of transactions, permissions should be checked individually for each call in the batch.
 
-Transaction unwrapping can be configured as pre-processing step to be applied for specific target addresses.
+Transaction unwrapping can be configured as a pre-processing step to be applied for specific target addresses.
 The unwrapping logic is implemented in adapter contracts.
 
 ## `MultiSendUnwrapper`
