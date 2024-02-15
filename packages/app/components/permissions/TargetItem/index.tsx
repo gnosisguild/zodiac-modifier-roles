@@ -11,6 +11,9 @@ import FunctionPermissionItem from "./FunctionPermissionItem"
 import { DiffFlag, PermissionsDiff } from "../types"
 import { groupDiff } from "../PermissionsDiff/diff"
 import DiffBox from "../DiffBox"
+import classes from "./style.module.css"
+import LabeledData from "@/ui/LabeledData"
+import Disclosure from "@/ui/Disclosure"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -36,42 +39,60 @@ const TargetItem: React.FC<{
 
   return (
     <DiffBox
+      borderless
       bg
       diff={targetDiff === DiffFlag.Modified ? undefined : targetDiff} // we don't highlight the modified target since this would get a bit too colorful
     >
-      <Flex direction="column" gap={3}>
-        <Address
-          address={targetAddress}
-          chainId={chainId}
-          displayFull
-          copyToClipboard
-          explorerLink
-        />
-
-        {wildcardPermission && (
-          <WildcardPermissionItem
-            {...wildcardPermission}
-            diff={diff?.get(wildcardPermission)?.flag}
-          />
-        )}
-
-        {!wildcardPermission &&
-          (permissions as FunctionPermissionCoerced[]).map(
-            (permission, index) => (
-              <FunctionPermissionItem
-                key={index} // selector is not unique, maybe use selector + conditionId?
-                {...permission}
-                diff={diff?.get(permission)?.flag}
-                modified={
-                  diff?.get(permission)?.modified as
-                    | FunctionPermissionCoerced
-                    | undefined
-                }
+      <Disclosure
+        button={
+          <Flex gap={4} justifyContent="space-between" alignItems="center">
+            <LabeledData label="Target Contract">
+              <Address
+                address={targetAddress}
                 chainId={chainId}
+                displayFull
+                copyToClipboard
+                explorerLink
+                blockieClassName={classes.targetBlockie}
+                className={classes.targetAddress}
               />
-            )
+            </LabeledData>
+            <LabeledData label="Permissions">
+              <div className={classes.functionCount}>
+                {wildcardPermission ? "Wildcard" : permissions.length}
+              </div>
+            </LabeledData>
+          </Flex>
+        }
+      >
+        <Flex direction="column" gap={3} className={classes.targetContent}>
+          {wildcardPermission && (
+            <WildcardPermissionItem
+              data-testid="wildcard-permission"
+              {...wildcardPermission}
+              diff={diff?.get(wildcardPermission)?.flag}
+            />
           )}
-      </Flex>
+
+          {!wildcardPermission &&
+            (permissions as FunctionPermissionCoerced[]).map(
+              (permission, index) => (
+                <FunctionPermissionItem
+                  data-testid="function-permission"
+                  key={index} // selector is not unique, maybe use selector + conditionId?
+                  {...permission}
+                  diff={diff?.get(permission)?.flag}
+                  modified={
+                    diff?.get(permission)?.modified as
+                      | FunctionPermissionCoerced
+                      | undefined
+                  }
+                  chainId={chainId}
+                />
+              )
+            )}
+        </Flex>
+      </Disclosure>
     </DiffBox>
   )
 }

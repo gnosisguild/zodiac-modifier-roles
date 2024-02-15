@@ -1,4 +1,4 @@
-import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
+import { ChainId, Condition, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 import { whatsabi } from "@shazow/whatsabi"
 import { cache } from "react"
 import {
@@ -16,6 +16,7 @@ import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
+import LabeledData from "@/ui/LabeledData"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -33,6 +34,7 @@ const FunctionPermissionItem: React.FC<
   return (
     <DiffBox
       diff={diff}
+      borderless
       modified={
         modified && <FunctionPermissionItem {...modified} chainId={chainId} />
       }
@@ -51,6 +53,7 @@ const FunctionPermissionItem: React.FC<
           {...rest}
         />
       )}
+      <div className={classes.verticalGuide} />
     </DiffBox>
   )
 }
@@ -65,15 +68,10 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 }) => {
   return (
     <Flex direction="column" gap={3}>
-      <div>
-        <code>{selector}</code>
-      </div>
-      {condition ? (
-        <ConditionView condition={condition} />
-      ) : (
-        <div>No condition set</div>
-      )}
-      <ExecutionOptions delegatecall={delegatecall} send={send} />
+      <LabeledData label="Function Selector">
+        <div className={classes.selector}>{selector}</div>
+      </LabeledData>
+      <ExecutionAndCondition {...{ condition, delegatecall, send }} />
     </Flex>
   )
 }
@@ -87,26 +85,37 @@ const AbiFunctionPermissionItem: React.FC<
   return (
     <Flex direction="column" gap={3}>
       <div>
-        <code className={classes.functionName}>
-          <Flex gap={2} alignItems="center" className={classes.signature}>
-            <div>{abi.name}</div>
-            {params && (
-              <>
-                <div className={classes.params}>(</div>
-                <div className={classes.params}>{params}</div>
-                <div className={classes.params}>)</div>
-              </>
-            )}
-          </Flex>
-        </code>
+        <Flex gap={5} alignItems="start" className={classes.signature}>
+          <LabeledData label="Function Signature">
+            <div className={classes.selector}>{abi.name}</div>
+          </LabeledData>
+          {params && (
+            <LabeledData label="Parameters">
+              <code className={classes.params}>{params}</code>
+            </LabeledData>
+          )}
+        </Flex>
       </div>
+      <ExecutionAndCondition {...{ condition, delegatecall, send, abi }} />
+    </Flex>
+  )
+}
+
+const ExecutionAndCondition: React.FC<{
+  condition?: Condition
+  delegatecall?: boolean
+  send?: boolean
+  abi?: AbiFunction
+}> = async ({ condition, delegatecall, send, abi }) => {
+  return (
+    <div className={classes.condition}>
+      <ExecutionOptions delegatecall={delegatecall} send={send} />
       {condition ? (
         <ConditionView condition={condition} abi={abi} />
       ) : (
         <div>No condition set</div>
       )}
-      <ExecutionOptions delegatecall={delegatecall} send={send} />
-    </Flex>
+    </div>
   )
 }
 

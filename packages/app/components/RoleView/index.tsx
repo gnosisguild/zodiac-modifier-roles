@@ -13,6 +13,7 @@ interface RoleViewProps {
 
 const RoleView: React.FC<RoleViewProps> = async ({ mod, roleKey }) => {
   let data = await fetchOrInitRole({ ...mod, roleKey })
+  console.log("ROLE VIEW DATA", data.targets)
   return (
     <Suspense fallback={<RoleViewLoading />}>
       <TabGroup
