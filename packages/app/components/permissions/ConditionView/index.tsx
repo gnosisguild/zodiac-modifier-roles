@@ -1,6 +1,11 @@
 import { Condition, Operator } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import { AbiFunction, AbiParameter, parseAbiParameter } from "viem"
+import {
+  AbiFunction,
+  AbiParameter,
+  decodeAbiParameters,
+  parseAbiParameter,
+} from "viem"
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -257,11 +262,29 @@ const ComparisonConditionView: React.FC<Props> = ({
   paramIndex,
   abi,
 }) => {
+  if (abi?.type === "function")
+    throw new Error("Unexpected comparison condition on function")
+
+  let value = condition.compValue || ""
+  const shallDecode = (type: string) =>
+    type === "address" ||
+    type === "string" ||
+    type === "boolean" ||
+    type.startsWith("int") ||
+    type.startsWith("uint")
+  if (condition.compValue && abi && shallDecode(abi.type)) {
+    const [decoded] = decodeAbiParameters(
+      [abi as AbiParameter],
+      condition.compValue
+    )
+    value = String(decoded)
+  }
+
   return (
     <Box p={2} borderless>
       <ConditionHeader condition={condition} paramIndex={paramIndex} abi={abi}>
         {condition.operator !== Operator.EqualToAvatar && (
-          <input type="text" readOnly value={condition.compValue} />
+          <input type="text" readOnly value={value} />
         )}
       </ConditionHeader>
     </Box>
