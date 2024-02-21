@@ -81,7 +81,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   }
 
   // if (condition.operator === Operator.Custom) {
-  //   return <CustomConditionView condition={condition} paramIndex={paramIndex} />
+  //   return <CustomConditionView condition={condition} paramIndex={paramIndex} abi={abi} />
   // }
 
   // if (condition.operator === Operator.WithinAllowance) {
@@ -89,6 +89,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   //     <WithinAllowanceConditionView
   //       condition={condition}
   //       paramIndex={paramIndex}
+  //       abi={abi}
   //     />
   //   )
   // }
@@ -100,6 +101,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   //     <GlobalWithinAllowanceConditionView
   //       condition={condition}
   //       paramIndex={paramIndex}
+  //       abi={abi}
   //     />
   //   )
   // }
