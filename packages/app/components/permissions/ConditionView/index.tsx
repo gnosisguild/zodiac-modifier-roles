@@ -169,7 +169,6 @@ export const ChildConditions: React.FC<
   const { children, operator } = condition
   const childrenLength = children?.length || 0
   const indentLevels = calcChildrenIndentLevels(condition)
-
   return (
     <div className={classes.conditionBody}>
       <Flex direction="column" gap={1}>
@@ -180,6 +179,9 @@ export const ChildConditions: React.FC<
             // preserve scoped param
             childParamIndex = paramIndex
             childAbi = abi
+          } else if (isArrayOperator(operator)) {
+            childParamIndex = undefined
+            childAbi = abi && arrayElementType(abi)
           } else {
             // drill down to the fields
             if (operator === Operator.Matches || operator === Operator.Pass) {
@@ -192,20 +194,18 @@ export const ChildConditions: React.FC<
                 childAbi = abi.inputs[index]
               } else {
                 // abi is AbiParameter
-                if ("components" in abi) {
+
+                const elementType = arrayElementType(abi)
+                if (elementType) {
+                  // array type
+                  childAbi = elementType
+                } else if ("components" in abi) {
                   // tuple type
                   childAbi = abi.components[index]
                 } else {
-                  const arrayComponents = getArrayComponents(abi.type)
-                  if (arrayComponents) {
-                    // array type
-                    const [_length, elementType] = arrayComponents
-                    childAbi = parseAbiParameter(elementType)
-                  } else {
-                    throw new Error(
-                      "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple or array type AbiParameter"
-                    )
-                  }
+                  throw new Error(
+                    "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple or array type AbiParameter"
+                  )
                 }
               }
             }
@@ -231,6 +231,24 @@ export const ChildConditions: React.FC<
 
 const isLogicalOperator = (operator: Operator) =>
   operator >= Operator.And && operator <= Operator.Nor
+
+const isArrayOperator = (operator: Operator) =>
+  operator >= Operator.ArrayEvery && operator <= Operator.ArraySubset
+
+const arrayElementType = (abi: AbiParameter): AbiParameter | undefined => {
+  const arrayComponents = getArrayComponents(abi.type)
+  if (!arrayComponents) return undefined
+  const [_length, elementType] = arrayComponents
+  const [_, elementInternalType] =
+    (abi.internalType && getArrayComponents(abi.internalType as string)) || []
+
+  return {
+    type: elementType,
+    internalType: elementInternalType,
+    // element tuple components are stored on the array type
+    components: (abi as any).components,
+  }
+}
 
 const calcMaxLogicalDepth = (condition: Condition): number => {
   const { children, operator } = condition
