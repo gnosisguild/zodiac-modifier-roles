@@ -1,8 +1,5 @@
 import { BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
-// There's some weird issue with eslint not being able to resolve this import...
-// eslint-disable-next-line import/no-unresolved
-import { RequireAtLeastOne } from "type-fest"
 
 import { Condition } from "../../../types"
 
@@ -21,6 +18,10 @@ export type ArrayElement<ArrayType extends readonly unknown[]> =
 export type ArrayScoping<T extends any[]> =
   | readonly Awaited<ArrayElement<T>>[]
   | ConditionFunction<Awaited<ArrayElement<T>>[]>
+
+type RequireAtLeastOne<T> = {
+  [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>
+}[keyof T]
 
 export type StructScoping<Struct extends { [key: string]: any }> =
   | RequireAtLeastOne<{

@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "ethers": "^5.7.2",
-    "type-fest": "^4.9.0",
     "zod": "^3.22.1"
   },
   "peerDependencies": {

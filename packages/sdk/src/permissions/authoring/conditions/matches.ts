@@ -23,7 +23,7 @@ import { describeStructure, parameterType } from "./utils"
  * @param scoping The conditions on the tuple or array elements
  */
 export const matches =
-  <S extends TupleScopings<any> | StructScoping<any>>(scoping: S) =>
+  <S extends TupleScopings<any>, T>(scoping: S): ConditionFunction<T> =>
   (abiType: ParamType) => {
     // The type system allows for nesting matches(matches()).
     // While using this in practice would not make too much sense, we must make sure it's valid nonetheless.
