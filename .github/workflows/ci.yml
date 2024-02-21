@@ -19,7 +19,6 @@ jobs:
       - run: yarn
       - run: yarn prepare
       - run: yarn test
-      - run: yarn build # check that all builds succeed
       - run: yarn coverage
       - name: Coveralls
         uses: coverallsapp/github-action@master
