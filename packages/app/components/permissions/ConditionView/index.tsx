@@ -6,6 +6,7 @@ import {
   decodeAbiParameters,
   parseAbiParameter,
 } from "viem"
+
 import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -13,6 +14,7 @@ import Indent from "./Indent"
 import ConditionHeader from "./ConditionHeader"
 import PassConditionView from "./PassConditionView"
 import BitmaskConditionView from "./BitmaskConditionView"
+import LabeledData from "@/ui/LabeledData"
 
 export interface Props {
   condition: Condition
@@ -317,10 +319,15 @@ const ComparisonConditionView: React.FC<Props> = ({
 
 const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
   return (
-    <Box p={2}>
-      <p>This condition is not supported</p>
-      <pre>{JSON.stringify(condition, undefined, 2)}</pre>
-    </Box>
+    <Flex direction="column" gap={2} className={classes.unsupported}>
+      <LabeledData label="Unsupported Condition">
+        <p>
+          Cannot parse this condition (it most likely came from a different
+          interface)
+        </p>
+        <pre>{JSON.stringify(condition, undefined, 2)}</pre>
+      </LabeledData>
+    </Flex>
   )
 }
 
