@@ -72,7 +72,11 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
 
   if (condition.operator === Operator.Bitmask) {
     return (
-      <BitmaskConditionView condition={condition} paramIndex={paramIndex} />
+      <BitmaskConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
     )
   }
 
