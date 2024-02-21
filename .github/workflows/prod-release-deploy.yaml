@@ -89,7 +89,6 @@ jobs:
       #   env:
       #     HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod-gnosis-chain
       #     HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: jfschwarz/zodiac-roles-mod-arbitrum
-      #     HOSTED_SERVICE_SUBGRAPH__GOERLI: jfschwarz/zodiac-roles-mod-goerli
       #     HOSTED_SERVICE_SUBGRAPH__AVALANCHE: jfschwarz/zodiac-roles-mod-avalanche
       #     HOSTED_SERVICE_SUBGRAPH__BSC: jfschwarz/zodiac-roles-mod-bsc
       #     HOSTED_SERVICE_SUBGRAPH__MAINNET: jfschwarz/zodiac-roles-mod-mainnet
@@ -99,7 +98,6 @@ jobs:
       #   run: |
       #     yarn deploy:arbitrum-one
       #     yarn deploy:gnosis-chain
-      #     yarn deploy:goerli
       #     yarn deploy:avalanche
       #     yarn deploy:bsc
       #     yarn deploy:mainnet

@@ -1,6 +1,5 @@
 import {
   mainnet,
-  goerli,
   sepolia,
   // optimism,
   // avalanche,
@@ -55,12 +54,6 @@ export const CHAINS = {
   //   blockExplorerApiKey: "AMXEAU3N9P7RJHFSZ7KAJDRY5MFJ1N29D6",
   // },
 
-  [goerli.id]: {
-    ...goerli,
-    prefix: "gor",
-    blockExplorerAbiUrl: "https://api-goerli.etherscan.io/api",
-    blockExplorerApiKey: "N53BKW6ABNX7CNUK8QIXGRAQS2NME92YAN",
-  },
   [sepolia.id]: {
     ...sepolia,
     prefix: "sep",

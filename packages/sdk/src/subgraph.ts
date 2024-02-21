@@ -1,6 +1,5 @@
 const SUBGRAPH = {
   [1]: "https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.2",
-  [5]: "https://api.studio.thegraph.com/query/23167/zodiac-roles-goerli/v2.1.1",
   // [10]: "",
   // [56]: "",
   [100]:

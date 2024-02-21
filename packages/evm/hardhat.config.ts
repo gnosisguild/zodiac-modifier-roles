@@ -67,10 +67,6 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: "https://rpc.gnosischain.com",
     },
-    goerli: {
-      ...sharedNetworkConfig,
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-    },
     sepolia: {
       ...sharedNetworkConfig,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
@@ -91,7 +87,6 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: ETHERSCAN_API_KEY,
-      goerli: ETHERSCAN_API_KEY,
       sepolia: ETHERSCAN_API_KEY,
       gnosis: GNOSISSCAN_API_KEY,
       matic: POLYGONSCAN_API_KEY,
