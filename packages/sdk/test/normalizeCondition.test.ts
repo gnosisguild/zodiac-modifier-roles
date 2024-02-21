@@ -36,7 +36,7 @@ describe("normalizeCondition()", () => {
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.And,
-      children: [DUMMY_COMP(3), DUMMY_COMP(0), DUMMY_COMP(1), DUMMY_COMP(2)],
+      children: [DUMMY_COMP(3), DUMMY_COMP(0), DUMMY_COMP(2), DUMMY_COMP(1)],
     })
   })
 
