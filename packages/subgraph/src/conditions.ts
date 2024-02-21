@@ -84,20 +84,15 @@ function jsonStringify(tree: ConditionTree, encoder: JSONEncoder): void {
 }
 
 export const ERC2470_SINGLETON_FACTORY_ADDRESS = Address.fromString("0xce0042b868300000d44a59004da54a005ffdcf9f")
-export const CREATE2_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0))
+export const ZERO_SALT = Bytes.fromUint8Array(new Uint8Array(32).fill(0))
 
 export function getConditionId(conditions: ScopeFunctionConditionsStruct[]): string {
   const packed = conditions
-    .map<Bytes>((condition) => packCondition(condition))
-    .reduce((acc, item) => acc.concat(item), new Bytes(0))
-    .concat(
-      conditions
-        .map<Bytes>((condition) => packCompValue(condition))
-        .reduce((acc, item) => acc.concat(item), new Bytes(0)),
-    )
+    .map<string>((condition) => packCondition(condition))
+    .reduce((acc, item) => acc + item.slice(2), "0x")
 
-  const initCode = creationCodeFor(packed)
-  return generateAddress2(ERC2470_SINGLETON_FACTORY_ADDRESS, CREATE2_SALT, initCode).toHexString()
+  const initCode = creationCodeFor(Bytes.fromHexString(packed).concat(packCompValues(conditions)))
+  return generateAddress2(ERC2470_SINGLETON_FACTORY_ADDRESS, ZERO_SALT, initCode).toHexString()
 }
 
 // 8    bits -> parent
@@ -107,22 +102,29 @@ const offsetParent = 8
 const offsetParamType = 5
 const offsetOperator = 0
 
-function packCondition(condition: ScopeFunctionConditionsStruct): Bytes {
-  return Bytes.fromI32(
-    (condition.parent << offsetParent) |
-      (condition.paramType << offsetParamType) |
-      (condition.operator << offsetOperator),
-  )
+function packCondition(condition: ScopeFunctionConditionsStruct): string {
+  const bytes = new Uint8Array(2)
+  bytes[0] = u8(condition.parent) << u8(offsetParent)
+  bytes[1] = (u8(condition.paramType) << u8(offsetParamType)) | (u8(condition.operator) << u8(offsetOperator))
+  return Bytes.fromUint8Array(bytes).toHexString()
 }
 
-function packCompValue(condition: ScopeFunctionConditionsStruct): Bytes {
-  if (!hasCompValue(condition.operator)) {
-    return new Bytes(0)
+function packCompValues(conditions: ScopeFunctionConditionsStruct[]): Bytes {
+  let result = new Bytes(0)
+
+  for (let i = 0; i < conditions.length; i++) {
+    const condition = conditions[i]
+    if (!hasCompValue(condition.operator)) {
+      continue
+    }
+
+    const compValue = compValueWithoutExtraneousOffset(conditions, i)
+    result = result.concat(
+      condition.operator == Operator.EqualTo ? Bytes.fromByteArray(crypto.keccak256(compValue)) : bytes32(compValue),
+    )
   }
 
-  return condition.operator == Operator.EqualTo
-    ? Bytes.fromByteArray(crypto.keccak256(condition.compValue))
-    : bytes32(condition.compValue)
+  return result
 }
 
 function bytes32(value: Bytes): Bytes {
@@ -134,8 +136,9 @@ function hasCompValue(operator: Operator): boolean {
 }
 
 function creationCodeFor(bytecode: Bytes): Bytes {
+  const lengthHex = "0x" + (bytecode.length + 1).toString(16).padStart(8, "0")
   return Bytes.fromHexString("0x63")
-    .concat(Bytes.fromI32(bytecode.length + 1))
+    .concat(Bytes.fromHexString(lengthHex))
     .concat(Bytes.fromHexString("0x80600E6000396000F300"))
     .concat(bytecode)
 }
@@ -161,4 +164,31 @@ export function generateAddress2(from: Address, salt: Bytes, initCode: Bytes): A
         .slice(-20),
     ),
   )
+}
+
+function compValueWithoutExtraneousOffset(conditions: ScopeFunctionConditionsStruct[], index: i32): Bytes {
+  if (conditions[index].compValue && conditions[index].operator == Operator.EqualTo && !isInline(conditions, index)) {
+    return Bytes.fromUint8Array(conditions[index].compValue.slice(32)) //Bytes.fromHexString("0x" + conditions[index].compValue.toHexString().slice(66))
+  }
+  return conditions[index].compValue
+}
+
+function isInline(conditions: ScopeFunctionConditionsStruct[], index: i32): boolean {
+  const paramType = conditions[index].paramType
+  switch (paramType) {
+    case ParameterType.Static:
+      return true
+    case ParameterType.Tuple:
+      for (let j = index + 1; j < conditions.length; ++j) {
+        const parent = conditions[j].parent
+        if (parent < index) continue
+        if (parent > index) break
+        if (!isInline(conditions, j)) {
+          return false
+        }
+      }
+      return true
+    default:
+      return false
+  }
 }

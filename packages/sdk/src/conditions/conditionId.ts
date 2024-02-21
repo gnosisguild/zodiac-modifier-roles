@@ -7,9 +7,10 @@ import {
   hexlify,
   hexConcat,
   keccak256,
+  hexZeroPad,
 } from "ethers/lib/utils"
 
-import { Condition, Operator } from "../types"
+import { Condition, Operator, ParameterType } from "../types"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 import { flattenCondition } from "./flattenCondition"
@@ -17,20 +18,26 @@ import { ConditionFlat } from "./types"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
   "0xce0042b868300000d44a59004da54a005ffdcf9f"
-const CREATE2_SALT =
-  "0xbadfed0000000000000000000000000000000000000000000000000000badfed"
+const ZERO_SALT =
+  "0x0000000000000000000000000000000000000000000000000000000000000000"
 
+/**
+ * Calculates the create2 storage address of the condition.
+ */
 export const conditionId = (condition: Condition) => {
   const conditions = flattenCondition(condition)
+  removeExtraneousOffsets(conditions)
+
   const packed = hexConcat([
     ...conditions.map((condition) => packCondition(condition)),
     ...conditions.map((condition) => packCompValue(condition)),
   ])
 
   const initCode = initCodeFor(packed)
+
   return getCreate2Address(
     ERC2470_SINGLETON_FACTORY_ADDRESS,
-    CREATE2_SALT,
+    ZERO_SALT,
     keccak256(initCode)
   ).toLowerCase()
 }
@@ -43,10 +50,13 @@ const offsetParamType = 5
 const offsetOperator = 0
 
 const packCondition = (condition: ConditionFlat) =>
-  hexlify(
-    (condition.parent << offsetParent) |
-      (condition.paramType << offsetParamType) |
-      (condition.operator << offsetOperator)
+  hexZeroPad(
+    hexlify(
+      (condition.parent << offsetParent) |
+        (condition.paramType << offsetParamType) |
+        (condition.operator << offsetOperator)
+    ),
+    2
   )
 
 const packCompValue = (condition: ConditionFlat) => {
@@ -57,16 +67,49 @@ const packCompValue = (condition: ConditionFlat) => {
     )
   }
 
-  return condition.operator == Operator.EqualTo
+  return condition.operator === Operator.EqualTo
     ? keccak256(condition.compValue)
     : encodeAbiParameters(["bytes32"], [condition.compValue])
+}
+
+const removeExtraneousOffsets = (conditions: ConditionFlat[]) => {
+  for (let i = 0; i < conditions.length; i++) {
+    if (
+      conditions[i].compValue &&
+      conditions[i].operator == Operator.EqualTo &&
+      !isInline(conditions, i)
+    ) {
+      conditions[i].compValue = "0x" + conditions[i].compValue!.slice(66)
+    }
+  }
+}
+
+const isInline = (conditions: ConditionFlat[], index: number) => {
+  const paramType = conditions[index].paramType
+  switch (paramType) {
+    case ParameterType.Static:
+      return true
+    case ParameterType.Tuple:
+      for (let j = index + 1; j < conditions.length; ++j) {
+        const parent = conditions[j].parent
+        if (parent < index) continue
+        if (parent > index) break
+        if (!isInline(conditions, j)) {
+          return false
+        }
+      }
+      return true
+    default:
+      return false
+  }
 }
 
 const initCodeFor = (bytecode: BytesLike) =>
   concat([
     "0x63",
-    BigNumber.from(hexDataLength(bytecode) + 1).toHexString(),
-    "0x80600E6000396000F300",
+    hexZeroPad(BigNumber.from(hexDataLength(bytecode) + 1).toHexString(), 4),
+    "0x80600E6000396000F3",
+    "0x00",
     bytecode,
   ])
 

@@ -47,7 +47,6 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Arbitrum One](https://arbiscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Görli](https://goerli.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
 #### MultiSendUnwrapper (transaction unwrapper)
@@ -59,7 +58,6 @@ Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
 - [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Arbitrum One](https://arbiscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Görli](https://goerli.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 
 #### AvatarIsOwnerOfERC721 (custom condition)
@@ -71,18 +69,16 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Arbitrum One](https://arbiscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Görli](https://goerli.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Mumbai](https://mumbai.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.1)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.1.1)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.1)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.1.1)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.1)
-- [Görli](https://api.studio.thegraph.com/query/23167/zodiac-roles-goerli/v2.1.1)
-- [Mumbai](https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.1)
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.2)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.1.2)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.2)
+- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.1.2)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.2)
+- [Mumbai](https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.2)
 
 ### Development environment setup
 

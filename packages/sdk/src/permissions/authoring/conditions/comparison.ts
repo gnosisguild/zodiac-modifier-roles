@@ -44,7 +44,7 @@ export const gt =
   (value: BigNumberish): ConditionFunction<BigNumberish> =>
   (abiType: ParamType) => {
     const type = ParamType.from(abiType)
-    if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {
+    if (!type.type.startsWith("uint") && !type.type.startsWith("int")) {
       throw new Error("`gt` is only supported for uint and int params")
     }
     return {
@@ -64,7 +64,7 @@ export const lt =
   (value: BigNumberish): ConditionFunction<BigNumberish> =>
   (abiType: ParamType) => {
     const type = ParamType.from(abiType)
-    if (!type.type.startsWith("uint") || !type.type.startsWith("int")) {
+    if (!type.type.startsWith("uint") && !type.type.startsWith("int")) {
       throw new Error("`lt` is only supported for uint and int params")
     }
     return {

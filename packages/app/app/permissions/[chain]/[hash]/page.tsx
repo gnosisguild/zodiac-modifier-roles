@@ -10,12 +10,14 @@ import { kv } from "@vercel/kv"
 import { CHAINS, ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 
+const chains = Object.values(CHAINS)
+
 export default async function PermissionPage({
   params: { hash, chain },
 }: {
   params: { hash: string; chain: string }
 }) {
-  const chainId = CHAINS[Number(chain) as ChainId]?.id as ChainId | undefined
+  const chainId = chains.find((c) => c.prefix === chain.toLowerCase())?.id
   if (!chainId) {
     notFound()
   }

@@ -1,7 +1,10 @@
 import { BigNumberish } from "ethers"
 
 import * as c from "../src/permissions/authoring/conditions"
-import { Scoping } from "../src/permissions/authoring/conditions/types"
+import {
+  ArrayScoping,
+  Scoping,
+} from "../src/permissions/authoring/conditions/types"
 
 // These are tests of the typing system, not the runtime behavior.
 // There's nothing to run here, but the code should not have any TypeScript errors.
@@ -21,6 +24,12 @@ const _t04: Scoping<{ a: Promise<string> }> = { a: Promise.resolve("a") }
 // @ts-expect-error - It should only be allowed to use gt on BigNumberish scopings
 const _t05: Scoping<string[]> = c.gt(0)
 
+const _t07: Scoping<[Struct, Struct]> = c.matches([
+  undefined,
+  // @ts-expect-error - It should correctly infer types for matches children
+  { wrong: "foo" },
+] as const)
+
 const oneOf = (values: string[]) =>
   values.length === 0
     ? undefined
@@ -38,3 +47,8 @@ c.calldataMatches({
   targetAddress: "0x1234567890123456789012345678901234567890",
   selector: "0x12345678",
 })
+
+type Struct = {
+  name: string
+  version: string
+}
