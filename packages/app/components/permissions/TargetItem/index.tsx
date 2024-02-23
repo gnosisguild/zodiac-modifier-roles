@@ -45,7 +45,12 @@ const TargetItem: React.FC<{
     >
       <Disclosure
         button={
-          <Flex gap={4} justifyContent="space-between" alignItems="center">
+          <Flex
+            gap={4}
+            justifyContent="space-between"
+            alignItems="center"
+            className={classes.targetHeader}
+          >
             <LabeledData label="Target Contract">
               <Address
                 address={targetAddress}

@@ -11,7 +11,7 @@ export interface Props {
   rounded?: boolean
   roundedLeft?: boolean
   roundedRight?: boolean
-  p?: 1 | 2 | 3
+  p?: 0 | 1 | 2 | 3
   children?: ReactNode
   title?: string
 }

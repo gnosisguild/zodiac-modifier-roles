@@ -108,14 +108,15 @@ const ExecutionAndCondition: React.FC<{
   abi?: AbiFunction
 }> = async ({ condition, delegatecall, send, abi }) => {
   return (
-    <div className={classes.condition}>
+    <Flex direction="column" gap={3}>
       <ExecutionOptions delegatecall={delegatecall} send={send} />
+      <div className={classes.calldataHeader}>Calldata Conditions</div>
       {condition ? (
         <ConditionView condition={condition} abi={abi} />
       ) : (
         <div>No condition set</div>
       )}
-    </div>
+    </Flex>
   )
 }
 

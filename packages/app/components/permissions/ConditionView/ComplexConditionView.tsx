@@ -6,7 +6,6 @@ import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import ConditionHeader from "./ConditionHeader"
 import { ChildConditions } from "."
-import classNames from "classnames"
 
 interface Props {
   condition: Condition
@@ -14,15 +13,16 @@ interface Props {
   abi?: AbiFunction | AbiParameter
 }
 
-const PassConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
-  const [collapsed, setCollapsed] = useState(true)
+const ComplexConditionView: React.FC<Props> = ({
+  condition,
+  paramIndex,
+  abi,
+}) => {
+  const [collapsed, setCollapsed] = useState(false)
   const toggleCollapsed = () => setCollapsed((val) => !val)
 
   return (
-    <div
-      className={classNames(classes.pass, classes.conditionContainer)}
-      title="No condition set"
-    >
+    <div className={classes.conditionContainer}>
       <div onClick={condition.children ? toggleCollapsed : () => {}}>
         <ConditionHeader
           condition={condition}
@@ -42,4 +42,4 @@ const PassConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   )
 }
 
-export default PassConditionView
+export default ComplexConditionView

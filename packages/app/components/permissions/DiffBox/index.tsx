@@ -17,6 +17,7 @@ const DiffBox: React.FC<{
     <Box
       borderless={borderless}
       bg={bg}
+      p={0}
       className={cn(
         classes.container,
         diff && classes.diff,

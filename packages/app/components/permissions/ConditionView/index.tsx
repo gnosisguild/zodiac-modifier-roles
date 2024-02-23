@@ -1,4 +1,4 @@
-import { Condition, Operator } from "zodiac-roles-sdk"
+import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import {
   AbiFunction,
@@ -7,14 +7,14 @@ import {
   parseAbiParameter,
 } from "viem"
 
-import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
-import Indent from "./Indent"
 import ConditionHeader from "./ConditionHeader"
 import PassConditionView from "./PassConditionView"
 import BitmaskConditionView from "./BitmaskConditionView"
 import LabeledData from "@/ui/LabeledData"
+import classNames from "classnames"
+import ComplexConditionView from "./ComplexConditionView"
 
 export interface Props {
   condition: Condition
@@ -23,6 +23,19 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
+  const paramTypeLabel =
+    !abi || "inputs" in abi ? ParameterType[condition.paramType] : abi.type
+
+  if (condition.paramType === ParameterType.Calldata) {
+    return (
+      <CalldataConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
+    )
+  }
+
   if (condition.operator === Operator.Pass) {
     return (
       <PassConditionView
@@ -128,7 +141,12 @@ const LogicalConditionView: React.FC<Props> = ({
       : Operator[operator]
 
   return (
-    <Box p={2} className={classes.logicalCondition}>
+    <div
+      className={classNames(
+        classes.logicalCondition,
+        classes.conditionContainer
+      )}
+    >
       <div className={classes.logicalConditionBar} />
       {childrenLength <= 1 && (
         <div className={classes.singleItemOperatorLabel}>{operatorLabel}</div>
@@ -144,28 +162,23 @@ const LogicalConditionView: React.FC<Props> = ({
           </div>
         }
       />
-    </Box>
+    </div>
   )
 }
 
-const ComplexConditionView: React.FC<Props> = ({
+const CalldataConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
   abi,
 }) => {
   return (
-    <Box p={2} borderless>
-      <ConditionHeader
-        condition={condition}
-        paramIndex={paramIndex}
-        abi={abi}
-      />
+    <div>
       <ChildConditions
         condition={condition}
         paramIndex={paramIndex}
         abi={abi}
       />
-    </Box>
+    </div>
   )
 }
 
@@ -176,10 +189,20 @@ export const ChildConditions: React.FC<
 > = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
-  const indentLevels = calcChildrenIndentLevels(condition)
+  const isCalldataCondition = condition.paramType === ParameterType.Calldata
+  const isLogicalCondition =
+    operator >= Operator.And && operator <= Operator.Nor
   return (
-    <div className={classes.conditionBody}>
-      <Flex direction="column" gap={1}>
+    <div
+      className={classNames(
+        classes.conditionBody,
+        isCalldataCondition && classes.initialCondition
+      )}
+    >
+      {!isLogicalCondition && !isCalldataCondition && (
+        <div className={classes.verticalGuide} />
+      )}
+      <Flex direction="column" gap={2}>
         {children?.map((condition, index) => {
           let childParamIndex: number | undefined = undefined
           let childAbi: AbiFunction | AbiParameter | undefined = undefined
@@ -221,13 +244,11 @@ export const ChildConditions: React.FC<
 
           return (
             <Fragment key={index}>
-              <Indent level={indentLevels[index]}>
-                <ConditionView
-                  condition={condition}
-                  paramIndex={childParamIndex}
-                  abi={childAbi}
-                />
-              </Indent>
+              <ConditionView
+                condition={condition}
+                paramIndex={childParamIndex}
+                abi={childAbi}
+              />
               {index < childrenLength - 1 && separator}
             </Fragment>
           )
@@ -273,16 +294,6 @@ const calcMaxLogicalDepth = (condition: Condition): number => {
         )
 }
 
-const calcChildrenIndentLevels = (condition: Condition): number[] => {
-  const { children } = condition
-  if (!children) return []
-
-  const childrenDepths = children.map(calcMaxLogicalDepth)
-  const maxDepth = Math.max(...childrenDepths)
-
-  return childrenDepths.map((depth) => maxDepth - depth)
-}
-
 const ComparisonConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
@@ -307,13 +318,20 @@ const ComparisonConditionView: React.FC<Props> = ({
   }
 
   return (
-    <Box p={2} borderless>
+    <div className={classes.conditionContainer}>
       <ConditionHeader condition={condition} paramIndex={paramIndex} abi={abi}>
         {condition.operator !== Operator.EqualToAvatar && (
-          <input type="text" readOnly value={value} />
+          <LabeledData label="Value">
+            <input
+              type="text"
+              readOnly
+              value={value}
+              className={classes.conditionInput}
+            />
+          </LabeledData>
         )}
       </ConditionHeader>
-    </Box>
+    </div>
   )
 }
 
