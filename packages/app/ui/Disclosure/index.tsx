@@ -8,11 +8,16 @@ import classNames from "classnames"
 interface DisclosureProps {
   button: React.ReactNode
   children: React.ReactNode
+  defaultOpen?: boolean
 }
 
-const Disclosure: React.FC<DisclosureProps> = ({ button, children }) => {
+const Disclosure: React.FC<DisclosureProps> = ({
+  button,
+  children,
+  defaultOpen = false,
+}) => {
   return (
-    <HeadlessDisclosure>
+    <HeadlessDisclosure defaultOpen={defaultOpen}>
       {({ open }) => (
         <>
           <HeadlessDisclosure.Button

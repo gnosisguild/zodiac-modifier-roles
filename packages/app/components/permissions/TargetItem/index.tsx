@@ -44,6 +44,7 @@ const TargetItem: React.FC<{
       diff={targetDiff === DiffFlag.Modified ? undefined : targetDiff} // we don't highlight the modified target since this would get a bit too colorful
     >
       <Disclosure
+        defaultOpen
         button={
           <Flex
             gap={4}
