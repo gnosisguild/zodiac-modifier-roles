@@ -9,7 +9,7 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "@reduxjs/toolkit": "^1.7.1",
-    "axios": "^1.6.2",
+    "axios": "^1.6.3",
     "axios-cache-adapter": "^2.7.3",
     "bnc-onboard": "^1.37.0",
     "classnames": "^2.3.1",
