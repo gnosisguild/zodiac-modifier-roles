@@ -36,7 +36,7 @@ export default async function PermissionPage({
     <Layout
       head={
         <>
-          <Breadcrumb href={`/permissions/${chainId}/${hash}`}>
+          <Breadcrumb href={`/permissions/${chain}/${hash}`}>
             <Flex gap={2} alignItems="center">
               <MdOutlinePolicy />
               <code className={styles.hash}>{hash}</code>
