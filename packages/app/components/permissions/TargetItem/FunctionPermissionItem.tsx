@@ -81,22 +81,24 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 const AbiFunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & { abi: AbiFunction }
 > = async ({ condition, delegatecall, send, abi }) => {
-  const params =
-    abi.inputs?.map((input) => input.type + " " + input.name).join(", ") || ""
+  const params = abi.inputs?.map((input) => input.type + " " + input.name) || []
 
   return (
     <Flex direction="column" gap={3}>
       <div>
-        <Flex gap={5} alignItems="start" className={classes.signature}>
-          <LabeledData label="Function Signature">
+        <LabeledData label="Function Signature">
+          <Flex gap={2} alignItems="center" className={classes.signature}>
             <div className={classes.selector}>{abi.name}</div>
-          </LabeledData>
-          {params && (
-            <LabeledData label="Parameters">
-              <code className={classes.params}>{params}</code>
-            </LabeledData>
-          )}
-        </Flex>
+
+            <Flex gap={1} alignItems="start">
+              {params.map((param, i) => (
+                <code className={classes.param} key={i}>
+                  {param}
+                </code>
+              ))}
+            </Flex>
+          </Flex>
+        </LabeledData>
       </div>
       <ExecutionAndCondition {...{ condition, delegatecall, send, abi }} />
     </Flex>
