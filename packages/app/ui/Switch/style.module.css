@@ -24,7 +24,7 @@
 .knobCase {
   border: 1px solid var(--border-color);
   border-radius: 100px;
-  height: 1.5em;
+  height: 1em;
   aspect-ratio: 2;
   background: rgb(255 107 107 / 8%);
 }
@@ -45,6 +45,11 @@
   justify-content: center;
   transition: transform 0.2s ease-in-out;
   color: #ff6b6b;
+}
+.knob svg {
+  position: relative;
+  left: -0.5px;
+  top: 0.5px;
 }
 
 .knob.checkedKnob {

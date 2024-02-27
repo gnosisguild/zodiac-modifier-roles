@@ -37,9 +37,16 @@ const ConditionHeader: React.FC<Props> = ({
       gap={0}
       alignItems="center"
       justifyContent="space-between"
-      className={classNames(classes.param, isComplexType && classes.hoverable)}
+      className={classNames(
+        classes.conditionHeader,
+        isComplexType && classes.hoverable
+      )}
     >
-      <Flex gap={3} alignItems="center">
+      <Flex
+        gap={3}
+        alignItems="center"
+        className={classes.conditionHeaderInner}
+      >
         {paramName && (
           <LabeledData label="Parameter">
             <div className={classes.paramInfo}>{paramName}</div>

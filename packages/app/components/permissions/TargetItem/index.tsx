@@ -4,7 +4,6 @@ import {
   PermissionCoerced,
 } from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
-import ExecutionOptions from "./ExecutionOptions"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
 import FunctionPermissionItem from "./FunctionPermissionItem"
@@ -14,6 +13,7 @@ import DiffBox from "../DiffBox"
 import classes from "./style.module.css"
 import LabeledData from "@/ui/LabeledData"
 import Disclosure from "@/ui/Disclosure"
+import Switch from "@/ui/Switch"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -109,9 +109,22 @@ const WildcardPermissionItem: React.FC<
 > = ({ delegatecall, send, diff }) => {
   return (
     <DiffBox diff={diff}>
-      <Flex direction="column" gap={3}>
-        <div>ALL FUNCTIONS</div>
-        <ExecutionOptions delegatecall={delegatecall} send={send} />
+      <Flex direction="row" gap={5}>
+        <Flex direction="row" gap={0} justifyContent="space-between">
+          <LabeledData label="Function Signature">
+            <Flex gap={2} alignItems="center" className={classes.signature}>
+              <div className={classes.selector}>ALL FUNCTIONS</div>
+            </Flex>
+          </LabeledData>
+          <Flex gap={3} alignItems="start">
+            <LabeledData label="Send value">
+              <Switch label="" checked={!!send} disabled />
+            </LabeledData>
+            <LabeledData label="Delegate call">
+              <Switch label="" checked={!!delegatecall} disabled />
+            </LabeledData>
+          </Flex>
+        </Flex>
       </Flex>
     </DiffBox>
   )
