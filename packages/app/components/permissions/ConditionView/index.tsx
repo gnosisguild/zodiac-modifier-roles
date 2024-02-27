@@ -1,11 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import {
-  AbiFunction,
-  AbiParameter,
-  decodeAbiParameters,
-  parseAbiParameter,
-} from "viem"
+import { AbiFunction, AbiParameter, decodeAbiParameters } from "viem"
 
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -15,6 +10,8 @@ import BitmaskConditionView from "./BitmaskConditionView"
 import LabeledData from "@/ui/LabeledData"
 import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
+import { isLogicalOperator, isArrayOperator, arrayElementType } from "./utils"
+export { matchesAbi } from "./utils"
 
 export interface Props {
   condition: Condition
@@ -23,9 +20,6 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
-  const paramTypeLabel =
-    !abi || "inputs" in abi ? ParameterType[condition.paramType] : abi.type
-
   if (condition.paramType === ParameterType.Calldata) {
     return (
       <CalldataConditionView
@@ -264,27 +258,6 @@ export const ChildConditions: React.FC<
   )
 }
 
-const isLogicalOperator = (operator: Operator) =>
-  operator >= Operator.And && operator <= Operator.Nor
-
-const isArrayOperator = (operator: Operator) =>
-  operator >= Operator.ArrayEvery && operator <= Operator.ArraySubset
-
-const arrayElementType = (abi: AbiParameter): AbiParameter | undefined => {
-  const arrayComponents = getArrayComponents(abi.type)
-  if (!arrayComponents) return undefined
-  const [_length, elementType] = arrayComponents
-  const [_, elementInternalType] =
-    (abi.internalType && getArrayComponents(abi.internalType as string)) || []
-
-  return {
-    type: elementType,
-    internalType: elementInternalType,
-    // element tuple components are stored on the array type
-    components: (abi as any).components,
-  }
-}
-
 const calcMaxLogicalDepth = (condition: Condition): number => {
   const { children, operator } = condition
   if (!children) return 0
@@ -353,11 +326,4 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
       </LabeledData>
     </Flex>
   )
-}
-
-const getArrayComponents = (
-  type: string
-): [length: number | null, innerType: string] | null => {
-  const matches = type.match(/^(.*)\[(\d+)?\]$/)
-  return matches ? [matches[2] ? Number(matches[2]) : null, matches[1]] : null
 }

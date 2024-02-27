@@ -1,23 +1,17 @@
-import { ChainId, Condition, FunctionPermissionCoerced } from "zodiac-roles-sdk"
+import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 import { whatsabi } from "@shazow/whatsabi"
 import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
 import { cache } from "react"
-import {
-  Abi,
-  AbiFunction,
-  createPublicClient,
-  http,
-  parseAbi,
-  toFunctionSelector,
-} from "viem"
+import { AbiFunction, createPublicClient, http, toFunctionSelector } from "viem"
 import Flex from "@/ui/Flex"
-import ConditionView from "../ConditionView"
+import ConditionView, { matchesAbi } from "../ConditionView"
 import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
 import LabeledData from "@/ui/LabeledData"
 import Switch from "@/ui/Switch"
+import { MdOutlineWarningAmber } from "react-icons/md"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -25,7 +19,15 @@ const FunctionPermissionItem: React.FC<
     modified?: FunctionPermissionCoerced
     chainId: ChainId
   }
-> = async ({ chainId, targetAddress, selector, diff, modified, ...rest }) => {
+> = async ({
+  chainId,
+  targetAddress,
+  selector,
+  diff,
+  modified,
+  condition,
+  ...rest
+}) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
 
   const functionAbi = abi.find(
@@ -46,12 +48,14 @@ const FunctionPermissionItem: React.FC<
           targetAddress={targetAddress}
           selector={selector}
           abi={functionAbi}
+          condition={condition}
           {...rest}
         />
       ) : (
         <RawFunctionPermissionItem
           targetAddress={targetAddress}
           selector={selector}
+          condition={condition}
           {...rest}
         />
       )}

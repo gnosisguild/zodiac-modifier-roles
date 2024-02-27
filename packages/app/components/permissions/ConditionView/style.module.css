@@ -175,3 +175,8 @@
 .compValue {
   width: 100%;
 }
+
+.abiMismatch {
+  color: var(--error-color);
+  font-weight: bold;
+}

@@ -1,12 +1,14 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { AbiFunction, AbiParameter } from "viem"
 import { ReactNode } from "react"
-import { RiArrowDropDownLine, RiArrowDropRightLine } from "react-icons/ri"
+import { BsLightningCharge } from "react-icons/bs"
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
 import LabeledData from "@/ui/LabeledData"
 import { SlArrowDown } from "react-icons/sl"
 import classNames from "classnames"
+import { matchesAbi } from "./utils"
+import { MdErrorOutline } from "react-icons/md"
 
 interface Props {
   condition: Condition
@@ -26,8 +28,12 @@ const ConditionHeader: React.FC<Props> = ({
   const { operator, paramType } = condition
   const paramName =
     paramIndex !== undefined ? abi?.name || `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
+
   const paramTypeLabel =
     !abi || "inputs" in abi ? ParameterType[paramType] : abi.type
+
+  const abiMismatch = abi && condition && !matchesAbi(condition, abi)
+
   const operatorLabel = OperatorLabels[operator] || Operator[operator]
 
   const isComplexType = paramType >= ParameterType.Tuple
@@ -53,7 +59,22 @@ const ConditionHeader: React.FC<Props> = ({
           </LabeledData>
         )}
         <LabeledData label="Type" className={classes.paramInfoLabel}>
-          <div className={classes.paramInfo}>{paramTypeLabel}</div>
+          <div className={classes.paramInfo}>
+            {abiMismatch ? (
+              <Flex
+                gap={1}
+                alignItems="center"
+                className={classes.abiMismatch}
+                title="The condition is not compatible with the ABI parameter type"
+              >
+                {paramTypeLabel}
+                <BsLightningCharge />
+                {ParameterType[paramType]}
+              </Flex>
+            ) : (
+              paramTypeLabel
+            )}
+          </div>
         </LabeledData>
 
         {operator !== Operator.Pass && (

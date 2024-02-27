@@ -9,7 +9,7 @@ export const body = Spectral({
 
 export const mono = Roboto_Mono({
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["400", "700"],
   display: "swap",
   variable: "--font-mono",
 })

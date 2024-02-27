@@ -6,6 +6,7 @@
     "source.fixAll.eslint": "explicit"
   },
   "search.exclude": {
-    "**/build": true
+    "**/build": true,
+    ".yarn": true
   }
 }
