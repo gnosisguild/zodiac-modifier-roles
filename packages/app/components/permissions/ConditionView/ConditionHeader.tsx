@@ -36,7 +36,13 @@ const ConditionHeader: React.FC<Props> = ({
 
   const operatorLabel = OperatorLabels[operator] || Operator[operator]
 
-  const isComplexType = paramType >= ParameterType.Tuple
+  // only conditions that aren't used are collapsible
+  const isCollapsible =
+    paramType >= ParameterType.Tuple &&
+    !(
+      condition.operator >= Operator.Matches &&
+      condition.operator <= Operator.ArraySubset
+    )
 
   return (
     <Flex
@@ -45,7 +51,7 @@ const ConditionHeader: React.FC<Props> = ({
       justifyContent="space-between"
       className={classNames(
         classes.conditionHeader,
-        isComplexType && classes.hoverable
+        isCollapsible && classes.hoverable
       )}
     >
       <Flex
@@ -84,7 +90,7 @@ const ConditionHeader: React.FC<Props> = ({
         )}
         {children}
       </Flex>
-      {isComplexType && (
+      {isCollapsible && (
         <SlArrowDown
           className={classNames(
             classes.collapseIcon,

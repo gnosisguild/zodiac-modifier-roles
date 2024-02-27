@@ -2,7 +2,6 @@
 import { Condition } from "zodiac-roles-sdk"
 import { AbiFunction, AbiParameter } from "viem"
 import { useState } from "react"
-import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import ConditionHeader from "./ConditionHeader"
 import { ChildConditions } from "."
@@ -17,7 +16,6 @@ interface Props {
 const PassConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   const [collapsed, setCollapsed] = useState(true)
   const toggleCollapsed = () => setCollapsed((val) => !val)
-
   return (
     <div
       className={classNames(classes.pass, classes.conditionContainer)}

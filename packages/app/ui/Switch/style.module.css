@@ -45,6 +45,7 @@
   justify-content: center;
   transition: transform 0.2s ease-in-out;
   color: #ff6b6b;
+  font-size: 0.8em;
 }
 .knob svg {
   position: relative;

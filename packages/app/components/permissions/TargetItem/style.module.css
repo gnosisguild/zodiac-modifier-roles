@@ -81,3 +81,9 @@
   top: auto;
   bottom: 0px;
 }
+.conditionEmpty {
+  padding: var(--spacing-2);
+  background: rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+}
