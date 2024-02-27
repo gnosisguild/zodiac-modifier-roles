@@ -1,5 +1,6 @@
 import { ChainId, Condition, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 import { whatsabi } from "@shazow/whatsabi"
+import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
 import { cache } from "react"
 import {
   Abi,
@@ -26,6 +27,7 @@ const FunctionPermissionItem: React.FC<
   }
 > = async ({ chainId, targetAddress, selector, diff, modified, ...rest }) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
+
   const functionAbi = abi.find(
     (fragment) =>
       fragment.type === "function" && toFunctionSelector(fragment) === selector
@@ -155,6 +157,17 @@ const fetchAbi = cache(async (address: string, chainId: ChainId) => {
 
   return {
     address: result.address,
-    abi: result.abi.filter((item) => item.type === "function") as AbiFunction[],
+    abi: (
+      result.abi.filter((item) => item.type === "function") as ABIFunction[]
+    ).map(coerceAbiFunction) as AbiFunction[],
   }
+})
+
+const coerceAbiFunction = (abi: ABIFunction): AbiFunction => ({
+  ...abi,
+  inputs: abi.inputs || [],
+  outputs: abi.outputs || [],
+  name: abi.name || "",
+  stateMutability:
+    abi.stateMutability || (abi.payable ? "payable" : "nonpayable"),
 })

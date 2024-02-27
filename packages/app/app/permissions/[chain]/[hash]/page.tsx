@@ -38,7 +38,7 @@ export default async function PermissionPage({
     <Layout
       head={
         <>
-          <Breadcrumb>
+          <Breadcrumb href={`/permissions/${chain}/${hash}`}>
             <Flex gap={2} alignItems="center">
               <LabeledData label="Permission Hash">
                 <div className={classes.hash}>{hash}</div>

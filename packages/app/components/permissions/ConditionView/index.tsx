@@ -192,6 +192,7 @@ export const ChildConditions: React.FC<
   const isCalldataCondition = condition.paramType === ParameterType.Calldata
   const isLogicalCondition =
     operator >= Operator.And && operator <= Operator.Nor
+
   return (
     <div
       className={classNames(
@@ -203,7 +204,7 @@ export const ChildConditions: React.FC<
         <div className={classes.verticalGuide} />
       )}
       <Flex direction="column" gap={2}>
-        {children?.map((condition, index) => {
+        {children?.map((child, index) => {
           let childParamIndex: number | undefined = undefined
           let childAbi: AbiFunction | AbiParameter | undefined = undefined
           if (isLogicalOperator(operator)) {
@@ -230,12 +231,17 @@ export const ChildConditions: React.FC<
                 if (elementType) {
                   // array type
                   childAbi = elementType
-                } else if ("components" in abi) {
+                } else if ("components" in abi && !!abi.components) {
                   // tuple type
                   childAbi = abi.components[index]
+                } else if (abi.type === "bytes") {
+                  // We're dealing with a `bytes` type that will be decoded according to the conditions type tree.
+                  // From here on down, no ABI information will be available.
+                  childAbi = undefined
                 } else {
+                  console.error({ abi, condition, child })
                   throw new Error(
-                    "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple or array type AbiParameter"
+                    "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple, array, or bytes type AbiParameter"
                   )
                 }
               }
@@ -245,7 +251,7 @@ export const ChildConditions: React.FC<
           return (
             <Fragment key={index}>
               <ConditionView
-                condition={condition}
+                condition={child}
                 paramIndex={childParamIndex}
                 abi={childAbi}
               />
