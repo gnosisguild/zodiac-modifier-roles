@@ -327,7 +327,7 @@ const ComparisonConditionView: React.FC<Props> = ({
     <div className={classes.conditionContainer}>
       <ConditionHeader condition={condition} paramIndex={paramIndex} abi={abi}>
         {condition.operator !== Operator.EqualToAvatar && (
-          <LabeledData label="Value">
+          <LabeledData label="Value" className={classes.compValue}>
             <input
               type="text"
               readOnly

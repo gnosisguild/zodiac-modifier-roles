@@ -9,7 +9,7 @@ import classNames from "classnames"
 import classes from "./style.module.css"
 
 type Props = {
-  label: ReactNode
+  label?: ReactNode
   checked: boolean
   disabled?: boolean
   onChange?: (checked: boolean) => void

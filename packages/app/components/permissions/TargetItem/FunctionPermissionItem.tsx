@@ -11,13 +11,13 @@ import {
   toFunctionSelector,
 } from "viem"
 import Flex from "@/ui/Flex"
-import ExecutionOptions from "./ExecutionOptions"
 import ConditionView from "../ConditionView"
 import { CHAINS } from "@/app/chains"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
 import LabeledData from "@/ui/LabeledData"
+import Switch from "@/ui/Switch"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -70,10 +70,24 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 }) => {
   return (
     <Flex direction="column" gap={3}>
-      <LabeledData label="Function Selector">
-        <div className={classes.selector}>{selector}</div>
-      </LabeledData>
-      <ExecutionAndCondition {...{ condition, delegatecall, send }} />
+      <Flex direction="row" gap={0} justifyContent="space-between">
+        <LabeledData label="Function Selector">
+          <div className={classes.selector}>{selector}</div>
+        </LabeledData>
+        <Flex gap={3} alignItems="start">
+          <LabeledData label="Send value">
+            <Switch checked={!!send} disabled />
+          </LabeledData>
+          <LabeledData label="Delegate call">
+            <Switch checked={!!delegatecall} disabled />
+          </LabeledData>
+        </Flex>
+      </Flex>
+      {condition ? (
+        <ConditionView {...{ condition }} />
+      ) : (
+        <div className={classes.conditionEmpty}>No condition set</div>
+      )}
     </Flex>
   )
 }
@@ -81,42 +95,37 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 const AbiFunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & { abi: AbiFunction }
 > = async ({ condition, delegatecall, send, abi }) => {
-  const params =
-    abi.inputs?.map((input) => input.type + " " + input.name).join(", ") || ""
+  const params = abi.inputs?.map((input) => input.type + " " + input.name) || []
 
   return (
     <Flex direction="column" gap={3}>
-      <div>
-        <Flex gap={5} alignItems="start" className={classes.signature}>
-          <LabeledData label="Function Signature">
+      <Flex direction="row" gap={0} justifyContent="space-between">
+        <LabeledData label="Function Signature">
+          <Flex gap={2} alignItems="center" className={classes.signature}>
             <div className={classes.selector}>{abi.name}</div>
-          </LabeledData>
-          {params && (
-            <LabeledData label="Parameters">
-              <code className={classes.params}>{params}</code>
-            </LabeledData>
-          )}
-        </Flex>
-      </div>
-      <ExecutionAndCondition {...{ condition, delegatecall, send, abi }} />
-    </Flex>
-  )
-}
 
-const ExecutionAndCondition: React.FC<{
-  condition?: Condition
-  delegatecall?: boolean
-  send?: boolean
-  abi?: AbiFunction
-}> = async ({ condition, delegatecall, send, abi }) => {
-  return (
-    <Flex direction="column" gap={3}>
-      <ExecutionOptions delegatecall={delegatecall} send={send} />
-      <div className={classes.calldataHeader}>Calldata Conditions</div>
+            <Flex gap={1} alignItems="start">
+              {params.map((param, i) => (
+                <code className={classes.param} key={i}>
+                  {param}
+                </code>
+              ))}
+            </Flex>
+          </Flex>
+        </LabeledData>
+        <Flex gap={3} alignItems="start">
+          <LabeledData label="Send value">
+            <Switch checked={!!send} disabled />
+          </LabeledData>
+          <LabeledData label="Delegate call">
+            <Switch checked={!!delegatecall} disabled />
+          </LabeledData>
+        </Flex>
+      </Flex>
       {condition ? (
-        <ConditionView condition={condition} abi={abi} />
+        <ConditionView {...{ condition, abi }} />
       ) : (
-        <div>No condition set</div>
+        <div className={classes.conditionEmpty}>No condition set</div>
       )}
     </Flex>
   )

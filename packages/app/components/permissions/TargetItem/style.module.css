@@ -7,35 +7,30 @@
   font-size: 14px;
 }
 
-.params {
+.param {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
-  position: relative;
   background: none;
-  padding: var(--spacing-1) var(--spacing-3);
   border: none;
-  border-radius: 100px;
+  padding: 0;
 }
 
-.params::before {
-  left: 0px;
-  border-left: 2px solid;
+.param:first-child::before {
+  content: "( ";
+}
+.param:last-child::after {
+  content: " )";
+}
+.param + .param::before {
+  content: ", ";
 }
 
-.params::after {
-  right: 0px;
-  border-right: 2px solid;
-}
-
-.params::after,
-.params::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  border-radius: 100%;
-  border-color: rgba(255, 255, 255, 0.5);
+.param:first-child::before,
+.param:last-child::after,
+.param + .param::before {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .targetHeader .targetBlockie {
@@ -85,7 +80,4 @@
 .verticalGuide::after {
   top: auto;
   bottom: 0px;
-}
-
-.calldataHeader {
 }

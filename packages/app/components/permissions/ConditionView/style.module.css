@@ -70,16 +70,19 @@
   margin-left: 0;
 }
 
-.param {
+.conditionHeader {
   background: var(--bg-color);
   padding: var(--spacing-2);
 }
-
-.param.hoverable {
+.conditionHeader.hoverable {
   cursor: pointer;
 }
-.param.hoverable:hover {
+.conditionHeader.hoverable:hover {
   background: var(--bg-color-hover);
+}
+
+.conditionHeaderInner {
+  width: 100%;
 }
 
 .paramInfo {
@@ -150,6 +153,7 @@
   border-radius: 4px;
   border: 1px solid var(--border-color);
   padding: 0 4px 0 2px;
+  font-style: normal;
 }
 
 .collapseIcon {
@@ -166,4 +170,8 @@
   padding: 0 var(--spacing-1);
   height: auto;
   line-height: 16px;
+}
+
+.compValue {
+  width: 100%;
 }
