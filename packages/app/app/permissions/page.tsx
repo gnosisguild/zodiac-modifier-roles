@@ -19,7 +19,7 @@ import {
   zTarget,
 } from "@/components/permissions/schema"
 import ChainSelect from "@/components/ChainSelect"
-import { ChainId, DEFAULT_CHAIN } from "../chains"
+import { ChainId, DEFAULT_CHAIN, CHAINS } from "../chains"
 
 export default function PermissionsPage() {
   const [chainId, setChainId] = useState<ChainId>(DEFAULT_CHAIN.id)
@@ -89,7 +89,7 @@ export default function PermissionsPage() {
     })
     const { hash } = await res.json()
     if (hash) {
-      router.push(`/permissions/${chainId}/${hash}`)
+      router.push(`/permissions/${CHAINS[chainId].prefix}/${hash}`)
     } else {
       setSubmitPending(false)
     }

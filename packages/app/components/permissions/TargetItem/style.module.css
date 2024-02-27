@@ -2,11 +2,88 @@
   display: inline-block;
 }
 
-.signature {
-  display: inline-flex;
+.selector {
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
 }
 
-.params {
+.param {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.param:first-child::before {
+  content: "( ";
+}
+.param:last-child::after {
+  content: " )";
+}
+.param + .param::before {
+  content: ", ";
+}
+
+.param:first-child::before,
+.param:last-child::after,
+.param + .param::before {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.targetHeader .targetBlockie {
+  height: 18px;
+  border: 0;
+  padding: 0;
+}
+
+.functionCount {
+  height: 30px;
+  font-family: var(--font-mono), monospace;
+  display: flex;
+  align-items: center;
+}
+
+.targetAddress {
+  height: 30px;
+}
+
+.targetContent {
+  padding: var(--spacing-3);
+  padding-left: var(--spacing-4);
+  position: relative;
+}
+
+.verticalGuide {
+  position: absolute;
+  top: 10px;
+  bottom: 0;
+  left: -20px;
+  width: 1px;
+  background-color: var(--border-color);
+  z-index: 10;
+}
+
+.verticalGuide::before,
+.verticalGuide::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 10px;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.verticalGuide::after {
+  top: auto;
+  bottom: 0px;
+}
+.conditionEmpty {
+  padding: var(--spacing-2);
+  background: rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
 }

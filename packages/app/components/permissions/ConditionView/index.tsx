@@ -1,18 +1,17 @@
-import { Condition, Operator } from "zodiac-roles-sdk"
+import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import {
-  AbiFunction,
-  AbiParameter,
-  decodeAbiParameters,
-  parseAbiParameter,
-} from "viem"
-import Box from "@/ui/Box"
+import { AbiFunction, AbiParameter, decodeAbiParameters } from "viem"
+
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
-import Indent from "./Indent"
 import ConditionHeader from "./ConditionHeader"
 import PassConditionView from "./PassConditionView"
 import BitmaskConditionView from "./BitmaskConditionView"
+import LabeledData from "@/ui/LabeledData"
+import classNames from "classnames"
+import ComplexConditionView from "./ComplexConditionView"
+import { isLogicalOperator, isArrayOperator, arrayElementType } from "./utils"
+export { matchesAbi } from "./utils"
 
 export interface Props {
   condition: Condition
@@ -21,6 +20,16 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
+  if (condition.paramType === ParameterType.Calldata) {
+    return (
+      <CalldataConditionView
+        condition={condition}
+        paramIndex={paramIndex}
+        abi={abi}
+      />
+    )
+  }
+
   if (condition.operator === Operator.Pass) {
     return (
       <PassConditionView
@@ -126,7 +135,12 @@ const LogicalConditionView: React.FC<Props> = ({
       : Operator[operator]
 
   return (
-    <Box p={2} className={classes.logicalCondition}>
+    <div
+      className={classNames(
+        classes.logicalCondition,
+        classes.conditionContainer
+      )}
+    >
       <div className={classes.logicalConditionBar} />
       {childrenLength <= 1 && (
         <div className={classes.singleItemOperatorLabel}>{operatorLabel}</div>
@@ -142,28 +156,23 @@ const LogicalConditionView: React.FC<Props> = ({
           </div>
         }
       />
-    </Box>
+    </div>
   )
 }
 
-const ComplexConditionView: React.FC<Props> = ({
+const CalldataConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
   abi,
 }) => {
   return (
-    <Box p={2} borderless>
-      <ConditionHeader
-        condition={condition}
-        paramIndex={paramIndex}
-        abi={abi}
-      />
+    <div>
       <ChildConditions
         condition={condition}
         paramIndex={paramIndex}
         abi={abi}
       />
-    </Box>
+    </div>
   )
 }
 
@@ -174,11 +183,22 @@ export const ChildConditions: React.FC<
 > = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
-  const indentLevels = calcChildrenIndentLevels(condition)
+  const isCalldataCondition = condition.paramType === ParameterType.Calldata
+  const isLogicalCondition =
+    operator >= Operator.And && operator <= Operator.Nor
+
   return (
-    <div className={classes.conditionBody}>
-      <Flex direction="column" gap={1}>
-        {children?.map((condition, index) => {
+    <div
+      className={classNames(
+        classes.conditionBody,
+        isCalldataCondition && classes.initialCondition
+      )}
+    >
+      {!isLogicalCondition && !isCalldataCondition && (
+        <div className={classes.verticalGuide} />
+      )}
+      <Flex direction="column" gap={2}>
+        {children?.map((child, index) => {
           let childParamIndex: number | undefined = undefined
           let childAbi: AbiFunction | AbiParameter | undefined = undefined
           if (isLogicalOperator(operator)) {
@@ -205,12 +225,17 @@ export const ChildConditions: React.FC<
                 if (elementType) {
                   // array type
                   childAbi = elementType
-                } else if ("components" in abi) {
+                } else if ("components" in abi && !!abi.components) {
                   // tuple type
                   childAbi = abi.components[index]
+                } else if (abi.type === "bytes") {
+                  // We're dealing with a `bytes` type that will be decoded according to the conditions type tree.
+                  // From here on down, no ABI information will be available.
+                  childAbi = undefined
                 } else {
+                  console.error({ abi, condition, child })
                   throw new Error(
-                    "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple or array type AbiParameter"
+                    "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple, array, or bytes type AbiParameter"
                   )
                 }
               }
@@ -219,13 +244,11 @@ export const ChildConditions: React.FC<
 
           return (
             <Fragment key={index}>
-              <Indent level={indentLevels[index]}>
-                <ConditionView
-                  condition={condition}
-                  paramIndex={childParamIndex}
-                  abi={childAbi}
-                />
-              </Indent>
+              <ConditionView
+                condition={child}
+                paramIndex={childParamIndex}
+                abi={childAbi}
+              />
               {index < childrenLength - 1 && separator}
             </Fragment>
           )
@@ -233,27 +256,6 @@ export const ChildConditions: React.FC<
       </Flex>
     </div>
   )
-}
-
-const isLogicalOperator = (operator: Operator) =>
-  operator >= Operator.And && operator <= Operator.Nor
-
-const isArrayOperator = (operator: Operator) =>
-  operator >= Operator.ArrayEvery && operator <= Operator.ArraySubset
-
-const arrayElementType = (abi: AbiParameter): AbiParameter | undefined => {
-  const arrayComponents = getArrayComponents(abi.type)
-  if (!arrayComponents) return undefined
-  const [_length, elementType] = arrayComponents
-  const [_, elementInternalType] =
-    (abi.internalType && getArrayComponents(abi.internalType as string)) || []
-
-  return {
-    type: elementType,
-    internalType: elementInternalType,
-    // element tuple components are stored on the array type
-    components: (abi as any).components,
-  }
 }
 
 const calcMaxLogicalDepth = (condition: Condition): number => {
@@ -269,16 +271,6 @@ const calcMaxLogicalDepth = (condition: Condition): number => {
               : 0
           })
         )
-}
-
-const calcChildrenIndentLevels = (condition: Condition): number[] => {
-  const { children } = condition
-  if (!children) return []
-
-  const childrenDepths = children.map(calcMaxLogicalDepth)
-  const maxDepth = Math.max(...childrenDepths)
-
-  return childrenDepths.map((depth) => maxDepth - depth)
 }
 
 const ComparisonConditionView: React.FC<Props> = ({
@@ -305,28 +297,33 @@ const ComparisonConditionView: React.FC<Props> = ({
   }
 
   return (
-    <Box p={2} borderless>
+    <div className={classes.conditionContainer}>
       <ConditionHeader condition={condition} paramIndex={paramIndex} abi={abi}>
         {condition.operator !== Operator.EqualToAvatar && (
-          <input type="text" readOnly value={value} />
+          <LabeledData label="Value" className={classes.compValue}>
+            <input
+              type="text"
+              readOnly
+              value={value}
+              className={classes.conditionInput}
+            />
+          </LabeledData>
         )}
       </ConditionHeader>
-    </Box>
+    </div>
   )
 }
 
 const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
   return (
-    <Box p={2}>
-      <p>This condition is not supported</p>
-      <pre>{JSON.stringify(condition, undefined, 2)}</pre>
-    </Box>
+    <Flex direction="column" gap={2} className={classes.unsupported}>
+      <LabeledData label="Unsupported Condition">
+        <p>
+          Cannot parse this condition (it most likely came from a different
+          interface)
+        </p>
+        <pre>{JSON.stringify(condition, undefined, 2)}</pre>
+      </LabeledData>
+    </Flex>
   )
-}
-
-const getArrayComponents = (
-  type: string
-): [length: number | null, innerType: string] | null => {
-  const matches = type.match(/^(.*)\[(\d+)?\]$/)
-  return matches ? [matches[2] ? Number(matches[2]) : null, matches[1]] : null
 }

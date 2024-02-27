@@ -1,5 +1,4 @@
 .main {
-  border: 1px solid var(--border-color);
   padding: var(--spacing-1);
 }
 
@@ -8,5 +7,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.headerHash {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+  font-family: var(--font-mono);
 }

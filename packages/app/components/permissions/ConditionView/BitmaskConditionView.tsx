@@ -6,6 +6,7 @@ import ConditionHeader from "./ConditionHeader"
 import Flex from "@/ui/Flex"
 import Field from "@/ui/Field"
 import { AbiFunction, AbiParameter } from "viem"
+import LabeledData from "@/ui/LabeledData"
 
 export interface Props {
   condition: Condition
@@ -28,26 +29,41 @@ const BitmaskConditionView: React.FC<Props> = ({
   const mask = hexlify(bytes.slice(2, 17))
   const value = hexlify(bytes.slice(17, 32))
   return (
-    <Box p={2} borderless>
+    <div className={classes.conditionContainer}>
       <ConditionHeader
         condition={condition}
         paramIndex={paramIndex}
         abi={abi}
       />
       <Flex direction="column" gap={2} className={classes.conditionBody}>
-        <Field label="shift">
-          <input type="text" readOnly value={shift} />
-        </Field>
+        <LabeledData label="Shift">
+          <input
+            type="text"
+            readOnly
+            value={shift}
+            className={classes.conditionInput}
+          />
+        </LabeledData>
 
-        <Field label="mask">
-          <input type="text" readOnly value={mask} />
-        </Field>
+        <LabeledData label="Mask">
+          <input
+            type="text"
+            readOnly
+            value={mask}
+            className={classes.conditionInput}
+          />
+        </LabeledData>
 
-        <Field label="expected value">
-          <input type="text" readOnly value={value} />
-        </Field>
+        <LabeledData label="Expected value">
+          <input
+            type="text"
+            readOnly
+            value={value}
+            className={classes.conditionInput}
+          />
+        </LabeledData>
       </Flex>
-    </Box>
+    </div>
   )
 }
 

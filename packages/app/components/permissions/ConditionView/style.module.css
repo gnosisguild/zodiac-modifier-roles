@@ -6,7 +6,12 @@
 }
 
 .logicalCondition {
+  border: 1px dashed var(--border-color);
   min-height: 40px;
+}
+
+.logicalCondition .conditionBody {
+  padding: var(--spacing-2);
 }
 
 .logicalConditionBar {
@@ -24,7 +29,7 @@
 }
 .logicalBranchSeparator .operatorLabel {
   position: absolute;
-  left: 0;
+  left: -16px;
   writing-mode: vertical-lr;
   transform: rotate(-180deg);
   text-transform: uppercase;
@@ -49,30 +54,129 @@
   line-height: var(--condition-indent);
 }
 
+.conditionContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
 .conditionBody {
+  position: relative;
   margin-left: var(--condition-indent);
 }
 
-.bullet {
-  width: 16px;
-  height: 18px;
+.conditionBody.initialCondition {
+  margin-left: 0;
 }
 
-.paramName {
-  flex-grow: 1;
+.conditionHeader {
+  background: var(--bg-color);
+  padding: var(--spacing-2);
+}
+.conditionHeader.hoverable {
+  cursor: pointer;
+}
+.conditionHeader.hoverable:hover {
+  background: var(--bg-color-hover);
 }
 
-.paramType {
+.conditionHeaderInner {
+  width: 100%;
+}
+
+.paramInfo {
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  padding: 2px 4px;
-  border-radius: 4px;
-  border: 1px solid rgba(217, 212, 173, 0.3);
-  position: relative;
-  top: -1px;
+  font-size: 12px;
+}
+
+.paramInfoLabel {
+  min-width: 60px;
 }
 
 .operator {
   white-space: nowrap;
-  text-align: right;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.unsupported {
+  padding: var(--spacing-2);
+}
+
+.unsupported pre {
+  color: var(--text-color);
+  margin: 0;
+  background-color: var(--bg-color);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: auto;
+  max-height: 200px;
+}
+
+.unsupported p {
+  margin: 0;
+  font-size: 12px;
+  margin-bottom: var(--spacing-2);
+}
+
+.verticalGuide {
+  position: absolute;
+  top: -62px;
+  bottom: 0;
+  left: -17px;
+  width: 1px;
+  background-color: var(--border-color);
+  z-index: 10;
+}
+
+.verticalGuide::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 10px;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.verticalGuide::after {
+  top: auto;
+  bottom: 0px;
+}
+
+.avatar {
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  padding: 0 4px 0 2px;
+  font-style: normal;
+}
+
+.collapseIcon {
+  margin-right: var(--spacing-1);
+}
+.openIcon {
+  transform: rotate(180deg);
+}
+
+.conditionInput:read-only {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: none;
+  font-size: 12px;
+  padding: 0 var(--spacing-1);
+  height: auto;
+  line-height: 16px;
+}
+
+.compValue {
+  width: 100%;
+}
+
+.abiMismatch {
+  color: var(--error-color);
+  font-weight: bold;
 }

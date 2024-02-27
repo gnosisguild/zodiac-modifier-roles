@@ -9,7 +9,9 @@
   --bg-color: rgba(217, 212, 173, 0.1);
   --bg-color-hover: rgba(217, 212, 173, 0.2);
 
-  --condition-indent: 24px;
+  --error-color: #ff2323;
+
+  --condition-indent: var(--spacing-3);
 }
 
 body {
