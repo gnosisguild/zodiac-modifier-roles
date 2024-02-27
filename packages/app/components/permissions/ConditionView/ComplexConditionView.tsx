@@ -2,7 +2,6 @@
 import { Condition } from "zodiac-roles-sdk"
 import { AbiFunction, AbiParameter } from "viem"
 import { useState } from "react"
-import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import ConditionHeader from "./ConditionHeader"
 import { ChildConditions } from "."

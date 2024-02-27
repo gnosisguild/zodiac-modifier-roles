@@ -18,6 +18,7 @@ interface Props {
   className?: string
   children?: React.ReactNode
   style?: React.CSSProperties
+  title?: string
 }
 
 const Flex = forwardRef<HTMLDivElement | null, Props>(
@@ -31,11 +32,13 @@ const Flex = forwardRef<HTMLDivElement | null, Props>(
       children,
       className,
       style,
+      title,
     },
     ref
   ) => (
     <div
       ref={ref}
+      title={title}
       className={cn(
         classes.flex,
         classes[`gap${gap}`],
