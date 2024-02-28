@@ -30,7 +30,9 @@ const KARPATKEY_ADDRESSES = {
     NETWORK: 1,
   },
 }
+
 type Configs = typeof KARPATKEY_ADDRESSES
+
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Karpatkey: Simulate Transactions Test", async () => {
