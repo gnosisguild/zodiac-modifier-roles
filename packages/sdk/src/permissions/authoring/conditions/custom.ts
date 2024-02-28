@@ -1,3 +1,4 @@
+import { BigNumberish } from "ethers"
 import { BytesLike, ParamType, getAddress, hexlify } from "ethers/lib/utils"
 
 import { Operator, ParameterType } from "../../../types"
@@ -11,7 +12,7 @@ const AVATAR_IS_OWNER_OF_ERC_721_ADDRESS =
  * Asserts that the value is scope represents an ERC721 token ID owned by the avatar.
  * Assumes that the call target is the ERC721 contract.
  */
-export const avatarIsOwnerOfErc721: ConditionFunction<string> = (
+export const avatarIsOwnerOfErc721: ConditionFunction<BigNumberish> = (
   abiType: ParamType
 ) => {
   if (abiType.type !== "address") {
