@@ -19,7 +19,7 @@ export const fetchOrInitRole = async ({ address, chainId, roleKey }: Props) => {
     // Otherwise we show a 404.
     const modExists = await fetchRolesMod(
       { address, chainId },
-      { next: { revalidate: 1 } }
+      { next: { revalidate: 60 * 5 } } // 5 minutes cache retention
     )
     if (!modExists) {
       notFound()

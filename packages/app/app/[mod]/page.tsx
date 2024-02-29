@@ -18,7 +18,7 @@ export default async function ModPage({ params }: { params: { mod: string } }) {
     notFound()
   }
 
-  const data = await fetchRolesMod(mod, { next: { revalidate: 1 } })
+  const data = await fetchRolesMod(mod, { next: { revalidate: 60 * 5 } }) // 5 minutes cache retention
   if (!data) {
     notFound()
   }
