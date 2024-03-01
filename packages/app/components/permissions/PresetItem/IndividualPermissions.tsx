@@ -20,8 +20,8 @@ const IndividualPermissions: React.FC<{
       borderless
       p={3}
       className={cn(classes.permissions, BOX_CLASS)}
-      labelCollapsed="Decoded permissions"
-      labelExpanded="Decoded permissions"
+      labelCollapsed="Individual permissions"
+      labelExpanded="Individual permissions"
       toggleClassName={TOGGLE_CLASS}
       onToggle={diff ? handleToggle : undefined}
     >
