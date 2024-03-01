@@ -369,13 +369,13 @@ describe("normalizeCondition()", () => {
               paramType: ParameterType.Static,
               operator: Operator.EqualTo,
               compValue:
-                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+                "0x0000000000000000000000001234123412341234123412341234123412341234",
             },
             {
               paramType: ParameterType.Static,
               operator: Operator.LessThan,
               compValue:
-                "0x00000000000000000000000000000000000000000000000000000000000003e8",
+                "0x00000000000000000000000000000000000000000000000000000000000007d0",
             },
           ],
         },
@@ -387,13 +387,13 @@ describe("normalizeCondition()", () => {
               paramType: ParameterType.Static,
               operator: Operator.EqualTo,
               compValue:
-                "0x0000000000000000000000001234123412341234123412341234123412341234",
+                "0x000000000000000000000000abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
             },
             {
               paramType: ParameterType.Static,
               operator: Operator.LessThan,
               compValue:
-                "0x00000000000000000000000000000000000000000000000000000000000007d0",
+                "0x00000000000000000000000000000000000000000000000000000000000003e8",
             },
           ],
         },
