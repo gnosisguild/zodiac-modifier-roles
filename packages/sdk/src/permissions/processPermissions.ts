@@ -17,7 +17,7 @@ import { execOptions, targetId, isFunctionScoped } from "./utils"
  * @returns The resulting list of allowed targets
  */
 export const processPermissions = (
-  permissions: (Permission | PermissionSet)[]
+  permissions: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
   const flatPermissions = permissions.flat()
 
@@ -35,7 +35,7 @@ export const processPermissions = (
       functions: [],
     }))
 
-  // collect all function scoped targets
+  // collect all function scoped targets and bring conditions into the normal form
   const functionPermissions = uniquePermissions.filter(
     (entry) => "selector" in entry
   ) as FunctionPermissionCoerced[]

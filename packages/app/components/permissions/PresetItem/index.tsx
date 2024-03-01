@@ -5,6 +5,7 @@ import Parameter from "./Parameter"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import DiffBox from "../DiffBox"
+import classes from "./style.module.css"
 
 interface Props {
   preset: Preset
@@ -15,16 +16,7 @@ interface Props {
 const PresetItem: React.FC<Props> = ({ preset, chainId, diff }) => {
   const presetDiff = diff?.get(preset)
   console.log({ presetDiff })
-  return (
-    <div>
-      <PresetItemMain {...{ preset, chainId, diff }} />
-      <IndividualPermissions
-        chainId={chainId}
-        permissions={preset.permissions}
-        diff={presetDiff?.permissions}
-      />
-    </div>
-  )
+  return <PresetItemMain {...{ preset, chainId, diff }} />
 }
 
 export default PresetItem
@@ -34,6 +26,7 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
   return (
     <DiffBox
       bg
+      borderless
       stretch
       diff={presetDiff?.flag}
       modified={
@@ -42,10 +35,10 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
         )
       }
     >
-      <Flex direction="column" gap={3}>
+      <Flex direction="column" gap={3} className={classes.presetContainer}>
         <PresetInfo apiInfo={preset.apiInfo} operation={preset.operation} />
 
-        <Flex direction="column" gap={2}>
+        <Flex direction="column" gap={3}>
           {preset.operation.parameters.map((parameter) => (
             <Parameter
               key={parameter.name}
@@ -55,6 +48,11 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
             />
           ))}
         </Flex>
+        <IndividualPermissions
+          chainId={chainId}
+          permissions={preset.permissions}
+          diff={presetDiff?.permissions}
+        />
       </Flex>
     </DiffBox>
   )

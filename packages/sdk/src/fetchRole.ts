@@ -67,9 +67,10 @@ export const fetchRole = async (
       operationName: "Role",
     }),
   })
-  const { data, error } = await res.json()
-  if (error) {
-    throw new Error(error)
+  const { data, error, errors } = await res.json()
+
+  if (error || (errors && errors[0])) {
+    throw new Error(error || errors[0])
   }
 
   if (!data || !data.role) {

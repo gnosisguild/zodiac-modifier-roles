@@ -1,33 +1,96 @@
 import z from "zod"
-import { Annotation, Permission, permissionId } from "zodiac-roles-sdk"
+import {
+  Annotation,
+  Permission,
+  processPermissions,
+  diffTargets,
+  splitCondition,
+  reconstructPermissions,
+  Target,
+} from "zodiac-roles-sdk"
 import { Enforcer } from "openapi-enforcer"
+import { OpenAPIV3 } from "openapi-types"
 import { zPermission } from "./schema"
 import { Preset } from "./types"
-import { OpenAPIV3 } from "openapi-types"
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
   permissions: readonly Permission[],
   annotations: readonly Annotation[]
 ) => {
-  const permissionIds = permissions.map(permissionId)
+  const { targets } = processPermissions(permissions)
 
   const presets = await Promise.all(annotations.map(resolveAnnotation))
 
-  // only consider those presets whose full set of permissions are actually enabled on the role
-  const confirmedPresets = presets.filter((preset) =>
-    preset?.permissions.every((permission) =>
-      permissionIds.includes(permissionId(permission))
-    )
-  ) as Preset[]
+  // Only consider those presets whose full set of permissions are actually enabled on the role. Determine this by:
+  //  - combining current permissions with preset permissions,
+  //  - deriving the targets,
+  //  - and checking if these are equal to the current targets.
+  const confirmedPresets = presets.filter((preset) => {
+    if (!preset) return false
 
-  // calculate remaining permissions that are not part of any preset
-  const permissionIdsInPresets = confirmedPresets.flatMap((preset) =>
-    preset.permissions.map(permissionId)
+    let targetsWithPresetApplied: Target[] = []
+    try {
+      const { targets } = processPermissions([
+        ...permissions,
+        ...preset.permissions,
+      ])
+      targetsWithPresetApplied = targets
+    } catch (e) {
+      // processPermissions throws if permissions and preset.permissions have entries addressing the same target function with different send/delegatecall options
+      return false
+    }
+
+    // If targetsWithPresetApplied is a subset of targets, it means they are equal sets.
+    return diffTargets(targetsWithPresetApplied, targets).length === 0
+  }) as Preset[]
+
+  // Calculate remaining permissions that are not part of any preset
+  const { targets: targetsViaPresets } = processPermissions(
+    confirmedPresets.flatMap((preset) => preset.permissions)
   )
-  const remainingPermissions = permissions.filter(
-    (permission) => !permissionIdsInPresets.includes(permissionId(permission))
-  )
+  const remainingTargets = diffTargets(targets, targetsViaPresets)
+  // For the remaining targets, split conditions so that the remaining branches don't include any of those that are already in presets
+  remainingTargets.forEach((target) => {
+    const targetViaPreset = targetsViaPresets.find(
+      (t) => t.address === target.address
+    )
+    if (!targetViaPreset) return
+
+    target.functions.forEach((func) => {
+      const funcViaPreset = targetViaPreset.functions.find(
+        (f) => f.selector === func.selector
+      )
+      if (!funcViaPreset) return
+
+      if (!funcViaPreset.condition || !func.condition) {
+        // if function targets remain, they must have a condition in which they differ
+        throw new Error("invariant violation")
+      }
+
+      const remainderCondition = splitCondition(
+        func.condition,
+        funcViaPreset.condition
+      )
+      if (!remainderCondition) throw new Error("invariant violation")
+      func.condition = remainderCondition
+    })
+  })
+  const remainingPermissions = reconstructPermissions(remainingTargets)
+
+  // Extra safety check: assert that the final set of targets remains unchanged
+  const { targets: finalTargets } = processPermissions([
+    ...confirmedPresets.flatMap((preset) => preset.permissions),
+    ...remainingPermissions,
+  ])
+  if (
+    diffTargets(finalTargets, targets).length !== 0 ||
+    diffTargets(targets, finalTargets).length !== 0
+  ) {
+    throw new Error(
+      "The processed results leads to a different set of targets."
+    )
+  }
 
   return { presets: confirmedPresets, permissions: remainingPermissions }
 }

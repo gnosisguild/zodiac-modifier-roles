@@ -6,6 +6,7 @@ import classes from "./style.module.css"
 import { ChainId } from "@/app/chains"
 import ExpandableBox from "@/ui/ExpandableBox"
 import { PermissionsDiff } from "../types"
+import Flex from "@/ui/Flex"
 
 const IndividualPermissions: React.FC<{
   permissions: PermissionCoerced[]
@@ -16,23 +17,25 @@ const IndividualPermissions: React.FC<{
 
   return (
     <ExpandableBox
-      bg
+      borderless
       p={3}
       className={cn(classes.permissions, BOX_CLASS)}
-      labelCollapsed="Show permissions"
-      labelExpanded="Hide permissions"
+      labelCollapsed="Individual permissions"
+      labelExpanded="Individual permissions"
       toggleClassName={TOGGLE_CLASS}
       onToggle={diff ? handleToggle : undefined}
     >
-      {permissionGroups.map(([targetAddress, permissions]) => (
-        <TargetItem
-          key={targetAddress}
-          targetAddress={targetAddress}
-          permissions={permissions}
-          chainId={chainId}
-          diff={diff}
-        />
-      ))}
+      <Flex gap={3} direction="column">
+        {permissionGroups.map(([targetAddress, permissions]) => (
+          <TargetItem
+            key={targetAddress}
+            targetAddress={targetAddress}
+            permissions={permissions}
+            chainId={chainId}
+            diff={diff}
+          />
+        ))}
+      </Flex>
     </ExpandableBox>
   )
 }
