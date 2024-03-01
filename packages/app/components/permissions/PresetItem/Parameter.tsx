@@ -1,6 +1,7 @@
+import Flex from "@/ui/Flex"
 import { OpenAPIParameter, Preset } from "../types"
-import Field from "@/ui/Field"
 import classes from "./style.module.css"
+import LabeledData from "@/ui/LabeledData"
 
 const Parameter: React.FC<{
   parameter: OpenAPIParameter
@@ -15,7 +16,7 @@ const Parameter: React.FC<{
       : queryParams[parameter.name]
 
   return (
-    <Field
+    <LabeledData
       label={parameter.name}
       title={parameter.description}
       key={parameter.name}
@@ -28,9 +29,14 @@ const Parameter: React.FC<{
           }
         />
       ) : (
-        <input type="text" readOnly value={value.toString()} />
+        <input
+          type="text"
+          readOnly
+          value={value.toString()}
+          className={classes.parameterInput}
+        />
       )}
-    </Field>
+    </LabeledData>
   )
 }
 
@@ -41,16 +47,16 @@ const ArrayInput: React.FC<{
   value: string[] | number[]
 }> = ({ readOnly, value }) => {
   return (
-    <div>
+    <Flex gap={2} direction="column">
       {value.map((item, i) => (
         <input
           key={i}
           type="text"
           readOnly={readOnly}
           value={item.toString()}
-          className={classes.arrayItem}
+          className={classes.parameterInput}
         />
       ))}
-    </div>
+    </Flex>
   )
 }

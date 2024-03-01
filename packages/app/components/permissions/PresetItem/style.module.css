@@ -1,23 +1,41 @@
+.presetContainer {
+  padding: var(--spacing-3);
+}
+
 .operation {
-  flex-grow: 1;
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--spacing-1) var(--spacing-2);
 }
 
 .apiInfo {
   align-self: flex-end;
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: 12px;
+}
+
+.apiInfo .title {
+  font-family: var(--font-mono);
+  font-style: italic;
 }
 
 .permissions {
-  border-top: 0px none;
 }
 
-.arrayItem:not(:first-child) {
+.parameterInput:not(:first-child) {
   margin-top: -1px;
-}
-
-.contact {
-  font-size: 12px;
 }
 
 .underline {
   text-decoration: underline;
+}
+
+.parameterInput:read-only {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: none;
+  font-size: 12px;
+  padding: var(--spacing-1);
+  height: auto;
+  line-height: 16px;
 }

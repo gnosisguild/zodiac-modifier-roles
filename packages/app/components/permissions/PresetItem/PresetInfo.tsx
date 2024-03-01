@@ -7,13 +7,15 @@ const PresetInfo: React.FC<{
   operation: Preset["operation"]
 }> = ({ apiInfo, operation }) => {
   return (
-    <Flex gap={2} justifyContent="center">
+    <Flex gap={2} justifyContent="space-between">
       <p className={classes.operation}>
         {operation.summary || operation.description}
       </p>
 
-      <Flex gap={2} className={classes.apiInfo} alignItems="center">
-        <code title={apiInfo.description}>{apiInfo.title}</code>
+      <Flex gap={2} className={classes.apiInfo} alignItems="baseline">
+        <div className={classes.title} title={apiInfo.description}>
+          {apiInfo.title}
+        </div>
         {apiInfo.contact?.name && (
           <div className={classes.contact}>
             by{" "}

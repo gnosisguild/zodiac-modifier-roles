@@ -1,17 +1,26 @@
 .toggle {
-  margin: calc(-1 * var(--spacing-3));
-  padding: var(--spacing-3);
+  padding: var(--spacing-2);
   text-align: center;
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
 }
 
 .body {
-  margin-top: var(--spacing-3);
-}
-
-.bg {
-  background-color: var(--bg-color);
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--spacing-3);
 }
 .doubleBg {
   background-color: rgba(217, 212, 173, 0.2);
+}
+
+.toggle:hover {
+  background: var(--bg-color);
+}
+
+.toggle.open .buttonIcon {
+  transform: rotate(180deg);
 }

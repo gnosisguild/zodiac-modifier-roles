@@ -6,12 +6,14 @@ interface LabeledDataProps {
   label: string
   children: React.ReactNode
   className?: string
+  title?: string
 }
 
 const LabeledData: React.FC<LabeledDataProps> = ({
   label,
   children,
   className,
+  title,
 }) => {
   return (
     <Flex
@@ -19,7 +21,7 @@ const LabeledData: React.FC<LabeledDataProps> = ({
       direction="column"
       className={cn(classes.container, className)}
     >
-      <label>{label}</label>
+      <label title={title}>{label}</label>
       <div>{children}</div>
     </Flex>
   )

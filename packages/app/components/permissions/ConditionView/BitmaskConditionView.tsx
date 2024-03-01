@@ -1,10 +1,8 @@
 import { Condition } from "zodiac-roles-sdk"
 import { arrayify, hexlify } from "ethers/lib/utils"
-import Box from "@/ui/Box"
 import classes from "./style.module.css"
 import ConditionHeader from "./ConditionHeader"
 import Flex from "@/ui/Flex"
-import Field from "@/ui/Field"
 import { AbiFunction, AbiParameter } from "viem"
 import LabeledData from "@/ui/LabeledData"
 
