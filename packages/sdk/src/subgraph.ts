@@ -1,6 +1,8 @@
 const SUBGRAPH = {
   [1]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-mainnet",
   [5]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-goerli",
+  [11155111]:
+    "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-sepolia",
   // [10]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-optimism",
   [56]: "https://api.thegraph.com/subgraphs/name/samepant/zodiac-roles-mod-bsc",
   [100]:

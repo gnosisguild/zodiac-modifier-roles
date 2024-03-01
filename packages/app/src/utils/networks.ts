@@ -6,6 +6,7 @@ if (!INFURA_KEY) throw new Error("INFURA KEY NOT SET")
 export enum Network {
   MAINNET = 1,
   GOERLI = 5,
+  SEPOLIA = 11155111,
   OPTIMISM = 10,
   OPTIMISM_ON_GNOSIS = 300,
   BINANCE = 56,
@@ -21,6 +22,7 @@ export enum Network {
 export const NETWORKS = [
   Network.MAINNET,
   Network.GOERLI,
+  Network.SEPOLIA,
   Network.OPTIMISM,
   Network.BINANCE,
   Network.GNOSIS,

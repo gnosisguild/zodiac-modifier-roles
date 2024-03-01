@@ -46,6 +46,29 @@
     ],
     "infoURL": "https://goerli.net/#about"
   },
+  "11155111": {
+    "name": "Sepolia",
+    "chainId": 11155111,
+    "shortName": "sep",
+    "nativeCurrency": {
+      "name": "Sepolia Ether",
+      "symbol": "SEP",
+      "decimals": 18
+    },
+    "rpc": [
+      "https://sepolia.infura.io/v3/${INFURA_API_KEY}",
+      "wss://sepolia.infura.io/v3/${INFURA_API_KEY}",
+      "https://rpc2.sepolia.org"
+    ],
+    "explorers": [
+      {
+        "name": "etherscan-sepolia",
+        "url": "https://sepolia.etherscan.io",
+        "standard": "EIP3091"
+      }
+    ],
+    "infoURL": "http://sepolia.org"
+  },
   "10": {
     "name": "Optimism",
     "chainId": 10,

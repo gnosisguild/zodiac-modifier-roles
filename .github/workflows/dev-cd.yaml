@@ -16,6 +16,7 @@ env:
   REACT_APP_ONBOARD_JS_DAPP_ID: 30fd8cd4-93a1-4c0e-a463-b5eceb9a3956
   REACT_APP_SUBGRAPH_BASE_URL: https://api.thegraph.com/subgraphs/name/
   REACT_APP_SUBGRAPH_GOERLI: samepant/zodiac-roles-mod-goerli
+  REACT_APP_SUBGRAPH_SEPOLIA: samepant/zodiac-roles-mod-sepolia
   REACT_APP_SUBGRAPH_GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
   REACT_APP_SUBGRAPH_MAINNET: samepant/zodiac-roles-mod-mainnet
   REACT_APP_SUBGRAPH_POLYGON: samepant/zodiac-roles-mod-polygon
@@ -83,6 +84,7 @@ jobs:
           HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: samepant/zodiac-roles-mod-gnosis-chain
           HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: samepant/zodiac-roles-mod-arbitrum
           HOSTED_SERVICE_SUBGRAPH__GOERLI: samepant/zodiac-roles-mod-goerli
+          HOSTED_SERVICE_SUBGRAPH__SEPOLIA: samepant/zodiac-roles-mod-sepolia
           HOSTED_SERVICE_SUBGRAPH__AVALANCHE: samepant/zodiac-roles-mod-avalanche
           HOSTED_SERVICE_SUBGRAPH__BSC: samepant/zodiac-roles-mod-bsc
           HOSTED_SERVICE_SUBGRAPH__MAINNET: samepant/zodiac-roles-mod-mainnet
@@ -93,6 +95,7 @@ jobs:
           yarn deploy:arbitrum-one
           yarn deploy:gnosis-chain
           yarn deploy:goerli
+          yarn deploy:sepolia
           yarn deploy:avalanche
           yarn deploy:bsc
           yarn deploy:mainnet
