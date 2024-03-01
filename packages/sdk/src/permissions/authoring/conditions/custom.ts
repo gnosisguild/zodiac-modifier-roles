@@ -15,9 +15,9 @@ const AVATAR_IS_OWNER_OF_ERC_721_ADDRESS =
 export const avatarIsOwnerOfErc721: ConditionFunction<BigNumberish> = (
   abiType: ParamType
 ) => {
-  if (abiType.type !== "address") {
+  if (abiType.type !== "uint256") {
     throw new Error(
-      "`avatarIsOwnerOfErc721` is only supported for address params"
+      "`avatarIsOwnerOfErc721` is only supported for uint256 params"
     )
   }
   return {
