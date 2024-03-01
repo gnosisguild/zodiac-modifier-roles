@@ -135,13 +135,21 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const functionId = getFunctionId(targetId, selector)
   const func = getOrCreateFunction(functionId, targetId, selector)
 
+  // Store the execution options
+  func.executionOptions = ExecutionOptionsKeys[event.params.options]
+
   // Store the conditions and reference the root condition from the function
   assert(event.params.conditions.length > 0, "Conditions must not be empty")
   const rootCondition = storeConditions(event.params.conditions)
   func.condition = rootCondition.id
+
   func.save()
 
-  log.info("Function {} has been scoped with condition {}", [functionId, rootCondition.id])
+  log.info("Function {} has been scoped with condition {} and exec options {}", [
+    functionId,
+    rootCondition.id,
+    ExecutionOptionsKeys[event.params.options],
+  ])
 }
 
 export function handleRevokeFunction(event: RevokeFunction): void {
