@@ -1,6 +1,7 @@
 const SAFE_TX_SERVICE = {
   [1]: "https://safe-transaction.gnosis.io/",
   [5]: "https://safe-transaction-goerli.safe.global/",
+  [11155111]: "https://safe-transaction-sepolia.safe.global/",
   [100]: "https://safe-transaction.xdai.gnosis.io/",
   [73799]: "https://safe-transaction.volta.gnosis.io/",
   [246]: "https://safe-transaction.ewc.gnosis.io/",
