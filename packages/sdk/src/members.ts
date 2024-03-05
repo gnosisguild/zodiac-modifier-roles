@@ -78,7 +78,11 @@ const replaceMembers = (roleKey: string, current: string[], next: string[]) => {
   ]
 }
 
-const extendMembers = (roleKey: string, current: string[], add: string[]) => {
+export const extendMembers = (
+  roleKey: string,
+  current: string[],
+  add: string[]
+) => {
   const toAdd = add.filter((member) => !current.includes(member))
   return toAdd.map((member) => addMember(roleKey, member))
 }
