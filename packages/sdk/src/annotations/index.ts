@@ -2,11 +2,11 @@ import { fetchRole } from "../fetchRole"
 import { ChainId, Annotation } from "../types"
 import { groupBy } from "../utils/groupBy"
 
-import { encodePost } from "./poster"
+import { encodeAnnotationsPost } from "./poster"
 import { UpdateAnnotationsPost } from "./types"
 
 type Options = {
-  address: string
+  address: `0x${string}`
   /**  The mode to use for updating the set of members of the role:
    *  - "replace": The role will have only the passed members, meaning that all other current members will be removed from the role
    *  - "extend": The role will keep its current members and will additionally get the passed members
@@ -85,15 +85,7 @@ export const applyAnnotations = async (
     log(`💬 ${message[0].toUpperCase()}${message.slice(1)}`)
   }
 
-  return [
-    encodePost(
-      JSON.stringify({
-        rolesMod: address,
-        roleKey,
-        ...updatePost,
-      })
-    ),
-  ]
+  return [encodeAnnotationsPost(address, roleKey, updatePost)]
 }
 
 const replaceAnnotations = (
@@ -119,7 +111,7 @@ const replaceAnnotations = (
   }
 }
 
-const extendAnnotations = (
+export const extendAnnotations = (
   current: Annotation[],
   add: Annotation[]
 ): UpdateAnnotationsPost => {
