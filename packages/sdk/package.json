@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "ethers": "^5.7.2",
-    "ethers-multisend": "^3.0.0",
     "zod": "^3.22.1"
   },
   "peerDependencies": {

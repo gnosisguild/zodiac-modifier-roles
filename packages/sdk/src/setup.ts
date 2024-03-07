@@ -4,7 +4,6 @@ import {
   keccak256,
   solidityKeccak256,
 } from "ethers/lib/utils"
-import { encodeMulti } from "ethers-multisend"
 
 import {
   Roles__factory,
@@ -22,24 +21,84 @@ const PROXY_FACTORY_ADDRESS = "0x000000000000aDdB49795b0f9bA5BC298cDda236"
 // https://github.com/safe-global/safe-deployments/blob/5ec81e8d7a85d66a33adbe0c098068c0a96d917c/src/assets/v1.4.1/multi_send.json
 const DEFAULT_MULTISEND_ADDRESS = "0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526"
 
+const RolesInterface = Roles__factory.createInterface()
 interface RoleConfig {
   key: string
   members: `0x${string}`[]
   permissions: readonly (Permission | PermissionSet)[]
 }
 
+/**
+ * Applies the given `roles` configurations to the Roles mod at `address`.
+ *
+ * **Warning:** This function does not check if any of the roles are already configured on the Roles mod. It will not revoke any permissions or members from existing roles.
+ **/
+export const setUpRoles = ({
+  address,
+  roles,
+}: {
+  address: `0x${string}`
+  roles: RoleConfig[]
+}) => {
+  // calls for configuring roles permissions
+  const applyPermissionsCalls = roles.flatMap(({ key, permissions }) => {
+    const { targets, annotations } = processPermissions(permissions)
+    return [
+      ...encodeCalls(encodeRoleKey(key), grant(targets)).map((data) => ({
+        to: address,
+        data,
+        value: "0",
+      })),
+      ...(annotations.length > 0
+        ? [
+            {
+              to: POSTER_ADDRESS,
+              data: encodeAnnotationsPost(
+                address,
+                encodeRoleKey(key),
+                extendAnnotations([], annotations)
+              ),
+              value: "0",
+            },
+          ]
+        : []),
+    ]
+  })
+
+  // calls for setting up role members
+  const rolesByMember = roles.reduce((acc, { key, members }) => {
+    members.forEach((member) => {
+      acc[member] = acc[member] || []
+      acc[member].push(key)
+    })
+    return acc
+  }, {} as { [member: `0x${string}`]: string[] })
+  const assignRolesCalls = Object.entries(rolesByMember).map(
+    ([member, roleKeys]) => ({
+      to: address,
+      data: RolesInterface.encodeFunctionData("assignRoles", [
+        member,
+        roleKeys.map(encodeRoleKey),
+        roleKeys.map(() => true),
+      ]),
+      value: "0",
+    })
+  )
+
+  return [...applyPermissionsCalls, ...assignRolesCalls]
+}
+
 interface Config {
   avatar: `0x${string}`
   target?: `0x${string}`
   owner?: `0x${string}`
+
   roles?: RoleConfig[]
 
   multiSendAddresses?: `0x${string}`[]
   enableOnTarget?: boolean
   saltNonce?: `0x${string}`
 }
-
-const RolesInterface = Roles__factory.createInterface()
 
 export const setUpRolesMod = ({
   avatar,
@@ -88,50 +147,8 @@ export const setUpRolesMod = ({
     value: "0",
   }))
 
-  // calls for configuring roles permissions
-  const applyPermissionsCalls = roles.flatMap(({ key, permissions }) => {
-    const { targets, annotations } = processPermissions(permissions)
-    return [
-      ...encodeCalls(encodeRoleKey(key), grant(targets)).map((data) => ({
-        to: proxyAddress,
-        data,
-        value: "0",
-      })),
-      ...(annotations.length > 0
-        ? [
-            {
-              to: POSTER_ADDRESS,
-              data: encodeAnnotationsPost(
-                proxyAddress,
-                encodeRoleKey(key),
-                extendAnnotations([], annotations)
-              ),
-              value: "0",
-            },
-          ]
-        : []),
-    ]
-  })
-
-  // calls for setting up role members
-  const rolesByMember = roles.reduce((acc, { key, members }) => {
-    members.forEach((member) => {
-      acc[member] = acc[member] || []
-      acc[member].push(key)
-    })
-    return acc
-  }, {} as { [member: `0x${string}`]: string[] })
-  const assignRolesCalls = Object.entries(rolesByMember).map(
-    ([member, roleKeys]) => ({
-      to: proxyAddress,
-      data: RolesInterface.encodeFunctionData("assignRoles", [
-        member,
-        roleKeys.map(encodeRoleKey),
-        roleKeys.map(() => true),
-      ]),
-      value: "0",
-    })
-  )
+  // calls for configuring members and permissions for all roles
+  const setUpRolesCalls = setUpRoles({ address: proxyAddress, roles })
 
   const enableOnTargetCall = {
     to: target,
@@ -139,16 +156,12 @@ export const setUpRolesMod = ({
     value: "0",
   }
 
-  return encodeMulti(
-    [
-      deployModuleCall,
-      ...setTransactionUnwrapperCalls,
-      ...applyPermissionsCalls,
-      ...assignRolesCalls,
-      ...(enableOnTarget ? [enableOnTargetCall] : []),
-    ],
-    DEFAULT_MULTISEND_ADDRESS
-  )
+  return [
+    deployModuleCall,
+    ...setTransactionUnwrapperCalls,
+    ...setUpRolesCalls,
+    ...(enableOnTarget ? [enableOnTargetCall] : []),
+  ]
 }
 
 const calculateProxyAddress = (initData: string, saltNonce: string) => {
