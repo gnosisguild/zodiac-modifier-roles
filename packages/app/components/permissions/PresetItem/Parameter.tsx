@@ -10,10 +10,11 @@ const Parameter: React.FC<{
 }> = ({ parameter, queryParams, pathParams }) => {
   // we only support path and query parameters
   if (parameter.in !== "path" && parameter.in !== "query") return null
-  const value =
+  const value = (
     parameter.in === "path"
       ? pathParams[parameter.name]
       : queryParams[parameter.name]
+  ) as string | number | string[] | number[] | undefined
 
   return (
     <LabeledData
@@ -25,14 +26,18 @@ const Parameter: React.FC<{
         <ArrayInput
           readOnly
           value={
-            Array.isArray(value) ? value : ([value] as string[] | number[])
+            value
+              ? Array.isArray(value)
+                ? value
+                : ([value] as string[] | number[])
+              : undefined
           }
         />
       ) : (
         <input
           type="text"
           readOnly
-          value={value.toString()}
+          value={value ? value.toString() : ""}
           className={classes.parameterInput}
         />
       )}
@@ -44,11 +49,11 @@ export default Parameter
 
 const ArrayInput: React.FC<{
   readOnly: boolean
-  value: string[] | number[]
+  value: string[] | number[] | undefined
 }> = ({ readOnly, value }) => {
   return (
     <Flex gap={2} direction="column">
-      {value.map((item, i) => (
+      {value?.map((item, i) => (
         <input
           key={i}
           type="text"

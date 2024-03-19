@@ -15,7 +15,6 @@ interface Props {
 
 const PresetItem: React.FC<Props> = ({ preset, chainId, diff }) => {
   const presetDiff = diff?.get(preset)
-  console.log({ presetDiff })
   return <PresetItemMain {...{ preset, chainId, diff }} />
 }
 
