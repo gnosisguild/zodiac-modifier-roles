@@ -85,7 +85,7 @@ export interface Target {
   address: `0x${string}`
   clearance: Clearance
   executionOptions: ExecutionOptions
-  functions: Function[]
+  functions: readonly Function[]
 }
 
 export interface Function {
@@ -99,7 +99,7 @@ export interface Condition {
   paramType: ParameterType
   operator: Operator
   compValue?: `0x${string}`
-  children?: Condition[]
+  children?: readonly Condition[]
 }
 
 export interface Allowance {

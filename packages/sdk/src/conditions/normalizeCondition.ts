@@ -277,7 +277,7 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
  * @returns the index of the hinge node. If there are differences in more than a single index, returns `null`.
  * @throws If the conditions would not pass integrity checks.
  **/
-const findMatchesHingeIndex = (conditions: Condition[]) => {
+const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
   // use first branch as reference and check if the others are equivalent beyond a single nested hinge node
   let hingeNodeIndex: number | null = null
 
@@ -314,7 +314,7 @@ const findMatchesHingeIndex = (conditions: Condition[]) => {
  * Given a set of AND conditions, check that their children are equal beyond a single hinge node in each branch. A hinge branch index of `-1` indicate a missing branch that is present in the other AND conditions.
  * @returns the indices of the hinge branches for the respective AND conditions. If there are differences in more than a single branch, returns `null`.
  **/
-const findAndHingeIndices = (conditions: Condition[]) => {
+const findAndHingeIndices = (conditions: readonly Condition[]) => {
   const allChildrenIds = conditions.map((condition) => {
     if (!condition.children) throw new Error("empty children")
     return condition.children.map(conditionId)

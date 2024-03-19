@@ -12,7 +12,7 @@ import {
  * @returns A set of permissions that produces these targets when processed
  */
 export const reconstructPermissions = (
-  targets: Target[]
+  targets: readonly Target[]
 ): PermissionCoerced[] => {
   return targets.flatMap((target) => {
     if (target.clearance === Clearance.None) {
