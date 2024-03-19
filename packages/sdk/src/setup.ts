@@ -132,7 +132,7 @@ export const setUpRolesMod = ({
   }
 
   // calculate deterministic proxy address for extra config calls
-  const proxyAddress = calculateProxyAddress(deployModuleCalldata, saltNonce)
+  const proxyAddress = calculateProxyAddress(setUpCalldata, saltNonce)
 
   // calls for setting up multiSend transaction unwrapping
   const MULTISEND_SELECTOR = "0x8d80ff0a"
