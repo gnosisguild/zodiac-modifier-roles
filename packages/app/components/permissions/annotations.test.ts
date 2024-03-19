@@ -44,9 +44,23 @@ describe("processAnnotations()", () => {
                 "schema": {
                   "deprecated": false,
                   "items": {
+                    "anyOf": [
+                      {
+                        "deprecated": false,
+                        "nullable": false,
+                        "type": "string",
+                      },
+                      {
+                        "deprecated": false,
+                        "enum": [
+                          "ETH",
+                        ],
+                        "nullable": false,
+                        "type": "string",
+                      },
+                    ],
                     "deprecated": false,
                     "nullable": false,
-                    "type": "string",
                   },
                   "nullable": false,
                   "type": "array",
@@ -59,13 +73,27 @@ describe("processAnnotations()", () => {
                 "explode": false,
                 "in": "query",
                 "name": "buy",
-                "required": false,
+                "required": true,
                 "schema": {
                   "deprecated": false,
                   "items": {
+                    "anyOf": [
+                      {
+                        "deprecated": false,
+                        "nullable": false,
+                        "type": "string",
+                      },
+                      {
+                        "deprecated": false,
+                        "enum": [
+                          "ETH",
+                        ],
+                        "nullable": false,
+                        "type": "string",
+                      },
+                    ],
                     "deprecated": false,
                     "nullable": false,
-                    "type": "string",
                   },
                   "nullable": false,
                   "type": "array",
@@ -157,7 +185,7 @@ describe("processAnnotations()", () => {
                         "paramType": 0,
                       },
                       {
-                        "operator": 0,
+                        "operator": 15,
                         "paramType": 1,
                       },
                       {
@@ -254,7 +282,7 @@ describe("processAnnotations()", () => {
                         "paramType": 0,
                       },
                       {
-                        "operator": 0,
+                        "operator": 15,
                         "paramType": 1,
                       },
                       {
@@ -431,7 +459,7 @@ const permissionsForPreset1: PermissionCoerced[] = [
                 },
               ],
             },
-            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 15 },
             { paramType: 1, operator: 0 },
             { paramType: 1, operator: 0 },
             { paramType: 1, operator: 0 },
@@ -496,7 +524,7 @@ const permissionsForPreset1: PermissionCoerced[] = [
                 },
               ],
             },
-            { paramType: 1, operator: 0 },
+            { paramType: 1, operator: 15 },
             { paramType: 1, operator: 0 },
             { paramType: 1, operator: 0 },
             { paramType: 1, operator: 0 },

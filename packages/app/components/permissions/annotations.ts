@@ -4,7 +4,7 @@ import {
   Permission,
   processPermissions,
   diffTargets,
-  splitCondition,
+  splitTargets,
   reconstructPermissions,
   Target,
 } from "zodiac-roles-sdk"
@@ -19,7 +19,6 @@ export const processAnnotations = async (
   annotations: readonly Annotation[]
 ) => {
   const { targets } = processPermissions(permissions)
-
   const presets = await Promise.all(annotations.map(resolveAnnotation))
 
   // Only consider those presets whose full set of permissions are actually enabled on the role. Determine this by:
@@ -49,33 +48,8 @@ export const processAnnotations = async (
   const { targets: targetsViaPresets } = processPermissions(
     confirmedPresets.flatMap((preset) => preset.permissions)
   )
-  const remainingTargets = diffTargets(targets, targetsViaPresets)
-  // For the remaining targets, split conditions so that the remaining branches don't include any of those that are already in presets
-  remainingTargets.forEach((target) => {
-    const targetViaPreset = targetsViaPresets.find(
-      (t) => t.address === target.address
-    )
-    if (!targetViaPreset) return
 
-    target.functions.forEach((func) => {
-      const funcViaPreset = targetViaPreset.functions.find(
-        (f) => f.selector === func.selector
-      )
-      if (!funcViaPreset) return
-
-      if (!funcViaPreset.condition || !func.condition) {
-        // if function targets remain, they must have a condition in which they differ
-        throw new Error("invariant violation")
-      }
-
-      const remainderCondition = splitCondition(
-        func.condition,
-        funcViaPreset.condition
-      )
-      if (!remainderCondition) throw new Error("invariant violation")
-      func.condition = remainderCondition
-    })
-  })
+  const remainingTargets = splitTargets(targets, targetsViaPresets)
   const remainingPermissions = reconstructPermissions(remainingTargets)
 
   // Extra safety check: assert that the final set of targets remains unchanged
@@ -83,10 +57,10 @@ export const processAnnotations = async (
     ...confirmedPresets.flatMap((preset) => preset.permissions),
     ...remainingPermissions,
   ])
-  if (
-    diffTargets(finalTargets, targets).length !== 0 ||
-    diffTargets(targets, finalTargets).length !== 0
-  ) {
+
+  const d1 = diffTargets(finalTargets, targets)
+  const d2 = diffTargets(targets, finalTargets)
+  if (d1.length !== 0 || d2.length !== 0) {
     throw new Error(
       "The processed results leads to a different set of targets."
     )

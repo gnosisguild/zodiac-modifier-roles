@@ -4,7 +4,10 @@ import { Clearance, Target, Function, Condition } from "../types"
 /**
  *  Returns targets granted by `a` that are not granted by `b`
  */
-export const diffTargets = (a: Target[], b: Target[]): Target[] => {
+export const diffTargets = (
+  a: readonly Target[],
+  b: readonly Target[]
+): Target[] => {
   // targets in a that are not in b
   const targetsDiff = a.filter(
     (targetA) => !b.some((targetB) => targetsEqual(targetA, targetB))
