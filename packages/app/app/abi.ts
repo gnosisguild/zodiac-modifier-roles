@@ -1,64 +1,64 @@
 import { whatsabi } from "@shazow/whatsabi"
 import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
 import throttledQueue from "throttled-queue"
-import { cache } from "react"
+import { AbiFunction, createPublicClient, http } from "viem"
+import { unstable_cache } from "next/cache"
 
 import { CHAINS, ChainId } from "./chains"
-import { AbiFunction, createPublicClient, http } from "viem"
 
 const ABI_LOADERS = new Map<ChainId, ThrottledEtherscanABILoader>()
 
-export const fetchAbi = cache(async (address: string, chainId: ChainId) => {
-  const chain = CHAINS[chainId]
-  const client = createPublicClient({
-    chain,
-    transport: http(),
-  })
+export const fetchAbi = unstable_cache(
+  async (address: string, chainId: ChainId) => {
+    const chain = CHAINS[chainId]
+    const client = createPublicClient({
+      chain,
+      transport: http(),
+    })
 
-  if (!ABI_LOADERS.has(chainId)) {
-    ABI_LOADERS.set(
-      chainId,
-      new ThrottledEtherscanABILoader({
-        baseURL: chain.blockExplorerAbiUrl,
-        apiKey: chain.blockExplorerApiKey,
-      })
-    )
-  }
+    if (!ABI_LOADERS.has(chainId)) {
+      ABI_LOADERS.set(
+        chainId,
+        new ThrottledEtherscanABILoader({
+          baseURL: chain.blockExplorerAbiUrl,
+          apiKey: chain.blockExplorerApiKey,
+        })
+      )
+    }
 
-  const abiLoader = ABI_LOADERS.get(chainId)!
+    const abiLoader = ABI_LOADERS.get(chainId)!
 
-  const result = await whatsabi.autoload(address, {
-    provider: client,
+    const result = await whatsabi.autoload(address, {
+      provider: client,
 
-    // * Optional loaders:
-    abiLoader,
-    // signatureLoader: whatsabi.loaders.defaultSignatureLookup,
+      // * Optional loaders:
+      abiLoader,
+      //   signatureLookup: false, // disable signature lookup
 
-    // * Optional hooks:
-    // onProgress: (phase: string) => { ... }
-    onError: (phase: string, context: any) => {
-      console.error(`Could not fetch ABI for ${chain.prefix}:${address}`, {
-        phase,
-        context,
-      })
-    },
+      // * Optional hooks:
+      // onProgress: (phase: string) => { ... }
+      onError: (phase: string, context: any) => {
+        console.error(`Could not fetch ABI for ${chain.prefix}:${address}`, {
+          phase,
+          context,
+        })
+      },
 
-    // * Optional settings:
-    followProxies: true,
-    // enableExperimentalMetadata: false,
-  })
-  //   console.log({
-  //     address,
+      // * Optional settings:
+      followProxies: true,
+      // enableExperimentalMetadata: false,
+    })
 
-  //     //  result: JSON.stringify(result)
-  //   })
-  return {
-    address: result.address,
-    abi: (
-      result.abi.filter((item) => item.type === "function") as ABIFunction[]
-    ).map(coerceAbiFunction) as AbiFunction[],
-  }
-})
+    return {
+      address: result.address,
+      abi: (
+        result.abi.filter((item) => item.type === "function") as ABIFunction[]
+      ).map(coerceAbiFunction) as AbiFunction[],
+    }
+  },
+  ["abi"],
+  { tags: ["abi"] } // cache indefinitely or until revalidateTag('abi') is called
+)
 
 const coerceAbiFunction = (abi: ABIFunction): AbiFunction => ({
   ...abi,
