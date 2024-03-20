@@ -14,13 +14,16 @@ import classes from "./style.module.css"
 import LabeledData from "@/ui/LabeledData"
 import Disclosure from "@/ui/Disclosure"
 import Switch from "@/ui/Switch"
+import { fetchAbi } from "@/app/abi"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
   permissions: PermissionCoerced[]
   chainId: ChainId
   diff?: PermissionsDiff
-}> = ({ targetAddress, chainId, permissions, diff }) => {
+}> = async ({ targetAddress, chainId, permissions, diff }) => {
+  const { abi } = await fetchAbi(targetAddress, chainId)
+
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
@@ -30,7 +33,6 @@ const TargetItem: React.FC<{
     groupDiff(
       permissions.map((p) => {
         if (!diff.has(p)) {
-          console.log({ diff, p })
           throw new Error("Missing permissions diff entry")
         }
         return diff.get(p)!.flag
@@ -88,6 +90,7 @@ const TargetItem: React.FC<{
                   key={index} // selector is not unique, maybe use selector + conditionId?
                   {...permission}
                   diff={diff?.get(permission)?.flag}
+                  abi={abi}
                   modified={
                     diff?.get(permission)?.modified as
                       | FunctionPermissionCoerced

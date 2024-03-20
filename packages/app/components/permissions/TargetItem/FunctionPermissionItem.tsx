@@ -1,8 +1,6 @@
 import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
-import { whatsabi } from "@shazow/whatsabi"
-import { ABIFunction } from "@shazow/whatsabi/lib.types/abi"
-import { cache } from "react"
-import { AbiFunction, createPublicClient, http, toFunctionSelector } from "viem"
+
+import { AbiFunction, toFunctionSelector } from "viem"
 import Flex from "@/ui/Flex"
 import ConditionView, { matchesAbi } from "../ConditionView"
 import { CHAINS } from "@/app/chains"
@@ -11,26 +9,25 @@ import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
 import LabeledData from "@/ui/LabeledData"
 import Switch from "@/ui/Switch"
-import { MdOutlineWarningAmber } from "react-icons/md"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
     diff?: DiffFlag
     modified?: FunctionPermissionCoerced
     chainId: ChainId
+    abi?: AbiFunction[]
   }
-> = async ({
+> = ({
   chainId,
   targetAddress,
   selector,
   diff,
+  abi,
   modified,
   condition,
   ...rest
 }) => {
-  const { abi } = await fetchAbi(targetAddress, chainId)
-
-  const functionAbi = abi.find(
+  const functionAbi = abi?.find(
     (fragment) =>
       fragment.type === "function" && toFunctionSelector(fragment) === selector
   ) as AbiFunction | undefined
@@ -134,53 +131,3 @@ const AbiFunctionPermissionItem: React.FC<
     </Flex>
   )
 }
-
-const fetchAbi = cache(async (address: string, chainId: ChainId) => {
-  const chain = CHAINS[chainId]
-  const client = createPublicClient({
-    chain,
-    transport: http(),
-  })
-
-  const abiLoader = new whatsabi.loaders.EtherscanABILoader({
-    baseURL: chain.blockExplorerAbiUrl,
-    apiKey: chain.blockExplorerApiKey,
-  })
-
-  const result = await whatsabi.autoload(address, {
-    provider: client,
-
-    // * Optional loaders:
-    abiLoader,
-    // signatureLoader: whatsabi.loaders.defaultSignatureLookup,
-
-    // * Optional hooks:
-    // onProgress: (phase: string) => { ... }
-    onError: (phase: string, context: any) => {
-      console.error(`Could not fetch ABI for ${chain.prefix}:${address}`, {
-        phase,
-        context,
-      })
-    },
-
-    // * Optional settings:
-    followProxies: true,
-    // enableExperimentalMetadata: false,
-  })
-
-  return {
-    address: result.address,
-    abi: (
-      result.abi.filter((item) => item.type === "function") as ABIFunction[]
-    ).map(coerceAbiFunction) as AbiFunction[],
-  }
-})
-
-const coerceAbiFunction = (abi: ABIFunction): AbiFunction => ({
-  ...abi,
-  inputs: abi.inputs || [],
-  outputs: abi.outputs || [],
-  name: abi.name || "",
-  stateMutability:
-    abi.stateMutability || (abi.payable ? "payable" : "nonpayable"),
-})

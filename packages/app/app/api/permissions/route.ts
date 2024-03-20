@@ -34,8 +34,6 @@ export async function POST(req: Request) {
   const key = hash(stringValue)
   await kv.set(key, stringValue)
 
-  console.log("Stored permissions", key)
-
   return NextResponse.json({ hash: key })
 }
 
