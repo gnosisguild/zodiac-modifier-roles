@@ -233,7 +233,6 @@ export const ChildConditions: React.FC<
                   // From here on down, no ABI information will be available.
                   childAbi = undefined
                 } else {
-                  console.error({ abi, condition, child })
                   throw new Error(
                     "Tried to drill down to fields, but abi is neither AbiFunction, nor tuple, array, or bytes type AbiParameter"
                   )
