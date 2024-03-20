@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "clear-cache": "rm -rf .next",
     "build": "next build",
     "start": "next start",
     "test": "jest",
@@ -24,7 +25,7 @@
     "ethereum-blockies-base64": "^1.0.2",
     "ethers": "^5.7.2",
     "jest": "^29.7.0",
-    "next": "^14.1.0",
+    "next": "^14.1.4",
     "openapi-enforcer": "^1.22.3",
     "openapi-types": "^12.1.3",
     "react": "^18.2.0",
