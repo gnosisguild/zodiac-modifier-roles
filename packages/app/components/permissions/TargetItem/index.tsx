@@ -15,6 +15,7 @@ import LabeledData from "@/ui/LabeledData"
 import Disclosure from "@/ui/Disclosure"
 import Switch from "@/ui/Switch"
 import { fetchAbi } from "@/app/abi"
+import ADDRESS_LABELS from "./addressLabels.json"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -27,6 +28,10 @@ const TargetItem: React.FC<{
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
+  console.log((ADDRESS_LABELS as any)[chainId.toString()], chainId)
+  const label = (ADDRESS_LABELS as any)[chainId.toString()]?.[
+    targetAddress.toLowerCase()
+  ]
 
   const targetDiff =
     diff &&
@@ -51,10 +56,11 @@ const TargetItem: React.FC<{
           <Flex
             gap={4}
             justifyContent="space-between"
-            alignItems="center"
+            alignItems="start"
             className={classes.targetHeader}
           >
             <LabeledData label="Target Contract">
+              {label}
               <Address
                 address={targetAddress}
                 chainId={chainId}
