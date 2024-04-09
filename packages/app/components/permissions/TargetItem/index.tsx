@@ -28,7 +28,7 @@ const TargetItem: React.FC<{
   const wildcardPermission = permissions.find(
     (permission) => !("selector" in permission)
   )
-  console.log((ADDRESS_LABELS as any)[chainId.toString()], chainId)
+
   const label = (ADDRESS_LABELS as any)[chainId.toString()]?.[
     targetAddress.toLowerCase()
   ]
