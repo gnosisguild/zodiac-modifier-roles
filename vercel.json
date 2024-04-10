@@ -1,9 +1,6 @@
 {
   "functions": {
-    "app/[mod]/**/*": {
-      "maxDuration": 60
-    },
-    "app/permissions/**/*": {
+    "app/!(api)/**/*": {
       "maxDuration": 60
     }
   }
