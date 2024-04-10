@@ -1,10 +1,10 @@
 {
-    "functions": {
-        "app/[mod]/**/*": {
-            "maxDuration": 60
-        },
-        "app/permissions/**/*": {
-            "maxDuration": 60
-        }
+  "functions": {
+    "[mod]/**/*": {
+      "maxDuration": 60
+    },
+    "permissions/**/*": {
+      "maxDuration": 60
     }
+  }
 }
