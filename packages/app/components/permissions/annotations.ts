@@ -73,14 +73,14 @@ const resolveAnnotation = async (
   annotation: Annotation
 ): Promise<Preset | null> => {
   const [permissions, schema] = await Promise.all([
-    fetch(annotation.uri)
+    fetch(annotation.uri, { next: { revalidate: 3600 } })
       .then((res) => res.json())
       .then(z.array(zPermission).parse)
       .catch((e: Error) => {
         console.error(`Error resolving annotation ${annotation.uri}`, e)
         return []
       }),
-    fetch(annotation.schema)
+    fetch(annotation.schema, { next: { revalidate: 3600 } })
       .then((res) => res.json())
       .then((json) =>
         Enforcer(json, {
