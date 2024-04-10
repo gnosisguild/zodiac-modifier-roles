@@ -23,6 +23,7 @@ const Disclosure: React.FC<DisclosureProps> = ({
           <HeadlessDisclosure.Button
             className={classNames(classes.button, open && classes.open)}
             as="div"
+            onMouseDown={(e) => e.preventDefault()} // Prevent text selection when toggling the panel
           >
             {button}
             <SlArrowDown size={24} className={classes.buttonIcon} />
