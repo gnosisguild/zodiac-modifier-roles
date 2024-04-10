@@ -1,9 +1,9 @@
 {
   "functions": {
-    "[mod]/**/*": {
+    "app/[mod]/**/*": {
       "maxDuration": 60
     },
-    "permissions/**/*": {
+    "app/permissions/**/*": {
       "maxDuration": 60
     }
   }
