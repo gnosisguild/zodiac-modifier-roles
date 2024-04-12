@@ -1,5 +1,6 @@
 import {
   Annotation,
+  Clearance,
   Target,
   applyAnnotations,
   applyTargets,
@@ -35,7 +36,11 @@ export default async function DiffPage({
     notFound()
   }
 
-  let roleData = await fetchOrInitRole({ ...mod, roleKey })
+  const roleData = await fetchOrInitRole({ ...mod, roleKey })
+  const roleTargets = roleData.targets.filter(
+    (target) => !isEmptyFunctionScoped(target)
+  )
+  const roleAnnotations = roleData.annotations
 
   const entry = await kv.get<{
     targets: Target[]
@@ -44,25 +49,29 @@ export default async function DiffPage({
   if (!entry) {
     notFound()
   }
+  const entryTargets = entry.targets.filter(
+    (target) => !isEmptyFunctionScoped(target)
+  )
+  const entryAnnotations = entry.annotations
 
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 
   const calls = [
     ...(
-      await applyTargets(roleKey, entry.targets, {
+      await applyTargets(roleKey, entryTargets, {
         ...mod,
         mode: "replace",
-        currentTargets: roleData.targets,
+        currentTargets: roleTargets,
         log: logCall,
       })
     ).map((data) => ({ to: mod.address, data })),
 
     ...(
-      await applyAnnotations(roleKey, entry.annotations, {
+      await applyAnnotations(roleKey, entryAnnotations, {
         ...mod,
         mode: "replace",
-        currentAnnotations: roleData.annotations,
+        currentAnnotations: roleAnnotations,
         log: logCall,
       })
     ).map((data) => ({ to: mod.address, data })),
@@ -79,8 +88,8 @@ export default async function DiffPage({
       <main className={styles.main}>
         <Flex direction="column" gap={1}>
           <PermissionsDiff
-            left={roleData}
-            right={entry}
+            left={{ targets: roleTargets, annotations: roleAnnotations }}
+            right={{ targets: entryTargets, annotations: entryAnnotations }}
             chainId={mod.chainId}
           />
           <Box p={3} className={styles.calls}>
@@ -119,6 +128,9 @@ export default async function DiffPage({
     </Layout>
   )
 }
+
+const isEmptyFunctionScoped = (target: Target) =>
+  target.clearance === Clearance.Function && target.functions.length === 0
 
 const exportToSafeTransactionBuilder = (
   calls: { to: `0x${string}`; data: `0x${string}` }[],
