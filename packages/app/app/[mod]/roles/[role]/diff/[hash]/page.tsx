@@ -1,7 +1,6 @@
 import {
   Annotation,
   Target,
-  applyAnnotations,
   applyTargets,
   posterAbi,
   rolesAbi,

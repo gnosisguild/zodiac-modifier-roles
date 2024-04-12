@@ -1,9 +1,7 @@
 import { Annotation, Target } from "zodiac-roles-sdk"
-import { MdOutlinePolicy } from "react-icons/md"
 
 import classes from "./page.module.css"
 import { notFound } from "next/navigation"
-import Box from "@/ui/Box"
 import PermissionsList from "@/components/permissions/PermissionsList"
 import Layout, { Breadcrumb } from "@/components/Layout"
 import { kv } from "@vercel/kv"
@@ -39,11 +37,9 @@ export default async function PermissionPage({
       head={
         <>
           <Breadcrumb href={`/permissions/${chain}/${hash}`}>
-            <Flex gap={2} alignItems="center">
-              <LabeledData label="Permissions Hash">
-                <div className={classes.hash}>{hash}</div>
-              </LabeledData>
-            </Flex>
+            <LabeledData label="Permissions">
+              <div className={classes.hash}>{hash}</div>
+            </LabeledData>
           </Breadcrumb>
         </>
       }
