@@ -102,3 +102,7 @@
   font-family: var(--font-mono), monospace;
   font-size: 12px;
 }
+
+.wildcardContainer {
+  padding: var(--spacing-2);
+}

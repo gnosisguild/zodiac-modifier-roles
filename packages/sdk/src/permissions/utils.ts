@@ -55,7 +55,7 @@ export const isFunctionScoped = (
 export const targetId = (permission: PermissionCoerced) =>
   "selector" in permission
     ? `${permission.targetAddress.toLowerCase()}.${permission.selector}`
-    : permission.targetAddress.toLowerCase()
+    : `${permission.targetAddress.toLowerCase()}.*` // * will be always be sorted before any selector 0x...
 
 export const permissionId = (permission: PermissionCoerced) => {
   const cid =
