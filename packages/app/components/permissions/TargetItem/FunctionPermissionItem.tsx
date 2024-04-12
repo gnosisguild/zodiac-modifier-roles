@@ -38,23 +38,25 @@ const FunctionPermissionItem: React.FC<
         modified && <FunctionPermissionItem {...modified} chainId={chainId} />
       }
     >
-      {functionAbi ? (
-        <AbiFunctionPermissionItem
-          targetAddress={targetAddress}
-          selector={selector}
-          abi={functionAbi}
-          condition={condition}
-          {...rest}
-        />
-      ) : (
-        <RawFunctionPermissionItem
-          targetAddress={targetAddress}
-          selector={selector}
-          condition={condition}
-          {...rest}
-        />
-      )}
-      <div className={classes.verticalGuide} />
+      <div className={classes.functionContainer}>
+        {functionAbi ? (
+          <AbiFunctionPermissionItem
+            targetAddress={targetAddress}
+            selector={selector}
+            abi={functionAbi}
+            condition={condition}
+            {...rest}
+          />
+        ) : (
+          <RawFunctionPermissionItem
+            targetAddress={targetAddress}
+            selector={selector}
+            condition={condition}
+            {...rest}
+          />
+        )}
+        <div className={classes.verticalGuide} />
+      </div>
     </DiffBox>
   )
 }
