@@ -105,7 +105,7 @@ const AbiFunctionPermissionItem: React.FC<
           <Flex gap={2} alignItems="center" className={classes.signature}>
             <div className={classes.selector}>{abi.name}</div>
 
-            <Flex gap={1} alignItems="start">
+            <Flex gap={1} alignItems="start" wrap className={classes.params}>
               {params.map((param, i) => (
                 <code className={classes.param} key={i}>
                   {param}

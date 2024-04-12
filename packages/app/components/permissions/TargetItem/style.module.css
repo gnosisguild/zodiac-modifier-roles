@@ -7,6 +7,11 @@
   font-size: 14px;
 }
 
+.params {
+  --open-parantheses-width: 13px;
+  margin-left: var(--open-parantheses-width);
+}
+
 .param {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
@@ -21,16 +26,21 @@
 .param:last-child::after {
   content: " )";
 }
-.param + .param::before {
+.param:not(:last-child)::after {
   content: ", ";
 }
 
 .param:first-child::before,
 .param:last-child::after,
-.param + .param::before {
+.param:not(:last-child)::after {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
+}
+
+.param:first-child::before {
+  position: absolute;
+  margin-left: calc(var(--open-parantheses-width) * -1);
 }
 
 .targetHeader .targetBlockie {
