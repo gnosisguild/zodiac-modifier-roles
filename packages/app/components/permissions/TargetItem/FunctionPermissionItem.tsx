@@ -2,8 +2,7 @@ import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 
 import { AbiFunction, toFunctionSelector } from "viem"
 import Flex from "@/ui/Flex"
-import ConditionView, { matchesAbi } from "../ConditionView"
-import { CHAINS } from "@/app/chains"
+import ConditionView from "../ConditionView"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
@@ -35,7 +34,6 @@ const FunctionPermissionItem: React.FC<
   return (
     <DiffBox
       diff={diff}
-      borderless
       modified={
         modified && <FunctionPermissionItem {...modified} chainId={chainId} />
       }

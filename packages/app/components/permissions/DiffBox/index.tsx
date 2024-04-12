@@ -9,13 +9,12 @@ const DiffBox: React.FC<{
   diff?: DiffFlag
   modified?: ReactNode
   bg?: boolean
-  borderless?: boolean
   children: ReactNode
   stretch?: boolean
-}> = ({ diff, modified, bg, borderless, children, stretch }) => (
+}> = ({ diff, modified, bg, children, stretch }) => (
   <Placeholder hidden={modified}>
     <Box
-      borderless={borderless}
+      borderless
       bg={bg}
       p={0}
       className={cn(

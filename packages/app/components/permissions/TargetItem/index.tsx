@@ -47,7 +47,6 @@ const TargetItem: React.FC<{
 
   return (
     <DiffBox
-      borderless
       bg
       diff={targetDiff === DiffFlag.Modified ? undefined : targetDiff} // we don't highlight the modified target since this would get a bit too colorful
     >
