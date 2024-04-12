@@ -1,6 +1,7 @@
 import {
   Annotation,
   Target,
+  applyAnnotations,
   applyTargets,
   posterAbi,
   rolesAbi,
@@ -48,26 +49,28 @@ export default async function DiffPage({
   const logCall = (log: string) => comments.push(log)
 
   const calls = [
-    ...(await applyTargets(roleKey, entry.targets, {
-      ...mod,
-      mode: "replace",
-      currentTargets: roleData.targets,
-      log: logCall,
-    })),
+    ...(
+      await applyTargets(roleKey, entry.targets, {
+        ...mod,
+        mode: "replace",
+        currentTargets: roleData.targets,
+        log: logCall,
+      })
+    ).map((data) => ({ to: mod.address, data })),
 
-    // TODO: these calls go to a different contract, so must not be thrown into the same bag
-    // ...(await applyAnnotations(roleKey, entry.annotations, {
-    //   ...mod,
-    //   mode: "replace",
-    //   currentAnnotations: roleData.annotations,
-    //   log: logCall,
-    // })),
+    ...(
+      await applyAnnotations(roleKey, entry.annotations, {
+        ...mod,
+        mode: "replace",
+        currentAnnotations: roleData.annotations,
+        log: logCall,
+      })
+    ).map((data) => ({ to: mod.address, data })),
   ]
 
   const txBuilderJson = exportToSafeTransactionBuilder(
     calls,
     mod.chainId,
-    mod.address,
     params.role
   )
 
@@ -99,7 +102,12 @@ export default async function DiffPage({
                 {calls.map((call, i) => (
                   <Flex gap={3} key={i}>
                     <div className={styles.index}>{i}</div>
-                    <CallData className={styles.calldata}>{call}</CallData>
+                    <div className={styles.callTo}>
+                      <label title={call.to}>
+                        {call.to === mod.address ? "Roles" : "Poster"}
+                      </label>
+                    </div>
+                    <CallData className={styles.callData}>{call.data}</CallData>
                     <div className={styles.comment}>{comments[i]}</div>
                   </Flex>
                 ))}
@@ -113,9 +121,8 @@ export default async function DiffPage({
 }
 
 const exportToSafeTransactionBuilder = (
-  calls: `0x${string}`[],
+  calls: { to: `0x${string}`; data: `0x${string}` }[],
   chainId: ChainId,
-  address: `0x${string}`,
   role: string
 ) => {
   return {
@@ -127,7 +134,7 @@ const exportToSafeTransactionBuilder = (
       description: "",
       txBuilderVersion: "1.16.2",
     },
-    transactions: calls.map((data) => decode({ to: address, data })),
+    transactions: calls.map(decode),
   } as const
 }
 
