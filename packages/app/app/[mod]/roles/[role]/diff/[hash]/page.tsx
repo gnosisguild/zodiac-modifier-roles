@@ -24,11 +24,14 @@ import Flex from "@/ui/Flex"
 import CallData from "@/components/CallData"
 import { fetchOrInitRole } from "@/components/RoleView/fetching"
 import { ChainId } from "@/app/chains"
+import Link from "next/link"
 
 export default async function DiffPage({
   params,
+  searchParams,
 }: {
   params: { mod: string; role: string; hash: string }
+  searchParams: { annotations?: string }
 }) {
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
@@ -40,7 +43,6 @@ export default async function DiffPage({
   const roleTargets = roleData.targets.filter(
     (target) => !isEmptyFunctionScoped(target)
   )
-  const roleAnnotations = roleData.annotations
 
   const entry = await kv.get<{
     targets: Target[]
@@ -52,7 +54,13 @@ export default async function DiffPage({
   const entryTargets = entry.targets.filter(
     (target) => !isEmptyFunctionScoped(target)
   )
-  const entryAnnotations = entry.annotations
+
+  const hasAnnotations =
+    roleData.annotations.length > 0 || entry.annotations.length > 0
+  const shallShowAnnotations = searchParams.annotations !== "false"
+
+  const roleAnnotations = shallShowAnnotations ? roleData.annotations : []
+  const entryAnnotations = shallShowAnnotations ? entry.annotations : []
 
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
@@ -74,7 +82,7 @@ export default async function DiffPage({
         currentAnnotations: roleAnnotations,
         log: logCall,
       })
-    ).map((data) => ({ to: mod.address, data })),
+    ).map((data) => ({ to: POSTER_ADDRESS, data })),
   ]
 
   const txBuilderJson = exportToSafeTransactionBuilder(
@@ -85,6 +93,18 @@ export default async function DiffPage({
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
+      {hasAnnotations && (
+        <Flex
+          direction="row"
+          gap={1}
+          justifyContent="end"
+          className={styles.toolbar}
+        >
+          <Link href={{ query: { annotations: !shallShowAnnotations } }}>
+            {shallShowAnnotations ? "Hide annotations" : "Show annotations"}
+          </Link>
+        </Flex>
+      )}
       <main className={styles.main}>
         <Flex direction="column" gap={1}>
           <PermissionsDiff
@@ -156,6 +176,7 @@ const POSTER_ADDRESS = "0x000000000000cd17345801aa8147b8D3950260FF" as const
 const decode = (transaction: { to: `0x${string}`; data: `0x${string}` }) => {
   const abi: readonly JsonFragment[] =
     transaction.to === POSTER_ADDRESS ? posterAbi : rolesAbi
+
   const iface = new Interface(abi)
 
   const selector = transaction.data.slice(0, 10)
