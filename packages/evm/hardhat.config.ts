@@ -83,6 +83,10 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: "https://arb1.arbitrum.io/rpc",
     },
+    avalanche: {
+      ...sharedNetworkConfig,
+      url: "https://rpc.ankr.com/avalanche",
+    },
   },
   etherscan: {
     apiKey: {
@@ -92,6 +96,7 @@ const config: HardhatUserConfig = {
       matic: POLYGONSCAN_API_KEY,
       mumbai: POLYGONSCAN_API_KEY,
       arbitrum: ARBISCAN_API_KEY,
+      avalanche: SNOWTRACE_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -124,6 +129,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.arbiscan.io/api",
           browserURL: "https://www.arbiscan.io",
+        },
+      },
+      {
+        network: "avalanche",
+        chainId: 43114,
+        urls: {
+          apiURL: "https://api.snowtrace.io/api",
+          browserURL: "https://www.snowtrace.io",
         },
       },
     ],
