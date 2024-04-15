@@ -8,7 +8,8 @@ const SUBGRAPH = {
     "https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.3",
   [42161]:
     "https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.1.3",
-  // [43114]: "",
+  [43114]:
+    "https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.1.3",
   [80001]:
     "https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.3",
   [11155111]:

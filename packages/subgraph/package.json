@@ -12,7 +12,7 @@
     "deploy:sepolia": "yarn prepare:sepolia && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_SEPOLIA'",
     "deploy:gnosis": "yarn prepare:gnosis && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_GNOSIS'",
     "deploy:arbitrum-one": "yarn prepare:arbitrum-one && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_ARBITRUM_ONE'",
-    "deploy:avalanche": "yarn prepare:avalanche && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_AVALANCHE'",
+    "deploy:avalanche": "yarn prepare:avalanche && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_AVALANCHE'",
     "deploy:bsc": "yarn prepare:bsc && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_BSC'",
     "deploy:optimism": "yarn prepare:optimism && bash -c 'source .env || true && graph deploy --node https://api.thegraph.com/deploy/ $SUBGRAPH_OPTIMISM'",
     "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_POLYGON'",
