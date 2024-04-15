@@ -1,15 +1,22 @@
-import { calculateDeployAddress, deployViaFactory } from "./EIP2470";
+import ethProvider from "eth-provider";
 import { task } from "hardhat/config";
+import { Web3Provider } from "@ethersproject/providers";
+import { calculateDeployAddress, deployViaFactory } from "./EIP2470";
 
 const SaltZero =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+const frame = ethProvider("frame");
 
 task(
   "deploy:adapters",
   "Deploys the MultiSendUnwrapper and AvatarIsOwnerOfERC721"
 ).setAction(async (_, hre) => {
-  const [signer] = await hre.ethers.getSigners();
-  const deployer = hre.ethers.provider.getSigner(signer.address);
+  const chainId = hre.network.config.chainId;
+  if (!chainId) throw new Error("chainId not set");
+  frame.setChain(chainId);
+  const provider = new Web3Provider(frame as any, chainId);
+  const signer = await provider.getSigner();
 
   const MultiSendUnwrapper = await hre.ethers.getContractFactory(
     "MultiSendUnwrapper"
@@ -21,7 +28,7 @@ task(
   await deployViaFactory(
     MultiSendUnwrapper.bytecode,
     SaltZero,
-    deployer,
+    signer,
     "MultiSendUnwrapper",
     2_000_000
   );
@@ -36,7 +43,7 @@ task(
   await deployViaFactory(
     AvatarIsOwnerOfERC721.bytecode,
     SaltZero,
-    deployer,
+    signer,
     "AvatarIsOwnerOfERC721",
     1_000_000
   );

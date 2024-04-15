@@ -22,6 +22,7 @@ const {
   GNOSISSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
   ARBISCAN_API_KEY,
+  SNOWTRACE_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -61,30 +62,37 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       ...sharedNetworkConfig,
+      chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
     gnosis: {
       ...sharedNetworkConfig,
+      chainId: 100,
       url: "https://rpc.gnosischain.com",
     },
     sepolia: {
       ...sharedNetworkConfig,
+      chainId: 11155111,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     },
     matic: {
       ...sharedNetworkConfig,
+      chainId: 137,
       url: "https://rpc-mainnet.maticvigil.com",
     },
     mumbai: {
       ...sharedNetworkConfig,
+      chainId: 80001,
       url: "https://rpc.ankr.com/polygon_mumbai",
     },
     arbitrum: {
       ...sharedNetworkConfig,
+      chainId: 42161,
       url: "https://arb1.arbitrum.io/rpc",
     },
     avalanche: {
       ...sharedNetworkConfig,
+      chainId: 43114,
       url: "https://rpc.ankr.com/avalanche",
     },
   },

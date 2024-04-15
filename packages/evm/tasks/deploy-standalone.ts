@@ -1,6 +1,10 @@
 import { task, types } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import ethProvider from "eth-provider";
 import { deployViaFactory } from "./EIP2470";
+import { Web3Provider } from "@ethersproject/providers";
+
+const frame = ethProvider("frame");
 
 interface RolesTaskArgs {
   owner: string;
@@ -22,8 +26,11 @@ task("deploy:standalone", "Deploys a Roles modifier")
   .addParam("target", "Address of the target", undefined, types.string)
   .setAction(
     async (taskArgs: RolesTaskArgs, hre: HardhatRuntimeEnvironment) => {
-      const [signer] = await hre.ethers.getSigners();
-      const deployer = hre.ethers.provider.getSigner(signer.address);
+      const chainId = hre.network.config.chainId;
+      if (!chainId) throw new Error("chainId not set");
+      frame.setChain(chainId);
+      const provider = new Web3Provider(frame as any, chainId);
+      const signer = await provider.getSigner();
 
       const salt = ZeroHash;
 
@@ -31,7 +38,7 @@ task("deploy:standalone", "Deploys a Roles modifier")
       const packerLibraryAddress = await deployViaFactory(
         Packer.bytecode,
         salt,
-        deployer,
+        signer,
         "Packer"
       );
 
@@ -39,7 +46,7 @@ task("deploy:standalone", "Deploys a Roles modifier")
       const integrityLibraryAddress = await deployViaFactory(
         Integrity.bytecode,
         salt,
-        deployer,
+        signer,
         "Integrity"
       );
 
@@ -55,7 +62,7 @@ task("deploy:standalone", "Deploys a Roles modifier")
         taskArgs.avatar,
         taskArgs.target
       );
-      await roles.connect(deployer).deployed();
+      await roles.connect(signer).deployed();
       console.log(`\x1B[32m✔ Roles deployed to: ${roles.address} 🎉\x1B[0m `);
 
       console.log("Waiting 1 minute before etherscan verification start...");
