@@ -44,3 +44,8 @@
   text-indent: -1.3em;
   user-select: none;
 }
+
+.toolbar {
+  font-size: 12px;
+  padding: var(--spacing-2) var(--spacing-4);
+}
