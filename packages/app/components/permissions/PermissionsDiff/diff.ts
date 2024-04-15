@@ -1,9 +1,4 @@
-import {
-  PermissionCoerced,
-  targetId,
-  permissionId,
-  conditionId,
-} from "zodiac-roles-sdk"
+import { PermissionCoerced, targetId, permissionId } from "zodiac-roles-sdk"
 import { DiffFlag, PermissionsDiff, Preset } from "../types"
 import { comparePermissionIds } from "../groupPermissions"
 

@@ -14,6 +14,7 @@ interface Props {
 }
 
 const PresetItem: React.FC<Props> = ({ preset, chainId, diff }) => {
+  // TODO what's the plan here!?
   const presetDiff = diff?.get(preset)
   return <PresetItemMain {...{ preset, chainId, diff }} />
 }
@@ -25,7 +26,6 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
   return (
     <DiffBox
       bg
-      borderless
       stretch
       diff={presetDiff?.flag}
       modified={

@@ -8,11 +8,9 @@ import classes from "./page.module.css"
 export default function PageBreadcrumbs({
   mod,
   role,
-  hash,
 }: {
   mod: Mod
   role: string
-  hash?: string
 }) {
   const roleKey = parseRoleParam(role)
   if (!roleKey) {
@@ -24,11 +22,7 @@ export default function PageBreadcrumbs({
       <ParentPageBreadcrumbs mod={mod} isLink={true} />
       <BreadcrumbDivider />
       <Breadcrumb
-        href={
-          Boolean(hash)
-            ? `/${mod.chainPrefix}:${mod.address}/roles/${role}`
-            : undefined
-        }
+        href={`/${mod.chainPrefix}:${mod.address}/roles/${role}`}
         className={classes.breadcrumb}
       >
         <label>Role</label>

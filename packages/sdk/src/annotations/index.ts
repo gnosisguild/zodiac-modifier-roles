@@ -65,7 +65,9 @@ export const applyAnnotations = async (
       throw new Error(`Invalid mode: ${options.mode}`)
   }
 
-  const addCount = updatePost.addAnnotations?.length || 0
+  const addCount =
+    updatePost.addAnnotations?.reduce((acc, add) => acc + add.uris.length, 0) ||
+    0
   const removeCount = updatePost.removeAnnotations?.length || 0
 
   if (addCount === 0 && removeCount === 0) {

@@ -146,16 +146,18 @@ const LogicalConditionView: React.FC<Props> = ({
         <div className={classes.singleItemOperatorLabel}>{operatorLabel}</div>
       )}
 
-      <ChildConditions
-        condition={condition}
-        paramIndex={paramIndex}
-        abi={abi}
-        separator={
-          <div className={classes.logicalBranchSeparator}>
-            <div className={classes.operatorLabel}>{operatorLabel}</div>
-          </div>
-        }
-      />
+      <div className={classes.logicalChildren}>
+        <ChildConditions
+          condition={condition}
+          paramIndex={paramIndex}
+          abi={abi}
+          separator={
+            <div className={classes.logicalBranchSeparator}>
+              <div className={classes.operatorLabel}>{operatorLabel}</div>
+            </div>
+          }
+        />
+      </div>
     </div>
   )
 }
@@ -191,7 +193,7 @@ export const ChildConditions: React.FC<
     <div
       className={classNames(
         classes.conditionBody,
-        isCalldataCondition && classes.initialCondition
+        isCalldataCondition && classes.topLevelCondition
       )}
     >
       {!isLogicalCondition && !isCalldataCondition && (

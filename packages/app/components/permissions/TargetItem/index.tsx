@@ -26,7 +26,12 @@ const TargetItem: React.FC<{
 }> = async ({ targetAddress, chainId, permissions, diff }) => {
   const { abi } = await fetchAbi(targetAddress, chainId)
 
-  const wildcardPermission = permissions.find(
+  // don't take into account "shadow permissions" added in the diff view for the purpose of aligning items in the two columns
+  const ownPermissions = diff
+    ? permissions.filter((p) => diff.get(p)?.flag !== DiffFlag.Hidden)
+    : permissions
+
+  const isWildcarded = ownPermissions.some(
     (permission) => !("selector" in permission)
   )
 
@@ -47,7 +52,6 @@ const TargetItem: React.FC<{
 
   return (
     <DiffBox
-      borderless
       bg
       diff={targetDiff === DiffFlag.Modified ? undefined : targetDiff} // we don't highlight the modified target since this would get a bit too colorful
     >
@@ -78,27 +82,19 @@ const TargetItem: React.FC<{
             </LabeledData>
             <LabeledData label="Permissions">
               <div className={classes.functionCount}>
-                {wildcardPermission ? "Wildcard" : permissions.length}
+                {isWildcarded ? "Wildcard" : permissions.length}
               </div>
             </LabeledData>
           </Flex>
         }
       >
         <Flex direction="column" gap={3} className={classes.targetContent}>
-          {wildcardPermission && (
-            <WildcardPermissionItem
-              data-testid="wildcard-permission"
-              {...wildcardPermission}
-              diff={diff?.get(wildcardPermission)?.flag}
-            />
-          )}
-
-          {!wildcardPermission &&
-            (permissions as FunctionPermissionCoerced[]).map(
-              (permission, index) => (
+          {(permissions as FunctionPermissionCoerced[]).map(
+            (permission, index) =>
+              permission.selector ? (
                 <FunctionPermissionItem
                   data-testid="function-permission"
-                  key={index} // selector is not unique, maybe use selector + conditionId?
+                  key={index} // selector is not unique, maybe use `permissionId(permission)` (a bit expensive to calculate, so should be cached)
                   {...permission}
                   diff={diff?.get(permission)?.flag}
                   abi={abi}
@@ -109,8 +105,20 @@ const TargetItem: React.FC<{
                   }
                   chainId={chainId}
                 />
+              ) : (
+                <WildcardPermissionItem
+                  data-testid="wildcard-permission"
+                  key={index}
+                  {...permission}
+                  diff={diff?.get(permission)?.flag}
+                  modified={
+                    diff?.get(permission)?.modified as
+                      | TargetPermission
+                      | undefined
+                  }
+                />
               )
-            )}
+          )}
         </Flex>
       </Disclosure>
     </DiffBox>
@@ -119,27 +127,28 @@ const TargetItem: React.FC<{
 export default TargetItem
 
 const WildcardPermissionItem: React.FC<
-  TargetPermission & { diff?: DiffFlag }
-> = ({ delegatecall, send, diff }) => {
+  TargetPermission & { diff?: DiffFlag; modified?: TargetPermission }
+> = ({ delegatecall, send, diff, modified }) => {
   return (
-    <DiffBox diff={diff}>
-      <Flex direction="row" gap={5}>
+    <DiffBox
+      diff={diff}
+      modified={modified && <WildcardPermissionItem {...modified} />}
+    >
+      <div className={classes.wildcardContainer}>
         <Flex direction="row" gap={0} justifyContent="space-between">
           <LabeledData label="Function Signature">
-            <Flex gap={2} alignItems="center" className={classes.signature}>
-              <div className={classes.selector}>ALL FUNCTIONS</div>
-            </Flex>
+            <div className={classes.selector}>ALL FUNCTIONS</div>
           </LabeledData>
           <Flex gap={3} alignItems="start">
             <LabeledData label="Send value">
-              <Switch label="" checked={!!send} disabled />
+              <Switch checked={!!send} disabled />
             </LabeledData>
             <LabeledData label="Delegate call">
-              <Switch label="" checked={!!delegatecall} disabled />
+              <Switch checked={!!delegatecall} disabled />
             </LabeledData>
           </Flex>
         </Flex>
-      </Flex>
+      </div>
     </DiffBox>
   )
 }

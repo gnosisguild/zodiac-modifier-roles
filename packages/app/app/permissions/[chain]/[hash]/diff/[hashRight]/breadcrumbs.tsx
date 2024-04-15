@@ -2,31 +2,28 @@ import { Breadcrumb } from "@/components/Layout"
 import { VscGitCompare } from "react-icons/vsc"
 import ParentPageBreadcrumbs from "../../breadcrumbs"
 import Flex from "@/ui/Flex"
-import { Mod } from "@/app/params"
 import LabeledData from "@/ui/LabeledData"
 import styles from "./page.module.css"
 
 export default function PageBreadcrumbs({
-  mod,
-  role,
+  chain,
   hash,
+  hashRight,
 }: {
-  mod: Mod
-  role: string
+  chain: string
   hash: string
+  hashRight: string
 }) {
   return (
     <>
-      <ParentPageBreadcrumbs mod={mod} role={role} />
-      <Breadcrumb
-        href={`/${mod.chainPrefix}:${mod.address}/roles/${role}/diff/${hash}`}
-      >
+      <ParentPageBreadcrumbs chain={chain} hash={hash} />
+      <Breadcrumb href={`/permissions/${chain}/${hash}/diff/${hashRight}`}>
         <VscGitCompare title="Diff" />
       </Breadcrumb>
-      <Breadcrumb href={`/permissions/${mod.chainPrefix}/${hash}`}>
+      <Breadcrumb href={`/permissions/${chain}/${hashRight}`}>
         <Flex gap={2} alignItems="center">
           <LabeledData label="Permissions">
-            <div className={styles.hash}>{hash}</div>
+            <div className={styles.hash}>{hashRight}</div>
           </LabeledData>
         </Flex>
       </Breadcrumb>

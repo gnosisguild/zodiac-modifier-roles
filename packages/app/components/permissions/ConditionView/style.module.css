@@ -10,7 +10,7 @@
   min-height: 40px;
 }
 
-.logicalCondition .conditionBody {
+.logicalChildren {
   padding: var(--spacing-2);
 }
 
@@ -29,7 +29,7 @@
 }
 .logicalBranchSeparator .operatorLabel {
   position: absolute;
-  left: -16px;
+  left: -24px;
   writing-mode: vertical-lr;
   transform: rotate(-180deg);
   text-transform: uppercase;
@@ -66,7 +66,7 @@
   margin-left: var(--condition-indent);
 }
 
-.conditionBody.initialCondition {
+.conditionBody.topLevelCondition {
   margin-left: 0;
 }
 

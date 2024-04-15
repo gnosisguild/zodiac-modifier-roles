@@ -7,6 +7,11 @@
   font-size: 14px;
 }
 
+.params {
+  --open-parantheses-width: 13px;
+  margin-left: var(--open-parantheses-width);
+}
+
 .param {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
@@ -21,16 +26,21 @@
 .param:last-child::after {
   content: " )";
 }
-.param + .param::before {
+.param:not(:last-child)::after {
   content: ", ";
 }
 
 .param:first-child::before,
 .param:last-child::after,
-.param + .param::before {
+.param:not(:last-child)::after {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
+}
+
+.param:first-child::before {
+  position: absolute;
+  margin-left: calc(var(--open-parantheses-width) * -1);
 }
 
 .targetHeader .targetBlockie {
@@ -51,16 +61,21 @@
 }
 
 .targetContent {
-  padding: var(--spacing-3);
-  padding-left: var(--spacing-4);
+  padding: var(--spacing-2);
+}
+
+.functionContainer {
+  padding: var(--spacing-2) var(--spacing-2) var(--spacing-2)
+    calc(var(--spacing-3) + var(--spacing-2));
   position: relative;
 }
 
 .verticalGuide {
   position: absolute;
-  top: 10px;
-  bottom: 0;
-  left: -20px;
+  top: var(--spacing-3);
+  bottom: var(--spacing-2);
+  left: var(--spacing-2);
+  margin-left: -3px;
   width: 1px;
   background-color: var(--border-color);
   z-index: 10;
@@ -86,4 +101,8 @@
   background: rgba(0, 0, 0, 0.3);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
+}
+
+.wildcardContainer {
+  padding: var(--spacing-2);
 }

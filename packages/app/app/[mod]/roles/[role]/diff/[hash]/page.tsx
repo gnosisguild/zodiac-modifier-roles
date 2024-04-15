@@ -1,5 +1,6 @@
 import {
   Annotation,
+  Clearance,
   Target,
   applyAnnotations,
   applyTargets,
@@ -23,11 +24,14 @@ import Flex from "@/ui/Flex"
 import CallData from "@/components/CallData"
 import { fetchOrInitRole } from "@/components/RoleView/fetching"
 import { ChainId } from "@/app/chains"
+import Link from "next/link"
 
 export default async function DiffPage({
   params,
+  searchParams,
 }: {
   params: { mod: string; role: string; hash: string }
+  searchParams: { annotations?: string }
 }) {
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
@@ -35,7 +39,10 @@ export default async function DiffPage({
     notFound()
   }
 
-  let roleData = await fetchOrInitRole({ ...mod, roleKey })
+  const roleData = await fetchOrInitRole({ ...mod, roleKey })
+  const roleTargets = roleData.targets.filter(
+    (target) => !isEmptyFunctionScoped(target)
+  )
 
   const entry = await kv.get<{
     targets: Target[]
@@ -44,41 +51,65 @@ export default async function DiffPage({
   if (!entry) {
     notFound()
   }
+  const entryTargets = entry.targets.filter(
+    (target) => !isEmptyFunctionScoped(target)
+  )
+
+  const hasAnnotations =
+    roleData.annotations.length > 0 || entry.annotations.length > 0
+  const shallShowAnnotations = searchParams.annotations !== "false"
+
+  const roleAnnotations = shallShowAnnotations ? roleData.annotations : []
+  const entryAnnotations = shallShowAnnotations ? entry.annotations : []
 
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 
   const calls = [
-    ...(await applyTargets(roleKey, entry.targets, {
-      ...mod,
-      mode: "replace",
-      currentTargets: roleData.targets,
-      log: logCall,
-    })),
+    ...(
+      await applyTargets(roleKey, entryTargets, {
+        ...mod,
+        mode: "replace",
+        currentTargets: roleTargets,
+        log: logCall,
+      })
+    ).map((data) => ({ to: mod.address, data })),
 
-    // TODO: these calls go to a different contract, so must not be thrown into the same bag
-    // ...(await applyAnnotations(roleKey, entry.annotations, {
-    //   ...mod,
-    //   mode: "replace",
-    //   currentAnnotations: roleData.annotations,
-    //   log: logCall,
-    // })),
+    ...(
+      await applyAnnotations(roleKey, entryAnnotations, {
+        ...mod,
+        mode: "replace",
+        currentAnnotations: roleAnnotations,
+        log: logCall,
+      })
+    ).map((data) => ({ to: POSTER_ADDRESS, data })),
   ]
 
   const txBuilderJson = exportToSafeTransactionBuilder(
     calls,
     mod.chainId,
-    mod.address,
     params.role
   )
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
+      {hasAnnotations && (
+        <Flex
+          direction="row"
+          gap={1}
+          justifyContent="end"
+          className={styles.toolbar}
+        >
+          <Link href={{ query: { annotations: !shallShowAnnotations } }}>
+            {shallShowAnnotations ? "Hide annotations" : "Show annotations"}
+          </Link>
+        </Flex>
+      )}
       <main className={styles.main}>
         <Flex direction="column" gap={1}>
           <PermissionsDiff
-            left={roleData}
-            right={entry}
+            left={{ targets: roleTargets, annotations: roleAnnotations }}
+            right={{ targets: entryTargets, annotations: entryAnnotations }}
             chainId={mod.chainId}
           />
           <Box p={3} className={styles.calls}>
@@ -100,7 +131,12 @@ export default async function DiffPage({
                 {calls.map((call, i) => (
                   <Flex gap={3} key={i}>
                     <div className={styles.index}>{i}</div>
-                    <CallData className={styles.calldata}>{call}</CallData>
+                    <div className={styles.callTo}>
+                      <label title={call.to}>
+                        {call.to === mod.address ? "Roles" : "Poster"}
+                      </label>
+                    </div>
+                    <CallData className={styles.callData}>{call.data}</CallData>
                     <div className={styles.comment}>{comments[i]}</div>
                   </Flex>
                 ))}
@@ -113,10 +149,12 @@ export default async function DiffPage({
   )
 }
 
+const isEmptyFunctionScoped = (target: Target) =>
+  target.clearance === Clearance.Function && target.functions.length === 0
+
 const exportToSafeTransactionBuilder = (
-  calls: `0x${string}`[],
+  calls: { to: `0x${string}`; data: `0x${string}` }[],
   chainId: ChainId,
-  address: `0x${string}`,
   role: string
 ) => {
   return {
@@ -128,7 +166,7 @@ const exportToSafeTransactionBuilder = (
       description: "",
       txBuilderVersion: "1.16.2",
     },
-    transactions: calls.map((data) => decode({ to: address, data })),
+    transactions: calls.map(decode),
   } as const
 }
 
@@ -138,6 +176,7 @@ const POSTER_ADDRESS = "0x000000000000cd17345801aa8147b8D3950260FF" as const
 const decode = (transaction: { to: `0x${string}`; data: `0x${string}` }) => {
   const abi: readonly JsonFragment[] =
     transaction.to === POSTER_ADDRESS ? posterAbi : rolesAbi
+
   const iface = new Interface(abi)
 
   const selector = transaction.data.slice(0, 10)

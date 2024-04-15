@@ -2,8 +2,7 @@ import { ChainId, FunctionPermissionCoerced } from "zodiac-roles-sdk"
 
 import { AbiFunction, toFunctionSelector } from "viem"
 import Flex from "@/ui/Flex"
-import ConditionView, { matchesAbi } from "../ConditionView"
-import { CHAINS } from "@/app/chains"
+import ConditionView from "../ConditionView"
 import classes from "./style.module.css"
 import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
@@ -35,28 +34,29 @@ const FunctionPermissionItem: React.FC<
   return (
     <DiffBox
       diff={diff}
-      borderless
       modified={
         modified && <FunctionPermissionItem {...modified} chainId={chainId} />
       }
     >
-      {functionAbi ? (
-        <AbiFunctionPermissionItem
-          targetAddress={targetAddress}
-          selector={selector}
-          abi={functionAbi}
-          condition={condition}
-          {...rest}
-        />
-      ) : (
-        <RawFunctionPermissionItem
-          targetAddress={targetAddress}
-          selector={selector}
-          condition={condition}
-          {...rest}
-        />
-      )}
-      <div className={classes.verticalGuide} />
+      <div className={classes.functionContainer}>
+        {functionAbi ? (
+          <AbiFunctionPermissionItem
+            targetAddress={targetAddress}
+            selector={selector}
+            abi={functionAbi}
+            condition={condition}
+            {...rest}
+          />
+        ) : (
+          <RawFunctionPermissionItem
+            targetAddress={targetAddress}
+            selector={selector}
+            condition={condition}
+            {...rest}
+          />
+        )}
+        <div className={classes.verticalGuide} />
+      </div>
     </DiffBox>
   )
 }
@@ -105,7 +105,7 @@ const AbiFunctionPermissionItem: React.FC<
           <Flex gap={2} alignItems="center" className={classes.signature}>
             <div className={classes.selector}>{abi.name}</div>
 
-            <Flex gap={1} alignItems="start">
+            <Flex gap={1} alignItems="start" wrap className={classes.params}>
               {params.map((param, i) => (
                 <code className={classes.param} key={i}>
                   {param}
