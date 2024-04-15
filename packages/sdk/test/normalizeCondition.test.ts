@@ -427,4 +427,26 @@ describe("normalizeCondition()", () => {
     // assert idempotency
     expect(normalizeCondition(normalized)).to.deep.equal(normalized)
   })
+
+  it("handles matches on arrays correctly when pushing down ORs", () => {
+    const PASS = { paramType: ParameterType.Static, operator: Operator.Pass }
+    const condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [DUMMY_COMP(0), PASS, PASS, DUMMY_COMP(1)],
+        },
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [DUMMY_COMP(0), PASS, DUMMY_COMP(1)],
+        },
+      ],
+    }
+
+    expect(normalizeCondition(condition)).to.deep.equal(condition)
+  })
 })
