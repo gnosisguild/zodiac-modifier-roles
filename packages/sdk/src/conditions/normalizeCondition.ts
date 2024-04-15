@@ -291,7 +291,11 @@ const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
     // empty matches does not make sense and would be rejected by the integrity check, bail
     if (!other.children) throw new Error("empty children")
 
-    for (let i = 0; i < other.children.length; i++) {
+    for (
+      let i = 0;
+      i < Math.max(first.children.length, other.children.length);
+      i++
+    ) {
       if (conditionsEqual(first.children[i], other.children[i])) {
         continue
       }
