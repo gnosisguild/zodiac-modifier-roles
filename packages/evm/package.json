@@ -41,6 +41,7 @@
     "eslint-plugin-eslint-comments": "3.2.0",
     "eslint-plugin-import": "2.29.0",
     "eslint-plugin-prettier": "4.2.1",
+    "eth-provider": "^0.13.6",
     "hardhat": "2.19.1",
     "hardhat-contract-sizer": "2.10.0",
     "hardhat-gas-reporter": "1.0.9",

@@ -45,14 +45,14 @@ const makeAllowFunction = <
     ...args: MapParams<Parameters<typeof ethersFunction>>
   ): FunctionPermission => {
     const scopings = args.slice(0, functionInputs.length) as any[]
+    const hasScopings = scopings.some((s) => !!s)
     const options = (args[functionInputs.length] || {}) as Options
     const presetFunction: FunctionPermission = {
       targetAddress: contract.address as `0x${string}`,
       signature: functionFragment.format("sighash"),
-      condition:
-        scopings.length > 0
-          ? c.calldataMatches(scopings, functionInputs)()
-          : undefined,
+      condition: hasScopings
+        ? c.calldataMatches(scopings, functionInputs)()
+        : undefined,
     }
     return applyOptions(coercePermission(presetFunction), options)
   }

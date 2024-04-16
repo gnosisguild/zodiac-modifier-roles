@@ -2,7 +2,7 @@ import {
   mainnet,
   sepolia,
   // optimism,
-  // avalanche,
+  avalanche,
   arbitrum,
   // bsc,
   polygon,
@@ -35,12 +35,12 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api.polygonscan.com/api",
     blockExplorerApiKey: "NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ",
   },
-  // [avalanche.id]: {
-  //   ...avalanche,
-  //   prefix: "avax",
-  //   blockExplorerAbiUrl: "https://api.snowtrace.io/api",
-  //   blockExplorerApiKey: "IAST9REKWMIW1QSE2M7K2IKKAZVNQPHC1U",
-  // },
+  [avalanche.id]: {
+    ...avalanche,
+    prefix: "avax",
+    blockExplorerAbiUrl: "https://api.snowtrace.io/api",
+    blockExplorerApiKey: "notrequired",
+  },
   [arbitrum.id]: {
     ...arbitrum,
     prefix: "arb1",
