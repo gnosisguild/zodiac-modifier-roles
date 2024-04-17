@@ -23,6 +23,42 @@ describe("splitTargets", () => {
     expect(diffTargets(finalTargets, combinedTargets)).to.have.length(0)
     expect(diffTargets(combinedTargets, finalTargets)).to.have.length(0)
   })
+
+  it("handles the case where the combined target does not have a condition set, but the split target does", () => {
+    // this happens, for example, when a user whitelists a function without setting a condition and applies a preset that does set a condition on that function
+
+    const { targets: combined } = processPermissions([
+      {
+        targetAddress: "0xcb444e90d8198415266c6a2724b7900fb12fc56e",
+        selector: "0x095ea7b3",
+        send: false,
+        delegatecall: false,
+      },
+    ])
+
+    const { targets: split } = processPermissions([
+      {
+        targetAddress: "0xcb444e90d8198415266c6a2724b7900fb12fc56e",
+        selector: "0x095ea7b3",
+        send: false,
+        delegatecall: false,
+        condition: {
+          paramType: 5,
+          operator: 5,
+          children: [
+            {
+              paramType: 1,
+              operator: 16,
+              compValue:
+                "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+            },
+          ],
+        },
+      },
+    ])
+
+    expect(splitTargets(combined, split)).to.deep.equal(combined)
+  })
 })
 
 const combinedPermissions: Permission[] = [
