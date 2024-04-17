@@ -20,34 +20,40 @@ export const splitTargets = (
   const remainder = diffTargets(combined, split)
 
   // For the remaining targets, split conditions so that the remaining condition branches don't include any of those that are already in `split`
-  return remainder.map((target) => {
-    const targetInSplit = split.find((t) => t.address === target.address)
-    if (!targetInSplit) return target
+  return remainder
+    .map((target) => {
+      const targetInSplit = split.find((t) => t.address === target.address)
+      if (!targetInSplit) return target
 
-    return {
-      ...target,
-      functions: target.functions.map((func) => {
-        const funcInSplit = targetInSplit.functions.find(
-          (f) => f.selector === func.selector
-        )
-        if (!funcInSplit) return func
+      return {
+        ...target,
+        functions: target.functions.map((func) => {
+          const funcInSplit = targetInSplit.functions.find(
+            (f) => f.selector === func.selector
+          )
+          if (!funcInSplit) return func
 
-        if (!funcInSplit.condition || !func.condition) {
-          // if function targets remain, they must have a condition in which they differ
-          throw new Error("invariant violation")
-        }
+          if (!funcInSplit.condition) {
+            // The split includes the function without condition, so it should not be included in the remainder
+            return null
+          }
+          if (!func.condition) {
+            // The combined target set allows the function without condition, so we keep it like this in the remainder
+            return func
+          }
 
-        const remainderCondition = splitCondition(
-          func.condition,
-          funcInSplit.condition
-        )
-        if (!remainderCondition) throw new Error("invariant violation")
+          const remainderCondition = splitCondition(
+            func.condition,
+            funcInSplit.condition
+          )
+          if (!remainderCondition) throw new Error("invariant violation")
 
-        return {
-          ...func,
-          condition: remainderCondition,
-        }
-      }),
-    }
-  })
+          return {
+            ...func,
+            condition: remainderCondition,
+          }
+        }),
+      }
+    })
+    .filter(Boolean) as Target[]
 }
