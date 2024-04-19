@@ -57,4 +57,4 @@ export const ethSdkConfig = {
   networkIds: {
     gnosis: 100,
   },
-}
+} as const
