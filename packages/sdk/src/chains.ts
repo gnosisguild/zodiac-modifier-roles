@@ -41,7 +41,7 @@ export const chains = {
     subgraph:
       "https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.3",
   },
-}
+} as const
 
 // The default eth-sdk config covers alls supported chains, except gnosis.
 export const ethSdkConfig = {
