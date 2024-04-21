@@ -1,4 +1,4 @@
-import SUBGRAPH from "./subgraph"
+import { chains } from "./chains"
 import { ChainId, Target } from "./types"
 
 interface Props {
@@ -34,7 +34,7 @@ export const fetchRolesMod = async (
   { address, chainId }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
-  const res = await fetch(SUBGRAPH[chainId], {
+  const res = await fetch(chains[chainId].subgraph, {
     ...options,
     method: "POST",
     headers: {

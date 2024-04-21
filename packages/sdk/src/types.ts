@@ -1,8 +1,8 @@
 import { BigNumber } from "ethers"
 
-import SUBGRAPH from "./subgraph"
+import { chains } from "./chains"
 
-export type ChainId = keyof typeof SUBGRAPH
+export type ChainId = keyof typeof chains
 
 export enum ExecutionOptions {
   None = 0,

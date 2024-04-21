@@ -10,5 +10,6 @@ export * from "./annotations"
 export { applyMembers } from "./members"
 export { setUpRolesMod } from "./setup"
 
+export * from "./chains"
 export * from "./abi"
 export * from "./types"
