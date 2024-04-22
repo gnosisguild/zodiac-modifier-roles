@@ -8,6 +8,7 @@ import { diffPermissions, diffPresets } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
 import { DIFF_CONTAINER_CLASS } from "../PresetItem/IndividualPermissions"
+import { SpawnAnchorContext } from "@/ui/Anchor"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -41,26 +42,30 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
   return (
     <Flex direction="row" gap={1}>
       <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
-        <PresetsAndPermissionsView
-          presets={[...presetsDiffLeft.keys()]}
-          permissions={[...permissionsDiffLeft.keys()]}
-          diff={{
-            permissions: permissionsDiffLeft,
-            presets: presetsDiffLeft,
-          }}
-          chainId={chainId}
-        />
+        <SpawnAnchorContext namespace="left">
+          <PresetsAndPermissionsView
+            presets={[...presetsDiffLeft.keys()]}
+            permissions={[...permissionsDiffLeft.keys()]}
+            diff={{
+              permissions: permissionsDiffLeft,
+              presets: presetsDiffLeft,
+            }}
+            chainId={chainId}
+          />
+        </SpawnAnchorContext>
       </Box>
       <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
-        <PresetsAndPermissionsView
-          presets={[...presetsDiffRight.keys()]}
-          permissions={[...permissionsDiffRight.keys()]}
-          diff={{
-            permissions: permissionsDiffRight,
-            presets: presetsDiffRight,
-          }}
-          chainId={chainId}
-        />
+        <SpawnAnchorContext namespace="right">
+          <PresetsAndPermissionsView
+            presets={[...presetsDiffRight.keys()]}
+            permissions={[...permissionsDiffRight.keys()]}
+            diff={{
+              permissions: permissionsDiffRight,
+              presets: presetsDiffRight,
+            }}
+            chainId={chainId}
+          />
+        </SpawnAnchorContext>
       </Box>
     </Flex>
   )

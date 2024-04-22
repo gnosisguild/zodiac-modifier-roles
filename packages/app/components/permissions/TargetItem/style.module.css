@@ -106,3 +106,8 @@
 .wildcardContainer {
   padding: var(--spacing-2);
 }
+
+.anchor {
+  /* We want to align it with the address blockie, which is 18x18 px */
+  margin: -10px;
+}

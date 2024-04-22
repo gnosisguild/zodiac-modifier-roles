@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Zodiac Roles",
   description: "Role-based access control for smart accounts",
+  manifest: "/manifest.json",
 }
 
 export default function PageLayout({

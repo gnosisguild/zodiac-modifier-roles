@@ -12,6 +12,7 @@
   box-sizing: border-box;
   font-size: 14px;
   opacity: 0.6;
+  outline: none;
 }
 .button[disabled] {
   opacity: 0.6;
@@ -20,6 +21,7 @@
 
 .button:hover {
   opacity: 1;
+  color: white; /* This is required to override a global style on a:hover */
 }
 
 .danger {

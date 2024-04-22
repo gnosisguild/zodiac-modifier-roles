@@ -17,6 +17,7 @@ import Switch from "@/ui/Switch"
 import { fetchAbi } from "@/app/abi"
 import ADDRESS_LABELS from "./addressLabels.json"
 import StopPropagation from "@/ui/StopPropagation"
+import Anchor from "@/ui/Anchor"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -50,6 +51,18 @@ const TargetItem: React.FC<{
       })
     )
 
+  const address = (
+    <Address
+      address={targetAddress}
+      chainId={chainId}
+      displayFull
+      copyToClipboard
+      explorerLink
+      blockieClassName={classes.targetBlockie}
+      className={classes.targetAddress}
+    />
+  )
+
   return (
     <DiffBox
       bg
@@ -65,19 +78,13 @@ const TargetItem: React.FC<{
             className={classes.targetHeader}
           >
             <LabeledData label="Target Contract">
-              {label}
-
-              {/* Prevent clicks on the copy button from toggling the panel */}
+              {/* Prevent clicks on the anchor or address icons from toggling the panel */}
               <StopPropagation>
-                <Address
-                  address={targetAddress}
-                  chainId={chainId}
-                  displayFull
-                  copyToClipboard
-                  explorerLink
-                  blockieClassName={classes.targetBlockie}
-                  className={classes.targetAddress}
-                />
+                <Flex gap={2} alignItems="center">
+                  <Anchor name={targetAddress} className={classes.anchor} />
+                  <div>{label || address}</div>
+                </Flex>
+                {label && address}
               </StopPropagation>
             </LabeledData>
             <LabeledData label="Permissions">

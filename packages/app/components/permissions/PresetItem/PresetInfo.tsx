@@ -1,16 +1,21 @@
 import Flex from "@/ui/Flex"
 import { Preset } from "../types"
 import classes from "./style.module.css"
+import Anchor from "@/ui/Anchor"
 
 const PresetInfo: React.FC<{
+  uri: string
   apiInfo: Preset["apiInfo"]
   operation: Preset["operation"]
-}> = ({ apiInfo, operation }) => {
+}> = ({ uri, apiInfo, operation }) => {
   return (
     <Flex gap={2} justifyContent="space-between">
-      <p className={classes.operation}>
-        {operation.summary || operation.description}
-      </p>
+      <Flex gap={2} alignItems="center">
+        <Anchor name={uri} className={classes.anchor} />
+        <p className={classes.operation}>
+          {operation.summary || operation.description}
+        </p>
+      </Flex>
 
       <Flex gap={2} className={classes.apiInfo} alignItems="baseline">
         <div className={classes.title} title={apiInfo.description}>

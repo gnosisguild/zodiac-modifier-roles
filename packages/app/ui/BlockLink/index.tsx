@@ -2,16 +2,17 @@ import cn from "classnames"
 import React from "react"
 
 import classes from "./style.module.css"
+import Link, { LinkProps } from "next/link"
 
 const BlockLink: React.FC<
-  React.DetailedHTMLProps<
-    React.AnchorHTMLAttributes<HTMLAnchorElement>,
-    HTMLAnchorElement
-  >
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> &
+    LinkProps & {
+      children?: React.ReactNode
+    }
 > = ({ className, children, ...rest }) => (
-  <a className={cn(classes.link, className)} {...rest}>
+  <Link className={cn(classes.link, className)} {...rest}>
     {children}
-  </a>
+  </Link>
 )
 
 export default BlockLink
