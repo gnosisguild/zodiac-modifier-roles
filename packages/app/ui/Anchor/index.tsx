@@ -1,5 +1,5 @@
 "use client"
-import { ReactNode, createContext, useContext } from "react"
+import { ReactNode, createContext, useContext, useEffect } from "react"
 import { RiLinkM } from "react-icons/ri"
 import BlockLink from "../BlockLink"
 
@@ -19,11 +19,26 @@ export const SpawnAnchorContext: React.FC<{
   )
 }
 
+let handledInitialPageLoad = false
+
 const Anchor: React.FC<{
   name: string
 }> = ({ name }) => {
   const context = useContext(AnchorContext)
   const uniqueName = context ? `${context}-${name}` : name
+  const isActive = window.location.hash === "#" + uniqueName
+
+  // Scroll into view
+  // We cannot rely on the browser-native behavior of scrolling into view if the anchor is only mounted after the page has loaded,
+  // e.g., when inside a <Suspense> block.
+  useEffect(() => {
+    if (isActive && !handledInitialPageLoad && window.screenTop === 0) {
+      handledInitialPageLoad = true
+      document.getElementById(uniqueName)?.scrollIntoView()
+      return
+    }
+  }, [isActive, uniqueName])
+
   return (
     <BlockLink id={uniqueName} href={"#" + uniqueName}>
       <RiLinkM />
