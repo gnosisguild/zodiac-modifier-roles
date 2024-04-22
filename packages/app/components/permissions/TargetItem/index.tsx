@@ -51,6 +51,18 @@ const TargetItem: React.FC<{
       })
     )
 
+  const address = (
+    <Address
+      address={targetAddress}
+      chainId={chainId}
+      displayFull
+      copyToClipboard
+      explorerLink
+      blockieClassName={classes.targetBlockie}
+      className={classes.targetAddress}
+    />
+  )
+
   return (
     <DiffBox
       bg
@@ -65,24 +77,14 @@ const TargetItem: React.FC<{
             alignItems="start"
             className={classes.targetHeader}
           >
-            <a id={targetAddress} />
             <LabeledData label="Target Contract">
-              {label}
-
-              {/* Prevent clicks on the copy button from toggling the panel */}
+              {/* Prevent clicks on the anchor or address icons from toggling the panel */}
               <StopPropagation>
-                <Flex gap={1}>
-                  <Address
-                    address={targetAddress}
-                    chainId={chainId}
-                    displayFull
-                    copyToClipboard
-                    explorerLink
-                    blockieClassName={classes.targetBlockie}
-                    className={classes.targetAddress}
-                  />
-                  <Anchor name={targetAddress} />
+                <Flex gap={2} alignItems="center">
+                  <Anchor name={targetAddress} className={classes.anchor} />
+                  <div>{label || address}</div>
                 </Flex>
+                {label && address}
               </StopPropagation>
             </LabeledData>
             <LabeledData label="Permissions">
