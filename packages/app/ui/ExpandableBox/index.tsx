@@ -5,15 +5,16 @@ import classes from "./style.module.css"
 import Box, { Props as BoxProps } from "@/ui/Box"
 import { SlArrowDown } from "react-icons/sl"
 
-const ExpandableBox: React.FC<
-  BoxProps & {
-    labelCollapsed: ReactNode
-    labelExpanded: ReactNode
-    children: ReactNode
-    toggleClassName?: string
-    onToggle?: (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
-  }
-> = ({
+export interface Props extends BoxProps {
+  labelCollapsed: ReactNode
+  labelExpanded: ReactNode
+  children: ReactNode
+  toggleClassName?: string
+  onToggle?: (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+  defaultExpanded?: boolean
+}
+
+const ExpandableBox: React.FC<Props> = ({
   labelCollapsed,
   labelExpanded,
   className,
@@ -21,9 +22,10 @@ const ExpandableBox: React.FC<
   children,
   toggleClassName,
   onToggle,
+  defaultExpanded = false,
   ...rest
 }) => {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
   return (
     <Box {...rest} bg={bg} p={0} className={className}>
       <div

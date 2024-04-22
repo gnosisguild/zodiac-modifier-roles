@@ -4,19 +4,21 @@ import { groupPermissions } from "../groupPermissions"
 import TargetItem from "../TargetItem"
 import classes from "./style.module.css"
 import { ChainId } from "@/app/chains"
-import ExpandableBox from "@/ui/ExpandableBox"
 import { PermissionsDiff } from "../types"
 import Flex from "@/ui/Flex"
+import AnchorExpandableBox from "./AnchorExpandableBox"
 
 const IndividualPermissions: React.FC<{
+  uri: string
   permissions: PermissionCoerced[]
   chainId: ChainId
   diff?: PermissionsDiff
-}> = ({ permissions, chainId, diff }) => {
+}> = ({ uri, permissions, chainId, diff }) => {
   const permissionGroups = groupPermissions(permissions)
 
   return (
-    <ExpandableBox
+    <AnchorExpandableBox
+      namespace={uri}
       borderless
       p={3}
       className={cn(classes.permissions, BOX_CLASS)}
@@ -36,7 +38,7 @@ const IndividualPermissions: React.FC<{
           />
         ))}
       </Flex>
-    </ExpandableBox>
+    </AnchorExpandableBox>
   )
 }
 
@@ -46,6 +48,7 @@ const BOX_CLASS = "permissionBox"
 const TOGGLE_CLASS = "permissionBoxToggle"
 export const DIFF_CONTAINER_CLASS = "diffContainer"
 
+// TODO: make this work!
 const handleToggle = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
   const diffContainers = [
     ...document.querySelectorAll(`.${DIFF_CONTAINER_CLASS}`),

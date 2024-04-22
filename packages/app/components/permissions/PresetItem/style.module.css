@@ -39,3 +39,8 @@
   height: auto;
   line-height: 16px;
 }
+
+.anchor {
+  /* We want to align it with the address blockie, which is 18x18 px */
+  margin: -10px;
+}

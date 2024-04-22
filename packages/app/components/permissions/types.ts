@@ -7,8 +7,8 @@ export type OpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
 
 export interface Preset {
   permissions: PermissionCoerced[]
-  uri: String
-  serverUrl: String
+  uri: string
+  serverUrl: string
   apiInfo: OpenAPIV3.InfoObject
   pathKey: string
   pathParams: Record<string, string | number>

@@ -19,32 +19,29 @@ export const SpawnAnchorContext: React.FC<{
   )
 }
 
-let handledInitialPageLoad = false
+export const useAnchor = (name: string) => {
+  const context = useContext(AnchorContext)
+  const uniqueName = context ? `${context}-${name}` : name
+  return encodeURIComponent(uniqueName)
+}
 
 const Anchor: React.FC<{
   name: string
   className: string
 }> = ({ name, className }) => {
-  const context = useContext(AnchorContext)
-  const uniqueName = context ? `${context}-${name}` : name
-  const isActive =
-    typeof window !== "undefined" && window.location.hash === "#" + uniqueName
+  const uniqueName = useAnchor(name)
 
   // Scroll into view
   // We cannot rely on the browser-native behavior of scrolling into view if the anchor is only mounted after the page has loaded,
   // e.g., when inside a <Suspense> block.
   useEffect(() => {
-    if (
-      isActive &&
-      !handledInitialPageLoad &&
-      typeof window !== "undefined" &&
-      window.screenTop === 0
-    ) {
-      handledInitialPageLoad = true
+    const isActive =
+      typeof window !== "undefined" && window.location.hash === "#" + uniqueName
+    if (isActive && typeof window !== "undefined" && window.screenTop === 0) {
       document.getElementById(uniqueName)?.scrollIntoView()
       return
     }
-  }, [isActive, uniqueName])
+  }, [uniqueName])
 
   return (
     <IconLinkButton
