@@ -1,4 +1,3 @@
-import SafeProvider from "@safe-global/safe-apps-react-sdk"
 import { MdOutlineFileDownload } from "react-icons/md"
 import {
   Annotation,
@@ -87,14 +86,11 @@ const ApplyUpdates: React.FC<Props> = async ({
           >
             <MdOutlineFileDownload />
           </a>
-          <Provider>
-            <ExecuteButton calls={calls} owner={owner} />
-          </Provider>
         </Flex>
         <Flex direction="column" gap={3}>
           {calls.map((call, i) => (
             <Flex gap={3} key={i}>
-              <div className={styles.index}>{i}</div>
+              <div className={styles.index}>{i + 1}</div>
               <div className={styles.callTo}>
                 <label title={call.to}>
                   {call.to === address ? "Roles" : "Poster"}
@@ -105,6 +101,9 @@ const ApplyUpdates: React.FC<Props> = async ({
             </Flex>
           ))}
         </Flex>
+        <Provider>
+          <ExecuteButton calls={calls} owner={owner} />
+        </Provider>
       </Flex>
     </Box>
   )

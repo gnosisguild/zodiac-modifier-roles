@@ -63,10 +63,7 @@ const ExecuteButton: React.FC<{ owner: `0x${string}`; calls: Call[] }> = ({
   return (
     <>
       {state === State.Initial && (
-        <Button
-          onClick={execute}
-          disabled={calls.length === 0 || state === State.Initial}
-        >
+        <Button primary onClick={execute} disabled={calls.length === 0}>
           Execute
         </Button>
       )}
