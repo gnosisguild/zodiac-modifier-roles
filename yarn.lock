@@ -3245,6 +3245,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@safe-global/safe-apps-react-sdk@npm:^4.7.1":
+  version: 4.7.1
+  resolution: "@safe-global/safe-apps-react-sdk@npm:4.7.1"
+  dependencies:
+    "@safe-global/safe-apps-sdk": ^9.0.0
+  peerDependencies:
+    react: 16.x.x || 17.x.x || 18.x.x
+  checksum: 3d644bd6b949dd6a11ca5ff213c1e0d33e3c02dc6ab116f2295a2e86fbaab2ac89766ba76a823efb23eb4ce92445d70d68cde8611067dc846fbd34a7d4a331a9
+  languageName: node
+  linkType: hard
+
 "@safe-global/safe-apps-sdk@npm:8.1.0, @safe-global/safe-apps-sdk@npm:^8.1.0":
   version: 8.1.0
   resolution: "@safe-global/safe-apps-sdk@npm:8.1.0"
@@ -3252,6 +3263,16 @@ __metadata:
     "@safe-global/safe-gateway-typescript-sdk": ^3.5.3
     viem: ^1.0.0
   checksum: e9d31ed6d9cd2cd9ed71ef5a0e1f6ecfca9f0c62acb9b86a0ddb1b65a609090f2297c4304591ac0518b266a1bcc88d1dad31b0d05e50c7732accccb65adab754
+  languageName: node
+  linkType: hard
+
+"@safe-global/safe-apps-sdk@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@safe-global/safe-apps-sdk@npm:9.0.0"
+  dependencies:
+    "@safe-global/safe-gateway-typescript-sdk": ^3.5.3
+    viem: ^1.6.0
+  checksum: 91d233d39d60574550a0455dc55e8cc58eb8b2324bf522e87ab0ed8b08eee702f60f71310790d0a892c5ad9cfc054ef5c7a05ef52f84ba2ecec7a1dcab689f7c
   languageName: node
   linkType: hard
 
@@ -18975,7 +18996,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^1.1.4":
+"viem@npm:^1.1.4, viem@npm:^1.6.0":
   version: 1.21.4
   resolution: "viem@npm:1.21.4"
   dependencies:
@@ -19742,6 +19763,7 @@ __metadata:
   resolution: "zodiac-roles-app@workspace:packages/app"
   dependencies:
     "@headlessui/react": ^1.7.18
+    "@safe-global/safe-apps-react-sdk": ^4.7.1
     "@shazow/whatsabi": ^0.11.0
     "@types/jest": ^29.5.5
     "@types/node": ^20.9.0
