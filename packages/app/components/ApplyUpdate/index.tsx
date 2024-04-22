@@ -20,6 +20,7 @@ import CallData from "../CallData"
 import styles from "./style.module.css"
 import { parseRoleParam } from "@/app/params"
 import ExecuteButton from "./ExecuteButton"
+import { Provider } from "./Provider"
 
 interface Props {
   chainId: ChainId
@@ -86,9 +87,9 @@ const ApplyUpdates: React.FC<Props> = async ({
           >
             <MdOutlineFileDownload />
           </a>
-          <SafeProvider>
+          <Provider>
             <ExecuteButton calls={calls} owner={owner} />
-          </SafeProvider>
+          </Provider>
         </Flex>
         <Flex direction="column" gap={3}>
           {calls.map((call, i) => (
