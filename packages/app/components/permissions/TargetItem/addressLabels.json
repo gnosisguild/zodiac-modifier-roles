@@ -35,7 +35,7 @@
     "0xcf5ea1b38380f6af39068375516daf40ed70d299": "Stader: StaderStakePoolsManager",
     "0xd061d61a4d941c39e5453435b6345dc261c2fce0": "Curve: Token Minter",
     "0xdc24316b9ae028f1497c275eb9192a3ea0f67022": "Curve: stETH Pool",
-    "0x13f4ea83d0bd40e75c8222255bc855a974568dd4": "Pancakeswap_v3: SmartRouter",
+    "0x13f4ea83d0bd40e75c8222255bc855a974568dd4": "Pancakeswap v3: SmartRouter",
     "0x182b723a58739a9c974cfdb385ceadb237453c28": "Curve: stETH Gauge",
     "0xa57b8d98dae62b26ec3bcc4a365338157060b234": "Aura: Booster",
     "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1": "Lido: WithdrawalQueueERC721",
@@ -72,12 +72,14 @@
     "0x5c0f23a5c1be65fa710d385814a7fd1bda480b1c": "wstETH-WETH Gauge",
     "0xf403c135812408bfbe8713b5a23a04b3d48aae31": "Convex: Booster",
     "0x373238337bfe1146fb49989fc222523f83081ddb": "Maker: DSR Manager",
-    "0xd322a49006fc828f9b5b37ab215f99b4e5cab19c": "Aave_v3: WrappedTokenGatewayV3",
+    "0xd322a49006fc828f9b5b37ab215f99b4e5cab19c": "Aave v3: WrappedTokenGatewayV3",
     "0x1b74fa5951dfa4c03D0127011548fA79b956f63B": "Convex: cvxstETH-ng-f",
     "0x21E27a5E5513D6e65C4f830167390997aA84843a": "Curve: stETH-ng-f",
     "0x56C526b0159a258887e0d79ec3a80dfb940d0cD7": "Curve: Stake and Deposit ZAP",
     "0x6B27D7BC63F1999D14fF9bA900069ee516669ee8": "Convex: cvxstETH-ng-f Rewarder",
-    "0x79F21BC30632cd40d2aF8134B469a0EB4C9574AA": "Curve: stETH-ng-f Gauge"
+    "0x79F21BC30632cd40d2aF8134B469a0EB4C9574AA": "Curve: stETH-ng-f Gauge",
+    "0xC874b064f465bdD6411D45734b56fac750Cda29A": "Stakewise: ETH2 Staking",
+    "0x893411580e590D62dDBca8a703d61Cc4A8c7b2b9": "Aave v3: WrappedTokenGatewayV3 (deprecated)"
   },
   "100": {
     "0x23da9ade38e4477b23770ded512fd37b12381fab": "CowswapOrderSigner"
