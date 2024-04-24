@@ -17,11 +17,7 @@ const Parameter: React.FC<{
   ) as string | number | string[] | number[] | undefined
 
   return (
-    <LabeledData
-      label={parameter.name}
-      title={parameter.description}
-      key={parameter.name}
-    >
+    <LabeledData label={parameter.name} title={parameter.description}>
       {parameter.schema?.type === "array" ? (
         <ArrayInput
           readOnly
