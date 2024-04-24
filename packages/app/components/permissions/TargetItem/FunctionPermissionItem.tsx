@@ -124,6 +124,8 @@ const AbiFunctionPermissionItem: React.FC<
                 </code>
               ))}
             </Flex>
+
+            <div className={classes.selectorSmall}>{selector}</div>
           </Flex>
         </LabeledData>
         <Flex gap={3} alignItems="start">

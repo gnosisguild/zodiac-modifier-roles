@@ -6,6 +6,14 @@
   font-family: var(--font-mono), monospace;
   font-size: 14px;
 }
+.selectorSmall {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 2px 5px;
+  font-family: var(--font-mono), monospace;
+}
 
 .params {
   --open-parantheses-width: 13px;
@@ -121,6 +129,7 @@
   font-family: var(--font-mono), monospace;
   text-transform: uppercase;
 }
+
 .proxyTo {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
