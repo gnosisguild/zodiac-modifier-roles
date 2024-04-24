@@ -33,7 +33,7 @@ export const fetchAbi = unstable_cache(
     const contractInfo = await abiLoader.getContract(target || address)
 
     return {
-      address: target || address,
+      proxyTo: target,
       name: contractInfo?.name || "",
       abi: contractInfo?.abi
         .filter((item: PartialAbiFunction) => item.type === "function")
@@ -137,7 +137,8 @@ class ThrottledEtherscanAbiLoader extends EtherscanAbiLoader {
           return this.getContract(address, retries - 1)
         }
 
-        throw e
+        console.error(e, `Retries left: ${retries}`)
+        return null
       }
     })
   }
