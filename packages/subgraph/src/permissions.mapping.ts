@@ -130,10 +130,13 @@ export function handleScopeFunction(event: ScopeFunction): void {
   const targetId = getTargetId(roleId, targetAddress)
   getOrCreateTarget(targetId, targetAddress, roleId)
 
-  // If function does not exist, create it with executionOptions set to None and wildcarded set to false
+  // If function does not exist, create it
   const selector = event.params.selector
   const functionId = getFunctionId(targetId, selector)
   const func = getOrCreateFunction(functionId, targetId, selector)
+
+  // Scope the function
+  func.wildcarded = false
 
   // Store the execution options
   func.executionOptions = ExecutionOptionsKeys[event.params.options]
