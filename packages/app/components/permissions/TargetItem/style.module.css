@@ -13,6 +13,7 @@
   width: fit-content;
   padding: 2px 5px;
   font-family: var(--font-mono), monospace;
+  margin-right: var(--spacing-3);
 }
 
 .params {
