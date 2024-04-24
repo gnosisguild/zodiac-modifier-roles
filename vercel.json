@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/!(api)/**/*": {
-      "maxDuration": 300 // 300s is the max on the Vercel pro plan
+      "maxDuration": 300
     }
   }
 }
