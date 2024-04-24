@@ -1322,9 +1322,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:^0.68.1":
-  version: 0.68.1
-  resolution: "@graphprotocol/graph-cli@npm:0.68.1"
+"@graphprotocol/graph-cli@npm:^0.71.0":
+  version: 0.71.0
+  resolution: "@graphprotocol/graph-cli@npm:0.71.0"
   dependencies:
     "@float-capital/float-subgraph-uncrashable": ^0.0.0-alpha.4
     "@oclif/core": 2.8.6
@@ -1355,16 +1355,16 @@ __metadata:
     yaml: 1.10.2
   bin:
     graph: bin/run
-  checksum: 70d49bd37abe2c14bcc248c7ce9cdfd08a2968211d706e1b63b2fd27ba1ff6db0449d6c4d1c6702d61951c80591852a0152cb4083675a4a331c43070b19b2788
+  checksum: dc1eeb217591cecb3daf51db9e8ad9adbef66e8fc83d7875ad72d17a5c276a968974158938b30cd1fd2cfcfdc77ae73dea26963fac649796de2b1721da00126b
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:^0.33.0":
-  version: 0.33.0
-  resolution: "@graphprotocol/graph-ts@npm:0.33.0"
+"@graphprotocol/graph-ts@npm:^0.35.1":
+  version: 0.35.1
+  resolution: "@graphprotocol/graph-ts@npm:0.35.1"
   dependencies:
     assemblyscript: 0.19.10
-  checksum: 083400dbf82cad7af6e2f059ced514a84776a708f6083b41048641c3ff53c7ab2e06d49c709dff67fc941ae0a00b2fe99a7fcb8da7f14718e2bb6f5556aac835
+  checksum: 3f6aa6aa2edde80cea4f73b560367d440c206325d161e8c9fa35f18f4cd52db1ffd1f02410890e435122bcb2683cac719c928836d9f9a27e85f6fb65d98e8efd
   languageName: node
   linkType: hard
 
@@ -19830,8 +19830,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zodiac-roles-subgraph@workspace:packages/subgraph"
   dependencies:
-    "@graphprotocol/graph-cli": ^0.68.1
-    "@graphprotocol/graph-ts": ^0.33.0
+    "@graphprotocol/graph-cli": ^0.71.0
+    "@graphprotocol/graph-ts": ^0.35.1
     assemblyscript-json: ^1.1.0
     mustache: ^4.2.0
     prettier: ^2.8.8
