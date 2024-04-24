@@ -18,6 +18,7 @@ import { fetchAbi } from "@/app/abi"
 import ADDRESS_LABELS from "./addressLabels.json"
 import StopPropagation from "@/ui/StopPropagation"
 import Anchor from "@/ui/Anchor"
+import { getAddress } from "viem"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -25,7 +26,16 @@ const TargetItem: React.FC<{
   chainId: ChainId
   diff?: PermissionsDiff
 }> = async ({ targetAddress, chainId, permissions, diff }) => {
-  const { abi } = await fetchAbi(targetAddress, chainId)
+  const { proxyTo, name, abi } = await fetchAbi(targetAddress, chainId)
+
+  const defaultLabel = proxyTo ? (
+    <>
+      <span className={classes.proxy}>proxy to</span>{" "}
+      {name || <span className={classes.proxyTo}>{getAddress(proxyTo)}</span>}
+    </>
+  ) : (
+    name
+  )
 
   // don't take into account "shadow permissions" added in the diff view for the purpose of aligning items in the two columns
   const ownPermissions = diff
@@ -36,9 +46,10 @@ const TargetItem: React.FC<{
     (permission) => !("selector" in permission)
   )
 
-  const label = (ADDRESS_LABELS as any)[chainId.toString()]?.[
-    targetAddress.toLowerCase()
-  ]
+  const label =
+    (ADDRESS_LABELS as any)[chainId.toString()]?.[
+      targetAddress.toLowerCase()
+    ] || defaultLabel
 
   const targetDiff =
     diff &&
@@ -82,7 +93,7 @@ const TargetItem: React.FC<{
               <StopPropagation>
                 <Flex gap={2} alignItems="center">
                   <Anchor name={targetAddress} className={classes.anchor} />
-                  <div>{label || address}</div>
+                  {label || address}
                 </Flex>
                 {label && address}
               </StopPropagation>
