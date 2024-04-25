@@ -76,12 +76,12 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.1.4)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.1.4)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.1.4)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.1.4)
-- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.1.4)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.1.4)
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.2.0)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.2.0)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.0)
+- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.2.0)
+- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.0)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.0)
 <!-- - [Mumbai](https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.1.3) -->
 
 ### Development environment setup
