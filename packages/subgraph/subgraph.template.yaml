@@ -23,20 +23,22 @@ dataSources:
         - name: Roles
           file: ./abis/Roles.sol/Roles.json
       eventHandlers:
+        - event: RolesModSetup(indexed address,indexed address,indexed address,address)
+          handler: handleRolesModSetup
         - event: AssignRoles(address,bytes32[],bool[])
           handler: handleAssignRoles
-        - event: AvatarSet(indexed address,indexed address)
-          handler: handleAvatarSet
         - event: DisabledModule(address)
           handler: handleDisabledModule
         - event: EnabledModule(address)
           handler: handleEnabledModule
-        - event: RolesModSetup(indexed address,indexed address,indexed address,address)
-          handler: handleRolesModSetup
         - event: SetDefaultRole(address,bytes32)
           handler: handleSetDefaultRole
+        - event: AvatarSet(indexed address,indexed address)
+          handler: handleAvatarSet
         - event: TargetSet(indexed address,indexed address)
           handler: handleTargetSet
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
       file: ./src/roles.mapping.ts
   - kind: ethereum
     name: PermissionBuilder
