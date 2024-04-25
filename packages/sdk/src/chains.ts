@@ -29,12 +29,6 @@ export const chains = {
     subgraph:
       "https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.0",
   },
-  [80001]: {
-    name: "polygonMumbai",
-    prefix: "maticmum",
-    subgraph:
-      "https://api.studio.thegraph.com/query/23167/zodiac-roles-mumbai/v2.2.0",
-  },
   [11155111]: {
     name: "sepolia",
     prefix: "sep",

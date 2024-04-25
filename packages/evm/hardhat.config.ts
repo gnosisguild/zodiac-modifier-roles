@@ -80,11 +80,6 @@ const config: HardhatUserConfig = {
       chainId: 137,
       url: "https://rpc-mainnet.maticvigil.com",
     },
-    mumbai: {
-      ...sharedNetworkConfig,
-      chainId: 80001,
-      url: "https://rpc.ankr.com/polygon_mumbai",
-    },
     arbitrum: {
       ...sharedNetworkConfig,
       chainId: 42161,
@@ -102,7 +97,6 @@ const config: HardhatUserConfig = {
       sepolia: ETHERSCAN_API_KEY,
       gnosis: GNOSISSCAN_API_KEY,
       matic: POLYGONSCAN_API_KEY,
-      mumbai: POLYGONSCAN_API_KEY,
       arbitrum: ARBISCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
     } as Record<string, string>,
@@ -121,14 +115,6 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.polygonscan.com/api",
           browserURL: "https://www.polygonscan.com",
-        },
-      },
-      {
-        network: "mumbai",
-        chainId: 80001,
-        urls: {
-          apiURL: "https://api-testnet.polygonscan.com/api",
-          browserURL: "https://mumbai.polygonscan.com",
         },
       },
       {
