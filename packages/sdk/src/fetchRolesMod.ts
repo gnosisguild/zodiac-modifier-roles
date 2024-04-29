@@ -22,6 +22,7 @@ const QUERY = `
         }
         targets {
           address
+          clearance
         }
       }
     }
@@ -82,5 +83,7 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
 const mapGraphQlRole = (role: any): RoleSummary => ({
   key: role.key,
   members: role.members.map((assignment: any) => assignment.member.address),
-  targets: role.targets.map((target: any): Target => target.address),
+  targets: role.targets
+    .filter((t: any) => t.clearance !== "None")
+    .map((t: any): `0x${string}` => t.address),
 })

@@ -117,6 +117,7 @@ type Member @entity {
   address: Bytes!
   enabledAsModule: Boolean!
   roles: [RoleAssignment!]! @derivedFrom(field: "member")
+  defaultRole: Role
 }
 
 type RoleAssignment @entity {

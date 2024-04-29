@@ -60,12 +60,6 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api-sepolia.etherscan.io/api",
     blockExplorerApiKey: "6RJ8KT4B1S9V7E3CIYECNY7HFW8IPWQ3C4",
   },
-  [polygonMumbai.id]: {
-    ...polygonMumbai,
-    prefix: "maticmum",
-    blockExplorerAbiUrl: "https://api-mumbai.polygonscan.com/api",
-    blockExplorerApiKey: "NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ",
-  },
 }
 
 export type ChainId = keyof typeof CHAINS
