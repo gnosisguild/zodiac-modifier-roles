@@ -28,3 +28,12 @@ a.button:hover {
 .button:disabled {
   opacity: 0.6;
 }
+
+.button.primary {
+  background: linear-gradient(
+    90deg,
+    rgba(43, 34, 101, 0.08) -26.61%,
+    #223265 49.61%,
+    rgba(43, 34, 101, 0.09) 119.72%
+  );
+}

@@ -3,6 +3,7 @@ import {
   AvatarSet,
   DisabledModule,
   EnabledModule,
+  OwnershipTransferred,
   RolesModSetup,
   SetDefaultRole,
   TargetSet,
@@ -63,8 +64,6 @@ export function handleAssignRoles(event: AssignRoles): void {
   }
 }
 
-export function handleAvatarSet(event: AvatarSet): void {}
-
 export function handleDisabledModule(event: DisabledModule): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
@@ -113,6 +112,59 @@ export function handleRolesModSetup(event: RolesModSetup): void {
   }
 }
 
-export function handleSetDefaultRole(event: SetDefaultRole): void {}
+export function handleSetDefaultRole(event: SetDefaultRole): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
 
-export function handleTargetSet(event: TargetSet): void {}
+  const memberAddress = event.params.module
+  const memberId = getMemberId(rolesModifierId, memberAddress)
+  const member = getOrCreateMember(memberId, rolesModifierId, memberAddress) // create member if it does not exist yet
+
+  const roleKey = event.params.defaultRoleKey
+  const roleId = getRoleId(rolesModifierId, roleKey)
+  // create role if it does not exist yet
+  getOrCreateRole(roleId, rolesModifierId, roleKey)
+
+  member.defaultRole = roleId
+  member.save()
+}
+
+export function handleAvatarSet(event: AvatarSet): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  rolesModifier.avatar = event.params.newAvatar
+  rolesModifier.save()
+}
+
+export function handleTargetSet(event: TargetSet): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  rolesModifier.target = event.params.newTarget
+  rolesModifier.save()
+}
+
+export function handleOwnershipTransferred(event: OwnershipTransferred): void {
+  const rolesModifierAddress = event.address
+  const rolesModifierId = getRolesModifierId(rolesModifierAddress)
+  const rolesModifier = getRolesModifier(rolesModifierId)
+  if (!rolesModifier) {
+    return
+  }
+
+  rolesModifier.owner = event.params.newOwner
+  rolesModifier.save()
+}

@@ -1,7 +1,8 @@
 {
   "functions": {
     "app/!(api)/**/*": {
-      "maxDuration": 60
+      "maxDuration": 300,
+      "memory": 3009
     }
   }
 }

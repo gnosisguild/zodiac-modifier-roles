@@ -69,19 +69,32 @@ export const processAnnotations = async (
   return { presets: confirmedPresets, permissions: remainingPermissions }
 }
 
+async function validateJsonResponse(res: Response) {
+  if (res.ok) {
+    return await res.json()
+  }
+
+  try {
+    const json = await res.json()
+    if (json.error) {
+      throw new Error(json.error)
+    }
+  } catch (e) {}
+  return new Error(`Request failed: ${res.statusText}`)
+}
 const resolveAnnotation = async (
   annotation: Annotation
 ): Promise<Preset | null> => {
   const [permissions, schema] = await Promise.all([
     fetch(annotation.uri, { next: { revalidate: 3600 } })
-      .then((res) => res.json())
+      .then(validateJsonResponse)
       .then(z.array(zPermission).parse)
       .catch((e: Error) => {
         console.error(`Error resolving annotation ${annotation.uri}`, e)
         return []
       }),
     fetch(annotation.schema, { next: { revalidate: 3600 } })
-      .then((res) => res.json())
+      .then(validateJsonResponse)
       .then((json) =>
         Enforcer(json, {
           componentOptions: {

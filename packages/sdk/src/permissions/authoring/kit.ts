@@ -59,9 +59,13 @@ const makeAllowFunction = <
 }
 
 type Options = {
+  /** Allow sending an Ether value */
   send?: boolean
+  /** Allow making delegate calls */
   delegatecall?: boolean
+  /** Restrict the total Ether value sent using the specified allowance */
   etherWithinAllowance?: `0x${string}`
+  /** Restrict the call rate using the specified allowance */
   callWithinAllowance?: `0x${string}`
 }
 

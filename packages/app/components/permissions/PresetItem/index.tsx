@@ -35,7 +35,11 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
       }
     >
       <Flex direction="column" gap={3} className={classes.presetContainer}>
-        <PresetInfo apiInfo={preset.apiInfo} operation={preset.operation} />
+        <PresetInfo
+          uri={preset.uri}
+          apiInfo={preset.apiInfo}
+          operation={preset.operation}
+        />
 
         <Flex direction="column" gap={3}>
           {preset.operation.parameters.map((parameter) => (
@@ -47,7 +51,9 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
             />
           ))}
         </Flex>
+
         <IndividualPermissions
+          uri={preset.uri}
           chainId={chainId}
           permissions={preset.permissions}
           diff={presetDiff?.permissions}

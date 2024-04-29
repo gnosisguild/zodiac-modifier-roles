@@ -6,6 +6,15 @@
   font-family: var(--font-mono), monospace;
   font-size: 14px;
 }
+.selectorSmall {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 2px 5px;
+  font-family: var(--font-mono), monospace;
+  margin-right: var(--spacing-3);
+}
 
 .params {
   --open-parantheses-width: 13px;
@@ -105,4 +114,24 @@
 
 .wildcardContainer {
   padding: var(--spacing-2);
+}
+
+.anchor {
+  /* We want to align it with the address blockie, which is 18x18 px */
+  margin: -10px;
+}
+
+.proxy {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-color);
+  width: fit-content;
+  padding: 2px 5px;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+}
+
+.proxyTo {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
 }

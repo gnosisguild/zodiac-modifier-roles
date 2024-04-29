@@ -8,6 +8,7 @@ import { DiffFlag } from "../types"
 import DiffBox from "../DiffBox"
 import LabeledData from "@/ui/LabeledData"
 import Switch from "@/ui/Switch"
+import Anchor from "@/ui/Anchor"
 
 const FunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & {
@@ -64,6 +65,7 @@ const FunctionPermissionItem: React.FC<
 export default FunctionPermissionItem
 
 const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
+  targetAddress,
   selector,
   condition,
   delegatecall,
@@ -73,7 +75,13 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
     <Flex direction="column" gap={3}>
       <Flex direction="row" gap={0} justifyContent="space-between">
         <LabeledData label="Function Selector">
-          <div className={classes.selector}>{selector}</div>
+          <Flex gap={2} alignItems="center">
+            <Anchor
+              name={`${targetAddress}-${selector}`}
+              className={classes.anchor}
+            />
+            <div className={classes.selector}>{selector}</div>
+          </Flex>
         </LabeledData>
         <Flex gap={3} alignItems="start">
           <LabeledData label="Send value">
@@ -95,7 +103,7 @@ const RawFunctionPermissionItem: React.FC<FunctionPermissionCoerced> = async ({
 
 const AbiFunctionPermissionItem: React.FC<
   FunctionPermissionCoerced & { abi: AbiFunction }
-> = async ({ condition, delegatecall, send, abi }) => {
+> = async ({ targetAddress, selector, condition, delegatecall, send, abi }) => {
   const params = abi.inputs?.map((input) => input.type + " " + input.name) || []
 
   return (
@@ -103,6 +111,10 @@ const AbiFunctionPermissionItem: React.FC<
       <Flex direction="row" gap={0} justifyContent="space-between">
         <LabeledData label="Function Signature">
           <Flex gap={2} alignItems="center" className={classes.signature}>
+            <Anchor
+              name={`${targetAddress}-${selector}`}
+              className={classes.anchor}
+            />
             <div className={classes.selector}>{abi.name}</div>
 
             <Flex gap={1} alignItems="start" wrap className={classes.params}>
@@ -112,6 +124,8 @@ const AbiFunctionPermissionItem: React.FC<
                 </code>
               ))}
             </Flex>
+
+            <div className={classes.selectorSmall}>{selector}</div>
           </Flex>
         </LabeledData>
         <Flex gap={3} alignItems="start">

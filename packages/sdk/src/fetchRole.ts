@@ -1,7 +1,7 @@
-import SUBGRAPH from "./subgraph"
+import { chains } from "./chains"
 import {
-  Role,
   ChainId,
+  Role,
   Clearance,
   ExecutionOptions,
   Function,
@@ -54,7 +54,7 @@ export const fetchRole = async (
   { address, roleKey, chainId }: Props,
   options?: FetchOptions
 ): Promise<Role | null> => {
-  const res = await fetch(SUBGRAPH[chainId], {
+  const res = await fetch(chains[chainId].subgraph, {
     ...options,
     method: "POST",
     headers: {
