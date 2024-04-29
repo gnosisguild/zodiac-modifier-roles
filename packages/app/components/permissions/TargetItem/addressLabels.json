@@ -22,7 +22,7 @@
     "0xba100000625a3754423978a60c9317c58a424e3d": "BAL Token",
     "0x48c3399719b582dd63eb5aadf12a40b4c3f52fa2": "SWISE Token",
     "0xc3d688b66703497daa19211eedff47f25384cdc3": "cUSDCv3 Token",
-    "0x39aa39c021dfbae8fac545936693ac917d5e7563": "CUSDC Token",
+    "0x39aa39c021dfbae8fac545936693ac917d5e7563": "cUSDC Token",
     "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9": "AAVE Token",
     "0xe95a203b1a91a908f9b9ce46459d101078c2c3cb": "ankrETH Token",
     "0xfe2e637202056d30016725477c5da089ab0a043a": "sETH2 Token",
@@ -72,12 +72,13 @@
     "0x5c0f23a5c1be65fa710d385814a7fd1bda480b1c": "wstETH-WETH Gauge",
     "0xf403c135812408bfbe8713b5a23a04b3d48aae31": "Convex: Booster",
     "0x373238337bfe1146fb49989fc222523f83081ddb": "Maker: DSR Manager",
-    "0xd322a49006fc828f9b5b37ab215f99b4e5cab19c": "Aave_v3: WrappedTokenGatewayV3",
+    "0xd322a49006fc828f9b5b37ab215f99b4e5cab19c": "Aave v3: WrappedTokenGatewayV3",
     "0x1b74fa5951dfa4c03D0127011548fA79b956f63B": "Convex: cvxstETH-ng-f",
     "0x21E27a5E5513D6e65C4f830167390997aA84843a": "Curve: stETH-ng-f",
     "0x56C526b0159a258887e0d79ec3a80dfb940d0cD7": "Curve: Stake and Deposit ZAP",
     "0x6B27D7BC63F1999D14fF9bA900069ee516669ee8": "Convex: cvxstETH-ng-f Rewarder",
-    "0x79F21BC30632cd40d2aF8134B469a0EB4C9574AA": "Curve: stETH-ng-f Gauge"
+    "0x79F21BC30632cd40d2aF8134B469a0EB4C9574AA": "Curve: stETH-ng-f Gauge",
+    "0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34": "Spark: Incentives"
   },
   "100": {
     "0x23da9ade38e4477b23770ded512fd37b12381fab": "CowswapOrderSigner"
