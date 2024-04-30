@@ -28,19 +28,18 @@ const TargetItem: React.FC<{
 }> = async ({ targetAddress, chainId, permissions, diff }) => {
   const contractInfo = await fetchContractInfo(targetAddress, chainId)
 
-  const defaultLabel =
-    "proxy" in contractInfo ? (
-      <>
-        <span className={classes.proxy}>proxy to</span>{" "}
-        {contractInfo.implementation.name || (
-          <span className={classes.proxyTo}>
-            {getAddress(contractInfo.proxy.target)}
-          </span>
-        )}
-      </>
-    ) : (
-      contractInfo.name
-    )
+  const defaultLabel = contractInfo.proxyTo ? (
+    <>
+      <span className={classes.proxy}>proxy to</span>{" "}
+      {contractInfo.name || (
+        <span className={classes.proxyTo}>
+          {getAddress(contractInfo.proxyTo)}
+        </span>
+      )}
+    </>
+  ) : (
+    contractInfo.name
+  )
 
   // don't take into account "shadow permissions" added in the diff view for the purpose of aligning items in the two columns
   const ownPermissions = diff
@@ -120,11 +119,7 @@ const TargetItem: React.FC<{
                   key={index} // selector is not unique, maybe use `permissionId(permission)` (a bit expensive to calculate, so should be cached)
                   {...permission}
                   diff={diff?.get(permission)?.flag}
-                  abi={
-                    "proxy" in contractInfo
-                      ? contractInfo.implementation.abi
-                      : contractInfo.abi
-                  }
+                  abi={contractInfo.abi}
                   modified={
                     diff?.get(permission)?.modified as
                       | FunctionPermissionCoerced
