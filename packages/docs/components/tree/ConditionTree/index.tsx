@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, useEffect } from "react";
+import React from "react";
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk";
 import styles from "./styles.module.css";
 import Tree, { TreeProps } from "../Tree";

@@ -55,7 +55,7 @@ export const PresetsAndPermissionsView = ({
     <Flex direction="column" gap={3}>
       {presets.map((preset, i) => (
         <PresetItem
-          key={`${preset.uri}`}
+          key={preset.uri}
           preset={preset}
           chainId={chainId}
           diff={diff?.presets}

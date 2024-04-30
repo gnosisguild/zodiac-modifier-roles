@@ -22,12 +22,12 @@ const RoleView: React.FC<RoleViewProps> = async ({ mod, roleKey }) => {
             targets={data.targets}
             annotations={data.annotations}
             chainId={mod.chainId}
-            key={`permissionList-${roleKey}`}
+            key="permissionList"
           />,
           <MembersList
             members={data.members}
             chainId={mod.chainId}
-            key={`memberList-${roleKey}`}
+            key="membersList"
           />,
         ]}
       />
