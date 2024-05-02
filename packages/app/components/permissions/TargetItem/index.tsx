@@ -3,22 +3,22 @@ import {
   FunctionPermissionCoerced,
   PermissionCoerced,
 } from "zodiac-roles-sdk"
+import { getAddress } from "viem"
 import Flex from "@/ui/Flex"
 import Address from "@/ui/Address"
 import { ChainId } from "@/app/chains"
 import FunctionPermissionItem from "./FunctionPermissionItem"
+import LabeledData from "@/ui/LabeledData"
+import Disclosure from "@/ui/Disclosure"
+import Switch from "@/ui/Switch"
+import StopPropagation from "@/ui/StopPropagation"
+import Anchor from "@/ui/Anchor"
+import { fetchContractInfo } from "@/app/abi"
+import ADDRESS_LABELS from "./addressLabels.json"
 import { DiffFlag, PermissionsDiff } from "../types"
 import { groupDiff } from "../PermissionsDiff/diff"
 import DiffBox from "../DiffBox"
 import classes from "./style.module.css"
-import LabeledData from "@/ui/LabeledData"
-import Disclosure from "@/ui/Disclosure"
-import Switch from "@/ui/Switch"
-import { fetchAbi } from "@/app/abi"
-import ADDRESS_LABELS from "./addressLabels.json"
-import StopPropagation from "@/ui/StopPropagation"
-import Anchor from "@/ui/Anchor"
-import { getAddress } from "viem"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -26,15 +26,19 @@ const TargetItem: React.FC<{
   chainId: ChainId
   diff?: PermissionsDiff
 }> = async ({ targetAddress, chainId, permissions, diff }) => {
-  const { proxyTo, name, abi } = await fetchAbi(targetAddress, chainId)
+  const contractInfo = await fetchContractInfo(targetAddress, chainId)
 
-  const defaultLabel = proxyTo ? (
+  const defaultLabel = contractInfo.proxyTo ? (
     <>
       <span className={classes.proxy}>proxy to</span>{" "}
-      {name || <span className={classes.proxyTo}>{getAddress(proxyTo)}</span>}
+      {contractInfo.name || (
+        <span className={classes.proxyTo}>
+          {getAddress(contractInfo.proxyTo)}
+        </span>
+      )}
     </>
   ) : (
-    name
+    contractInfo.name
   )
 
   // don't take into account "shadow permissions" added in the diff view for the purpose of aligning items in the two columns
@@ -115,7 +119,7 @@ const TargetItem: React.FC<{
                   key={index} // selector is not unique, maybe use `permissionId(permission)` (a bit expensive to calculate, so should be cached)
                   {...permission}
                   diff={diff?.get(permission)?.flag}
-                  abi={abi}
+                  abi={contractInfo.abi}
                   modified={
                     diff?.get(permission)?.modified as
                       | FunctionPermissionCoerced

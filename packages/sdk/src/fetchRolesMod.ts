@@ -23,6 +23,9 @@ const QUERY = `
         targets {
           address
           clearance
+          functions {
+            selector
+          }
         }
       }
     }
@@ -84,6 +87,10 @@ const mapGraphQlRole = (role: any): RoleSummary => ({
   key: role.key,
   members: role.members.map((assignment: any) => assignment.member.address),
   targets: role.targets
-    .filter((t: any) => t.clearance !== "None")
+    .filter(
+      (t: any) =>
+        t.clearance !== "None" &&
+        !(t.clearance === "Function" && t.functions.length === 0)
+    )
     .map((t: any): `0x${string}` => t.address),
 })
