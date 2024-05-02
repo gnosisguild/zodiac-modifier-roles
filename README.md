@@ -47,6 +47,7 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Arbitrum One](https://arbiscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337/contract/43114/code)
+- [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
 #### MultiSendUnwrapper (transaction unwrapper)
@@ -58,6 +59,7 @@ Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
 - [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Arbitrum One](https://arbiscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0/contract/43114/code)
+- [Base](https://basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 
 #### AvatarIsOwnerOfERC721 (custom condition)
@@ -69,6 +71,7 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Arbitrum One](https://arbiscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1/contract/43114/code)
+- [Base](https://basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 
 #### Subgraphs
@@ -78,6 +81,7 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.0)
 - [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.2.0)
 - [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.0)
+- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.2.0)
 - [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.0)
 
 ### Development environment setup

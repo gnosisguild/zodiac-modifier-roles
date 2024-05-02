@@ -1,5 +1,5 @@
 import { chains } from "./chains"
-import { ChainId, Target } from "./types"
+import { ChainId } from "./types"
 
 interface Props {
   address: string

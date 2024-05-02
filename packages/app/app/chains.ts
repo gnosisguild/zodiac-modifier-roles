@@ -4,9 +4,9 @@ import {
   // optimism,
   avalanche,
   arbitrum,
+  base,
   // bsc,
   polygon,
-  polygonMumbai,
   gnosis,
 } from "@wagmi/core/chains" // cannot import from wagmi/chains because that one declares "use client;"
 
@@ -46,6 +46,12 @@ export const CHAINS = {
     prefix: "arb1",
     blockExplorerAbiUrl: "https://api.arbiscan.io/api",
     blockExplorerApiKey: "CSITWCYI9UDAJ7QS92FNVJ2XQP5B23P4J9",
+  },
+  [base.id]: {
+    ...base,
+    prefix: "base",
+    blockExplorerAbiUrl: "https://api.basescan.org/api",
+    blockExplorerApiKey: "KCC7EQHE17IAQZA9TICUS6BQTJGZUDRNIY",
   },
   // [bsc.id]: {
   //   ...bsc,
