@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.10.5",
+  "version": "2.11.0",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
