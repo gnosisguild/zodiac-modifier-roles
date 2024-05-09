@@ -69,15 +69,42 @@ type Options = {
   callWithinAllowance?: `0x${string}`
 }
 
+const emptyCalldataMatches = {
+  paramType: ParameterType.Calldata,
+  operator: Operator.Matches,
+  children: [],
+}
+
+const applyGlobalAllowance = (
+  condition: Condition = emptyCalldataMatches,
+  allowanceCondition: Condition
+) => {
+  const clone = JSON.parse(JSON.stringify(condition)) // TODO shall we use structuredClone() instead
+
+  // traverse the tree and apply the allowance condition to all calldata matches nodes
+  const applyAllowance = (node: Condition) => {
+    if (node.children) {
+      node.children.forEach(applyAllowance)
+    }
+
+    if (
+      node.paramType === ParameterType.Calldata &&
+      node.operator === Operator.Matches
+    ) {
+      if (!node.children) node.children = []
+      node.children = [...(node.children || []), allowanceCondition]
+    }
+  }
+  applyAllowance(clone)
+
+  return clone
+}
+
 const applyOptions = (
   entry: FunctionPermissionCoerced,
   options: Options
 ): FunctionPermissionCoerced => {
-  const conditions: Condition[] = []
-
-  if (entry.condition) {
-    conditions.push(entry.condition)
-  }
+  let condition = entry.condition
 
   if (options.etherWithinAllowance) {
     if (!options.send) {
@@ -86,21 +113,18 @@ const applyOptions = (
       )
     }
 
-    conditions.push(etherWithinAllowance(options.etherWithinAllowance)())
+    condition = applyGlobalAllowance(
+      condition,
+      etherWithinAllowance(options.etherWithinAllowance)()
+    )
   }
 
   if (options.callWithinAllowance) {
-    conditions.push(callWithinAllowance(options.callWithinAllowance)())
+    condition = applyGlobalAllowance(
+      condition,
+      callWithinAllowance(options.callWithinAllowance)()
+    )
   }
-
-  const condition =
-    conditions.length > 1
-      ? {
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: conditions,
-        }
-      : conditions[0]
 
   return {
     ...entry,
