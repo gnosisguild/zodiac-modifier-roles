@@ -7,8 +7,8 @@ import { processAnnotations } from "../annotations"
 import { diffPermissions, diffPresets } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
-import { DIFF_CONTAINER_CLASS } from "../PresetItem/IndividualPermissions"
 import { SpawnAnchorContext } from "@/ui/Anchor"
+import { DIFF_CONTAINER_CLASS } from "../PresetItem/IndividualPermissionsExpandable"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
