@@ -49,7 +49,7 @@ export default IndividualPermissionsExpandable
 
 const BOX_CLASS = "permissionBox"
 const TOGGLE_CLASS = "permissionBoxToggle"
-const DIFF_CONTAINER_CLASS = "diffContainer"
+export const DIFF_CONTAINER_CLASS = "diffContainer"
 
 // TODO: make this work!
 const syncToggle = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
