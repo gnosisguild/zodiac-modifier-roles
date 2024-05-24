@@ -1,6 +1,6 @@
 import { ParamType } from "ethers/lib/utils"
+import { ParameterType, Condition, Operator } from "zodiac-roles-deployments"
 
-import { ParameterType, Condition, Operator } from "../../../types"
 import { encodeAbiParameters } from "../../../utils/encodeAbiParameters"
 
 export const encodeValue = (value: any, type: ParamType) => {

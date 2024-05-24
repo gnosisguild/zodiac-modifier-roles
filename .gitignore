@@ -5,7 +5,6 @@
 **/.env
 **/.history
 **/coverage*
-**/deployments
 
 .yarn/cache
 .yarn/install-state.gz

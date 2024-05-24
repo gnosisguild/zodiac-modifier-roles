@@ -1,7 +1,6 @@
-import { Roles__factory } from "../../evm/typechain-types"
+import { fetchRole, ChainId } from "zodiac-roles-deployments"
 
-import { fetchRole } from "./fetchRole"
-import { ChainId } from "./types"
+import { Roles__factory } from "../../evm/typechain-types"
 
 const rolesInterface = Roles__factory.createInterface()
 

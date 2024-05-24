@@ -1,8 +1,8 @@
 import { expect } from "chai"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
 import { splitCondition } from "../src/conditions/splitCondition"
-import { Condition, Operator, ParameterType } from "../src/types"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number): Condition => ({

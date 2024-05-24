@@ -19702,7 +19702,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.11.5, zod@npm:^3.22.1, zod@npm:^3.22.3":
+"zod@npm:^3.11.5, zod@npm:^3.22.3":
   version: 3.22.4
   resolution: "zod@npm:3.22.4"
   checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f
@@ -19737,6 +19737,16 @@ __metadata:
     viem: ^2.7.1
     wagmi: ^2.5.5
     zodiac-roles-sdk: "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"zodiac-roles-deployments@workspace:^, zodiac-roles-deployments@workspace:packages/deployments":
+  version: 0.0.0-use.local
+  resolution: "zodiac-roles-deployments@workspace:packages/deployments"
+  dependencies:
+    prettier: ^2.8.8
+    rimraf: ^3.0.2
+    typescript: ^5.3.3
   languageName: unknown
   linkType: soft
 
@@ -19801,7 +19811,7 @@ __metadata:
     ts-node: ^10.8.0
     typechain: ^8.3.2
     typescript: ^5.3.3
-    zod: ^3.22.1
+    zodiac-roles-deployments: "workspace:^"
   peerDependencies:
     "@dethcrypto/eth-sdk-client": ^0.1.6
   peerDependenciesMeta:

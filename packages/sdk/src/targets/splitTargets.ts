@@ -2,8 +2,9 @@
  *  Splits targets `a` granted by `a` that are not granted by `b`
  */
 
+import { Target } from "zodiac-roles-deployments"
+
 import { splitCondition } from "../conditions"
-import { Target } from "../types"
 
 import { diffTargets } from "./diffTargets"
 

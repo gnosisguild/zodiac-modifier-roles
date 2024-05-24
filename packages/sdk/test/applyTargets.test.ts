@@ -1,7 +1,7 @@
 import { expect } from "chai"
+import { Operator, ParameterType, Target } from "zodiac-roles-deployments"
 
 import { replaceTargets } from "../src/targets/applyTargets"
-import { Operator, ParameterType, Target } from "../src/types"
 
 describe("replaceTargets", () => {
   it("should revoke function-scoped targets", () => {

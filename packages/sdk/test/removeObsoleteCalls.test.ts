@@ -1,8 +1,8 @@
 import { expect } from "chai"
+import { ExecutionOptions } from "zodiac-roles-deployments"
 
 import { removeObsoleteCalls } from "../src/calls"
 import { Call } from "../src/calls/types"
-import { ExecutionOptions } from "../src/types"
 
 describe("removeObsoleteCalls", () => {
   it("should remove function permission updates if later on the entire target is cleared", () => {

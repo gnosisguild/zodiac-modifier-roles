@@ -1,5 +1,11 @@
+import {
+  Clearance,
+  Target,
+  Function,
+  Condition,
+} from "zodiac-roles-deployments"
+
 import { conditionId, normalizeCondition } from "../conditions"
-import { Clearance, Target, Function, Condition } from "../types"
 
 /**
  *  Returns targets granted by `a` that are not granted by `b`

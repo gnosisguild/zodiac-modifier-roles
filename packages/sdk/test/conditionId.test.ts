@@ -1,7 +1,7 @@
 import { expect } from "chai"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId, normalizeCondition } from "../src/conditions"
-import { Operator, ParameterType } from "../src/types"
 
 describe("conditionId", () => {
   it("calculates the create2 storage address of the condition", () => {

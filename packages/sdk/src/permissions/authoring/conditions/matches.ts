@@ -1,8 +1,8 @@
 import { BigNumber, BigNumberish } from "ethers"
 import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
-import { Condition, Operator, ParameterType } from "../../../types"
 import { AbiType, FunctionPermission } from "../../types"
 import { coercePermission } from "../../utils"
 

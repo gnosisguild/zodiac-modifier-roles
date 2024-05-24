@@ -1,5 +1,6 @@
 import * as ethSdk from "@dethcrypto/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 // eslint does not know about our Typescript path alias
 // eslint-disable-next-line import/no-unresolved
@@ -7,7 +8,6 @@ import { c } from "zodiac-roles-sdk"
 
 // For things that are not publicly exported we still use relative paths.
 // Since these are mainly types, this won't blow up bundles.
-import { Condition, Operator, ParameterType } from "../../types"
 import {
   ExecutionFlags,
   TargetPermission,

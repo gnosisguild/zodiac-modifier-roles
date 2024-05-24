@@ -1,4 +1,4 @@
-import { Condition, Operator } from "../types"
+import { Condition, Operator } from "zodiac-roles-deployments"
 
 import { conditionId } from "./conditionId"
 import { normalizeCondition } from "./normalizeCondition"

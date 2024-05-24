@@ -1,6 +1,5 @@
 import { ParamType } from "ethers/lib/utils"
-
-import { Condition, Operator, ParameterType } from "../../../types"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 import { ArrayElement, ConditionFunction, Scoping } from "./types"

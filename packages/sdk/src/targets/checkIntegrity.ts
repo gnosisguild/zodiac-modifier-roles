@@ -1,5 +1,6 @@
+import { Clearance, Function, Target } from "zodiac-roles-deployments"
+
 import { checkRootConditionIntegrity } from "../conditions"
-import { Clearance, Function, Target } from "../types"
 
 export const checkIntegrity = (targets: Target[]): void => {
   const uniqueAddresses = new Set(

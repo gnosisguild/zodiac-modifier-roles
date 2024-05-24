@@ -1,4 +1,4 @@
-import { Condition } from "../types"
+import { Condition } from "zodiac-roles-deployments"
 
 import { ConditionFlat } from "./types"
 

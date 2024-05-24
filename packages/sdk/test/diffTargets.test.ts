@@ -1,13 +1,13 @@
 import { expect } from "chai"
-
-import { diffTargets } from "../src/targets/diffTargets"
 import {
   Clearance,
   ExecutionOptions,
   Operator,
   ParameterType,
   Target,
-} from "../src/types"
+} from "zodiac-roles-deployments"
+
+import { diffTargets } from "../src/targets/diffTargets"
 
 describe("diffTargets", () => {
   it("should correctly diff target-cleared targets", () => {

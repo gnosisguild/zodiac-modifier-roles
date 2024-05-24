@@ -9,8 +9,8 @@ import {
   keccak256,
   hexZeroPad,
 } from "ethers/lib/utils"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { Condition, Operator, ParameterType } from "../types"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 import { flattenCondition } from "./flattenCondition"

@@ -1,5 +1,11 @@
+import {
+  Annotation,
+  Clearance,
+  ExecutionOptions,
+  Target,
+} from "zodiac-roles-deployments"
+
 import { normalizeCondition } from "../conditions"
-import { Annotation, Clearance, ExecutionOptions, Target } from "../types"
 import { groupBy } from "../utils/groupBy"
 
 import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
