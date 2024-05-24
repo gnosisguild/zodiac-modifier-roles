@@ -45,8 +45,7 @@
     "prepare": "yarn eth-sdk"
   },
   "dependencies": {
-    "ethers": "^5.7.2",
-    "zod": "^3.22.1"
+    "ethers": "^5.7.2"
   },
   "peerDependencies": {
     "@dethcrypto/eth-sdk-client": "^0.1.6"
