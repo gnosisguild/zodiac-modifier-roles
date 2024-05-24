@@ -1,10 +1,10 @@
 import { expect } from "chai"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
 } from "../src/conditions"
-import { Operator, ParameterType } from "../src/types"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
 describe("checkConditionIntegrity()", () => {

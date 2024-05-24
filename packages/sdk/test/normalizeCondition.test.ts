@@ -1,10 +1,10 @@
 import { expect } from "chai"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
 import { FunctionPermissionCoerced, c } from "../src/permissions"
 import { allow } from "../src/permissions/authoring/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
-import { Condition, Operator, ParameterType } from "../src/types"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number): Condition => ({
