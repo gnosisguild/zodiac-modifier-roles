@@ -1,4 +1,4 @@
-import { chains } from "./chains";
+import { chains } from "./chains"
 import {
   ChainId,
   Role,
@@ -6,12 +6,12 @@ import {
   ExecutionOptions,
   Function,
   Target,
-} from "./types";
+} from "./types"
 
 interface Props {
-  address: string;
-  roleKey: string;
-  chainId: ChainId;
+  address: string
+  roleKey: string
+  chainId: ChainId
 }
 
 const QUERY = `
@@ -43,12 +43,12 @@ query Role($id: String) {
     }
   }
 }
-`.trim();
+`.trim()
 
 const getRoleId = (address: string, roleKey: string) =>
-  `${address.toLowerCase()}-ROLE-${roleKey}`;
+  `${address.toLowerCase()}-ROLE-${roleKey}`
 
-type FetchOptions = Omit<RequestInit, "method" | "body">;
+type FetchOptions = Omit<RequestInit, "method" | "body">
 
 export const fetchRole = async (
   { address, roleKey, chainId }: Props,
@@ -66,19 +66,19 @@ export const fetchRole = async (
       variables: { id: getRoleId(address, roleKey) },
       operationName: "Role",
     }),
-  });
-  const { data, error, errors } = await res.json();
+  })
+  const { data, error, errors } = await res.json()
 
   if (error || (errors && errors[0])) {
-    throw new Error(error || errors[0]);
+    throw new Error(error || errors[0])
   }
 
   if (!data || !data.role) {
-    return null;
+    return null
   }
 
-  return mapGraphQl(data.role);
-};
+  return mapGraphQl(data.role)
+}
 
 const mapGraphQl = (role: any): Role => ({
   ...role,
@@ -104,4 +104,4 @@ const mapGraphQl = (role: any): Role => ({
       ),
     })
   ),
-});
+})

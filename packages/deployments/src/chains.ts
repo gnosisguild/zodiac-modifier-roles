@@ -41,4 +41,4 @@ export const chains = {
     subgraph:
       "https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.0",
   },
-} as const;
+} as const

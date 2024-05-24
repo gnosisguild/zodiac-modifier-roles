@@ -1,6 +1,6 @@
-import { chains } from "./chains";
+import { chains } from "./chains"
 
-export type ChainId = keyof typeof chains;
+export type ChainId = keyof typeof chains
 
 export enum ExecutionOptions {
   None = 0,
@@ -72,36 +72,36 @@ export enum Operator {
 }
 
 export interface Role {
-  key: `0x${string}`;
-  members: `0x${string}`[];
-  targets: Target[];
-  annotations: Annotation[];
+  key: `0x${string}`
+  members: `0x${string}`[]
+  targets: Target[]
+  annotations: Annotation[]
 }
 
 export interface Target {
-  address: `0x${string}`;
-  clearance: Clearance;
-  executionOptions: ExecutionOptions;
-  functions: readonly Function[];
+  address: `0x${string}`
+  clearance: Clearance
+  executionOptions: ExecutionOptions
+  functions: readonly Function[]
 }
 
 export interface Function {
-  selector: `0x${string}`;
-  executionOptions: ExecutionOptions;
-  wildcarded: boolean;
-  condition?: Condition;
+  selector: `0x${string}`
+  executionOptions: ExecutionOptions
+  wildcarded: boolean
+  condition?: Condition
 }
 
 export interface Condition {
-  paramType: ParameterType;
-  operator: Operator;
-  compValue?: `0x${string}`;
-  children?: readonly Condition[];
+  paramType: ParameterType
+  operator: Operator
+  compValue?: `0x${string}`
+  children?: readonly Condition[]
 }
 
 export interface Annotation {
   /** The URI serves as ID for the annotation. An http get request will be made to fetch the targeted permissions. */
-  uri: string;
+  uri: string
   /** The OpenAPI schema that describes the API endpoint at uri. */
-  schema: string;
+  schema: string
 }
