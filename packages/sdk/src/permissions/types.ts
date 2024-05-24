@@ -1,6 +1,5 @@
 import { BytesLike, ParamType } from "ethers/lib/utils"
-
-import { Annotation, Condition } from "../types"
+import { Annotation, Condition } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "./authoring/conditions/types"
 

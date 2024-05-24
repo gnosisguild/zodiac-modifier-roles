@@ -1,5 +1,6 @@
+import { ExecutionOptions } from "zodiac-roles-deployments"
+
 import { conditionId } from "../conditions"
-import { ExecutionOptions } from "../types"
 
 import { Call } from "./types"
 

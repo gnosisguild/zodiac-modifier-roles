@@ -1,4 +1,4 @@
-import { Clearance, Target } from "../types"
+import { Clearance, Target } from "zodiac-roles-deployments"
 
 import { Call } from "./types"
 

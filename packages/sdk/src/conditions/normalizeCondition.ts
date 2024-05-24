@@ -1,6 +1,5 @@
 import { BigNumber } from "ethers"
-
-import { Condition, Operator, ParameterType } from "../types"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "./conditionId"
 

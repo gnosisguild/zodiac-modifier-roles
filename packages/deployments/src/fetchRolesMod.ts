@@ -1,9 +1,9 @@
-import { chains } from "./chains"
-import { ChainId } from "./types"
+import { chains } from "./chains";
+import { ChainId } from "./types";
 
 interface Props {
-  address: string
-  chainId: ChainId
+  address: string;
+  chainId: ChainId;
 }
 
 const QUERY = `
@@ -30,9 +30,9 @@ const QUERY = `
       }
     }
   }
-`
+`;
 
-type FetchOptions = Omit<RequestInit, "method" | "body">
+type FetchOptions = Omit<RequestInit, "method" | "body">;
 
 export const fetchRolesMod = async (
   { address, chainId }: Props,
@@ -50,38 +50,38 @@ export const fetchRolesMod = async (
       variables: { id: address.toLowerCase() },
       operationName: "RolesMod",
     }),
-  })
-  const { data, error, errors } = await res.json()
+  });
+  const { data, error, errors } = await res.json();
 
   if (error || (errors && errors[0])) {
-    throw new Error(error || errors[0])
+    throw new Error(error || errors[0]);
   }
 
   if (!data || !data.rolesModifier) {
-    return null
+    return null;
   }
 
-  return mapGraphQl(data.rolesModifier)
-}
+  return mapGraphQl(data.rolesModifier);
+};
 
 interface RoleSummary {
-  key: string
-  members: `0x${string}`[]
-  targets: `0x${string}`[]
+  key: string;
+  members: `0x${string}`[];
+  targets: `0x${string}`[];
 }
 
 interface RolesModifier {
-  address: `0x${string}`
-  owner: `0x${string}`
-  avatar: `0x${string}`
-  target: `0x${string}`
-  roles: RoleSummary[]
+  address: `0x${string}`;
+  owner: `0x${string}`;
+  avatar: `0x${string}`;
+  target: `0x${string}`;
+  roles: RoleSummary[];
 }
 
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
-})
+});
 
 const mapGraphQlRole = (role: any): RoleSummary => ({
   key: role.key,
@@ -93,4 +93,4 @@ const mapGraphQlRole = (role: any): RoleSummary => ({
         !(t.clearance === "Function" && t.functions.length === 0)
     )
     .map((t: any): `0x${string}` => t.address),
-})
+});

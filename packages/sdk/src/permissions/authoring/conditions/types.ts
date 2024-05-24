@@ -1,7 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers"
 import { ParamType } from "ethers/lib/utils"
-
-import { Condition } from "../../../types"
+import { Condition } from "zodiac-roles-deployments"
 
 export type ConditionFunction<T> = (
   abiType: ParamType,

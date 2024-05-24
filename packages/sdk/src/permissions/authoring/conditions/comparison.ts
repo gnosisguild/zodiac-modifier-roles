@@ -1,7 +1,6 @@
 import { BigNumberish, BytesLike } from "ethers"
 import { arrayify, concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
-
-import { Operator, ParameterType } from "../../../types"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "./types"
 import { describeStructure, parameterType, encodeValue } from "./utils"

@@ -1,3 +1,5 @@
+import { fetchRole, ChainId, Target } from "zodiac-roles-deployments"
+
 import {
   Call,
   encodeCalls,
@@ -6,8 +8,6 @@ import {
   removeObsoleteCalls,
   revoke,
 } from "../calls"
-import { fetchRole } from "../fetchRole"
-import { ChainId, Target } from "../types"
 
 import { checkIntegrity } from "./checkIntegrity"
 import { diffTargets } from "./diffTargets"

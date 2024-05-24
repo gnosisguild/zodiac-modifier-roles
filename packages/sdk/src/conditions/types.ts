@@ -1,4 +1,4 @@
-import { Operator, ParameterType } from "../types"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 export interface ConditionFlat {
   parent: number

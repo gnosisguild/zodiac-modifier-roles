@@ -1,5 +1,6 @@
-import { fetchRole } from "../fetchRole"
-import { ChainId, Annotation } from "../types"
+import { ChainId, Annotation } from "zodiac-roles-deployments"
+
+import { fetchRole } from "../../../deployments/src/fetchRole"
 import { groupBy } from "../utils/groupBy"
 
 import { encodeAnnotationsPost } from "./poster"

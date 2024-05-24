@@ -1,4 +1,4 @@
-import { Condition, ExecutionOptions } from "../types"
+import { Condition, ExecutionOptions } from "zodiac-roles-deployments"
 
 interface AllowTargetCall {
   call: "allowTarget"

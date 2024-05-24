@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "../types"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 export const checkConditionIntegrity = (condition: Condition): void => {
   checkConsistentChildrenTypes(condition)

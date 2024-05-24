@@ -1,4 +1,9 @@
-import { Clearance, ExecutionOptions, Operator, Target } from "../types"
+import {
+  Clearance,
+  ExecutionOptions,
+  Operator,
+  Target,
+} from "zodiac-roles-deployments"
 
 import {
   FunctionPermissionCoerced,
