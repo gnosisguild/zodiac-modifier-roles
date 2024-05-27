@@ -2,7 +2,7 @@ import { chains } from "./chains"
 import { ChainId, Clearance, ExecutionOptions, Function } from "./types"
 
 interface Props {
-  address: string
+  address: `0x${string}`
   chainId: ChainId
 }
 
@@ -79,7 +79,7 @@ interface TargetSummary {
 }
 
 export interface RoleSummary {
-  key: string
+  key: `0x${string}`
   members: `0x${string}`[]
   targets: TargetSummary[]
 }
