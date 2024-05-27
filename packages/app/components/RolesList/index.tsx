@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { RiArrowRightSLine } from "react-icons/ri"
+import { RoleSummary } from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
 import classes from "./style.module.css"
 import Link from "next/link"
@@ -8,12 +9,6 @@ import { parseBytes32String } from "ethers/lib/utils"
 import CopyButton from "@/ui/CopyButton"
 import { Mod } from "@/app/params"
 import LabeledData from "@/ui/LabeledData"
-
-interface RoleSummary {
-  key: string
-  members: `0x${string}`[]
-  targets: `0x${string}`[]
-}
 
 const tryParseBytes32String = (str: string) => {
   try {
@@ -36,7 +31,10 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
           role.key,
           tryParseBytes32String(role.key) || "",
           ...role.members,
-          ...role.targets,
+          ...role.targets.map((target) => target.address),
+          ...role.targets.flatMap((target) =>
+            target.functions.map((fn) => fn.selector)
+          ),
         ].some((str) => str.toLowerCase().includes(trimmedQuery))
       )
     : roles
