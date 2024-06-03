@@ -4,12 +4,11 @@ import { kv } from "@vercel/kv"
 
 import Layout from "@/components/Layout"
 import PermissionsDiff from "@/components/permissions/PermissionsDiff"
-import LabeledData from "@/ui/LabeledData"
-import Flex from "@/ui/Flex"
 import PageBreadcrumbs from "./breadcrumbs"
 import styles from "./page.module.css"
 import { CHAINS } from "@/app/chains"
-import Link from "next/link"
+import AnnotationsToggle from "@/components/AnnotationsToggle"
+import Flex from "@/ui/Flex"
 
 const chains = Object.values(CHAINS)
 
@@ -56,9 +55,7 @@ export default async function DiffPage({
           justifyContent="end"
           className={styles.toolbar}
         >
-          <Link href={{ query: { annotations: !shallShowAnnotations } }}>
-            {shallShowAnnotations ? "Hide annotations" : "Show annotations"}
-          </Link>
+          <AnnotationsToggle on={shallShowAnnotations} />
         </Flex>
       )}
       <main className={styles.main}>

@@ -44,3 +44,14 @@
     background-position-x: 0%;
   }
 }
+
+.permissionsWrapper {
+  position: relative;
+}
+
+.toolbar {
+  position: absolute;
+  top: -52px;
+  right: var(--spacing-3);
+  font-size: 12px;
+}

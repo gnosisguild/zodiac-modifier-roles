@@ -1,39 +1,44 @@
-import { fetchOrInitRole } from "@/components/RoleView/fetching"
+import { Role } from "zodiac-roles-sdk"
+import { Suspense } from "react"
 import { Mod } from "@/app/params"
 import TabGroup from "@/ui/TabGroup"
 import PermissionsList from "../permissions/PermissionsList"
 import MembersList from "../MembersList"
-import { Suspense } from "react"
 import classes from "./style.module.css"
+import AnnotationsToggle from "../AnnotationsToggle"
 
-interface RoleViewProps {
+type RoleViewProps = {
   mod: Mod
-  roleKey: `0x${string}`
+  role: Role
+  showAnnotations: boolean
 }
 
-const RoleView: React.FC<RoleViewProps> = async ({ mod, roleKey }) => {
-  let data = await fetchOrInitRole({ ...mod, roleKey })
-  return (
-    <Suspense fallback={<RoleViewLoading />}>
-      <TabGroup
-        tabs={["Permissions", "Members"]}
-        panels={[
+const RoleView: React.FC<RoleViewProps> = ({ mod, role, showAnnotations }) => (
+  <Suspense fallback={<RoleViewLoading />}>
+    <TabGroup
+      tabs={["Permissions", "Members"]}
+      panels={[
+        <div className={classes.permissionsWrapper} key="permissionList">
+          {role.annotations.length > 0 && (
+            <div className={classes.toolbar}>
+              <AnnotationsToggle on={showAnnotations} />
+            </div>
+          )}
           <PermissionsList
-            targets={data.targets}
-            annotations={data.annotations}
+            targets={role.targets}
+            annotations={showAnnotations ? role.annotations : []}
             chainId={mod.chainId}
-            key="permissionList"
-          />,
-          <MembersList
-            members={data.members}
-            chainId={mod.chainId}
-            key="membersList"
-          />,
-        ]}
-      />
-    </Suspense>
-  )
-}
+          />
+        </div>,
+        <MembersList
+          members={role.members}
+          chainId={mod.chainId}
+          key="membersList"
+        />,
+      ]}
+    />
+  </Suspense>
+)
 
 export default RoleView
 
