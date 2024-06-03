@@ -17,7 +17,7 @@ type Options = (
       /** ID of the chain where the Roles mod is deployed */
       chainId: ChainId
       /** Address of the roles mod */
-      address: string
+      address: `0x${string}`
     }
   | {
       /** The targets that are currently configured for the role */
@@ -38,9 +38,10 @@ type Options = (
  *
  * @param roleKey The key of the role to update
  * @param targets Targets to apply to the role
+ * @param options Options for the update
  */
 export const applyTargets = async (
-  roleKey: string,
+  roleKey: `0x${string}`,
   targets: Target[],
   options: Options
 ) => {

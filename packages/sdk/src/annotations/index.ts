@@ -17,14 +17,21 @@ type Options = {
   log?: boolean | ((message: string) => void)
 } & (
   | {
-      currentAnnotations: Annotation[]
+      currentAnnotations: readonly Annotation[]
     }
   | { chainId: ChainId }
 )
 
+/**
+ * Returns a set of encoded call data to be sent to the Roles mod for updating the annotations of the given role.
+ *
+ * @param roleKey The key of the role to update
+ * @param annotations Annotations to apply to the role
+ * @param options Options for the update
+ */
 export const applyAnnotations = async (
-  roleKey: string,
-  annotations: Annotation[],
+  roleKey: `0x${string}`,
+  annotations: readonly Annotation[],
   options: Options
 ) => {
   const { address, mode } = options
@@ -92,8 +99,8 @@ export const applyAnnotations = async (
 }
 
 const replaceAnnotations = (
-  current: Annotation[],
-  next: Annotation[]
+  current: readonly Annotation[],
+  next: readonly Annotation[]
 ): UpdateAnnotationsPost => {
   const removeAnnotations = current
     .map((annotation) => annotation.uri)
@@ -115,8 +122,8 @@ const replaceAnnotations = (
 }
 
 export const extendAnnotations = (
-  current: Annotation[],
-  add: Annotation[]
+  current: readonly Annotation[],
+  add: readonly Annotation[]
 ): UpdateAnnotationsPost => {
   const toAdd = add.filter(
     ({ uri, schema }) =>
@@ -130,8 +137,8 @@ export const extendAnnotations = (
 }
 
 const removeAnnotations = (
-  current: Annotation[],
-  remove: Annotation[]
+  current: readonly Annotation[],
+  remove: readonly Annotation[]
 ): UpdateAnnotationsPost => {
   return {
     removeAnnotations: remove
@@ -140,7 +147,7 @@ const removeAnnotations = (
   }
 }
 
-const groupAnnotations = (annotations: Annotation[]) =>
+const groupAnnotations = (annotations: readonly Annotation[]) =>
   Object.entries(groupBy(annotations, (annotation) => annotation.schema)).map(
     ([schema, annotations]) => ({
       schema,
