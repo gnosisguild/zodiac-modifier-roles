@@ -37,10 +37,11 @@ export const applyAnnotations = async (
   const { address, mode } = options
   const log = options.log === true ? console.log : options.log || undefined
 
-  let currentAnnotations =
-    "currentAnnotations" in options && options.currentAnnotations
+  let currentAnnotations: readonly Annotation[]
 
-  if (!currentAnnotations) {
+  if ("currentAnnotations" in options && options.currentAnnotations) {
+    currentAnnotations = options.currentAnnotations
+  } else {
     if ("chainId" in options && options.chainId) {
       const role = await fetchRole({
         chainId: options.chainId,
