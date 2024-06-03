@@ -1,8 +1,8 @@
 import { chains } from "./chains"
-import { ChainId } from "./types"
+import { ChainId, Clearance, ExecutionOptions, Function } from "./types"
 
 interface Props {
-  address: string
+  address: `0x${string}`
   chainId: ChainId
 }
 
@@ -23,8 +23,11 @@ const QUERY = `
         targets {
           address
           clearance
+          executionOptions
           functions {
             selector
+            wildcarded
+            executionOptions
           }
         }
       }
@@ -64,13 +67,24 @@ export const fetchRolesMod = async (
   return mapGraphQl(data.rolesModifier)
 }
 
-interface RoleSummary {
-  key: string
-  members: `0x${string}`[]
-  targets: `0x${string}`[]
+interface TargetSummary {
+  address: `0x${string}`
+  clearance: Clearance
+  executionOptions: ExecutionOptions
+  functions: {
+    selector: `0x${string}`
+    wildcarded: boolean
+    executionOptions: ExecutionOptions
+  }[]
 }
 
-interface RolesModifier {
+export interface RoleSummary {
+  key: `0x${string}`
+  members: `0x${string}`[]
+  targets: TargetSummary[]
+}
+
+export interface RolesModifier {
   address: `0x${string}`
   owner: `0x${string}`
   avatar: `0x${string}`
@@ -92,5 +106,24 @@ const mapGraphQlRole = (role: any): RoleSummary => ({
         t.clearance !== "None" &&
         !(t.clearance === "Function" && t.functions.length === 0)
     )
-    .map((t: any): `0x${string}` => t.address),
+    .map(
+      (target: any): TargetSummary => ({
+        address: target.address,
+        clearance: Clearance[target.clearance as keyof typeof Clearance],
+        executionOptions:
+          ExecutionOptions[
+            target.executionOptions as keyof typeof ExecutionOptions
+          ],
+        functions: target.functions.map(
+          (func: any): Function => ({
+            selector: func.selector,
+            executionOptions:
+              ExecutionOptions[
+                func.executionOptions as keyof typeof ExecutionOptions
+              ],
+            wildcarded: func.wildcarded,
+          })
+        ),
+      })
+    ),
 })

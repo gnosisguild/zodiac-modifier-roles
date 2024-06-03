@@ -17,11 +17,11 @@ type Options = (
       /** ID of the chain where the Roles mod is deployed */
       chainId: ChainId
       /** Address of the roles mod */
-      address: string
+      address: `0x${string}`
     }
   | {
       /** The targets that are currently configured for the role */
-      currentTargets: Target[]
+      currentTargets: readonly Target[]
     }
 ) & {
   /**  The mode to use for updating the targets of the role:
@@ -38,15 +38,18 @@ type Options = (
  *
  * @param roleKey The key of the role to update
  * @param targets Targets to apply to the role
+ * @param options Options for the update
  */
 export const applyTargets = async (
-  roleKey: string,
+  roleKey: `0x${string}`,
   targets: Target[],
   options: Options
 ) => {
-  let currentTargets = "currentTargets" in options && options.currentTargets
+  let currentTargets: readonly Target[]
 
-  if (!currentTargets) {
+  if ("currentTargets" in options && options.currentTargets) {
+    currentTargets = options.currentTargets
+  } else {
     if ("chainId" in options && options.chainId) {
       const role = await fetchRole({
         chainId: options.chainId,
@@ -93,7 +96,10 @@ export const applyTargets = async (
   return encodeCalls(roleKey, calls)
 }
 
-const extendTargets = (current: Target[], add: Target[]): Call[] => {
+const extendTargets = (
+  current: readonly Target[],
+  add: readonly Target[]
+): Call[] => {
   // TODO if current grants a fully-cleared target, we need to remove function-scoped permissions to that target from add
   // TODO merge permissions to same target+function by joining their conditions with OR
   return grant(diffTargets(add, current))
@@ -105,7 +111,10 @@ const extendTargets = (current: Target[], add: Target[]): Call[] => {
  * @param subtract targets to subtract from the current targets of the role
  * @returns The set of calls to make to the Roles modifier owning the role
  */
-const removeTargets = (current: Target[], subtract: Target[]): Call[] => {
+const removeTargets = (
+  current: readonly Target[],
+  subtract: readonly Target[]
+): Call[] => {
   const notGranted = diffTargets(subtract, current)
   const toRevoke = diffTargets(subtract, notGranted)
   // TODO throw, if subtract contains a function to a target that is fully-cleared in current
@@ -118,7 +127,10 @@ const removeTargets = (current: Target[], subtract: Target[]): Call[] => {
  * @param next targets of the role describing the desired target state
  * @returns The set of calls to make to the Roles modifier owning the role
  */
-export const replaceTargets = (current: Target[], next: Target[]): Call[] => {
+export const replaceTargets = (
+  current: readonly Target[],
+  next: readonly Target[]
+): Call[] => {
   return removeObsoleteCalls([
     ...revoke(diffTargets(current, next)),
     ...grant(diffTargets(next, current)),

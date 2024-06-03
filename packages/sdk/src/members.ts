@@ -9,11 +9,11 @@ type Options = (
       /** ID of the Chain where the Roles mod is deployed */
       chainId: ChainId
       /** Address of the roles mod */
-      address: string
+      address: `0x${string}`
     }
   | {
       /** The addresses of all current members of this role. If not specified, they will be fetched from the subgraph. */
-      currentMembers: string[]
+      currentMembers: readonly `0x${string}`[]
     }
 ) & {
   /**  The mode to use for updating the set of members of the role:
@@ -31,13 +31,15 @@ type Options = (
  * @param members Array of member addresses
  */
 export const applyMembers = async (
-  roleKey: string,
-  members: string[],
+  roleKey: `0x${string}`,
+  members: readonly `0x${string}`[],
   options: Options
 ) => {
-  let currentMembers = "currentMembers" in options && options.currentMembers
+  let currentMembers: readonly `0x${string}`[]
 
-  if (!currentMembers) {
+  if ("currentMembers" in options && options.currentMembers) {
+    currentMembers = options.currentMembers
+  } else {
     if ("chainId" in options && options.chainId) {
       const role = await fetchRole({
         chainId: options.chainId,
@@ -67,7 +69,11 @@ export const applyMembers = async (
   }
 }
 
-const replaceMembers = (roleKey: string, current: string[], next: string[]) => {
+const replaceMembers = (
+  roleKey: `0x${string}`,
+  current: readonly `0x${string}`[],
+  next: readonly `0x${string}`[]
+) => {
   const toRemove = current.filter((member) => !next.includes(member))
   const toAdd = next.filter((member) => !current.includes(member))
 
@@ -78,24 +84,24 @@ const replaceMembers = (roleKey: string, current: string[], next: string[]) => {
 }
 
 export const extendMembers = (
-  roleKey: string,
-  current: string[],
-  add: string[]
+  roleKey: `0x${string}`,
+  current: readonly `0x${string}`[],
+  add: readonly `0x${string}`[]
 ) => {
   const toAdd = add.filter((member) => !current.includes(member))
   return toAdd.map((member) => addMember(roleKey, member))
 }
 
 const removeMembers = (
-  roleKey: string,
-  current: string[],
-  remove: string[]
+  roleKey: `0x${string}`,
+  current: readonly `0x${string}`[],
+  remove: readonly `0x${string}`[]
 ) => {
   const toRemove = remove.filter((member) => current.includes(member))
   return toRemove.map((member) => removeMember(roleKey, member))
 }
 
-const addMember = (roleKey: string, member: string) => {
+const addMember = (roleKey: `0x${string}`, member: `0x${string}`) => {
   return rolesInterface.encodeFunctionData("assignRoles", [
     member,
     [roleKey],
@@ -103,7 +109,7 @@ const addMember = (roleKey: string, member: string) => {
   ]) as `0x${string}`
 }
 
-const removeMember = (roleKey: string, member: string) => {
+const removeMember = (roleKey: `0x${string}`, member: `0x${string}`) => {
   return rolesInterface.encodeFunctionData("assignRoles", [
     member,
     [roleKey],

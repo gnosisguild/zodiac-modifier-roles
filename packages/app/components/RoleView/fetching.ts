@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { ChainId, Role, fetchRole, fetchRolesMod } from "zodiac-roles-sdk"
 
 interface Props {
-  address: string
+  address: `0x${string}`
   roleKey: `0x${string}`
   chainId: ChainId
 }

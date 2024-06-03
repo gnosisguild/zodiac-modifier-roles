@@ -86,19 +86,32 @@ const permissions = [allow.mainnet.dai.approve(CURVE_3POOL)];
 
 ## Apply permissions
 
-Additional SDK functions allow applying a set of permissions to a role:
+Additional SDK functions allow applying a set of permissions to a role.
 
 ```typescript
-import { applyPermissions } from "zodiac-roles-sdk";
+import { processPermissions, applyTargets } from "zodiac-roles-sdk";
 
-const calls = applyPermissions(MY_ROLE_KEY, permissions, {
-  network: 1,
+const { targets } = processPermissions(permissions);
+
+const calls = applyTargets(MY_ROLE_KEY, targets, {
+  chainId: 1,
   address: ROLES_MOD_ADDRESS,
+  mode: "replace",
 });
 ```
 
-This will fetch the current permissions configured for the role identified by `MY_ROLE_KEY` and compute the set of calls required to patch it to the new set of `permissions`.
-You can execute the calls via ethers or batch them as a multi-send.
+As an initial step, permissions are processed for grouping them by target address and merging multiple permissions to the same function into a single entry.
+
+The `applyTargets` function fetches the current targets configured onchain for the role in the Roles Modifier and computes the set of calls required to patch it to the new set of `targets`.
+
+The `mode` option controls how the current set of targets already configured for the role onchain is handled. It can be one of the following values:
+
+- `"replace"`: The new set of targets replaces the current set.
+- `"extend"`: The current set of targets is kept and only additional targets or functions are added.
+- `"remove"`: All passed target that are already configured in the current set of targets will we removed.
+
+The `applyTargets` function returns an array of call data hex string that can be executed to apply the update.
+You can execute the calls via ethers/viem or batch them as a multi-send.
 
 ethers:
 

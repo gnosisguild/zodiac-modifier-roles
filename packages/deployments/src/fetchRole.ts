@@ -9,8 +9,8 @@ import {
 } from "./types"
 
 interface Props {
-  address: string
-  roleKey: string
+  address: `0x${string}`
+  roleKey: `0x${string}`
   chainId: ChainId
 }
 
@@ -45,7 +45,7 @@ query Role($id: String) {
 }
 `.trim()
 
-const getRoleId = (address: string, roleKey: string) =>
+const getRoleId = (address: `0x${string}`, roleKey: `0x${string}`) =>
   `${address.toLowerCase()}-ROLE-${roleKey}`
 
 type FetchOptions = Omit<RequestInit, "method" | "body">
