@@ -8,9 +8,9 @@ import PermissionsDiff from "@/components/permissions/PermissionsDiff"
 import PageBreadcrumbs from "./breadcrumbs"
 import styles from "./page.module.css"
 import Flex from "@/ui/Flex"
-import { fetchOrInitRole } from "@/components/RoleView/fetching"
-import Link from "next/link"
 import ApplyUpdates from "@/components/ApplyUpdate"
+import AnnotationsToggle from "@/components/AnnotationsToggle"
+import { fetchOrInitRole } from "../../fetching"
 
 export default async function DiffPage({
   params,
@@ -62,9 +62,7 @@ export default async function DiffPage({
           justifyContent="end"
           className={styles.toolbar}
         >
-          <Link href={{ query: { annotations: !shallShowAnnotations } }}>
-            {shallShowAnnotations ? "Hide annotations" : "Show annotations"}
-          </Link>
+          <AnnotationsToggle on={shallShowAnnotations} />
         </Flex>
       )}
       <main className={styles.main}>

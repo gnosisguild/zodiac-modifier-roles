@@ -1,21 +1,27 @@
-import classes from "./page.module.css"
 import { notFound } from "next/navigation"
+import cn from "classnames"
 import { parseModParam, parseRoleParam } from "@/app/params"
 import Layout from "@/components/Layout"
 import PageBreadcrumbs from "./breadcrumbs"
 import RoleView from "@/components/RoleView"
-import cn from "classnames"
+import classes from "./page.module.css"
+import { fetchOrInitRole } from "./fetching"
 
 export default async function RolePage({
   params,
+  searchParams,
 }: {
   params: { mod: string; role: string; hash?: string }
+  searchParams: { annotations?: string }
 }) {
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
   if (!mod || !roleKey) {
     notFound()
   }
+
+  const role = await fetchOrInitRole({ ...mod, roleKey })
+  const showAnnotations = searchParams.annotations !== "false"
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
@@ -32,7 +38,7 @@ export default async function RolePage({
             </div>
           )}
         </div>
-        <RoleView mod={mod} roleKey={roleKey} />
+        <RoleView mod={mod} role={role} showAnnotations={showAnnotations} />
       </main>
     </Layout>
   )

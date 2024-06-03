@@ -22,3 +22,14 @@
   align-items: center;
   font-family: var(--font-mono);
 }
+
+.permissionsWrapper {
+  position: relative;
+}
+
+.toolbar {
+  position: absolute;
+  top: -50px;
+  right: var(--spacing-3);
+  font-size: 12px;
+}

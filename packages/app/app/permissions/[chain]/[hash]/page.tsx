@@ -3,20 +3,22 @@ import { Annotation, Target } from "zodiac-roles-sdk"
 import classes from "./page.module.css"
 import { notFound } from "next/navigation"
 import PermissionsList from "@/components/permissions/PermissionsList"
-import Layout, { Breadcrumb } from "@/components/Layout"
+import Layout from "@/components/Layout"
 import { kv } from "@vercel/kv"
-import { CHAINS, ChainId } from "@/app/chains"
-import Flex from "@/ui/Flex"
+import { CHAINS } from "@/app/chains"
 import LabeledData from "@/ui/LabeledData"
 import CopyButton from "@/ui/CopyButton"
 import PageBreadcrumbs from "./breadcrumbs"
+import AnnotationsToggle from "@/components/AnnotationsToggle"
 
 const chains = Object.values(CHAINS)
 
 export default async function PermissionPage({
   params: { hash, chain },
+  searchParams,
 }: {
   params: { hash: string; chain: string }
+  searchParams: { annotations?: string }
 }) {
   const chainId = chains.find((c) => c.prefix === chain.toLowerCase())?.id
   if (!chainId) {
@@ -33,6 +35,9 @@ export default async function PermissionPage({
 
   const { targets, annotations } = entry
 
+  const hasAnnotations = annotations.length > 0
+  const showAnnotations = searchParams.annotations !== "false"
+
   return (
     <Layout head={<PageBreadcrumbs chain={chain} hash={hash} />}>
       <main className={classes.main}>
@@ -44,11 +49,19 @@ export default async function PermissionPage({
             </div>
           </LabeledData>
         </div>
-        <PermissionsList
-          targets={targets}
-          annotations={annotations}
-          chainId={chainId}
-        />
+
+        <div className={classes.permissionsWrapper}>
+          {hasAnnotations && (
+            <div className={classes.toolbar}>
+              <AnnotationsToggle on={showAnnotations} />
+            </div>
+          )}
+          <PermissionsList
+            targets={targets}
+            annotations={annotations}
+            chainId={chainId}
+          />
+        </div>
       </main>
     </Layout>
   )
