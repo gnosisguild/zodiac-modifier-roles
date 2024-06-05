@@ -1,16 +1,11 @@
-import {
-  ZERO_ADDRESS,
-  aura,
-  balancer,
-  cowswap
-} from "../addresses"
-import { staticEqual, staticOneOf } from "../../helpers/utils"
-import { allowErc20Approve } from "../../helpers/erc20"
-import { lidoExitStrategy1 } from "../../helpers/ExitStrategies/LidoExitStrategies"
+import { allow } from "../../allow"
 import { auraExitStrategy2 } from "../../helpers/ExitStrategies/AuraExitStrategies"
+import { lidoExitStrategy1 } from "../../helpers/ExitStrategies/LidoExitStrategies"
+import { allowErc20Approve } from "../../helpers/erc20"
+import { staticEqual, staticOneOf } from "../../helpers/utils"
 import { AVATAR } from "../../placeholders"
 import { RolePreset } from "../../types"
-import { allow } from "../../allow"
+import { ZERO_ADDRESS, aura, balancer, cowswap } from "../addresses"
 
 const preset = {
   network: 1,
