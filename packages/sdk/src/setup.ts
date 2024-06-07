@@ -18,8 +18,11 @@ import { encodeRoleKey } from "./roleKey"
 
 const ROLES_MASTERCOPY_ADDRESS = "0x9646fDAD06d3e24444381f44362a3B0eB343D337"
 const PROXY_FACTORY_ADDRESS = "0x000000000000aDdB49795b0f9bA5BC298cDda236"
-// https://github.com/safe-global/safe-deployments/blob/5ec81e8d7a85d66a33adbe0c098068c0a96d917c/src/assets/v1.4.1/multi_send.json
-const DEFAULT_MULTISEND_ADDRESS = "0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526"
+
+const DEFAULT_MULTISEND_ADDRESSES = [
+  "0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526", // https://github.com/safe-global/safe-deployments/blob/5ec81e8d7a85d66a33adbe0c098068c0a96d917c/src/assets/v1.4.1/multi_send.json
+  "0x9641d764fc13c8B624c04430C7356C1C7C8102e2", // https://github.com/safe-global/safe-deployments/blob/5ec81e8d7a85d66a33adbe0c098068c0a96d917c/src/assets/v1.4.1/multi_send_call_only.json
+] as const
 
 const RolesInterface = Roles__factory.createInterface()
 interface RoleConfig {
@@ -95,7 +98,7 @@ interface Config {
 
   roles?: RoleConfig[]
 
-  multiSendAddresses?: `0x${string}`[]
+  multiSendAddresses?: readonly `0x${string}`[]
   enableOnTarget?: boolean
   saltNonce?: `0x${string}`
 }
@@ -106,7 +109,7 @@ export const setUpRolesMod = ({
   owner = avatar,
   roles = [],
 
-  multiSendAddresses = [DEFAULT_MULTISEND_ADDRESS],
+  multiSendAddresses = DEFAULT_MULTISEND_ADDRESSES,
   enableOnTarget = true,
   saltNonce = "0x0000000000000000000000000000000000000000000000000000000000000000",
 }: Config) => {
