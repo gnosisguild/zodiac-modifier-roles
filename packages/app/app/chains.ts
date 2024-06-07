@@ -1,7 +1,7 @@
 import {
   mainnet,
   sepolia,
-  // optimism,
+  optimism,
   avalanche,
   arbitrum,
   base,
@@ -23,12 +23,12 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api.gnosisscan.io/api",
     blockExplorerApiKey: "8ENCUFT4D3XVJS7N9ZFS5Z9XQPNUGRKSN5",
   },
-  // [optimism.id]: {
-  //   ...optimism,
-  //   prefix: "oeth",
-  //   blockExplorerAbiUrl: "https://api-optimistic.etherscan.io/api",
-  //   blockExplorerApiKey: "6RJ8KT4B1S9V7E3CIYECNY7HFW8IPWQ3C4",
-  // },
+  [optimism.id]: {
+    ...optimism,
+    prefix: "oeth",
+    blockExplorerAbiUrl: "https://api-optimistic.etherscan.io/api",
+    blockExplorerApiKey: "SM2FQ62U49I6H9V9CCEGFS34QGBK4IIJPH",
+  },
   [polygon.id]: {
     ...polygon,
     prefix: "matic",

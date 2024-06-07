@@ -19,6 +19,7 @@ const {
   PK,
   MNEMONIC,
   ETHERSCAN_API_KEY,
+  OPTIMISTIC_ETHERSCAN_API_KEY,
   GNOSISSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
   ARBISCAN_API_KEY,
@@ -65,6 +66,11 @@ const config: HardhatUserConfig = {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
+    optimism: {
+      ...sharedNetworkConfig,
+      chainId: 10,
+      url: "https://mainnet.optimism.io",
+    },
     gnosis: {
       ...sharedNetworkConfig,
       chainId: 100,
@@ -95,12 +101,21 @@ const config: HardhatUserConfig = {
     apiKey: {
       mainnet: ETHERSCAN_API_KEY,
       sepolia: ETHERSCAN_API_KEY,
+      optimism: OPTIMISTIC_ETHERSCAN_API_KEY,
       gnosis: GNOSISSCAN_API_KEY,
       matic: POLYGONSCAN_API_KEY,
       arbitrum: ARBISCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
     } as Record<string, string>,
     customChains: [
+      {
+        network: "optimism",
+        chainId: 10,
+        urls: {
+          apiURL: "https://api-optimistic.etherscan.io/api",
+          browserURL: "https://optimistic.etherscan.io",
+        },
+      },
       {
         network: "gnosis",
         chainId: 100,
