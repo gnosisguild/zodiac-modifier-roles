@@ -1,17 +1,9 @@
 import { defineConfig } from "@dethcrypto/eth-sdk"
 
+import { ethSdkConfig } from "../src/ethSdk"
+
 export default defineConfig({
-  etherscanURLs: {
-    mainnet: "https://api.etherscan.io/api",
-    gnosis: "https://api.gnosisscan.io/api",
-    //gnosis: "https://blockscout.com/xdai/mainnet/api"
-  },
-  rpc: {
-    mainnet:
-      "https://eth-mainnet.g.alchemy.com/v2/twj7sBzB1_Njwoejwj0EFM-_x-TKJkZb",
-    gnosis: "https://rpc.gnosischain.com/",
-    //gnosis: "https://rpc.ankr.com/gnosis"
-  },
+  ...ethSdkConfig,
   contracts: {
     mainnet: {
       lido: {
