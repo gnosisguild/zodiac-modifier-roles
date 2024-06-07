@@ -25,7 +25,7 @@ describe("processAnnotations()", () => {
         {
           "apiInfo": {
             "contact": {
-              "name": "Karpatkey",
+              "name": "karpatkey",
               "url": "https://kit.karpatkey.com",
             },
             "description": "Permissions for Zodiac Roles covering interactions with DeFi protocols",
