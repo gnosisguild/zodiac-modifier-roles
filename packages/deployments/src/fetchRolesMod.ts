@@ -31,6 +31,9 @@ const QUERY = `
           }
         }
       }
+      unwrapAdapters(where: {selector: "0x8d80ff0a", adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"}) {
+        targetAddress
+      }
     }
   }
 `
@@ -90,11 +93,15 @@ export interface RolesModifier {
   avatar: `0x${string}`
   target: `0x${string}`
   roles: RoleSummary[]
+  multiSendAddresses: `0x${string}`[]
 }
 
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
+  multiSendAddresses: rolesModifier.unwrapAdapters.map(
+    (adapter: any) => adapter.targetAddress
+  ),
 })
 
 const mapGraphQlRole = (role: any): RoleSummary => ({
