@@ -6,12 +6,9 @@ export function handleSetUnwrapAdapter(event: SetUnwrapAdapter): void {
   const rolesModifierAddress = event.address
   const rolesModifierId = getRolesModifierId(rolesModifierAddress)
 
-  const adapter = getOrCreateUnwrapAdapter(
-    event.params.adapter,
-    event.params.to,
-    event.params.selector,
-    rolesModifierId,
-  )
+  const adapter = getOrCreateUnwrapAdapter(event.params.to, event.params.selector, rolesModifierId)
+  adapter.adapterAddress = event.params.adapter
+  adapter.save()
 
   log.info("UnwrapAdapter {} has been set to {}", [adapter.id, adapter.adapterAddress.toHexString()])
 }
