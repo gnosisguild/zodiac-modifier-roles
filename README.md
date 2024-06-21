@@ -79,14 +79,14 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.2.1)
-- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.2.1)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.2.1)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.1)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.2.1)
-- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.1)
-- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.2.1)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.1)
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.2.2)
+- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.2.2)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.2.2)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.2)
+- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.2.2)
+- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.2)
+- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.2.2)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.2)
 
 ### Development environment setup
 
