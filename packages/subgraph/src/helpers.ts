@@ -135,6 +135,8 @@ export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: strin
   return allowance
 }
 
+export const ADDRESS_ZERO = Address.fromHexString("0x0000000000000000000000000000000000000000")
+
 export const getOrCreateUnwrapAdapter = (
   targetAddress: Address,
   selector: Bytes,
@@ -146,6 +148,7 @@ export const getOrCreateUnwrapAdapter = (
   // save adapter the first time we encounter it
   if (!adapter) {
     adapter = new UnwrapAdapter(id)
+    adapter.adapterAddress = ADDRESS_ZERO
     adapter.rolesModifier = rolesModifierId
     adapter.targetAddress = targetAddress
     adapter.selector = selector
