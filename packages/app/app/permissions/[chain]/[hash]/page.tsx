@@ -58,7 +58,7 @@ export default async function PermissionPage({
           )}
           <PermissionsList
             targets={targets}
-            annotations={annotations}
+            annotations={showAnnotations ? annotations : []}
             chainId={chainId}
           />
         </div>
