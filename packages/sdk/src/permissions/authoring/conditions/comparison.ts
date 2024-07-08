@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike } from "ethers"
+import { BigNumber, BigNumberish, BytesLike } from "ethers"
 import { arrayify, concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
@@ -56,6 +56,12 @@ export const gt =
   }
 
 /**
+ * Asserts that the value from calldata is greater than or equal to the given value
+ * @param value The reference value to encode
+ */
+export const gte = (value: BigNumberish) => gt(BigNumber.from(value).sub(1))
+
+/**
  * Asserts that the value from calldata is greater than the given value
  * @param value The reference value to encode
  */
@@ -74,6 +80,12 @@ export const lt =
       compValue: encodeValue(value, abiType),
     }
   }
+
+/**
+ * Asserts that the value from calldata is less than or equal to the given value
+ * @param value The reference value to encode
+ */
+export const lte = (value: BigNumberish) => lt(BigNumber.from(value).add(1))
 
 /**
  * Asserts that the bits selected by the mask at the given bytes offset equal the given value
