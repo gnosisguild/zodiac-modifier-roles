@@ -130,7 +130,7 @@ const calldataMatchesScopings =
 
       return and(
         () => matchesCondition,
-        bitmask({ mask: selector, value: selector })
+        bitmask({ mask: "0xffffffff", value: selector })
       )(ParamType.from("bytes"))
     }
 
