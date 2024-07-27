@@ -14,11 +14,23 @@ import Switch from "@/ui/Switch"
 import StopPropagation from "@/ui/StopPropagation"
 import Anchor from "@/ui/Anchor"
 import { fetchContractInfo } from "@/app/abi"
-import ADDRESS_LABELS from "./addressLabels.json"
+import addressLabels from "./addressLabels.json"
 import { DiffFlag, PermissionsDiff } from "../types"
 import { groupDiff } from "../PermissionsDiff/diff"
 import DiffBox from "../DiffBox"
 import classes from "./style.module.css"
+
+const ADDRESS_LABELS = Object.fromEntries(
+  Object.entries(addressLabels).map(([chain, labels]) => [
+    chain,
+    Object.fromEntries(
+      Object.entries(labels).map(([address, label]) => [
+        address.toLowerCase(),
+        label,
+      ])
+    ),
+  ])
+)
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
