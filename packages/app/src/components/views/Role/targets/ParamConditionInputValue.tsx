@@ -31,8 +31,8 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 const PlaceholderPerType: Record<ParamNativeType, string> = {
-  [ParamNativeType.ARRAY]: "[value 1, value 2, ...]",
-  [ParamNativeType.TUPLE]: "(1,2,3)",
+  [ParamNativeType.ARRAY]: "[element 0, value 1, ...]",
+  [ParamNativeType.TUPLE]: "[field 0, field 1, ...]",
   [ParamNativeType.BOOLEAN]: "true",
   [ParamNativeType.INT]: "-235000000",
   [ParamNativeType.UINT]: "235000000",
@@ -127,14 +127,13 @@ const useDecodedValue = (
 ) => {
   const callbackRef = useRef(onDecodingError)
   callbackRef.current = onDecodingError
-  const paramTypeString = param && param.format("full")
-  const valueDecoded = paramTypeString ? tryAbiDecode(paramTypeString, value) : value
+  const valueDecoded = param ? tryAbiDecode(param, value) : value
 
   useEffect(() => {
-    if (paramTypeString) {
-      tryAbiDecode(paramTypeString, value, callbackRef.current)
+    if (param) {
+      tryAbiDecode(param, value, callbackRef.current)
     }
-  }, [paramTypeString, value])
+  }, [param, value])
 
   return valueDecoded
 }
@@ -149,10 +148,16 @@ const tryAbiEncode = (param: ethers.utils.ParamType | null, value: string) => {
   }
 }
 
-const tryAbiDecode = (param: string, value: string, onDecodingError?: (err: Error) => void) => {
+const tryAbiDecode = (param: ethers.utils.ParamType, value: string, onDecodingError?: (err: Error) => void) => {
   if (!value) return value
+
+  const paramTypeString = param.format("full")
+  const nativeType = getNativeType(param)
   try {
-    return ethers.utils.defaultAbiCoder.decode([param], value).toString()
+    const decoded = ethers.utils.defaultAbiCoder.decode([paramTypeString], value)[0]
+    return nativeType === ParamNativeType.ARRAY || nativeType === ParamNativeType.TUPLE
+      ? JSON.stringify(decoded)
+      : decoded.toString()
   } catch (err) {
     console.error("Error decoding value", err, { param, value })
     if (onDecodingError) onDecodingError(err as Error)

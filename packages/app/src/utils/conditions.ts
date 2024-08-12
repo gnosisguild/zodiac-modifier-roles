@@ -62,6 +62,7 @@ export const getWriteFunctions = (abi: JsonFragment[] | undefined) =>
   !abi ? [] : Object.values(new Interface(abi).functions).filter(isWriteFunction)
 
 export function formatParamValue(param: ethers.utils.ParamType, value: string) {
-  if (getNativeType(param) === ParamNativeType.ARRAY) return JSON.parse(value)
+  const nativeType = getNativeType(param)
+  if (nativeType === ParamNativeType.ARRAY || nativeType === ParamNativeType.TUPLE) return JSON.parse(value)
   return value
 }

@@ -35,7 +35,7 @@ export interface ParamCondition {
   index: number
   type: ParameterType
   condition: ParamComparison
-  value: string[]
+  value: string[] // usually a single-element array, multiple values are used only for ParamComparison.ONE_OF
 }
 
 export enum ParamComparison {

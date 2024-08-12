@@ -15,7 +15,7 @@ import { FunctionFragment, Interface } from "@ethersproject/abi"
 import { _signer } from "../hooks/useWallet"
 import { getExplorer } from "../utils/explorer"
 import { Network } from "../utils/networks"
-import { formatParamValue, isWriteFunction } from "../utils/conditions"
+import { isWriteFunction } from "../utils/conditions"
 
 export enum WalletType {
   INJECTED = "injected",
@@ -75,13 +75,11 @@ function getFunctionTransaction(
 
   for (let i = 0; i < paramsLength; i++) {
     const param = funcCondition.params.find((param) => param.index === i)
-    if (param) {
-      const type = func.inputs[param.index]
-      const value = ethers.utils.defaultAbiCoder.encode([type], param.value)
+    if (param && param.condition !== ParamComparison.ONE_OF) {
       isParamScoped.push(true)
       paramType.push(getParameterTypeInt(param.type))
       paramComp.push(getParamComparisonInt(param.condition))
-      compValue.push(value)
+      compValue.push(param.value[0])
     } else {
       isParamScoped.push(false)
       paramType.push(0)
@@ -221,8 +219,6 @@ export const updateRole = async (
     const paramLevelTxs: Promise<PopulatedTransaction>[] = Object.entries(paramEventsPerFunction)
       .map(([sighash, params]) => {
         return params.map((paramCondition) => {
-          const param = functions[sighash].inputs[paramCondition.index]
-
           if (paramCondition.type === ParameterType.NO_RESTRICTION) {
             // unscopeParameter
             console.log("[updateRole] unscope parameter", [role.id, target.address, sighash, paramCondition.index])
@@ -233,8 +229,6 @@ export const updateRole = async (
               paramCondition.index,
             )
           } else if (paramCondition.condition !== ParamComparison.ONE_OF) {
-            const value = formatParamValue(param, paramCondition.value[0])
-            const encodedValue = ethers.utils.defaultAbiCoder.encode([param], [value])
             console.log("[updateRole] scope parameter", [
               role.id,
               target.address,
@@ -242,7 +236,7 @@ export const updateRole = async (
               paramCondition.index,
               getParameterTypeInt(paramCondition.type),
               getParamComparisonInt(paramCondition.condition),
-              encodedValue,
+              paramCondition.value[0],
             ])
             return rolesModifierContract.populateTransaction.scopeParameter(
               role.id,
@@ -251,20 +245,16 @@ export const updateRole = async (
               paramCondition.index,
               getParameterTypeInt(paramCondition.type),
               getParamComparisonInt(paramCondition.condition),
-              encodedValue,
+              paramCondition.value[0],
             )
           } else {
-            const encodedValues = paramCondition.value.map((value) => {
-              return ethers.utils.defaultAbiCoder.encode([param], [formatParamValue(param, value)])
-            })
-
             console.log("[updateRole] scope parameter as OneOf", [
               role.id,
               target.address,
               sighash,
               paramCondition.index,
               getParameterTypeInt(paramCondition.type),
-              encodedValues || [],
+              paramCondition.value,
             ])
             return rolesModifierContract.populateTransaction.scopeParameterAsOneOf(
               role.id,
@@ -272,7 +262,7 @@ export const updateRole = async (
               sighash,
               paramCondition.index,
               getParameterTypeInt(paramCondition.type),
-              encodedValues || [],
+              paramCondition.value,
             )
           }
         })
