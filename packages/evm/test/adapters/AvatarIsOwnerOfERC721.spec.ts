@@ -23,12 +23,13 @@ describe("AvatarIsOwnerOfERC721", async () => {
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
+    const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     await roles.enableModule(invoker.address);
 
@@ -37,12 +38,10 @@ describe("AvatarIsOwnerOfERC721", async () => {
 
     const MockERC721 = await hre.ethers.getContractFactory("MockERC721");
     const mockERC721 = await MockERC721.deploy();
+    const mockERC721Address = await mockERC721.getAddress();
+    const SELECTOR = mockERC721.interface.getFunction("doSomething").selector;
 
-    const SELECTOR = mockERC721.interface.getSighash(
-      mockERC721.interface.getFunction("doSomething")
-    );
-
-    await roles.connect(owner).scopeTarget(ROLE_KEY, mockERC721.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, mockERC721Address);
 
     const CustomChecker = await hre.ethers.getContractFactory(
       "AvatarIsOwnerOfERC721"
@@ -57,7 +56,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
         .connect(owner)
         .scopeFunction(
           ROLE_KEY,
-          mockERC721.address,
+          mockERC721Address,
           SELECTOR,
           conditions,
           options
@@ -68,9 +67,9 @@ describe("AvatarIsOwnerOfERC721", async () => {
       return roles
         .connect(invoker)
         .execTransactionFromModule(
-          mockERC721.address,
+          mockERC721Address,
           0,
-          (await mockERC721.populateTransaction.doSomething(tokenId, someParam))
+          (await mockERC721.doSomething.populateTransaction(tokenId, someParam))
             .data as string,
           0
         );
@@ -91,7 +90,8 @@ describe("AvatarIsOwnerOfERC721", async () => {
   it("passes a comparison", async () => {
     const { roles, avatar, mockERC721, customChecker, scopeFunction, invoke } =
       await loadFixture(setup);
-
+    const avatarAddress = await avatar.getAddress();
+    const customCheckerAddress = await customChecker.getAddress();
     const extra = "000000000000000000000000";
     await scopeFunction([
       {
@@ -104,7 +104,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
         parent: 0,
         paramType: ParameterType.Static,
         operator: Operator.Custom,
-        compValue: `${customChecker.address}${extra}`,
+        compValue: `${customCheckerAddress}${extra}`,
       },
       {
         parent: 0,
@@ -119,7 +119,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
     const someParam = 123;
 
     await mockERC721.mint(AddressOne, notOwnedByAvatar);
-    await mockERC721.mint(avatar.address, ownedByAvatar);
+    await mockERC721.mint(avatarAddress, ownedByAvatar);
 
     await expect(invoke(notOwnedByAvatar, someParam))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
