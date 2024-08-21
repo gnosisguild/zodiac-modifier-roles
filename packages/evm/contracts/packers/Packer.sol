@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
+import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
 
 import "./BufferPacker.sol";
 
