@@ -40,23 +40,21 @@ export async function baseSetup(
 
   const TestContract = await hre.ethers.getContractFactory("TestContract");
   const testContract = await TestContract.deploy();
-
+  const avatarAddress = await avatar.getAddress();
   const roles = await deployRolesMod(
     hre,
     owner.address,
-    avatar.address,
-    avatar.address
+    avatarAddress,
+    avatarAddress
   );
   await roles.enableModule(invoker.address);
 
   await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
   await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+  const SELECTOR = testContract.interface.getFunction(functioName).selector;
+  const testContractAddress = await testContract.getAddress();
 
-  const SELECTOR = testContract.interface.getSighash(
-    testContract.interface.getFunction(functioName)
-  );
-
-  await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+  await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
   async function scopeFunction(
     conditions: ConditionFlatStruct[],
@@ -66,7 +64,7 @@ export async function baseSetup(
       .connect(owner)
       .scopeFunction(
         ROLE_KEY,
-        testContract.address,
+        testContractAddress,
         SELECTOR,
         conditions,
         options
@@ -86,14 +84,14 @@ export async function baseSetup(
 export async function setupFnThatMaybeReturns() {
   const { owner, invoker, roles, testContract, scopeFunction } =
     await baseSetup("fnThatMaybeReverts");
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: BigNumberish, b: boolean) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.fnThatMaybeReverts(a, b))
+        (await testContract.fnThatMaybeReverts.populateTransaction(a, b))
           .data as string,
         0
       );
@@ -110,14 +108,15 @@ export async function setupFnThatMaybeReturns() {
 export async function setupOneParamStatic() {
   const { owner, invoker, roles, testContract, scopeFunction } =
     await baseSetup("oneParamStatic");
+  const testContractAddress = await testContract.getAddress();
 
   async function invoke(a: BigNumberish, operation: 0 | 1 = 0) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamStatic(a))
+        (await testContract.oneParamStatic.populateTransaction(a))
           .data as string,
         operation
       );
@@ -133,14 +132,15 @@ export async function setupOneParamStatic() {
 export async function setupTwoParamsStatic() {
   const { owner, invoker, roles, testContract, scopeFunction } =
     await baseSetup("twoParamsStatic");
+  const testContractAddress = await testContract.getAddress();
 
   async function invoke(a: number, b: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.twoParamsStatic(a, b))
+        (await testContract.twoParamsStatic.populateTransaction(a, b))
           .data as string,
         0
       );
@@ -156,14 +156,14 @@ export async function setupTwoParamsStatic() {
 export async function setupOneParamStaticTuple() {
   const { invoker, roles, testContract, scopeFunction, owner } =
     await baseSetup("oneParamStaticTuple");
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.StaticTupleStruct) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamStaticTuple(a))
+        (await testContract.oneParamStaticTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -180,14 +180,14 @@ export async function setupOneParamStaticNestedTuple() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamStaticNestedTuple"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.StaticNestedTupleStruct) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamStaticNestedTuple(a))
+        (await testContract.oneParamStaticNestedTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -203,15 +203,15 @@ export async function setupTwoParamsStaticTupleStatic() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "twoParamsStaticTupleStatic"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.StaticTupleStruct, b: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
         (
-          await testContract.populateTransaction.twoParamsStaticTupleStatic(
+          await testContract.twoParamsStaticTupleStatic.populateTransaction(
             a,
             b
           )
@@ -230,14 +230,14 @@ export async function setupOneParamDynamicTuple() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamDynamicTuple"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.DynamicTupleStruct) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamDynamicTuple(a))
+        (await testContract.oneParamDynamicTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -253,14 +253,14 @@ export async function setupOneParamDynamicNestedTuple() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamDynamicNestedTuple"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.DynamicNestedTupleStruct) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamDynamicNestedTuple(a))
+        (await testContract.oneParamDynamicNestedTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -275,14 +275,14 @@ export async function setupOneParamDynamicNestedTuple() {
 export async function setupOneParamArrayOfStatic() {
   const { invoker, roles, testContract, scopeFunction, owner } =
     await baseSetup("oneParamArrayOfStatic");
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: number[]) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamArrayOfStatic(a))
+        (await testContract.oneParamArrayOfStatic.populateTransaction(a))
           .data as string,
         0
       );
@@ -299,14 +299,14 @@ export async function setupOneParamArrayOfStaticTuple() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamArrayOfStaticTuple"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.StaticTupleStruct[]) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamArrayOfStaticTuple(a))
+        (await testContract.oneParamArrayOfStaticTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -321,14 +321,14 @@ export async function setupOneParamArrayOfStaticTuple() {
 export async function setupOneParamArrayOfDynamicTuple() {
   const { invoker, roles, testContract, scopeFunction, owner } =
     await baseSetup("oneParamArrayOfDynamicTuple");
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: TestContract.DynamicTupleStruct[]) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamArrayOfDynamicTuple(a))
+        (await testContract.oneParamArrayOfDynamicTuple.populateTransaction(a))
           .data as string,
         0
       );
@@ -345,14 +345,14 @@ export async function setupOneParamUintWord() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamUintWord"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamUintWord(a))
+        (await testContract.oneParamUintWord.populateTransaction(a))
           .data as string,
         0
       );
@@ -368,14 +368,14 @@ export async function setupOneParamUintSmall() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamUintSmall"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamUintSmall(a))
+        (await testContract.oneParamUintSmall.populateTransaction(a))
           .data as string,
         0
       );
@@ -391,14 +391,14 @@ export async function setupOneParamIntWord() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamIntWord"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamIntWord(a))
+        (await testContract.oneParamIntWord.populateTransaction(a))
           .data as string,
         0
       );
@@ -414,14 +414,14 @@ export async function setupOneParamIntSmall() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamIntSmall"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: number) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamIntSmall(a))
+        (await testContract.oneParamIntSmall.populateTransaction(a))
           .data as string,
         0
       );
@@ -437,14 +437,14 @@ export async function setupOneParamBytesWord() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamBytesWord"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: string) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamBytesWord(a))
+        (await testContract.oneParamBytesWord.populateTransaction(a))
           .data as string,
         0
       );
@@ -460,14 +460,14 @@ export async function setupOneParamBytesSmall() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamBytesSmall"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: string) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamBytesSmall(a))
+        (await testContract.oneParamBytesSmall.populateTransaction(a))
           .data as string,
         0
       );
@@ -483,14 +483,14 @@ export async function setupOneParamBytes() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamBytes"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: string) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamBytes(a))
+        (await testContract.oneParamBytes.populateTransaction(a))
           .data as string,
         0
       );
@@ -506,14 +506,14 @@ export async function setupOneParamString() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamString"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: string) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamString(a))
+        (await testContract.oneParamString.populateTransaction(a))
           .data as string,
         0
       );
@@ -529,14 +529,14 @@ export async function setupOneParamAddress() {
   const { invoker, roles, testContract, scopeFunction } = await baseSetup(
     "oneParamAddress"
   );
-
+  const testContractAddress = await testContract.getAddress();
   async function invoke(a: string) {
     return roles
       .connect(invoker)
       .execTransactionFromModule(
-        testContract.address,
+        testContractAddress,
         0,
-        (await testContract.populateTransaction.oneParamAddress(a))
+        (await testContract.oneParamAddress.populateTransaction(a))
           .data as string,
         0
       );

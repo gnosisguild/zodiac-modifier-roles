@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
   BYTES32_ZERO,

@@ -2,8 +2,9 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumberish } from "ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder, BigNumberish } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
   Operator,
@@ -26,12 +27,12 @@ describe("Operator - CallWithinAllowance", async () => {
     const testContract = await TestContract.deploy();
 
     const [owner, invoker] = await hre.ethers.getSigners();
-
+    const avatarAddress = await avatar.getAddress();
     const roles = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     await roles.enableModule(invoker.address);
 
@@ -54,20 +55,17 @@ describe("Operator - CallWithinAllowance", async () => {
         .connect(owner)
         .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
-
+    const testContractAddress = await testContract.getAddress();
     await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
+    const SELECTOR = testContract.interface.getFunction("doNothing").selector;
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
     await roles.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      testContractAddress,
       SELECTOR,
       [
         {
@@ -90,9 +88,9 @@ describe("Operator - CallWithinAllowance", async () => {
       return roles
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          testContractAddress,
           0,
-          (await testContract.populateTransaction.doNothing()).data as string,
+          (await testContract.doNothing.populateTransaction()).data as string,
           0
         );
     }
@@ -204,11 +202,9 @@ describe("Operator - CallWithinAllowance", async () => {
     it("enforces different call allowances per variant", async () => {
       const { owner, invoker, roles, testContract, setAllowance } =
         await loadFixture(setup);
-
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("oneParamStatic")
-      );
-
+      const testContractAddress = await testContract.getAddress();
+      const SELECTOR =
+        testContract.interface.getFunction("oneParamStatic").selector;
       const allowanceKey1 =
         "0x1000000000000000000000000000000000000000000000000000000000000001";
       const allowanceKey2 =
@@ -217,7 +213,7 @@ describe("Operator - CallWithinAllowance", async () => {
       const value2 = 200;
       const valueOther = 9999;
 
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
       await setAllowance({
         key: allowanceKey1,
         balance: 0,
@@ -238,9 +234,9 @@ describe("Operator - CallWithinAllowance", async () => {
         return roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testContractAddress,
             0,
-            (await testContract.populateTransaction.oneParamStatic(p))
+            (await testContract.oneParamStatic.populateTransaction(p))
               .data as string,
             0
           );
@@ -248,7 +244,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY,
-        testContract.address,
+        testContractAddress,
         SELECTOR,
         [
           {

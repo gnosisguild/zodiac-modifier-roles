@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumber } from "ethers";
-
 import {
   BYTES32_ZERO,
   Operator,
@@ -39,7 +37,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x4600000000000000000000000000000000000000000000000000000000000000"
         )
       )
@@ -47,7 +45,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x4600ff0000000000000000000000000000000110000000000000000334400000"
         )
       )
@@ -55,7 +53,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x4500000000000000000000000000000000000000000000000000000000000000"
         )
       )
@@ -90,14 +88,14 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x0000000000000000000010302000000000000000000000000000000000000000"
         )
       )
     ).to.not.be.reverted;
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x000000000000000000001030200000000000000000000000000000ffffffffff"
         )
       )
@@ -105,7 +103,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x000000000000000000001030400000000000000000000000000000ffffffffff"
         )
       )
@@ -139,14 +137,14 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x00000000000000000000000000000000000000000000000000000000000abcd"
         )
       )
     ).to.not.be.reverted;
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x00000000ffffffff000000000000000000000000000000000000000000fabcd"
         )
       )
@@ -154,7 +152,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd"
         )
       )
@@ -189,7 +187,7 @@ describe("Operator - Bitmask", async () => {
 
     await expect(
       invoke(
-        BigNumber.from(
+        BigInt(
           "0x000000000000000000000000000000000000000000000000000000000000000"
         )
       )

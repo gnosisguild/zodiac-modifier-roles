@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumberish } from "ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder, BigNumberish } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic, setupTwoParamsStatic } from "./setup";
@@ -392,7 +393,7 @@ describe("Operator - WithinAllowance", async () => {
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 100,
-        period: interval,
+        period: BigInt(interval),
         refill: 0,
         timestamp: 1,
       });
@@ -402,13 +403,12 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.timestamp).to.equal(1);
 
       await expect(invoke(0)).to.not.be.reverted;
-      const now = await time.latest();
+      const now = BigInt(await time.latest());
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.timestamp.toNumber()).to.be.greaterThan(1);
-      expect(now - allowance.timestamp.toNumber()).to.be.lessThanOrEqual(
-        interval * 2
-      );
+      expect(allowance.timestamp).to.be.gt(1);
+      const timeDifference = now - allowance.timestamp;
+      expect(timeDifference).to.be.lte(interval * 2);
     });
     it("Does not updates timestamp if interval is zero", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(
@@ -481,7 +481,7 @@ describe("Operator - WithinAllowance", async () => {
       await expect(invoke(0)).to.not.be.reverted;
 
       allowance = await roles.allowances(allowanceKey);
-      expect(allowance.timestamp.toNumber()).to.be.greaterThan(timestamp);
+      expect(allowance.timestamp).to.be.greaterThan(timestamp);
     });
     it("Does not update timestamp from future timestamp", async () => {
       const { owner, roles, invoke, scopeFunction } = await loadFixture(

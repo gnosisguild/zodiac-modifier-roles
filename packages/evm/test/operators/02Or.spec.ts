@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { defaultAbiCoder } from "ethers/lib/utils";
 
 import {
   BYTES32_ZERO,
@@ -9,6 +8,9 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { setupOneParamStatic } from "./setup";
+import { AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Or", async () => {
   it("evaluates operator Or with a single child", async () => {

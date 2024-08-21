@@ -2,8 +2,9 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumberish } from "ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder, BigNumberish, parseEther } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
   Operator,
@@ -26,16 +27,18 @@ describe("Operator - EtherWithinAllowance", async () => {
     const testContract = await TestContract.deploy();
 
     const [owner, invoker] = await hre.ethers.getSigners();
+    const testAddress = await testContract.getAddress();
+    const avatarAddress = await avatar.getAddress();
     // fund avatar
     await invoker.sendTransaction({
-      to: avatar.address,
-      value: hre.ethers.utils.parseEther("1"),
+      to: avatarAddress,
+      value: parseEther("1"),
     });
     const roles = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     await roles.enableModule(invoker.address);
 
@@ -61,18 +64,18 @@ describe("Operator - EtherWithinAllowance", async () => {
 
     await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
 
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("receiveEthAndDoNothing")
-    );
+    const SELECTOR = testContract.interface.getFunction(
+      "receiveEthAndDoNothing"
+    ).selector;
 
     await roles.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      testAddress,
       SELECTOR,
       [
         {
@@ -95,9 +98,9 @@ describe("Operator - EtherWithinAllowance", async () => {
       return roles
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          testAddress,
           value,
-          (await testContract.populateTransaction.receiveEthAndDoNothing())
+          (await testContract.receiveEthAndDoNothing.populateTransaction())
             .data as string,
           0
         );
@@ -194,10 +197,9 @@ describe("Operator - EtherWithinAllowance", async () => {
     it("enforces different eth allowances per variant", async () => {
       const { owner, invoker, roles, testContract, setAllowance } =
         await loadFixture(setup);
-
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("oneParamStatic")
-      );
+      const testAddress = await testContract.getAddress();
+      const SELECTOR =
+        testContract.interface.getFunction("oneParamStatic").selector;
 
       const allowanceKey1 =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -227,7 +229,7 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY,
-        testContract.address,
+        testAddress,
         SELECTOR,
         [
           {
@@ -280,9 +282,9 @@ describe("Operator - EtherWithinAllowance", async () => {
         return roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testAddress,
             value,
-            (await testContract.populateTransaction.oneParamStatic(p))
+            (await testContract.oneParamStatic.populateTransaction(p))
               .data as string,
             0
           );
