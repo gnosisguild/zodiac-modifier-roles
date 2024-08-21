@@ -25,10 +25,11 @@ const FunctionPermissionItem: React.FC<
   abi,
   modified,
   condition,
-  ...rest
+  send,
+  delegatecall,
 }) => {
   const functionAbi = abi?.find(
-    (fragment) =>
+    (fragment: any) =>
       fragment.type === "function" && toFunctionSelector(fragment) === selector
   ) as AbiFunction | undefined
 
@@ -36,7 +37,9 @@ const FunctionPermissionItem: React.FC<
     <DiffBox
       diff={diff}
       modified={
-        modified && <FunctionPermissionItem {...modified} chainId={chainId} />
+        modified && (
+          <FunctionPermissionItem {...modified} chainId={chainId} abi={abi} />
+        )
       }
     >
       <div className={classes.functionContainer}>
@@ -46,14 +49,16 @@ const FunctionPermissionItem: React.FC<
             selector={selector}
             abi={functionAbi}
             condition={condition}
-            {...rest}
+            send={send}
+            delegatecall={delegatecall}
           />
         ) : (
           <RawFunctionPermissionItem
             targetAddress={targetAddress}
             selector={selector}
             condition={condition}
-            {...rest}
+            send={send}
+            delegatecall={delegatecall}
           />
         )}
         <div className={classes.verticalGuide} />
