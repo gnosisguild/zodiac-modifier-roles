@@ -3,10 +3,11 @@ import assert from "assert";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { Interface, defaultAbiCoder } from "ethers/lib/utils";
-
 import { Operator, ParameterType } from "../utils";
 
+import { AbiCoder, Interface } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 const YesRemoveOffset = true;
 
 describe("Decoder library", async () => {
@@ -27,7 +28,7 @@ describe("Decoder library", async () => {
     const { decoder, testEncoder } = await loadFixture(setup);
 
     const { data } =
-      await testEncoder.populateTransaction.dynamic32DynamicStatic(
+      await testEncoder.dynamic32DynamicStatic.populateTransaction(
         [],
         "Hello World!",
         123456789
@@ -76,7 +77,7 @@ describe("Decoder library", async () => {
   it("plucks Dynamic from Tuple", async () => {
     const { decoder, testEncoder } = await loadFixture(setup);
 
-    const { data } = await testEncoder.populateTransaction._dynamicTuple({
+    const { data } = await testEncoder._dynamicTuple.populateTransaction({
       dynamic: "0xabcd0011",
     });
 
@@ -112,7 +113,7 @@ describe("Decoder library", async () => {
   it("plucks Dynamic from Array", async () => {
     const { decoder, testEncoder } = await loadFixture(setup);
 
-    const { data } = await testEncoder.populateTransaction.dynamicArray([
+    const { data } = await testEncoder.dynamicArray.populateTransaction([
       "0xaabbccdd",
       "0x004466ff",
     ]);

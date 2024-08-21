@@ -4,11 +4,12 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BigNumber } from "ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
+
+import { AbiCoder } from "ethers";
 
 import { Operator, ParameterType } from "../utils";
 
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 const YesRemoveOffset = true;
 const DontRemoveOffset = false;
 
@@ -30,7 +31,7 @@ describe("Decoder library", async () => {
     it("plucks (dynamic) empty buffer from encoded caldata", async () => {
       const { testEncoder, decoder } = await loadFixture(setup);
 
-      const { data } = await testEncoder.populateTransaction.dynamic("0x");
+      const { data } = await testEncoder.dynamic.populateTransaction("0x");
       assert(data);
 
       const layout = {
@@ -46,8 +47,8 @@ describe("Decoder library", async () => {
       };
 
       const result = await decoder.inspect(data, layout);
-      expect(result.location).to.equal(BigNumber.from(0));
-      expect(result.size).to.equal(BigNumber.from((data.length - 2) / 2));
+      expect(result.location).to.equal(BigInt(0));
+      expect(result.size).to.equal(BigInt((data.length - 2) / 2));
 
       const parameter = result.children[0];
       expect(parameter.location).to.equal(36);
@@ -62,7 +63,7 @@ describe("Decoder library", async () => {
       // (address,bytes,uint32[])
 
       const { data } =
-        await testEncoder.populateTransaction.staticDynamicDynamic32(
+        await testEncoder.staticDynamicDynamic32.populateTransaction(
           AddressOne,
           "0xabcd",
           [10, 32, 55]
@@ -128,7 +129,7 @@ describe("Decoder library", async () => {
       // (bytes,bool,bytes2[])
 
       const { data } =
-        await testEncoder.populateTransaction.dynamicStaticDynamic32(
+        await testEncoder.dynamicStaticDynamic32.populateTransaction(
           "0x12ab45",
           false,
           ["0x1122", "0x3344", "0x5566"]
@@ -197,7 +198,7 @@ describe("Decoder library", async () => {
       // (bytes2[],string,uint32)
 
       const { data } =
-        await testEncoder.populateTransaction.dynamic32DynamicStatic(
+        await testEncoder.dynamic32DynamicStatic.populateTransaction(
           ["0xaabb", "0x1234", "0xff33"],
           "Hello World!",
           123456789
@@ -257,13 +258,13 @@ describe("Decoder library", async () => {
           result.children[2].location,
           result.children[2].size
         )
-      ).to.equal(BigNumber.from(123456789));
+      ).to.equal(BigInt(123456789));
     });
     it("plucks dynamicTuple from encoded calldata", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       // function dynamicTuple(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32))
-      const { data } = await testEncoder.populateTransaction._dynamicTuple({
+      const { data } = await testEncoder._dynamicTuple.populateTransaction({
         dynamic: "0xabcd",
       });
 
@@ -307,7 +308,7 @@ describe("Decoder library", async () => {
     it("plucks staticTuple (explicitly) from encoded calldata", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
-      const { data } = await testEncoder.populateTransaction.staticTuple(
+      const { data } = await testEncoder.staticTuple.populateTransaction(
         {
           a: 1999,
           b: AddressOne,
@@ -372,7 +373,7 @@ describe("Decoder library", async () => {
     it("plucks staticTuple (implicitly) from encoded calldata", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
-      const { data } = await testEncoder.populateTransaction.staticTuple(
+      const { data } = await testEncoder.staticTuple.populateTransaction(
         {
           a: 1999,
           b: AddressOne,
@@ -429,7 +430,7 @@ describe("Decoder library", async () => {
 
       // function dynamicTupleWithNestedStaticTuple(tuple(uint256 a, bytes b, tuple(uint256 a, address b) c))
       const { data } =
-        await testEncoder.populateTransaction.dynamicTupleWithNestedStaticTuple(
+        await testEncoder.dynamicTupleWithNestedStaticTuple.populateTransaction(
           {
             a: 2023,
             b: "0xbadfed",
@@ -513,7 +514,7 @@ describe("Decoder library", async () => {
       const value3 = "0xdeadbeef";
 
       const { data } =
-        await testEncoder.populateTransaction.dynamicTupleWithNestedDynamicTuple(
+        await testEncoder.dynamicTupleWithNestedDynamicTuple.populateTransaction(
           {
             a: value1,
             b: {
@@ -663,7 +664,7 @@ describe("Decoder library", async () => {
 
       // function dynamicTupleWithNestedArray(tuple(uint256 a, bytes b, tuple(uint256 a, address b)[] c))
       const { data } =
-        await testEncoder.populateTransaction.dynamicTupleWithNestedArray({
+        await testEncoder.dynamicTupleWithNestedArray.populateTransaction({
           a: 21000,
           b: dynamicValue,
           c: [{ a: 10, b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" }],
@@ -745,7 +746,7 @@ describe("Decoder library", async () => {
 
       // function arrayStaticTupleItems(tuple(uint256 a, address b)[])
       const { data } =
-        await testEncoder.populateTransaction.arrayStaticTupleItems([
+        await testEncoder.arrayStaticTupleItems.populateTransaction([
           {
             a: 95623,
             b: "0x00000000219ab540356cbb839cbe05303d7705fa",
@@ -846,7 +847,7 @@ describe("Decoder library", async () => {
 
       // function arrayDynamicTupleItems(tuple(bytes dynamic, uint256 _static, uint256[] dynamic32)[])
       const { data } =
-        await testEncoder.populateTransaction.arrayDynamicTupleItems([
+        await testEncoder.arrayDynamicTupleItems.populateTransaction([
           {
             dynamic: "0xbadfed",
             _static: 9998877,
@@ -967,12 +968,12 @@ describe("Decoder library", async () => {
       const number = 123456789;
       const address = "0x0000000000000000000000000000000000000001";
 
-      const { data: embedded } = await testEncoder.populateTransaction.simple(
+      const { data: embedded } = await testEncoder.simple.populateTransaction(
         number
       );
 
       const { data } =
-        await testEncoder.populateTransaction.staticDynamicDynamic32(
+        await testEncoder.staticDynamicDynamic32.populateTransaction(
           address,
           embedded as string,
           []
@@ -1028,13 +1029,13 @@ describe("Decoder library", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data: nestedData } =
-        await testEncoder.populateTransaction.dynamicTuple({
+        await testEncoder.dynamicTuple.populateTransaction({
           dynamic: "0x00",
           _static: 9922,
           dynamic32: [55, 66, 88],
         });
 
-      const { data } = await testEncoder.populateTransaction.dynamicTuple({
+      const { data } = await testEncoder.dynamicTuple.populateTransaction({
         dynamic: nestedData as string,
         _static: 0,
         dynamic32: [],
@@ -1141,13 +1142,13 @@ describe("Decoder library", async () => {
       const { decoder, testEncoder } = await loadFixture(setup);
 
       const { data: nestedData1 } =
-        await testEncoder.populateTransaction.dynamicStaticDynamic32(
+        await testEncoder.dynamicStaticDynamic32.populateTransaction(
           "0xaabbccdd",
           true,
           ["0xaabb", "0xf26b"]
         );
       const { data: nestedData2 } =
-        await testEncoder.populateTransaction.dynamicStaticDynamic32(
+        await testEncoder.dynamicStaticDynamic32.populateTransaction(
           "0x22334455",
           false,
           []
@@ -1156,7 +1157,7 @@ describe("Decoder library", async () => {
       assert(nestedData1);
       assert(nestedData2);
 
-      const { data } = await testEncoder.populateTransaction.dynamicArray([
+      const { data } = await testEncoder.dynamicArray.populateTransaction([
         nestedData1,
         nestedData2,
       ]);
