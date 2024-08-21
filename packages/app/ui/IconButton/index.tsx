@@ -1,5 +1,5 @@
 import cn from "classnames"
-import React from "react"
+import React, { AnchorHTMLAttributes } from "react"
 
 import classes from "./style.module.css"
 import Link from "next/link"
@@ -31,6 +31,21 @@ export const IconLinkButton: React.FC<
   }
 > = ({ className, danger, small, ...rest }) => (
   <Link
+    className={cn(classes.button, className, {
+      [classes.danger]: danger,
+      [classes.small]: small,
+    })}
+    {...rest}
+  />
+)
+
+export const IconAButton: React.FC<
+  AnchorHTMLAttributes<HTMLAnchorElement> & {
+    danger?: boolean
+    small?: boolean
+  }
+> = ({ className, danger, small, ...rest }) => (
+  <a
     className={cn(classes.button, className, {
       [classes.danger]: danger,
       [classes.small]: small,

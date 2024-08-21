@@ -1,7 +1,7 @@
 "use client"
 import { ReactNode, createContext, useContext, useEffect } from "react"
 import { RiLinkM } from "react-icons/ri"
-import { IconLinkButton } from "../IconButton"
+import { IconAButton } from "../IconButton"
 
 const AnchorContext = createContext<string>("")
 
@@ -44,13 +44,9 @@ const Anchor: React.FC<{
   }, [uniqueName])
 
   return (
-    <IconLinkButton
-      id={uniqueName}
-      href={"#" + uniqueName}
-      className={className}
-    >
+    <IconAButton id={uniqueName} href={"#" + uniqueName} className={className}>
       <RiLinkM />
-    </IconLinkButton>
+    </IconAButton>
   )
 }
 

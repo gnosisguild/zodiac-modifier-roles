@@ -73,7 +73,7 @@ describe("processAnnotations()", () => {
                 "explode": false,
                 "in": "query",
                 "name": "buy",
-                "required": true,
+                "required": false,
                 "schema": {
                   "deprecated": false,
                   "items": {
@@ -97,6 +97,22 @@ describe("processAnnotations()", () => {
                   },
                   "nullable": false,
                   "type": "array",
+                },
+                "style": "form",
+              },
+              {
+                "allowEmptyValue": false,
+                "allowReserved": false,
+                "explode": false,
+                "in": "query",
+                "name": "feeAmountBp",
+                "required": false,
+                "schema": {
+                  "deprecated": false,
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "nullable": false,
+                  "type": "integer",
                 },
                 "style": "form",
               },
