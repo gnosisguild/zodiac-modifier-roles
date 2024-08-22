@@ -8,6 +8,7 @@ import {
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
+import { parseEther } from "ethers";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -22,13 +23,13 @@ async function setup() {
   const avatar = await Avatar.deploy();
   const TestContract = await hre.ethers.getContractFactory("TestContract");
   const testContract = await TestContract.deploy();
-
+  const avatarAddress = await avatar.getAddress();
   const [owner, invoker] = await hre.ethers.getSigners();
   const modifier = await deployRolesMod(
     hre,
     owner.address,
-    avatar.address,
-    avatar.address
+    avatarAddress,
+    avatarAddress
   );
 
   await modifier.enableModule(invoker.address);
@@ -41,8 +42,8 @@ async function setup() {
 
   // fund avatar
   await invoker.sendTransaction({
-    to: avatar.address,
-    value: hre.ethers.utils.parseEther("10"),
+    to: avatarAddress,
+    value: parseEther("10"),
   });
 
   return {
@@ -62,21 +63,21 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
 
         await expect(
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               0
@@ -89,17 +90,17 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
           .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
@@ -108,21 +109,21 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Send);
 
         await expect(
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               0
@@ -135,17 +136,17 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Send);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Send);
 
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
@@ -154,17 +155,17 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
           .allowTarget(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             ExecutionOptions.DelegateCall
           );
 
@@ -172,7 +173,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               0
@@ -185,14 +186,14 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         await modifier
           .connect(owner)
           .allowTarget(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             ExecutionOptions.DelegateCall
           );
 
@@ -200,7 +201,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               "0x",
               Operation.Call
@@ -213,21 +214,21 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Both);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Both);
 
         await expect(
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               0
@@ -240,21 +241,21 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.Both);
+          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Both);
 
         await expect(
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               Operation.Call
@@ -270,25 +271,25 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
-        const value = hre.ethers.utils.parseEther("1");
-
-        const SELECTOR = testContract.interface.getSighash(
-          testContract.interface.getFunction("receiveEthAndDoNothing")
-        );
+        const SELECTOR = testContract.interface.getFunction(
+          "receiveEthAndDoNothing"
+        ).selector;
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             SELECTOR,
             ExecutionOptions.None
           );
@@ -297,7 +298,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               Operation.Call
@@ -310,18 +311,18 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             "0x00000000",
             ExecutionOptions.None
           );
@@ -329,7 +330,7 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
           .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
@@ -338,25 +339,25 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1.123");
 
-        const value = hre.ethers.utils.parseEther("1.123");
-
-        const SELECTOR = testContract.interface.getSighash(
-          testContract.interface.getFunction("receiveEthAndDoNothing")
-        );
+        const SELECTOR = testContract.interface.getFunction(
+          "receiveEthAndDoNothing"
+        ).selector;
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             SELECTOR,
             ExecutionOptions.Send
           );
@@ -365,7 +366,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               Operation.Call
@@ -378,17 +379,17 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1.123");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1.123");
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             "0x00000000",
             ExecutionOptions.Send
           );
@@ -396,7 +397,7 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
@@ -405,25 +406,25 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
-        const value = hre.ethers.utils.parseEther("1");
-
-        const SELECTOR = testContract.interface.getSighash(
-          testContract.interface.getFunction("receiveEthAndDoNothing")
-        );
+        const SELECTOR = testContract.interface.getFunction(
+          "receiveEthAndDoNothing"
+        ).selector;
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             SELECTOR,
             ExecutionOptions.DelegateCall
           );
@@ -432,7 +433,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               Operation.Call
@@ -445,18 +446,18 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1");
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             "0x00000000",
             ExecutionOptions.DelegateCall
           );
@@ -464,7 +465,7 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
           .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
@@ -473,25 +474,25 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1.123");
 
-        const value = hre.ethers.utils.parseEther("1.123");
-
-        const SELECTOR = testContract.interface.getSighash(
-          testContract.interface.getFunction("receiveEthAndDoNothing")
-        );
+        const SELECTOR = testContract.interface.getFunction(
+          "receiveEthAndDoNothing"
+        ).selector;
 
         const { data } =
-          await testContract.populateTransaction.receiveEthAndDoNothing();
+          await testContract.receiveEthAndDoNothing.populateTransaction();
 
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             SELECTOR,
             ExecutionOptions.Both
           );
@@ -500,7 +501,7 @@ describe("ExecutionOptions", async () => {
           modifier
             .connect(invoker)
             .execTransactionFromModule(
-              testContract.address,
+              testContractAddress,
               value,
               data as string,
               Operation.Call
@@ -513,17 +514,17 @@ describe("ExecutionOptions", async () => {
         const { modifier, testContract, owner, invoker } = await loadFixture(
           setup
         );
-
-        const value = hre.ethers.utils.parseEther("1.123");
+        const testContractAddress = await testContract.getAddress();
+        const value = parseEther("1.123");
         await modifier
           .connect(owner)
-          .scopeTarget(ROLE_KEY, testContract.address);
+          .scopeTarget(ROLE_KEY, testContractAddress);
 
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
-            testContract.address,
+            testContractAddress,
             "0x00000000",
             ExecutionOptions.Both
           );
@@ -531,7 +532,7 @@ describe("ExecutionOptions", async () => {
         await expect(
           modifier
             .connect(invoker)
-            .execTransactionFromModule(testContract.address, value, "0x", 0)
+            .execTransactionFromModule(testContractAddress, value, "0x", 0)
         )
           .to.be.emit(testContract, "ReceiveFallback")
           .withArgs(value);
@@ -544,14 +545,14 @@ describe("ExecutionOptions", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
       );
-
-      const { data } = await testContract.populateTransaction.emitTheSender();
+      const testContractAddress = await testContract.getAddress();
+      const { data } = await testContract.emitTheSender.populateTransaction();
 
       await modifier
         .connect(owner)
         .allowTarget(
           ROLE_KEY,
-          testContract.address,
+          testContractAddress,
           ExecutionOptions.DelegateCall
         );
 
@@ -559,7 +560,7 @@ describe("ExecutionOptions", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testContractAddress,
             0,
             data as string,
             Operation.DelegateCall
@@ -570,18 +571,18 @@ describe("ExecutionOptions", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
       );
-
-      const { data } = await testContract.populateTransaction.emitTheSender();
+      const testContractAddress = await testContract.getAddress();
+      const { data } = await testContract.emitTheSender.populateTransaction();
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testContractAddress,
             0,
             data as string,
             Operation.DelegateCall
@@ -594,20 +595,19 @@ describe("ExecutionOptions", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
       );
+      const testContractAddress = await testContract.getAddress();
+      const SELECTOR =
+        testContract.interface.getFunction("emitTheSender").selector;
 
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("emitTheSender")
-      );
+      const { data } = await testContract.emitTheSender.populateTransaction();
 
-      const { data } = await testContract.populateTransaction.emitTheSender();
-
-      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
       await modifier
         .connect(owner)
         .allowFunction(
           ROLE_KEY,
-          testContract.address,
+          testContractAddress,
           SELECTOR,
           ExecutionOptions.Both
         );
@@ -616,7 +616,7 @@ describe("ExecutionOptions", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testContractAddress,
             0,
             data as string,
             Operation.DelegateCall
@@ -627,20 +627,19 @@ describe("ExecutionOptions", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
         setup
       );
+      const testContractAddress = await testContract.getAddress();
+      const SELECTOR =
+        testContract.interface.getFunction("emitTheSender").selector;
 
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("emitTheSender")
-      );
+      const { data } = await testContract.emitTheSender.populateTransaction();
 
-      const { data } = await testContract.populateTransaction.emitTheSender();
-
-      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
       await modifier
         .connect(owner)
         .allowFunction(
           ROLE_KEY,
-          testContract.address,
+          testContractAddress,
           SELECTOR,
           ExecutionOptions.None
         );
@@ -649,7 +648,7 @@ describe("ExecutionOptions", async () => {
         modifier
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            testContractAddress,
             0,
             data as string,
             Operation.DelegateCall

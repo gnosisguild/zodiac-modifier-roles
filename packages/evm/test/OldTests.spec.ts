@@ -11,7 +11,9 @@ import {
   BYTES32_ZERO,
   encodeMultisendPayload,
 } from "./utils";
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -24,12 +26,12 @@ describe("OldTests", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-
+    const avatarAddress = await avatar.getAddress();
     const modifier = await deployRolesMod(
       hre,
-      avatar.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress,
+      avatarAddress
     );
 
     return { avatar, testContract, modifier };
@@ -40,13 +42,13 @@ describe("OldTests", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-
+    const avatarAddress = await avatar.getAddress();
     const [owner, invoker] = await hre.ethers.getSigners();
     const modifier = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
 
     await modifier.enableModule(invoker.address);
@@ -65,48 +67,36 @@ describe("OldTests", async () => {
 
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
-
+    const modifierAddress = await modifier.getAddress();
     const MultiSendUnwrapper = await hre.ethers.getContractFactory(
       "MultiSendUnwrapper"
     );
     const adapter = await MultiSendUnwrapper.deploy();
-
+    const testContractAddress = await testContract.getAddress();
     await avatar.exec(
-      modifier.address,
+      modifierAddress,
       0,
       (
-        await modifier.populateTransaction.setTransactionUnwrapper(
-          multisend.address,
+        await modifier.setTransactionUnwrapper.populateTransaction(
+          await multisend.getAddress(),
           "0x8d80ff0a",
-          adapter.address
+          await adapter.getAddress()
         )
       ).data as string,
       0
     );
 
     const [user1] = await hre.ethers.getSigners();
-    const encodedParam_1 = ethers.utils.defaultAbiCoder.encode(
-      ["address"],
-      [user1.address]
-    );
-    const encodedParam_2 = ethers.utils.defaultAbiCoder.encode(
-      ["uint256"],
-      [99]
-    );
+    const encodedParam_1 = defaultAbiCoder.encode(["address"], [user1.address]);
+    const encodedParam_2 = defaultAbiCoder.encode(["uint256"], [99]);
     const encodedParam_3 = defaultAbiCoder.encode(
       ["string"],
       ["This is a dynamic array"]
     );
-    const encodedParam_4 = ethers.utils.defaultAbiCoder.encode(
-      ["uint256"],
-      [4]
-    );
+    const encodedParam_4 = defaultAbiCoder.encode(["uint256"], [4]);
     const encodedParam_5 = defaultAbiCoder.encode(["string"], ["Test"]);
-    const encodedParam_6 = ethers.utils.defaultAbiCoder.encode(
-      ["bool"],
-      [true]
-    );
-    const encodedParam_7 = ethers.utils.defaultAbiCoder.encode(["uint8"], [3]);
+    const encodedParam_6 = defaultAbiCoder.encode(["bool"], [true]);
+    const encodedParam_7 = defaultAbiCoder.encode(["uint8"], [3]);
     const encodedParam_8 = defaultAbiCoder.encode(["string"], ["weeeeeeee"]);
     const encodedParam_9 = defaultAbiCoder.encode(
       ["string"],
@@ -115,18 +105,18 @@ describe("OldTests", async () => {
       ]
     );
     const tx_1 = {
-      to: testContract.address,
+      to: testContractAddress,
       value: 0,
-      data: (await testContract.populateTransaction.mint(user1.address, 99))
+      data: (await testContract.mint.populateTransaction(user1.address, 99))
         .data as string,
       operation: 0,
     };
 
     const tx_3 = {
-      to: testContract.address,
+      to: testContractAddress,
       value: 0,
       data: (
-        await testContract.populateTransaction.testDynamic(
+        await testContract.testDynamic.populateTransaction(
           "This is a dynamic array",
           4,
           "Test",
@@ -218,11 +208,11 @@ describe("OldTests", async () => {
 
       await modifier.assignRoles(invoker.address, [ROLE_KEY], [true]);
       await modifier.setDefaultRole(invoker.address, ROLE_KEY);
-
+      const testContractAddress = await testContract.getAddress();
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContract.address, 0, "0xab", 0)
+          .execTransactionFromModule(testContractAddress, 0, "0xab", 0)
       ).to.be.revertedWithCustomError(modifier, "FunctionSignatureTooShort");
     });
 
@@ -232,19 +222,19 @@ describe("OldTests", async () => {
       );
 
       const [user1] = await hre.ethers.getSigners();
-
+      const testContractAddress = await testContract.getAddress();
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          testContractAddress,
           0,
           mint.data as string,
           0
@@ -257,27 +247,38 @@ describe("OldTests", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const testContractAddress = await testContract.getAddress();
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
+      const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        testContractAddress,
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        allowTargetAddress.data || "",
+        0
+      );
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
@@ -301,35 +302,45 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
+      const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        allowTargetAddress.data || "",
+        0
+      );
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
 
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           mint.data || "",
           0
@@ -341,31 +352,39 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        functionScoped.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -388,16 +407,21 @@ describe("OldTests", async () => {
         ],
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         98
       );
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           mint.data || "",
           0
@@ -412,31 +436,39 @@ describe("OldTests", async () => {
 
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        functionScoped.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -459,16 +491,21 @@ describe("OldTests", async () => {
         ],
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           mint.data || "",
           0
@@ -480,38 +517,51 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
 
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("testDynamic")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        functionScoped.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("testDynamic").selector,
         conditionTree,
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const dynamic = await testContract.populateTransaction.testDynamic(
+      const dynamic = await testContract.testDynamic.populateTransaction(
         "This is a dynamic array that is not allowed",
         4,
         "Test",
@@ -523,7 +573,7 @@ describe("OldTests", async () => {
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           dynamic.data || "",
           0
@@ -537,37 +587,52 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
 
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        functionScoped.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
         ExecutionOptions.None
       );
 
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const dynamic = await testContract.populateTransaction.testDynamic(
+      const dynamic = await testContract.testDynamic.populateTransaction(
         "This is a dynamic array",
         4,
         "Test",
@@ -579,7 +644,7 @@ describe("OldTests", async () => {
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           dynamic.data || "",
           0
@@ -601,31 +666,39 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const scopeTarget = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        scopeTarget.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -648,31 +721,41 @@ describe("OldTests", async () => {
         ],
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
+      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped_2.data || "",
+        0
+      );
 
       const tx_bad = {
-        to: testContract.address,
+        to: await testContract.getAddress(),
         value: 0,
-        data: (await testContract.populateTransaction.mint(user1.address, 98))
+        data: (await testContract.mint.populateTransaction(user1.address, 98))
           .data as string,
         operation: 0,
       };
 
       await expect(
         modifier.execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           (
-            await multisend.populateTransaction.multiSend(
+            await multisend.multiSend.populateTransaction(
               encodeMultisendPayload([tx_1, tx_1, tx_3, tx_bad, tx_1, tx_3])
             )
           ).data as string,
@@ -695,31 +778,39 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const functionScoped = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, functionScoped.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        functionScoped.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -743,10 +834,15 @@ describe("OldTests", async () => {
         ExecutionOptions.None
       );
 
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
       let multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([tx_1])
         )
       ).data as string;
@@ -757,7 +853,7 @@ describe("OldTests", async () => {
 
       await expect(
         modifier.execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCalldata,
           1
@@ -779,31 +875,39 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
-
-      const scopeTarget = await modifier.populateTransaction.scopeTarget(
-        ROLE_KEY1,
-        testContract.address
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress()
+      );
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        scopeTarget.data || "",
+        0
+      );
+
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
+        ROLE_KEY1,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -826,26 +930,36 @@ describe("OldTests", async () => {
         ],
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
+      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped_2.data || "",
+        0
+      );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
         )
       ).data as string;
 
       await expect(
         modifier.execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCalldata,
           1
@@ -858,21 +972,26 @@ describe("OldTests", async () => {
     it("reverts if called from module not assigned any role", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
+      const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        allowTargetAddress.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
 
       await expect(
         modifier.execTransactionFromModuleReturnData(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           mint.data || "",
           0
@@ -885,27 +1004,37 @@ describe("OldTests", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
+      const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        allowTargetAddress.data || "",
+        0
+      );
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
@@ -929,35 +1058,45 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const allowTargetAddress = await modifier.populateTransaction.allowTarget(
+      const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, allowTargetAddress.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        allowTargetAddress.data || "",
+        0
+      );
 
-      const defaultRole = await modifier.populateTransaction.setDefaultRole(
+      const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
         ROLE_KEY1
       );
 
-      await avatar.exec(modifier.address, 0, defaultRole.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        defaultRole.data || "",
+        0
+      );
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
 
       await expect(
         modifier.execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
           mint.data || "",
           0
@@ -974,7 +1113,7 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
       const fnThatReverts =
-        await testContract.populateTransaction.fnThatReverts();
+        await testContract.fnThatReverts.populateTransaction();
 
       await modifier
         .connect(owner)
@@ -982,13 +1121,17 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionWithRole(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             fnThatReverts.data as string,
             0,
@@ -1004,7 +1147,7 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
       const fnThatReverts =
-        await testContract.populateTransaction.fnThatReverts();
+        await testContract.fnThatReverts.populateTransaction();
 
       await modifier
         .connect(owner)
@@ -1012,13 +1155,17 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionWithRole(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             fnThatReverts.data as string,
             0,
@@ -1038,7 +1185,7 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
 
-      const mint = await testContract.populateTransaction.mint(
+      const mint = await testContract.mint.populateTransaction(
         user1.address,
         99
       );
@@ -1047,7 +1194,7 @@ describe("OldTests", async () => {
         modifier
           .connect(invoker)
           .execTransactionWithRoleReturnData(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             mint.data as string,
             0,
@@ -1064,7 +1211,7 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
       const fnThatReverts =
-        await testContract.populateTransaction.fnThatReverts();
+        await testContract.fnThatReverts.populateTransaction();
 
       await modifier
         .connect(owner)
@@ -1072,13 +1219,17 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionWithRoleReturnData(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             fnThatReverts.data as string,
             0,
@@ -1095,7 +1246,7 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
       const fnThatReverts =
-        await testContract.populateTransaction.fnThatReverts();
+        await testContract.fnThatReverts.populateTransaction();
 
       await modifier
         .connect(owner)
@@ -1103,13 +1254,17 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       await expect(
         modifier
           .connect(invoker)
           .execTransactionWithRoleReturnData(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             fnThatReverts.data as string,
             0,
@@ -1135,25 +1290,28 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
 
-      const assign = await modifier.populateTransaction.assignRoles(
+      const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY],
         [true]
       );
-      await avatar.exec(modifier.address, 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
-      const scopeTarget = await modifier.populateTransaction.scopeTarget(
+      const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY,
-        testContract.address
+        await testContract.getAddress()
       );
-      await avatar.exec(modifier.address, 0, scopeTarget.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        scopeTarget.data || "",
+        0
+      );
 
-      const paramScoped = await modifier.populateTransaction.scopeFunction(
+      const paramScoped = await modifier.scopeFunction.populateTransaction(
         ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("mint")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("mint").selector,
         [
           {
             parent: 0,
@@ -1176,27 +1334,37 @@ describe("OldTests", async () => {
         ],
         ExecutionOptions.None
       );
-      await avatar.exec(modifier.address, 0, paramScoped.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped.data || "",
+        0
+      );
 
-      const paramScoped_2 = await modifier.populateTransaction.scopeFunction(
+      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
         ROLE_KEY,
-        testContract.address,
+        await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
         ExecutionOptions.None
       );
 
-      await avatar.exec(modifier.address, 0, paramScoped_2.data || "", 0);
+      await avatar.exec(
+        await modifier.getAddress(),
+        0,
+        paramScoped_2.data || "",
+        0
+      );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
         )
       ).data as string;
 
       await expect(
         modifier.execTransactionWithRoleReturnData(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCalldata,
           1,

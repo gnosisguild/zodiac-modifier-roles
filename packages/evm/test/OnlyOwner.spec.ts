@@ -11,12 +11,12 @@ async function setup() {
   const avatar = await Avatar.deploy();
 
   const [owner, johnDoe] = await hre.ethers.getSigners();
-
+  const avatarAddress = await avatar.getAddress();
   const modifier = await deployRolesMod(
     hre,
     owner.address,
-    avatar.address,
-    avatar.address
+    avatarAddress,
+    avatarAddress
   );
 
   return {

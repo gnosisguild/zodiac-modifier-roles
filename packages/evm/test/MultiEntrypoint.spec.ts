@@ -30,12 +30,12 @@ async function setup() {
   const testContract = await TestContract.deploy();
 
   const [owner, invoker] = await hre.ethers.getSigners();
-
+  const avatarAddress = await avatar.getAddress();
   const roles = await deployRolesMod(
     hre,
     owner.address,
-    avatar.address,
-    avatar.address
+    avatarAddress,
+    avatarAddress
   );
 
   const MultiSend = await hre.ethers.getContractFactory("MultiSend");
@@ -48,37 +48,42 @@ async function setup() {
 
   await roles
     .connect(owner)
-    .setTransactionUnwrapper(multisend.address, "0x8d80ff0a", adapter.address);
+    .setTransactionUnwrapper(
+      await multisend.getAddress(),
+      "0x8d80ff0a",
+      await adapter.getAddress()
+    );
 
   await roles.enableModule(invoker.address);
 
   await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
   await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
+  const testContractAddress = await testContract.getAddress();
   const multisendCallData = (
-    await multisend.populateTransaction.multiSend(
+    await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
-          to: testContract.address,
+          to: testContractAddress,
           value: 0,
           data: (
-            await testContract.populateTransaction.doNothing()
+            await testContract.doNothing.populateTransaction()
           ).data as string,
           operation: Operation.Call,
         },
         {
-          to: testContract.address,
+          to: testContractAddress,
           value: 0,
           data: (
-            await testContract.populateTransaction.doEvenLess()
+            await testContract.doEvenLess.populateTransaction()
           ).data as string,
           operation: Operation.Call,
         },
         {
-          to: testContract.address,
+          to: testContractAddress,
           value: 0,
           data: (
-            await testContract.populateTransaction.setAStorageNumber(
+            await testContract.setAStorageNumber.populateTransaction(
               NEXT_STORAGE_VALUE
             )
           ).data as string,
@@ -103,13 +108,13 @@ describe("Multi Entrypoint", async () => {
   it("reverts immediately if unwrapper reverts", async () => {
     const { invoker, roles, multisend } = await loadFixture(setup);
 
-    const { data } = await multisend.populateTransaction.multiSend("0x");
+    const { data } = await multisend.multiSend.populateTransaction("0x");
 
     await expect(
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           data as string,
           Operation.DelegateCall
@@ -126,18 +131,16 @@ describe("Multi Entrypoint", async () => {
       testContract,
       multisendCallData,
     } = await loadFixture(setup);
+    const testContractAddress = await testContract.getAddress();
+    const selector = testContract.interface.getFunction("doNothing").selector;
 
-    const selector = testContract.interface.getSighash(
-      testContract.interface.getFunction("doNothing")
-    );
-
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCallData,
           Operation.DelegateCall
@@ -160,17 +163,15 @@ describe("Multi Entrypoint", async () => {
       testContract,
       multisendCallData,
     } = await loadFixture(setup);
-
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    const testContractAddress = await testContract.getAddress();
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
     await roles
       .connect(owner)
       .allowFunction(
         ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("doNothing")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("doNothing").selector,
         ExecutionOptions.None
       );
 
@@ -178,23 +179,20 @@ describe("Multi Entrypoint", async () => {
       .connect(owner)
       .allowFunction(
         ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("doEvenLess")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("doEvenLess").selector,
         ExecutionOptions.None
       );
 
-    const selector = testContract.interface.getSighash(
-      testContract.interface.getFunction("setAStorageNumber")
-    );
+    const selector =
+      testContract.interface.getFunction("setAStorageNumber").selector;
 
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCallData,
           Operation.DelegateCall
@@ -211,28 +209,25 @@ describe("Multi Entrypoint", async () => {
   it("succeeds for one transaction", async () => {
     const { owner, invoker, roles, multisend, testContract } =
       await loadFixture(setup);
+    const testContractAddress = await testContract.getAddress();
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles.connect(owner).allowFunction(
+      ROLE_KEY,
+      testContractAddress,
 
-    await roles
-      .connect(owner)
-      .allowFunction(
-        ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("setAStorageNumber")
-        ),
-        ExecutionOptions.None
-      );
+      testContract.interface.getFunction("setAStorageNumber").selector,
+      ExecutionOptions.None
+    );
 
     const multisendCallData = (
-      await multisend.populateTransaction.multiSend(
+      await multisend.multiSend.populateTransaction(
         encodeMultisendPayload([
           {
-            to: testContract.address,
+            to: testContractAddress,
             value: 0,
             data: (
-              await testContract.populateTransaction.setAStorageNumber(
+              await testContract.setAStorageNumber.populateTransaction(
                 NEXT_STORAGE_VALUE
               )
             ).data as string,
@@ -247,7 +242,7 @@ describe("Multi Entrypoint", async () => {
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCallData,
           Operation.DelegateCall
@@ -259,7 +254,7 @@ describe("Multi Entrypoint", async () => {
     await roles
       .connect(owner)
       .setTransactionUnwrapper(
-        multisend.address,
+        await multisend.getAddress(),
         "0x8d80ff0a",
         "0x0000000000000000000000000000000000000000"
       );
@@ -267,7 +262,7 @@ describe("Multi Entrypoint", async () => {
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCallData,
           Operation.DelegateCall
@@ -286,17 +281,15 @@ describe("Multi Entrypoint", async () => {
       testContract,
       multisendCallData,
     } = await loadFixture(setup);
-
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    const testContractAddress = await testContract.getAddress();
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
     await roles
       .connect(owner)
       .allowFunction(
         ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("doNothing")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("doNothing").selector,
         ExecutionOptions.None
       );
 
@@ -304,30 +297,25 @@ describe("Multi Entrypoint", async () => {
       .connect(owner)
       .allowFunction(
         ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("doEvenLess")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("doEvenLess").selector,
         ExecutionOptions.None
       );
 
-    await roles
-      .connect(owner)
-      .allowFunction(
-        ROLE_KEY,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("setAStorageNumber")
-        ),
-        ExecutionOptions.None
-      );
+    await roles.connect(owner).allowFunction(
+      ROLE_KEY,
+      testContractAddress,
+
+      testContract.interface.getFunction("setAStorageNumber").selector,
+      ExecutionOptions.None
+    );
 
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          multisend.address,
+          await multisend.getAddress(),
           0,
           multisendCallData,
           Operation.DelegateCall

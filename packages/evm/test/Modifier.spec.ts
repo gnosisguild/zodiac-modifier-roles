@@ -14,11 +14,12 @@ describe("Modifier", async () => {
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
+    const avatarAddress = await avatar.getAddress();
     const roles = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     return { owner, invoker, avatar, roles, testContract };
   }
