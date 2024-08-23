@@ -1,16 +1,23 @@
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
-
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
+import "solidity-coverage";
 
-import "./tasks/deploy-adapters";
+import "./tasks/extract-mastercopy";
+import "./tasks/reconstruct-mastercopy";
+import "./tasks/deploy-mastercopies";
 import "./tasks/deploy-mastercopy";
-import "./tasks/deploy-proxy";
-import "./tasks/deploy-standalone";
+import "./tasks/verify-mastercopies";
+import "./tasks/verify-mastercopy";
+
+// import "./tasks/deploy-adapters";
+// import "./tasks/deploy-proxy";
+// import "./tasks/deploy-standalone";
 
 // Load environment variables.
 dotenv.config();

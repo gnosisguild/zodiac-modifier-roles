@@ -1,84 +1,64 @@
-import { defaultAbiCoder } from "ethers/lib/utils";
-import { task } from "hardhat/config";
-import { deployViaFactory } from "./EIP2470";
-import ethProvider from "eth-provider";
-import { Web3Provider } from "@ethersproject/providers";
+import { task, types } from "hardhat/config";
 
-const ZeroHash =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
-const AddressOne = "0x0000000000000000000000000000000000000001";
+import {
+  EIP1193Provider,
+  deployMastercopy,
+  readMastercopy,
+} from "@gnosis-guild/zodiac-core";
+import { createEIP1193 } from "./createEIP1193";
 
-const frame = ethProvider("frame");
+task(
+  "deploy:mastercopy",
+  "For every version entry on the artifacts file, deploys a mastercopy into the current network"
+)
+  .addOptionalParam(
+    "contractVersion",
+    "The specific version of the contract to deploy",
+    "latest", // Default value
+    types.string
+  )
+  .setAction(async ({ contractVersion }, hre) => {
+    const [signer] = await hre.ethers.getSigners();
+    const provider = createEIP1193(hre.network.provider, signer);
 
-task("deploy:mastercopy", "Deploys and verifies Roles mastercopy").setAction(
-  async (_, hre) => {
-    const chainId = hre.network.config.chainId;
-    if (!chainId) throw new Error("chainId not set");
-    frame.setChain(chainId);
-    const provider = new Web3Provider(frame as any, chainId);
-    const signer = await provider.getSigner();
+    // Deploy the contracts based on the provided version
+    await deployLatestMastercopyFromDisk(provider, contractVersion);
+  });
 
-    const salt = ZeroHash;
+async function deployLatestMastercopyFromDisk(
+  provider: EIP1193Provider,
+  version?: string
+) {
+  const CONTRACTS = ["Packer", "Integrity", "Roles"];
 
-    const Packer = await hre.ethers.getContractFactory("Packer");
-    const packerLibraryAddress = await deployViaFactory(
-      Packer.bytecode,
-      salt,
-      signer,
-      "Packer",
-      2_000_000
-    );
+  for (const contract of CONTRACTS) {
+    try {
+      // Read the artifact for the specific contract and version
+      const artifact = readMastercopy({
+        contractName: contract,
+        contractVersion: version === "latest" ? undefined : version,
+      });
 
-    const Integrity = await hre.ethers.getContractFactory("Integrity");
-    const integrityLibraryAddress = await deployViaFactory(
-      Integrity.bytecode,
-      salt,
-      signer,
-      "Integrity",
-      2_000_000
-    );
+      const { address, noop } = await deployMastercopy({
+        ...artifact,
+        provider,
+      });
 
-    const Roles = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Integrity: integrityLibraryAddress,
-        Packer: packerLibraryAddress,
-      },
-    });
-
-    const args = defaultAbiCoder.encode(
-      ["address", "address", "address"],
-      [AddressOne, AddressOne, AddressOne]
-    );
-
-    const rolesAddress = await deployViaFactory(
-      `${Roles.bytecode}${args.substring(2)}`,
-      salt,
-      signer,
-      "Roles Mastercopy",
-      6_000_000
-    );
-
-    if (hre.network.name == "hardhat") {
-      return;
+      if (noop) {
+        console.log(
+          `🔄 ${artifact.contractName}@${artifact.contractVersion}: Already deployed at ${address}`
+        );
+      } else {
+        console.log(
+          `🚀 ${artifact.contractName}@${artifact.contractVersion}: Successfully deployed at ${address}`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `⏭️ Skipping deployment of ${contract}@${version}: Version not found.`
+      );
+      // Skip the current contract if there's an error and continue with the next one
+      continue;
     }
-
-    console.log("Waiting 1 minute before etherscan verification start...");
-    // Etherscan needs some time to process before trying to verify.
-    await new Promise((resolve) => setTimeout(resolve, 60000));
-
-    await hre.run("verify:verify", {
-      address: packerLibraryAddress,
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: integrityLibraryAddress,
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: rolesAddress,
-      constructorArguments: [AddressOne, AddressOne, AddressOne],
-    });
   }
-);
+}
