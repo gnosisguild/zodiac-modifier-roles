@@ -10,7 +10,6 @@
     "clean": "hardhat clean",
     "test": "hardhat test",
     "extract:mastercopy": "yarn run build && yarn hardhat extract:mastercopy",
-    "reconstruct:mastercopy": "yarn run build && yarn hardhat reconstruct:mastercopy --network",
     "deploy:mastercopies": "yarn hardhat deploy:mastercopies --network",
     "deploy:mastercopy": "hardhat deploy:mastercopy --network",
     "deploy:standalone": "hardhat deploy:standalone --network",
