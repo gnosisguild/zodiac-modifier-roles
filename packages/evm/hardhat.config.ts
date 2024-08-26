@@ -9,7 +9,6 @@ import type { HttpNetworkUserConfig } from "hardhat/types";
 import "solidity-coverage";
 
 import "./tasks/extract-mastercopy";
-import "./tasks/reconstruct-mastercopy";
 import "./tasks/deploy-mastercopies";
 import "./tasks/deploy-mastercopy";
 import "./tasks/verify-mastercopies";
