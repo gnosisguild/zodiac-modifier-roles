@@ -10,13 +10,13 @@
     "pre-commit": "yarn workspaces foreach run pre-commit",
     "test": "yarn workspaces foreach run test",
     "build": "yarn workspaces foreach run build",
-    "build:evm": "yarn workspace @gnosis.pm/zodiac-modifier-roles run build",
+    "build:evm": "yarn workspace @gnosis-guild/zodiac-core-modifier-roles run build",
     "build:subgraph": "yarn workspace zodiac-roles-subgraph run build",
     "build:deployments": "yarn workspace zodiac-roles-deployments run build",
     "build:sdk": "yarn workspace zodiac-roles-sdk run build",
     "build:app": "yarn workspace zodiac-roles-app run build",
     "build:docs": "yarn workspace zodiac-roles-docs run build",
-    "coverage": "yarn workspace @gnosis.pm/zodiac-modifier-roles run coverage",
+    "coverage": "yarn workspace @gnosis-guild/zodiac-core-modifier-roles run coverage",
     "dev": "yarn build:deployments && yarn build:sdk && yarn workspace zodiac-roles-app run dev"
   },
   "repository": {
