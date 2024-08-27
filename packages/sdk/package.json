@@ -49,23 +49,23 @@
     "zodiac-roles-deployments": "workspace:^"
   },
   "peerDependencies": {
-    "@dethcrypto/eth-sdk-client": "^0.1.6"
+    "@gnosis-guild/eth-sdk-client": "^0.1.6"
   },
   "peerDependenciesMeta": {
-    "@dethcrypto/eth-sdk-client": {
+    "@gnosis-guild/eth-sdk-client": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@dethcrypto/eth-sdk": "^0.3.4",
-    "@dethcrypto/eth-sdk-client": "^0.1.6",
-    "@gnosis.pm/zodiac": "^3.5.2",
+    "@gnosis-guild/eth-sdk": "^0.3.5",
+    "@gnosis-guild/eth-sdk-client": "^0.1.6",
+    "@gnosis-guild/typechain-ethers-v6": "^0.5.3",
+    "@gnosis-guild/zodiac-core": "^1.1.0",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "@typechain/ethers-v5": "^10.2.1",
     "@typechain/hardhat": "^6.1.6",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^10.0.4",

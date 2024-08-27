@@ -1,4 +1,4 @@
-import { defineConfig } from "@dethcrypto/eth-sdk"
+import { defineConfig } from "@gnosis-guild/eth-sdk"
 
 import { ethSdkConfig } from "../src/ethSdk"
 

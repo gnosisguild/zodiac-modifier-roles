@@ -466,41 +466,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dethcrypto/eth-sdk-client@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "@dethcrypto/eth-sdk-client@npm:0.1.6"
-  checksum: f7f2084ac04ad0d57d38ae6253de660ea53043032d684bd330dd3652d9303069c519b866c6be8722be15096a1c8bc21f826e7f527ab38fc452f09a1463fed6f3
-  languageName: node
-  linkType: hard
-
-"@dethcrypto/eth-sdk@npm:^0.3.4":
-  version: 0.3.4
-  resolution: "@dethcrypto/eth-sdk@npm:0.3.4"
-  dependencies:
-    "@typechain/ethers-v5": ^10.0.0
-    chalk: ^4.1.2
-    commander: ^8.3.0
-    debug: ^4.3.2
-    fs-extra: ^10.0.0
-    glob: 7.1.7
-    got: ^11.8.2
-    lodash: ^4.17.21
-    mkdirp: ^1.0.4
-    ora: ^5.4.1
-    tmp-promise: ^3.0.3
-    typechain: 8.0.0
-    zod: ^3.11.5
-  peerDependencies:
-    "@ethersproject/abi": ^5
-    "@ethersproject/abstract-provider": ^5
-    "@ethersproject/bignumber": ^5
-    ethers: ^5
-  bin:
-    eth-sdk: dist/cli.js
-  checksum: dc80611dc118b771ac9d01e19f8aa94dfb6b70b5a1cb2b6aa87a5eb96c49ee691b7000519859240b1b332b2f85b5d1c5860c2678c81704670e7332b6f0049dab
-  languageName: node
-  linkType: hard
-
 "@eslint-community/eslint-utils@npm:^4.2.0":
   version: 4.4.0
   resolution: "@eslint-community/eslint-utils@npm:4.4.0"
@@ -1045,9 +1010,41 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis-guild/typechain-ethers-v6@npm:^0.5.2":
-  version: 0.5.2
-  resolution: "@gnosis-guild/typechain-ethers-v6@npm:0.5.2"
+"@gnosis-guild/eth-sdk-client@npm:^0.1.6":
+  version: 0.1.6
+  resolution: "@gnosis-guild/eth-sdk-client@npm:0.1.6"
+  checksum: 6ab454e2982f8103317e921f74af625082237ee471c5b46031076aea7bf0bb10f0d1ede66f2fd43e0120527ceef05bf359d1eeaefc24a27e06fe6b74ecf0653f
+  languageName: node
+  linkType: hard
+
+"@gnosis-guild/eth-sdk@npm:^0.3.5":
+  version: 0.3.5
+  resolution: "@gnosis-guild/eth-sdk@npm:0.3.5"
+  dependencies:
+    "@gnosis-guild/typechain-ethers-v6": ^0.5.3
+    chalk: ^4.1.2
+    commander: ^8.3.0
+    debug: ^4.3.2
+    fs-extra: ^10.0.0
+    glob: 7.1.7
+    got: ^11.8.2
+    lodash: ^4.17.21
+    mkdirp: ^1.0.4
+    ora: ^5.4.1
+    tmp-promise: ^3.0.3
+    typechain: ^8.0.0
+    zod: ^3.11.5
+  peerDependencies:
+    ethers: ^6
+  bin:
+    eth-sdk: dist/cli.js
+  checksum: e8211b119e02e3eb194c95e7b50a03f4d5e5fe98759407eabfe169a29e065fc253655d9fbe5facb599e9461998334dc3bc026e57487088f1b5a048d7594cd26c
+  languageName: node
+  linkType: hard
+
+"@gnosis-guild/typechain-ethers-v6@npm:^0.5.3":
+  version: 0.5.3
+  resolution: "@gnosis-guild/typechain-ethers-v6@npm:0.5.3"
   dependencies:
     lodash: ^4.17.15
     ts-essentials: ^7.0.1
@@ -1055,7 +1052,7 @@ __metadata:
     ethers: 6.x
     typechain: ^8.3.2
     typescript: ">=4.7.0"
-  checksum: 47d00017bda9f709dd8401f97e22b1cd8e4a86dba1d2bfc0e670ffb790e5cbabce5263b3b5e321e254071c0dc50dd956284ba2e6b5e9c7808eee1de7740aa9de
+  checksum: 9fade8501f1c7fd9a5a2703f947c567866e74696418ae6016d67fb0a24ea356f70b996655014616fb4d9a1b57a2fbe9be6c8d5eb7adbb319c08654fb4f83774f
   languageName: node
   linkType: hard
 
@@ -1063,7 +1060,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
-    "@gnosis-guild/typechain-ethers-v6": ^0.5.2
+    "@gnosis-guild/typechain-ethers-v6": ^0.5.3
     "@gnosis-guild/zodiac-core": ^1.1.0
     "@gnosis.pm/safe-contracts": 1.3.0
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.7
@@ -1114,32 +1111,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis.pm/mock-contract@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@gnosis.pm/mock-contract@npm:4.0.0"
-  checksum: ce6f3d6218779a1899f9697dc668ce85c9fcd8b743a8c7cd157124130cc79ba0b2f64faa1a723a03c41134dc617bec2af0a757a381397674e745d694a8cb4bb2
-  languageName: node
-  linkType: hard
-
 "@gnosis.pm/safe-contracts@npm:1.3.0":
   version: 1.3.0
   resolution: "@gnosis.pm/safe-contracts@npm:1.3.0"
   peerDependencies:
     ethers: ^5.1.4
   checksum: fea331745e3af0ed7322115e5bd4cc37de914253d9f6e1d85a4713e7e1fdc758bdba95cd2c38c6ba2cfd1bb289378d983d40723c3c525331dce0ed30418ab990
-  languageName: node
-  linkType: hard
-
-"@gnosis.pm/zodiac@npm:^3.5.2":
-  version: 3.5.2
-  resolution: "@gnosis.pm/zodiac@npm:3.5.2"
-  dependencies:
-    "@gnosis.pm/mock-contract": ^4.0.0
-    "@gnosis.pm/safe-contracts": 1.3.0
-    "@openzeppelin/contracts": ^5.0.0
-    "@openzeppelin/contracts-upgradeable": ^5.0.0
-    ethers: ^5.7.1
-  checksum: 06c56c6c42b339676ae3e178d696f7a7036a876bcf1d9d0d708e6e29eeb0cbb53fef5a5ad37608ef307ed755ed6c61ef81321c41e154f7eb12fa5726c5a35af8
   languageName: node
   linkType: hard
 
@@ -2898,7 +2875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:5.0.2, @openzeppelin/contracts-upgradeable@npm:^5.0.0":
+"@openzeppelin/contracts-upgradeable@npm:5.0.2":
   version: 5.0.2
   resolution: "@openzeppelin/contracts-upgradeable@npm:5.0.2"
   peerDependencies:
@@ -2914,7 +2891,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:5.0.2, @openzeppelin/contracts@npm:^5.0.0":
+"@openzeppelin/contracts@npm:5.0.2":
   version: 5.0.2
   resolution: "@openzeppelin/contracts@npm:5.0.2"
   checksum: 0cce6fc284bd1d89e2a447027832a62f1356b44ee31088899453e10349a63a62df2f07da63d76e4c41aad9c86b96b650b2b6fc85439ef276850dda1170a047fd
@@ -3725,22 +3702,6 @@ __metadata:
   version: 1.0.4
   resolution: "@tsconfig/node16@npm:1.0.4"
   checksum: 202319785901f942a6e1e476b872d421baec20cf09f4b266a1854060efbf78cde16a4d256e8bc949d31e6cd9a90f1e8ef8fb06af96a65e98338a2b6b0de0a0ff
-  languageName: node
-  linkType: hard
-
-"@typechain/ethers-v5@npm:^10.0.0, @typechain/ethers-v5@npm:^10.2.1":
-  version: 10.2.1
-  resolution: "@typechain/ethers-v5@npm:10.2.1"
-  dependencies:
-    lodash: ^4.17.15
-    ts-essentials: ^7.0.1
-  peerDependencies:
-    "@ethersproject/abi": ^5.0.0
-    "@ethersproject/providers": ^5.0.0
-    ethers: ^5.1.3
-    typechain: ^8.1.1
-    typescript: ">=4.3.0"
-  checksum: 852da4b1ff368ef87251111a5d50077de3d0fc12c519529269a74223740f8bda89297e67a5eb6c1f5b04ee23119566d6cbccf58264d32a83132be0f328a58d22
   languageName: node
   linkType: hard
 
@@ -9073,7 +9034,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.7.0, ethers@npm:^5.7.1, ethers@npm:^5.7.2":
+"ethers@npm:^5.7.0, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -18387,29 +18348,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typechain@npm:8.0.0":
-  version: 8.0.0
-  resolution: "typechain@npm:8.0.0"
-  dependencies:
-    "@types/prettier": ^2.1.1
-    debug: ^4.3.1
-    fs-extra: ^7.0.0
-    glob: 7.1.7
-    js-sha3: ^0.8.0
-    lodash: ^4.17.15
-    mkdirp: ^1.0.4
-    prettier: ^2.3.1
-    ts-command-line-args: ^2.2.0
-    ts-essentials: ^7.0.1
-  peerDependencies:
-    typescript: ">=4.3.0"
-  bin:
-    typechain: dist/cli/cli.js
-  checksum: c049cc84ac3cf3a5ed8374db750b7b9adcfc523bb1940e1b8bafef063297aed081a5378560c3fbccd1f5d130d32c9ba9678654dfe00d97fb1dfa17d04a933450
-  languageName: node
-  linkType: hard
-
-"typechain@npm:8.3.2, typechain@npm:^8.3.2":
+"typechain@npm:8.3.2, typechain@npm:^8.0.0, typechain@npm:^8.3.2":
   version: 8.3.2
   resolution: "typechain@npm:8.3.2"
   dependencies:
@@ -19930,15 +19869,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zodiac-roles-sdk@workspace:packages/sdk"
   dependencies:
-    "@dethcrypto/eth-sdk": ^0.3.4
-    "@dethcrypto/eth-sdk-client": ^0.1.6
-    "@gnosis.pm/zodiac": ^3.5.2
+    "@gnosis-guild/eth-sdk": ^0.3.5
+    "@gnosis-guild/eth-sdk-client": ^0.1.6
+    "@gnosis-guild/typechain-ethers-v6": ^0.5.3
+    "@gnosis-guild/zodiac-core": ^1.1.0
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.6
     "@nomicfoundation/hardhat-network-helpers": ^1.0.9
     "@nomicfoundation/hardhat-toolbox": ^2.0.2
     "@nomiclabs/hardhat-ethers": ^2.2.3
     "@nomiclabs/hardhat-etherscan": ^3.1.7
-    "@typechain/ethers-v5": ^10.2.1
     "@typechain/hardhat": ^6.1.6
     "@types/chai": ^4.3.1
     "@types/mocha": ^10.0.4
@@ -19963,9 +19902,9 @@ __metadata:
     typescript: ^5.3.3
     zodiac-roles-deployments: "workspace:^"
   peerDependencies:
-    "@dethcrypto/eth-sdk-client": ^0.1.6
+    "@gnosis-guild/eth-sdk-client": ^0.1.6
   peerDependenciesMeta:
-    "@dethcrypto/eth-sdk-client":
+    "@gnosis-guild/eth-sdk-client":
       optional: true
   languageName: unknown
   linkType: soft

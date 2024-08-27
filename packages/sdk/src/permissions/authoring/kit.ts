@@ -1,4 +1,4 @@
-import * as ethSdk from "@dethcrypto/eth-sdk-client"
+import * as ethSdk from "@gnosis-guild/eth-sdk-client"
 import { BaseContract, ethers } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
