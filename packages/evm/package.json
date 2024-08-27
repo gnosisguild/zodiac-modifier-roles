@@ -21,6 +21,7 @@
     "prepack": "yarn build"
   },
   "devDependencies": {
+    "@gnosis-guild/typechain-ethers-v6": "^0.5.2",
     "@gnosis-guild/zodiac-core": "^1.1.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.7",
@@ -30,7 +31,6 @@
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.9",
     "@nomicfoundation/ignition-core": "^0.15.5",
-    "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/mocha": "10.0.4",
     "@types/yargs": "17.0.33",

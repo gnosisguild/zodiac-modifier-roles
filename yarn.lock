@@ -1045,10 +1045,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gnosis-guild/typechain-ethers-v6@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "@gnosis-guild/typechain-ethers-v6@npm:0.5.2"
+  dependencies:
+    lodash: ^4.17.15
+    ts-essentials: ^7.0.1
+  peerDependencies:
+    ethers: 6.x
+    typechain: ^8.3.2
+    typescript: ">=4.7.0"
+  checksum: 47d00017bda9f709dd8401f97e22b1cd8e4a86dba1d2bfc0e670ffb790e5cbabce5263b3b5e321e254071c0dc50dd956284ba2e6b5e9c7808eee1de7740aa9de
+  languageName: node
+  linkType: hard
+
 "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm":
   version: 0.0.0-use.local
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
+    "@gnosis-guild/typechain-ethers-v6": ^0.5.2
     "@gnosis-guild/zodiac-core": ^1.1.0
     "@gnosis.pm/safe-contracts": 1.3.0
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.7
@@ -1061,7 +1076,6 @@ __metadata:
     "@nomicfoundation/ignition-core": ^0.15.5
     "@openzeppelin/contracts": 4.9.3
     "@openzeppelin/contracts-upgradeable": 4.9.3
-    "@typechain/ethers-v6": ^0.5.1
     "@typechain/hardhat": ^9.1.0
     "@types/mocha": 10.0.4
     "@types/yargs": 17.0.33
@@ -3727,20 +3741,6 @@ __metadata:
     typechain: ^8.1.1
     typescript: ">=4.3.0"
   checksum: 852da4b1ff368ef87251111a5d50077de3d0fc12c519529269a74223740f8bda89297e67a5eb6c1f5b04ee23119566d6cbccf58264d32a83132be0f328a58d22
-  languageName: node
-  linkType: hard
-
-"@typechain/ethers-v6@npm:^0.5.1":
-  version: 0.5.1
-  resolution: "@typechain/ethers-v6@npm:0.5.1"
-  dependencies:
-    lodash: ^4.17.15
-    ts-essentials: ^7.0.1
-  peerDependencies:
-    ethers: 6.x
-    typechain: ^8.3.2
-    typescript: ">=4.7.0"
-  checksum: 44e7970ce95eeb1a02019f8a53bbe30dcb87664e1df15fe436ae48eea1bf91ca72b5b230eac1bdf9cbe9b55bc488b54c6273e6f77155eaeff885fb34cfcd1108
   languageName: node
   linkType: hard
 

@@ -13,6 +13,7 @@ import "./tasks/deploy-mastercopies";
 import "./tasks/deploy-mastercopy";
 import "./tasks/verify-mastercopies";
 import "./tasks/verify-mastercopy";
+import { TypechainConfig } from "@typechain/hardhat/dist/types";
 
 // import "./tasks/deploy-adapters";
 // import "./tasks/deploy-proxy";
@@ -159,6 +160,9 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: true,
   },
+  typechain: {
+    target: require.resolve("@gnosis-guild/typechain-ethers-v6"),
+  } satisfies Partial<TypechainConfig>,
 };
 
 export default config;
