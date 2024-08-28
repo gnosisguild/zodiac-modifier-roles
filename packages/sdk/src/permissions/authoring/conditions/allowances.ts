@@ -1,5 +1,4 @@
-import { BigNumberish } from "ethers"
-import { ParamType } from "ethers/lib/utils"
+import { BigNumberish, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { encodeAbiParameters } from "../../../utils/encodeAbiParameters"

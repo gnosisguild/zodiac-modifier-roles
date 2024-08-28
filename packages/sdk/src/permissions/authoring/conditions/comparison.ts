@@ -1,5 +1,12 @@
-import { BigNumber, BigNumberish, BytesLike } from "ethers"
-import { arrayify, concat, hexlify, ParamType, zeroPad } from "ethers/lib/utils"
+import {
+  BigNumberish,
+  BytesLike,
+  concat,
+  getBytes,
+  hexlify,
+  ParamType,
+  toBeHex,
+} from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "./types"
@@ -59,7 +66,7 @@ export const gt =
  * Asserts that the value from calldata is greater than or equal to the given value
  * @param value The reference value to encode
  */
-export const gte = (value: BigNumberish) => gt(BigNumber.from(value).sub(1))
+export const gte = (value: BigNumberish) => gt(BigInt(value) - BigInt(1))
 
 /**
  * Asserts that the value from calldata is greater than the given value
@@ -85,7 +92,7 @@ export const lt =
  * Asserts that the value from calldata is less than or equal to the given value
  * @param value The reference value to encode
  */
-export const lte = (value: BigNumberish) => lt(BigNumber.from(value).add(1))
+export const lte = (value: BigNumberish) => lt(BigInt(value) + BigInt(1))
 
 /**
  * Asserts that the bits selected by the mask at the given bytes offset equal the given value
@@ -108,11 +115,11 @@ export const bitmask =
       throw new Error("shift is out of range, must be between 0 and 65535")
     }
 
-    const maskBytes = arrayify(mask)
+    const maskBytes = getBytes(mask)
     if (maskBytes.length > 15) {
       throw new Error("mask is too long, maximum length is 15 bytes")
     }
-    const valueBytes = arrayify(value)
+    const valueBytes = getBytes(value)
     if (maskBytes.length > 15) {
       throw new Error("value is too long, maximum length is 15 bytes")
     }
@@ -122,7 +129,7 @@ export const bitmask =
       operator: Operator.Bitmask,
       compValue: hexlify(
         concat([
-          zeroPad(hexlify(shift), 2),
+          toBeHex(shift, 2),
           zeroPadRight(maskBytes, 15),
           zeroPadRight(valueBytes, 15),
         ])

@@ -14,7 +14,7 @@
     "@types/react-dom": "^18.2.4",
     "eslint": "^8.53.0",
     "eslint-config-next": "^13.4.4",
-    "ethers": "^5.7.2",
+    "ethers": "^6.13.2",
     "next": "^13.4.16",
     "nextra": "^2.11.0",
     "nextra-theme-docs": "^2.11.0",

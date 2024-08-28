@@ -1,5 +1,4 @@
-import { BigNumber, BigNumberish } from "ethers"
-import { ParamType, isHexString, isBytes } from "ethers/lib/utils"
+import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
@@ -33,6 +32,13 @@ export const matches =
 
     let conditions: (Condition | undefined)[]
 
+    if (abiType.baseType === "tuple" && !abiType.components) {
+      throw new Error("Tuple type must have components")
+    }
+    if (abiType.baseType === "array" && !abiType.arrayChildren) {
+      throw new Error("Array type must have arrayChildren")
+    }
+
     if (Array.isArray(scoping)) {
       // scoping is an array (TupleScopings)
 
@@ -48,8 +54,8 @@ export const matches =
         mapScoping(
           scoping,
           abiType.baseType === "tuple"
-            ? abiType.components[index]
-            : abiType.arrayChildren
+            ? abiType.components![index]
+            : abiType.arrayChildren!
         )
       )
     } else {
@@ -63,7 +69,7 @@ export const matches =
       }
 
       // map scoping values to conditions
-      conditions = abiType.components.map((componentType) =>
+      conditions = abiType.components!.map((componentType) =>
         mapScoping(scoping[componentType.name], componentType)
       )
     }
@@ -80,7 +86,7 @@ export const matches =
         (condition, index) =>
           condition ||
           describeStructure(
-            abiType.baseType === "tuple"
+            abiType.baseType === "tuple" && abiType.components
               ? abiType.components[index]
               : abiType.arrayChildren
           )
@@ -293,10 +299,10 @@ const assertValidConditionsLength = (
   let expectedLength: number
   if (Array.isArray(typeOrTypes)) {
     expectedLength = typeOrTypes.length
-  } else if (typeOrTypes.baseType === "tuple") {
+  } else if (typeOrTypes.baseType === "tuple" && typeOrTypes.components) {
     expectedLength = typeOrTypes.components.length
   } else if (typeOrTypes.baseType === "array") {
-    expectedLength = typeOrTypes.arrayLength
+    expectedLength = typeOrTypes.arrayLength || -1
   } else {
     throw new Error(
       `Can only use \`matches\` on tuple or array type params, got: \`${typeOrTypes.format(
@@ -323,7 +329,7 @@ const assertValidConditionsKeys = (
 
   const types = Array.isArray(typeOrTypes)
     ? typeOrTypes
-    : typeOrTypes.components
+    : typeOrTypes.components!
 
   const unusedStructureKeys = arrayDiff(
     Object.keys(structure),
@@ -349,9 +355,9 @@ const assertCompatibleParamTypes = (
 
     if (Array.isArray(typeOrTypes)) {
       type = typeOrTypes[index]
-    } else if (typeOrTypes.baseType === "tuple") {
+    } else if (typeOrTypes.baseType === "tuple" && typeOrTypes.components) {
       type = typeOrTypes.components[index]
-    } else if (typeOrTypes.baseType === "array") {
+    } else if (typeOrTypes.baseType === "array" && typeOrTypes.arrayChildren) {
       type = typeOrTypes.arrayChildren
     } else {
       throw new Error(
@@ -417,12 +423,9 @@ const arrayDiff = (a: string[], b: string[]) => {
 
 function isBigNumberish(value: any): value is BigNumberish {
   return (
-    value != null &&
-    (BigNumber.isBigNumber(value) ||
-      (typeof value === "number" && value % 1 === 0) ||
-      (typeof value === "string" && !!value.match(/^-?[0-9]+$/)) ||
-      isHexString(value) ||
-      typeof value === "bigint" ||
-      isBytes(value))
+    (typeof value === "number" && value % 1 === 0) ||
+    typeof value === "bigint" ||
+    (typeof value === "string" && !!value.match(/^-?[0-9]+$/)) ||
+    isHexString(value)
   )
 }

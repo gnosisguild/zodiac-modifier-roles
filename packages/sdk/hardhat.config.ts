@@ -1,5 +1,5 @@
 import { HardhatUserConfig } from "hardhat/types"
-import "hardhat-deploy"
+// import "hardhat-deploy"
 
 import evmConfig from "../evm/hardhat.config"
 

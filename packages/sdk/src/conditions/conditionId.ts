@@ -1,14 +1,13 @@
-import { BigNumber } from "ethers"
 import {
   BytesLike,
   concat,
   getCreate2Address,
-  hexDataLength,
+  dataLength,
   hexlify,
-  hexConcat,
   keccak256,
-  hexZeroPad,
-} from "ethers/lib/utils"
+  zeroPadValue,
+  toBeHex,
+} from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
@@ -28,7 +27,7 @@ export const conditionId = (condition: Condition) => {
   const conditions = flattenCondition(condition)
   removeExtraneousOffsets(conditions)
 
-  const packed = hexConcat([
+  const packed = concat([
     ...conditions.map((condition) => packCondition(condition)),
     ...conditions.map((condition) => packCompValue(condition)),
   ])
@@ -50,12 +49,10 @@ const offsetParamType = 5
 const offsetOperator = 0
 
 const packCondition = (condition: ConditionFlat) =>
-  hexZeroPad(
-    hexlify(
-      (condition.parent << offsetParent) |
-        (condition.paramType << offsetParamType) |
-        (condition.operator << offsetOperator)
-    ),
+  toBeHex(
+    (condition.parent << offsetParent) |
+      (condition.paramType << offsetParamType) |
+      (condition.operator << offsetOperator),
     2
   )
 
@@ -107,7 +104,7 @@ const isInline = (conditions: ConditionFlat[], index: number) => {
 const initCodeFor = (bytecode: BytesLike) =>
   concat([
     "0x63",
-    hexZeroPad(BigNumber.from(hexDataLength(bytecode) + 1).toHexString(), 4),
+    toBeHex(dataLength(bytecode) + 1, 4),
     "0x80600E6000396000F3",
     "0x00",
     bytecode,

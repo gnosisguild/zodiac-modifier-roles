@@ -1,4 +1,4 @@
-import { formatBytes32String, parseBytes32String } from "ethers/lib/utils"
+import { decodeBytes32String, encodeBytes32String } from "ethers"
 
 export const encodeRoleKey = (roleKey: string) => {
   if (roleKey.startsWith("0x") && roleKey.length === 66) {
@@ -6,16 +6,16 @@ export const encodeRoleKey = (roleKey: string) => {
     return roleKey
   }
 
-  return formatBytes32String(roleKey)
+  return encodeBytes32String(roleKey)
 }
 
 export const decodeRoleKey = (roleKey: string) => {
   if (roleKey.startsWith("0x") && roleKey.length === 66) {
-    return parseBytes32String(roleKey)
+    return decodeBytes32String(roleKey)
   }
 
   try {
-    formatBytes32String(roleKey)
+    encodeBytes32String(roleKey)
   } catch (e) {
     throw new Error(`Invalid role key: ${roleKey}`)
   }

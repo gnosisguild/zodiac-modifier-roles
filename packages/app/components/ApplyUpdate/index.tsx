@@ -9,8 +9,6 @@ import {
   rolesAbi,
 } from "zodiac-roles-sdk"
 import { JsonFragment, JsonFragmentType } from "@ethersproject/abi"
-import { Interface, hexlify, isBytesLike, Result } from "ethers/lib/utils"
-import { BigNumber } from "ethers"
 
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"

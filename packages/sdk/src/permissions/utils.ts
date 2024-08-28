@@ -1,4 +1,4 @@
-import { keccak256, ParamType, toUtf8Bytes } from "ethers/lib/utils"
+import { keccak256, ParamType, toUtf8Bytes } from "ethers"
 import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deployments"
 
 import { conditionId, normalizeCondition } from "../conditions"

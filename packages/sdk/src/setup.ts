@@ -1,9 +1,9 @@
 import {
-  defaultAbiCoder,
+  AbiCoder,
   getCreate2Address,
   keccak256,
-  solidityKeccak256,
-} from "ethers/lib/utils"
+  solidityPackedKeccak256,
+} from "ethers"
 
 import {
   Roles__factory,
@@ -117,7 +117,7 @@ export const setUpRolesMod = ({
   const setUpCalldata = Roles__factory.createInterface().encodeFunctionData(
     "setUp",
     [
-      defaultAbiCoder.encode(
+      AbiCoder.defaultAbiCoder().encode(
         ["address", "address", "address"],
         [owner, avatar, target]
       ),
@@ -173,9 +173,9 @@ const calculateProxyAddress = (initData: string, saltNonce: string) => {
     ROLES_MASTERCOPY_ADDRESS.toLowerCase().slice(2) +
     "5af43d82803e903d91602b57fd5bf3"
 
-  const salt = solidityKeccak256(
+  const salt = solidityPackedKeccak256(
     ["bytes32", "uint256"],
-    [solidityKeccak256(["bytes"], [initData]), saltNonce]
+    [solidityPackedKeccak256(["bytes"], [initData]), saltNonce]
   )
 
   return getCreate2Address(

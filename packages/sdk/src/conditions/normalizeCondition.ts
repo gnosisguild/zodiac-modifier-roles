@@ -1,4 +1,3 @@
-import { BigNumber } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "./conditionId"
@@ -153,10 +152,10 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
     if (!condition.children) return condition
 
     const pairs = condition.children.map(
-      (child) => [BigNumber.from(conditionId(child)), child] as const
+      (child) => [BigInt(conditionId(child)), child] as const
     )
     // sort is in-place
-    pairs.sort(([a], [b]) => (a.lt(b) ? -1 : 1))
+    pairs.sort(([a], [b]) => (a < b ? -1 : 1))
     let orderedChildren = pairs.map(([, child]) => child)
 
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first

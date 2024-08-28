@@ -1,5 +1,4 @@
-import { BigNumberish } from "ethers"
-import { BytesLike, ParamType, getAddress, hexlify } from "ethers/lib/utils"
+import { BigNumberish, BytesLike, getAddress, hexlify, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "./types"

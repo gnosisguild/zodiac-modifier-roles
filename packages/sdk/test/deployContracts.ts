@@ -1,4 +1,4 @@
-import { parseEther } from "ethers/lib/utils"
+import { parseEther } from "ethers"
 import hre from "hardhat"
 
 import { Roles } from "../../evm/typechain-types"
