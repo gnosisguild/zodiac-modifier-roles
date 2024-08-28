@@ -97,7 +97,7 @@ export const matches =
 const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: AbiType[],
+    abiTypes: readonly AbiType[],
     selector?: `0x${string}`
   ) =>
   (abiType?: ParamType) => {
@@ -189,7 +189,7 @@ type CalldataMatches = {
    **/
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: AbiType[],
+    abiTypes: readonly AbiType[],
     selector?: `0x${string}`
   ): (abiType?: ParamType) => Condition
 
@@ -206,7 +206,7 @@ type CalldataMatches = {
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
-  abiTypes?: AbiType[],
+  abiTypes?: readonly AbiType[],
   selector?: `0x${string}`
 ): ((abiType?: ParamType) => Condition) => {
   return abiTypes

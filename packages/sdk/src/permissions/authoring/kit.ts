@@ -1,5 +1,15 @@
 import * as ethSdk from "@gnosis-guild/eth-sdk-client"
-import { BaseContract, ethers } from "ethers"
+import {
+  Addressable,
+  BaseContract,
+  ContractTransaction,
+  ContractTransactionResponse,
+  ethers,
+  FunctionFragment,
+  isError,
+  TransactionRequest,
+  Typed,
+} from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 // eslint does not know about our Typescript path alias
@@ -24,38 +34,12 @@ import { TupleScopings } from "./conditions/types"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
-type MapParams<T extends any[]> = ((...b: T) => void) extends (
-  ...args: [...infer I, any]
-) => void
-  ? [...params: TupleScopings<I>, options?: Options]
-  : []
-
-const makeAllowFunction = <
-  C extends BaseContract,
-  N extends keyof C["functions"]
->(
-  contract: C,
-  name: N
-) => {
-  const functionFragment = contract.interface.getFunction(name as string)
-  const functionInputs = functionFragment.inputs
-  const ethersFunction = contract.functions[name as string]
-
-  return (
-    ...args: MapParams<Parameters<typeof ethersFunction>>
-  ): FunctionPermission => {
-    const scopings = args.slice(0, functionInputs.length) as any[]
-    const hasScopings = scopings.some((s) => !!s)
-    const options = (args[functionInputs.length] || {}) as Options
-    const presetFunction: FunctionPermission = {
-      targetAddress: contract.address as `0x${string}`,
-      signature: functionFragment.format("sighash"),
-      condition: hasScopings
-        ? c.calldataMatches(scopings, functionInputs)()
-        : undefined,
-    }
-    return applyOptions(coercePermission(presetFunction), options)
-  }
+type PickByValue<T, Value> = {
+  [P in keyof T as T[P] extends Value
+    ? P extends string
+      ? P
+      : never
+    : never]: T[P]
 }
 
 type Options = {
@@ -69,17 +53,105 @@ type Options = {
   callWithinAllowance?: `0x${string}`
 }
 
+/** We need to skip over functions with "view" state mutability. We do this by matching the ethers ContractMethod type  */
+interface StateMutatingContractMethod {
+  (...args: any[]): Promise<ContractTransactionResponse>
+
+  name: string
+  fragment: FunctionFragment
+  getFragment(...args: any[]): FunctionFragment
+  populateTransaction(...args: any[]): Promise<ContractTransaction>
+  staticCall(...args: any[]): Promise<any>
+  send(...args: any[]): Promise<ContractTransactionResponse>
+  estimateGas(...args: any[]): Promise<bigint>
+  staticCallResult(...args: any[]): Promise<any>
+}
+
+type StateMutatingContractMethods<C extends BaseContract> = PickByValue<
+  C,
+  StateMutatingContractMethod
+>
+
+// These are copied over from what TypeChain generates
+type BaseOverrides = Omit<TransactionRequest, "to" | "data">
+type NonPayableOverrides = Omit<
+  BaseOverrides,
+  "value" | "blockTag" | "enableCcipRead"
+>
+type PayableOverrides = Omit<BaseOverrides, "blockTag" | "enableCcipRead">
+
+// For each type in the tuple exclude alternative types that ethers supports for specifying parameters:
+// Typed, Promise<any>, Addressable
+type ExcludeTyped<T extends any[]> = {
+  [K in keyof T]: Exclude<T[K], Typed | Promise<any> | Addressable>
+}
+
+// Maps the types of ethers method arguments to the ones we want to use in the allow function
+type AllowFunctionParameters<MethodArgs extends [...any]> = MethodArgs extends [
+  ...any,
+  NonPayableOverrides | PayableOverrides
+]
+  ? never
+  : [...TupleScopings<ExcludeTyped<MethodArgs>>, options?: Options]
+
+type AllowFunctions<C extends BaseContract> = {
+  [key in keyof StateMutatingContractMethods<C>]: (
+    ...args: AllowFunctionParameters<
+      Parameters<C[key] extends (...args: any) => any ? C[key] : never>
+    >
+  ) => FunctionPermission
+}
+
+type AllowContract<C extends BaseContract> = {
+  [EVERYTHING]: (options?: Options) => TargetPermission
+} & AllowFunctions<C>
+
+const makeAllowFunction = <
+  C extends BaseContract,
+  N extends keyof StateMutatingContractMethods<C>
+>(
+  contract: C,
+  name: N
+) => {
+  const functionFragment = contract.interface.getFunction(name as string)!
+  const functionInputs = functionFragment.inputs
+
+  if (
+    typeof contract.target !== "string" ||
+    !contract.target.startsWith("0x")
+  ) {
+    throw new Error("Only addresses as contract targets are supported")
+  }
+
+  return (...args: any[]): FunctionPermission => {
+    const scopings = args.slice(0, functionInputs.length) as any[]
+    const hasScopings = scopings.some((s) => !!s)
+    const options = (args[functionInputs.length] || {}) as Options
+    const presetFunction: FunctionPermission = {
+      targetAddress: contract.target as `0x${string}`,
+      signature: functionFragment.format("sighash"),
+      condition: hasScopings
+        ? c.calldataMatches(scopings, functionInputs)()
+        : undefined,
+    }
+    return applyOptions(coercePermission(presetFunction), options)
+  }
+}
+
 const emptyCalldataMatches = {
   paramType: ParameterType.Calldata,
   operator: Operator.Matches,
   children: [],
 }
 
+// TODO not quite sure if this is correct. We need to apply it to the calldata matches node in every OR branch.
+// But what happens if it there are multiple calldata matches nodes in the different AND branches? Would the allowance be consumed multiple times?
+// Also what happens in NOR branches?
 const applyGlobalAllowance = (
   condition: Condition = emptyCalldataMatches,
   allowanceCondition: Condition
 ) => {
-  const clone = JSON.parse(JSON.stringify(condition)) // TODO shall we use structuredClone() instead
+  const clone = JSON.parse(JSON.stringify(condition))
 
   // traverse the tree and apply the allowance condition to all calldata matches nodes
   const applyAllowance = (node: Condition) => {
@@ -136,31 +208,57 @@ const applyOptions = (
 
 export const EVERYTHING = Symbol("EVERYTHING")
 
-type AllowFunctions<C extends BaseContract> = {
-  [key in keyof C["functions"]]: (
-    ...args: MapParams<Parameters<C["functions"][key]>>
-  ) => FunctionPermission
-}
-type AllowContract<C extends BaseContract> = {
-  [EVERYTHING]: (options?: Options) => TargetPermission
-} & AllowFunctions<C>
-
 const makeAllowContract = <C extends BaseContract>(
   contract: C
 ): AllowContract<C> => {
   const allowEverything = (options?: ExecutionFlags): TargetPermission => {
     return {
-      targetAddress: contract.address as `0x${string}`,
+      targetAddress: contract.target as `0x${string}`,
       ...options,
     }
   }
 
-  const allowFunctions = Object.keys(contract.functions).reduce((acc, key) => {
-    acc[key as keyof C["functions"]] = makeAllowFunction(contract, key)
-    return acc
-  }, {} as AllowFunctions<C>)
+  // TODO use Proxy just like ethers v6
+  // https://github.com/ethers-io/ethers.js/blob/main/src.ts/contract/contract.ts#L777
 
-  return Object.assign(allowFunctions, { [EVERYTHING]: allowEverything })
+  const contractHasFunction = (prop: string) => {
+    try {
+      contract.getFunction(prop)
+    } catch (error) {
+      if (!isError(error, "INVALID_ARGUMENT") || error.argument !== "key") {
+        throw error
+      }
+      return false
+    }
+    return true
+  }
+
+  return new Proxy(
+    {},
+    {
+      get: (target, prop) => {
+        if (prop === EVERYTHING) {
+          return allowEverything
+        }
+        if (typeof prop !== "string") {
+          return undefined
+        }
+
+        if (contractHasFunction(prop)) {
+          return makeAllowFunction(contract, prop as any)
+        }
+
+        return undefined
+      },
+      has: (target, prop) => {
+        if (typeof prop === "symbol") {
+          return prop === EVERYTHING
+        }
+
+        return contractHasFunction(prop)
+      },
+    }
+  ) as any
 }
 
 type EthSdk = {

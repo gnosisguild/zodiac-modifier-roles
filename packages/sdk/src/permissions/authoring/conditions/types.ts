@@ -33,7 +33,7 @@ export type StructScoping<Struct extends { [key: string]: any }> =
 
 /**
  * A scoping is one of the following:
- * - a primitive, BigNumber, or array value – will be used for an equality check
+ * - a primitive or array value – will be used for an equality check
  * - an object – will be used as a matching pattern
  * - a condition function
  */
@@ -46,9 +46,9 @@ export type Scoping<T> = T extends PrimitiveValue
   : unknown // it resolves to this if T is any (for example when using scoping functions outside of the typed context)
 
 export type TupleScopings<Params extends [...any[]]> = {
-  [Index in keyof Params]?: Awaited<Params[Index]> extends PrimitiveValue
-    ? PrimitiveScoping<Awaited<Params[Index]>>
-    : Awaited<Params[Index]> extends any[]
-    ? ArrayScoping<Awaited<Params[Index]>>
-    : StructScoping<Awaited<Params[Index]>>
+  [Index in keyof Params]?: Params[Index] extends PrimitiveValue
+    ? PrimitiveScoping<Params[Index]>
+    : Params[Index] extends any[]
+    ? ArrayScoping<Params[Index]>
+    : StructScoping<Params[Index]>
 }
