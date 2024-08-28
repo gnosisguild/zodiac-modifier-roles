@@ -86,9 +86,9 @@ export const matches =
         (condition, index) =>
           condition ||
           describeStructure(
-            abiType.baseType === "tuple" && abiType.components
-              ? abiType.components[index]
-              : abiType.arrayChildren
+            abiType.baseType === "tuple"
+              ? abiType.components![index]
+              : abiType.arrayChildren!
           )
       ),
     }

@@ -23,7 +23,7 @@ export const every =
       paramType: ParameterType.Array,
       operator: Operator.ArrayEvery,
       children: [
-        mapScoping(elementScoping, abiType.arrayChildren) as Condition, // cast is safe because of earlier elementScoping check
+        mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
       ],
     }
   }
@@ -47,7 +47,7 @@ export const some =
       paramType: ParameterType.Array,
       operator: Operator.ArraySome,
       children: [
-        mapScoping(elementScoping, abiType.arrayChildren) as Condition, // cast is safe because of earlier elementScoping check
+        mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
       ],
     }
   }
@@ -71,7 +71,7 @@ export const subset =
         if (elementScoping === undefined) {
           throw new Error("subset() element condition must not be undefined")
         }
-        return mapScoping(elementScoping, abiType.arrayChildren) as Condition // cast is safe because of earlier elementScoping check
+        return mapScoping(elementScoping, abiType.arrayChildren!) as Condition // cast is safe because of earlier elementScoping check
       }),
     }
   }

@@ -1,4 +1,4 @@
-import { ParamType } from "ethers/lib/utils"
+import { ParamType } from "ethers"
 import { ParameterType, Condition, Operator } from "zodiac-roles-deployments"
 
 import { encodeAbiParameters } from "../../../utils/encodeAbiParameters"
