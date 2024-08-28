@@ -1,5 +1,5 @@
 import { CHAINS } from "@/app/chains"
-import { formatBytes32String } from "ethers/lib/utils"
+import { encodeBytes32String } from "ethers"
 import { isAddress } from "viem"
 import { ChainId } from "zodiac-roles-sdk"
 
@@ -32,7 +32,7 @@ export function parseRoleParam(role: string | string[] | undefined) {
   if (!role || typeof role !== "string") return null
 
   try {
-    return formatBytes32String(role) as `0x${string}`
+    return encodeBytes32String(role) as `0x${string}`
   } catch (e) {
     return role.startsWith("0x") && role.length === 66
       ? (role as `0x${string}`)

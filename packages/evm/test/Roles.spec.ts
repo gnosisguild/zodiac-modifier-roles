@@ -11,9 +11,8 @@ import {
   deployRolesMod,
   toConditionsFlat,
 } from "./utils";
-import { defaultAbiCoder } from "@ethersproject/abi";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BytesLike } from "ethers";
+import { AbiCoder, BytesLike } from "ethers";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -21,6 +20,8 @@ const ROLE_KEY1 =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 const ROLE_KEY2 =
   "0x0000000000000000000000000000000000000000000000000000000000000002";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Roles", async () => {
   async function setup() {
