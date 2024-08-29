@@ -144,32 +144,27 @@ const emptyCalldataMatches = {
   children: [],
 }
 
-// TODO not quite sure if this is correct. We need to apply it to the calldata matches node in every OR branch.
-// But what happens if it there are multiple calldata matches nodes in the different AND branches? Would the allowance be consumed multiple times?
-// Also what happens in NOR branches?
+/**
+ * EthersWithinAllowance and CallWithinAllowance are global conditions that restrict the total Ether value sent or the call rate.
+ * They must be appended as children of the root calldata matches node.
+ */
 const applyGlobalAllowance = (
   condition: Condition = emptyCalldataMatches,
   allowanceCondition: Condition
 ) => {
-  const clone = JSON.parse(JSON.stringify(condition))
-
-  // traverse the tree and apply the allowance condition to all calldata matches nodes
-  const applyAllowance = (node: Condition) => {
-    if (node.children) {
-      node.children.forEach(applyAllowance)
-    }
-
-    if (
-      node.paramType === ParameterType.Calldata &&
-      node.operator === Operator.Matches
-    ) {
-      if (!node.children) node.children = []
-      node.children = [...(node.children || []), allowanceCondition]
-    }
+  if (
+    condition.paramType !== ParameterType.Calldata ||
+    condition.operator !== Operator.Matches
+  ) {
+    throw new Error(
+      "Global allowance can only be applied to calldata matches nodes"
+    )
   }
-  applyAllowance(clone)
 
-  return clone
+  return {
+    ...condition,
+    children: [...(condition.children || []), allowanceCondition],
+  }
 }
 
 const applyOptions = (
