@@ -15657,6 +15657,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-icons@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "react-icons@npm:5.3.0"
+  peerDependencies:
+    react: "*"
+  checksum: 3aa5f50e05aafc6d31e0d995fe0d98560069aa88717b24ce8aaa082a7e7b20ca95e1e19d847ed6e52d658a5a30e15826af20d7554bf993a743edd55586db62e3
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^16.13.1":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
@@ -19334,6 +19343,7 @@ __metadata:
     nextra-theme-docs: ^2.11.0
     react: ^18.2.0
     react-dom: ^18.2.0
+    react-icons: ^5.3.0
     typescript: ^5.3.3
     zodiac-roles-sdk: "workspace:*"
   languageName: unknown
