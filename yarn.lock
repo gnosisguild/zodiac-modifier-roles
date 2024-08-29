@@ -839,9 +839,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis-guild/eth-sdk@npm:^0.3.6":
-  version: 0.3.6
-  resolution: "@gnosis-guild/eth-sdk@npm:0.3.6"
+"@gnosis-guild/eth-sdk@npm:^0.3.7":
+  version: 0.3.7
+  resolution: "@gnosis-guild/eth-sdk@npm:0.3.7"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.3
     chalk: ^4.1.2
@@ -859,7 +859,7 @@ __metadata:
     ethers: ^6
   bin:
     eth-sdk: dist/cli.js
-  checksum: 4c778160fe500d6054bd14e2fb31dfd8e94be24c42f1e031c86509a23fbd67851088929b65fd714355262ab7d73e27527487f7c49191a49326eb43b2653c4e3e
+  checksum: dd2bb970629328f1f9c703debf829ca17b548956a39e175f4c700868ca80b360993eee46358b0b71977c5b88438cb422b85defedc16c309a6664d63a4aaaced4
   languageName: node
   linkType: hard
 
@@ -19348,7 +19348,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zodiac-roles-sdk@workspace:packages/sdk"
   dependencies:
-    "@gnosis-guild/eth-sdk": ^0.3.6
+    "@gnosis-guild/eth-sdk": ^0.3.7
     "@gnosis-guild/eth-sdk-client": ^0.1.6
     "@gnosis-guild/typechain-ethers-v6": ^0.5.4
     "@gnosis-guild/zodiac-core": ^1.1.0
@@ -19367,7 +19367,7 @@ __metadata:
     eslint-config-prettier: ^8.10.0
     eslint-plugin-import: ^2.29.0
     eslint-plugin-prettier: ^4.2.1
-    ethers: "npm:^6.13.2"
+    ethers: ^6.13.2
     hardhat: ^2.22.7
     hardhat-contract-sizer: 2.10.0
     hardhat-gas-reporter: ^2.2.1
