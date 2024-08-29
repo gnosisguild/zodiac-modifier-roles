@@ -34,6 +34,7 @@
     "typescript": "^5.3.3",
     "viem": "^2.7.1",
     "wagmi": "^2.5.5",
+    "zod": "^3.23.8",
     "zodiac-roles-sdk": "workspace:*"
   },
   "installConfig": {
