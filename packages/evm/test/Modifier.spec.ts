@@ -29,10 +29,9 @@ describe("Modifier", async () => {
       const { roles, invoker } = await loadFixture(setup);
       await expect(
         roles.connect(invoker).disableModule(AddressOne, invoker.address)
-      )
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(invoker.address);
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
+
     it("reverts if module is null or sentinel", async () => {
       const { roles, owner } = await loadFixture(setup);
 
@@ -66,9 +65,9 @@ describe("Modifier", async () => {
   describe("enableModule()", async () => {
     it("reverts if not owner", async () => {
       const { roles, invoker } = await loadFixture(setup);
-      await expect(roles.connect(invoker).enableModule(AddressOne))
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(invoker.address);
+      await expect(
+        roles.connect(invoker).enableModule(AddressOne)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("reverts if module is already enabled", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);

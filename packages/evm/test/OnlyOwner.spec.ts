@@ -35,9 +35,7 @@ describe("OnlyOwner", async () => {
 
     await expect(
       modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0)
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, 0))
       .to.not.be.reverted;
@@ -45,9 +43,9 @@ describe("OnlyOwner", async () => {
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
-    await expect(modifier.connect(johnDoe).scopeTarget(ROLE_KEY, SomeAddress))
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    await expect(
+      modifier.connect(johnDoe).scopeTarget(ROLE_KEY, SomeAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).scopeTarget(ROLE_KEY, SomeAddress)).to
       .not.be.reverted;
@@ -55,9 +53,9 @@ describe("OnlyOwner", async () => {
   it("onlyOwner for revokeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
-    await expect(modifier.connect(johnDoe).revokeTarget(ROLE_KEY, SomeAddress))
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    await expect(
+      modifier.connect(johnDoe).revokeTarget(ROLE_KEY, SomeAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).revokeTarget(ROLE_KEY, SomeAddress)).to
       .not.be.reverted;
@@ -69,9 +67,7 @@ describe("OnlyOwner", async () => {
       modifier
         .connect(johnDoe)
         .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0)
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
       modifier
         .connect(owner)
@@ -85,9 +81,7 @@ describe("OnlyOwner", async () => {
       modifier
         .connect(johnDoe)
         .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000")
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
@@ -119,9 +113,7 @@ describe("OnlyOwner", async () => {
         ],
         0
       )
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier.connect(owner).scopeFunction(
@@ -154,9 +146,7 @@ describe("OnlyOwner", async () => {
 
     await expect(
       modifier.connect(johnDoe).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier.connect(owner).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
@@ -173,9 +163,7 @@ describe("OnlyOwner", async () => {
           "0xaabbccdd",
           "0x0000000000000000000000000000000000000004"
         )
-    )
-      .to.be.revertedWithCustomError(modifier, "OwnableUnauthorizedAccount")
-      .withArgs(johnDoe.address);
+    ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier

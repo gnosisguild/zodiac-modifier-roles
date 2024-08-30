@@ -49,9 +49,8 @@ describe("Module works with factory", () => {
       AddressOne,
     ]);
 
-    await expect(masterCopy.setUp(encodedParams)).to.be.revertedWithCustomError(
-      masterCopy,
-      "InvalidInitialization"
+    await expect(masterCopy.setUp(encodedParams)).to.be.revertedWith(
+      "Initializable: contract is already initialized"
     );
   });
 

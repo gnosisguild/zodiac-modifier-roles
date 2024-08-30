@@ -133,9 +133,7 @@ describe("Roles", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
         roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
-      )
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(alice.address);
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("assigns roles to a module", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
@@ -251,9 +249,9 @@ describe("Roles", async () => {
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
-      await expect(roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1))
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(alice.address);
+      await expect(
+        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("sets default role", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
