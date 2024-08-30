@@ -313,7 +313,6 @@ describe("MultiSendUnwrapper", async () => {
 
     let { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData1.slice(2));
-
     ({ left, right } = location(result[1]));
     expect(data.slice(2).slice(left, right)).to.equal(txData2.slice(2));
   });
@@ -335,7 +334,6 @@ describe("MultiSendUnwrapper", async () => {
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
     ).to.be.reverted;
-
     ({ data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {

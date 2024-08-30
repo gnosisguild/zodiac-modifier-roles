@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-import { verifyAllMastercopies } from "@gnosis-guild/zodiac-core";
+import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
 
 const { ETHERSCAN_API_KEY } = process.env;
 
@@ -12,8 +12,24 @@ task(
   }
 
   const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
-  await verifyAllMastercopies({
-    apiUrlOrChainId: chainId,
-    apiKey: ETHERSCAN_API_KEY,
-  });
+
+  for (const artifact of readMastercopies()) {
+    const { noop } = await verifyMastercopy({
+      artifact,
+      apiUrlOrChainId: chainId,
+      apiKey: ETHERSCAN_API_KEY,
+    });
+
+    const { contractName, contractVersion, address } = artifact;
+
+    if (noop) {
+      console.log(
+        `🔄 ${contractName}@${contractVersion}: Already verified at ${address}`
+      );
+    } else {
+      console.log(
+        `🚀 ${contractName}@${contractVersion}: Successfully verified at ${address}`
+      );
+    }
+  }
 });

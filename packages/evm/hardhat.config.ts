@@ -8,19 +8,17 @@ import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import "solidity-coverage";
 
-import "./tasks/extract-mastercopy";
-import "./tasks/deploy-mastercopies";
-import "./tasks/deploy-mastercopy";
-import "./tasks/verify-mastercopies";
-import "./tasks/verify-mastercopy";
 import { TypechainConfig } from "@typechain/hardhat/dist/types";
-
-// import "./tasks/deploy-adapters";
-// import "./tasks/deploy-proxy";
-// import "./tasks/deploy-standalone";
 
 // Load environment variables.
 dotenv.config();
+
+import "./tasks/deploy-mastercopies";
+import "./tasks/deploy-mastercopy";
+import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopies";
+import "./tasks/verify-mastercopy";
+
 const {
   INFURA_KEY,
   PK,

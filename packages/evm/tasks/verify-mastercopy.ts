@@ -1,22 +1,7 @@
 import { task, types } from "hardhat/config";
-import {
-  readMastercopy,
-  verifyAllMastercopies,
-} from "@gnosis-guild/zodiac-core";
-import path from "path";
-import fs from "fs";
-import { cwd } from "process";
+import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
 
 const { ETHERSCAN_API_KEY } = process.env;
-
-/**
- * Simulates the SDK's `defaultMastercopyArtifactsFile`, pointing to the mastercopies.json file.
- *
- * @returns {string} The absolute path to the mastercopy artifacts file.
- */
-function getMastercopyArtifactsFile(): string {
-  return path.join(cwd(), "temp-mastercopies.json");
-}
 
 task(
   "verify:mastercopy",
@@ -24,7 +9,7 @@ task(
 )
   .addOptionalParam(
     "contractVersion",
-    "The specific version of the contract to deploy",
+    "Filters by a specific version or lateat",
     "latest", // Default value
     types.string
   )
@@ -34,66 +19,24 @@ task(
     }
 
     const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
-    await verifyLatestMastercopyFromDisk(chainId, contractVersion);
-  });
 
-/**
- * Verifies the latest mastercopy from disk, handling multiple contracts and versions.
- *
- * @param {string} chainId - The chain ID of the network.
- * @param {string} [version] - The specific version of the contract to verify.
- */
-async function verifyLatestMastercopyFromDisk(
-  chainId: string,
-  version?: string
-) {
-  const CONTRACTS = ["Packer", "Integrity", "Roles"];
-
-  const verifyDir = path.dirname(getMastercopyArtifactsFile());
-
-  // Ensure the directory exists
-  if (!fs.existsSync(verifyDir)) {
-    fs.mkdirSync(verifyDir, { recursive: true });
-  }
-
-  // Define the mastercopyObject with the appropriate type
-  const mastercopyObject: { [key: string]: { [version: string]: any } } = {};
-
-  for (const contract of CONTRACTS) {
-    try {
-      // Read the artifact for the specific contract and version
-      const latestArtifact = readMastercopy({
-        contractName: contract,
-        contractVersion: version === "latest" ? undefined : version,
+    for (const artifact of readMastercopies({ contractVersion })) {
+      const { noop } = await verifyMastercopy({
+        artifact,
+        apiUrlOrChainId: chainId,
+        apiKey: ETHERSCAN_API_KEY,
       });
 
-      if (!latestArtifact) {
-        console.error(
-          `⏭️ Skipping verify of ${contract}@${version}: Artifact not found.`
+      const { contractName, contractVersion, address } = artifact;
+
+      if (noop) {
+        console.log(
+          `🔄 ${contractName}@${contractVersion}: Already verified at ${address}`
         );
-        continue;
+      } else {
+        console.log(
+          `🚀 ${contractName}@${contractVersion}: Successfully verified at ${address}`
+        );
       }
-
-      // Add the contract to the expected structure
-      mastercopyObject[contract] = {
-        [latestArtifact.contractVersion]: latestArtifact,
-      };
-    } catch (error) {
-      console.error(
-        `⏭️ Skipping deployment of ${contract}@${version}: Version not found.`
-      );
-      continue;
     }
-  }
-
-  const tempFilePath = getMastercopyArtifactsFile();
-  fs.writeFileSync(tempFilePath, JSON.stringify(mastercopyObject, null, 2));
-
-  await verifyAllMastercopies({
-    apiUrlOrChainId: chainId,
-    apiKey: ETHERSCAN_API_KEY as string,
-    mastercopyArtifactsFile: tempFilePath,
   });
-
-  fs.unlinkSync(tempFilePath);
-}
