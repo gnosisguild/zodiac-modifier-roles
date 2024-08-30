@@ -120,7 +120,9 @@
     "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB": "COW Token",
     "0xe6d8d8aC54461b1C5eD15740EEe322043F696C08": "StakeWise: Chorus One - MEV Max",
     "0xeAd792B55340Aa20181A80d6a16db6A0ECd1b827": "Aura: auraBAL Depositor",
-    "0xfAA2eD111B4F580fCb85C48E6DC6782Dc5FCD7a6": "stkauraBAL Token"
+    "0xfAA2eD111B4F580fCb85C48E6DC6782Dc5FCD7a6": "stkauraBAL Token",
+    "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e": "POA Network: AMB-ETH-XDAI",
+    "0x88ad09518695c6c3712AC10a214bE5109a655671": "Gnosis Chain: ETH-xDAI Omni Bridge"
   },
   "100": {
     "0x23da9ade38e4477b23770ded512fd37b12381fab": "Cow: OrderSigner",
