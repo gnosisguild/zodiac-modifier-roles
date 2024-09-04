@@ -1,12 +1,12 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk";
 import AbiTree from "@/components/tree/AbiTree";
 import ConditionTree, { gatherNodeIds } from "@/components/tree/ConditionTree";
-import { ParamType } from "@ethersproject/abi";
 import clsx from "clsx";
 import { useState } from "react";
 import styles from "./styles.module.css";
 import { useTreeState } from "@/components/tree/Tree";
 import CallData from "@/components/CallData";
+import { ParamType } from "ethers";
 
 export const BalancerSwapExample = () => {
   const treeState = useTreeState({

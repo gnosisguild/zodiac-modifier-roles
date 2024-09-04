@@ -1,5 +1,5 @@
 import { HardhatUserConfig } from "hardhat/types"
-import "hardhat-deploy"
+import "@nomicfoundation/hardhat-ethers"
 
 import evmConfig from "../evm/hardhat.config"
 

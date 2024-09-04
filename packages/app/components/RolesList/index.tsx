@@ -5,14 +5,14 @@ import { RoleSummary } from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
 import classes from "./style.module.css"
 import Link from "next/link"
-import { parseBytes32String } from "ethers/lib/utils"
 import CopyButton from "@/ui/CopyButton"
 import { Mod } from "@/app/params"
 import LabeledData from "@/ui/LabeledData"
+import { decodeBytes32String } from "ethers"
 
-const tryParseBytes32String = (str: string) => {
+const tryDecodeBytes32String = (str: string) => {
   try {
-    return parseBytes32String(str)
+    return decodeBytes32String(str)
   } catch (err) {
     return null
   }
@@ -29,7 +29,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
     ? roles.filter((role) =>
         [
           role.key,
-          tryParseBytes32String(role.key) || "",
+          tryDecodeBytes32String(role.key) || "",
           ...role.members,
           ...role.targets.map((target) => target.address),
           ...role.targets.flatMap((target) =>
@@ -78,7 +78,7 @@ const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
 
       <Flex direction="column" gap={2}>
         {matchingRoles.map((role) => {
-          const parsedKey = tryParseBytes32String(role.key)
+          const parsedKey = tryDecodeBytes32String(role.key)
           return (
             <Link
               key={role.key}

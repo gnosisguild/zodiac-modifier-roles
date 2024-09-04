@@ -1,19 +1,24 @@
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
-
 import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
+import "solidity-coverage";
 
-import "./tasks/deploy-adapters";
-import "./tasks/deploy-mastercopy";
-import "./tasks/deploy-proxy";
-import "./tasks/deploy-standalone";
+import { TypechainConfig } from "@typechain/hardhat/dist/types";
 
 // Load environment variables.
 dotenv.config();
+
+import "./tasks/deploy-mastercopies";
+import "./tasks/deploy-mastercopy";
+import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopies";
+import "./tasks/verify-mastercopy";
+
 const {
   INFURA_KEY,
   PK,
@@ -153,6 +158,9 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: true,
   },
+  typechain: {
+    target: require.resolve("@gnosis-guild/typechain-ethers-v6"),
+  } satisfies Partial<TypechainConfig>,
 };
 
 export default config;

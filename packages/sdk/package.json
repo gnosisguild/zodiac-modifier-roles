@@ -45,28 +45,26 @@
     "prepare": "yarn eth-sdk"
   },
   "dependencies": {
-    "ethers": "^5.7.2",
+    "ethers": "^6.13.2",
     "zodiac-roles-deployments": "workspace:^"
   },
   "peerDependencies": {
-    "@dethcrypto/eth-sdk-client": "^0.1.6"
+    "@gnosis-guild/eth-sdk-client": "^0.1.6"
   },
   "peerDependenciesMeta": {
-    "@dethcrypto/eth-sdk-client": {
+    "@gnosis-guild/eth-sdk-client": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@dethcrypto/eth-sdk": "^0.3.4",
-    "@dethcrypto/eth-sdk-client": "^0.1.6",
-    "@gnosis.pm/zodiac": "^3.5.2",
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@gnosis-guild/eth-sdk": "^0.3.7",
+    "@gnosis-guild/eth-sdk-client": "^0.1.6",
+    "@gnosis-guild/typechain-ethers-v6": "^0.5.4",
+    "@gnosis-guild/zodiac-core": "^1.1.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
+    "@nomicfoundation/hardhat-ethers": "^3.0.7",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
-    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "@typechain/ethers-v5": "^10.2.1",
-    "@typechain/hardhat": "^6.1.6",
+    "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^10.0.4",
     "@types/node": "^20.9.0",
@@ -78,10 +76,9 @@
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "hardhat": "^2.19.1",
+    "hardhat": "^2.22.7",
     "hardhat-contract-sizer": "2.10.0",
-    "hardhat-deploy": "^0.11.44",
-    "hardhat-gas-reporter": "1.0.9",
+    "hardhat-gas-reporter": "^2.2.1",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",

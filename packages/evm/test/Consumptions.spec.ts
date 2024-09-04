@@ -1,7 +1,7 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
-import { ConsumptionStructOutput } from "../typechain-types/contracts/Consumptions";
+import { ConsumptionStructOutput } from "../typechain-types/contracts/test/MockConsumptions";
 
 describe("Consumptions library", async () => {
   async function setup() {

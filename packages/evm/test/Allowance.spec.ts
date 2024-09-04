@@ -1,4 +1,3 @@
-import { defaultAbiCoder } from "@ethersproject/abi";
 import { expect } from "chai";
 import hre from "hardhat";
 import {
@@ -11,7 +10,7 @@ import {
   toConditionsFlat,
   encodeMultisendPayload,
 } from "./utils";
-import { BigNumberish } from "ethers";
+import { AbiCoder, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   setupFnThatMaybeReturns,
@@ -20,6 +19,8 @@ import {
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
 } from "./operators/setup";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Allowance", async () => {
   it("unexistent allowance produces error", async () => {
@@ -716,11 +717,14 @@ describe("Allowance", async () => {
 
       const [owner, invoker] = await hre.ethers.getSigners();
 
+      const avatarAddress = await avatar.getAddress();
+      const testContractAddress = await testContract.getAddress();
+      const testEncoderAddress = await testEncoder.getAddress();
       const roles = await deployRolesMod(
         hre,
         owner.address,
-        avatar.address,
-        avatar.address
+        avatarAddress,
+        avatarAddress
       );
       await roles.enableModule(invoker.address);
 
@@ -728,25 +732,25 @@ describe("Allowance", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testEncoderAddress);
 
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
+      const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper = await hre.ethers.getContractFactory(
         "MultiSendUnwrapper"
       );
       const adapter = await MultiSendUnwrapper.deploy();
+      const adapterAddress = await adapter.getAddress();
 
       await roles
         .connect(owner)
         .setTransactionUnwrapper(
-          multisend.address,
-          multisend.interface.getSighash(
-            multisend.interface.getFunction("multiSend")
-          ),
-          adapter.address
+          multisendAddress,
+          multisend.interface.getFunction("multiSend").selector,
+          adapterAddress
         );
 
       async function setAllowance(allowanceKey: string, balance: BigNumberish) {
@@ -792,13 +796,10 @@ describe("Allowance", async () => {
 
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
-
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("oneParamStatic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("oneParamStatic").selector,
         [
           {
             parent: 0,
@@ -818,10 +819,8 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("twoParamsStatic").selector,
         [
           {
             parent: 0,
@@ -845,22 +844,23 @@ describe("Allowance", async () => {
         ExecutionOptions.None
       );
 
+      const testContractAddress = await testContract.getAddress();
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.oneParamStatic(value1)
+                await testContract.oneParamStatic.populateTransaction(value1)
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.twoParamsStatic(
+                await testContract.twoParamsStatic.populateTransaction(
                   0,
                   value2
                 )
@@ -881,7 +881,12 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
+          .execTransactionFromModule(
+            await multisend.getAddress(),
+            0,
+            multisendCalldata,
+            1
+          )
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -919,10 +924,8 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("oneParamStatic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("oneParamStatic").selector,
         [
           {
             parent: 0,
@@ -942,10 +945,8 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("twoParamsStatic").selector,
         [
           {
             parent: 0,
@@ -970,21 +971,21 @@ describe("Allowance", async () => {
       );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([
             {
-              to: testContract.address,
+              to: await testContract.getAddress(),
               value: 0,
               data: (
-                await testContract.populateTransaction.oneParamStatic(value11)
+                await testContract.oneParamStatic.populateTransaction(value11)
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: await testContract.getAddress(),
               value: 0,
               data: (
-                await testContract.populateTransaction.twoParamsStatic(
+                await testContract.twoParamsStatic.populateTransaction(
                   value12,
                   value2
                 )
@@ -1005,7 +1006,12 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
+          .execTransactionFromModule(
+            await multisend.getAddress(),
+            0,
+            multisendCalldata,
+            1
+          )
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -1024,17 +1030,15 @@ describe("Allowance", async () => {
       const balance = 75;
       const value1 = 40;
       const value2 = 40;
-
+      const testContractAddress = await testContract.getAddress();
       await roles
         .connect(owner)
         .setAllowance(allowanceKey, balance, 0, 0, 0, 0);
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("oneParamStatic")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("oneParamStatic").selector,
         [
           {
             parent: 0,
@@ -1054,10 +1058,8 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("twoParamsStatic").selector,
         [
           {
             parent: 0,
@@ -1082,21 +1084,21 @@ describe("Allowance", async () => {
       );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.oneParamStatic(value1)
+                await testContract.oneParamStatic.populateTransaction(value1)
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.twoParamsStatic(
+                await testContract.twoParamsStatic.populateTransaction(
                   value2,
                   999999
                 )
@@ -1112,7 +1114,12 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
+          .execTransactionFromModule(
+            await multisend.getAddress(),
+            0,
+            multisendCalldata,
+            1
+          )
       )
         .to.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
@@ -1144,13 +1151,11 @@ describe("Allowance", async () => {
 
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
-
+      const testContractAddress = await testContract.getAddress();
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("oneParamStatic")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("oneParamStatic").selector,
         [
           {
             parent: 0,
@@ -1172,19 +1177,15 @@ describe("Allowance", async () => {
         .connect(owner)
         .allowFunction(
           roleKey,
-          testContract.address,
-          testContract.interface.getSighash(
-            testContract.interface.getFunction("doNothing")
-          ),
+          testContractAddress,
+          testContract.interface.getFunction("doNothing").selector,
           ExecutionOptions.None
         );
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("twoParamsStatic").selector,
         [
           {
             parent: 0,
@@ -1209,29 +1210,29 @@ describe("Allowance", async () => {
       );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.oneParamStatic(value11)
+                await testContract.oneParamStatic.populateTransaction(value11)
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.doNothing()
+                await testContract.doNothing.populateTransaction()
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.twoParamsStatic(
+                await testContract.twoParamsStatic.populateTransaction(
                   value12,
                   value2
                 )
@@ -1252,7 +1253,12 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
+          .execTransactionFromModule(
+            await multisend.getAddress(),
+            0,
+            multisendCalldata,
+            1
+          )
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -1288,13 +1294,11 @@ describe("Allowance", async () => {
 
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
-
+      const testContractAddress = await testContract.getAddress();
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("oneParamStatic")
-        ),
+        testContractAddress,
+        testContract.interface.getFunction("oneParamStatic").selector,
         [
           {
             parent: 0,
@@ -1311,13 +1315,11 @@ describe("Allowance", async () => {
         ],
         ExecutionOptions.None
       );
-
+      const testEncoderAddress = await testEncoder.getAddress();
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testEncoder.address,
-        testEncoder.interface.getSighash(
-          testEncoder.interface.getFunction("simple")
-        ),
+        testEncoderAddress,
+        testEncoder.interface.getFunction("simple").selector,
         [
           {
             parent: 0,
@@ -1337,10 +1339,10 @@ describe("Allowance", async () => {
 
       await roles.connect(owner).scopeFunction(
         roleKey,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("twoParamsStatic")
-        ),
+        testContractAddress,
+
+        testContract.interface.getFunction("twoParamsStatic").selector,
+
         [
           {
             parent: 0,
@@ -1365,29 +1367,29 @@ describe("Allowance", async () => {
       );
 
       const multisendCalldata = (
-        await multisend.populateTransaction.multiSend(
+        await multisend.multiSend.populateTransaction(
           encodeMultisendPayload([
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.oneParamStatic(value11)
+                await testContract.oneParamStatic.populateTransaction(value11)
               ).data as string,
               operation: 0,
             },
             {
-              to: testEncoder.address,
+              to: testEncoderAddress,
               value: 0,
               data: (
-                await testEncoder.populateTransaction.simple(1)
+                await testEncoder.simple.populateTransaction(1)
               ).data as string,
               operation: 0,
             },
             {
-              to: testContract.address,
+              to: testContractAddress,
               value: 0,
               data: (
-                await testContract.populateTransaction.twoParamsStatic(
+                await testContract.twoParamsStatic.populateTransaction(
                   value12,
                   value2
                 )
@@ -1408,7 +1410,12 @@ describe("Allowance", async () => {
       await expect(
         roles
           .connect(invoker)
-          .execTransactionFromModule(multisend.address, 0, multisendCalldata, 1)
+          .execTransactionFromModule(
+            await multisend.getAddress(),
+            0,
+            multisendCalldata,
+            1
+          )
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(

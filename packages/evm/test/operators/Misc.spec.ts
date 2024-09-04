@@ -8,7 +8,9 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { setupOneParamBytes } from "./setup";
-import { Interface, defaultAbiCoder } from "@ethersproject/abi";
+import { Interface, AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Misc", async () => {
   it("evaluates operator Bitmask and EqualsTo with type equivalent tree", async () => {
@@ -29,6 +31,9 @@ describe("Operator - Misc", async () => {
       "function fnAllowed2(uint256 a)",
       "function fnOther(uint256 a)",
     ]);
+    const fnAllowed1 = iface.getFunction("fnAllowed1");
+    const fnAllowed2 = iface.getFunction("fnAllowed2");
+    if (!fnAllowed1 || !fnAllowed2) return;
 
     await scopeFunction([
       {
@@ -66,13 +71,13 @@ describe("Operator - Misc", async () => {
         parent: 3,
         paramType: ParameterType.Dynamic,
         operator: Operator.Bitmask,
-        compValue: maskCompValue(iface.getSighash("fnAllowed1")),
+        compValue: maskCompValue(fnAllowed1.selector),
       },
       {
         parent: 3,
         paramType: ParameterType.Dynamic,
         operator: Operator.Bitmask,
-        compValue: maskCompValue(iface.getSighash("fnAllowed2")),
+        compValue: maskCompValue(fnAllowed2.selector),
       },
     ]);
 
@@ -107,7 +112,9 @@ describe("Operator - Misc", async () => {
       "function fnAllowed2(uint256 a)",
       "function fnOther(uint256 a)",
     ]);
-
+    const fnAllowed1 = iface.getFunction("fnAllowed1");
+    const fnAllowed2 = iface.getFunction("fnAllowed2");
+    if (!fnAllowed1 || !fnAllowed2) return;
     await expect(
       scopeFunction([
         {
@@ -138,13 +145,13 @@ describe("Operator - Misc", async () => {
           parent: 2,
           paramType: ParameterType.Dynamic,
           operator: Operator.Bitmask,
-          compValue: maskCompValue(iface.getSighash("fnAllowed1")),
+          compValue: maskCompValue(fnAllowed1.selector),
         },
         {
           parent: 2,
           paramType: ParameterType.Dynamic,
           operator: Operator.Bitmask,
-          compValue: maskCompValue(iface.getSighash("fnAllowed2")),
+          compValue: maskCompValue(fnAllowed2.selector),
         },
         {
           parent: 3,

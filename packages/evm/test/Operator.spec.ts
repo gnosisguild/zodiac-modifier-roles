@@ -2,7 +2,9 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
   Operator,
@@ -26,13 +28,13 @@ describe("Operator", async () => {
 
     const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
     const testEncoder = await TestEncoder.deploy();
-
+    const avatarAddress = await avatar.getAddress();
     const [owner, invoker] = await hre.ethers.getSigners();
     const modifier = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     await modifier.enableModule(invoker.address);
 
@@ -55,27 +57,28 @@ describe("Operator", async () => {
   it("checks operator Or over Static", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithSingleParam")
-    );
+    const SELECTOR =
+      testContract.interface.getFunction("fnWithSingleParam").selector;
 
     const invoke = async (a: number) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
-          (await testContract.populateTransaction.fnWithSingleParam(a))
+          (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testContract.getAddress());
 
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      await testContract.getAddress(),
       SELECTOR,
       [
         {
@@ -116,26 +119,27 @@ describe("Operator", async () => {
   it("checks operator And over Calldata", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithSingleParam")
-    );
+    const SELECTOR =
+      testContract.interface.getFunction("fnWithSingleParam").selector;
 
     const invoke = async (a: number) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
-          (await testContract.populateTransaction.fnWithSingleParam(a))
+          (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testContract.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      await testContract.getAddress(),
       SELECTOR,
       [
         {
@@ -189,26 +193,27 @@ describe("Operator", async () => {
   it("checks operator And over Static", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithSingleParam")
-    );
+    const SELECTOR =
+      testContract.interface.getFunction("fnWithSingleParam").selector;
 
     const invoke = async (a: number) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
-          (await testContract.populateTransaction.fnWithSingleParam(a))
+          (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testContract.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      await testContract.getAddress(),
       SELECTOR,
       [
         {
@@ -256,26 +261,28 @@ describe("Operator", async () => {
   it("checks operator Or over Dynamic", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testContract.interface.getSighash(
-      testContract.interface.getFunction("fnWithTwoMixedParams")
-    );
+    const SELECTOR = testContract.interface.getFunction(
+      "fnWithTwoMixedParams"
+    ).selector;
 
     const invoke = async (a: boolean, b: string) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testContract.address,
+          await testContract.getAddress(),
           0,
-          (await testContract.populateTransaction.fnWithTwoMixedParams(a, b))
+          (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testContract.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
+      await testContract.getAddress(),
       SELECTOR,
       [
         {
@@ -336,26 +343,26 @@ describe("Operator", async () => {
     const addressOne = "0x0000000000000000000000000000000000000123";
     const addressTwo = "0x0000000000000000000000000000000000000cda";
 
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("staticTuple")
-    );
+    const SELECTOR = testEncoder.interface.getFunction("staticTuple").selector;
 
     const invoke = async (s: any) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.staticTuple(s, 100))
+          (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -433,25 +440,27 @@ describe("Operator", async () => {
     const address3 = "0x0000000000000000000000000000000000000cda";
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("arrayStaticTupleItems")
-    );
+    const SELECTOR = testEncoder.interface.getFunction(
+      "arrayStaticTupleItems"
+    ).selector;
     const invoke = async (a: any[]) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+          (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -580,26 +589,26 @@ describe("Operator", async () => {
     const addressOne = "0x0000000000000000000000000000000000000123";
     const addressTwo = "0x0000000000000000000000000000000000000cda";
 
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("staticTuple")
-    );
+    const SELECTOR = testEncoder.interface.getFunction("staticTuple").selector;
 
     const invoke = async (s: any) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.staticTuple(s, 100))
+          (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -677,26 +686,26 @@ describe("Operator", async () => {
     const addressOk = "0x0000000000000000000000000000000000000123";
     const addressNok = "0x0000000000000000000000000000000000000cda";
 
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("staticTuple")
-    );
+    const SELECTOR = testEncoder.interface.getFunction("staticTuple").selector;
 
     const invoke = async (s: any) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.staticTuple(s, 100))
+          (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -737,26 +746,26 @@ describe("Operator", async () => {
   it("checks a dynamic Tuple comparison", async () => {
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
 
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("dynamicTuple")
-    );
+    const SELECTOR = testEncoder.interface.getFunction("dynamicTuple").selector;
 
     const invoke = async (s: any) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.dynamicTuple(s))
+          (await testEncoder.dynamicTuple.populateTransaction(s))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -826,25 +835,27 @@ describe("Operator", async () => {
     const address3 = "0x0000000000000000000000000000000000000cda";
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
-    const SELECTOR = testEncoder.interface.getSighash(
-      testEncoder.interface.getFunction("arrayStaticTupleItems")
-    );
+    const SELECTOR = testEncoder.interface.getFunction(
+      "arrayStaticTupleItems"
+    ).selector;
     const invoke = async (a: any[]) =>
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          testEncoder.address,
+          await testEncoder.getAddress(),
           0,
-          (await testEncoder.populateTransaction.arrayStaticTupleItems(a))
+          (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
           0
         );
 
     // set it to true
-    await modifier.connect(owner).scopeTarget(ROLE_KEY, testEncoder.address);
+    await modifier
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
     await modifier.connect(owner).scopeFunction(
       ROLE_KEY,
-      testEncoder.address,
+      await testEncoder.getAddress(),
       SELECTOR,
       [
         {
@@ -956,17 +967,17 @@ describe("Operator", async () => {
         setup
       );
 
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("fnWithTwoMixedParams")
-      );
+      const SELECTOR = testContract.interface.getFunction(
+        "fnWithTwoMixedParams"
+      ).selector;
 
       const invoke = async (a: boolean, b: string) =>
         modifier
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
-            (await testContract.populateTransaction.fnWithTwoMixedParams(a, b))
+            (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
               .data as string,
             0
           );
@@ -976,10 +987,12 @@ describe("Operator", async () => {
         .assignRoles(invoker.address, [ROLE_KEY], [true]);
 
       // set it to true
-      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+      await modifier
+        .connect(owner)
+        .scopeTarget(ROLE_KEY, await testContract.getAddress());
       await modifier.connect(owner).scopeFunction(
         ROLE_KEY,
-        testContract.address,
+        await testContract.getAddress(),
         SELECTOR,
         [
           {

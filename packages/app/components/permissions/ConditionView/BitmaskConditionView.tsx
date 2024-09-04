@@ -1,10 +1,10 @@
 import { Condition } from "zodiac-roles-sdk"
-import { arrayify, hexlify } from "ethers/lib/utils"
 import classes from "./style.module.css"
 import ConditionHeader from "./ConditionHeader"
 import Flex from "@/ui/Flex"
 import { AbiFunction, AbiParameter } from "viem"
 import LabeledData from "@/ui/LabeledData"
+import { getBytes, hexlify } from "ethers"
 
 export interface Props {
   condition: Condition
@@ -22,7 +22,7 @@ const BitmaskConditionView: React.FC<Props> = ({
 }) => {
   // compValue is packed as follows:
   // <2 bytes shift offset><15 bytes bitmask><15 bytes expected value>
-  const bytes = arrayify(condition.compValue || ZERO)
+  const bytes = getBytes(condition.compValue || ZERO)
   const shift = hexlify(bytes.slice(0, 2))
   const mask = hexlify(bytes.slice(2, 17))
   const value = hexlify(bytes.slice(17, 32))

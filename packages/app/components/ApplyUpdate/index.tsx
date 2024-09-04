@@ -8,9 +8,6 @@ import {
   posterAbi,
   rolesAbi,
 } from "zodiac-roles-sdk"
-import { JsonFragment, JsonFragmentType } from "@ethersproject/abi"
-import { Interface, hexlify, isBytesLike, Result } from "ethers/lib/utils"
-import { BigNumber } from "ethers"
 
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
@@ -20,6 +17,14 @@ import styles from "./style.module.css"
 import { parseRoleParam } from "@/app/params"
 import ExecuteButton from "./ExecuteButton"
 import { Provider } from "./Provider"
+import {
+  hexlify,
+  Interface,
+  isBytesLike,
+  JsonFragment,
+  JsonFragmentType,
+  Result,
+} from "ethers"
 
 interface Props {
   chainId: ChainId
@@ -191,7 +196,7 @@ const asTxBuilderInputValues = (result: Result) => {
       let serialized = value
       if (typeof value === "string") {
         serialized = value
-      } else if (BigNumber.isBigNumber(value)) {
+      } else if (typeof value === "bigint" || typeof value === "number") {
         serialized = value.toString()
       } else if (isBytesLike(value)) {
         serialized = hexlify(value)

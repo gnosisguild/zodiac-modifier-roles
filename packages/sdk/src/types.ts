@@ -1,10 +1,8 @@
-import { BigNumber } from "ethers"
-
 export interface Allowance {
   key: `0x${string}`
   period: number
-  refill: BigNumber
+  refill: bigint
   timestamp: number
-  maxRefill: BigNumber
-  balance: BigNumber
+  maxRefill: bigint
+  balance: bigint
 }

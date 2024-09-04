@@ -4,8 +4,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BigNumberish } from "ethers";
-import { getAddress, solidityPack } from "ethers/lib/utils";
+import { BigNumberish, getAddress, solidityPacked } from "ethers";
 import { encodeMultisendPayload } from "../utils";
 
 enum Operation {
@@ -37,9 +36,9 @@ describe("MultiSendUnwrapper", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
-      await testEncoder.populateTransaction.simple(1);
+      await testEncoder.simple.populateTransaction(1);
 
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
@@ -78,9 +77,9 @@ describe("MultiSendUnwrapper", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
-      await testEncoder.populateTransaction.simple(1);
+      await testEncoder.simple.populateTransaction(1);
 
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
@@ -121,9 +120,9 @@ describe("MultiSendUnwrapper", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
-      await testEncoder.populateTransaction.simple(1);
+      await testEncoder.simple.populateTransaction(1);
 
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000001",
@@ -155,9 +154,9 @@ describe("MultiSendUnwrapper", async () => {
   it("reverts if value not zero", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.populateTransaction.simple(1);
+    const { data: txData } = await testEncoder.simple.populateTransaction(1);
     assert(txData);
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -178,8 +177,8 @@ describe("MultiSendUnwrapper", async () => {
   it("reverts if operation not delegate call", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.populateTransaction.simple(1);
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -200,7 +199,7 @@ describe("MultiSendUnwrapper", async () => {
   it("reverts if no transaction encoded", async () => {
     const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data } = await multisend.populateTransaction.multiSend("0x");
+    const { data } = await multisend.multiSend.populateTransaction("0x");
 
     assert(data);
 
@@ -212,9 +211,9 @@ describe("MultiSendUnwrapper", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
     const { data: simpleCalldata } =
-      await testEncoder.populateTransaction.simple(1);
+      await testEncoder.simple.populateTransaction(1);
 
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendWrongLength([
         {
           to: "0x0000000000000000000000000000000000000001",
@@ -233,8 +232,8 @@ describe("MultiSendUnwrapper", async () => {
   it("unwraps a single transaction", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.populateTransaction.simple(1);
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -259,7 +258,7 @@ describe("MultiSendUnwrapper", async () => {
     expect(getAddress(result[0].to)).to.equal(
       getAddress("0xaaff330000000000000000000aa0000ff0000000")
     );
-    expect(result[0].value.toNumber()).to.equal(999444555);
+    expect(result[0].value).to.equal(BigInt(999444555));
 
     const { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData.slice(2));
@@ -268,7 +267,7 @@ describe("MultiSendUnwrapper", async () => {
   it("unwraps multiple transactions", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
-    const { data: txData1 } = await testEncoder.populateTransaction.simple(1);
+    const { data: txData1 } = await testEncoder.simple.populateTransaction(1);
     const { data: txData2 } = await testEncoder.staticDynamicDynamic32(
       "0x0000000000000000000000000000000000000001",
       "0xaabbcc",
@@ -277,7 +276,7 @@ describe("MultiSendUnwrapper", async () => {
     assert(txData1);
     assert(txData2);
 
-    const { data } = await multisend.populateTransaction.multiSend(
+    const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000002",
@@ -304,16 +303,16 @@ describe("MultiSendUnwrapper", async () => {
 
     expect(result).to.have.lengthOf(2);
     expect(result[0].to).to.equal("0x0000000000000000000000000000000000000002");
-    expect(result[0].value.toNumber()).to.equal(999444555);
+    expect(result[0].value).to.equal(BigInt(999444555));
     expect(result[0].operation).to.equal(1);
 
     expect(result[1].to).to.equal("0x0000000000000000000000000000000000000003");
-    expect(result[1].value.toNumber()).to.equal(7654);
+    expect(result[1].value).to.equal(BigInt(7654));
+
     expect(result[1].operation).to.equal(0);
 
     let { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData1.slice(2));
-
     ({ left, right } = location(result[1]));
     expect(data.slice(2).slice(left, right)).to.equal(txData2.slice(2));
   });
@@ -321,8 +320,8 @@ describe("MultiSendUnwrapper", async () => {
   it("reverts if inner transaction operation incorrect", async () => {
     const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.populateTransaction.simple(1);
-    let { data } = await multisend.populateTransaction.multiSend(
+    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    let { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -335,8 +334,7 @@ describe("MultiSendUnwrapper", async () => {
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
     ).to.be.reverted;
-
-    ({ data } = await multisend.populateTransaction.multiSend(
+    ({ data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
@@ -364,7 +362,7 @@ const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
     "0x" +
     txs
       .map((tx) =>
-        solidityPack(
+        solidityPacked(
           ["uint8", "address", "uint256", "uint256", "bytes"],
           [tx.operation, tx.to, tx.value, 4000000, tx.data]
         ).slice(2)
@@ -374,8 +372,8 @@ const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
 };
 
 function location(result: any) {
-  const offset = result.dataLocation.toNumber();
-  const length = result.dataSize.toNumber();
+  const offset = Number(result.dataLocation);
+  const length = Number(result.dataSize);
   const left = offset * 2;
   const right = (offset + length) * 2;
 

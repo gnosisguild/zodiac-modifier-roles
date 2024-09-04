@@ -35,5 +35,8 @@
     "@graphprotocol/graph-cli": "^0.71.0",
     "@graphprotocol/graph-ts": "^0.35.1",
     "assemblyscript-json": "^1.1.0"
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
   }
 }

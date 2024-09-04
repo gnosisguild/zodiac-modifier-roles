@@ -27,7 +27,7 @@ describe("Operator - Custom", async () => {
   }
   it("evaluates operator Custom - result is check pass", async () => {
     const { customChecker, scopeFunction, invoke } = await loadFixture(setup);
-
+    const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
     await scopeFunction([
       {
@@ -40,7 +40,7 @@ describe("Operator - Custom", async () => {
         parent: 0,
         paramType: ParameterType.Static,
         operator: Operator.Custom,
-        compValue: `${customChecker.address}${extra}`,
+        compValue: `${customerCheckerAddress}${extra}`,
       },
     ]);
 
@@ -51,7 +51,7 @@ describe("Operator - Custom", async () => {
     const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
       setup
     );
-
+    const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
     await scopeFunction([
       {
@@ -64,7 +64,7 @@ describe("Operator - Custom", async () => {
         parent: 0,
         paramType: ParameterType.Static,
         operator: Operator.Custom,
-        compValue: `${customChecker.address}${extra}`,
+        compValue: `${customerCheckerAddress}${extra}`,
       },
     ]);
 
@@ -80,7 +80,7 @@ describe("Operator - Custom", async () => {
     const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
       setup
     );
-
+    const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
     await scopeFunction(
       [
@@ -94,7 +94,7 @@ describe("Operator - Custom", async () => {
           parent: 0,
           paramType: ParameterType.Static,
           operator: Operator.Custom,
-          compValue: `${customChecker.address}${extra}`,
+          compValue: `${customerCheckerAddress}${extra}`,
         },
       ],
       ExecutionOptions.Both
@@ -129,6 +129,6 @@ describe("Operator - Custom", async () => {
     // above 101 is accepted
     await expect(invoke(99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.CustomConditionMalformed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.CustomConditionViolation, BYTES32_ZERO);
   });
 });

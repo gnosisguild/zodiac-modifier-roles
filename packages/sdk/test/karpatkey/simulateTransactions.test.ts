@@ -1,9 +1,9 @@
-import { BigNumber } from "ethers"
-import { formatBytes32String } from "ethers/lib/utils"
-import hre, { deployments, ethers } from "hardhat"
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
+import hre from "hardhat"
 
 import { TestAvatar } from "../../../evm/typechain-types"
 import { Permission, processPermissions } from "../../src"
+import { encodeRoleKey } from "../../src/roleKey"
 import { applyTargets } from "../../src/targets/applyTargets"
 import { deployContracts } from "../deployContracts"
 
@@ -36,11 +36,10 @@ type Configs = typeof KARPATKEY_ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("karpatkey: Simulate Transactions Test", async () => {
-  const ROLE_KEY = formatBytes32String("TEST_ROLE") as `0x${string}`
+  const ROLE_KEY = encodeRoleKey("TEST_ROLE") as `0x${string}`
 
-  const setup = deployments.createFixture(async () => {
-    await deployments.fixture()
-    const [owner] = await ethers.getSigners()
+  const setup = async () => {
+    const [owner] = await hre.ethers.getSigners()
 
     const MultiSend = await hre.ethers.getContractFactory("MultiSend")
     const multiSend = await MultiSend.deploy()
@@ -55,14 +54,14 @@ describe("karpatkey: Simulate Transactions Test", async () => {
 
     const modifier = await deployContracts(
       owner.address,
-      avatar.address,
-      avatar.address
+      await avatar.getAddress(),
+      await avatar.getAddress()
     )
 
     await modifier.setTransactionUnwrapper(
       "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-      multiSend.interface.getSighash("multiSend(bytes)"),
-      multiSendUnwrapper.address
+      multiSend.interface.getFunction("multiSend(bytes)")!.selector,
+      await multiSendUnwrapper.getAddress()
     )
 
     // add ethers default signer to role 1
@@ -76,7 +75,7 @@ describe("karpatkey: Simulate Transactions Test", async () => {
       modifier,
       multiSend,
     }
-  })
+  }
 
   const simulateTransactions = async ({
     permissions,
@@ -93,7 +92,7 @@ describe("karpatkey: Simulate Transactions Test", async () => {
       expectRevert?: boolean
     }[]
   }) => {
-    const { owner, modifier } = await setup()
+    const { owner, modifier } = await loadFixture(setup)
 
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
@@ -107,17 +106,17 @@ describe("karpatkey: Simulate Transactions Test", async () => {
       }
     )
 
+    const to = await modifier.getAddress()
     const permissionUpdateTransactions = transactionsData.map((data) => ({
-      to: modifier.address,
+      to,
       data: data,
       value: "0",
     }))
 
-    let totalGas = BigNumber.from(0)
+    let totalGas = BigInt(0)
     for (let i = 0; i < transactionsData.length; i++) {
-      totalGas = totalGas.add(
-        await owner.estimateGas(permissionUpdateTransactions[i])
-      )
+      totalGas =
+        totalGas + (await owner.estimateGas(permissionUpdateTransactions[i]))
 
       await owner.sendTransaction({
         ...permissionUpdateTransactions[i],

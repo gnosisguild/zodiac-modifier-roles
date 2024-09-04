@@ -6,25 +6,25 @@ This guide walks you through the basic steps of using the Roles SDK.
 
 ## Installation
 
-The Roles SDK relies on [eth-sdk](https://github.com/dethcrypto/eth-sdk) for generating type-safe APIs from automatically downloaded contract ABIs.
+The Roles SDK relies on [eth-sdk](https://github.com/gnosisguild/eth-sdk) for generating type-safe APIs from automatically downloaded contract ABIs.
 To add it to your project, run one of the following commands.
 
 With npm:
 
 ```bash
-npm i --save @dethcrypto/eth-sdk @dethcrypto/eth-sdk-client zodiac-roles-sdk
+npm i --save @gnosis-guild/eth-sdk @gnosis-guild/eth-sdk-client zodiac-roles-sdk
 ```
 
 With yarn:
 
 ```bash
-yarn add @dethcrypto/eth-sdk @dethcrypto/eth-sdk-client zodiac-roles-sdk
+yarn add @gnosis-guild/eth-sdk @gnosis-guild/eth-sdk-client zodiac-roles-sdk
 ```
 
 With pnpm:
 
 ```bash
-pnpm add @dethcrypto/eth-sdk @dethcrypto/eth-sdk-client zodiac-roles-sdk
+pnpm add @gnosis-guild/eth-sdk @gnosis-guild/eth-sdk-client zodiac-roles-sdk
 ```
 
 ## Configuration
@@ -35,7 +35,7 @@ Create a folder named `eth-sdk` in your project root (where your package.json is
 Inside this folder, create a `config.ts` file with the following content structure:
 
 ```typescript
-import { defineConfig } from "@dethcrypto/eth-sdk";
+import { defineConfig } from "@gnosis-guild/eth-sdk";
 
 export default defineConfig({
   contracts: {
@@ -50,7 +50,7 @@ This example lists the [DAI contract](https://etherscan.io/address/0x6b175474e89
 The object under the `contracts` field should generally list the identifiers of all chains you plan to target.
 For each chain entry, you can define arbitrary object structures with addresses stored at the leave values.
 
-**For custom chain configurations:** refer to the [eth-sdk docs](https://github.com/dethcrypto/eth-sdk#configuration) for a complete overview of the available configuration options.
+**For custom chain configurations:** refer to the [eth-sdk docs](https://github.com/gnosisguild/eth-sdk#configuration) for a complete overview of the available configuration options.
 
 ## Generate allow kit
 

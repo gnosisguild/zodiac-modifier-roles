@@ -1,11 +1,14 @@
 import assert from "assert";
-import { BigNumberish, Signer } from "ethers";
 import {
+  BigNumberish,
   BytesLike,
+  Signer,
+  ethers,
   getAddress,
   parseEther,
-  solidityPack,
-} from "ethers/lib/utils";
+  solidityPacked,
+} from "ethers";
+
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
@@ -168,22 +171,23 @@ export async function deployRolesMod(
   avatar: string,
   target: string
 ) {
-  await getSingletonFactory(hre.ethers.provider.getSigner());
+  await getSingletonFactory(await hre.ethers.provider.getSigner());
 
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
 
   const Packer = await hre.ethers.getContractFactory("Packer");
   const packer = await Packer.deploy();
-
+  const integrityAddress = await integrity.getAddress();
+  const packerAddress = await packer.getAddress();
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Integrity: integrity.address,
-      Packer: packer.address,
+      Integrity: integrityAddress,
+      Packer: packerAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);
-
+  await modifier.waitForDeployment();
   return modifier;
 }
 
@@ -192,7 +196,7 @@ export const encodeMultisendPayload = (txs: MetaTransaction[]): string => {
     "0x" +
     txs
       .map((tx) =>
-        solidityPack(
+        solidityPacked(
           ["uint8", "address", "uint256", "uint256", "bytes"],
           [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
         ).slice(2)
@@ -227,7 +231,7 @@ export function toConditionsFlat(root: ConditionStruct): ConditionFlatStruct[] {
         parent,
         paramType: node.paramType,
         operator: node.operator,
-        compValue: node.compValue,
+        compValue: node.compValue as ethers.BytesLike,
       },
     ];
 
@@ -259,15 +263,16 @@ async function getSingletonFactory(signer: Signer) {
     // fund the singleton factory deployer account
     await signer.sendTransaction({
       to: deployerAddress,
-      value: parseEther("0.0247"),
+      value: parseEther("0.0247").toString(),
     });
 
+    const signedTx =
+      "0xf9016c8085174876e8008303c4d88080b90154608060405234801561001057600080fd5b50610134806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634af63f0214602d575b600080fd5b60cf60048036036040811015604157600080fd5b810190602081018135640100000000811115605b57600080fd5b820183602082011115606c57600080fd5b80359060200191846001830284011164010000000083111715608d57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550509135925060eb915050565b604080516001600160a01b039092168252519081900360200190f35b6000818351602085016000f5939250505056fea26469706673582212206b44f8a82cb6b156bfcc3dc6aadd6df4eefd204bc928a4397fd15dacf6d5320564736f6c634300060200331b83247000822470";
+
     // deploy the singleton factory
-    await (
-      await provider.sendTransaction(
-        "0xf9016c8085174876e8008303c4d88080b90154608060405234801561001057600080fd5b50610134806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634af63f0214602d575b600080fd5b60cf60048036036040811015604157600080fd5b810190602081018135640100000000811115605b57600080fd5b820183602082011115606c57600080fd5b80359060200191846001830284011164010000000083111715608d57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550509135925060eb915050565b604080516001600160a01b039092168252519081900360200190f35b6000818351602085016000f5939250505056fea26469706673582212206b44f8a82cb6b156bfcc3dc6aadd6df4eefd204bc928a4397fd15dacf6d5320564736f6c634300060200331b83247000822470"
-      )
-    )?.wait();
+    await provider.broadcastTransaction(signedTx).then((txResponse) => {
+      return txResponse.wait();
+    });
 
     if ((await provider.getCode(factoryAddress)) == "0x") {
       throw Error("Singleton factory could not be deployed to correct address");

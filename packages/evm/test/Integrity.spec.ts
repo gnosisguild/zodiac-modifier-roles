@@ -4,15 +4,17 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BYTES32_ZERO, Operator, ParameterType } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
-import { defaultAbiCoder } from "@ethersproject/abi";
+import { AbiCoder } from "ethers";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 async function setup() {
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
-
+  const integrityAddress = await integrity.getAddress();
   const Mock = await hre.ethers.getContractFactory("MockIntegrity", {
     libraries: {
-      Integrity: integrity.address,
+      Integrity: integrityAddress,
     },
   });
   const mock = await Mock.deploy();

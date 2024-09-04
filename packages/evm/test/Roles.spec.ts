@@ -11,9 +11,8 @@ import {
   deployRolesMod,
   toConditionsFlat,
 } from "./utils";
-import { defaultAbiCoder } from "@ethersproject/abi";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BytesLike } from "ethers";
+import { AbiCoder, BytesLike } from "ethers";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -22,19 +21,21 @@ const ROLE_KEY1 =
 const ROLE_KEY2 =
   "0x0000000000000000000000000000000000000000000000000000000000000002";
 
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
+
 describe("Roles", async () => {
   async function setup() {
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
-
+    const avatarAddress = await avatar.getAddress();
     const [owner, invoker, alice, bob] = await hre.ethers.getSigners();
     const roles = await deployRolesMod(
       hre,
       owner.address,
-      avatar.address,
-      avatar.address
+      avatarAddress,
+      avatarAddress
     );
     await roles.enableModule(invoker.address);
 
@@ -60,13 +61,13 @@ describe("Roles", async () => {
 
     await roles.setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContract.address);
+    await roles
+      .connect(owner)
+      .scopeTarget(ROLE_KEY, await testContract.getAddress());
     await roles.connect(owner).scopeFunction(
       ROLE_KEY,
-      testContract.address,
-      testContract.interface.getSighash(
-        testContract.interface.getFunction("spendAndMaybeRevert")
-      ),
+      await testContract.getAddress(),
+      testContract.interface.getFunction("spendAndMaybeRevert").selector,
       [
         {
           parent: 0,
@@ -103,14 +104,17 @@ describe("Roles", async () => {
   describe("setUp()", async () => {
     it("should emit event because of successful set up", async () => {
       const [user1] = await hre.ethers.getSigners();
+      if (!hre.ethers.isAddress(user1.address)) {
+        throw new Error("Invalid address detected: " + user1.address);
+      }
       const roles = await deployRolesMod(
         hre,
         user1.address,
         user1.address,
         user1.address
       );
-      await roles.deployed();
-      await expect(roles.deployTransaction)
+      await roles.waitForDeployment();
+      await expect(roles.deploymentTransaction())
         .to.emit(roles, "RolesModSetup")
         .withArgs(user1.address, user1.address, user1.address, user1.address);
     });
@@ -129,22 +133,24 @@ describe("Roles", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
         roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
-      )
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(alice.address);
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("assigns roles to a module", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       await expect(
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -161,7 +167,7 @@ describe("Roles", async () => {
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -173,7 +179,11 @@ describe("Roles", async () => {
 
       await roles
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       //authorize
       await roles
@@ -186,7 +196,7 @@ describe("Roles", async () => {
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -203,7 +213,7 @@ describe("Roles", async () => {
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -239,9 +249,9 @@ describe("Roles", async () => {
   describe("setDefaultRole()", () => {
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
-      await expect(roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1))
-        .to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount")
-        .withArgs(alice.address);
+      await expect(
+        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("sets default role", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
@@ -257,14 +267,18 @@ describe("Roles", async () => {
       // allow all calls to testContract from ROLE1
       await roles
         .connect(owner)
-        .allowTarget(ROLE_KEY1, testContract.address, ExecutionOptions.None);
+        .allowTarget(
+          ROLE_KEY1,
+          await testContract.getAddress(),
+          ExecutionOptions.None
+        );
 
       // expect it to fail
       await expect(
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -277,7 +291,7 @@ describe("Roles", async () => {
         roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
             0
@@ -305,10 +319,10 @@ describe("Roles", async () => {
         return roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             (
-              await testContract.populateTransaction.spendAndMaybeRevert(
+              await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
                 executionRevert
               )
@@ -366,10 +380,10 @@ describe("Roles", async () => {
         return roles
           .connect(invoker)
           .execTransactionFromModuleReturnData(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             (
-              await testContract.populateTransaction.spendAndMaybeRevert(
+              await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
                 executionRevert
               )
@@ -432,10 +446,10 @@ describe("Roles", async () => {
         return roles
           .connect(invoker)
           .execTransactionWithRole(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             (
-              await testContract.populateTransaction.spendAndMaybeRevert(
+              await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
                 executionRevert
               )
@@ -530,10 +544,10 @@ describe("Roles", async () => {
         return roles
           .connect(invoker)
           .execTransactionWithRoleReturnData(
-            testContract.address,
+            await testContract.getAddress(),
             0,
             (
-              await testContract.populateTransaction.spendAndMaybeRevert(
+              await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
                 executionRevert
               )
@@ -625,16 +639,19 @@ describe("Roles", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY1], [true]);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
-      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract.address);
-      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract2.address);
+      await roles
+        .connect(owner)
+        .scopeTarget(ROLE_KEY1, await testContract.getAddress());
+      await roles
+        .connect(owner)
+        .scopeTarget(ROLE_KEY1, await testContract2.getAddress());
 
-      const SELECTOR = testContract.interface.getSighash(
-        testContract.interface.getFunction("fnWithSingleParam")
-      );
+      const SELECTOR =
+        testContract.interface.getFunction("fnWithSingleParam").selector;
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY1,
-        testContract.address,
+        await testContract.getAddress(),
         SELECTOR,
         [
           {
@@ -655,7 +672,7 @@ describe("Roles", async () => {
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY1,
-        testContract2.address,
+        await testContract2.getAddress(),
         SELECTOR,
         [
           {
@@ -680,15 +697,17 @@ describe("Roles", async () => {
           .execTransactionFromModule(
             targetAddress,
             0,
-            (await testContract.populateTransaction.fnWithSingleParam(a))
+            (await testContract.fnWithSingleParam.populateTransaction(a))
               .data as string,
             0
           );
 
-      await expect(invoke(testContract.address, 11)).to.not.be.reverted;
-      await expect(invoke(testContract2.address, 11)).to.not.be.reverted;
-      await expect(invoke(testContract.address, 0)).to.be.reverted;
-      await expect(invoke(testContract2.address, 0)).to.be.reverted;
+      await expect(invoke(await testContract.getAddress(), 11)).to.not.be
+        .reverted;
+      await expect(invoke(await testContract2.getAddress(), 11)).to.not.be
+        .reverted;
+      await expect(invoke(await testContract.getAddress(), 0)).to.be.reverted;
+      await expect(invoke(await testContract2.getAddress(), 0)).to.be.reverted;
     });
 
     it("a permission with fields insided a nested Calldata", async () => {
@@ -698,14 +717,14 @@ describe("Roles", async () => {
         .connect(owner)
         .assignRoles(invoker.address, [ROLE_KEY1], [true]);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
-      await roles.connect(owner).scopeTarget(ROLE_KEY1, testContract.address);
+      await roles
+        .connect(owner)
+        .scopeTarget(ROLE_KEY1, await testContract.getAddress());
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("dynamic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("dynamic").selector,
         toConditionsFlat({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
@@ -745,7 +764,7 @@ describe("Roles", async () => {
 
       const invoke = async (a: number, b: BytesLike) => {
         const inner = (
-          await testContract.populateTransaction.oneParamDynamicTuple({
+          await testContract.oneParamDynamicTuple.populateTransaction({
             a,
             b,
           })
@@ -753,9 +772,9 @@ describe("Roles", async () => {
         return roles
           .connect(invoker)
           .execTransactionFromModule(
-            testContract.address,
+            await testContract.getAddress(),
             0,
-            (await testContract.populateTransaction.dynamic(inner))
+            (await testContract.dynamic.populateTransaction(inner))
               .data as string,
             0
           );
@@ -773,10 +792,8 @@ describe("Roles", async () => {
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("dynamic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("dynamic").selector,
         toConditionsFlat({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
@@ -814,10 +831,8 @@ describe("Roles", async () => {
 
       await roles.connect(owner).scopeFunction(
         ROLE_KEY1,
-        testContract.address,
-        testContract.interface.getSighash(
-          testContract.interface.getFunction("dynamic")
-        ),
+        await testContract.getAddress(),
+        testContract.interface.getFunction("dynamic").selector,
         toConditionsFlat({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,

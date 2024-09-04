@@ -1,8 +1,8 @@
 import React, { ReactNode, useEffect } from "react";
 import styles from "./styles.module.css";
 import Tree, { TreeProps } from "../Tree";
-import { ParamType } from "@ethersproject/abi";
 import Node from "../Node/index";
+import { ParamType } from "ethers";
 
 interface Props {
   inputs: readonly ParamType[];

@@ -4,11 +4,11 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BigNumber } from "ethers";
-import { Interface, defaultAbiCoder } from "ethers/lib/utils";
 
 import { Operator, ParameterType } from "../utils";
+import { AbiCoder, Interface } from "ethers";
 
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 const DontRemoveOffset = false;
 
 describe("Decoder library", async () => {
@@ -32,7 +32,7 @@ describe("Decoder library", async () => {
       // (bytes2[],string,uint32)
 
       const { data } =
-        await testEncoder.populateTransaction.dynamic32DynamicStatic(
+        await testEncoder.dynamic32DynamicStatic.populateTransaction(
           ["0xaabb", "0x1234", "0xff33"],
           "Hello World!",
           123456789
@@ -75,7 +75,7 @@ describe("Decoder library", async () => {
           result.children[2].location,
           result.children[2].size
         )
-      ).to.equal(BigNumber.from(123456789));
+      ).to.equal(BigInt(123456789));
     });
 
     it("plucks Static from Tuple", async () => {
@@ -134,7 +134,7 @@ describe("Decoder library", async () => {
 
       // function arrayStaticTupleItems(tuple(uint256 a, address b)[])
       const { data } =
-        await testEncoder.populateTransaction.arrayStaticTupleItems([
+        await testEncoder.arrayStaticTupleItems.populateTransaction([
           {
             a: 95623,
             b: "0x00000000219ab540356cbb839cbe05303d7705fa",
