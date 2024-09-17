@@ -26,7 +26,178 @@ export default function PermissionsPage() {
   const [value, setValue] = useState("")
   const [submitPending, setSubmitPending] = useState(false)
   const router = useRouter()
-
+  console.log(
+    JSON.stringify(
+      processPermissions([
+        {
+          targetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+          selector: "0x095ea7b3",
+          condition: {
+            paramType: 5,
+            operator: 5,
+            children: [
+              {
+                paramType: 1,
+                operator: 16,
+                compValue:
+                  "0x000000000000000000000000c92e8bdf79f0507f65a392b0ab4667716bfe0110",
+              },
+              {
+                paramType: 1,
+                operator: 0,
+              },
+            ],
+          },
+        },
+        {
+          targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
+          selector: "0x569d3489",
+          condition: {
+            paramType: 5,
+            operator: 5,
+            children: [
+              {
+                paramType: 3,
+                operator: 5,
+                children: [
+                  {
+                    paramType: 1,
+                    operator: 16,
+                    compValue:
+                      "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                  },
+                  {
+                    paramType: 1,
+                    operator: 16,
+                    compValue:
+                      "0x000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  },
+                  {
+                    paramType: 1,
+                    operator: 15,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                ],
+              },
+              {
+                paramType: 1,
+                operator: 0,
+              },
+              {
+                paramType: 1,
+                operator: 0,
+              },
+            ],
+          },
+          delegatecall: true,
+        },
+        {
+          targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
+          selector: "0x5a66c223",
+          condition: {
+            paramType: 5,
+            operator: 5,
+            children: [
+              {
+                paramType: 3,
+                operator: 5,
+                children: [
+                  {
+                    paramType: 1,
+                    operator: 16,
+                    compValue:
+                      "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
+                  },
+                  {
+                    paramType: 1,
+                    operator: 16,
+                    compValue:
+                      "0x000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  },
+                  {
+                    paramType: 1,
+                    operator: 15,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                  {
+                    paramType: 1,
+                    operator: 0,
+                  },
+                ],
+              },
+            ],
+          },
+          delegatecall: true,
+        },
+      ]).targets
+    )
+  )
   let errorMessage = ""
   let json = null
   if (value.trim()) {
@@ -61,8 +232,12 @@ export default function PermissionsPage() {
           targets = result.targets
           annotations = result.annotations
         } catch (eP) {
-          console.error(eP)
-          console.error(eT)
+          console.error(
+            "not parsable as `{targets: [...], annotations: [...]}`",
+            e
+          )
+          console.error("not parsable as `[...targets]`", eT)
+          console.error("not parsable as `[...permissions]`", eP)
           errorMessage =
             "Json input is neither a valid set of targets nor a valid permissions array"
         }
