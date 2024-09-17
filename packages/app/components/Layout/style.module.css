@@ -9,6 +9,15 @@
   /* overflow: auto; */
 }
 
+.body {
+  display: flex;
+  flex-direction: column;
+}
+.body.noScroll {
+  overflow: hidden;
+  height: 100%;
+}
+
 .topBar {
   flex-grow: 0;
   flex-shrink: 0;
@@ -18,6 +27,9 @@
 .main {
   padding: var(--spacing-4);
   box-sizing: border-box;
+}
+.main.noScroll {
+  flex-grow: 1;
 }
 
 .homeBreadcrumb {

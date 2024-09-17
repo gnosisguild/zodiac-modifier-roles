@@ -13,7 +13,7 @@ const Layout: React.FC<{
   noScroll?: true
 }> = ({ head, children, noScroll }) => (
   <div className={classes.page}>
-    <div>
+    <div className={cn(classes.body, noScroll && classes.noScroll)}>
       <div className={classes.topBar}>
         <Flex gap={4} justifyContent="space-between" alignItems="center">
           <Flex gap={2} alignItems="center">
