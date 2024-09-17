@@ -1,6 +1,8 @@
 # Annotations
 
-Managing and auditing large sets of permissions can be difficult. To address this challenge, we've introduced the ability to add permission annotations to roles.
+Managing and auditing large sets of permissions can be difficult.
+To address this challenge, we've introduced the ability to add permission annotations to roles.
+Annotations provide a way to group permissions and attach additional context, making it easier to understand and manage.
 
 An annotation is defined by two fields:
 
@@ -11,17 +13,17 @@ Annotations, being an auxiliary concept, are not stored in the Roles contract. I
 
 ## Resolving Annotations
 
-The Roles app resolves annotations by fetching both the permissions to be annotated from `uri` and the `schema` document.
+The Roles app resolves annotations by fetching the permissions to be annotated from the specified `uri` as well as the corresponding `schema` document.
 
-If the given role is not granted all of the permissions scoped by the annotation, the annotation will be ignored.
+If the permissions returned from the `uri` are a subset of the permissions granted to the role, the annotation will be applied, otherwise it will be ignored.
 
-From the `schema` document, the Roles app extracts the [Operation object](https://swagger.io/specification/#operation-object) representing the `uri` endpoint.
+From the `schema` document, the Roles app extracts the [Operation object](https://swagger.io/specification/#operation-object) of the `uri` endpoint.
 This information guides the generic rendering of the annotated permission set in the app.
 
 ## Example
 
-The [DeFi Kit]() project provides curates permission sets for common interactions with different DeFi protocols.
-It uses annotations to indicate which permissions belonging to a certain protocol action.
+The [DeFi Kit](https://kit.karpatkey.com) project curates permission sets for common interactions with different DeFi protocols.
+It uses annotations to indicate which permissions belong to a certain protocol action.
 
 For example, a `swap` action of the `cowswap` protocol would be annotated as follows:
 
@@ -38,4 +40,6 @@ https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?sell=0x6B175474E89
 
 The schema information allows the Roles app to render the annotated permission set in an abstracted, user friendly way:
 
-< TODO: add Roles app screenshot showing the cowswap swap DeFi Kit action >
+![Annotated permission set in the Roles app](./images/roles-app-annotated-view.png)
+
+Live example: https://roles.gnosisguild.org/permissions/eth/QDvRwxK23piKZ1EdbZgrXP2MydB2tEa2JqWLHIzk

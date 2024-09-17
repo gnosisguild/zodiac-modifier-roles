@@ -61,8 +61,12 @@ export default function PermissionsPage() {
           targets = result.targets
           annotations = result.annotations
         } catch (eP) {
-          console.error(eP)
-          console.error(eT)
+          console.error(
+            "not parsable as `{targets: [...], annotations: [...]}`",
+            e
+          )
+          console.error("not parsable as `[...targets]`", eT)
+          console.error("not parsable as `[...permissions]`", eP)
           errorMessage =
             "Json input is neither a valid set of targets nor a valid permissions array"
         }
