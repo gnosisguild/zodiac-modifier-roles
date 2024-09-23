@@ -44,7 +44,14 @@ export const processAnnotations = async (
 ) => {
   const { targets } = processPermissions(permissions)
   const presets = await Promise.all(
-    annotations.map((annotation) => resolveAnnotation(annotation, options))
+    annotations.map(async (annotation) => {
+      try {
+        return resolveAnnotation(annotation, options)
+      } catch (e) {
+        console.error("Error resolving annotation", e)
+        return null
+      }
+    })
   )
 
   // Only consider those presets whose full set of permissions are actually enabled on the role. Determine this by:
@@ -114,28 +121,22 @@ const resolveAnnotation = async (
   const [permissions, schema] = await Promise.all([
     fetchPermissions(annotation.uri).catch((e: Error) => {
       console.error(`Error resolving annotation ${annotation.uri}`, e)
-      throw new Error(`Error resolving annotation ${annotation.uri}`)
+      throw new Error(`Error resolving annotation: ${e}`)
     }),
     fetchSchema(annotation.schema).catch((e) => {
       console.error(`Error resolving annotation schema ${annotation.schema}`, e)
-      throw new Error(`Error resolving annotation schema ${annotation.schema}`)
+      throw new Error(`Error resolving annotation schema: ${e}`)
     }),
   ] as const)
 
   if (!permissions) {
-    throw new Error(
-      `Annotation ${annotation.uri} has invalid fetchPermissions result`
-    )
+    throw new Error("invalid fetchPermissions result")
   }
   if (!schema) {
-    throw new Error(
-      `Annotation schema ${annotation.schema} has invalid fetchSchema result`
-    )
+    throw new Error("invalid fetchSchema result")
   }
   if (permissions.length === 0) {
-    throw new Error(
-      `Annotation ${annotation.uri} resolves to empty permission set`
-    )
+    throw new Error(`Annotation resolves to empty permission set`)
   }
 
   const { serverUrl, path } = resolveAnnotationPath(
@@ -163,9 +164,7 @@ const resolveAnnotation = async (
   }
 
   if (!value) {
-    throw new Error(
-      `Could not resolve annotation ${annotation.uri} with schema ${annotation.schema}`
-    )
+    throw new Error(`Could not resolve annotation: ${error}`)
   }
 
   return {
