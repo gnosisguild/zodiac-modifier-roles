@@ -386,6 +386,21 @@ describe("processAnnotations()", () => {
       },
     ])
   })
+
+  it("handles endpoints with indiscriminate parameter schemas", async () => {
+    const result = await processAnnotations(
+      permissionsForPreset1,
+      [
+        {
+          uri: "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?sell=ETH&buy=0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          schema: "https://kit.karpatkey.com/api/v1/openapi.json",
+        },
+      ],
+      { fetchPermissions: async () => permissionsForPreset1 }
+    )
+
+    expect(result.presets).toMatchInlineSnapshot()
+  })
 })
 
 const annotation1 = {
