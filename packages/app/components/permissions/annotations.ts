@@ -103,8 +103,12 @@ const resolveAnnotation = async (
   } = {}
 ): Promise<Preset | null> => {
   const {
-    fetchPermissions = defaultJsonFetch,
-    fetchSchema = defaultJsonFetch,
+    fetchPermissions = defaultJsonFetch as (
+      url: string
+    ) => Promise<Permission[]>,
+    fetchSchema = defaultJsonFetch as (
+      url: string
+    ) => Promise<OpenAPIV3.Document>,
   } = options
 
   const [permissions, schema] = await Promise.all([
@@ -168,7 +172,7 @@ const resolveAnnotation = async (
     permissions,
     uri: annotation.uri,
     serverUrl,
-    apiInfo: schema.info?.toObject() || { title: "", version: "" },
+    apiInfo: enforcer.info?.toObject() || { title: "", version: "" },
     pathKey: value.pathKey,
     pathParams: value.path,
     queryParams: value.query,
