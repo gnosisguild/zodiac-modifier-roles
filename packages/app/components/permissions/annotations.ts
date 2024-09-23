@@ -74,14 +74,18 @@ async function validateJsonResponse(res: Response) {
     return await res.json()
   }
 
+  // try to parse the response as json to get the error message
+  let json = null
   try {
-    const json = await res.json()
-    if (json.error) {
-      throw new Error(json.error)
-    }
+    json = await res.json()
   } catch (e) {}
+  if (json.error) {
+    throw new Error(json.error)
+  }
+
   return new Error(`Request failed: ${res.statusText}`)
 }
+
 const resolveAnnotation = async (
   annotation: Annotation
 ): Promise<Preset | null> => {
@@ -125,10 +129,10 @@ const resolveAnnotation = async (
   })
 
   if (error) {
-    console.error(error)
+    console.error(error, annotation)
   }
   if (warning) {
-    console.warn(warning)
+    console.warn(warning, annotation)
   }
 
   if (!value) {
