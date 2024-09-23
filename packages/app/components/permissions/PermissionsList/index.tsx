@@ -8,7 +8,7 @@ import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import PresetItem from "../PresetItem"
 import TargetItem from "../TargetItem"
-import { processAnnotations } from "../annotations"
+import { processAnnotations } from "../processAnnotations"
 import { groupPermissions } from "../groupPermissions"
 import { PermissionsDiff, Preset, PresetsDiff } from "../types"
 

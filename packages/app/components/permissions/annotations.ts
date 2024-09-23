@@ -1,4 +1,3 @@
-import z from "zod"
 import {
   Annotation,
   Permission,
@@ -10,16 +9,43 @@ import {
 } from "zodiac-roles-sdk"
 import { Enforcer } from "openapi-enforcer"
 import { OpenAPIV3 } from "openapi-types"
-import { zPermission } from "./schema"
 import { Preset } from "./types"
+
+const defaultJsonFetch = async (url: string) => {
+  const res = await fetch(url)
+  return await validateJsonResponse(res)
+}
+
+async function validateJsonResponse(res: Response) {
+  if (res.ok) {
+    return await res.json()
+  }
+
+  // try to parse the response as json to get the error message
+  let json = null
+  try {
+    json = await res.json()
+  } catch (e) {}
+  if (json.error) {
+    throw new Error(json.error)
+  }
+
+  return new Error(`Request failed: ${res.statusText}`)
+}
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
   permissions: readonly Permission[],
-  annotations: readonly Annotation[]
+  annotations: readonly Annotation[],
+  options: {
+    fetchPermissions?: (url: string) => Promise<Permission[]>
+    fetchSchema?: (url: string) => Promise<OpenAPIV3.Document>
+  } = {}
 ) => {
   const { targets } = processPermissions(permissions)
-  const presets = await Promise.all(annotations.map(resolveAnnotation))
+  const presets = await Promise.all(
+    annotations.map((annotation) => resolveAnnotation(annotation, options))
+  )
 
   // Only consider those presets whose full set of permissions are actually enabled on the role. Determine this by:
   //  - combining current permissions with preset permissions,
@@ -69,53 +95,44 @@ export const processAnnotations = async (
   return { presets: confirmedPresets, permissions: remainingPermissions }
 }
 
-async function validateJsonResponse(res: Response) {
-  if (res.ok) {
-    return await res.json()
-  }
-
-  // try to parse the response as json to get the error message
-  let json = null
-  try {
-    json = await res.json()
-  } catch (e) {}
-  if (json.error) {
-    throw new Error(json.error)
-  }
-
-  return new Error(`Request failed: ${res.statusText}`)
-}
-
 const resolveAnnotation = async (
-  annotation: Annotation
+  annotation: Annotation,
+  options: {
+    fetchPermissions?: (url: string) => Promise<Permission[]>
+    fetchSchema?: (url: string) => Promise<OpenAPIV3.Document>
+  } = {}
 ): Promise<Preset | null> => {
-  const [permissions, schema] = await Promise.all([
-    fetch(annotation.uri, { next: { revalidate: 3600 } })
-      .then(validateJsonResponse)
-      .then(z.array(zPermission).parse)
-      .catch((e: Error) => {
-        console.error(`Error resolving annotation ${annotation.uri}`, e)
-        return []
-      }),
-    fetch(annotation.schema, { next: { revalidate: 3600 } })
-      .then(validateJsonResponse)
-      .then((json) =>
-        Enforcer(json, {
-          componentOptions: {
-            exceptionSkipCodes: ["EDEV001"], // ignore error: "Property not allowed: webhooks"
-          },
-        })
-      )
-      .catch((e) => {
-        console.error(
-          `Error resolving annotation schema ${annotation.schema}`,
-          e
-        )
-        return null
-      }),
-  ])
+  const {
+    fetchPermissions = defaultJsonFetch,
+    fetchSchema = defaultJsonFetch,
+  } = options
 
-  if (permissions.length === 0 || !schema) return null
+  const [permissions, schema] = await Promise.all([
+    fetchPermissions(annotation.uri).catch((e: Error) => {
+      console.error(`Error resolving annotation ${annotation.uri}`, e)
+      throw new Error(`Error resolving annotation ${annotation.uri}`)
+    }),
+    fetchSchema(annotation.schema).catch((e) => {
+      console.error(`Error resolving annotation schema ${annotation.schema}`, e)
+      throw new Error(`Error resolving annotation schema ${annotation.schema}`)
+    }),
+  ] as const)
+
+  if (!permissions) {
+    throw new Error(
+      `Annotation ${annotation.uri} has invalid fetchPermissions result`
+    )
+  }
+  if (!schema) {
+    throw new Error(
+      `Annotation schema ${annotation.schema} has invalid fetchSchema result`
+    )
+  }
+  if (permissions.length === 0) {
+    throw new Error(
+      `Annotation ${annotation.uri} resolves to empty permission set`
+    )
+  }
 
   const { serverUrl, path } = resolveAnnotationPath(
     annotation.uri,
@@ -123,7 +140,13 @@ const resolveAnnotation = async (
     annotation.schema
   )
 
-  const { value, error, warning } = schema.request({
+  const enforcer = await Enforcer(schema, {
+    componentOptions: {
+      exceptionSkipCodes: ["EDEV001"], // ignore error: "Property not allowed: webhooks"
+    },
+  })
+
+  const { value, error, warning } = enforcer.request({
     method: "GET",
     path,
   })
@@ -136,7 +159,9 @@ const resolveAnnotation = async (
   }
 
   if (!value) {
-    return null
+    throw new Error(
+      `Could not resolve annotation ${annotation.uri} with schema ${annotation.schema}`
+    )
   }
 
   return {
@@ -155,8 +180,6 @@ const resolveAnnotation = async (
         [],
     },
   }
-
-  return null
 }
 
 /** Returns the annotation's path relative to the API server's base URL */
