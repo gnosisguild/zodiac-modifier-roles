@@ -1,5 +1,6 @@
 import { PermissionCoerced, targetId, permissionId } from "zodiac-roles-sdk"
-import { DiffFlag, PermissionsDiff, Preset } from "../types"
+import { Preset } from "zodiac-roles-sdk/annotations"
+import { DiffFlag, PermissionsDiff } from "../types"
 import { comparePermissionIds } from "../groupPermissions"
 
 export const diffPermissions = (
@@ -161,7 +162,7 @@ export const diffPresets = (
 
   // 2) new path key in right: Hidden / Added
   rightSorted.forEach((r) => {
-    if (!leftSorted.some((l) => l.pathKey === r.pathKey)) {
+    if (!leftSorted.some((l) => l.path === r.path)) {
       diffLeft.set(r, { flag: DiffFlag.Hidden })
       diffRight.set(r, { flag: DiffFlag.Added })
     }
@@ -169,7 +170,7 @@ export const diffPresets = (
 
   // 3) missing path key in right: Removed / Hidden
   leftSorted.forEach((l) => {
-    if (!rightSorted.some((r) => r.pathKey === l.pathKey)) {
+    if (!rightSorted.some((r) => r.path === l.path)) {
       diffLeft.set(l, { flag: DiffFlag.Removed })
       diffRight.set(l, { flag: DiffFlag.Hidden })
     }
@@ -182,7 +183,7 @@ export const diffPresets = (
     if (diffLeft.has(l)) return
 
     const r = rightSorted.find(
-      (r) => !diffRight.has(r) && r.pathKey === l.pathKey && r.uri !== l.uri
+      (r) => !diffRight.has(r) && r.path === l.path && r.uri !== l.uri
     )
 
     if (r) {
@@ -213,7 +214,7 @@ export const diffPresets = (
     if (diffRight.has(r)) return
 
     const l = leftSorted.find(
-      (l) => !diffLeft.has(l) && l.pathKey === r.pathKey && l.uri !== r.uri
+      (l) => !diffLeft.has(l) && l.path === r.path && l.uri !== r.uri
     )
 
     if (l) {

@@ -8,7 +8,7 @@ import {
   // bsc,
   polygon,
   gnosis,
-} from "@wagmi/core/chains" // cannot import from wagmi/chains because that one declares "use client;"
+} from "wagmi/chains"
 
 export const CHAINS = {
   [mainnet.id]: {
