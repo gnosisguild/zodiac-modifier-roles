@@ -1,5 +1,4 @@
 import { PermissionCoerced, permissionId } from "zodiac-roles-sdk"
-import { Preset } from "./types"
 
 /** Group permissions by targetAddress and sort everything in ascending order */
 export const groupPermissions = (permissions: PermissionCoerced[]) => {

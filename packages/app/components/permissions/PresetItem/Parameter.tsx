@@ -1,19 +1,17 @@
+import { Preset } from "zodiac-roles-sdk/annotations"
 import Flex from "@/ui/Flex"
-import { OpenAPIParameter, Preset } from "../types"
 import classes from "./style.module.css"
 import LabeledData from "@/ui/LabeledData"
 
 const Parameter: React.FC<{
-  parameter: OpenAPIParameter
-  queryParams: Preset["queryParams"]
-  pathParams: Preset["pathParams"]
-}> = ({ parameter, queryParams, pathParams }) => {
+  parameter: Preset["operation"]["parameters"][number]
+  params: Preset["params"]
+  query: Preset["query"]
+}> = ({ parameter, params, query }) => {
   // we only support path and query parameters
   if (parameter.in !== "path" && parameter.in !== "query") return null
   const value = (
-    parameter.in === "path"
-      ? pathParams[parameter.name]
-      : queryParams[parameter.name]
+    parameter.in === "path" ? params[parameter.name] : query[parameter.name]
   ) as string | number | string[] | number[] | undefined
 
   return (

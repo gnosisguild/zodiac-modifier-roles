@@ -1,4 +1,5 @@
-import { DiffFlag, Preset } from "../types"
+import { Preset } from "zodiac-roles-sdk/annotations"
+import { DiffFlag } from "../types"
 import { diffPermissions, diffPresets } from "./diff"
 
 describe("diff", () => {
@@ -193,9 +194,9 @@ const PRESET: Preset = {
     title: "DeFi Kit",
     version: "1.0.0",
   },
-  pathKey: "/permissions/gor/cowswap/swap",
-  pathParams: {},
-  queryParams: {
+  path: "/permissions/gor/cowswap/swap",
+  params: {},
+  query: {
     sell: [
       "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",

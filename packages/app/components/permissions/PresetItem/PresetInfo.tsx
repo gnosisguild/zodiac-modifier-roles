@@ -1,5 +1,5 @@
+import { Preset } from "zodiac-roles-sdk/annotations"
 import Flex from "@/ui/Flex"
-import { Preset } from "../types"
 import classes from "./style.module.css"
 import Anchor from "@/ui/Anchor"
 

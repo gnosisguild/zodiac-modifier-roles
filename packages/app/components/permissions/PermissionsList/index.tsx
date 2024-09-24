@@ -4,13 +4,14 @@ import {
   Target,
   reconstructPermissions,
 } from "zodiac-roles-sdk"
+import { Preset } from "zodiac-roles-sdk/annotations"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import PresetItem from "../PresetItem"
 import TargetItem from "../TargetItem"
-import { processAnnotations } from "../annotations"
+import { processAnnotations } from "../processAnnotations"
 import { groupPermissions } from "../groupPermissions"
-import { PermissionsDiff, Preset, PresetsDiff } from "../types"
+import { PermissionsDiff, PresetsDiff } from "../types"
 
 interface Props {
   targets: Target[]

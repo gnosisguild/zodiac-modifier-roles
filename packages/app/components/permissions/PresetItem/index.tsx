@@ -1,4 +1,5 @@
-import { Preset, PresetsDiff } from "../types"
+import { Preset } from "zodiac-roles-sdk/annotations"
+import { PresetsDiff } from "../types"
 import IndividualPermissions from "./IndividualPermissions"
 import PresetInfo from "./PresetInfo"
 import Parameter from "./Parameter"
@@ -46,8 +47,8 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
             <Parameter
               key={parameter.name}
               parameter={parameter}
-              pathParams={preset.pathParams}
-              queryParams={preset.queryParams}
+              params={preset.params}
+              query={preset.query}
             />
           ))}
         </Flex>
