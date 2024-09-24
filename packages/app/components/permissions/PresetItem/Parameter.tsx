@@ -1,10 +1,11 @@
 import Flex from "@/ui/Flex"
-import { OpenAPIParameter, Preset } from "../types"
+
 import classes from "./style.module.css"
 import LabeledData from "@/ui/LabeledData"
+import { Preset } from "zodiac-roles-sdk/annotations"
 
 const Parameter: React.FC<{
-  parameter: OpenAPIParameter
+  parameter: Preset["operation"]["parameters"][number]
   paramValues: Preset["paramValues"]
 }> = ({ parameter, paramValues }) => {
   // we only support path and query parameters

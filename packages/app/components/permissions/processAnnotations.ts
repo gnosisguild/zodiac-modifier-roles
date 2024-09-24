@@ -1,5 +1,5 @@
 import { Annotation, Permission } from "zodiac-roles-sdk"
-import { processAnnotations as processAnnotationsBase } from "./annotations"
+import { processAnnotations as processAnnotationsBase } from "zodiac-roles-sdk/annotations"
 import { z } from "zod"
 import { zPermission } from "./schema"
 

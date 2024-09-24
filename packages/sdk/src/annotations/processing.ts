@@ -1,15 +1,33 @@
-import {
-  Annotation,
-  Permission,
-  processPermissions,
-  diffTargets,
-  splitTargets,
-  reconstructPermissions,
-  Target,
-} from "zodiac-roles-sdk"
-import { OpenAPIV3 } from "openapi-types"
 import OpenAPIBackend from "openapi-backend"
-import { OpenAPIParameter, Preset } from "./types"
+import { OpenAPIV3 } from "openapi-types"
+import { Annotation, Target } from "zodiac-roles-deployments"
+
+import {
+  Permission,
+  PermissionCoerced,
+  processPermissions,
+  reconstructPermissions,
+} from "../permissions"
+import { diffTargets, splitTargets } from "../targets"
+
+type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
+  schema: OpenAPIV3.SchemaObject
+}
+
+export interface Preset {
+  permissions: PermissionCoerced[]
+  uri: string
+  serverUrl: string
+  apiInfo: OpenAPIV3.InfoObject
+  path: string
+  paramValues: Record<string, string | number | string[] | number[]>
+  operation: {
+    summary?: string
+    description?: string
+    tags?: string[]
+    parameters: DeferencedOpenAPIParameter[]
+  }
+}
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
@@ -153,7 +171,8 @@ const resolveAnnotation = async (
 
   // The schema is already fully dereferenced, but the types don't reflect that
   // Thus the manual type cast.
-  const operationParameters = operation.parameters as OpenAPIParameter[]
+  const operationParameters =
+    operation.parameters as DeferencedOpenAPIParameter[]
 
   return {
     permissions,

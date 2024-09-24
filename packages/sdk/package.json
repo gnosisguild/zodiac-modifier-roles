@@ -13,6 +13,10 @@
     "./kit": {
       "require": "./build/cjs/sdk/src/permissions/authoring/kit.js",
       "import": "./build/esm/sdk/src/permissions/authoring/kit.js"
+    },
+    "./annotations": {
+      "require": "./build/cjs/sdk/src/annotations/processing.js",
+      "import": "./build/esm/sdk/src/annotations/processing.js"
     }
   },
   "typesVersions": {
@@ -22,6 +26,9 @@
       ],
       "kit": [
         "./build/cjs/sdk/src/permissions/authoring/kit.d.ts"
+      ],
+      "processing": [
+        "./build/cjs/sdk/src/annotations/processing.d.ts"
       ]
     }
   },
@@ -49,10 +56,18 @@
     "zodiac-roles-deployments": "workspace:^"
   },
   "peerDependencies": {
-    "@gnosis-guild/eth-sdk-client": "^0.1.6"
+    "@gnosis-guild/eth-sdk-client": "^0.1.6",
+    "openapi-backend": "^5.11.0",
+    "openapi-types": "^12.1.3"
   },
   "peerDependenciesMeta": {
     "@gnosis-guild/eth-sdk-client": {
+      "optional": true
+    },
+    "openapi-backend": {
+      "optional": true
+    },
+    "openapi-types": {
       "optional": true
     }
   },
@@ -79,6 +94,8 @@
     "hardhat": "^2.22.7",
     "hardhat-contract-sizer": "2.10.0",
     "hardhat-gas-reporter": "^2.2.1",
+    "openapi-backend": "^5.11.0",
+    "openapi-types": "^12.1.3",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",

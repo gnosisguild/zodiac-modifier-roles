@@ -1,4 +1,5 @@
-import { DiffFlag, Preset } from "../types"
+import { Preset } from "zodiac-roles-sdk/annotations"
+import { DiffFlag } from "../types"
 import { diffPermissions, diffPresets } from "./diff"
 
 describe("diff", () => {

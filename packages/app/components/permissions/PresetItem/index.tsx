@@ -1,4 +1,5 @@
-import { Preset, PresetsDiff } from "../types"
+import { Preset } from "zodiac-roles-sdk/annotations"
+import { PresetsDiff } from "../types"
 import IndividualPermissions from "./IndividualPermissions"
 import PresetInfo from "./PresetInfo"
 import Parameter from "./Parameter"
