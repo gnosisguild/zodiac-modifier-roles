@@ -23,6 +23,16 @@ describe("processAnnotations()", () => {
     ])
     expect(result.presets).to.have.lengthOf(1)
     expect(result.presets[0].permissions).to.deep.equal(permissionsForPreset1)
+    expect(result.presets[0].query).to.deep.equal({
+      buy: [
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      ],
+      sell: [
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      ],
+    })
   })
 
   it("returns the remaining, un-annotated permissions", async () => {

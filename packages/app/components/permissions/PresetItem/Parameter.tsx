@@ -1,21 +1,18 @@
+import { Preset } from "zodiac-roles-sdk/annotations"
 import Flex from "@/ui/Flex"
-
 import classes from "./style.module.css"
 import LabeledData from "@/ui/LabeledData"
-import { Preset } from "zodiac-roles-sdk/annotations"
 
 const Parameter: React.FC<{
   parameter: Preset["operation"]["parameters"][number]
-  paramValues: Preset["paramValues"]
-}> = ({ parameter, paramValues }) => {
+  params: Preset["params"]
+  query: Preset["query"]
+}> = ({ parameter, params, query }) => {
   // we only support path and query parameters
   if (parameter.in !== "path" && parameter.in !== "query") return null
-  const value = paramValues[parameter.name] as
-    | string
-    | number
-    | string[]
-    | number[]
-    | undefined
+  const value = (
+    parameter.in === "path" ? params[parameter.name] : query[parameter.name]
+  ) as string | number | string[] | number[] | undefined
 
   return (
     <LabeledData label={parameter.name} title={parameter.description}>

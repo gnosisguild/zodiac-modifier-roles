@@ -20,7 +20,8 @@ export interface Preset {
   serverUrl: string
   apiInfo: OpenAPIV3.InfoObject
   path: string
-  paramValues: Record<string, string | number | string[] | number[]>
+  params: Record<string, string | number>
+  query: Record<string, string | number | string[] | number[]>
   operation: {
     summary?: string
     description?: string
@@ -162,7 +163,11 @@ const resolveAnnotation = async (
     schema,
     annotation.schema
   )
-  const { operation, paramValues } = matchAction(schema, { path, query })
+  const {
+    operation,
+    params,
+    query: parsedQuery,
+  } = matchAction(schema, { path, query })
 
   if (!operation) {
     console.error("No operation found for annotation", annotation)
@@ -180,7 +185,8 @@ const resolveAnnotation = async (
     serverUrl,
     apiInfo: schema.definition.info || { title: "", version: "" },
     path: operation.path,
-    paramValues,
+    params: params,
+    query: parsedQuery,
     operation: {
       summary: operation.summary,
       tags: operation.tags,
@@ -239,18 +245,18 @@ const matchAction = (
     query,
     headers: {},
   })
-
   // find matching operation from schema
   const operation = schema.router.matchOperation(request)
 
-  if (!operation) {
-    // parse request again, now with matched operation so that request.params will be populated
+  if (operation) {
+    // parse request again, now with matched operation so that request.query and request.params will correctly parsed
     request = schema.router.parseRequest(request, operation)
   }
 
   return {
     operation,
-    paramValues: request.params,
+    params: request.params,
+    query: request.query,
   }
 }
 

@@ -47,7 +47,8 @@ const PresetItemMain: React.FC<Props> = ({ preset, chainId, diff }) => {
             <Parameter
               key={parameter.name}
               parameter={parameter}
-              paramValues={preset.paramValues}
+              params={preset.params}
+              query={preset.query}
             />
           ))}
         </Flex>
