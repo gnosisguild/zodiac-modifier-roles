@@ -5,16 +5,16 @@ import LabeledData from "@/ui/LabeledData"
 
 const Parameter: React.FC<{
   parameter: OpenAPIParameter
-  queryParams: Preset["queryParams"]
-  pathParams: Preset["pathParams"]
-}> = ({ parameter, queryParams, pathParams }) => {
+  paramValues: Preset["paramValues"]
+}> = ({ parameter, paramValues }) => {
   // we only support path and query parameters
   if (parameter.in !== "path" && parameter.in !== "query") return null
-  const value = (
-    parameter.in === "path"
-      ? pathParams[parameter.name]
-      : queryParams[parameter.name]
-  ) as string | number | string[] | number[] | undefined
+  const value = paramValues[parameter.name] as
+    | string
+    | number
+    | string[]
+    | number[]
+    | undefined
 
   return (
     <LabeledData label={parameter.name} title={parameter.description}>

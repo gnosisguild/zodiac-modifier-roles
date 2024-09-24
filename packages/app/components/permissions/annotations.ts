@@ -7,31 +7,9 @@ import {
   reconstructPermissions,
   Target,
 } from "zodiac-roles-sdk"
-import { Enforcer } from "openapi-enforcer"
 import { OpenAPIV3 } from "openapi-types"
-import { Preset } from "./types"
-
-const defaultJsonFetch = async (url: string) => {
-  const res = await fetch(url)
-  return await validateJsonResponse(res)
-}
-
-async function validateJsonResponse(res: Response) {
-  if (res.ok) {
-    return await res.json()
-  }
-
-  // try to parse the response as json to get the error message
-  let json = null
-  try {
-    json = await res.json()
-  } catch (e) {}
-  if (json.error) {
-    throw new Error(json.error)
-  }
-
-  return new Error(`Request failed: ${res.statusText}`)
-}
+import OpenAPIBackend from "openapi-backend"
+import { OpenAPIParameter, Preset } from "./types"
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
@@ -42,11 +20,42 @@ export const processAnnotations = async (
     fetchSchema?: (url: string) => Promise<OpenAPIV3.Document>
   } = {}
 ) => {
+  const {
+    fetchPermissions = defaultJsonFetch as (
+      url: string
+    ) => Promise<Permission[]>,
+    fetchSchema = defaultJsonFetch as (
+      url: string
+    ) => Promise<OpenAPIV3.Document>,
+  } = options
+
+  const cache = new Map<string, Promise<OpenAPIBackend>>()
+  const cachedFetchSchema = (url: string) => {
+    const fetchSchemaAndInitApi = async () => {
+      const schema = await fetchSchema(url)
+      const api = new OpenAPIBackend({
+        definition: schema,
+        quick: true, // makes $ref resolution synchronous
+      })
+      await api.init()
+      return api
+    }
+
+    if (!cache.has(url)) {
+      cache.set(url, fetchSchemaAndInitApi())
+    }
+
+    return cache.get(url)!
+  }
+
   const { targets } = processPermissions(permissions)
   const presets = await Promise.all(
     annotations.map(async (annotation) => {
       try {
-        return resolveAnnotation(annotation, options)
+        return await resolveAnnotation(annotation, {
+          fetchPermissions,
+          fetchSchema: cachedFetchSchema,
+        })
       } catch (e) {
         console.error("Error resolving annotation", e)
         return null
@@ -104,20 +113,14 @@ export const processAnnotations = async (
 
 const resolveAnnotation = async (
   annotation: Annotation,
-  options: {
-    fetchPermissions?: (url: string) => Promise<Permission[]>
-    fetchSchema?: (url: string) => Promise<OpenAPIV3.Document>
-  } = {}
+  {
+    fetchPermissions,
+    fetchSchema,
+  }: {
+    fetchPermissions: (url: string) => Promise<Permission[]>
+    fetchSchema: (url: string) => Promise<OpenAPIBackend>
+  }
 ): Promise<Preset | null> => {
-  const {
-    fetchPermissions = defaultJsonFetch as (
-      url: string
-    ) => Promise<Permission[]>,
-    fetchSchema = defaultJsonFetch as (
-      url: string
-    ) => Promise<OpenAPIV3.Document>,
-  } = options
-
   const [permissions, schema] = await Promise.all([
     fetchPermissions(annotation.uri).catch((e: Error) => {
       console.error(`Error resolving annotation ${annotation.uri}`, e)
@@ -132,71 +135,53 @@ const resolveAnnotation = async (
   if (!permissions) {
     throw new Error("invalid fetchPermissions result")
   }
-  if (!schema) {
-    throw new Error("invalid fetchSchema result")
-  }
   if (permissions.length === 0) {
     throw new Error(`Annotation resolves to empty permission set`)
   }
 
-  const { serverUrl, path } = resolveAnnotationPath(
+  const { serverUrl, path, query } = parseUri(
     annotation.uri,
     schema,
     annotation.schema
   )
+  const { operation, paramValues } = matchAction(schema, { path, query })
 
-  const enforcer = await Enforcer(schema, {
-    componentOptions: {
-      exceptionSkipCodes: ["EDEV001"], // ignore error: "Property not allowed: webhooks"
-    },
-  })
-
-  const { value, error, warning } = enforcer.request({
-    method: "GET",
-    path,
-  })
-
-  if (error) {
-    console.error(error, annotation)
-  }
-  if (warning) {
-    console.warn(warning, annotation)
+  if (!operation) {
+    console.error("No operation found for annotation", annotation)
+    return null
   }
 
-  if (!value) {
-    throw new Error(`Could not resolve annotation: ${error}`)
-  }
+  // The schema is already fully dereferenced, but the types don't reflect that
+  // Thus the manual type cast.
+  const operationParameters = operation.parameters as OpenAPIParameter[]
 
   return {
     permissions,
     uri: annotation.uri,
     serverUrl,
-    apiInfo: enforcer.info?.toObject() || { title: "", version: "" },
-    pathKey: value.pathKey,
-    pathParams: value.path,
-    queryParams: value.query,
+    apiInfo: schema.definition.info || { title: "", version: "" },
+    path: operation.path,
+    paramValues,
     operation: {
-      summary: value.operation?.summary,
-      tags: value.operation?.tags,
-      parameters:
-        value.operation?.parameters?.map((param: any) => param.toObject()) ||
-        [],
+      summary: operation.summary,
+      tags: operation.tags,
+      parameters: operationParameters,
     },
   }
 }
 
 /** Returns the annotation's path relative to the API server's base URL */
-const resolveAnnotationPath = (
+const parseUri = (
   annotationUrl: string,
-  schema: OpenAPIV3.Document,
+  schema: OpenAPIBackend,
   schemaUrl: string
 ) => {
   // Server urls may be relative, to indicate that the host location is relative to the location where the OpenAPI document is being served.
   // We resolve them to absolute urls.
   const serverUrls =
-    !schema.servers || schema.servers.length === 0
+    !schema.document.servers || schema.document.servers.length === 0
       ? ["/"]
-      : schema.servers.map((server) => server.url)
+      : schema.document.servers.map((server) => server.url)
   const absoluteServerUrls = serverUrls.map(
     (serverUrl) => new URL(serverUrl, schemaUrl).href
   )
@@ -211,12 +196,63 @@ const resolveAnnotationPath = (
     )
   }
 
+  // extract the pathname after the server base path and the query string
   const pathAndQuery = new URL(annotationUrl, matchingServerUrl).href.slice(
     matchingServerUrl.length
   )
+  const { pathname, search } = new URL(pathAndQuery, "http://0/")
 
   return {
     serverUrl: matchingServerUrl,
-    path: pathAndQuery,
+    path: pathname,
+    query: search,
   }
+}
+
+/** Matches a request against the operations in the OpenAPI schema  */
+const matchAction = (
+  schema: OpenAPIBackend,
+  { path, query }: { path: string; query: string }
+) => {
+  let request = schema.router.parseRequest({
+    method: "GET",
+    path,
+    query,
+    headers: {},
+  })
+
+  // find matching operation from schema
+  const operation = schema.router.matchOperation(request)
+
+  if (!operation) {
+    // parse request again, now with matched operation so that request.params will be populated
+    request = schema.router.parseRequest(request, operation)
+  }
+
+  return {
+    operation,
+    paramValues: request.params,
+  }
+}
+
+const defaultJsonFetch = async (url: string) => {
+  const res = await fetch(url)
+  return await validateJsonResponse(res)
+}
+
+async function validateJsonResponse(res: Response) {
+  if (res.ok) {
+    return await res.json()
+  }
+
+  // try to parse the response as json to get the error message
+  let json = null
+  try {
+    json = await res.json()
+  } catch (e) {}
+  if (json.error) {
+    throw new Error(json.error)
+  }
+
+  return new Error(`Request failed: ${res.statusText}`)
 }

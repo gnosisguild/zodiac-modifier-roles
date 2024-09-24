@@ -4,15 +4,15 @@ import { PermissionCoerced } from "zodiac-roles-sdk"
 export type OpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
 }
+type T = OpenAPIParameter["schema"]
 
 export interface Preset {
   permissions: PermissionCoerced[]
   uri: string
   serverUrl: string
   apiInfo: OpenAPIV3.InfoObject
-  pathKey: string
-  pathParams: Record<string, string | number>
-  queryParams: Record<string, string | number | string[] | number[]>
+  path: string
+  paramValues: Record<string, string | number | string[] | number[]>
   operation: {
     summary?: string
     description?: string
