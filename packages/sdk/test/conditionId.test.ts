@@ -1,9 +1,9 @@
 import { expect } from "chai"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionId, normalizeCondition } from "../src/conditions"
+import { conditionAddress, normalizeCondition } from "../src/conditions"
 
-describe("conditionId", () => {
+describe("conditionAddress", () => {
   it("calculates the create2 storage address of the condition", () => {
     const normalizedCondition = normalizeCondition({
       operator: Operator.Matches,
@@ -55,7 +55,7 @@ describe("conditionId", () => {
         },
       ],
     })
-    expect(conditionId(normalizedCondition)).to.equal(
+    expect(conditionAddress(normalizedCondition)).to.equal(
       "0xa835a51f2a581493b7416daed729cc78e0f68224" // see: https://arbiscan.io/address/0xa835a51f2a581493b7416daed729cc78e0f68224#code
     )
   })

@@ -5,7 +5,7 @@ import {
   Condition,
 } from "zodiac-roles-deployments"
 
-import { conditionId, normalizeCondition } from "../conditions"
+import { normalizeCondition } from "../conditions"
 
 /**
  *  Returns targets granted by `a` that are not granted by `b`
@@ -80,7 +80,6 @@ const conditionsEqual = (conditionA?: Condition, conditionB?: Condition) =>
   (!conditionA && !conditionB) ||
   (conditionA &&
     conditionB &&
-    conditionId(normalizeCondition(conditionA)) ===
-      conditionId(normalizeCondition(conditionB)))
+    normalizeCondition(conditionA).id === normalizeCondition(conditionB).id)
 
 const isTruthy = Boolean as any as <T>(x: T | undefined) => x is T

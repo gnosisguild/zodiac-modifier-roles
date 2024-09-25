@@ -1,5 +1,5 @@
 export { flattenCondition } from "./flattenCondition"
-export { conditionId } from "./conditionId"
+export { conditionAddress, conditionId } from "./conditionId"
 export { normalizeCondition } from "./normalizeCondition"
 export { splitCondition } from "./splitCondition"
 export {

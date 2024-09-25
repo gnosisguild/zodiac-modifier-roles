@@ -1,7 +1,7 @@
 import { keccak256, ParamType, toUtf8Bytes } from "ethers"
 import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deployments"
 
-import { conditionId, normalizeCondition } from "../conditions"
+import { conditionAddress, normalizeCondition } from "../conditions"
 
 import {
   Permission,
@@ -60,7 +60,7 @@ export const targetId = (permission: PermissionCoerced) =>
 export const permissionId = (permission: PermissionCoerced) => {
   const cid =
     "condition" in permission && permission.condition
-      ? conditionId(normalizeCondition(permission.condition))
+      ? conditionAddress(normalizeCondition(permission.condition))
       : ""
   return `${targetId(permission)}:${execOptions(permission)}:${cid}`
 }
