@@ -2,7 +2,7 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId as calculateConditionId } from "./conditionId"
 
-type NormalizedCondition = Omit<Condition, "children"> & {
+export type NormalizedCondition = Omit<Condition, "children"> & {
   id: string
   children?: NormalizedCondition[]
 }
@@ -40,6 +40,15 @@ export const normalizeCondition = (
 const addId = (condition: NormalizedCondition) => {
   condition.id = calculateConditionId(condition)
   return condition
+}
+
+export const stripIds = (condition: NormalizedCondition): Condition => {
+  const { id, children, ...rest } = condition
+  if (!children) return rest
+  return {
+    ...rest,
+    children: children.map(stripIds),
+  }
 }
 
 /** collapse condition subtrees unnecessarily describing static tuple structures */
@@ -142,10 +151,9 @@ const dedupeBranches = (
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const childId = child.id
-      const isDuplicate = !childIds.has(childId)
-      childIds.add(childId)
-      return isDuplicate
+      const isDuplicate = childIds.has(child.id)
+      childIds.add(child.id)
+      return !isDuplicate
     })
 
     condition.children = uniqueChildren

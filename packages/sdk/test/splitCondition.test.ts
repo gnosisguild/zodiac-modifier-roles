@@ -11,7 +11,7 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-describe("splitCondition", () => {
+describe.only("splitCondition", () => {
   it("returns the remainder condition for ORs", () => {
     const combined = normalizeCondition({
       paramType: ParameterType.None,

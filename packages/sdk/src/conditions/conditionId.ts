@@ -21,7 +21,10 @@ const ZERO_SALT =
 export const conditionId = (condition: Condition) => {
   const conditions = flattenCondition(condition)
   return concat(
-    conditions.flatMap((condition) => [packCondition(condition), "0x"])
+    conditions.flatMap((condition) => [
+      packCondition(condition),
+      condition.compValue || "0x",
+    ])
   )
 }
 

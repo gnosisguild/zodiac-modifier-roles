@@ -1,37 +1,31 @@
-import { Condition, Operator } from "zodiac-roles-deployments"
+import { Operator } from "zodiac-roles-deployments"
 
-import { conditionId } from "./conditionId"
-import { normalizeCondition } from "./normalizeCondition"
+import {
+  normalizeCondition,
+  NormalizedCondition,
+  stripIds,
+} from "./normalizeCondition"
 
 /**
- * Given two conditions, split the first condition into two conditions, the given split condition and the remainder.
- * Both passed conditions are assumed to be in normal form.
+ * Given two normalized conditions, split the first condition into two conditions, the given split condition and the remainder.
  * @returns The remainder condition (normalized), or `undefined` if the split condition is equal to the combined condition.
  * @throws If the split condition is not a sub-condition of the combined condition.
  */
 export const splitCondition = (
-  combined: Condition,
-  split: Condition
-): Condition | undefined => {
-  const result = splitConditionRecursive(combined, split)
-  return result && normalizeCondition(result)
-}
-
-const splitConditionRecursive = (
-  combined: Condition,
-  split: Condition
-): Condition | undefined => {
-  if (conditionId(combined) === conditionId(split)) return undefined
+  combined: NormalizedCondition,
+  split: NormalizedCondition
+): NormalizedCondition | undefined => {
+  if (combined.id === split.id) return undefined
 
   if (combined.operator === Operator.Or) {
     // potential splitting point
     const combinedChildrenIds = new Set(
-      combined.children?.map(conditionId) || []
+      combined.children?.map((c) => c.id) || []
     )
 
     if (split.operator === Operator.Or) {
       // n:m OR split
-      const splitChildrenIds = new Set(split.children?.map(conditionId) || [])
+      const splitChildrenIds = new Set(split.children?.map((c) => c.id) || [])
       if (
         new Set([...combinedChildrenIds, ...splitChildrenIds]).size !==
         combinedChildrenIds.size
@@ -40,38 +34,34 @@ const splitConditionRecursive = (
       }
 
       const remainderChildren =
-        combined.children?.filter(
-          (child) => !splitChildrenIds.has(conditionId(child))
-        ) || []
+        combined.children?.filter((child) => !splitChildrenIds.has(child.id)) ||
+        []
 
       if (!remainderChildren.length) return undefined
 
       return remainderChildren.length === 1
         ? remainderChildren[0]
-        : {
+        : renormalize({
             ...combined,
             children: remainderChildren,
-          }
+          })
     } else {
       // n:1 OR split
-      const splitConditionId = conditionId(split)
-      if (!combinedChildrenIds.has(splitConditionId)) {
+      if (!combinedChildrenIds.has(split.id)) {
         throw new Error("inconsistent children")
       }
 
       const remainderChildren =
-        combined.children?.filter(
-          (child) => conditionId(child) !== splitConditionId
-        ) || []
+        combined.children?.filter((child) => child.id !== split.id) || []
 
       if (!remainderChildren.length) return undefined
 
       return remainderChildren.length === 1
         ? remainderChildren[0]
-        : {
+        : renormalize({
             ...combined,
             children: remainderChildren,
-          }
+          })
     }
   }
 
@@ -100,8 +90,8 @@ const splitConditionRecursive = (
 
     // Combined and split conditions are both normalized, meaning children are ordered ny their condition ID.
     // They must differ in at most in one child, but this child will appear at different positions.
-    const combinedChildrenIds = combined.children.map(conditionId)
-    const splitChildrenIds = split.children.map(conditionId)
+    const combinedChildrenIds = combined.children.map((c) => c.id)
+    const splitChildrenIds = split.children.map((c) => c.id)
     const equalChildren = combined.children.filter((_, i) =>
       splitChildrenIds.includes(combinedChildrenIds[i])
     )
@@ -121,7 +111,10 @@ const splitConditionRecursive = (
     )
     if (!remainderChild) throw new Error("invariant violation")
 
-    return { ...combined, children: [...equalChildren, remainderChild] }
+    return renormalize({
+      ...combined,
+      children: [...equalChildren, remainderChild],
+    })
   }
 
   // Process all children of matches and array conditions
@@ -130,7 +123,7 @@ const splitConditionRecursive = (
   const remainderChildren = combined.children.map((child, index) => {
     const splitChild = split.children && split.children[index]
     if (!splitChild) throw new Error("inconsistent children")
-    if (conditionId(child) === conditionId(splitChild)) return child
+    if (child.id === splitChild.id) return child
 
     // Combined and split conditions are both normalized, meaning children will have the same order up to the first difference (i.e. the split child).
     if (didSplit) {
@@ -147,8 +140,13 @@ const splitConditionRecursive = (
     throw new Error("invariant violation")
   }
 
-  return {
+  return renormalize({
     ...combined,
     children: remainderChildren,
-  }
+  })
 }
+
+// When deriving an updated condition from a normalized condition, we need to re-normalize it.
+// This is ensured by stripping out the now stale ID so normalizeCondition won't bail.
+const renormalize = (condition: NormalizedCondition): NormalizedCondition =>
+  normalizeCondition(stripIds(condition))
