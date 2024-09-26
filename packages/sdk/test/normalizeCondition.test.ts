@@ -6,6 +6,7 @@ import { FunctionPermissionCoerced, c } from "../src/permissions"
 import { allow } from "../src/permissions/authoring/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
+import { stripIds } from "../src/conditions/normalizeCondition"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
@@ -479,12 +480,3 @@ describe("normalizeCondition()", () => {
     expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
   })
 })
-
-const stripIds = (condition: Condition & { id?: string }): Condition => {
-  const { id, children, ...rest } = condition
-  if (!children) return rest
-  return {
-    ...rest,
-    children: children.map(stripIds),
-  }
-}

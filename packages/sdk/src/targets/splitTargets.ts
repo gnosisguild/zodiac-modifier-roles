@@ -4,7 +4,7 @@
 
 import { Target } from "zodiac-roles-deployments"
 
-import { splitCondition } from "../conditions"
+import { normalizeCondition, splitCondition } from "../conditions"
 
 import { diffTargets } from "./diffTargets"
 
@@ -44,8 +44,8 @@ export const splitTargets = (
           }
 
           const remainderCondition = splitCondition(
-            func.condition,
-            funcInSplit.condition
+            normalizeCondition(func.condition),
+            normalizeCondition(funcInSplit.condition)
           )
           if (!remainderCondition) throw new Error("invariant violation")
 

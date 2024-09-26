@@ -80,6 +80,6 @@ const conditionsEqual = (conditionA?: Condition, conditionB?: Condition) =>
   (!conditionA && !conditionB) ||
   (conditionA &&
     conditionB &&
-    normalizeCondition(conditionA).id === normalizeCondition(conditionB).id)
+    normalizeCondition(conditionA).$$id === normalizeCondition(conditionB).$$id)
 
 const isTruthy = Boolean as any as <T>(x: T | undefined) => x is T

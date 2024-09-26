@@ -3,7 +3,13 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 import { conditionId as calculateConditionId } from "./conditionId"
 
 export type NormalizedCondition = Omit<Condition, "children"> & {
-  id: string
+  /**
+   * A unique ID that is derived from the normalized condition content.
+   * As such it's useful for comparing conditions for equality.
+   *
+   * **Important: Whenever a condition is updated, its `$$id` field must be deleted.**
+   **/
+  $$id: string
   children?: NormalizedCondition[]
 }
 
@@ -14,11 +20,11 @@ export type NormalizedCondition = Omit<Condition, "children"> & {
 export const normalizeCondition = (
   condition: Condition | NormalizedCondition
 ): NormalizedCondition => {
-  if ("id" in condition && condition.id) return condition
+  if (isNormalized(condition)) return condition
 
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
   let result: NormalizedCondition = {
-    id: "", // we'll set if after passing all normalization steps
+    $$id: "", // we'll set if after passing all normalization steps
     ...condition,
     children: condition.children?.map(normalizeCondition),
   }
@@ -37,13 +43,17 @@ export const normalizeCondition = (
   return result
 }
 
+export const isNormalized = (
+  condition: Condition
+): condition is NormalizedCondition => "$$id" in condition && !!condition.$$id
+
 const addId = (condition: NormalizedCondition) => {
-  condition.id = calculateConditionId(condition)
+  condition.$$id = calculateConditionId(condition)
   return condition
 }
 
 export const stripIds = (condition: NormalizedCondition): Condition => {
-  const { id, children, ...rest } = condition
+  const { $$id, children, ...rest } = condition
   if (!children) return rest
   return {
     ...rest,
@@ -68,7 +78,7 @@ const collapseStaticTupleTypeTrees = (
 
       return isStaticTuple
         ? addId({
-            id: "",
+            $$id: "",
             paramType: ParameterType.Static,
             operator: condition.operator,
             compValue: condition.compValue,
@@ -151,8 +161,8 @@ const dedupeBranches = (
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const isDuplicate = childIds.has(child.id)
-      childIds.add(child.id)
+      const isDuplicate = childIds.has(child.$$id)
+      childIds.add(child.$$id)
       return !isDuplicate
     })
 
@@ -186,7 +196,9 @@ const normalizeChildrenOrder = (
     condition.operator === Operator.Nor
   ) {
     if (!condition.children) return condition
-    condition.children.sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
+    condition.children.sort((a, b) =>
+      BigInt(a.$$id) < BigInt(b.$$id) ? -1 : 1
+    )
 
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
     const moveToFront = condition.children.filter(
@@ -280,7 +292,7 @@ const pushDownLogicalConditions = (
             ? []
             : [
                 {
-                  id: "",
+                  $$id: "",
                   paramType: ParameterType.None,
                   operator: Operator.Or,
                   children: orBranches,
@@ -293,7 +305,7 @@ const pushDownLogicalConditions = (
     // If we push down, we'll need to re-normalize the children
     // This will recursively further push down logical conditions as far as possible
     if (updatedCondition) {
-      updatedCondition.id = "" // clear id to force re-normalization
+      updatedCondition.$$id = "" // clear id to force re-normalization
       return normalizeCondition(updatedCondition)
     }
   }
@@ -350,7 +362,7 @@ const findMatchesHingeIndex = (conditions: readonly NormalizedCondition[]) => {
 const findAndHingeIndices = (conditions: readonly NormalizedCondition[]) => {
   const allChildrenIds = conditions.map((condition) => {
     if (!condition.children) throw new Error("empty children")
-    return condition.children.map((child) => child.id)
+    return condition.children.map((child) => child.$$id)
   })
   const allChildrenIdsSets = allChildrenIds.map((ids) => new Set(ids))
 
@@ -409,4 +421,4 @@ const isDynamicParamType = (condition: Condition): boolean => {
 const conditionsEqual = (
   a: NormalizedCondition | undefined,
   b: NormalizedCondition | undefined
-) => (!a || a.id) === (!b || b.id)
+) => (!a || a.$$id) === (!b || b.$$id)
