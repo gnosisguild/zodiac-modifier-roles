@@ -1,30 +1,70 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionId } from "./conditionId"
+import { conditionId as calculateConditionId } from "./conditionId"
+
+export type NormalizedCondition = Omit<Condition, "children"> & {
+  /**
+   * A unique ID that is derived from the normalized condition content.
+   * As such it's useful for comparing conditions for equality.
+   *
+   * **Important: Whenever a condition is updated, its `$$id` field must be deleted.**
+   **/
+  $$id: string
+  children?: NormalizedCondition[]
+}
 
 /**
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
  * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
  **/
-export const normalizeCondition = (condition: Condition): Condition => {
+export const normalizeCondition = (
+  condition: Condition | NormalizedCondition
+): NormalizedCondition => {
+  if (isNormalized(condition)) return condition
+
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
-  const normalizedChildren = condition.children?.map(normalizeCondition)
-  let result: Condition = normalizedChildren
-    ? { ...condition, children: normalizedChildren }
-    : condition
+  let result: NormalizedCondition = {
+    $$id: "", // we'll set if after passing all normalization steps
+    ...condition,
+    children: condition.children?.map(normalizeCondition),
+  }
+
+  // At this point result is already a deep clone of the input condition, so the individual normalization functions can safely mutate it in place.
   result = collapseStaticTupleTypeTrees(result)
   result = pruneTrailingPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
-  result = normalizeChildrenOrder(result)
   result = deleteUndefinedFields(result)
   result = pushDownLogicalConditions(result)
+  result = normalizeChildrenOrder(result)
+
+  addId(result)
   return result
 }
 
+export const isNormalized = (
+  condition: Condition
+): condition is NormalizedCondition => "$$id" in condition && !!condition.$$id
+
+const addId = (condition: NormalizedCondition) => {
+  condition.$$id = calculateConditionId(condition)
+  return condition
+}
+
+export const stripIds = (condition: NormalizedCondition): Condition => {
+  const { $$id, children, ...rest } = condition
+  if (!children) return rest
+  return {
+    ...rest,
+    children: children.map(stripIds),
+  }
+}
+
 /** collapse condition subtrees unnecessarily describing static tuple structures */
-const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
+const collapseStaticTupleTypeTrees = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (condition.paramType === ParameterType.Tuple) {
     if (
       condition.operator === Operator.Pass ||
@@ -37,11 +77,12 @@ const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
       )
 
       return isStaticTuple
-        ? {
+        ? addId({
+            $$id: "",
             paramType: ParameterType.Static,
             operator: condition.operator,
             compValue: condition.compValue,
-          }
+          })
         : condition
     }
   }
@@ -50,7 +91,9 @@ const collapseStaticTupleTypeTrees = (condition: Condition): Condition => {
 }
 
 /** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
-const pruneTrailingPass = (condition: Condition): Condition => {
+const pruneTrailingPass = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
@@ -72,7 +115,7 @@ const pruneTrailingPass = (condition: Condition): Condition => {
   if (isDynamicTuple) {
     keepChildrenUntil = condition.children.findIndex(isDynamicParamType)
   }
-  let prunedChildren: Condition[] = condition.children.slice(
+  let prunedChildren: NormalizedCondition[] = condition.children.slice(
     0,
     keepChildrenUntil + 1
   )
@@ -84,13 +127,14 @@ const pruneTrailingPass = (condition: Condition): Condition => {
     }
   }
 
-  return prunedChildren.length === condition.children.length
-    ? condition
-    : { ...condition, children: prunedChildren }
+  condition.children = prunedChildren
+  return condition
 }
 
 /** flatten nested AND/OR conditions */
-const flattenNestedLogicalConditions = (condition: Condition): Condition => {
+const flattenNestedLogicalConditions = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -100,17 +144,16 @@ const flattenNestedLogicalConditions = (condition: Condition): Condition => {
     const flattenedChildren = condition.children.flatMap((child) =>
       child.operator === condition.operator ? child.children || [] : [child]
     )
-    return {
-      ...condition,
-      children: flattenedChildren,
-    }
+    condition.children = flattenedChildren
   }
 
   return condition
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
-const dedupeBranches = (condition: Condition): Condition => {
+const dedupeBranches = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -118,20 +161,21 @@ const dedupeBranches = (condition: Condition): Condition => {
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const childId = conditionId(child)
-      const isDuplicate = !childIds.has(childId)
-      childIds.add(childId)
-      return isDuplicate
+      const isDuplicate = childIds.has(child.$$id)
+      childIds.add(child.$$id)
+      return !isDuplicate
     })
 
-    return { ...condition, children: uniqueChildren }
+    condition.children = uniqueChildren
   }
 
   return condition
 }
 
 /** remove AND/OR wrapping if they have only a single child */
-const unwrapSingleBranches = (condition: Condition): Condition => {
+const unwrapSingleBranches = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -143,43 +187,38 @@ const unwrapSingleBranches = (condition: Condition): Condition => {
 }
 
 /** enforce a canonical order of AND/OR/NOR branches */
-const normalizeChildrenOrder = (condition: Condition): Condition => {
+const normalizeChildrenOrder = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
     condition.operator === Operator.Nor
   ) {
     if (!condition.children) return condition
-
-    const pairs = condition.children.map(
-      (child) => [BigInt(conditionId(child)), child] as const
+    condition.children.sort((a, b) =>
+      BigInt(a.$$id) < BigInt(b.$$id) ? -1 : 1
     )
-    // sort is in-place
-    pairs.sort(([a], [b]) => (a < b ? -1 : 1))
-    let orderedChildren = pairs.map(([, child]) => child)
 
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
-    const moveToFront = orderedChildren.filter(
+    const moveToFront = condition.children.filter(
       (child) =>
         child.paramType === ParameterType.Calldata ||
         child.paramType === ParameterType.AbiEncoded
     )
-    orderedChildren = [
+    condition.children = [
       ...moveToFront,
-      ...orderedChildren.filter((c) => !moveToFront.includes(c)),
+      ...condition.children.filter((c) => !moveToFront.includes(c)),
     ]
-
-    return {
-      ...condition,
-      children: orderedChildren,
-    }
   }
 
   return condition
 }
 
 /** push AND and OR conditions as far down the tree as possible without changing semantics */
-const pushDownLogicalConditions = (condition: Condition): Condition => {
+const pushDownLogicalConditions = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -195,7 +234,7 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
       return condition
     }
 
-    let updatedCondition: Condition | null = null
+    let updatedCondition: NormalizedCondition | null = null
     if (first.operator === Operator.Matches) {
       let hingeIndex: number | null = null
       try {
@@ -227,7 +266,7 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
 
       updatedCondition = {
         ...first,
-        children: children as Condition[],
+        children: children as NormalizedCondition[],
       }
     }
 
@@ -253,6 +292,7 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
             ? []
             : [
                 {
+                  $$id: "",
                   paramType: ParameterType.None,
                   operator: Operator.Or,
                   children: orBranches,
@@ -264,7 +304,10 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
 
     // If we push down, we'll need to re-normalize the children
     // This will recursively further push down logical conditions as far as possible
-    return updatedCondition ? normalizeCondition(updatedCondition) : condition
+    if (updatedCondition) {
+      updatedCondition.$$id = "" // clear id to force re-normalization
+      return normalizeCondition(updatedCondition)
+    }
   }
 
   return condition
@@ -275,7 +318,7 @@ const pushDownLogicalConditions = (condition: Condition): Condition => {
  * @returns the index of the hinge node. If there are differences in more than a single index, returns `null`.
  * @throws If the conditions would not pass integrity checks.
  **/
-const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
+const findMatchesHingeIndex = (conditions: readonly NormalizedCondition[]) => {
   // use first branch as reference and check if the others are equivalent beyond a single nested hinge node
   let hingeNodeIndex: number | null = null
 
@@ -316,10 +359,10 @@ const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
  * Given a set of AND conditions, check that their children are equal beyond a single hinge node in each branch. A hinge branch index of `-1` indicate a missing branch that is present in the other AND conditions.
  * @returns the indices of the hinge branches for the respective AND conditions. If there are differences in more than a single branch, returns `null`.
  **/
-const findAndHingeIndices = (conditions: readonly Condition[]) => {
+const findAndHingeIndices = (conditions: readonly NormalizedCondition[]) => {
   const allChildrenIds = conditions.map((condition) => {
     if (!condition.children) throw new Error("empty children")
-    return condition.children.map(conditionId)
+    return condition.children.map((child) => child.$$id)
   })
   const allChildrenIdsSets = allChildrenIds.map((ids) => new Set(ids))
 
@@ -349,7 +392,9 @@ const intersection = <T>(...sets: Set<T>[]) => {
 const difference = <T>(a: Set<T>, b: Set<T>) =>
   Array.from(a).filter((element) => !b.has(element))
 
-const deleteUndefinedFields = (condition: Condition): Condition => {
+const deleteUndefinedFields = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
   if ("children" in condition && !condition.children) delete condition.children
   if ("compValue" in condition && !condition.compValue)
     delete condition.compValue
@@ -373,5 +418,7 @@ const isDynamicParamType = (condition: Condition): boolean => {
   }
 }
 
-const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
-  (!a || conditionId(a)) === (!b || conditionId(b))
+const conditionsEqual = (
+  a: NormalizedCondition | undefined,
+  b: NormalizedCondition | undefined
+) => (!a || a.$$id) === (!b || b.$$id)

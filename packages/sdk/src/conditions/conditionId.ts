@@ -3,9 +3,7 @@ import {
   concat,
   getCreate2Address,
   dataLength,
-  hexlify,
   keccak256,
-  zeroPadValue,
   toBeHex,
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
@@ -20,10 +18,20 @@ const ERC2470_SINGLETON_FACTORY_ADDRESS =
 const ZERO_SALT =
   "0x0000000000000000000000000000000000000000000000000000000000000000"
 
+export const conditionId = (condition: Condition) => {
+  const conditions = flattenCondition(condition)
+  return concat(
+    conditions.flatMap((condition) => [
+      packCondition(condition),
+      condition.compValue || "0x",
+    ])
+  )
+}
+
 /**
  * Calculates the create2 storage address of the condition.
  */
-export const conditionId = (condition: Condition) => {
+export const conditionAddress = (condition: Condition) => {
   const conditions = flattenCondition(condition)
   removeExtraneousOffsets(conditions)
 

@@ -1,6 +1,6 @@
 import { ExecutionOptions } from "zodiac-roles-deployments"
 
-import { conditionId } from "../conditions"
+import { conditionAddress } from "../conditions"
 
 import { Call } from "./types"
 
@@ -39,7 +39,7 @@ export const logCall = (
 
     case "scopeFunction": {
       const { targetAddress, selector, executionOptions, condition } = call
-      const cid = conditionId(condition)
+      const cid = conditionAddress(condition)
       log(
         `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${cid}`
       )

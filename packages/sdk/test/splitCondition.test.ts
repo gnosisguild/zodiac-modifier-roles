@@ -13,22 +13,19 @@ const DUMMY_COMP = (id: number): Condition => ({
 
 describe("splitCondition", () => {
   it("returns the remainder condition for ORs", () => {
-    const combined = normalizeCondition({
+    const combined = {
       paramType: ParameterType.None,
       operator: Operator.Or,
       children: [DUMMY_COMP(0), DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
-    })
+    }
 
     // n:m split
     expect(
-      splitCondition(
-        combined,
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.Or,
-          children: [DUMMY_COMP(0), DUMMY_COMP(1)],
-        })
-      )
+      splitCondition(combined, {
+        paramType: ParameterType.None,
+        operator: Operator.Or,
+        children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+      })
     ).to.deep.equal(
       normalizeCondition({
         paramType: ParameterType.None,
@@ -38,9 +35,7 @@ describe("splitCondition", () => {
     )
 
     // 1:n split
-    expect(
-      splitCondition(combined, normalizeCondition(DUMMY_COMP(0)))
-    ).to.deep.equal(
+    expect(splitCondition(combined, DUMMY_COMP(0))).to.deep.equal(
       normalizeCondition({
         paramType: ParameterType.None,
         operator: Operator.Or,
@@ -50,19 +45,16 @@ describe("splitCondition", () => {
 
     // n:1 split
     expect(
-      splitCondition(
-        combined,
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.Or,
-          children: [DUMMY_COMP(0), DUMMY_COMP(1), DUMMY_COMP(2)],
-        })
-      )
+      splitCondition(combined, {
+        paramType: ParameterType.None,
+        operator: Operator.Or,
+        children: [DUMMY_COMP(0), DUMMY_COMP(1), DUMMY_COMP(2)],
+      })
     ).to.deep.equal(normalizeCondition(DUMMY_COMP(3)))
   })
 
   it("hoists the split through MATCHES and AND parents", () => {
-    const combined = normalizeCondition({
+    const combined = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -80,9 +72,9 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(3),
       ],
-    })
+    }
 
-    const split = normalizeCondition({
+    const split = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -93,7 +85,7 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(3),
       ],
-    })
+    }
 
     expect(splitCondition(combined, split)).to.deep.equal(
       normalizeCondition({
@@ -112,17 +104,17 @@ describe("splitCondition", () => {
   })
 
   it("returns `undefined` if the split condition is equal to the combined condition", () => {
-    const condition = normalizeCondition({
+    const condition = {
       paramType: ParameterType.None,
       operator: Operator.Or,
       children: [DUMMY_COMP(0), DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
-    })
+    }
 
     expect(splitCondition(condition, condition)).to.be.undefined
   })
 
   it("throws if the split condition is not a sub-condition of the combined condition", () => {
-    const condition = normalizeCondition({
+    const condition = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -140,9 +132,9 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(3),
       ],
-    })
+    }
 
-    const split1 = normalizeCondition({
+    const split1 = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -160,12 +152,12 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(3),
       ],
-    })
+    }
     expect(() => splitCondition(condition, split1)).to.throw(
       "inconsistent children"
     )
 
-    const split2 = normalizeCondition({
+    const split2 = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -183,12 +175,12 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(999),
       ],
-    })
+    }
     expect(() => splitCondition(condition, split2)).to.throw(
       "more than one AND branch differs"
     )
 
-    const split3 = normalizeCondition({
+    const split3 = {
       paramType: ParameterType.None,
       operator: Operator.And,
       children: [
@@ -206,7 +198,7 @@ describe("splitCondition", () => {
         },
         DUMMY_COMP(3),
       ],
-    })
+    }
     expect(() => splitCondition(condition, split3)).to.throw(
       "more than one child differs"
     )
