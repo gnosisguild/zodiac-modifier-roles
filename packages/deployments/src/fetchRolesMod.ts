@@ -13,18 +13,18 @@ const QUERY = `
       owner
       avatar
       target 
-      roles {
+      roles(first: 1000) {
         key
-        members {
+        members(first: 1000) {
           member {
             address
           }
         }
-        targets {
+        targets(first: 1000) {
           address
           clearance
           executionOptions
-          functions {
+          functions(first: 1000) {
             selector
             wildcarded
             executionOptions
@@ -65,6 +65,12 @@ export const fetchRolesMod = async (
 
   if (!data || !data.rolesModifier) {
     return null
+  }
+
+  assertNoPagination(data.rolesModifier.roles)
+  for (const role of data.rolesModifier.roles) {
+    assertNoPagination(role.members)
+    assertNoPagination(role.targets)
   }
 
   return mapGraphQl(data.rolesModifier)
@@ -134,3 +140,9 @@ const mapGraphQlRole = (role: any): RoleSummary => ({
       })
     ),
 })
+
+const assertNoPagination = (data: any[]) => {
+  if (data.length === 1000) {
+    throw new Error("Pagination not supported")
+  }
+}

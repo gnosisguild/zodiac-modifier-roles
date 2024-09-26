@@ -18,16 +18,16 @@ const QUERY = `
 query Role($id: String) {
   role(id: $id) {
     key
-    members {
+    members(first: 1000) {
       member {
         address
       }
     }
-    targets {
+    targets(first: 1000) {
       address
       clearance
       executionOptions
-      functions {
+      functions(first: 1000) {
         selector
         executionOptions
         wildcarded
@@ -37,7 +37,7 @@ query Role($id: String) {
         }
       }
     }
-    annotations {
+    annotations(first: 1000) {
       uri
       schema
     }
@@ -77,6 +77,10 @@ export const fetchRole = async (
     return null
   }
 
+  assertNoPagination(data.role.members)
+  assertNoPagination(data.role.targets)
+  assertNoPagination(data.role.annotations)
+
   return mapGraphQl(data.role)
 }
 
@@ -105,3 +109,9 @@ const mapGraphQl = (role: any): Role => ({
     })
   ),
 })
+
+const assertNoPagination = (data: any[]) => {
+  if (data.length === 1000) {
+    throw new Error("Pagination not supported")
+  }
+}
