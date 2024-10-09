@@ -6,7 +6,7 @@ import {
   arbitrum,
   base,
   polygon,
-  polygonZkEvm
+  polygonZkEvm,
   gnosis,
 } from "wagmi/chains"
 
