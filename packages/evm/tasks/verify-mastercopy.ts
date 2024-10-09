@@ -9,13 +9,18 @@ task(
 )
   .addOptionalParam(
     "contractVersion",
-    "Filters by a specific version or lateat",
+    "Specify a specific version",
     "latest", // Default value
     types.string
   )
   .setAction(async ({ contractVersion }, hre) => {
-    if (!ETHERSCAN_API_KEY) {
-      throw new Error("Missing ENV ETHERSCAN_API_KEY");
+    const apiKey = (hre.config.etherscan.apiKey as any)[hre.network.name] as
+      | string
+      | undefined;
+    if (!apiKey) {
+      throw new Error(
+        "Missing etherscan api key for network " + hre.network.name
+      );
     }
 
     const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
@@ -24,7 +29,7 @@ task(
       const { noop } = await verifyMastercopy({
         artifact,
         apiUrlOrChainId: chainId,
-        apiKey: ETHERSCAN_API_KEY,
+        apiKey: apiKey,
       });
 
       const { contractName, contractVersion, address } = artifact;

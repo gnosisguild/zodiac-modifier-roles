@@ -893,7 +893,7 @@ __metadata:
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.4
-    "@gnosis-guild/zodiac-core": ^2.0.2
+    "@gnosis-guild/zodiac-core": ^2.0.4
     "@gnosis.pm/safe-contracts": 1.3.0
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.7
     "@nomicfoundation/hardhat-ethers": ^3.0.7
@@ -943,16 +943,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis-guild/zodiac-core@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@gnosis-guild/zodiac-core@npm:2.0.2"
+"@gnosis-guild/zodiac-core@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@gnosis-guild/zodiac-core@npm:2.0.4"
   dependencies:
     "@gnosis.pm/safe-contracts": 1.3.0
     "@openzeppelin/contracts": 5.0.2
     "@openzeppelin/contracts-upgradeable": 5.0.2
     ethers: ^6.13.2
     semver: ^7.6.3
-  checksum: 2f679e98fcc828c3b0e4b4d6ddf55c1d176516c0d921e0015d44634dbde99575475456f6622df8fd0014b54a9e2a6204374981f0f96443d3ff7fe650367b6f43
+  checksum: aaeb9bf586ec70a950ed543ce07db9d62017f5f1884a64f3d2cf6d2d7fceb2dfaf54b7dc5435eaefb8b2c21efb86d4999ee144064243d13a85e296f2e9ed935d
   languageName: node
   linkType: hard
 

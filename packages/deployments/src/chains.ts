@@ -23,6 +23,12 @@ export const chains = {
     subgraph:
       "https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.3",
   },
+  [1101]: {
+    name: "zkevm",
+    prefix: "zkevm",
+    subgraph:
+      "https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.2.3",
+  },
   [42161]: {
     name: "arbitrumOne",
     prefix: "arb1",

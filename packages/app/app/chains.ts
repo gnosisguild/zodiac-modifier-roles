@@ -5,8 +5,8 @@ import {
   avalanche,
   arbitrum,
   base,
-  // bsc,
   polygon,
+  polygonZkEvm,
   gnosis,
 } from "wagmi/chains"
 
@@ -35,6 +35,12 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api.polygonscan.com/api",
     blockExplorerApiKey: "NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ",
   },
+  [polygonZkEvm.id]: {
+    ...polygonZkEvm,
+    prefix: "zkevm",
+    blockExplorerAbiUrl: "https://api.polygonscan.com/api",
+    blockExplorerApiKey: "NM937M1IZXVQ6QVDXS73XMF8JSAB677JWQ",
+  },
   [avalanche.id]: {
     ...avalanche,
     prefix: "avax",
@@ -53,13 +59,6 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api.basescan.org/api",
     blockExplorerApiKey: "KCC7EQHE17IAQZA9TICUS6BQTJGZUDRNIY",
   },
-  // [bsc.id]: {
-  //   ...bsc,
-  //   prefix: "bnb",
-  //   blockExplorerAbiUrl: "https://api.bscscan.com/api",
-  //   blockExplorerApiKey: "AMXEAU3N9P7RJHFSZ7KAJDRY5MFJ1N29D6",
-  // },
-
   [sepolia.id]: {
     ...sepolia,
     prefix: "sep",

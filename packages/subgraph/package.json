@@ -17,6 +17,7 @@
     "deploy:optimism": "yarn prepare:optimism && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_OPTIMISM'",
     "deploy:base": "yarn prepare:base && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_BASE'",
     "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_POLYGON'",
+    "deploy:zkevm": "yarn prepare:zkevm && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_ZKEVM'",
     "prepare:mainnet": "mustache networks/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "prepare:sepolia": "mustache networks/sepolia.json subgraph.template.yaml > subgraph.yaml",
     "prepare:gnosis": "mustache networks/gnosis.json subgraph.template.yaml > subgraph.yaml",
@@ -25,7 +26,8 @@
     "prepare:bsc": "mustache networks/bsc.json subgraph.template.yaml > subgraph.yaml",
     "prepare:optimism": "mustache networks/optimism.json subgraph.template.yaml > subgraph.yaml",
     "prepare:base": "mustache networks/base.json subgraph.template.yaml > subgraph.yaml",
-    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml"
+    "prepare:polygon": "mustache networks/polygon.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:zkevm": "mustache networks/polygon-zkevm.json subgraph.template.yaml > subgraph.yaml"
   },
   "devDependencies": {
     "mustache": "^4.2.0",
