@@ -1,12 +1,12 @@
-import { expect, assert } from "chai"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { expect } from "chai"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
+import { stripIds } from "../src/conditions/normalizeCondition"
 import { FunctionPermissionCoerced, c } from "../src/permissions"
 import { allow } from "../src/permissions/authoring/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
-import { stripIds } from "../src/conditions/normalizeCondition"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
