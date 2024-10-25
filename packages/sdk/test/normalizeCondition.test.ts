@@ -179,27 +179,6 @@ describe("normalizeCondition()", () => {
     )
   })
 
-  it("collapses condition subtrees unnecessarily describing static tuple structures", () => {
-    const compValue = encodeAbiParameters(["(uint256)"], [[123]])
-    expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Tuple,
-          operator: Operator.EqualTo,
-          compValue,
-          children: [
-            // tuple has only static children
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-          ],
-        })
-      )
-    ).to.deep.equal({
-      paramType: ParameterType.Static,
-      operator: Operator.EqualTo,
-      compValue,
-    })
-  })
-
   it("prunes trailing Static Pass nodes on Calldata", () => {
     expect(
       stripIds(

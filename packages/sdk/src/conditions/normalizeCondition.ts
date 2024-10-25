@@ -30,7 +30,6 @@ export const normalizeCondition = (
   }
 
   // At this point result is already a deep clone of the input condition, so the individual normalization functions can safely mutate it in place.
-  result = collapseStaticTupleTypeTrees(result)
   result = pruneTrailingPass(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
@@ -59,35 +58,6 @@ export const stripIds = (condition: NormalizedCondition): Condition => {
     ...rest,
     children: children.map(stripIds),
   }
-}
-
-/** collapse condition subtrees unnecessarily describing static tuple structures */
-const collapseStaticTupleTypeTrees = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
-  if (condition.paramType === ParameterType.Tuple) {
-    if (
-      condition.operator === Operator.Pass ||
-      condition.operator === Operator.EqualTo
-    ) {
-      if (!condition.children) return condition
-
-      const isStaticTuple = condition.children.every(
-        (child) => child.paramType === ParameterType.Static
-      )
-
-      return isStaticTuple
-        ? addId({
-            $$id: "",
-            paramType: ParameterType.Static,
-            operator: condition.operator,
-            compValue: condition.compValue,
-          })
-        : condition
-    }
-  }
-
-  return condition
 }
 
 /** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
