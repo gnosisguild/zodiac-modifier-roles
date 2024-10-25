@@ -1,6 +1,5 @@
 import * as ethSdk from "@gnosis-guild/eth-sdk-client"
 import {
-  Addressable,
   BaseContract,
   ContractTransaction,
   ContractTransactionResponse,
@@ -8,7 +7,6 @@ import {
   FunctionFragment,
   isError,
   TransactionRequest,
-  Typed,
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
@@ -80,19 +78,13 @@ type NonPayableOverrides = Omit<
 >
 type PayableOverrides = Omit<BaseOverrides, "blockTag" | "enableCcipRead">
 
-// For each type in the tuple exclude alternative types that ethers supports for specifying parameters:
-// Typed, Promise<any>, Addressable
-type ExcludeTyped<T extends any[]> = {
-  [K in keyof T]: Exclude<T[K], Typed | Promise<any> | Addressable>
-}
-
 // Maps the types of ethers method arguments to the ones we want to use in the allow function
 type AllowFunctionParameters<MethodArgs extends [...any]> = MethodArgs extends [
   ...any,
   NonPayableOverrides | PayableOverrides
 ]
   ? never
-  : [...TupleScopings<ExcludeTyped<MethodArgs>>, options?: Options]
+  : [...TupleScopings<MethodArgs>, options?: Options]
 
 type AllowFunctions<C extends BaseContract> = {
   [key in keyof StateMutatingContractMethods<C>]: (

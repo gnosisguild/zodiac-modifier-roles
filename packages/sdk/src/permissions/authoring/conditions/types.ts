@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ParamType } from "ethers"
+import { Addressable, BigNumberish, BytesLike, ParamType, Typed } from "ethers"
 import { Condition } from "zodiac-roles-deployments"
 
 export type ConditionFunction<T> = (
@@ -21,13 +21,20 @@ type RequireAtLeastOne<T> = {
   [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>
 }[keyof T]
 
+// Exclude alternative union members that ethers supports for specifying parameters:
+// Typed, Promise<any>, Addressable
+export type PrimitiveOnly<T> = Exclude<T, Typed | Promise<any> | Addressable>
+type MapToScoping<T> = PrimitiveOnly<T> extends PrimitiveValue
+  ? PrimitiveScoping<PrimitiveOnly<T>>
+  : PrimitiveOnly<T> extends unknown[]
+  ? ArrayScoping<PrimitiveOnly<T>>
+  : PrimitiveOnly<T> extends { [key: string]: any }
+  ? StructScoping<PrimitiveOnly<T>>
+  : never
+
 export type StructScoping<Struct extends { [key: string]: any }> =
   | RequireAtLeastOne<{
-      [Key in keyof Struct]?: Awaited<Struct[Key]> extends PrimitiveValue
-        ? PrimitiveScoping<Awaited<Struct[Key]>>
-        : Awaited<Struct[Key]> extends unknown[]
-        ? ArrayScoping<Awaited<Struct[Key]>>
-        : StructScoping<Awaited<Struct[Key]>>
+      [Key in keyof Struct]?: MapToScoping<Struct[Key]>
     }>
   | ConditionFunction<Struct>
 
@@ -46,9 +53,5 @@ export type Scoping<T> = T extends PrimitiveValue
   : unknown // it resolves to this if T is any (for example when using scoping functions outside of the typed context)
 
 export type TupleScopings<Params extends [...any[]]> = {
-  [Index in keyof Params]?: Params[Index] extends PrimitiveValue
-    ? PrimitiveScoping<Params[Index]>
-    : Params[Index] extends any[]
-    ? ArrayScoping<Params[Index]>
-    : StructScoping<Params[Index]>
+  [Index in keyof Params]?: MapToScoping<Params[Index]>
 }
