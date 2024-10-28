@@ -1,4 +1,5 @@
 import { expect } from "chai"
+
 import { processAnnotations } from "../src/annotations/processing"
 import { PermissionCoerced } from "../src/permissions"
 
@@ -179,64 +180,6 @@ const permissionsForPreset1: PermissionCoerced[] = [
   {
     targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
     selector: "0x5a66c223",
-    condition: {
-      paramType: 5,
-      operator: 5,
-      children: [
-        {
-          paramType: 3,
-          operator: 5,
-          children: [
-            {
-              paramType: 0,
-              operator: 2,
-              children: [
-                {
-                  paramType: 1,
-                  operator: 16,
-                  compValue:
-                    "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
-                },
-                {
-                  paramType: 1,
-                  operator: 16,
-                  compValue:
-                    "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                },
-              ],
-            },
-            {
-              paramType: 0,
-              operator: 2,
-              children: [
-                {
-                  paramType: 1,
-                  operator: 16,
-                  compValue:
-                    "0x0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
-                },
-                {
-                  paramType: 1,
-                  operator: 16,
-                  compValue:
-                    "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                },
-              ],
-            },
-            { paramType: 1, operator: 15 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-            { paramType: 1, operator: 0 },
-          ],
-        },
-      ],
-    },
     delegatecall: true,
   },
 ]

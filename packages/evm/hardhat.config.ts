@@ -29,7 +29,7 @@ const {
   POLYGONSCAN_API_KEY,
   ARBISCAN_API_KEY,
   SNOWTRACE_API_KEY,
-  ZKEVM_POLYGONSCAN_API_KEY
+  ZKEVM_POLYGONSCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -102,7 +102,7 @@ const config: HardhatUserConfig = {
       chainId: 43114,
       url: "https://rpc.ankr.com/avalanche",
     },
-    zkEVM: {
+    zkevm: {
       ...sharedNetworkConfig,
       chainId: 1101,
       url: "https://zkevm-rpc.com",
@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
       matic: POLYGONSCAN_API_KEY,
       arbitrum: ARBISCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
-      zkEVM: ZKEVM_POLYGONSCAN_API_KEY
+      zkevm: ZKEVM_POLYGONSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -158,6 +158,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.snowtrace.io/api",
           browserURL: "https://www.snowtrace.io",
+        },
+      },
+      {
+        network: "zkevm",
+        chainId: 1101,
+        urls: {
+          apiURL: "https://api-zkevm.polygonscan.com/api",
+          browserURL: "https://zkevm.polygonscan.com",
         },
       },
     ],
