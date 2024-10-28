@@ -53,16 +53,16 @@ type Options = {
 
 /** We need to skip over functions with "view" state mutability. We do this by matching the ethers ContractMethod type  */
 interface StateMutatingContractMethod {
-  (...args: any[]): Promise<ContractTransactionResponse>
+  (): Promise<ContractTransactionResponse>
 
   name: string
   fragment: FunctionFragment
-  getFragment(...args: any[]): FunctionFragment
-  populateTransaction(...args: any[]): Promise<ContractTransaction>
-  staticCall(...args: any[]): Promise<any>
-  send(...args: any[]): Promise<ContractTransactionResponse>
-  estimateGas(...args: any[]): Promise<bigint>
-  staticCallResult(...args: any[]): Promise<any>
+  getFragment(): FunctionFragment
+  populateTransaction(): Promise<ContractTransaction>
+  staticCall(): Promise<any>
+  send(): Promise<ContractTransactionResponse>
+  estimateGas(): Promise<bigint>
+  staticCallResult(): Promise<any>
 }
 
 type StateMutatingContractMethods<C extends BaseContract> = PickByValue<
