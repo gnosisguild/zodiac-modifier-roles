@@ -87,6 +87,7 @@ type Role @entity {
   targets: [Target!]! @derivedFrom(field: "role")
   members: [RoleAssignment!]! @derivedFrom(field: "role")
   annotations: [Annotation!]! @derivedFrom(field: "role")
+  lastUpdate: BigInt! # block number of the last update
 }
 
 type Target @entity {

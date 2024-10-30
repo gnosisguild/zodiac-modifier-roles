@@ -4,7 +4,6 @@ import {
   Role,
   RolesModifier,
   Target,
-  Condition,
   Member,
   Allowance,
   UnwrapAdapter,
@@ -25,7 +24,7 @@ export const getUnwrapAdapterId = (targetAddress: Address, selector: Bytes, role
   rolesModifierId + "-ADAPTER-" + targetAddress.toHex() + "." + selector.toHex()
 export const getAnnotationId = (uri: string, rolesModifierId: string): string => rolesModifierId + "-ANNOTATION-" + uri
 
-export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: Bytes): Role => {
+export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: Bytes, blockNumber: BigInt): Role => {
   let role = Role.load(roleId)
 
   // save role if this is the first time we encounter it
@@ -33,11 +32,15 @@ export const getOrCreateRole = (roleId: string, rolesModifierId: string, key: By
     role = new Role(roleId)
     role.key = key
     role.rolesModifier = rolesModifierId
+    role.lastUpdate = blockNumber
     role.save()
     log.info("Created new role #{}", [roleId])
   } else {
     log.debug("Loaded existing role #{}", [roleId])
+    // already now set the last update block number, so we don't have to remember to do it before saving
+    role.lastUpdate = blockNumber
   }
+
   return role
 }
 

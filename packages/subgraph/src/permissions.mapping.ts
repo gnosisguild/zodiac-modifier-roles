@@ -33,7 +33,7 @@ export function handleAllowTarget(event: AllowTarget): void {
 
   // Make sure the role exists
   const roleId = getRoleId(rolesModifierId, event.params.roleKey)
-  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.roleKey, event.block.number)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -41,6 +41,9 @@ export function handleAllowTarget(event: AllowTarget): void {
   target.executionOptions = ExecutionOptionsKeys[event.params.options]
   target.clearance = ClearanceKeys[Clearance.Target]
   target.save()
+
+  // update role lastUpdate field
+  role.save()
 
   log.info("Permission has been granted to call any function of target {}", [targetId])
 }
@@ -56,7 +59,7 @@ export function handleScopeTarget(event: ScopeTarget): void {
 
   // Make sure the role exists
   const roleId = getRoleId(rolesModifierId, event.params.roleKey)
-  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.roleKey, event.block.number)
 
   const targetAddress = event.params.targetAddress
   const targetId = getTargetId(roleId, targetAddress)
@@ -64,6 +67,9 @@ export function handleScopeTarget(event: ScopeTarget): void {
   target.executionOptions = ExecutionOptionsKeys[ExecutionOptions.None]
   target.clearance = ClearanceKeys[Clearance.Function]
   target.save()
+
+  // update role lastUpdate field
+  role.save()
 
   log.info("Target {} has been set to scoped", [targetId])
 }
@@ -97,7 +103,7 @@ export function handleAllowFunction(event: AllowFunction): void {
 
   // Make sure the role exists
   const roleId = getRoleId(rolesModifierId, event.params.roleKey)
-  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.roleKey, event.block.number)
 
   // Make sure the target exists
   const targetAddress = event.params.targetAddress
@@ -111,6 +117,9 @@ export function handleAllowFunction(event: AllowFunction): void {
   func.condition = null
   func.save()
 
+  // update role lastUpdate field
+  role.save()
+
   log.info("Wildcard permission to call {} has been granted", [functionId])
 }
 
@@ -123,7 +132,7 @@ export function handleScopeFunction(event: ScopeFunction): void {
 
   // Make sure the role exists
   const roleId = getRoleId(rolesModifierId, event.params.roleKey)
-  getOrCreateRole(roleId, rolesModifierId, event.params.roleKey)
+  const role = getOrCreateRole(roleId, rolesModifierId, event.params.roleKey, event.block.number)
 
   // Make sure the target exists
   const targetAddress = event.params.targetAddress
@@ -147,6 +156,9 @@ export function handleScopeFunction(event: ScopeFunction): void {
   func.condition = rootCondition.id
 
   func.save()
+
+  // update role lastUpdate field
+  role.save()
 
   log.info("Function {} has been scoped with condition {} and exec options {}", [
     functionId,
