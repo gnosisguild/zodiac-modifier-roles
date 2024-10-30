@@ -247,6 +247,34 @@ describe("normalizeCondition()", () => {
     })
   })
 
+  it("prunes trailing static Tuple Pass nodes", () => {
+    expect(
+      stripIds(
+        normalizeCondition({
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            DUMMY_COMP(0),
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            },
+          ],
+        })
+      )
+    ).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [DUMMY_COMP(0)],
+    })
+  })
+
   it("does not prune trailing Static Pass nodes on static tuples", () => {
     expect(
       stripIds(
