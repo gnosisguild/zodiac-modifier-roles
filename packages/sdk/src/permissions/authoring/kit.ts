@@ -1,6 +1,5 @@
 import * as ethSdk from "@gnosis-guild/eth-sdk-client"
 import {
-  Addressable,
   BaseContract,
   ContractTransaction,
   ContractTransactionResponse,
@@ -8,7 +7,6 @@ import {
   FunctionFragment,
   isError,
   TransactionRequest,
-  Typed,
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
@@ -55,16 +53,16 @@ type Options = {
 
 /** We need to skip over functions with "view" state mutability. We do this by matching the ethers ContractMethod type  */
 interface StateMutatingContractMethod {
-  (...args: any[]): Promise<ContractTransactionResponse>
+  (): Promise<ContractTransactionResponse>
 
   name: string
   fragment: FunctionFragment
-  getFragment(...args: any[]): FunctionFragment
-  populateTransaction(...args: any[]): Promise<ContractTransaction>
-  staticCall(...args: any[]): Promise<any>
-  send(...args: any[]): Promise<ContractTransactionResponse>
-  estimateGas(...args: any[]): Promise<bigint>
-  staticCallResult(...args: any[]): Promise<any>
+  getFragment(): FunctionFragment
+  populateTransaction(): Promise<ContractTransaction>
+  staticCall(): Promise<any>
+  send(): Promise<ContractTransactionResponse>
+  estimateGas(): Promise<bigint>
+  staticCallResult(): Promise<any>
 }
 
 type StateMutatingContractMethods<C extends BaseContract> = PickByValue<
@@ -80,19 +78,13 @@ type NonPayableOverrides = Omit<
 >
 type PayableOverrides = Omit<BaseOverrides, "blockTag" | "enableCcipRead">
 
-// For each type in the tuple exclude alternative types that ethers supports for specifying parameters:
-// Typed, Promise<any>, Addressable
-type ExcludeTyped<T extends any[]> = {
-  [K in keyof T]: Exclude<T[K], Typed | Promise<any> | Addressable>
-}
-
 // Maps the types of ethers method arguments to the ones we want to use in the allow function
 type AllowFunctionParameters<MethodArgs extends [...any]> = MethodArgs extends [
   ...any,
   NonPayableOverrides | PayableOverrides
 ]
   ? never
-  : [...TupleScopings<ExcludeTyped<MethodArgs>>, options?: Options]
+  : [...TupleScopings<MethodArgs>, options?: Options]
 
 type AllowFunctions<C extends BaseContract> = {
   [key in keyof StateMutatingContractMethods<C>]: (

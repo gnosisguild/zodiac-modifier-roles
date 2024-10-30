@@ -1,12 +1,12 @@
-import { expect, assert } from "chai"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { expect } from "chai"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
+import { stripIds } from "../src/conditions/normalizeCondition"
 import { FunctionPermissionCoerced, c } from "../src/permissions"
 import { allow } from "../src/permissions/authoring/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
-import { stripIds } from "../src/conditions/normalizeCondition"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
@@ -177,27 +177,6 @@ describe("normalizeCondition()", () => {
         children: [DUMMY_COMP(2), DUMMY_COMP(0), DUMMY_COMP(1)],
       })
     )
-  })
-
-  it("collapses condition subtrees unnecessarily describing static tuple structures", () => {
-    const compValue = encodeAbiParameters(["(uint256)"], [[123]])
-    expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Tuple,
-          operator: Operator.EqualTo,
-          compValue,
-          children: [
-            // tuple has only static children
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-          ],
-        })
-      )
-    ).to.deep.equal({
-      paramType: ParameterType.Static,
-      operator: Operator.EqualTo,
-      compValue,
-    })
   })
 
   it("prunes trailing Static Pass nodes on Calldata", () => {

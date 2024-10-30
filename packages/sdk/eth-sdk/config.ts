@@ -32,6 +32,9 @@ export default defineConfig({
       balancer: {
         vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
       },
+      aura: {
+        claim_zap: "0x5b2364fD757E262253423373E4D57C5c011Ad7F4",
+      },
     },
     gnosis: {},
   },
