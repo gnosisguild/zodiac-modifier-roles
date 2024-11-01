@@ -49,6 +49,7 @@ query Role($id: String) {
       uri
       schema
     }
+    lastUpdate
   }
 }
 `.trim()
