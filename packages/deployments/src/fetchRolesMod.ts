@@ -1,10 +1,18 @@
 import { chains } from "./chains"
 import { ChainId, Clearance, ExecutionOptions, Function } from "./types"
 
-interface Props {
+type Props = {
   address: `0x${string}`
-  chainId: ChainId
-}
+} & (
+  | {
+      /** pass a chainId to use query against a dev subgraph */
+      chainId: ChainId
+    }
+  | {
+      /** pass your own subgraph endpoint for production use */
+      subgraph: string
+    }
+)
 
 const QUERY = `
   query RolesMod($id: String) {
@@ -41,10 +49,13 @@ const QUERY = `
 type FetchOptions = Omit<RequestInit, "method" | "body">
 
 export const fetchRolesMod = async (
-  { address, chainId }: Props,
+  { address, ...rest }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
-  const res = await fetch(chains[chainId].subgraph, {
+  const endpoint =
+    "subgraph" in rest ? rest.subgraph : chains[rest.chainId].subgraph
+
+  const res = await fetch(endpoint, {
     ...options,
     method: "POST",
     headers: {
