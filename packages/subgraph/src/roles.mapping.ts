@@ -38,7 +38,7 @@ export function handleAssignRoles(event: AssignRoles): void {
 
   for (let i = 0; i < roleKeys.length; i++) {
     const roleId = getRoleId(rolesModifierId, roleKeys[i])
-    const role = getOrCreateRole(roleId, rolesModifierId, roleKeys[i])
+    const role = getOrCreateRole(roleId, rolesModifierId, roleKeys[i], event.block.number)
     const assignmentId = getAssignmentId(memberId, roleId)
     let assignment = RoleAssignment.load(assignmentId)
     if (!assignment) {
@@ -48,6 +48,9 @@ export function handleAssignRoles(event: AssignRoles): void {
         assignment.member = memberId
         assignment.role = roleId
         assignment.save()
+
+        // update role lastUpdate field
+        role.save()
       } else {
         // nothing to do the member - role relationship does not exist
         log.warning("Trying to remove member {} from role #{}, but it's not a member", [memberId, roleId])
@@ -59,6 +62,9 @@ export function handleAssignRoles(event: AssignRoles): void {
       } else {
         // removing a member-role relationship
         store.remove("RoleAssignment", assignmentId)
+
+        // update role lastUpdate field
+        role.save()
       }
     }
   }
@@ -126,8 +132,9 @@ export function handleSetDefaultRole(event: SetDefaultRole): void {
 
   const roleKey = event.params.defaultRoleKey
   const roleId = getRoleId(rolesModifierId, roleKey)
+
   // create role if it does not exist yet
-  getOrCreateRole(roleId, rolesModifierId, roleKey)
+  getOrCreateRole(roleId, rolesModifierId, roleKey, event.block.number)
 
   member.defaultRole = roleId
   member.save()

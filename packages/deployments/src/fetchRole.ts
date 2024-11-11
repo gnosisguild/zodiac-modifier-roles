@@ -8,11 +8,19 @@ import {
   Target,
 } from "./types"
 
-interface Props {
+type Props = {
   address: `0x${string}`
   roleKey: `0x${string}`
-  chainId: ChainId
-}
+} & (
+  | {
+      /** pass a chainId to use query against a dev subgraph */
+      chainId: ChainId
+    }
+  | {
+      /** pass your own subgraph endpoint for production use */
+      subgraph: string
+    }
+)
 
 const QUERY = `
 query Role($id: String) {
@@ -41,6 +49,7 @@ query Role($id: String) {
       uri
       schema
     }
+    lastUpdate
   }
 }
 `.trim()
@@ -51,10 +60,13 @@ const getRoleId = (address: `0x${string}`, roleKey: `0x${string}`) =>
 type FetchOptions = Omit<RequestInit, "method" | "body">
 
 export const fetchRole = async (
-  { address, roleKey, chainId }: Props,
+  { address, roleKey, ...rest }: Props,
   options?: FetchOptions
 ): Promise<Role | null> => {
-  const res = await fetch(chains[chainId].subgraph, {
+  const endpoint =
+    "subgraph" in rest ? rest.subgraph : chains[rest.chainId].subgraph
+
+  const res = await fetch(endpoint, {
     ...options,
     method: "POST",
     headers: {
