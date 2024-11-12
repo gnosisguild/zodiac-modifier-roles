@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-deployments",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "license": "LGPL-3.0+",
   "main": "build/cjs/index.js",
   "module": "build/esm/index.js",

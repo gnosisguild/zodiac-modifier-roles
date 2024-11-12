@@ -38,11 +38,11 @@ const QUERY = `
             executionOptions
           }
         }
+        lastUpdate
       }
       unwrapAdapters(where: {selector: "0x8d80ff0a", adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"}) {
         targetAddress
       }
-      lastUpdate
     }
   }
 `
