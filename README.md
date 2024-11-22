@@ -88,17 +88,17 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.3.0)
-- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.3.0)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.3.0)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.3.0)
-- [Polygon zkEVM](https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.3.0)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.3.0)
-- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.3.0)
-- [BSC](https://api.studio.thegraph.com/query/23167/zodiac-roles-bsc/v2.3.0)
-- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.3.0)
-- [Base Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-base-sepolia/v2.3.0)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.3.0)
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.3.1)
+- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.3.1)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.3.1)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.3.1)
+- [Polygon zkEVM](https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.3.1)
+- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.3.1)
+- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.3.1)
+- [BSC](https://api.studio.thegraph.com/query/23167/zodiac-roles-bsc/v2.3.1)
+- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.3.1)
+- [Base Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-base-sepolia/v2.3.1)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.3.1)
 
 ### Development environment setup
 
