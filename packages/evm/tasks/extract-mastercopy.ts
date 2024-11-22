@@ -13,6 +13,30 @@ task(
 ).setAction(async (_, hre) => {
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
+    contractName: "AvatarIsOwnerOfERC721",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/adapters/AvatarIsOwnerOfERC721.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: ZeroHash,
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
+    contractName: "MultiSendUnwrapper",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/adapters/MultiSendUnwrapper.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: ZeroHash,
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
     contractName: "Packer",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
       sourceName: "contracts/packers/Packer.sol",
@@ -35,18 +59,6 @@ task(
       values: [],
     },
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  });
-  writeMastercopyFromBuild({
-    contractVersion: packageJson.version,
-    contractName: "AvatarIsOwnerOfERC721",
-    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/adapters/AvatarIsOwnerOfERC721.sol",
-    }),
-    constructorArgs: {
-      types: [],
-      values: [],
-    },
-    salt: ZeroHash,
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
