@@ -18,7 +18,7 @@
     "deploy:base-sepolia": "yarn prepare:base-sepolia && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_BASE_SEPOLIA'",
     "deploy:polygon": "yarn prepare:polygon && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_POLYGON'",
     "deploy:zkevm": "yarn prepare:zkevm && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_ZKEVM'",
-    "deploy:bsc": "yarn prepare:zkevm && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_BSC'",
+    "deploy:bsc": "yarn prepare:bsc && bash -c 'source .env || true && graph deploy --studio $SUBGRAPH_BSC'",
     "prepare:mainnet": "mustache networks/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "prepare:sepolia": "mustache networks/sepolia.json subgraph.template.yaml > subgraph.yaml",
     "prepare:gnosis": "mustache networks/gnosis.json subgraph.template.yaml > subgraph.yaml",
