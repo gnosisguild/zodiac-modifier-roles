@@ -49,7 +49,9 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Arbitrum One](https://arbiscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337/contract/43114/code)
+- [BSC](https://bscscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
 #### MultiSendUnwrapper (transaction unwrapper)
@@ -63,7 +65,9 @@ Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
 - [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Arbitrum One](https://arbiscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0/contract/43114/code)
+- [BSC](https://bscscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Base](https://basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Base Sepolia](https://sepolia.basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 
 #### AvatarIsOwnerOfERC721 (custom condition)
@@ -77,20 +81,24 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Arbitrum One](https://arbiscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Avalanche C-Chain](https://snowtrace.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1/contract/43114/code)
+- [BSC](https://bscscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Base](https://basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Base Sepolia](https://sepolia.basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.2.3)
-- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.2.3)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.2.3)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.2.3)
-- [Polygon zkEVM](https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.2.3)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.2.3)
-- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.2.3)
-- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.2.3)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.2.3)
+- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.3.0)
+- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.3.0)
+- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.3.0)
+- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.3.0)
+- [Polygon zkEVM](https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.3.0)
+- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.3.0)
+- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.3.0)
+- [BSC](https://api.studio.thegraph.com/query/23167/zodiac-roles-bsc/v2.3.0)
+- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.3.0)
+- [Base Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-base-sepolia/v2.3.0)
+- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.3.0)
 
 ### Development environment setup
 
