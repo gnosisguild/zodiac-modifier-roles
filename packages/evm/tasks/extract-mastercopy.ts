@@ -3,6 +3,7 @@ import { task } from "hardhat/config";
 import { writeMastercopyFromBuild } from "@gnosis-guild/zodiac-core";
 
 import packageJson from "../package.json";
+import { ZeroHash } from "ethers";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -34,6 +35,18 @@ task(
       values: [],
     },
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
+    contractName: "AvatarIsOwnerOfERC721",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/adapters/AvatarIsOwnerOfERC721.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: ZeroHash,
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
