@@ -31,6 +31,7 @@ const {
   SNOWTRACE_API_KEY,
   ZKEVM_POLYGONSCAN_API_KEY,
   BASESCAN_API_KEY,
+  BSCSCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -136,6 +137,7 @@ const config: HardhatUserConfig = {
       zkevm: ZKEVM_POLYGONSCAN_API_KEY,
       base: BASESCAN_API_KEY,
       baseSepolia: BASESCAN_API_KEY,
+      bsc: BSCSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -184,6 +186,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-zkevm.polygonscan.com/api",
           browserURL: "https://zkevm.polygonscan.com",
+        },
+      },
+      {
+        network: "bsc",
+        chainId: 56,
+        urls: {
+          apiURL: "https://api.bscscan.com/api",
+          browserURL: "https://bscscan.com",
         },
       },
     ],
