@@ -1,6 +1,13 @@
 import { Address, Bytes, json, JSONValueKind, log, store } from "@graphprotocol/graph-ts"
 import { NewPost } from "../generated/Poster/Poster"
-import { getAnnotationId, getOrCreateAnnotation, getRoleId, getRolesModifier, getRolesModifierId } from "./helpers"
+import {
+  getAnnotationId,
+  getOrCreateAnnotation,
+  getOrCreateRole,
+  getRoleId,
+  getRolesModifier,
+  getRolesModifierId,
+} from "./helpers"
 
 export function handleNewPost(event: NewPost): void {
   // only listen for events with the tag keccak256("ROLES_PERMISSION_ANNOTATION")
@@ -45,6 +52,8 @@ export function handleNewPost(event: NewPost): void {
 
   const roleId = getRoleId(rolesModifierId, roleKey)
 
+  let hasUpdates = false
+
   const removeAnnotationsEntries =
     parsedPost.get("removeAnnotations") && parsedPost.get("removeAnnotations")!.kind == JSONValueKind.ARRAY
       ? parsedPost.get("removeAnnotations")!.toArray()
@@ -63,6 +72,7 @@ export function handleNewPost(event: NewPost): void {
     const id = getAnnotationId(uri.toString(), roleId)
     store.remove("Annotation", id)
     log.info("Annotation #{} has been removed", [id])
+    hasUpdates = true
   }
 
   for (let i = 0; i < addAnnotationsEntries.length; i++) {
@@ -87,6 +97,13 @@ export function handleNewPost(event: NewPost): void {
       }
       const annotation = getOrCreateAnnotation(uriEntry.toString(), schema.toString(), roleId)
       log.info("Annotation #{} has been added", [annotation.id])
+      hasUpdates = true
     }
+  }
+
+  if (hasUpdates) {
+    // update role's lastUpdate field
+    const role = getOrCreateRole(roleId, rolesModifierId, roleKey, event.block.number)
+    role.save()
   }
 }
