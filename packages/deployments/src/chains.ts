@@ -41,11 +41,23 @@ export const chains = {
     subgraph:
       "https://api.studio.thegraph.com/query/93263/zodiac-roles-avalanche/v2.3.0",
   },
+  [56]: {
+    name: "bsc",
+    prefix: "bnb",
+    subgraph:
+      "https://api.studio.thegraph.com/query/93263/zodiac-roles-bsc/v2.3.0",
+  },
   [8453]: {
     name: "base",
     prefix: "base",
     subgraph:
       "https://api.studio.thegraph.com/query/93263/zodiac-roles-base/v2.3.0",
+  },
+  [84532]: {
+    name: "baseSepolia",
+    prefix: "basesep",
+    subgraph:
+      "https://api.studio.thegraph.com/query/93263/zodiac-roles-base-sepolia/v2.3.0",
   },
   [11155111]: {
     name: "sepolia",

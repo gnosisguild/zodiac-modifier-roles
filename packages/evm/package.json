@@ -42,7 +42,7 @@
     "eslint-plugin-eslint-comments": "3.2.0",
     "eslint-plugin-import": "2.29.0",
     "eslint-plugin-prettier": "4.2.1",
-    "eth-provider": "^0.13.6",
+    "eth-provider": "^0.13.7",
     "ethers": "^6.13.2",
     "hardhat": "^2.22.7",
     "hardhat-contract-sizer": "2.10.0",

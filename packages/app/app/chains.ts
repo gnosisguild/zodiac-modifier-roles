@@ -5,9 +5,11 @@ import {
   avalanche,
   arbitrum,
   base,
+  baseSepolia,
   polygon,
   polygonZkEvm,
   gnosis,
+  bsc,
 } from "wagmi/chains"
 
 export const CHAINS = {
@@ -53,10 +55,22 @@ export const CHAINS = {
     blockExplorerAbiUrl: "https://api.arbiscan.io/api",
     blockExplorerApiKey: "CSITWCYI9UDAJ7QS92FNVJ2XQP5B23P4J9",
   },
+  [bsc.id]: {
+    ...bsc,
+    prefix: "bnb",
+    blockExplorerAbiUrl: "https://api.bscscan.com/api",
+    blockExplorerApiKey: "B2E3G4MB7UM7Y9BSD7JHK57UI2UQK88YUW",
+  },
   [base.id]: {
     ...base,
     prefix: "base",
     blockExplorerAbiUrl: "https://api.basescan.org/api",
+    blockExplorerApiKey: "KCC7EQHE17IAQZA9TICUS6BQTJGZUDRNIY",
+  },
+  [baseSepolia.id]: {
+    ...baseSepolia,
+    prefix: "basesep",
+    blockExplorerAbiUrl: "https://api-sepolia.basescan.org/api",
     blockExplorerApiKey: "KCC7EQHE17IAQZA9TICUS6BQTJGZUDRNIY",
   },
   [sepolia.id]: {

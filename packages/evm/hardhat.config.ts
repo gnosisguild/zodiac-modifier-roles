@@ -30,6 +30,8 @@ const {
   ARBISCAN_API_KEY,
   SNOWTRACE_API_KEY,
   ZKEVM_POLYGONSCAN_API_KEY,
+  BASESCAN_API_KEY,
+  BSCSCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -82,10 +84,10 @@ const config: HardhatUserConfig = {
       chainId: 100,
       url: "https://rpc.gnosischain.com",
     },
-    sepolia: {
+    base: {
       ...sharedNetworkConfig,
-      chainId: 11155111,
-      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+      chainId: 8453,
+      url: "https://mainnet.base.org",
     },
     matic: {
       ...sharedNetworkConfig,
@@ -107,6 +109,21 @@ const config: HardhatUserConfig = {
       chainId: 1101,
       url: "https://zkevm-rpc.com",
     },
+    bsc: {
+      ...sharedNetworkConfig,
+      chainId: 56,
+      url: "https://bscrpc.com",
+    },
+    sepolia: {
+      ...sharedNetworkConfig,
+      chainId: 11155111,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+    },
+    baseSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 84532,
+      url: `https://sepolia.base.org`,
+    },
   },
   etherscan: {
     apiKey: {
@@ -118,6 +135,9 @@ const config: HardhatUserConfig = {
       arbitrum: ARBISCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
       zkevm: ZKEVM_POLYGONSCAN_API_KEY,
+      base: BASESCAN_API_KEY,
+      baseSepolia: BASESCAN_API_KEY,
+      bsc: BSCSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -166,6 +186,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-zkevm.polygonscan.com/api",
           browserURL: "https://zkevm.polygonscan.com",
+        },
+      },
+      {
+        network: "bsc",
+        chainId: 56,
+        urls: {
+          apiURL: "https://api.bscscan.com/api",
+          browserURL: "https://bscscan.com",
         },
       },
     ],

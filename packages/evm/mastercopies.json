@@ -1,4 +1,119 @@
 {
+  "AvatarIsOwnerOfERC721": {
+    "2.1.0": {
+      "contractName": "AvatarIsOwnerOfERC721",
+      "sourceName": "contracts/adapters/AvatarIsOwnerOfERC721.sol",
+      "contractVersion": "2.1.0",
+      "compilerVersion": "v0.8.21+commit.d9974bed",
+      "factory": "0xce0042b868300000d44a59004da54a005ffdcf9f",
+      "address": "0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1",
+      "bytecode": "0x608060405234801561000f575f80fd5b5061032b8061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610029575f3560e01c8063b0acb9801461002d575b5f80fd5b61004061003b3660046101b0565b61005b565b60408051921515835260208301919091520160405180910390f35b5f805f336001600160a01b0316635aef7de66040518163ffffffff1660e01b8152600401602060405180830381865afa15801561009a573d5f803e3d5ffd5b505050506040513d601f19601f820116820180604052508101906100be919061026a565b90505f89878a6100ce898361028c565b926100db939291906102b1565b6100e4916102d8565b6040516331a9108f60e11b8152600481018290529091506001600160a01b0383811691908e1690636352211e90602401602060405180830381865afa15801561012f573d5f803e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610153919061026a565b6001600160a01b0316149c5f9c509a5050505050505050505050565b6001600160a01b0381168114610183575f80fd5b50565b803560028110610194575f80fd5b919050565b80356001600160a01b031981168114610194575f80fd5b5f805f805f805f8060e0898b0312156101c7575f80fd5b88356101d28161016f565b975060208901359650604089013567ffffffffffffffff808211156101f5575f80fd5b818b0191508b601f830112610208575f80fd5b813581811115610216575f80fd5b8c6020828501011115610227575f80fd5b60208301985080975050505061023f60608a01610186565b93506080890135925060a0890135915061025b60c08a01610199565b90509295985092959890939650565b5f6020828403121561027a575f80fd5b81516102858161016f565b9392505050565b808201808211156102ab57634e487b7160e01b5f52601160045260245ffd5b92915050565b5f80858511156102bf575f80fd5b838611156102cb575f80fd5b5050820193919092039150565b803560208310156102ab575f19602084900360031b1b169291505056fea26469706673582212207733f53fcf22d3e1f256b11dae338bd38c971e16faf47ddcbb4c91d6cbf7bff664736f6c63430008150033",
+      "constructorArgs": {
+        "types": [],
+        "values": []
+      },
+      "salt": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "enum Enum.Operation",
+              "name": "",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "location",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "size",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes12",
+              "name": "",
+              "type": "bytes12"
+            }
+          ],
+          "name": "check",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "success",
+              "type": "bool"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "reason",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ],
+      "compilerInput": {
+        "language": "Solidity",
+        "sources": {
+          "@gnosis.pm/safe-contracts/contracts/common/Enum.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.7.0 <0.9.0;\n\n/// @title Enum - Collection of enums\n/// @author Richard Meissner - <richard@gnosis.pm>\ncontract Enum {\n    enum Operation {Call, DelegateCall}\n}\n"
+          },
+          "@openzeppelin/contracts/interfaces/IERC721.sol": {
+            "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.0) (interfaces/IERC721.sol)\n\npragma solidity ^0.8.20;\n\nimport {IERC721} from \"../token/ERC721/IERC721.sol\";\n"
+          },
+          "@openzeppelin/contracts/token/ERC721/IERC721.sol": {
+            "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.0) (token/ERC721/IERC721.sol)\n\npragma solidity ^0.8.20;\n\nimport {IERC165} from \"../../utils/introspection/IERC165.sol\";\n\n/**\n * @dev Required interface of an ERC721 compliant contract.\n */\ninterface IERC721 is IERC165 {\n    /**\n     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.\n     */\n    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);\n\n    /**\n     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.\n     */\n    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);\n\n    /**\n     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.\n     */\n    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);\n\n    /**\n     * @dev Returns the number of tokens in ``owner``'s account.\n     */\n    function balanceOf(address owner) external view returns (uint256 balance);\n\n    /**\n     * @dev Returns the owner of the `tokenId` token.\n     *\n     * Requirements:\n     *\n     * - `tokenId` must exist.\n     */\n    function ownerOf(uint256 tokenId) external view returns (address owner);\n\n    /**\n     * @dev Safely transfers `tokenId` token from `from` to `to`.\n     *\n     * Requirements:\n     *\n     * - `from` cannot be the zero address.\n     * - `to` cannot be the zero address.\n     * - `tokenId` token must exist and be owned by `from`.\n     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.\n     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon\n     *   a safe transfer.\n     *\n     * Emits a {Transfer} event.\n     */\n    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;\n\n    /**\n     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients\n     * are aware of the ERC721 protocol to prevent tokens from being forever locked.\n     *\n     * Requirements:\n     *\n     * - `from` cannot be the zero address.\n     * - `to` cannot be the zero address.\n     * - `tokenId` token must exist and be owned by `from`.\n     * - If the caller is not `from`, it must have been allowed to move this token by either {approve} or\n     *   {setApprovalForAll}.\n     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon\n     *   a safe transfer.\n     *\n     * Emits a {Transfer} event.\n     */\n    function safeTransferFrom(address from, address to, uint256 tokenId) external;\n\n    /**\n     * @dev Transfers `tokenId` token from `from` to `to`.\n     *\n     * WARNING: Note that the caller is responsible to confirm that the recipient is capable of receiving ERC721\n     * or else they may be permanently lost. Usage of {safeTransferFrom} prevents loss, though the caller must\n     * understand this adds an external call which potentially creates a reentrancy vulnerability.\n     *\n     * Requirements:\n     *\n     * - `from` cannot be the zero address.\n     * - `to` cannot be the zero address.\n     * - `tokenId` token must be owned by `from`.\n     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.\n     *\n     * Emits a {Transfer} event.\n     */\n    function transferFrom(address from, address to, uint256 tokenId) external;\n\n    /**\n     * @dev Gives permission to `to` to transfer `tokenId` token to another account.\n     * The approval is cleared when the token is transferred.\n     *\n     * Only a single account can be approved at a time, so approving the zero address clears previous approvals.\n     *\n     * Requirements:\n     *\n     * - The caller must own the token or be an approved operator.\n     * - `tokenId` must exist.\n     *\n     * Emits an {Approval} event.\n     */\n    function approve(address to, uint256 tokenId) external;\n\n    /**\n     * @dev Approve or remove `operator` as an operator for the caller.\n     * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.\n     *\n     * Requirements:\n     *\n     * - The `operator` cannot be the address zero.\n     *\n     * Emits an {ApprovalForAll} event.\n     */\n    function setApprovalForAll(address operator, bool approved) external;\n\n    /**\n     * @dev Returns the account approved for `tokenId` token.\n     *\n     * Requirements:\n     *\n     * - `tokenId` must exist.\n     */\n    function getApproved(uint256 tokenId) external view returns (address operator);\n\n    /**\n     * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.\n     *\n     * See {setApprovalForAll}\n     */\n    function isApprovedForAll(address owner, address operator) external view returns (bool);\n}\n"
+          },
+          "@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+            "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/introspection/IERC165.sol)\n\npragma solidity ^0.8.20;\n\n/**\n * @dev Interface of the ERC165 standard, as defined in the\n * https://eips.ethereum.org/EIPS/eip-165[EIP].\n *\n * Implementers can declare support of contract interfaces, which can then be\n * queried by others ({ERC165Checker}).\n *\n * For an implementation, see {ERC165}.\n */\ninterface IERC165 {\n    /**\n     * @dev Returns true if this contract implements the interface defined by\n     * `interfaceId`. See the corresponding\n     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]\n     * to learn more about how these ids are created.\n     *\n     * This function call must use less than 30 000 gas.\n     */\n    function supportsInterface(bytes4 interfaceId) external view returns (bool);\n}\n"
+          },
+          "contracts/adapters/AvatarIsOwnerOfERC721.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"@openzeppelin/contracts/interfaces/IERC721.sol\";\nimport \"./Types.sol\";\n\ninterface IModifier {\n    function avatar() external view returns (address);\n\n    function target() external view returns (address);\n}\n\ncontract AvatarIsOwnerOfERC721 is ICustomCondition {\n    function check(\n        address to,\n        uint256 /* value */,\n        bytes calldata data,\n        Enum.Operation /* operation */,\n        uint256 location,\n        uint256 size,\n        bytes12 /* extra */\n    ) public view returns (bool success, bytes32 reason) {\n        address avatar = IModifier(msg.sender).avatar();\n        uint256 tokenId = uint256(bytes32(data[location:location + size]));\n        return (IERC721(to).ownerOf(tokenId) == avatar, 0);\n    }\n}\n"
+          },
+          "contracts/adapters/Types.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"@gnosis.pm/safe-contracts/contracts/common/Enum.sol\";\n\ninterface IMultiSend {\n    function multiSend(bytes memory transactions) external payable;\n}\n\nstruct UnwrappedTransaction {\n    Enum.Operation operation;\n    address to;\n    uint256 value;\n    // We wanna deal in calldata slices. We return location, let invoker slice\n    uint256 dataLocation;\n    uint256 dataSize;\n}\n\ninterface ITransactionUnwrapper {\n    function unwrap(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Enum.Operation operation\n    ) external view returns (UnwrappedTransaction[] memory result);\n}\n\ninterface ICustomCondition {\n    function check(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Enum.Operation operation,\n        uint256 location,\n        uint256 size,\n        bytes12 extra\n    ) external view returns (bool success, bytes32 reason);\n}\n"
+          }
+        },
+        "settings": {
+          "evmVersion": "shanghai",
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "devdoc",
+                "userdoc",
+                "metadata",
+                "abi"
+              ]
+            }
+          },
+          "libraries": {}
+        }
+      }
+    }
+  },
   "Integrity": {
     "2.1.0": {
       "contractName": "Integrity",
@@ -1828,6 +1943,134 @@
               "Packer": "0x61c5b1be435391fdd7bc6703f3740c0d11728a8c"
             }
           }
+        }
+      }
+    }
+  },
+  "MultiSendUnwrapper": {
+    "2.1.0": {
+      "contractName": "MultiSendUnwrapper",
+      "sourceName": "contracts/adapters/MultiSendUnwrapper.sol",
+      "contractVersion": "2.1.0",
+      "compilerVersion": "v0.8.21+commit.d9974bed",
+      "factory": "0xce0042b868300000d44a59004da54a005ffdcf9f",
+      "address": "0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0",
+      "bytecode": "0x608060405234801561000f575f80fd5b506108178061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610029575f3560e01c8063c7a7b6351461002d575b5f80fd5b61004061003b366004610511565b610056565b60405161004d91906105c8565b60405180910390f35b606084156100775760405163ad6e405560e01b815260040160405180910390fd5b600182600181111561008b5761008b6105b4565b146100a95760405163ad6e405560e01b815260040160405180910390fd5b6100b384846100d6565b5f6100be85856101a1565b90506100cb85858361029d565b979650505050505050565b6346c07f8560e11b6100e8828461065c565b6001600160e01b0319161461011057604051631a751fb760e11b815260040160405180910390fd5b602061011f826004818661068c565b610128916106b3565b1461014657604051631a751fb760e11b815260040160405180910390fd5b5f610154826024818661068c565b61015d916106b3565b90508161017361016e8360406106e4565b6104ca565b61017e9060046106e4565b1461019c57604051631a751fb760e11b815260040160405180910390fd5b505050565b5f60445b826101b18260206106e4565b1015610277575f6101c48483818861068c565b6101cd916106f7565b60f81c905060018111156101f357604051629ec3f960e31b815260040160405180910390fd5b5f85856102018560356106e4565b61020c92829061068c565b610215916106b3565b905084816102248560556106e4565b61022e91906106e4565b111561024c57604051629ec3f960e31b815260040160405180910390fd5b6102578160556106e4565b61026190846106e4565b92508361026d81610725565b94505050506101a5565b815f0361029657604051629ec3f960e31b815260040160405180910390fd5b5092915050565b60608167ffffffffffffffff8111156102b8576102b861073d565b60405190808252806020026020018201604052801561032057816020015b61030d6040805160a08101909152805f81526020015f6001600160a01b031681526020015f81526020015f81526020015f81525090565b8152602001906001900390816102d65790505b50905060445f5b838110156104c15761033b8583818961068c565b610344916106f7565b60f81c6001811115610358576103586105b4565b83828151811061036a5761036a610751565b60200260200101515f01906001811115610386576103866105b4565b90816001811115610399576103996105b4565b9052506103a76001836106e4565b91506103b58583818961068c565b6103be91610765565b60601c8382815181106103d3576103d3610751565b6020908102919091018101516001600160a01b039092169101526103f86014836106e4565b91506104068583818961068c565b61040f916106b3565b5f1c83828151811061042357610423610751565b6020026020010151604001818152505060208261044091906106e4565b91505f61044f8684818a61068c565b610458916106b3565b90506104656020846106e4565b92508284838151811061047a5761047a610751565b602002602001015160600181815250508084838151811061049d5761049d610751565b6020908102919091010151608001526104b681846106e4565b925050600101610327565b50509392505050565b5f602060016104d984836106e4565b6104e39190610798565b6104ed91906107ab565b6104f89060206107ca565b92915050565b80356002811061050c575f80fd5b919050565b5f805f805f60808688031215610525575f80fd5b85356001600160a01b038116811461053b575f80fd5b945060208601359350604086013567ffffffffffffffff8082111561055e575f80fd5b818801915088601f830112610571575f80fd5b81358181111561057f575f80fd5b896020828501011115610590575f80fd5b6020830195508094505050506105a8606087016104fe565b90509295509295909350565b634e487b7160e01b5f52602160045260245ffd5b602080825282518282018190525f91906040908185019086840185805b8381101561064e57825180516002811061060d57634e487b7160e01b84526021600452602484fd5b8652808801516001600160a01b0316888701528681015187870152606080820151908701526080908101519086015260a090940193918601916001016105e5565b509298975050505050505050565b6001600160e01b031981358181169160048510156106845780818660040360031b1b83161692505b505092915050565b5f808585111561069a575f80fd5b838611156106a6575f80fd5b5050820193919092039150565b803560208310156104f8575f19602084900360031b1b1692915050565b634e487b7160e01b5f52601160045260245ffd5b808201808211156104f8576104f86106d0565b6001600160f81b031981358181169160018510156106845760019490940360031b84901b1690921692915050565b5f60018201610736576107366106d0565b5060010190565b634e487b7160e01b5f52604160045260245ffd5b634e487b7160e01b5f52603260045260245ffd5b6bffffffffffffffffffffffff1981358181169160148510156106845760149490940360031b84901b1690921692915050565b818103818111156104f8576104f86106d0565b5f826107c557634e487b7160e01b5f52601260045260245ffd5b500490565b80820281158282048414176104f8576104f86106d056fea2646970667358221220fdbe66738b4a25a36e5fbd476d551f3c9657dd12c046459067c1471f52efa0f764736f6c63430008150033",
+      "constructorArgs": {
+        "types": [],
+        "values": []
+      },
+      "salt": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "abi": [
+        {
+          "inputs": [],
+          "name": "MalformedBody",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "MalformedHeader",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "UnsupportedMode",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "enum Enum.Operation",
+              "name": "operation",
+              "type": "uint8"
+            }
+          ],
+          "name": "unwrap",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "enum Enum.Operation",
+                  "name": "operation",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "dataLocation",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "dataSize",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct UnwrappedTransaction[]",
+              "name": "",
+              "type": "tuple[]"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ],
+      "compilerInput": {
+        "language": "Solidity",
+        "sources": {
+          "@gnosis.pm/safe-contracts/contracts/common/Enum.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.7.0 <0.9.0;\n\n/// @title Enum - Collection of enums\n/// @author Richard Meissner - <richard@gnosis.pm>\ncontract Enum {\n    enum Operation {Call, DelegateCall}\n}\n"
+          },
+          "contracts/adapters/MultiSendUnwrapper.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"./Types.sol\";\n\ncontract MultiSendUnwrapper is ITransactionUnwrapper {\n    uint256 private constant OFFSET_START = 68;\n\n    error UnsupportedMode();\n    error MalformedHeader();\n    error MalformedBody();\n\n    function unwrap(\n        address,\n        uint256 value,\n        bytes calldata data,\n        Enum.Operation operation\n    ) external pure returns (UnwrappedTransaction[] memory) {\n        if (value != 0) {\n            revert UnsupportedMode();\n        }\n        if (operation != Enum.Operation.DelegateCall) {\n            revert UnsupportedMode();\n        }\n        _validateHeader(data);\n        uint256 count = _validateEntries(data);\n        return _unwrapEntries(data, count);\n    }\n\n    function _validateHeader(bytes calldata data) private pure {\n        // first 4 bytes are the selector for multiSend(bytes)\n        if (bytes4(data) != IMultiSend.multiSend.selector) {\n            revert MalformedHeader();\n        }\n\n        // the following 32 bytes are the offset to the bytes param\n        // (always 0x20)\n        if (bytes32(data[4:]) != bytes32(uint256(0x20))) {\n            revert MalformedHeader();\n        }\n\n        // the following 32 bytes are the length of the bytes param\n        uint256 length = uint256(bytes32(data[36:]));\n\n        // validate that the total calldata length matches\n        // it's the 4 + 32 + 32 bytes checked above + the <length> bytes\n        // padded to a multiple of 32\n        if (4 + _ceil32(32 + 32 + length) != data.length) {\n            revert MalformedHeader();\n        }\n    }\n\n    function _validateEntries(\n        bytes calldata data\n    ) private pure returns (uint256 count) {\n        uint256 offset = OFFSET_START;\n\n        // data is padded to 32 bytes we can't simply do offset < data.length\n        for (; offset + 32 < data.length; ) {\n            // Per transaction:\n            // Operation   1  bytes\n            // To          20 bytes\n            // Value       32 bytes\n            // Length      32 bytes\n            // Data        Length bytes\n            uint8 operation = uint8(bytes1(data[offset:]));\n            if (operation > 1) {\n                revert MalformedBody();\n            }\n\n            uint256 length = uint256(bytes32(data[offset + 53:]));\n            if (offset + 85 + length > data.length) {\n                revert MalformedBody();\n            }\n\n            offset += 85 + length;\n            count++;\n        }\n\n        if (count == 0) {\n            revert MalformedBody();\n        }\n    }\n\n    function _unwrapEntries(\n        bytes calldata data,\n        uint256 count\n    ) private pure returns (UnwrappedTransaction[] memory result) {\n        result = new UnwrappedTransaction[](count);\n\n        uint256 offset = OFFSET_START;\n        for (uint256 i; i < count; ) {\n            result[i].operation = Enum.Operation(uint8(bytes1(data[offset:])));\n            offset += 1;\n\n            result[i].to = address(bytes20(data[offset:]));\n            offset += 20;\n\n            result[i].value = uint256(bytes32(data[offset:]));\n            offset += 32;\n\n            uint256 size = uint256(bytes32(data[offset:]));\n            offset += 32;\n\n            result[i].dataLocation = offset;\n            result[i].dataSize = size;\n            offset += size;\n\n            unchecked {\n                ++i;\n            }\n        }\n    }\n\n    function _ceil32(uint256 length) private pure returns (uint256) {\n        // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf\n        return ((length + 32 - 1) / 32) * 32;\n    }\n}\n"
+          },
+          "contracts/adapters/Types.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"@gnosis.pm/safe-contracts/contracts/common/Enum.sol\";\n\ninterface IMultiSend {\n    function multiSend(bytes memory transactions) external payable;\n}\n\nstruct UnwrappedTransaction {\n    Enum.Operation operation;\n    address to;\n    uint256 value;\n    // We wanna deal in calldata slices. We return location, let invoker slice\n    uint256 dataLocation;\n    uint256 dataSize;\n}\n\ninterface ITransactionUnwrapper {\n    function unwrap(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Enum.Operation operation\n    ) external view returns (UnwrappedTransaction[] memory result);\n}\n\ninterface ICustomCondition {\n    function check(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Enum.Operation operation,\n        uint256 location,\n        uint256 size,\n        bytes12 extra\n    ) external view returns (bool success, bytes32 reason);\n}\n"
+          }
+        },
+        "settings": {
+          "evmVersion": "shanghai",
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "devdoc",
+                "userdoc",
+                "metadata",
+                "abi"
+              ]
+            }
+          },
+          "libraries": {}
         }
       }
     }
