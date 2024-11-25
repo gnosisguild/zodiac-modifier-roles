@@ -4,7 +4,7 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 import { normalizeCondition } from "../src/conditions"
 import { stripIds } from "../src/conditions/normalizeCondition"
 import { FunctionPermissionCoerced, c } from "../src/permissions"
-import { allow } from "../src/permissions/authoring/kit"
+import { allow } from "../src/entrypoints/kit"
 import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 

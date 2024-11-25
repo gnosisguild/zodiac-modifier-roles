@@ -17,18 +17,17 @@ import { c } from "zodiac-roles-sdk"
 // For things that are not publicly exported we still use relative paths.
 // Since these are mainly types, this won't blow up bundles.
 import {
+  callWithinAllowance,
+  etherWithinAllowance,
+} from "../permissions/authoring/conditions/allowances"
+import { TupleScopings } from "../permissions/authoring/conditions/types"
+import {
   ExecutionFlags,
   TargetPermission,
   FunctionPermission,
   FunctionPermissionCoerced,
-} from "../types"
-import { coercePermission } from "../utils"
-
-import {
-  callWithinAllowance,
-  etherWithinAllowance,
-} from "./conditions/allowances"
-import { TupleScopings } from "./conditions/types"
+} from "../permissions/types"
+import { coercePermission } from "../permissions/utils"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
