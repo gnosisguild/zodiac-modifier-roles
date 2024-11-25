@@ -1,6 +1,6 @@
 import { expect } from "chai"
 
-import { processAnnotations } from "../src/annotations/processing"
+import { processAnnotations } from "../src/entrypoints/annotations"
 import { PermissionCoerced } from "../src/permissions"
 
 describe("processAnnotations()", () => {

@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -11,12 +11,12 @@
       "import": "./build/esm/sdk/src/index.js"
     },
     "./kit": {
-      "require": "./build/cjs/sdk/src/permissions/authoring/kit.js",
-      "import": "./build/esm/sdk/src/permissions/authoring/kit.js"
+      "require": "./build/cjs/sdk/src/entrypoints/kit.js",
+      "import": "./build/esm/sdk/src/entrypoints/kit.js"
     },
     "./annotations": {
-      "require": "./build/cjs/sdk/src/annotations/processing.js",
-      "import": "./build/esm/sdk/src/annotations/processing.js"
+      "require": "./build/cjs/sdk/src/entrypoints/annotations.js",
+      "import": "./build/esm/sdk/src/entrypoints/annotations.js"
     }
   },
   "typesVersions": {
@@ -25,10 +25,10 @@
         "./build/cjs/sdk/src/index.d.ts"
       ],
       "kit": [
-        "./build/cjs/sdk/src/permissions/authoring/kit.d.ts"
+        "./build/cjs/sdk/src/entrypoints/kit.d.ts"
       ],
-      "processing": [
-        "./build/cjs/sdk/src/annotations/processing.d.ts"
+      "annotations": [
+        "./build/cjs/sdk/src/entrypoints/annotations.d.ts"
       ]
     }
   },

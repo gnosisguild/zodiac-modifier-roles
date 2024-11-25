@@ -1,14 +1,17 @@
 import OpenAPIBackend from "openapi-backend"
 import { OpenAPIV3 } from "openapi-types"
 import { Annotation, Target } from "zodiac-roles-deployments"
-
+// We import via alias to avoid double bundling of sdk functions
 import {
   Permission,
   PermissionCoerced,
   processPermissions,
   reconstructPermissions,
-} from "../permissions"
-import { diffTargets, splitTargets } from "../targets"
+  diffTargets,
+  splitTargets,
+  // eslint does not know about our Typescript path alias
+  // eslint-disable-next-line import/no-unresolved
+} from "zodiac-roles-sdk"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
@@ -130,7 +133,7 @@ export const processAnnotations = async (
   return { presets: confirmedPresets, permissions: remainingPermissions }
 }
 
-const resolveAnnotation = async (
+export const resolveAnnotation = async (
   annotation: Annotation,
   {
     fetchPermissions,
@@ -274,10 +277,12 @@ async function validateJsonResponse(res: Response) {
   let json = null
   try {
     json = await res.json()
-  } catch (e) {}
+  } catch (e) {
+    throw new Error("Could not parse as json")
+  }
   if (json.error) {
     throw new Error(json.error)
   }
 
-  return new Error(`Request failed: ${res.statusText}`)
+  throw new Error(`Request failed: ${res.statusText}`)
 }

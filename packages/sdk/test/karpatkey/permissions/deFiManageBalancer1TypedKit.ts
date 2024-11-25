@@ -1,5 +1,5 @@
 import { c, Permission } from "../../../src"
-import { allow as allowKit } from "../../../src/permissions/authoring/kit"
+import { allow as allowKit } from "../../../src/entrypoints/kit"
 
 const allow = allowKit.mainnet
 
