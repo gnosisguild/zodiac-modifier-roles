@@ -114,6 +114,7 @@ export interface Role {
   members: `0x${string}`[]
   targets: Target[]
   annotations: Annotation[]
+  lastUpdate: number
 }
 
 export interface Target {
