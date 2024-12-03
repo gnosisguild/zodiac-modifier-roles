@@ -131,8 +131,8 @@ export const getOrCreateAllowance = (allowanceKey: Bytes, rolesModifierId: strin
     allowance.balance = BigInt.fromU32(0)
     allowance.maxRefill = BigInt.fromU32(0)
     allowance.refill = BigInt.fromU32(0)
-    allowance.period = 0
-    allowance.timestamp = 0
+    allowance.period = BigInt.fromU32(0)
+    allowance.timestamp = BigInt.fromU32(0)
     allowance.save()
   }
   return allowance
