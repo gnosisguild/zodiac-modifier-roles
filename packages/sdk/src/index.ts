@@ -7,7 +7,7 @@ export { encodeCalls } from "./calls"
 export * from "./targets"
 export * from "./annotations"
 export { applyMembers } from "./members"
-export { setUpRolesMod } from "./setup"
+export { setUpRoles, setUpRolesMod } from "./setup"
 
 export * from "./ethSdk"
 export * from "./abi"
