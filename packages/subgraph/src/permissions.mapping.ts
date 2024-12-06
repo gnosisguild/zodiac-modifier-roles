@@ -192,8 +192,8 @@ export function handleSetAllowance(event: SetAllowance): void {
   allowance.balance = event.params.balance
   allowance.refill = event.params.refill
   allowance.maxRefill = event.params.maxRefill
-  allowance.period = event.params.period.toU32()
-  allowance.timestamp = event.params.timestamp.toU32()
+  allowance.period = event.params.period
+  allowance.timestamp = event.params.timestamp
   allowance.save()
 
   log.info("Allowance {} has been set", [allowance.id])

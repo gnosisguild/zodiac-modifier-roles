@@ -35,4 +35,5 @@ const newRole = (roleKey: `0x${string}`): Role => ({
   members: [],
   targets: [],
   annotations: [],
+  lastUpdate: 0,
 })
