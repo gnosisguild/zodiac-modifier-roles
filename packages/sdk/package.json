@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.18.0",
+  "version": "2.19.0",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -17,6 +17,10 @@
     "./annotations": {
       "require": "./build/cjs/sdk/src/entrypoints/annotations.js",
       "import": "./build/esm/sdk/src/entrypoints/annotations.js"
+    },
+    "./typechain": {
+      "require": "./build/cjs/sdk/src/entrypoints/typechain.js",
+      "import": "./build/esm/sdk/src/entrypoints/typechain.js"
     }
   },
   "typesVersions": {
@@ -29,6 +33,9 @@
       ],
       "annotations": [
         "./build/cjs/sdk/src/entrypoints/annotations.d.ts"
+      ],
+      "typechain": [
+        "./build/cjs/sdk/src/entrypoints/typechain.d.ts"
       ]
     }
   },
