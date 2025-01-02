@@ -20,6 +20,10 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/api/permissions",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
     ]
   },
 }
