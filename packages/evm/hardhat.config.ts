@@ -32,6 +32,7 @@ const {
   ZKEVM_POLYGONSCAN_API_KEY,
   BASESCAN_API_KEY,
   BSCSCAN_API_KEY,
+  CELOSCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -114,6 +115,11 @@ const config: HardhatUserConfig = {
       chainId: 56,
       url: "https://bscrpc.com",
     },
+    celo: {
+      ...sharedNetworkConfig,
+      chainId: 42220,
+      url: "https://forno.celo.org",
+    },
     sepolia: {
       ...sharedNetworkConfig,
       chainId: 11155111,
@@ -150,8 +156,8 @@ const config: HardhatUserConfig = {
       base: BASESCAN_API_KEY,
       baseSepolia: BASESCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
-      // Use "ETHERSCAN_API_KEY" as a placeholder, because Blockscout doesn't need a real API key, and Hardhat will complain if this property isn't set.
-      "lisk-sepolia": ETHERSCAN_API_KEY,
+      celo: CELOSCAN_API_KEY,
+      "lisk-sepolia": "not-required",
       "bob-sepolia": ETHERSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
@@ -209,6 +215,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.bscscan.com/api",
           browserURL: "https://bscscan.com",
+        },
+      },
+      {
+        network: "celo",
+        chainId: 42220,
+        urls: {
+          apiURL: "https://api.celoscan.io/api",
+          browserURL: "https://celoscan.io",
         },
       },
       {
