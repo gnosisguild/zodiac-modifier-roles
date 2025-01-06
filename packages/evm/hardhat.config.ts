@@ -120,6 +120,11 @@ const config: HardhatUserConfig = {
       chainId: 42220,
       url: "https://forno.celo.org",
     },
+    lisk: {
+      ...sharedNetworkConfig,
+      chainId: 1135,
+      url: "https://rpc.api.lisk.com",
+    },
     sepolia: {
       ...sharedNetworkConfig,
       chainId: 11155111,
@@ -128,7 +133,12 @@ const config: HardhatUserConfig = {
     baseSepolia: {
       ...sharedNetworkConfig,
       chainId: 84532,
-      url: `https://sepolia.base.org`,
+      url: "https://sepolia.base.org",
+    },
+    liskSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
     },
     "lisk-sepolia": {
       ...sharedNetworkConfig,
