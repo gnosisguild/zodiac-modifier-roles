@@ -143,9 +143,11 @@ export const resolveAnnotation = async (
     fetchSchema: (url: string) => Promise<OpenAPIBackend>
   }
 ): Promise<Preset | null> => {
+  const normalizedUri = normalizeUri(annotation.uri)
+
   const [permissions, schema] = await Promise.all([
-    fetchPermissions(annotation.uri).catch((e: Error) => {
-      console.error(`Error resolving annotation ${annotation.uri}`, e)
+    fetchPermissions(normalizedUri).catch((e: Error) => {
+      console.error(`Error resolving annotation ${normalizedUri}`, e)
       throw new Error(`Error resolving annotation: ${e}`)
     }),
     fetchSchema(annotation.schema).catch((e) => {
@@ -162,7 +164,7 @@ export const resolveAnnotation = async (
   }
 
   const { serverUrl, path, query } = parseUri(
-    annotation.uri,
+    normalizedUri,
     schema,
     annotation.schema
   )
@@ -184,7 +186,7 @@ export const resolveAnnotation = async (
 
   return {
     permissions,
-    uri: annotation.uri,
+    uri: normalizedUri,
     serverUrl,
     apiInfo: schema.definition.info || { title: "", version: "" },
     path: operation.path,
@@ -196,6 +198,23 @@ export const resolveAnnotation = async (
       parameters: operationParameters,
     },
   }
+}
+
+/** Normalize a URI to a canonical form in which query params are sorted alphabetically */
+const normalizeUri = (uri: string) => {
+  let url: URL
+  try {
+    url = new URL(uri) // Parse the URI into its components
+  } catch (error) {
+    throw new Error(`Invalid URI: ${uri}`) // Handle invalid URI errors
+  }
+
+  const searchParams = new URLSearchParams(url.search)
+  // Sort the key/value pairs in place
+  searchParams.sort()
+
+  // Reconstruct the URI with normalized query parameters
+  return `${url.origin}${url.pathname}?${searchParams}`
 }
 
 /** Returns the annotation's path relative to the API server's base URL */
