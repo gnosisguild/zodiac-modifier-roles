@@ -8,7 +8,7 @@ import { diffPermissions, diffPresets } from "./diff"
 import { PresetsAndPermissionsView } from "../PermissionsList"
 import classes from "./style.module.css"
 import { SpawnAnchorContext } from "@/ui/Anchor"
-import { DIFF_CONTAINER_CLASS } from "../PresetItem/IndividualPermissionsExpandable"
+import { DIFF_CONTAINER_CLASS } from "./classes"
 
 interface Props {
   left: { targets: Target[]; annotations: Annotation[] }
@@ -38,7 +38,11 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
     leftPresets,
     rightPresets
   )
-
+  console.log(
+    "cn",
+    cn(classes.left, DIFF_CONTAINER_CLASS),
+    DIFF_CONTAINER_CLASS
+  )
   return (
     <Flex direction="row" gap={1}>
       <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
@@ -54,7 +58,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
           />
         </SpawnAnchorContext>
       </Box>
-      <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
+      <Box p={3} className={cn(classes.right, DIFF_CONTAINER_CLASS)}>
         <SpawnAnchorContext namespace="right">
           <PresetsAndPermissionsView
             presets={[...presetsDiffRight.keys()]}

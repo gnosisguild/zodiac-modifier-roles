@@ -6,6 +6,7 @@ import { SpawnAnchorContext, useAnchor } from "@/ui/Anchor"
 import ExpandableBox, { Props } from "@/ui/ExpandableBox"
 
 import classes from "./style.module.css"
+import { DIFF_CONTAINER_CLASS } from "../PermissionsDiff/classes"
 
 const AnchorExpandableBox: React.FC<Props> = (props) => {
   const [hashOnMount, setHashOnMount] = useState<string | undefined>(undefined)
@@ -49,7 +50,6 @@ export default IndividualPermissionsExpandable
 
 const BOX_CLASS = "permissionBox"
 const TOGGLE_CLASS = "permissionBoxToggle"
-export const DIFF_CONTAINER_CLASS = "diffContainer"
 
 // TODO: make this work!
 const syncToggle = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
