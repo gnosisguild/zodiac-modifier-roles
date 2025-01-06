@@ -51,8 +51,11 @@ export default IndividualPermissionsExpandable
 const BOX_CLASS = "permissionBox"
 const TOGGLE_CLASS = "permissionBoxToggle"
 
-// TODO: make this work!
 const syncToggle = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  // Don't handle the programmatically triggered click on counterpartToggle, so we don't get into a loop
+  // https://developer.mozilla.org/en-US/docs/Web/API/Event/isTrusted
+  if (!ev.isTrusted) return
+
   const diffContainers = [
     ...document.querySelectorAll(`.${DIFF_CONTAINER_CLASS}`),
   ]
@@ -91,5 +94,6 @@ const syncToggle = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
   if (!counterpartToggle) {
     throw new Error("Expected to find counterpart toggle")
   }
+
   counterpartToggle.click()
 }

@@ -38,11 +38,7 @@ const PermissionsDiff = async ({ left, right, chainId }: Props) => {
     leftPresets,
     rightPresets
   )
-  console.log(
-    "cn",
-    cn(classes.left, DIFF_CONTAINER_CLASS),
-    DIFF_CONTAINER_CLASS
-  )
+
   return (
     <Flex direction="row" gap={1}>
       <Box p={3} className={cn(classes.left, DIFF_CONTAINER_CLASS)}>
