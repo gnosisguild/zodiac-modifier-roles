@@ -8,7 +8,7 @@ import {
   ExecutionOptions,
 } from "zodiac-roles-sdk"
 
-const zAddress = z.string().transform((val, ctx) => {
+export const zAddress = z.string().transform((val, ctx) => {
   try {
     return getAddress(val).toLowerCase() as `0x${string}`
   } catch (e) {
