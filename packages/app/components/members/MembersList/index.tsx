@@ -17,7 +17,7 @@ const MembersList: React.FC<{
       {sorted.map((member) => (
         <Box
           key={member}
-          bg
+          bg={diff?.get(member) ? false : true}
           p={2}
           className={
             diff?.get(member) &&

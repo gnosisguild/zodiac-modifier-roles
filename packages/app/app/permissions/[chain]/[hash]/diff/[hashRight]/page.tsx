@@ -1,10 +1,8 @@
-import { Clearance, Target } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
 import { kv } from "@vercel/kv"
 
 import Layout from "@/components/Layout"
 import PageBreadcrumbs from "./breadcrumbs"
-import styles from "./page.module.css"
 import { CHAINS } from "@/app/chains"
 import { PermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
