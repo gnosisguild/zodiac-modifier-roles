@@ -2,9 +2,12 @@ import { MdOutlineFileDownload } from "react-icons/md"
 import {
   Annotation,
   ChainId,
+  Role,
   Target,
   applyAnnotations,
+  applyMembers,
   applyTargets,
+  decodeRoleKey,
   posterAbi,
   rolesAbi,
 } from "zodiac-roles-sdk"
@@ -31,11 +34,11 @@ interface Props {
   chainId: ChainId
   address: `0x${string}`
   owner: `0x${string}`
-  role: string
-  targets: Target[]
-  annotations: Annotation[]
-  currentTargets: Target[]
-  currentAnnotations: Annotation[]
+  role: Role
+
+  members?: `0x${string}`[]
+  targets?: Target[]
+  annotations?: Annotation[]
 }
 
 const ApplyUpdates: React.FC<Props> = async ({
@@ -43,40 +46,58 @@ const ApplyUpdates: React.FC<Props> = async ({
   address,
   owner,
   role,
+  members,
   targets,
   annotations,
-  currentTargets,
-  currentAnnotations,
 }) => {
-  const roleKey = parseRoleParam(role)
-  if (!roleKey) throw new Error("Invalid role key")
-
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 
-  const calls = [
-    ...(
-      await applyTargets(roleKey, targets, {
-        chainId: chainId,
-        address: address,
-        mode: "replace",
-        currentTargets,
-        log: logCall,
-      })
-    ).map((data) => ({ to: address, data })),
+  let calls: { to: `0x${string}`; data: `0x${string}` }[] = []
 
-    ...(
-      await applyAnnotations(roleKey, annotations, {
-        chainId: chainId,
-        address: address,
-        mode: "replace",
-        currentAnnotations,
-        log: logCall,
-      })
-    ).map((data) => ({ to: POSTER_ADDRESS, data })),
-  ]
+  if (members) {
+    calls = calls.concat(
+      (
+        await applyMembers(role.key, members, {
+          chainId,
+          address,
+          mode: "replace",
+          currentMembers: role.members,
+          log: logCall,
+        })
+      ).map((data) => ({ to: address, data }))
+    )
+  }
 
-  const txBuilderJson = exportToSafeTransactionBuilder(calls, chainId, role)
+  if (targets) {
+    calls = calls.concat(
+      (
+        await applyTargets(role.key, targets, {
+          chainId,
+          address,
+          mode: "replace",
+          currentTargets: role.targets,
+          log: logCall,
+        })
+      ).map((data) => ({ to: address, data }))
+    )
+  }
+
+  if (annotations) {
+    calls = calls.concat(
+      (
+        await applyAnnotations(role.key, annotations, {
+          chainId: chainId,
+          address: address,
+          mode: "replace",
+          currentAnnotations: role.annotations,
+          log: logCall,
+        })
+      ).map((data) => ({ to: POSTER_ADDRESS, data }))
+    )
+  }
+
+  const txBuilderJson = exportToSafeTransactionBuilder(calls, chainId, role.key)
   return (
     <Box p={3} className={styles.calls}>
       <Flex direction="column" gap={3}>
@@ -120,14 +141,14 @@ export default ApplyUpdates
 const exportToSafeTransactionBuilder = (
   calls: { to: `0x${string}`; data: `0x${string}` }[],
   chainId: ChainId,
-  role: string
+  roleKey: string
 ) => {
   return {
     version: "1.0",
     chainId: chainId.toString(10),
     createdAt: Date.now(),
     meta: {
-      name: `Update permissions of "${role}" role`,
+      name: `Update permissions of ${decodeRoleKey(roleKey)} role`,
       description: "",
       txBuilderVersion: "1.16.2",
     },

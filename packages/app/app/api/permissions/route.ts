@@ -2,21 +2,14 @@ import { NextResponse } from "next/server"
 import { checkIntegrity } from "zodiac-roles-sdk"
 import { kv } from "@vercel/kv"
 import { createHash } from "crypto"
-import { z } from "zod"
-import { zAddress, zAnnotation, zTarget } from "@/components/permissions/schema"
+import { PermissionsPost, zPermissionsPost } from "./types"
 
 export async function POST(req: Request) {
   const json = await req.json()
 
-  const zParams = z.object({
-    targets: z.array(zTarget).optional(),
-    annotations: z.array(zAnnotation).optional(),
-    members: z.array(zAddress).optional(),
-  })
-
-  let validated: z.infer<typeof zParams>
+  let validated: PermissionsPost
   try {
-    validated = zParams.parse(json)
+    validated = zPermissionsPost.parse(json)
   } catch (e) {
     return NextResponse.json({
       error: "Json is invalid",

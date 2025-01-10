@@ -1,18 +1,29 @@
-"use client"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
 import Address from "@/ui/Address"
 import classes from "./style.module.css"
 import Box from "@/ui/Box"
+import { DiffFlag } from "@/components/permissions/types"
 
-const MembersList: React.FC<{ members: string[]; chainId: ChainId }> = ({
-  members,
-  chainId,
-}) => {
+const MembersList: React.FC<{
+  members: string[]
+  chainId: ChainId
+  diff?: Map<string, DiffFlag.Added | DiffFlag.Removed>
+}> = ({ members, chainId, diff }) => {
+  const sorted = members.map((member) => member.toLowerCase()).sort()
+
   return (
     <Flex direction="column" gap={1}>
-      {members.map((member) => (
-        <Box key={member} bg p={2}>
+      {sorted.map((member) => (
+        <Box
+          key={member}
+          bg
+          p={2}
+          className={
+            diff?.get(member) &&
+            classes[DiffFlag[diff.get(member)!].toLowerCase()]
+          }
+        >
           <Address
             chainId={chainId}
             address={member}

@@ -34,3 +34,13 @@
   text-align: center;
   opacity: 0.8;
 }
+
+.added {
+  background-color: #35774861;
+  border: 1px solid #357748;
+}
+
+.removed {
+  background-color: #88242461;
+  border: 1px solid #882424;
+}
