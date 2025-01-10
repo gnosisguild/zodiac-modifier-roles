@@ -1,3 +1,4 @@
+import { getAddress } from "ethers"
 import { fetchRole, ChainId } from "zodiac-roles-deployments"
 
 import { Roles__factory } from "../../evm/typechain-types"
@@ -22,6 +23,7 @@ type Options = (
    *  - "remove": All passed members will be removed from the role
    */
   mode: "replace" | "extend" | "remove"
+  log?: boolean | ((message: string) => void)
 }
 
 /**
@@ -57,51 +59,65 @@ export const applyMembers = async (
     }
   }
 
+  const currentSet = new Set(
+    currentMembers.map((member) => getAddress(member) as `0x${string}`)
+  )
+  const membersSet = new Set(
+    members.map((member) => getAddress(member) as `0x${string}`)
+  )
+
+  let assignments: { add: `0x${string}`[]; remove: `0x${string}`[] }
   switch (options.mode) {
     case "replace":
-      return replaceMembers(roleKey, currentMembers, members)
+      assignments = replaceMembers(currentSet, membersSet)
+      break
     case "extend":
-      return extendMembers(roleKey, currentMembers, members)
+      assignments = extendMembers(currentSet, membersSet)
+      break
     case "remove":
-      return removeMembers(roleKey, currentMembers, members)
+      assignments = removeMembers(currentSet, membersSet)
+      break
     default:
       throw new Error(`Invalid mode: ${options.mode}`)
   }
-}
 
-const replaceMembers = (
-  roleKey: `0x${string}`,
-  current: readonly `0x${string}`[],
-  next: readonly `0x${string}`[]
-) => {
-  const toRemove = current.filter((member) => !next.includes(member))
-  const toAdd = next.filter((member) => !current.includes(member))
+  if (options.log) {
+    const log = options.log === true ? console.log : options.log
+    assignments.remove.forEach((account) => log(`👤 Remove member ${account}`))
+    assignments.add.forEach((account) => log(`👤 Add member ${account}`))
+  }
 
   return [
-    ...toRemove.map((member) => removeMember(roleKey, member)),
-    ...toAdd.map((member) => addMember(roleKey, member)),
+    ...assignments.remove.map((member) => encodeRemoveCall(roleKey, member)),
+    ...assignments.add.map((member) => encodeAddCall(roleKey, member)),
   ]
 }
 
-export const extendMembers = (
-  roleKey: `0x${string}`,
-  current: readonly `0x${string}`[],
-  add: readonly `0x${string}`[]
-) => {
-  const toAdd = add.filter((member) => !current.includes(member))
-  return toAdd.map((member) => addMember(roleKey, member))
-}
+const replaceMembers = (
+  current: Set<`0x${string}`>,
+  next: Set<`0x${string}`>
+) => ({
+  remove: [...current].filter((member) => !next.has(member)),
+  add: [...next].filter((member) => !current.has(member)),
+})
+
+const extendMembers = (
+  current: Set<`0x${string}`>,
+  add: Set<`0x${string}`>
+) => ({
+  remove: [],
+  add: [...add].filter((member) => !current.has(member)),
+})
 
 const removeMembers = (
-  roleKey: `0x${string}`,
-  current: readonly `0x${string}`[],
-  remove: readonly `0x${string}`[]
-) => {
-  const toRemove = remove.filter((member) => current.includes(member))
-  return toRemove.map((member) => removeMember(roleKey, member))
-}
+  current: Set<`0x${string}`>,
+  remove: Set<`0x${string}`>
+) => ({
+  remove: [...remove].filter((member) => current.has(member)),
+  add: [],
+})
 
-const addMember = (roleKey: `0x${string}`, member: `0x${string}`) => {
+const encodeAddCall = (roleKey: `0x${string}`, member: `0x${string}`) => {
   return rolesInterface.encodeFunctionData("assignRoles", [
     member,
     [roleKey],
@@ -109,7 +125,7 @@ const addMember = (roleKey: `0x${string}`, member: `0x${string}`) => {
   ]) as `0x${string}`
 }
 
-const removeMember = (roleKey: `0x${string}`, member: `0x${string}`) => {
+const encodeRemoveCall = (roleKey: `0x${string}`, member: `0x${string}`) => {
   return rolesInterface.encodeFunctionData("assignRoles", [
     member,
     [roleKey],
