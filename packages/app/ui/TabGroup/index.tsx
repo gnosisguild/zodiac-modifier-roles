@@ -7,7 +7,7 @@ import classes from "./style.module.css"
 import cn from "classnames"
 
 interface TabGroupProps {
-  tabs: string[]
+  tabs: React.ReactNode[]
   panels: React.ReactNode[]
 }
 

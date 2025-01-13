@@ -1,16 +1,17 @@
-import { Annotation, Clearance, Target, fetchRolesMod } from "zodiac-roles-sdk"
+import { fetchRolesMod } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
 import { kv } from "@vercel/kv"
 
 import Layout from "@/components/Layout"
 import { parseModParam, parseRoleParam } from "@/app/params"
-import PermissionsDiff from "@/components/permissions/PermissionsDiff"
 import PageBreadcrumbs from "./breadcrumbs"
 import styles from "./page.module.css"
 import Flex from "@/ui/Flex"
 import ApplyUpdates from "@/components/ApplyUpdate"
 import AnnotationsToggle from "@/components/AnnotationsToggle"
 import { fetchOrInitRole } from "../../fetching"
+import { PermissionsPost } from "@/app/api/permissions/types"
+import DiffView from "@/components/DiffView"
 
 export default async function DiffPage({
   params,
@@ -26,27 +27,17 @@ export default async function DiffPage({
   }
 
   const roleData = await fetchOrInitRole({ ...mod, roleKey })
-  const roleTargets = roleData.targets.filter(
-    (target) => !isEmptyFunctionScoped(target)
-  )
 
-  const entry = await kv.get<{
-    targets: Target[]
-    annotations: Annotation[]
-  }>(params.hash)
-  if (!entry) {
+  const post = await kv.get<PermissionsPost>(params.hash)
+  if (!post) {
     notFound()
   }
-  const entryTargets = entry.targets.filter(
-    (target) => !isEmptyFunctionScoped(target)
-  )
 
   const hasAnnotations =
-    roleData.annotations.length > 0 || entry.annotations.length > 0
-  const shallShowAnnotations = searchParams.annotations !== "false"
+    roleData.annotations.length > 0 ||
+    (post.annotations && post.annotations.length > 0)
 
-  const roleAnnotations = shallShowAnnotations ? roleData.annotations : []
-  const entryAnnotations = shallShowAnnotations ? entry.annotations : []
+  const showAnnotations = searchParams.annotations !== "false"
 
   const modInfo = await fetchRolesMod(mod, { next: { revalidate: 1 } })
   if (!modInfo) {
@@ -55,37 +46,24 @@ export default async function DiffPage({
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
-      {hasAnnotations && (
-        <Flex
-          direction="row"
-          gap={1}
-          justifyContent="end"
-          className={styles.toolbar}
-        >
-          <AnnotationsToggle on={shallShowAnnotations} />
-        </Flex>
-      )}
-      <main className={styles.main}>
-        <Flex direction="column" gap={1}>
-          <PermissionsDiff
-            left={{ targets: roleTargets, annotations: roleAnnotations }}
-            right={{ targets: entryTargets, annotations: entryAnnotations }}
+      <main>
+        <Flex direction="column" gap={3}>
+          <DiffView
+            left={roleData}
+            right={post}
             chainId={mod.chainId}
+            showAnnotations={showAnnotations}
           />
           <ApplyUpdates
             {...mod}
-            role={params.role}
+            role={roleData}
             owner={modInfo.owner}
-            targets={entryTargets}
-            annotations={entryAnnotations}
-            currentTargets={roleTargets}
-            currentAnnotations={roleAnnotations}
+            targets={post.targets}
+            annotations={post.annotations}
+            members={post.members}
           />
         </Flex>
       </main>
     </Layout>
   )
 }
-
-const isEmptyFunctionScoped = (target: Target) =>
-  target.clearance === Clearance.Function && target.functions.length === 0

@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { Mod } from "@/app/params"
 import TabGroup from "@/ui/TabGroup"
 import PermissionsList from "../permissions/PermissionsList"
-import MembersList from "../MembersList"
+import MembersList from "../members/MembersList"
 import classes from "./style.module.css"
 import AnnotationsToggle from "../AnnotationsToggle"
 

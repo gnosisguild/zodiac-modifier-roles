@@ -11,3 +11,5 @@ export type {
   FunctionPermission,
   FunctionPermissionCoerced,
 } from "./types"
+
+export type { Scoping } from "./authoring/conditions/types"

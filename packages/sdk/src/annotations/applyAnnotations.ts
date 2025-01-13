@@ -90,7 +90,7 @@ export const applyAnnotations = async (
         : undefined,
     ]
       .filter(Boolean)
-      .join(" ,")
+      .join(", ")
 
     log(`💬 ${message[0].toUpperCase()}${message.slice(1)}`)
   }
