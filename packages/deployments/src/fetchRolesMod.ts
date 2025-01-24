@@ -120,11 +120,11 @@ export interface RoleSummary {
 
 export interface Allowance {
   key: `0x${string}`
-  refill: BigInt
-  maxRefill: BigInt
-  period: BigInt
-  balance: BigInt
-  timestamp: BigInt
+  refill: bigint
+  maxRefill: bigint
+  period: bigint
+  balance: bigint
+  timestamp: bigint
 }
 
 export interface RolesModifier {
