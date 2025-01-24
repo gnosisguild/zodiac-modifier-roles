@@ -40,7 +40,20 @@ const QUERY = `
         }
         lastUpdate
       }
-      unwrapAdapters(where: {selector: "0x8d80ff0a", adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"}) {
+      allowances(first: 1000) {
+        key
+        refill
+        maxRefill
+        period
+        balance
+        timestamp
+      }
+      unwrapAdapters(
+        where: {
+          selector: "0x8d80ff0a", 
+          adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
+        }
+      ) {
         targetAddress
       }
     }
@@ -105,12 +118,22 @@ export interface RoleSummary {
   targets: TargetSummary[]
 }
 
+export interface Allowance {
+  key: `0x${string}`
+  refill: BigInt
+  maxRefill: BigInt
+  period: BigInt
+  balance: BigInt
+  timestamp: BigInt
+}
+
 export interface RolesModifier {
   address: `0x${string}`
   owner: `0x${string}`
   avatar: `0x${string}`
   target: `0x${string}`
   roles: RoleSummary[]
+  allowances: Allowance[]
   multiSendAddresses: `0x${string}`[]
 }
 
