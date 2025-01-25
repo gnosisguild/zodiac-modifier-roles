@@ -122,9 +122,9 @@ export interface Allowance {
   key: `0x${string}`
   refill: bigint
   maxRefill: bigint
-  period: bigint
+  period: number
   balance: bigint
-  timestamp: bigint
+  timestamp: number
 }
 
 export interface RolesModifier {
@@ -140,6 +140,14 @@ export interface RolesModifier {
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
+  allowances: rolesModifier.allowances.map((allowance: any) => ({
+    key: allowance.key,
+    refill: BigInt(allowance.refill),
+    maxRefill: BigInt(allowance.maxRefill),
+    period: Number(allowance.period),
+    balance: BigInt(allowance.balance),
+    timestamp: Number(allowance.timestamp),
+  })),
   multiSendAddresses: rolesModifier.unwrapAdapters.map(
     (adapter: any) => adapter.targetAddress
   ),
