@@ -138,6 +138,15 @@ export interface Condition {
   children?: readonly Condition[]
 }
 
+export interface Allowance {
+  key: `0x${string}`
+  refill: bigint
+  maxRefill: bigint
+  period: bigint
+  balance: bigint
+  timestamp: bigint
+}
+
 export interface Annotation {
   /** The URI serves as ID for the annotation. An http get request will be made to fetch the targeted permissions. */
   uri: string
