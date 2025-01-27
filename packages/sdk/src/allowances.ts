@@ -41,7 +41,7 @@ export const applyAllowances = async (
   } else {
     if (!("chainId" in options)) {
       throw new Error(
-        "Either `currentMembers` or `chainId` and `address` must be specified"
+        "Either `currentAllowances` or `chainId` and `address` must be specified"
       )
     }
 
