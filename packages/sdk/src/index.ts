@@ -13,4 +13,3 @@ export * from "./api"
 
 export * from "./ethSdk"
 export * from "./abi"
-export * from "./types"

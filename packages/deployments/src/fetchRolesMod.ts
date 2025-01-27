@@ -1,5 +1,11 @@
 import { chains } from "./chains"
-import { ChainId, Clearance, ExecutionOptions, Function } from "./types"
+import {
+  Allowance,
+  ChainId,
+  Clearance,
+  ExecutionOptions,
+  Function,
+} from "./types"
 
 type Props = {
   address: `0x${string}`
@@ -40,7 +46,20 @@ const QUERY = `
         }
         lastUpdate
       }
-      unwrapAdapters(where: {selector: "0x8d80ff0a", adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"}) {
+      allowances(first: 1000) {
+        key
+        refill
+        maxRefill
+        period
+        balance
+        timestamp
+      }
+      unwrapAdapters(
+        where: {
+          selector: "0x8d80ff0a", 
+          adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
+        }
+      ) {
         targetAddress
       }
     }
@@ -111,12 +130,21 @@ export interface RolesModifier {
   avatar: `0x${string}`
   target: `0x${string}`
   roles: RoleSummary[]
+  allowances: Allowance[]
   multiSendAddresses: `0x${string}`[]
 }
 
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
+  allowances: rolesModifier.allowances.map((allowance: any) => ({
+    key: allowance.key,
+    refill: BigInt(allowance.refill),
+    maxRefill: BigInt(allowance.maxRefill),
+    period: BigInt(allowance.period),
+    balance: BigInt(allowance.balance),
+    timestamp: BigInt(allowance.timestamp),
+  })),
   multiSendAddresses: rolesModifier.unwrapAdapters.map(
     (adapter: any) => adapter.targetAddress
   ),

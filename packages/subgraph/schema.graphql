@@ -134,6 +134,7 @@ type RolesModifier @entity {
   avatar: Bytes!
   target: Bytes!
   roles: [Role!]! @derivedFrom(field: "rolesModifier")
+  allowances: [Allowance!]! @derivedFrom(field: "rolesModifier")
   unwrapAdapters: [UnwrapAdapter!]! @derivedFrom(field: "rolesModifier")
 }
 
