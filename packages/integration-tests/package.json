@@ -1,5 +1,5 @@
 {
-  "name": "zodiac-roles-sdk-integration-tests",
+  "name": "zodiac-roles-integration-tests",
   "private": true,
   "license": "LGPL-3.0+",
   "scripts": {
