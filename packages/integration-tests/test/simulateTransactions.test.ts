@@ -8,8 +8,8 @@ import {
 } from "zodiac-roles-sdk"
 
 import { TestAvatar } from "../../evm/typechain-types"
-import { deployContracts } from "./deployContracts"
 
+import { deployContracts } from "./deployContracts"
 import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"
 import manageENS1Permissions from "./permissions/deFiManageENS1Untyped"
 import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1"

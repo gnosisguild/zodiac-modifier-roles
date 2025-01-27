@@ -1,4 +1,5 @@
 import { expect, it, suite } from "vitest"
+
 import { processAnnotations } from "../src/entrypoints/annotations"
 import { PermissionCoerced } from "../src/permissions"
 
