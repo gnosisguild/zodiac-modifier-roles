@@ -14,6 +14,5 @@
       "zodiac-roles-sdk": ["./src/index.ts"]
     }
   },
-  "include": ["./src", "./test"],
-  "files": ["./hardhat.config.ts"]
+  "include": ["./src", "./test"]
 }
