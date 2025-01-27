@@ -1,5 +1,5 @@
 import { defineConfig } from "@gnosis-guild/eth-sdk"
-import { ethSdkConfig } from "zodiac-roles-sdk"
+import { ethSdkConfig } from "../../sdk/src/ethSdk"
 
 export default defineConfig({
   ...ethSdkConfig,
