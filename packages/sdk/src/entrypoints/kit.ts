@@ -80,7 +80,7 @@ type PayableOverrides = Omit<BaseOverrides, "blockTag" | "enableCcipRead">
 // Maps the types of ethers method arguments to the ones we want to use in the allow function
 type AllowFunctionParameters<MethodArgs extends [...any]> = MethodArgs extends [
   ...any,
-  NonPayableOverrides | PayableOverrides
+  NonPayableOverrides | PayableOverrides,
 ]
   ? never
   : [...TupleScopings<MethodArgs>, options?: Options]
@@ -99,7 +99,7 @@ type AllowContract<C extends BaseContract> = {
 
 const makeAllowFunction = <
   C extends BaseContract,
-  N extends keyof StateMutatingContractMethods<C>
+  N extends keyof StateMutatingContractMethods<C>,
 >(
   contract: C,
   name: N
@@ -255,14 +255,13 @@ type AllowKit<S extends EthSdk> = {
   [Key in keyof S]: S[Key] extends BaseContract
     ? AllowContract<S[Key]>
     : S[Key] extends EthSdk // somehow it cannot infer that it cannot be a BaseContract here, so we use an extra conditional
-    ? AllowKit<S[Key]>
-    : never
+      ? AllowKit<S[Key]>
+      : never
 }
 
 const mapSdk = <S extends EthSdk>(sdk: S): AllowKit<S> => {
   return Object.keys(sdk).reduce((acc, key) => {
-    // for this check to work reliably, make sure ethers node_modules is not duplicated
-    if (sdk[key] instanceof BaseContract) {
+    if (sdk[key].constructor.name === "Contract") {
       acc[key] = makeAllowContract(sdk[key] as BaseContract)
     } else {
       acc[key] = mapSdk(sdk[key] as EthSdk)
@@ -283,7 +282,6 @@ type AllowKitMap = {
 }
 
 const uncapitalize = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
-
 export const allow: AllowKitMap = Object.keys(ethSdk).reduce(
   (acc, sdkGetterName) => {
     if (sdkGetterName === "getContract") return acc
