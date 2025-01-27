@@ -47,6 +47,8 @@
     "build": "rimraf build && yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "check": "yarn check:types && yarn check:prettier && yarn check:lint",
     "check:types": "tsc --noEmit",
     "check:lint": "eslint src test --ext .ts",
@@ -95,7 +97,8 @@
     "rimraf": "^3.0.2",
     "ts-node": "^10.8.0",
     "typechain": "^8.3.2",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "3.0.4"
   },
   "resolutions": {
     "typechain": "^8.3.2"
