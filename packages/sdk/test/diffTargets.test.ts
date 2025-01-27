@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import {
   Clearance,
   ExecutionOptions,
@@ -9,7 +9,7 @@ import {
 
 import { diffTargets } from "../src/targets/diffTargets"
 
-describe("diffTargets", () => {
+suite("diffTargets", () => {
   it("should correctly diff target-cleared targets", () => {
     const a: Target[] = [
       {

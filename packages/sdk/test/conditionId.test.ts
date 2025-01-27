@@ -1,9 +1,9 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionAddress, normalizeCondition } from "../src/conditions"
 
-describe("conditionAddress", () => {
+suite("conditionAddress", () => {
   it("calculates the create2 storage address of the condition", () => {
     const normalizedCondition = normalizeCondition({
       operator: Operator.Matches,

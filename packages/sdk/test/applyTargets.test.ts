@@ -1,9 +1,9 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { Operator, ParameterType, Target } from "zodiac-roles-deployments"
 
 import { replaceTargets } from "../src/targets/applyTargets"
 
-describe("replaceTargets", () => {
+suite("replaceTargets", () => {
   it("should revoke function-scoped targets", () => {
     const before: Target[] = [
       {

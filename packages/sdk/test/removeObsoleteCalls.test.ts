@@ -1,10 +1,10 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { ExecutionOptions } from "zodiac-roles-deployments"
 
 import { removeObsoleteCalls } from "../src/calls"
 import { Call } from "../src/calls/types"
 
-describe("removeObsoleteCalls", () => {
+suite("removeObsoleteCalls", () => {
   it("should remove function permission updates if later on the entire target is cleared", () => {
     const calls: Call[] = [
       {
