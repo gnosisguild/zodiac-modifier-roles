@@ -66,7 +66,6 @@ describe("applyAllowances", () => {
       ])
     })
 
-    //Is this correct?
     it("unsets all allowances when passed an empty array", async () => {
       const currentAllowances: Allowance[] = [
         {
