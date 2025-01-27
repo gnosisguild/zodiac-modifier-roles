@@ -1,12 +1,11 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../src/conditions"
-import { stripIds } from "../src/conditions/normalizeCondition"
-import { allow } from "../src/entrypoints/kit"
-import { FunctionPermissionCoerced, c } from "../src/permissions"
-import { mergeFunctionPermissions } from "../src/permissions/mergeFunctionPermissions"
-import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
+import { normalizeCondition, stripIds } from "./normalizeCondition"
+import { allow } from "../entrypoints/kit"
+import { FunctionPermissionCoerced, c } from "../permissions"
+import { mergeFunctionPermissions } from "../permissions/mergeFunctionPermissions"
+import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
