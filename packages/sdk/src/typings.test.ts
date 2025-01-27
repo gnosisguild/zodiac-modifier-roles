@@ -1,8 +1,8 @@
 import { test } from "vitest"
 import { BigNumberish } from "ethers"
 
-import * as c from "../src/permissions/authoring/conditions"
-import { Scoping } from "../src/permissions/authoring/conditions/types"
+import * as c from "./permissions/authoring/conditions"
+import { Scoping } from "./permissions/authoring/conditions/types"
 
 test("typings", async () => {
   // These are tests of the typing system, not the runtime behavior.
@@ -32,8 +32,8 @@ test("typings", async () => {
     values.length === 0
       ? undefined
       : values.length === 1
-      ? values[0]
-      : c.or(...(values as [string, string, ...string[]]))
+        ? values[0]
+        : c.or(...(values as [string, string, ...string[]]))
 
   // It should be allowed to only define scoping for some struct fields
   const _t06: Scoping<{ a: string; b: number }> = { a: oneOf(["foo", "bar"]) }

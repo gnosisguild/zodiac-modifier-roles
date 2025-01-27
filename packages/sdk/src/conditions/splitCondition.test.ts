@@ -1,9 +1,9 @@
 import { expect, it, suite } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../src/conditions"
-import { splitCondition } from "../src/conditions/splitCondition"
-import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
+import { normalizeCondition } from "./normalizeCondition"
+import { splitCondition } from "./splitCondition"
+import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number): Condition => ({
   paramType: ParameterType.Static,

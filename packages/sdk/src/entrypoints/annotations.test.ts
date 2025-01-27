@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 
-import { processAnnotations } from "../src/entrypoints/annotations"
-import { PermissionCoerced } from "../src/permissions"
+import { processAnnotations } from "./annotations"
+import { PermissionCoerced } from "../permissions"
 
 suite("processAnnotations()", () => {
   it("returns the original set of permissions if no annotations are given", async () => {

@@ -1,10 +1,12 @@
 import { expect, it, suite } from "vitest"
+
 import {
   Permission,
   processPermissions,
   reconstructPermissions,
-} from "../src/permissions"
-import { diffTargets, splitTargets } from "../src/targets"
+} from "../permissions"
+import { splitTargets } from "./splitTargets"
+import { diffTargets } from "./diffTargets"
 
 suite("splitTargets", () => {
   it("splits so that both shares combined yield the original permissions", () => {
