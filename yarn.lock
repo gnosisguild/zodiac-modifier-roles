@@ -20369,15 +20369,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"zodiac-roles-monorepo@workspace:.":
+"zodiac-roles-integration-tests@workspace:packages/integration-tests":
   version: 0.0.0-use.local
-  resolution: "zodiac-roles-monorepo@workspace:."
-  languageName: unknown
-  linkType: soft
-
-"zodiac-roles-sdk-integration-tests@workspace:packages/sdk-integration-tests":
-  version: 0.0.0-use.local
-  resolution: "zodiac-roles-sdk-integration-tests@workspace:packages/sdk-integration-tests"
+  resolution: "zodiac-roles-integration-tests@workspace:packages/integration-tests"
   dependencies:
     "@gnosis-guild/zodiac-core": ^2.0.4
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.8
@@ -20401,6 +20395,12 @@ __metadata:
     typescript: ^5.7.3
     zodiac-roles-deployments: "workspace:^"
     zodiac-roles-sdk: "workspace:^"
+  languageName: unknown
+  linkType: soft
+
+"zodiac-roles-monorepo@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "zodiac-roles-monorepo@workspace:."
   languageName: unknown
   linkType: soft
 

@@ -1,10 +1,9 @@
-import { expect, it, suite } from "vitest"
 import { AbiCoder, concat, hexlify, zeroPadValue } from "ethers"
-
-import { applyAllowances } from "../src/allowances"
+import { expect, it, suite } from "vitest"
+import { Allowance } from "zodiac-roles-deployments"
 
 import { Roles__factory } from "../../evm/typechain-types"
-import { Allowance } from "zodiac-roles-deployments"
+import { applyAllowances } from "../src/allowances"
 
 const iface = Roles__factory.createInterface()
 
