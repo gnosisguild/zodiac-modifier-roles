@@ -1,5 +1,4 @@
-import { expect } from "chai"
-
+import { expect, it, suite } from "vitest"
 import {
   Permission,
   processPermissions,
@@ -7,7 +6,7 @@ import {
 } from "../src/permissions"
 import { diffTargets, splitTargets } from "../src/targets"
 
-describe("splitTargets", () => {
+suite("splitTargets", () => {
   it("splits so that both shares combined yield the original permissions", () => {
     const { targets: combinedTargets } = processPermissions(combinedPermissions)
     const { targets: split } = processPermissions(splitPermissions)

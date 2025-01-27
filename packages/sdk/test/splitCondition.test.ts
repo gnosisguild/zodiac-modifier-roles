@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
@@ -11,7 +11,7 @@ const DUMMY_COMP = (id: number): Condition => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-describe("splitCondition", () => {
+suite("splitCondition", () => {
   it("returns the remainder condition for ORs", () => {
     const combined = {
       paramType: ParameterType.None,

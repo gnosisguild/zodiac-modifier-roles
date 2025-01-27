@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "../src/conditions"
@@ -14,7 +14,7 @@ const DUMMY_COMP = (id: number) => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-describe("normalizeCondition()", () => {
+suite("normalizeCondition()", () => {
   it("flattens nested AND conditions", () => {
     expect(
       stripIds(
