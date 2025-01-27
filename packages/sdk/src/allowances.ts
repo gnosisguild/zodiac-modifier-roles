@@ -75,7 +75,7 @@ export const applyAllowances = async (
   if (options.log) {
     const log = options.log === true ? console.log : options.log
     result.unset.forEach(({ key }) => log(`💰 Unset allowance ${key}`))
-    result.set.forEach(({ key }) => log(`👤 Set allowance ${key}`))
+    result.set.forEach(({ key }) => log(`💰 Set allowance ${key}`))
   }
 
   return [
