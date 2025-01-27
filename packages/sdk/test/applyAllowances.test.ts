@@ -1,10 +1,10 @@
+import { expect, it, suite } from "vitest"
 import { AbiCoder, concat, hexlify, zeroPadValue } from "ethers"
 
 import { applyAllowances } from "../src/allowances"
 
 import { Roles__factory } from "../../evm/typechain-types"
 import { Allowance } from "zodiac-roles-deployments"
-import { expect } from "chai"
 
 const iface = Roles__factory.createInterface()
 
@@ -13,8 +13,8 @@ const key2 = hexlify(zeroPadValue("0x02", 32)) as `0x${string}`
 const key3 = hexlify(zeroPadValue("0x03", 32)) as `0x${string}`
 const key4 = hexlify(zeroPadValue("0x04", 32)) as `0x${string}`
 
-describe("applyAllowances", () => {
-  describe("replace", () => {
+suite("applyAllowances", () => {
+  suite("replace", () => {
     it("unsets allowances that are not mentioned, and sets the ones passed in", async () => {
       const currentAllowances: Allowance[] = [
         {
@@ -98,7 +98,7 @@ describe("applyAllowances", () => {
     })
   })
 
-  describe("extend", () => {
+  suite("extend", () => {
     it("sets the allowances passed in, and ignores existing ones", async () => {
       const currentAllowances: Allowance[] = [
         {
@@ -183,7 +183,7 @@ describe("applyAllowances", () => {
     })
   })
 
-  describe("remove", () => {
+  suite("remove", () => {
     it("unsets the allowances passed in, and ignores existing ones", async () => {
       const currentAllowances: Allowance[] = [
         {

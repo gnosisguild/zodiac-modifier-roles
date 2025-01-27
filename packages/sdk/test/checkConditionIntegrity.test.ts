@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import {
@@ -7,7 +7,7 @@ import {
 } from "../src/conditions"
 import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
 
-describe("checkConditionIntegrity()", () => {
+suite("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {
     expect(() =>
       checkConditionIntegrity({
@@ -80,7 +80,7 @@ describe("checkConditionIntegrity()", () => {
   })
 })
 
-describe("checkRootConditionIntegrity()", () => {
+suite("checkRootConditionIntegrity()", () => {
   it("should throw if the root param type is not Calldata", () => {
     expect(() =>
       checkRootConditionIntegrity({

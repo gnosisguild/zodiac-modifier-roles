@@ -1,9 +1,8 @@
-import { expect } from "chai"
-
+import { expect, it, suite } from "vitest"
 import { processAnnotations } from "../src/entrypoints/annotations"
 import { PermissionCoerced } from "../src/permissions"
 
-describe("processAnnotations()", () => {
+suite("processAnnotations()", () => {
   it("returns the original set of permissions if no annotations are given", async () => {
     const permissions = [
       {
