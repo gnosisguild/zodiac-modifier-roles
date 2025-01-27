@@ -47,8 +47,9 @@ describe("Simulate Transactions Test", async () => {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend")
     const multiSend = await MultiSend.deploy()
 
-    const MultiSendUnwrapper =
-      await hre.ethers.getContractFactory("MultiSendUnwrapper")
+    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
+      "MultiSendUnwrapper"
+    )
     const multiSendUnwrapper = await MultiSendUnwrapper.deploy()
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar")
