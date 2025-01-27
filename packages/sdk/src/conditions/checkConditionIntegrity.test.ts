@@ -4,8 +4,8 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
-} from "../src/conditions"
-import { encodeAbiParameters } from "../src/utils/encodeAbiParameters"
+} from "./checkConditionIntegrity"
+import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 suite("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {

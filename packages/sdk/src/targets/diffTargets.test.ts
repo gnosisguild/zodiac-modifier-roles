@@ -7,7 +7,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { diffTargets } from "../src/targets/diffTargets"
+import { diffTargets } from "./diffTargets"
 
 suite("diffTargets", () => {
   it("should correctly diff target-cleared targets", () => {

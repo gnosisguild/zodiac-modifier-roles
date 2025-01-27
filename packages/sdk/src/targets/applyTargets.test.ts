@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType, Target } from "zodiac-roles-deployments"
 
-import { replaceTargets } from "../src/targets/applyTargets"
+import { replaceTargets } from "./applyTargets"
 
 suite("replaceTargets", () => {
   it("should revoke function-scoped targets", () => {
