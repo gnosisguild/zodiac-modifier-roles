@@ -11,9 +11,12 @@ export async function POST(req: Request) {
   try {
     validated = zPermissionsPost.parse(json)
   } catch (e) {
-    return NextResponse.json({
-      error: "Json is invalid",
-    })
+    return NextResponse.json(
+      {
+        error: "Json is invalid",
+      },
+      { status: 400 }
+    )
   }
 
   if (validated.targets) {
