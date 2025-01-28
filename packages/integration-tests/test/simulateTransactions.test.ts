@@ -10,7 +10,7 @@ import {
 import { TestAvatar } from "../../evm/typechain-types"
 
 import { deployContracts } from "./deployContracts"
-//import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"
+import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"
 import manageENS1Permissions from "./permissions/deFiManageENS1Untyped"
 import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1"
 import manageENS1Transactions from "./testTransactions/deFiManageENS1"
@@ -167,15 +167,15 @@ describe("Simulate Transactions Test", async () => {
     console.log("\n\n------- TRANSACTION SIMULATION FINISHED -------")
   }
 
-  // describe("ManageBalancer1 permissions", () => {
-  //   it("allows executing all listed management transactions from the DAO Safe", async () => {
-  //     await simulateTransactions({
-  //       config: ADDRESSES.BALANCER_1_ETH,
-  //       permissions: manageBalancer1Permissions,
-  //       // transactions: manageBalancer1Transactions,
-  //     })
-  //   })
-  // })
+  describe("ManageBalancer1 permissions", () => {
+    it("allows executing all listed management transactions from the DAO Safe", async () => {
+      await simulateTransactions({
+        config: ADDRESSES.BALANCER_1_ETH,
+        permissions: manageBalancer1Permissions,
+        transactions: manageBalancer1Transactions,
+      })
+    })
+  })
 
   describe("ManageENS1 permissions", () => {
     it("allows executing all listed management transactions from the DAO Safe", async () => {
