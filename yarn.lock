@@ -4376,10 +4376,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/mocha@npm:^10.0.4":
-  version: 10.0.7
-  resolution: "@types/mocha@npm:10.0.7"
-  checksum: 5e411ed8aa19228e322b2fb0075c4d822322fb157d1adfc8620a798748035d430dc16421bdc7d7f84f118481b8c8c63ec86b95757a8acc926ddc3d737fbffc3a
+"@types/mocha@npm:^10.0.10":
+  version: 10.0.10
+  resolution: "@types/mocha@npm:10.0.10"
+  checksum: 17a56add60a8cc8362d3c62cb6798be3f89f4b6ccd5b9abd12b46e31ff299be21ff2faebf5993de7e0099559f58ca5a3b49a505d302dfa5d65c5a4edfc089195
   languageName: node
   linkType: hard
 
@@ -7116,6 +7116,13 @@ __metadata:
   version: 0.5.0
   resolution: "cookie@npm:0.5.0"
   checksum: 1f4bd2ca5765f8c9689a7e8954183f5332139eb72b6ff783d8947032ec1fdf43109852c178e21a953a30c0dd42257828185be01b49d1eb1a67fd054ca588a180
+  languageName: node
+  linkType: hard
+
+"cookie@npm:^1.0.1":
+  version: 1.0.2
+  resolution: "cookie@npm:1.0.2"
+  checksum: 2c5a6214147ffa7135ce41860c781de17e93128689b0d080d3116468274b3593b607bcd462ac210d3a61f081db3d3b09ae106e18d60b1f529580e95cf2db8a55
   languageName: node
   linkType: hard
 
@@ -15467,6 +15474,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi-backend@npm:^5.11.1":
+  version: 5.11.1
+  resolution: "openapi-backend@npm:5.11.1"
+  dependencies:
+    "@apidevtools/json-schema-ref-parser": ^11.1.0
+    ajv: ^8.6.2
+    bath-es5: ^3.0.3
+    cookie: ^1.0.1
+    dereference-json-schema: ^0.2.1
+    lodash: ^4.17.15
+    mock-json-schema: ^1.0.7
+    openapi-schema-validator: ^12.0.0
+    openapi-types: ^12.0.2
+    qs: ^6.9.3
+  checksum: cd51379e21a6fc89e8497e11dcacff398ccab54366b70e7e91740367411ce295de170957ca172c5063094786b0af854f88db85de9928d6edf89444134be667ff
+  languageName: node
+  linkType: hard
+
 "openapi-schema-validator@npm:^12.0.0":
   version: 12.1.3
   resolution: "openapi-schema-validator@npm:12.1.3"
@@ -20382,7 +20407,7 @@ __metadata:
     "@nomicfoundation/hardhat-network-helpers": ^1.0.12
     "@typechain/hardhat": ^9.1.0
     "@types/chai": ^5.0.1
-    "@types/mocha": ^10.0.4
+    "@types/mocha": ^10.0.10
     "@types/node": ^20.9.0
     "@typescript-eslint/eslint-plugin": ^5.62.0
     "@typescript-eslint/parser": ^5.62.0
@@ -20423,7 +20448,7 @@ __metadata:
     eslint-plugin-import: ^2.29.0
     eslint-plugin-prettier: ^4.2.1
     ethers: ^6.13.5
-    openapi-backend: ^5.11.0
+    openapi-backend: ^5.11.1
     openapi-types: ^12.1.3
     prettier: ^3.4.2
     rimraf: ^6.0.1
