@@ -8,8 +8,9 @@ import {
   AllowFunction,
 } from "../generated/PermissionBuilder/PermissionBuilder"
 import { Target } from "../generated/schema"
-import { log, store } from "@graphprotocol/graph-ts"
+import { BigInt, log, store } from "@graphprotocol/graph-ts"
 import {
+  getAllowanceId,
   getFunctionId,
   getOrCreateAllowance,
   getOrCreateFunction,
@@ -188,13 +189,26 @@ export function handleSetAllowance(event: SetAllowance): void {
     return
   }
 
-  const allowance = getOrCreateAllowance(event.params.allowanceKey, rolesModifierId)
-  allowance.balance = event.params.balance
-  allowance.refill = event.params.refill
-  allowance.maxRefill = event.params.maxRefill
-  allowance.period = event.params.period
-  allowance.timestamp = event.params.timestamp
-  allowance.save()
+  const zero = BigInt.fromI32(0)
+  const isZeroed =
+    event.params.balance.equals(zero) &&
+    event.params.refill.equals(zero) &&
+    event.params.maxRefill.equals(zero) &&
+    event.params.period.equals(zero) &&
+    event.params.timestamp.equals(zero)
 
-  log.info("Allowance {} has been set", [allowance.id])
+  if (isZeroed) {
+    const allowanceId = getAllowanceId(event.params.allowanceKey, rolesModifierId)
+    store.remove("Allowance", allowanceId)
+    log.info("Allowance {} has been deleted", [allowanceId])
+  } else {
+    const allowance = getOrCreateAllowance(event.params.allowanceKey, rolesModifierId)
+    allowance.balance = event.params.balance
+    allowance.refill = event.params.refill
+    allowance.maxRefill = event.params.maxRefill
+    allowance.period = event.params.period
+    allowance.timestamp = event.params.timestamp
+    allowance.save()
+    log.info("Allowance {} has been set", [allowance.id])
+  }
 }
