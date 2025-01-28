@@ -1,6 +1,7 @@
 import { Allowance, ChainId, fetchRolesMod } from "zodiac-roles-deployments"
 
 import { Roles__factory } from "../../evm/typechain-types"
+import { allow } from "./entrypoints/kit"
 
 const rolesInterface = Roles__factory.createInterface()
 
@@ -84,10 +85,28 @@ export const applyAllowances = async (
   ]
 }
 
-const replaceAllowances = (prev: Allowance[], next: Allowance[]) => ({
-  unset: prev.filter((allowance) => next.every((a) => a.key !== allowance.key)),
-  set: next,
-})
+const replaceAllowances = (prev: Allowance[], next: Allowance[]) => {
+  const toDelete = prev.filter((allowance) =>
+    next.every((a) => a.key !== allowance.key)
+  )
+
+  const toUpdate = next
+    .filter((allowance) => prev.some((a) => a.key == allowance.key))
+    .map((allowance) => ({
+      ...allowance,
+      balance: prev.find((a) => a.key == allowance.key)!.balance,
+      timestamp: prev.find((a) => a.key == allowance.key)!.timestamp,
+    }))
+
+  const toCreate = next.filter((allowance) =>
+    prev.every((a) => a.key !== allowance.key)
+  )
+
+  return {
+    unset: toDelete,
+    set: [...toUpdate, ...toCreate],
+  }
+}
 
 const extendAllowances = (_: Allowance[], next: Allowance[]) => ({
   unset: [],
