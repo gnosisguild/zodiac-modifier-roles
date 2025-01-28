@@ -137,16 +137,14 @@ export interface RolesModifier {
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
-  allowances: rolesModifier.allowances
-    .map((allowance: any) => ({
-      key: allowance.key,
-      refill: BigInt(allowance.refill),
-      maxRefill: BigInt(allowance.maxRefill),
-      period: BigInt(allowance.period),
-      balance: BigInt(allowance.balance),
-      timestamp: BigInt(allowance.timestamp),
-    }))
-    .filter((allowance: Allowance) => !isDeletedAllowance(allowance)),
+  allowances: rolesModifier.allowances.map((allowance: any) => ({
+    key: allowance.key,
+    refill: BigInt(allowance.refill),
+    maxRefill: BigInt(allowance.maxRefill),
+    period: BigInt(allowance.period),
+    balance: BigInt(allowance.balance),
+    timestamp: BigInt(allowance.timestamp),
+  })),
   multiSendAddresses: rolesModifier.unwrapAdapters.map(
     (adapter: any) => adapter.targetAddress
   ),
@@ -187,18 +185,4 @@ const assertNoPagination = (data: any[]) => {
   if (data.length === 1000) {
     throw new Error("Pagination not supported")
   }
-}
-
-/*
- * In the context of the rolesMod, zeroing an allowance is equivalent to deleting it.
- */
-const isDeletedAllowance = (allowance: Allowance) => {
-  const zero = BigInt(0)
-  return (
-    allowance.refill == zero &&
-    allowance.maxRefill == zero &&
-    allowance.period == zero &&
-    allowance.balance == zero &&
-    allowance.timestamp == zero
-  )
 }
