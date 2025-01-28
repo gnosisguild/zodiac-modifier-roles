@@ -17,8 +17,8 @@ export async function GET(
 
   // Return calls array but omit sensitive authToken
   return NextResponse.json({
+    id: params.collection,
     calls: collection.calls,
-    createdAt: collection.createdAt,
   })
 }
 
