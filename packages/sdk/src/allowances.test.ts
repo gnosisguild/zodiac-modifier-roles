@@ -37,14 +37,6 @@ suite("applyAllowances", () => {
 
       const allowances: Allowance[] = [
         {
-          key: key1,
-          balance: 11n,
-          maxRefill: 12n,
-          refill: 13n,
-          period: 14n,
-          timestamp: 15n,
-        },
-        {
           key: key3,
           balance: 16n,
           maxRefill: 17n,
@@ -60,9 +52,9 @@ suite("applyAllowances", () => {
       })
 
       expect(result).to.deep.equal([
+        encodeUnsetAllowance(currentAllowances[0]),
         encodeUnsetAllowance(currentAllowances[1]),
         encodeSetAllowance(allowances[0]),
-        encodeSetAllowance(allowances[1]),
       ])
     })
 
@@ -94,6 +86,64 @@ suite("applyAllowances", () => {
       expect(result).to.deep.equal([
         encodeUnsetAllowance(currentAllowances[0]),
         encodeUnsetAllowance(currentAllowances[1]),
+      ])
+    })
+
+    it("when overlapping, it preserves timestamp and balance", async () => {
+      const currentAllowances: Allowance[] = [
+        {
+          key: key1,
+          balance: 1n,
+          maxRefill: 1n,
+          refill: 1n,
+          period: 1n,
+          timestamp: 1n,
+        },
+        {
+          key: key2,
+          balance: 2n,
+          maxRefill: 2n,
+          refill: 2n,
+          period: 2n,
+          timestamp: 2n,
+        },
+      ]
+
+      const allowances: Allowance[] = [
+        {
+          key: key2,
+          balance: 3n,
+          maxRefill: 3n,
+          refill: 3n,
+          period: 3n,
+          timestamp: 3n,
+        },
+        {
+          key: key3,
+          balance: 4n,
+          maxRefill: 4n,
+          refill: 4n,
+          period: 4n,
+          timestamp: 4n,
+        },
+      ]
+
+      const result = await applyAllowances(allowances, {
+        currentAllowances,
+        mode: "replace",
+      })
+
+      expect(result).to.deep.equal([
+        encodeUnsetAllowance(currentAllowances[0]),
+        encodeSetAllowance({
+          key: key2,
+          balance: 2n,
+          maxRefill: 3n,
+          refill: 3n,
+          period: 3n,
+          timestamp: 2n,
+        }),
+        encodeSetAllowance(allowances[1]),
       ])
     })
   })
