@@ -10,7 +10,7 @@ const config: HardhatUserConfig = {
     artifacts: "build/artifacts",
     cache: "build/cache",
     sources: "contracts",
-    tests: "./test",
+    tests: "../integration-tests/test",
   },
   mocha: {
     timeout: 2000000,
