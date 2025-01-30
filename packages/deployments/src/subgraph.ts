@@ -50,8 +50,6 @@ export const fetchFromSubgraph = async (
 
   const { data, error, errors } = await res.json()
 
-  console.log(data, error, errors)
-
   const foundError = error || (errors && errors[0])
   if (foundError) {
     const message =
@@ -62,7 +60,7 @@ export const fetchFromSubgraph = async (
   }
 
   if (!data) {
-    throw new Error("subgraph query returned no data")
+    throw new Error("Subgraph query returned no data")
   }
 
   return data

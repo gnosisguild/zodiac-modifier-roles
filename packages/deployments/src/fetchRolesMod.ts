@@ -92,7 +92,7 @@ export const fetchRolesMod = async (
     subgraphProps,
     {
       query: blockNumber ? MOD_AT_BLOCK_QUERY : MOD_QUERY,
-      variables: { id: address.toLowerCase() },
+      variables: { id: address.toLowerCase(), block: blockNumber },
       operationName: "RolesMod",
     },
     options
