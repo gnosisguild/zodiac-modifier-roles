@@ -1,4 +1,5 @@
 import { chains } from "./chains"
+import { assertNoPagination, fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   Allowance,
   ChainId,
@@ -9,102 +10,108 @@ import {
 
 type Props = {
   address: `0x${string}`
+  /** Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block. */
+  blockNumber?: number
 } & (
   | {
-      /** pass a chainId to use query against a dev subgraph */
+      /** pass a chainId to use query against the official subgraph deployment */
       chainId: ChainId
+      /** pass your own API key from The Graph for production use */
+      theGraphApiKey?: string
     }
   | {
-      /** pass your own subgraph endpoint for production use */
+      /** pass your own subgraph endpoint */
       subgraph: string
     }
 )
 
-const QUERY = `
-  query RolesMod($id: String) {
-    rolesModifier(id: $id) {
-      address
-      owner
-      avatar
-      target 
-      roles(first: 1000) {
-        key
-        members(first: 1000) {
-          member {
-            address
-          }
-        }
-        targets(first: 1000) {
+const MOD_FIELDS = `
+    address
+    owner
+    avatar
+    target 
+    roles(first: 1000) {
+      key
+      members(first: 1000) {
+        member {
           address
-          clearance
+        }
+      }
+      targets(first: 1000) {
+        address
+        clearance
+        executionOptions
+        functions(first: 1000) {
+          selector
+          wildcarded
           executionOptions
-          functions(first: 1000) {
-            selector
-            wildcarded
-            executionOptions
-          }
         }
-        lastUpdate
       }
-      allowances(first: 1000) {
-        key
-        refill
-        maxRefill
-        period
-        balance
-        timestamp
-      }
-      unwrapAdapters(
-        where: {
-          selector: "0x8d80ff0a", 
-          adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
-        }
-      ) {
-        targetAddress
-      }
+      lastUpdate
     }
+    allowances(first: 1000) {
+      key
+      refill
+      maxRefill
+      period
+      balance
+      timestamp
+    }
+    unwrapAdapters(
+      first: 1000,
+      where: {
+        selector: "0x8d80ff0a", 
+        adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
+      }
+    ) {
+      targetAddress
+    }
+`.trim()
+
+const MOD_QUERY = `
+query RolesMod($id: String) {
+  rolesModifier(id: $id) {
+    ${MOD_FIELDS}
   }
+}
 `
 
-type FetchOptions = Omit<RequestInit, "method" | "body">
+const MOD_AT_BLOCK_QUERY = `
+query RolesMod($id: String, $block: Int) {
+  rolesModifier(id: $id, block: { number: $block }) {
+    ${MOD_FIELDS}
+  }
+}
+`
 
 export const fetchRolesMod = async (
-  { address, ...rest }: Props,
+  { address, blockNumber, ...subgraphProps }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
-  const endpoint =
-    "subgraph" in rest ? rest.subgraph : chains[rest.chainId].subgraph
-
-  const res = await fetch(endpoint, {
-    ...options,
-    method: "POST",
-    headers: {
-      ...options?.headers,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: QUERY,
-      variables: { id: address.toLowerCase() },
+  const { rolesModifier } = await fetchFromSubgraph(
+    subgraphProps,
+    {
+      query: blockNumber ? MOD_AT_BLOCK_QUERY : MOD_QUERY,
+      variables: { id: address.toLowerCase(), block: blockNumber },
       operationName: "RolesMod",
-    }),
-  })
-  const { data, error, errors } = await res.json()
+    },
+    options
+  )
 
-  if (error || (errors && errors[0])) {
-    throw new Error(error || errors[0])
-  }
-
-  if (!data || !data.rolesModifier) {
+  if (!rolesModifier) {
     return null
   }
 
-  assertNoPagination(data.rolesModifier.roles)
-  for (const role of data.rolesModifier.roles) {
+  assertNoPagination(rolesModifier.roles)
+  for (const role of rolesModifier.roles) {
     assertNoPagination(role.members)
     assertNoPagination(role.targets)
   }
 
-  return mapGraphQl(data.rolesModifier)
+  assertNoPagination(rolesModifier.allowances)
+  assertNoPagination(rolesModifier.unwrapAdapters)
+
+  return mapGraphQl(rolesModifier)
 }
 
 interface TargetSummary {
@@ -180,9 +187,3 @@ const mapGraphQlRole = (role: any): RoleSummary => ({
       })
     ),
 })
-
-const assertNoPagination = (data: any[]) => {
-  if (data.length === 1000) {
-    throw new Error("Pagination not supported")
-  }
-}
