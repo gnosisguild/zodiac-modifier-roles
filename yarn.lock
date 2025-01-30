@@ -6508,7 +6508,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai-as-promised@npm:^7.1.1":
+"chai-as-promised@npm:^7.1.1, chai-as-promised@npm:^7.1.2":
   version: 7.1.2
   resolution: "chai-as-promised@npm:7.1.2"
   dependencies:
@@ -20428,6 +20428,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.62.0
     "@typescript-eslint/parser": ^5.62.0
     chai: ^4.3.10
+    chai-as-promised: ^7.1.2
     eslint: ^8.53.0
     eslint-config-prettier: ^8.10.0
     eslint-plugin-prettier: ^4.2.1
