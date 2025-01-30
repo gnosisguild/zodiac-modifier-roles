@@ -7,71 +7,51 @@ export const chains = {
   [10]: {
     name: "optimism",
     prefix: "oeth",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-optimism/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmeJXG1sWpdbqs4nZE9JFs2j9nGuFLH4VCmbCVXP7oQh9d",
   },
   [100]: {
     name: "gnosis",
     prefix: "gno",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-gnosis/v2.3.4",
     subgraphDeploymentId: "QmR1TkpcQzhBfUwmRJfeV4kQbUbDUZUvyWxtLTCYkiivvz",
   },
   [137]: {
     name: "polygon",
     prefix: "matic",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-polygon/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmVrtFGzKJcuCbdbeaCAmhzJeVpkqrySNwvaCiVSpip4cm",
   },
   [1101]: {
     name: "zkevm",
     prefix: "zkevm",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-zkevm/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmctRf4gwTT63t2SNT4pFekHfjjHyV97jX8CaMQdrUBS4y",
   },
   [42161]: {
     name: "arbitrumOne",
     prefix: "arb1",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-arbitrum-one/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmPBUT8onznz5kocjwzzQPoRatu8gSPAaaSra7jixaF1mD",
   },
   [43114]: {
     name: "avalanche",
     prefix: "avax",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-avalanche/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmSegJhx8SEQ5WFfi6ZLQLs8XRSfLoka7yULsUKgeGBLnT",
   },
   [56]: {
     name: "bsc",
     prefix: "bnb",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-bsc/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmUM9dfkiN5jHMxUzPYHW8tKguPr65qnWpzb3dRMKT1kDc",
   },
   [8453]: {
     name: "base",
     prefix: "base",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-base/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmWGQfg86sAjZUQ2HUeHN4mVQTejFb1XPPtLLoz2Ks7Wfp",
   },
   [84532]: {
     name: "baseSepolia",
     prefix: "basesep",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-base-sepolia/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmSZuUNsMtLjN9Gd4sNu7rCGChZ56NQc2XY7kN3YLz9pQD",
   },
   [11155111]: {
     name: "sepolia",
     prefix: "sep",
-    subgraph:
-      "https://api.studio.thegraph.com/query/93263/zodiac-roles-sepolia/v2.3.4",
-    subgraphDeploymentId: "Q...",
+    subgraphDeploymentId: "QmdeXJ7g889wK4wDNpRrvKGN91SZiwvdmCU9dFQsgqaQ3K",
   },
 } as const
