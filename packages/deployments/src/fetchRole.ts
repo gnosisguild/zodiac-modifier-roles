@@ -27,9 +27,7 @@ type Props = {
     }
 )
 
-const ROLE_QUERY = `
-query Role($id: String) {
-  role(id: $id) {
+const ROLE_FIELDS = `
     key
     members(first: 1000) {
       member {
@@ -55,6 +53,12 @@ query Role($id: String) {
       schema
     }
     lastUpdate
+`.trim()
+
+const ROLE_QUERY = `
+query Role($id: String) {
+  role(id: $id) {
+    ${ROLE_FIELDS}
   }
 }
 `.trim()
@@ -62,31 +66,7 @@ query Role($id: String) {
 const ROLE_AT_BLOCK_QUERY = `
 query Role($id: String, $block: Int) {
   role(id: $id, block: { number: $block }) {
-    key
-    members(first: 1000) {
-      member {
-        address
-      }
-    }
-    targets(first: 1000) {
-      address
-      clearance
-      executionOptions
-      functions(first: 1000) {
-        selector
-        executionOptions
-        wildcarded
-        condition {
-          id
-          json
-        }
-      }
-    }
-    annotations(first: 1000) {
-      uri
-      schema
-    }
-    lastUpdate
+    ${ROLE_FIELDS}
   }
 }
 `.trim()
