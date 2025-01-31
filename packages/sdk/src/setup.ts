@@ -14,7 +14,7 @@ import { extendAnnotations } from "./annotations"
 import { POSTER_ADDRESS, encodeAnnotationsPost } from "./annotations/poster"
 import { encodeCalls, grant } from "./calls"
 import { Permission, PermissionSet, processPermissions } from "./permissions"
-import { encodeRoleKey } from "./roleKey"
+import { encodeRoleKey } from "./keys"
 
 const ROLES_MASTERCOPY_ADDRESS = "0x9646fDAD06d3e24444381f44362a3B0eB343D337"
 const PROXY_FACTORY_ADDRESS = "0x000000000000aDdB49795b0f9bA5BC298cDda236"
@@ -69,13 +69,16 @@ export const setUpRoles = ({
   })
 
   // calls for setting up role members
-  const rolesByMember = roles.reduce((acc, { key, members }) => {
-    members.forEach((member) => {
-      acc[member] = acc[member] || []
-      acc[member].push(key)
-    })
-    return acc
-  }, {} as { [member: `0x${string}`]: string[] })
+  const rolesByMember = roles.reduce(
+    (acc, { key, members }) => {
+      members.forEach((member) => {
+        acc[member] = acc[member] || []
+        acc[member].push(key)
+      })
+      return acc
+    },
+    {} as { [member: `0x${string}`]: string[] }
+  )
   const assignRolesCalls = Object.entries(rolesByMember).map(
     ([member, roleKeys]) => ({
       to: address,
