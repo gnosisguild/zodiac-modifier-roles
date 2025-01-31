@@ -7,10 +7,10 @@ import { decodeBytes32String, encodeBytes32String } from "ethers"
 export const encodeKey = (key: string) => {
   if (key.startsWith("0x") && key.length === 66) {
     // already encoded
-    return key
+    return key as `0x${string}`
   }
 
-  return encodeBytes32String(key)
+  return encodeBytes32String(key) as `0x${string}`
 }
 
 /**
