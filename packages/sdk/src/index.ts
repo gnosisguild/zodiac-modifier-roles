@@ -17,7 +17,12 @@ export type {
   PermissionSet,
 } from "./permissions"
 
-export { applyTargets, checkIntegrity } from "./targets"
+export {
+  applyTargets,
+  checkIntegrity,
+  diffTargets,
+  splitTargets,
+} from "./targets"
 export { applyAnnotations } from "./annotations"
 export { applyMembers } from "./members"
 export { applyAllowances } from "./allowances"
