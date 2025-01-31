@@ -7,7 +7,7 @@ import {
   applyAnnotations,
   applyMembers,
   applyTargets,
-  decodeRoleKey,
+  decodeKey,
   posterAbi,
   rolesAbi,
 } from "zodiac-roles-sdk"
@@ -148,7 +148,7 @@ const exportToSafeTransactionBuilder = (
     chainId: chainId.toString(10),
     createdAt: Date.now(),
     meta: {
-      name: `Update permissions of ${decodeRoleKey(roleKey)} role`,
+      name: `Update permissions of ${decodeKey(roleKey)} role`,
       description: "",
       txBuilderVersion: "1.16.2",
     },

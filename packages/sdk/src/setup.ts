@@ -14,7 +14,7 @@ import { extendAnnotations } from "./annotations"
 import { POSTER_ADDRESS, encodeAnnotationsPost } from "./annotations/poster"
 import { encodeCalls, grant } from "./calls"
 import { Permission, PermissionSet, processPermissions } from "./permissions"
-import { encodeRoleKey } from "./keys"
+import { encodeKey } from "./keys"
 
 const ROLES_MASTERCOPY_ADDRESS = "0x9646fDAD06d3e24444381f44362a3B0eB343D337"
 const PROXY_FACTORY_ADDRESS = "0x000000000000aDdB49795b0f9bA5BC298cDda236"
@@ -47,7 +47,7 @@ export const setUpRoles = ({
   const applyPermissionsCalls = roles.flatMap(({ key, permissions }) => {
     const { targets, annotations } = processPermissions(permissions)
     return [
-      ...encodeCalls(encodeRoleKey(key), grant(targets)).map((data) => ({
+      ...encodeCalls(encodeKey(key), grant(targets)).map((data) => ({
         to: address,
         data,
         value: "0",
@@ -58,7 +58,7 @@ export const setUpRoles = ({
               to: POSTER_ADDRESS,
               data: encodeAnnotationsPost(
                 address,
-                encodeRoleKey(key),
+                encodeKey(key),
                 extendAnnotations([], annotations)
               ),
               value: "0",
@@ -84,7 +84,7 @@ export const setUpRoles = ({
       to: address,
       data: RolesInterface.encodeFunctionData("assignRoles", [
         member,
-        roleKeys.map(encodeRoleKey),
+        roleKeys.map(encodeKey),
         roleKeys.map(() => true),
       ]),
       value: "0",
