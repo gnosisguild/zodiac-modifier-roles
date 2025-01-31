@@ -5,6 +5,7 @@ export {
   forAll,
   processPermissions,
   reconstructPermissions,
+  coercePermission,
   targetId,
   permissionId,
 } from "./permissions"
