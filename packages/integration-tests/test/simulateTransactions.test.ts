@@ -39,7 +39,7 @@ type Configs = typeof ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Simulate Transactions Test", async () => {
-  const ROLE_KEY = encodeKey("TEST_ROLE") as `0x${string}`
+  const ROLE_KEY = encodeKey("TEST_ROLE")
 
   const setup = async () => {
     const [owner] = await hre.ethers.getSigners()
