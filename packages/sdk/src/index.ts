@@ -1,6 +1,13 @@
 export * from "zodiac-roles-deployments"
 
-export { c, forAll, targetId, permissionId } from "./permissions"
+export {
+  c,
+  forAll,
+  processPermissions,
+  reconstructPermissions,
+  targetId,
+  permissionId,
+} from "./permissions"
 export type {
   Permission,
   PermissionCoerced,
