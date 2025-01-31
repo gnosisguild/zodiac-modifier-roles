@@ -1,16 +1,26 @@
 export * from "zodiac-roles-deployments"
 
-export * from "./conditions"
-export * from "./permissions"
-export { encodeCalls } from "./calls"
+export { c, forAll, targetId, permissionId } from "./permissions"
+export type {
+  Permission,
+  PermissionCoerced,
+  TargetPermission,
+  FunctionPermission,
+  FunctionPermissionCoerced,
+  PermissionSet,
+} from "./permissions"
 
-export * from "./targets"
-export * from "./annotations"
+export { applyTargets, checkIntegrity } from "./targets"
+export { applyAnnotations } from "./annotations"
 export { applyMembers } from "./members"
 export { applyAllowances } from "./allowances"
-export { setUpRoles, setUpRolesMod } from "./setup"
-export { encodeRoleKey, decodeRoleKey } from "./roleKey"
-export * from "./api"
 
-export * from "./ethSdk"
-export * from "./abi"
+export { encodeKey, decodeKey } from "./keys"
+
+// TODO those will be thrown out, too
+export { setUpRoles, setUpRolesMod } from "./setup"
+
+export { postRole } from "./api"
+export { posterAbi, rolesAbi } from "./abi"
+
+export { ethSdkConfig } from "./ethSdk"
