@@ -5,15 +5,12 @@ import { Call } from "./types"
 
 const rolesInterface = Roles__factory.createInterface()
 
-export const encodeCalls = (
-  roleKey: string,
-  calls: Call[]
-): `0x${string}`[] => {
+export const encodeCalls = (calls: Call[]): `0x${string}`[] => {
   return calls.map((call) => {
     switch (call.call) {
       case "allowTarget": {
         return rolesInterface.encodeFunctionData("allowTarget", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
           call.executionOptions,
         ])
@@ -21,21 +18,21 @@ export const encodeCalls = (
 
       case "scopeTarget": {
         return rolesInterface.encodeFunctionData("scopeTarget", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
         ])
       }
 
       case "revokeTarget": {
         return rolesInterface.encodeFunctionData("revokeTarget", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
         ])
       }
 
       case "allowFunction": {
         return rolesInterface.encodeFunctionData("allowFunction", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
           call.selector,
           call.executionOptions,
@@ -44,7 +41,7 @@ export const encodeCalls = (
 
       case "scopeFunction": {
         return rolesInterface.encodeFunctionData("scopeFunction", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
           call.selector,
           flattenCondition(call.condition).map((c) => ({
@@ -57,9 +54,26 @@ export const encodeCalls = (
 
       case "revokeFunction": {
         return rolesInterface.encodeFunctionData("revokeFunction", [
-          roleKey,
+          call.roleKey,
           call.targetAddress,
           call.selector,
+        ])
+      }
+      case "assignRoles": {
+        return rolesInterface.encodeFunctionData("assignRoles", [
+          call.member,
+          [call.roleKey],
+          [call.join],
+        ])
+      }
+      case "setAllowance": {
+        return rolesInterface.encodeFunctionData("setAllowance", [
+          call.key,
+          call.balance,
+          call.maxRefill,
+          call.refill,
+          call.period,
+          call.timestamp,
         ])
       }
     }

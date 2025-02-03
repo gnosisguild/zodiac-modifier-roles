@@ -51,6 +51,22 @@ export const logCall = (
       log(`⛔ Revoke permissions to call ${targetAddress}.${selector}`)
       break
     }
+
+    case "assignRoles": {
+      const { member, join } = call
+      log(join ? `👤 Add member ${member}` : `👤 Add Remove ${member}`)
+      break
+    }
+
+    case "setAllowance": {
+      const { key, balance, maxRefill, refill, period, timestamp } = call
+      const isUnset = !balance && !maxRefill && !refill && !period && !timestamp
+      log(`💰 ${isUnset ? "Unset" : "Set"} allowance ${key}`)
+      break
+    }
+
+    // default:
+    //   log(`Unhandled call ${call.call}`)
   }
 }
 
