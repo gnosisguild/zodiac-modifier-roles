@@ -1,3 +1,4 @@
+import { chains } from "./chains"
 import { assertNoPagination, fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   Allowance,
@@ -5,8 +6,6 @@ import {
   Clearance,
   ExecutionOptions,
   Function,
-  Role,
-  Target,
 } from "./types"
 
 type Props = {
@@ -44,17 +43,9 @@ const MOD_FIELDS = `
         executionOptions
         functions(first: 1000) {
           selector
-          executionOptions
           wildcarded
-          condition {
-            id
-            json
-          }
+          executionOptions
         }
-      }
-      annotations(first: 1000) {
-        uri
-        schema
       }
       lastUpdate
     }
@@ -93,10 +84,10 @@ query RolesMod($id: String, $block: Int) {
 }
 `
 
-export const fetchRolesMod = async (
+export const fetchRolesModSummary = async (
   { address, blockNumber, ...subgraphProps }: Props,
   options?: FetchOptions
-): Promise<RolesModifier | null> => {
+): Promise<RolesModifierSummary | null> => {
   const { rolesModifier } = await fetchFromSubgraph(
     subgraphProps,
     {
@@ -123,17 +114,34 @@ export const fetchRolesMod = async (
   return mapGraphQl(rolesModifier)
 }
 
-export interface RolesModifier {
+interface TargetSummary {
+  address: `0x${string}`
+  clearance: Clearance
+  executionOptions: ExecutionOptions
+  functions: {
+    selector: `0x${string}`
+    wildcarded: boolean
+    executionOptions: ExecutionOptions
+  }[]
+}
+
+export interface RoleSummary {
+  key: `0x${string}`
+  members: `0x${string}`[]
+  targets: TargetSummary[]
+}
+
+export interface RolesModifierSummary {
   address: `0x${string}`
   owner: `0x${string}`
   avatar: `0x${string}`
   target: `0x${string}`
-  roles: Role[]
+  roles: RoleSummary[]
   allowances: Allowance[]
   multiSendAddresses: `0x${string}`[]
 }
 
-const mapGraphQl = (rolesModifier: any): RolesModifier => ({
+const mapGraphQl = (rolesModifier: any): RolesModifierSummary => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
   allowances: rolesModifier.allowances.map((allowance: any) => ({
@@ -149,28 +157,33 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ),
 })
 
-const mapGraphQlRole = (role: any): Role => ({
-  ...role,
+const mapGraphQlRole = (role: any): RoleSummary => ({
+  key: role.key,
   members: role.members.map((assignment: any) => assignment.member.address),
-  targets: role.targets.map(
-    (target: any): Target => ({
-      address: target.address,
-      clearance: Clearance[target.clearance as keyof typeof Clearance],
-      executionOptions:
-        ExecutionOptions[
-          target.executionOptions as keyof typeof ExecutionOptions
-        ],
-      functions: target.functions.map(
-        (func: any): Function => ({
-          selector: func.selector,
-          executionOptions:
-            ExecutionOptions[
-              func.executionOptions as keyof typeof ExecutionOptions
-            ],
-          wildcarded: func.wildcarded,
-          condition: func.condition && JSON.parse(func.condition.json),
-        })
-      ),
-    })
-  ),
+  targets: role.targets
+    .filter(
+      (t: any) =>
+        t.clearance !== "None" &&
+        !(t.clearance === "Function" && t.functions.length === 0)
+    )
+    .map(
+      (target: any): TargetSummary => ({
+        address: target.address,
+        clearance: Clearance[target.clearance as keyof typeof Clearance],
+        executionOptions:
+          ExecutionOptions[
+            target.executionOptions as keyof typeof ExecutionOptions
+          ],
+        functions: target.functions.map(
+          (func: any): Function => ({
+            selector: func.selector,
+            executionOptions:
+              ExecutionOptions[
+                func.executionOptions as keyof typeof ExecutionOptions
+              ],
+            wildcarded: func.wildcarded,
+          })
+        ),
+      })
+    ),
 })
