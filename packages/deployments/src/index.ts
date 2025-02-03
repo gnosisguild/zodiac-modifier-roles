@@ -1,4 +1,5 @@
 export * from "./chains"
 export * from "./fetchRolesMod"
+export * from "./fetchRolesModSummary"
 export * from "./fetchRole"
 export * from "./types"
