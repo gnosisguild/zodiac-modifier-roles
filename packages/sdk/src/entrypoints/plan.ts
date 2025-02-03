@@ -7,10 +7,10 @@ import {
   Role,
   Target,
 } from "zodiac-roles-deployments"
-import diffRolesMod from "./diff/diffRolesMod"
-import diffRole from "./diff/diffRole"
+import diffRolesMod from "../diff/diffRolesMod"
+import diffRole from "../diff/diffRole"
 
-import { Call, encodeCalls, logCall } from "./calls"
+import { Call, encodeCalls, logCall } from "../calls"
 
 type Options = (
   | { chainId: ChainId; address: `0x${string}` }
