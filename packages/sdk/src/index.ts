@@ -18,20 +18,15 @@ export type {
   PermissionSet,
 } from "./permissions"
 
-export {
-  applyTargets,
-  checkIntegrity,
-  diffTargets,
-  splitTargets,
-} from "./targets"
+export { checkIntegrity, splitTargets } from "./targets"
 export { applyAnnotations } from "./annotations"
-export { applyMembers } from "./members"
-export { applyAllowances } from "./allowances"
 
 export { encodeKey, decodeKey } from "./keys"
 
 // TODO those will be thrown out, too
 export { setUpRoles, setUpRolesMod } from "./setup"
+
+export { planApply, planApplyRole, planExtendRole } from "./entrypoints/plan"
 
 export { postRole } from "./api"
 export { posterAbi, rolesAbi } from "./abi"
