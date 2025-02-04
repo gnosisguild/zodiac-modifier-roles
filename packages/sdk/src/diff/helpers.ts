@@ -17,23 +17,18 @@ export function isClearancePlus(
   prev: Clearance | undefined,
   next: Clearance | undefined
 ) {
-  const isNone = (c?: Clearance) => c === Clearance.None || !c
-
-  return (
-    (isNone(prev) === true && isNone(next) === false) ||
-    (prev === Clearance.Function && next == Clearance.Target)
-  )
+  prev = prev || Clearance.None
+  next = next || Clearance.None
+  return next > prev
 }
 
 export function isClearanceMinus(
   prev: Clearance | undefined,
   next: Clearance | undefined
 ) {
-  const isNone = (c?: Clearance) => c === Clearance.None || !c
-  return (
-    (prev === Clearance.Target && next !== Clearance.Target) ||
-    (prev === Clearance.Function && isNone(next) === true)
-  )
+  prev = prev || Clearance.None
+  next = next || Clearance.None
+  return prev > next
 }
 
 export function isExecutionOptionsPlus(
