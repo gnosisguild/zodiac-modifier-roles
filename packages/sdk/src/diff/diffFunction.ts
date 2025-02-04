@@ -1,5 +1,4 @@
-import { invariant } from "@epic-web/invariant"
-import { Condition, Function } from "zodiac-roles-deployments"
+import { Function } from "zodiac-roles-deployments"
 
 import { Call } from "../calls"
 import { normalizeCondition } from "../conditions"
@@ -51,65 +50,54 @@ export function diffFunction({
   prev?: Function
   next?: Function
 }): Diff {
-  if (isPlus(prev, next)) {
-    invariant(!!next, "expected next to be defined")
-    const call: Call = next.wildcarded
-      ? {
-          call: "allowFunction",
-          roleKey,
-          targetAddress,
-          selector: next.selector,
-          executionOptions: next.executionOptions,
-        }
-      : {
-          call: "scopeFunction",
-          roleKey,
-          targetAddress,
-          selector: next.selector,
-          executionOptions: next.executionOptions,
-          condition: normalizeCondition(next.condition!),
-        }
+  const call = draftCall({
+    roleKey,
+    targetAddress,
+    selector: (prev?.selector || next?.selector) as string,
+    fn: next,
+  })
 
-    return { minus: [], plus: [call] }
+  return {
+    minus: isMinus(prev, next) ? [call] : [],
+    plus: isPlus(prev, next) ? [call] : [],
   }
-
-  if (isMinus(prev, next) && next) {
-    const call: Call = next.wildcarded
-      ? {
-          call: "allowFunction",
-          roleKey,
-          targetAddress,
-          selector: next.selector,
-          executionOptions: next.executionOptions,
-        }
-      : {
-          call: "scopeFunction",
-          roleKey,
-          targetAddress,
-          selector: next.selector,
-          executionOptions: next.executionOptions,
-          condition: normalizeCondition(next.condition!),
-        }
-
-    return { minus: [call], plus: [] }
-  }
-
-  if (isMinus(prev, next)) {
-    invariant(!!prev, "expected prev to be defined")
+}
+function draftCall({
+  roleKey,
+  targetAddress,
+  selector,
+  fn,
+}: {
+  roleKey: string
+  targetAddress: string
+  selector: string
+  fn?: Function
+}): Call {
+  if (!fn) {
     return {
-      minus: [
-        {
-          call: "revokeFunction",
-          roleKey,
-          targetAddress,
-          selector: prev.selector,
-        },
-      ],
-      plus: [],
+      call: "revokeFunction",
+      roleKey,
+      targetAddress,
+      selector,
     }
   }
 
-  return { minus: [], plus: [] }
+  return fn.wildcarded
+    ? {
+        call: "allowFunction",
+        roleKey,
+        targetAddress,
+        selector,
+        executionOptions: fn.executionOptions,
+      }
+    : {
+        call: "scopeFunction",
+        roleKey,
+        targetAddress,
+        selector,
+        executionOptions: fn.executionOptions,
+        condition: normalizeCondition(fn.condition!),
+      }
 }
 
 function isPlus(prev: Function | undefined, next: Function | undefined) {

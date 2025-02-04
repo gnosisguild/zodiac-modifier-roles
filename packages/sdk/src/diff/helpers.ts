@@ -19,7 +19,16 @@ export function isClearancePlus(
 ) {
   prev = prev || Clearance.None
   next = next || Clearance.None
-  return next > prev
+
+  if (prev === Clearance.None && next !== Clearance.None) {
+    return true
+  }
+
+  if (prev === Clearance.Function && next === Clearance.Target) {
+    return true
+  }
+
+  return false
 }
 
 export function isClearanceMinus(
@@ -28,35 +37,52 @@ export function isClearanceMinus(
 ) {
   prev = prev || Clearance.None
   next = next || Clearance.None
-  return prev > next
+
+  if (next === Clearance.Function && prev === Clearance.Target) {
+    return true
+  }
+
+  if (next === Clearance.None && prev !== Clearance.None) {
+    return true
+  }
+
+  return false
 }
 
 export function isExecutionOptionsPlus(
   prev: ExecutionOptions,
   next: ExecutionOptions
 ) {
-  if (
-    [prev, next].every((eo) =>
-      [ExecutionOptions.Send, ExecutionOptions.DelegateCall].includes(eo)
-    )
-  ) {
-    return false
+  if (prev === ExecutionOptions.None && next !== ExecutionOptions.None) {
+    return true
   }
 
-  return next > prev
+  if (
+    (prev === ExecutionOptions.Send ||
+      prev === ExecutionOptions.DelegateCall) &&
+    next === ExecutionOptions.Both
+  ) {
+    return true
+  }
+
+  return false
 }
 
 export function isExecutionOptionsMinus(
   prev: ExecutionOptions,
   next: ExecutionOptions
 ) {
-  if (
-    [prev, next].every((eo) =>
-      [ExecutionOptions.Send, ExecutionOptions.DelegateCall].includes(eo)
-    )
-  ) {
-    return false
+  if (prev === ExecutionOptions.Both && next !== ExecutionOptions.Both) {
+    return true
   }
 
-  return prev > next
+  if (
+    (prev === ExecutionOptions.Send ||
+      prev === ExecutionOptions.DelegateCall) &&
+    next === ExecutionOptions.None
+  ) {
+    return true
+  }
+
+  return false
 }

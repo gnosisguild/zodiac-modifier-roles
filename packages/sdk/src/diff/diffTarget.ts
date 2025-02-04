@@ -1,7 +1,7 @@
-import { invariant } from "@epic-web/invariant"
-
 import { Clearance, Target } from "zodiac-roles-deployments"
+
 import { diffFunctions } from "./diffFunction"
+import { Call } from "../calls"
 
 import {
   Diff,
@@ -21,20 +21,20 @@ export function diffTargets({
   prev?: Target[]
   next?: Target[]
 }) {
-  const targetAddresses = Array.from(
+  const allTargetAddresses = Array.from(
     new Set([
       ...(prev?.map(({ address }) => address) || []),
       ...(next?.map(({ address }) => address) || []),
     ])
   )
 
-  return targetAddresses
+  return allTargetAddresses
     .map((targetAddress) =>
       diffTarget({
         roleKey,
         targetAddress,
-        prev: prev?.find(({ address }) => address == targetAddress),
-        next: prev?.find(({ address }) => address == targetAddress),
+        prev: prev?.find(({ address }) => address === targetAddress),
+        next: next?.find(({ address }) => address === targetAddress),
       })
     )
     .reduce(merge, { minus: [], plus: [] })
@@ -51,29 +51,15 @@ export function diffTarget({
   prev?: Target
   next?: Target
 }): Diff {
-  const result: Diff = { minus: [], plus: [] }
+  const call = draftCall({
+    roleKey,
+    targetAddress,
+    target: next,
+  })
 
-  if (isPlus(prev, next)) {
-    invariant(!!next, "Plus not undefined")
-    result.plus = [
-      next.clearance == Clearance.Target
-        ? {
-            call: "allowTarget",
-            roleKey,
-            targetAddress,
-            executionOptions: next.executionOptions,
-          }
-        : { call: "scopeTarget", roleKey, targetAddress },
-    ]
-  }
-
-  if (isMinus(prev, next)) {
-    invariant(!!prev, "Plus not undefined")
-    result.minus = [
-      next
-        ? { call: "scopeTarget", roleKey, targetAddress }
-        : { call: "revokeTarget", roleKey, targetAddress },
-    ]
+  const result: Diff = {
+    minus: isMinus(prev, next) ? [call] : [],
+    plus: isPlus(prev, next) ? [call] : [],
   }
 
   return merge(
@@ -87,6 +73,41 @@ export function diffTarget({
   )
 }
 
+function draftCall({
+  roleKey,
+  targetAddress,
+  target,
+}: {
+  roleKey: string
+  targetAddress: string
+  target?: Target
+}): Call {
+  const clearance = target?.clearance || Clearance.None
+
+  if (clearance === Clearance.None) {
+    return {
+      call: "revokeTarget",
+      roleKey,
+      targetAddress,
+    }
+  }
+
+  if (clearance == Clearance.Function) {
+    return {
+      call: "scopeTarget",
+      roleKey,
+      targetAddress,
+    }
+  }
+
+  return {
+    call: "allowTarget",
+    roleKey,
+    targetAddress,
+    executionOptions: target!.executionOptions,
+  }
+}
+
 function isPlus(prev: Target | undefined, next: Target | undefined) {
   if (isClearancePlus(prev?.clearance, next?.clearance)) {
     return true
@@ -95,14 +116,10 @@ function isPlus(prev: Target | undefined, next: Target | undefined) {
   const bothClearanceTarget =
     prev?.clearance === Clearance.Target && next?.clearance === Clearance.Target
 
-  if (
+  return (
     bothClearanceTarget &&
     isExecutionOptionsPlus(prev.executionOptions, next.executionOptions)
-  ) {
-    return true
-  }
-
-  return false
+  )
 }
 
 function isMinus(prev: Target | undefined, next: Target | undefined) {
@@ -112,12 +129,8 @@ function isMinus(prev: Target | undefined, next: Target | undefined) {
   const bothClearanceTarget =
     prev?.clearance === Clearance.Target && next?.clearance === Clearance.Target
 
-  if (
+  return (
     bothClearanceTarget &&
     isExecutionOptionsMinus(prev?.executionOptions, next?.executionOptions)
-  ) {
-    return true
-  }
-
-  return false
+  )
 }
