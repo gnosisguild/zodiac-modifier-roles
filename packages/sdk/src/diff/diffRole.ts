@@ -31,7 +31,7 @@ export function diffRoles({
       diffRole({
         roleKey,
         prev: prev?.find(({ key }) => key == roleKey),
-        next: prev?.find(({ key }) => key == roleKey),
+        next: next?.find(({ key }) => key == roleKey),
       })
     )
     .reduce(merge, { minus: [], plus: [] })
@@ -50,7 +50,7 @@ export function diffRole({
     diffTargets({
       roleKey,
       prev: prev?.targets,
-      next: prev?.targets,
+      next: next?.targets,
     }),
     diffMembers({
       roleKey,
