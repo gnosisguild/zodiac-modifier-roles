@@ -1,50 +1,61 @@
-import { invariant } from "@epic-web/invariant"
+import { Annotation, Target } from "zodiac-roles-deployments"
 
-import { Role } from "zodiac-roles-deployments"
+import { diffMembers } from "./diffMembers"
+import { diffTargets } from "./diffTarget"
 
-import diffTarget from "./diffTarget"
-import diffMembers from "./diffMembers"
 import { Diff, merge } from "./helpers"
 
-type RolePayload = Omit<Role, "lastUpdate">
+type RoleFragment = {
+  key: string
+  members?: `0x${string}`[]
+  targets?: Target[]
+  annotations?: Annotation[]
+}
 
-export default function diffRole({
+export function diffRoles({
+  prev,
+  next,
+}: {
+  prev?: RoleFragment[]
+  next?: RoleFragment[]
+}): Diff {
+  const roleKeys = Array.from(
+    new Set([
+      ...(prev?.map(({ key }) => key) || []),
+      ...(next?.map(({ key }) => key) || []),
+    ])
+  )
+
+  return roleKeys
+    .map((roleKey) =>
+      diffRole({
+        roleKey,
+        prev: prev?.find(({ key }) => key == roleKey),
+        next: prev?.find(({ key }) => key == roleKey),
+      })
+    )
+    .reduce(merge, { minus: [], plus: [] })
+}
+
+export function diffRole({
   roleKey,
   prev,
   next,
 }: {
   roleKey: string
-  prev?: RolePayload
-  next?: RolePayload
+  prev?: RoleFragment
+  next?: RoleFragment
 }): Diff {
-  invariant(!prev || prev.key == roleKey, "wrong roleKey")
-  invariant(!next || next.key == roleKey, "wrong roleKey")
-
-  const targetAddresses = Array.from(
-    new Set([
-      ...(prev?.targets.map((t) => t.address) || []),
-      ...(next?.targets.map((t) => t.address) || []),
-    ])
+  return merge(
+    diffTargets({
+      roleKey,
+      prev: prev?.targets,
+      next: prev?.targets,
+    }),
+    diffMembers({
+      roleKey,
+      prev: prev?.members,
+      next: next?.members,
+    })
   )
-
-  let result: Diff = { minus: [], plus: [] }
-
-  const targets = targetAddresses
-    .map((targetAddress) =>
-      diffTarget({
-        roleKey,
-        targetAddress,
-        prev: prev?.targets.find((t) => t.address == targetAddress),
-        next: prev?.targets.find((t) => t.address == targetAddress),
-      })
-    )
-    .reduce((result, diff) => merge(result, diff), result)
-
-  const members = diffMembers({
-    roleKey,
-    prev: prev?.members,
-    next: next?.members,
-  })
-
-  return merge(targets, members)
 }

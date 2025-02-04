@@ -1,7 +1,7 @@
 import { invariant } from "@epic-web/invariant"
 
 import { Clearance, Target } from "zodiac-roles-deployments"
-import diffFunction from "./diffFunction"
+import { diffFunctions } from "./diffFunction"
 
 import {
   Diff,
@@ -12,7 +12,35 @@ import {
   merge,
 } from "./helpers"
 
-export default function diffTarget({
+export function diffTargets({
+  roleKey,
+  prev,
+  next,
+}: {
+  roleKey: string
+  prev?: Target[]
+  next?: Target[]
+}) {
+  const targetAddresses = Array.from(
+    new Set([
+      ...(prev?.map(({ address }) => address) || []),
+      ...(next?.map(({ address }) => address) || []),
+    ])
+  )
+
+  return targetAddresses
+    .map((targetAddress) =>
+      diffTarget({
+        roleKey,
+        targetAddress,
+        prev: prev?.find(({ address }) => address == targetAddress),
+        next: prev?.find(({ address }) => address == targetAddress),
+      })
+    )
+    .reduce(merge, { minus: [], plus: [] })
+}
+
+export function diffTarget({
   roleKey,
   targetAddress,
   prev,
@@ -48,23 +76,15 @@ export default function diffTarget({
     ]
   }
 
-  const selectors = Array.from(
-    new Set([
-      ...(prev?.functions || []).map(({ selector }) => selector),
-      ...(next?.functions || []).map(({ selector }) => selector),
-    ])
+  return merge(
+    result,
+    diffFunctions({
+      roleKey,
+      targetAddress,
+      prev: prev?.functions,
+      next: next?.functions,
+    })
   )
-
-  return selectors
-    .map((selector) =>
-      diffFunction({
-        roleKey,
-        targetAddress,
-        prev: prev?.functions?.find((fn) => fn.selector == selector),
-        next: next?.functions?.find((fn) => fn.selector == selector),
-      })
-    )
-    .reduce((result, { minus, plus }) => merge(result, { minus, plus }), result)
 }
 
 function isPlus(prev: Target | undefined, next: Target | undefined) {

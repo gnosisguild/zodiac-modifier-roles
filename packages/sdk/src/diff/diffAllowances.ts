@@ -1,7 +1,7 @@
 import { Allowance } from "zodiac-roles-deployments"
 import { Diff } from "./helpers"
 
-export default function diffAllowances({
+export function diffAllowances({
   prev = [],
   next = [],
 }: {

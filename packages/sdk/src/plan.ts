@@ -7,31 +7,18 @@ import {
   Role,
   Target,
 } from "zodiac-roles-deployments"
-import diffRolesMod from "../diff/diffRolesMod"
-import diffRole from "../diff/diffRole"
 
-import { Call, encodeCalls, logCall } from "../calls"
+import diff, { diffRole } from "./diff"
 
-type Options = (
-  | { chainId: ChainId; address: `0x${string}` }
-  | { currentRoles?: Role[]; currentAllowances?: Allowance[] }
-) & {
-  log?: boolean | ((message: string) => void)
-}
-
-type RoleOptions = (
-  | { chainId: ChainId; address: `0x${string}` }
-  | { currentRole?: Role }
-) & {
-  log?: boolean | ((message: string) => void)
-}
+import { Call, encodeCalls, logCall } from "./calls"
 
 export async function planApply(
-  rolesMod: { roles: Role[]; allowances: Allowance[] },
+  next: { roles: Role[]; allowances: Allowance[] },
   options: Options
 ) {
   const prev = await maybeFetchRolesMod(options)
-  const { minus, plus } = await diffRolesMod({ prev, next: rolesMod })
+
+  const { minus, plus } = diff({ prev, next })
 
   const calls = [...minus, ...plus]
   logCalls(calls, options)
@@ -39,10 +26,10 @@ export async function planApply(
   return encodeCalls(calls)
 }
 
-export async function planApplyRole(role: Role, options: RoleOptions) {
-  const roleKey = role.key
-  const prev = await maybeFetchRole(role.key, options)
-  const { minus, plus } = await diffRole({ roleKey, prev, next: role })
+export async function planApplyRole(next: Role, options: RoleOptions) {
+  const prev = await maybeFetchRole(next.key, options)
+
+  const { minus, plus } = await diffRole({ roleKey: next.key, prev, next })
 
   const calls = [...minus, ...plus]
   logCalls(calls, options)
@@ -50,23 +37,19 @@ export async function planApplyRole(role: Role, options: RoleOptions) {
   return encodeCalls(calls)
 }
 
-export async function planExtendRole(
-  role: {
-    key: `0x${string}`
-    members?: `0x${string}`[]
-    targets?: Target[]
-    annotations?: Annotation[]
-  },
-  options: RoleOptions
-) {
-  const prev = await maybeFetchRole(role.key, options)
-  const { plus } = await diffRole({
-    roleKey: role.key,
-    prev,
-    next: { members: [], targets: [], annotations: [], ...role },
-  })
+type RoleFragment = {
+  key: `0x${string}`
+  members?: `0x${string}`[]
+  targets?: Target[]
+  annotations?: Annotation[]
+}
 
-  // extend only, just the plus
+export async function planExtendRole(next: RoleFragment, options: RoleOptions) {
+  const prev = await maybeFetchRole(next.key, options)
+
+  const { plus } = await diffRole({ roleKey: next.key, prev, next })
+
+  // extend -> just the plus
   const calls = plus
   logCalls(calls, options)
 
@@ -84,6 +67,13 @@ function logCalls(
   for (const call of calls) {
     logCall(call, log === true ? console.log : log || undefined)
   }
+}
+
+type Options = (
+  | { chainId: ChainId; address: `0x${string}` }
+  | { currentRoles?: Role[]; currentAllowances?: Allowance[] }
+) & {
+  log?: boolean | ((message: string) => void)
 }
 
 async function maybeFetchRolesMod(
@@ -104,6 +94,13 @@ async function maybeFetchRolesMod(
         }
       : undefined
   }
+}
+
+type RoleOptions = (
+  | { chainId: ChainId; address: `0x${string}` }
+  | { currentRole?: Role }
+) & {
+  log?: boolean | ((message: string) => void)
 }
 
 async function maybeFetchRole(
