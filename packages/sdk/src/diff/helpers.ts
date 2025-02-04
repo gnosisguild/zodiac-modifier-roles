@@ -6,10 +6,10 @@ export type Diff = {
   plus: Call[]
 }
 
-export function merge(diff1: Diff, diff2: Diff): Diff {
+export function merge(prev: Diff, next: Diff): Diff {
   return {
-    minus: [...diff1.minus, ...diff2.minus],
-    plus: [...diff1.plus, ...diff2.plus],
+    minus: [...prev.minus, ...next.minus],
+    plus: [...prev.plus, ...next.plus],
   }
 }
 

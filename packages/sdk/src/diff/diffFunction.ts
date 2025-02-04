@@ -7,9 +7,40 @@ import {
   Diff,
   isExecutionOptionsMinus,
   isExecutionOptionsPlus,
+  merge,
 } from "./helpers"
 
-export default function diffFunction({
+export function diffFunctions({
+  roleKey,
+  targetAddress,
+  prev,
+  next,
+}: {
+  roleKey: string
+  targetAddress: string
+  prev?: Function[]
+  next?: Function[]
+}): Diff {
+  const allSelectors = Array.from(
+    new Set([
+      ...(prev || []).map(({ selector }) => selector),
+      ...(next || []).map(({ selector }) => selector),
+    ])
+  )
+
+  return allSelectors
+    .map((selector) =>
+      diffFunction({
+        roleKey,
+        targetAddress,
+        prev: prev?.find((fn) => fn.selector == selector),
+        next: next?.find((fn) => fn.selector == selector),
+      })
+    )
+    .reduce(merge, { minus: [], plus: [] })
+}
+
+export function diffFunction({
   roleKey,
   targetAddress,
   prev,

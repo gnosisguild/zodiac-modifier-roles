@@ -1,13 +1,7 @@
-import { Call } from "../calls"
-
 import { getAddress } from "ethers"
+import { Diff } from "./helpers"
 
-type Diff = {
-  minus: Call[]
-  plus: Call[]
-}
-
-export default function diffMembers({
+export function diffMembers({
   roleKey,
   prev,
   next,
