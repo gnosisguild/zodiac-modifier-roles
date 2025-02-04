@@ -35,34 +35,28 @@ export function isExecutionOptionsPlus(
   prev: ExecutionOptions,
   next: ExecutionOptions
 ) {
-  if (prev == ExecutionOptions.None && next != ExecutionOptions.None) {
-    return true
-  }
-
   if (
-    (prev == ExecutionOptions.Send || prev === ExecutionOptions.DelegateCall) &&
-    next == ExecutionOptions.Both
+    [prev, next].every((eo) =>
+      [ExecutionOptions.Send, ExecutionOptions.DelegateCall].includes(eo)
+    )
   ) {
-    return true
+    return false
   }
 
-  return false
+  return next > prev
 }
 
 export function isExecutionOptionsMinus(
   prev: ExecutionOptions,
   next: ExecutionOptions
 ) {
-  if (prev === ExecutionOptions.Both && next !== ExecutionOptions.Both) {
-    return true
-  }
-
   if (
-    (prev == ExecutionOptions.Send || prev === ExecutionOptions.DelegateCall) &&
-    next == ExecutionOptions.None
+    [prev, next].every((eo) =>
+      [ExecutionOptions.Send, ExecutionOptions.DelegateCall].includes(eo)
+    )
   ) {
-    return true
+    return false
   }
 
-  return false
+  return prev > next
 }
