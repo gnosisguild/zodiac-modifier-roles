@@ -73,14 +73,14 @@ export function diffFunction({
     return { minus: [], plus: [call] }
   }
 
-  if (isMinus(prev, next)) {
-    invariant(!!prev, "expected prev to be defined")
-    const call: Call = !next
+  if (isMinus(prev, next) && next) {
+    const call: Call = next.wildcarded
       ? {
-          call: "revokeFunction",
+          call: "allowFunction",
           roleKey,
           targetAddress,
-          selector: prev.selector,
+          selector: next.selector,
+          executionOptions: next.executionOptions,
         }
       : {
           call: "scopeFunction",
@@ -94,6 +94,21 @@ export function diffFunction({
     return { minus: [call], plus: [] }
   }
 
+  if (isMinus(prev, next)) {
+    invariant(!!prev, "expected prev to be defined")
+    return {
+      minus: [
+        {
+          call: "revokeFunction",
+          roleKey,
+          targetAddress,
+          selector: prev.selector,
+        },
+      ],
+      plus: [],
+    }
+  }
+
   return { minus: [], plus: [] }
 }
 
@@ -103,26 +118,24 @@ function isPlus(prev: Function | undefined, next: Function | undefined) {
     return true
   }
 
-  // if function previously is condition and now is wildcarded
-  if (prev?.condition && next?.wildcarded === true) {
+  const prevIsScoped = !!prev?.condition
+  const nextIsScoped = !!next?.condition
+  const nextIsWildcarded = next?.wildcarded === true
+
+  // if previously scoped, and now wildcarded
+  if (prevIsScoped && nextIsWildcarded) {
     return true
   }
 
-  // if both conditions, but conditions differ
-  if (
-    prev?.condition &&
-    next?.condition &&
-    !conditionsEqual(prev.condition, next.condition)
-  ) {
+  // if both scoped, but conditions differ
+  if (prevIsScoped && nextIsScoped && !scopedAndEqual(prev, next)) {
     return true
   }
 
-  // if both conditions, and conditions equal, but executionOptions plus
+  // if both logically equal, but ExecutionOptions plus
   if (
-    prev?.condition &&
-    next?.condition &&
-    conditionsEqual(prev.condition, next.condition) &&
-    isExecutionOptionsPlus(prev.executionOptions, next.executionOptions)
+    (scopedAndEqual(prev, next) || wildcardedAndEqual(prev, next)) &&
+    isExecutionOptionsPlus(prev!.executionOptions, next!.executionOptions)
   ) {
     return true
   }
@@ -131,22 +144,23 @@ function isPlus(prev: Function | undefined, next: Function | undefined) {
 }
 
 function isMinus(prev: Function | undefined, next: Function | undefined) {
-  // if the function previously did not exist
+  // if the function does not exist anymore
   if (prev && !next) {
     return true
   }
 
-  // if function previously is was wildcarded and now is condition
-  if (prev?.wildcarded && next?.condition) {
+  const nextIsScoped = !!next?.condition
+  const prevIsWildcarded = prev?.wildcarded === true
+
+  // if previously wildcarded and now scoped
+  if (prevIsWildcarded && nextIsScoped) {
     return true
   }
 
-  // if both conditions, and conditions equal, but executionOptions minus
+  // if both logically equal, but ExecutionOptions minus
   if (
-    prev?.condition &&
-    next?.condition &&
-    conditionsEqual(prev.condition, next.condition) &&
-    isExecutionOptionsMinus(prev.executionOptions, next.executionOptions)
+    (scopedAndEqual(prev, next) || wildcardedAndEqual(prev, next)) &&
+    isExecutionOptionsMinus(prev!.executionOptions, next!.executionOptions)
   ) {
     return true
   }
@@ -154,6 +168,19 @@ function isMinus(prev: Function | undefined, next: Function | undefined) {
   return false
 }
 
-function conditionsEqual(a: Condition, b: Condition) {
-  return normalizeCondition(a).$$id === normalizeCondition(b).$$id
+function scopedAndEqual(a?: Function, b?: Function) {
+  return (
+    a?.condition &&
+    b?.condition &&
+    normalizeCondition(a.condition).$$id ===
+      normalizeCondition(b.condition).$$id
+  )
+}
+
+function wildcardedAndEqual(a?: Function, b?: Function) {
+  return (
+    typeof a?.wildcarded == "boolean" &&
+    typeof b?.wildcarded == "boolean" &&
+    a.wildcarded === b?.wildcarded
+  )
 }

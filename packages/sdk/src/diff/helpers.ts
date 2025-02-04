@@ -37,12 +37,10 @@ export function isClearanceMinus(
 }
 
 export function isExecutionOptionsPlus(
-  prev: ExecutionOptions | undefined,
-  next: ExecutionOptions | undefined
+  prev: ExecutionOptions,
+  next: ExecutionOptions
 ) {
-  const isNone = (eo?: ExecutionOptions) => eo === ExecutionOptions.None || !eo
-
-  if (isNone(prev) === true && isNone(next) === false) {
+  if (prev == ExecutionOptions.None && next != ExecutionOptions.None) {
     return true
   }
 
@@ -57,18 +55,16 @@ export function isExecutionOptionsPlus(
 }
 
 export function isExecutionOptionsMinus(
-  prev: ExecutionOptions | undefined,
-  next: ExecutionOptions | undefined
+  prev: ExecutionOptions,
+  next: ExecutionOptions
 ) {
-  const isNone = (eo?: ExecutionOptions) => eo === ExecutionOptions.None || !eo
-
   if (prev === ExecutionOptions.Both && next !== ExecutionOptions.Both) {
     return true
   }
 
   if (
     (prev == ExecutionOptions.Send || prev === ExecutionOptions.DelegateCall) &&
-    isNone(next)
+    next == ExecutionOptions.None
   ) {
     return true
   }
