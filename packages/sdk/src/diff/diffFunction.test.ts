@@ -1,14 +1,15 @@
 import { expect, it, suite } from "vitest"
+import { ZeroAddress, ZeroHash } from "ethers"
 import {
   ExecutionOptions,
+  Function,
   Operator,
   ParameterType,
 } from "zodiac-roles-deployments"
-
-import { diffFunction } from "./diffFunction"
-import { ZeroAddress, ZeroHash } from "ethers"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 import { normalizeCondition } from "../conditions"
+
+import { diffFunction, diffFunctions } from "./diffFunction"
 
 const roleKey = ZeroHash
 const targetAddress = ZeroAddress
@@ -408,5 +409,45 @@ suite("diffFunction", () => {
         executionOptions: is,
       },
     ])
+  })
+})
+
+suite("diffFunctions", () => {
+  it("it diffs and merges from collections", () => {
+    const prev: Function[] = [
+      {
+        selector: "0x01",
+        executionOptions: ExecutionOptions.Both,
+        wildcarded: true,
+      },
+      {
+        selector: "0x02",
+        executionOptions: ExecutionOptions.Send,
+        wildcarded: true,
+      },
+    ]
+
+    const next: Function[] = [
+      {
+        selector: "0x02",
+        executionOptions: ExecutionOptions.Send,
+        wildcarded: true,
+      },
+      {
+        selector: "0x03",
+        executionOptions: ExecutionOptions.Send,
+        wildcarded: true,
+      },
+    ]
+
+    const { minus, plus } = diffFunctions({
+      roleKey,
+      targetAddress,
+      prev,
+      next,
+    })
+
+    expect(minus).toHaveLength(1)
+    expect(plus).toHaveLength(1)
   })
 })
