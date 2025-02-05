@@ -11,24 +11,32 @@ import ChainIcon from "@/ui/ChainIcon"
 import Flex from "@/ui/Flex"
 import LabeledData from "@/ui/LabeledData"
 import { CHAINS } from "@/app/chains"
+import { kv } from "@vercel/kv"
+
+import { zRecord } from "@/app/api/records/types"
+
+const chains = Object.values(CHAINS)
 
 export default async function EditPermissionsPage({
   params,
 }: {
   params: { chain: string; record: string }
 }) {
-  const mod = parseModParam(params.record)
-  if (!mod) {
+  const chainId = chains.find(
+    (c) => c.prefix === params.chain.toLowerCase()
+  )?.id
+  if (!chainId) {
     notFound()
   }
 
-  const data = await fetchRolesMod(mod, { next: { revalidate: 1 } })
-  if (!data) {
+  const value = await kv.get(params.record)
+  if (!value) {
     notFound()
   }
+  const record = zRecord.parse(value)
 
   return (
-    <Layout head={<PageBreadcrumbs mod={mod} />}>
+    <Layout head={<PageBreadcrumbs {...params} />}>
       <main>
         <div className={classes.header}>
           <LabeledData label="Roles Instance">

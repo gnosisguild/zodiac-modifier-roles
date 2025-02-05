@@ -22,13 +22,12 @@ export const zCall = z.object({
 
 export type Call = z.infer<typeof zCall>
 
-export const zCallsCollection = z.object({
-  authToken: z.string(), // providing this token will allow the user to edit the calls collection
+export const zRecord = z.object({
+  authToken: z.string(), // providing this token will allow the user to edit the record
   calls: z.array(zCall),
+  wildcards: z.boolean(), // allows wildcarding fields in the calls
+  alternatives: z.boolean(), // allows alternative values for fields in the calls
+  lastUpdated: z.date(),
 })
 
-export type CallsCollection = z.infer<typeof zCallsCollection>
-
-console.log(
-  z.bigint().parse("123123123123123123123123123123123123123123123123")
-)
+export type Record = z.infer<typeof zRecord>

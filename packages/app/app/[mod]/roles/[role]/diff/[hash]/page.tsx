@@ -10,7 +10,7 @@ import Flex from "@/ui/Flex"
 import ApplyUpdates from "@/components/ApplyUpdate"
 import AnnotationsToggle from "@/components/AnnotationsToggle"
 import { fetchOrInitRole } from "../../fetching"
-import { PermissionsPost } from "@/app/api/permissions/types"
+import { PermissionsPost, zPermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
 
 export default async function DiffPage({
@@ -28,14 +28,11 @@ export default async function DiffPage({
 
   const roleData = await fetchOrInitRole({ ...mod, roleKey })
 
-  const post = await kv.get<PermissionsPost>(params.hash)
-  if (!post) {
+  const value = await kv.get(params.hash)
+  if (!value) {
     notFound()
   }
-
-  const hasAnnotations =
-    roleData.annotations.length > 0 ||
-    (post.annotations && post.annotations.length > 0)
+  const post = zPermissionsPost.parse(value)
 
   const showAnnotations = searchParams.annotations !== "false"
 

@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const storedData = await kv.get(params.record)
   if (!storedData) {
-    return NextResponse.json({ error: "Collection not found" }, { status: 404 })
+    return NextResponse.json({ error: "Record not found" }, { status: 404 })
   }
 
   const record = JSON.parse(storedData as string)

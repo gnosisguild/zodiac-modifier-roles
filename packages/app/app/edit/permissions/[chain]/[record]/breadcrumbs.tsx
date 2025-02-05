@@ -1,19 +1,19 @@
 import { Breadcrumb } from "@/components/Layout"
-import Address from "@/ui/Address"
-import { Mod } from "../params"
 import classes from "./page.module.css"
+import LabeledData from "@/ui/LabeledData"
+import { ChainId } from "@/app/chains"
 
 export default function PageBreadcrumbs({
   chain,
-  collectionId,
+  record,
 }: {
-  chain
-  collectionId
+  chain: string
+  record: string
 }) {
   return (
-    <Breadcrumb href={`/permissions/${chain}/${collectionId}`}>
-      <LabeledData label="Permissions">
-        <div className={classes.hash}>{hash}</div>
+    <Breadcrumb href={`/edit/permissions/${chain}/${record}`}>
+      <LabeledData label="Call Record">
+        <div className={classes.hash}>{record}</div>
       </LabeledData>
     </Breadcrumb>
   )
