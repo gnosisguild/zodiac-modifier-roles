@@ -12,29 +12,50 @@ import diff, { diffRole } from "./diff"
 
 import { Call, encodeCalls, logCall } from "./calls"
 
-export async function planApply(
-  next: { roles: Role[]; allowances: Allowance[] },
-  options: Options
-) {
-  const prev = await maybeFetchRolesMod(options)
-
-  const { minus, plus } = diff({ prev, next })
-
-  const calls = [...minus, ...plus]
-  logCalls(calls, options)
-
-  return encodeCalls(calls)
+type Options = {
+  chainId: ChainId
+  address: `0x${string}`
+  log?: boolean | ((message: string) => void)
 }
 
-export async function planApplyRole(next: Role, options: RoleOptions) {
-  const prev = await maybeFetchRole(next.key, options)
-
-  const { minus, plus } = await diffRole({ prev, next })
+export async function planApply(
+  apply: { roles: Role[]; allowances: Allowance[] },
+  {
+    chainId,
+    address,
+    current,
+    log,
+  }: {
+    current?: {
+      roles: Role[]
+      allowances: Allowance[]
+    }
+  } & Options
+) {
+  const { minus, plus } = diff({
+    prev: current || (await fetchRolesMod({ chainId, address })),
+    next: apply,
+  })
 
   const calls = [...minus, ...plus]
-  logCalls(calls, options)
+  logCalls(calls, log)
 
-  return encodeCalls(calls)
+  return encodeCalls(calls, address)
+}
+
+export async function planApplyRole(
+  role: Role,
+  { chainId, address, current, log }: { current?: Role } & Options
+) {
+  const { minus, plus } = await diffRole({
+    prev: current || (await fetchRole({ chainId, address, roleKey: role.key })),
+    next: role,
+  })
+
+  const calls = [...minus, ...plus]
+  logCalls(calls, log)
+
+  return encodeCalls(calls, address)
 }
 
 type RoleFragment = {
@@ -44,78 +65,28 @@ type RoleFragment = {
   annotations?: Annotation[]
 }
 
-export async function planExtendRole(next: RoleFragment, options: RoleOptions) {
-  const prev = await maybeFetchRole(next.key, options)
-
-  const { plus } = await diffRole({ prev, next })
+export async function planExtendRole(
+  role: RoleFragment,
+  { chainId, address, current, log }: { current?: Role } & Options
+) {
+  const { plus } = await diffRole({
+    prev: current || (await fetchRole({ chainId, address, roleKey: role.key })),
+    next: role,
+  })
 
   // extend -> just the plus
   const calls = plus
-  logCalls(calls, options)
+  logCalls(calls, log)
 
-  return encodeCalls(calls)
+  return encodeCalls(calls, address)
 }
 
-function logCalls(
-  calls: Call[],
-  { log }: { log?: boolean | ((message: string) => void) }
-) {
+function logCalls(calls: Call[], log?: boolean | ((message: string) => void)) {
   if (!log) {
     return
   }
 
   for (const call of calls) {
     logCall(call, log === true ? console.log : log || undefined)
-  }
-}
-
-type Options = (
-  | { chainId: ChainId; address: `0x${string}` }
-  | { currentRoles?: Role[]; currentAllowances?: Allowance[] }
-) & {
-  log?: boolean | ((message: string) => void)
-}
-
-async function maybeFetchRolesMod(
-  options: Options
-): Promise<{ roles: Role[]; allowances: Allowance[] } | undefined> {
-  if ("address" in options) {
-    return (
-      (await fetchRolesMod({
-        chainId: options.chainId,
-        address: options.address,
-      })) || undefined
-    )
-  } else {
-    return options.currentRoles || options.currentAllowances
-      ? {
-          roles: options.currentRoles || [],
-          allowances: options.currentAllowances || [],
-        }
-      : undefined
-  }
-}
-
-type RoleOptions = (
-  | { chainId: ChainId; address: `0x${string}` }
-  | { currentRole?: Role }
-) & {
-  log?: boolean | ((message: string) => void)
-}
-
-async function maybeFetchRole(
-  roleKey: `0x${string}`,
-  options: RoleOptions
-): Promise<Role | undefined> {
-  if ("address" in options) {
-    return (
-      (await fetchRole({
-        chainId: options.chainId,
-        address: options.address,
-        roleKey,
-      })) || undefined
-    )
-  } else {
-    return options.currentRole || undefined
   }
 }

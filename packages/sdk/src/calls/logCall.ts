@@ -65,8 +65,23 @@ export const logCall = (
       break
     }
 
-    // default:
-    //   log(`Unhandled call ${call.call}`)
+    case "postAnnotations": {
+      const { addAnnotations, removeAnnotations } = call.body
+      const addCount =
+        addAnnotations?.reduce((acc, add) => acc + add.uris.length, 0) || 0
+      const removeCount = removeAnnotations?.length || 0
+      const message = [
+        addCount > 0 ? "add " + pluralize(addCount, "annotation") : undefined,
+        removeCount > 0
+          ? "remove " + pluralize(removeCount, "annotation")
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(", ")
+
+      log(`💬 ${message[0].toUpperCase()}${message.slice(1)}`)
+      break
+    }
   }
 }
 
@@ -75,4 +90,15 @@ const ExecutionOptionLabel = {
   [ExecutionOptions.DelegateCall]: "call, delegatecall",
   [ExecutionOptions.Send]: "call, send",
   [ExecutionOptions.Both]: "call, delegatecall, send",
+}
+
+const pluralize = (
+  count: number,
+  singular: string,
+  plural = `${singular}s`
+) => {
+  if (count === 1) {
+    return `1 ${singular}`
+  }
+  return `${count} ${plural}`
 }

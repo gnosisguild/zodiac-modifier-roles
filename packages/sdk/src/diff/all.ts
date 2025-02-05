@@ -8,8 +8,8 @@ export function diffAll({
   prev,
   next,
 }: {
-  prev?: { roles: Role[]; allowances: Allowance[] }
-  next?: { roles: Role[]; allowances: Allowance[] }
+  prev: { roles: Role[]; allowances: Allowance[] } | undefined | null
+  next: { roles: Role[]; allowances: Allowance[] } | undefined | null
 }): Diff {
   return merge(
     diffRoles({
