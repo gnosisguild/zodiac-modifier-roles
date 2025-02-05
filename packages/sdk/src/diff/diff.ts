@@ -1,6 +1,6 @@
 import { Allowance, Role } from "zodiac-roles-deployments"
 import { diffRoles } from "./diffRole"
-import { diffAllowances } from "./diffAllowances"
+import { diffAllowances } from "./diffAllowance"
 
 import { Diff, merge } from "./helpers"
 
