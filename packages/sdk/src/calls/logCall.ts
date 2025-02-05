@@ -54,7 +54,7 @@ export const logCall = (
 
     case "assignRoles": {
       const { member, join } = call
-      log(join ? `👤 Add member ${member}` : `👤 Add Remove ${member}`)
+      log(join ? `👤 Add member ${member}` : `👤 Remove member ${member}`)
       break
     }
 
