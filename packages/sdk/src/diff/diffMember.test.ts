@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { ZeroHash } from "ethers"
 
-import { diffMembers } from "./diffMembers"
+import { diffMembers } from "./diffMember"
 
 const roleKey = ZeroHash
 const AddressOne = `0x0000000000000000000000000000000000000001`

@@ -1,6 +1,6 @@
 import { Annotation, Target } from "zodiac-roles-deployments"
 
-import { diffMembers } from "./diffMembers"
+import { diffMembers } from "./diffMember"
 import { diffTargets } from "./diffTarget"
 
 import { Diff, merge } from "./helpers"
