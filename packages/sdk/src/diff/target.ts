@@ -1,7 +1,7 @@
 import { ZeroHash } from "ethers"
 import { Clearance, Target } from "zodiac-roles-deployments"
 
-import { diffFunctions } from "./diffFunction"
+import { diffFunctions } from "./function"
 import { Call } from "../calls"
 
 import {
