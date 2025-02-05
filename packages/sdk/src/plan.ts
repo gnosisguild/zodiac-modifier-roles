@@ -29,7 +29,7 @@ export async function planApply(
 export async function planApplyRole(next: Role, options: RoleOptions) {
   const prev = await maybeFetchRole(next.key, options)
 
-  const { minus, plus } = await diffRole({ roleKey: next.key, prev, next })
+  const { minus, plus } = await diffRole({ prev, next })
 
   const calls = [...minus, ...plus]
   logCalls(calls, options)
@@ -47,7 +47,7 @@ type RoleFragment = {
 export async function planExtendRole(next: RoleFragment, options: RoleOptions) {
   const prev = await maybeFetchRole(next.key, options)
 
-  const { plus } = await diffRole({ roleKey: next.key, prev, next })
+  const { plus } = await diffRole({ prev, next })
 
   // extend -> just the plus
   const calls = plus
