@@ -7,11 +7,12 @@ import {
   PermissionCoerced,
   processPermissions,
   reconstructPermissions,
-  diffTargets,
   splitTargets,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
+
+import { compareTargets } from "../diff"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
@@ -105,7 +106,7 @@ export const processAnnotations = async (
     }
 
     // If targetsWithPresetApplied is a subset of targets, it means they are equal sets.
-    return diffTargets(targetsWithPresetApplied, targets).length === 0
+    return compareTargets(targetsWithPresetApplied, targets)
   }) as Preset[]
 
   // Calculate remaining permissions that are not part of any preset
@@ -122,9 +123,7 @@ export const processAnnotations = async (
     ...remainingPermissions,
   ])
 
-  const d1 = diffTargets(finalTargets, targets)
-  const d2 = diffTargets(targets, finalTargets)
-  if (d1.length !== 0 || d2.length !== 0) {
+  if (!compareTargets(targets, finalTargets)) {
     throw new Error(
       "The processed results leads to a different set of targets."
     )

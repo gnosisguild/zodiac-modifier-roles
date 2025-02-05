@@ -1,3 +1,4 @@
+import { ZeroHash } from "ethers"
 import { Clearance, Target } from "zodiac-roles-deployments"
 
 import { diffFunctions } from "./diffFunction"
@@ -32,7 +33,6 @@ export function diffTargets({
     .map((targetAddress) =>
       diffTarget({
         roleKey,
-        targetAddress,
         prev: prev?.find(({ address }) => address === targetAddress),
         next: next?.find(({ address }) => address === targetAddress),
       })
@@ -42,15 +42,15 @@ export function diffTargets({
 
 export function diffTarget({
   roleKey,
-  targetAddress,
   prev,
   next,
 }: {
   roleKey: string
-  targetAddress: string
   prev?: Target
   next?: Target
 }): Diff {
+  const targetAddress = (prev?.address || next?.address)!
+
   const call = draftCall({
     roleKey,
     targetAddress,
@@ -71,6 +71,11 @@ export function diffTarget({
       next: next?.functions,
     })
   )
+}
+
+export function compareTargets(prev: Target[], next: Target[]): boolean {
+  const { minus, plus } = diffTargets({ prev, next, roleKey: ZeroHash })
+  return minus.length === 0 && plus.length === 0
 }
 
 function draftCall({
