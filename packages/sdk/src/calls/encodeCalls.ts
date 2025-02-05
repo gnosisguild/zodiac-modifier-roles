@@ -1,11 +1,15 @@
 import { Roles__factory } from "../../../evm/typechain-types"
+import { encodeAnnotationsPost } from "../annotations/poster"
 import { flattenCondition } from "../conditions"
 
 import { Call } from "./types"
 
 const rolesInterface = Roles__factory.createInterface()
 
-export const encodeCalls = (calls: Call[]): `0x${string}`[] => {
+export const encodeCalls = (
+  calls: Call[],
+  rolesMod: string
+): `0x${string}`[] => {
   return calls.map((call) => {
     switch (call.call) {
       case "allowTarget": {
@@ -75,6 +79,11 @@ export const encodeCalls = (calls: Call[]): `0x${string}`[] => {
           call.period,
           call.timestamp,
         ])
+      }
+
+      case "postAnnotations": {
+        const { roleKey, body } = call
+        return encodeAnnotationsPost(rolesMod, roleKey, body)
       }
     }
   }) as `0x${string}`[]

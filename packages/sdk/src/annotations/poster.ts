@@ -19,7 +19,7 @@ export const encodePost = (content: string) => {
 }
 
 export const encodeAnnotationsPost = (
-  rolesMod: `0x${string}`,
+  rolesMod: string,
   roleKey: string,
   updatePost: UpdateAnnotationsPost
 ) => {

@@ -59,6 +59,18 @@ interface SetAllowanceCall {
   timestamp: bigint
 }
 
+interface PostAnnotationsCall {
+  call: "postAnnotations"
+  roleKey: string
+  body: {
+    addAnnotations?: {
+      uris: string[]
+      schema: string
+    }[]
+    removeAnnotations?: string[]
+  }
+}
+
 export type Call =
   | AllowTargetCall
   | ScopeTargetCall
@@ -68,3 +80,4 @@ export type Call =
   | RevokeFunctionCall
   | AssignRolesCall
   | SetAllowanceCall
+  | PostAnnotationsCall
