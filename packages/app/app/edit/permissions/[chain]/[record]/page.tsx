@@ -9,15 +9,15 @@ import PageBreadcrumbs from "./breadcrumbs"
 import Address from "@/ui/Address"
 import ChainIcon from "@/ui/ChainIcon"
 import Flex from "@/ui/Flex"
-import { CHAINS } from "../chains"
 import LabeledData from "@/ui/LabeledData"
+import { CHAINS } from "@/app/chains"
 
 export default async function EditPermissionsPage({
   params,
 }: {
-  params: { chain: string; collection: string }
+  params: { chain: string; record: string }
 }) {
-  const mod = parseModParam(params.mod)
+  const mod = parseModParam(params.record)
   if (!mod) {
     notFound()
   }

@@ -6,25 +6,25 @@ import { Call, zCall } from "../types"
 
 export async function GET(
   req: Request,
-  { params }: { params: { collection: string } }
+  { params }: { params: { record: string } }
 ) {
-  const storedData = await kv.get(params.collection)
+  const storedData = await kv.get(params.record)
   if (!storedData) {
     return NextResponse.json({ error: "Collection not found" }, { status: 404 })
   }
 
-  const collection = JSON.parse(storedData as string)
+  const record = JSON.parse(storedData as string)
 
   // Return calls array but omit sensitive authToken
   return NextResponse.json({
-    id: params.collection,
-    calls: collection.calls,
+    id: params.record,
+    calls: record.calls,
   })
 }
 
 export async function POST(
   req: Request,
-  { params }: { params: { collection: string } }
+  { params }: { params: { record: string } }
 ) {
   // Get and validate authorization header format
   const authHeader = req.headers.get("authorization")
@@ -48,17 +48,22 @@ export async function POST(
     )
   }
 
-  // Get collection from KV store
-  const storedData = await kv.get(params.collection)
+  // Get record from KV store
+  const storedData = await kv.get(params.record)
   if (!storedData) {
     return NextResponse.json({ error: "Collection not found" }, { status: 404 })
   }
 
   // Parse stored data
-  const collection = JSON.parse(storedData as string)
+  const record = JSON.parse(storedData as string)
 
   // Verify auth token using constant-time comparison
-  if (!timingSafeEqual(Buffer.from(token), Buffer.from(collection.authToken))) {
+  if (
+    !timingSafeEqual(
+      new Uint8Array(Buffer.from(token)),
+      new Uint8Array(Buffer.from(record.authToken))
+    )
+  ) {
     return NextResponse.json(
       { error: "Invalid authorization" },
       { status: 403 }
@@ -79,14 +84,14 @@ export async function POST(
     )
   }
 
-  // Append new calls to collection
-  collection.calls = [...collection.calls, ...newCalls]
+  // Append new calls to record
+  record.calls = [...record.calls, ...newCalls]
 
   // Update KV store
-  await kv.set(params.collection, JSON.stringify(collection))
+  await kv.set(params.record, JSON.stringify(record))
 
   return NextResponse.json({
     success: true,
-    callCount: collection.calls.length,
+    callCount: record.calls.length,
   })
 }
