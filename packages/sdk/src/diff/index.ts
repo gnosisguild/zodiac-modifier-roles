@@ -1,5 +1,5 @@
-import { diff } from "./diff"
-import { diffRole } from "./diffRole"
-import { diffTargets, compareTargets } from "./diffTarget"
+import { diffAll } from "./all"
+import { diffRole } from "./role"
+import { diffTargets, compareTargets } from "./target"
 
-export { diff as default, diffRole, diffTargets, compareTargets }
+export { diffAll as default, diffRole, diffTargets, compareTargets }

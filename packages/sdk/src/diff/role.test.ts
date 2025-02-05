@@ -1,6 +1,6 @@
 import { it, suite, expect } from "vitest"
 import { Clearance, ExecutionOptions } from "zodiac-roles-deployments"
-import { diffRoles } from "./diffRole"
+import { diffRoles } from "./role"
 
 const AddressOne = "0x0000000000000000000000000000000000000001" as `0x${string}`
 const AddressTwo = "0x0000000000000000000000000000000000000002" as `0x${string}`

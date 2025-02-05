@@ -1,10 +1,10 @@
 import { Allowance, Role } from "zodiac-roles-deployments"
-import { diffRoles } from "./diffRole"
-import { diffAllowances } from "./diffAllowance"
+import { diffRoles } from "./role"
+import { diffAllowances } from "./allowances"
 
 import { Diff, merge } from "./helpers"
 
-export function diff({
+export function diffAll({
   prev,
   next,
 }: {

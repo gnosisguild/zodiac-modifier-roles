@@ -3,7 +3,7 @@ import { Clearance, ExecutionOptions, Target } from "zodiac-roles-deployments"
 
 import { ZeroAddress, ZeroHash } from "ethers"
 
-import { diffTarget, diffTargets } from "./diffTarget"
+import { diffTarget, diffTargets } from "./target"
 
 const roleKey = ZeroHash
 const address = ZeroAddress as `0x${string}`

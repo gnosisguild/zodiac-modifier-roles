@@ -2,8 +2,8 @@ import { invariant } from "@epic-web/invariant"
 import { ZeroHash } from "ethers"
 import { Annotation, Target } from "zodiac-roles-deployments"
 
-import { diffMembers } from "./diffMember"
-import { diffTargets } from "./diffTarget"
+import { diffMembers } from "./members"
+import { diffTargets } from "./target"
 
 import { Diff, merge } from "./helpers"
 
