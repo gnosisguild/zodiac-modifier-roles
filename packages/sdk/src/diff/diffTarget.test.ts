@@ -22,7 +22,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress: address,
       next,
     })
 
@@ -56,7 +55,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress: address,
       prev,
       next,
     })
@@ -91,7 +89,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress: address,
       prev,
       next,
     })
@@ -127,7 +124,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress: address,
       prev,
       next,
     })
@@ -162,7 +158,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress: address,
       prev,
       next,
     })
@@ -190,7 +185,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
@@ -220,7 +214,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
     })
 
@@ -254,7 +247,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
@@ -289,7 +281,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
@@ -324,7 +315,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
@@ -352,7 +342,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
@@ -436,7 +425,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
