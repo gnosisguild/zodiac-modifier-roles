@@ -1,3 +1,5 @@
+import { invariant } from "@epic-web/invariant"
+import { ZeroHash } from "ethers"
 import { Annotation, Target } from "zodiac-roles-deployments"
 
 import { diffMembers } from "./diffMember"
@@ -29,7 +31,6 @@ export function diffRoles({
   return roleKeys
     .map((roleKey) =>
       diffRole({
-        roleKey,
         prev: prev?.find(({ key }) => key == roleKey),
         next: next?.find(({ key }) => key == roleKey),
       })
@@ -38,14 +39,13 @@ export function diffRoles({
 }
 
 export function diffRole({
-  roleKey,
   prev,
   next,
 }: {
-  roleKey: string
   prev?: RoleFragment
   next?: RoleFragment
 }): Diff {
+  const roleKey = ensureRoleKey(prev, next)
   return merge(
     diffTargets({
       roleKey,
@@ -58,4 +58,12 @@ export function diffRole({
       next: next?.members,
     })
   )
+}
+
+function ensureRoleKey(prev?: RoleFragment, next?: RoleFragment) {
+  const set = new Set([prev?.key, next?.key].filter(Boolean))
+
+  invariant(set.size <= 1, "Invalid Role Comparison")
+
+  return prev?.key || next?.key || ZeroHash
 }
