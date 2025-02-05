@@ -1,4 +1,3 @@
-import { chains } from "./chains"
 import { assertNoPagination, fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   ChainId,
