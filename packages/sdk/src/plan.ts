@@ -19,7 +19,7 @@ type Options = {
 }
 
 export async function planApply(
-  apply: { roles: Role[]; allowances: Allowance[] },
+  next: { roles: Role[]; allowances: Allowance[] },
   {
     chainId,
     address,
@@ -34,7 +34,7 @@ export async function planApply(
 ) {
   const { minus, plus } = diff({
     prev: current || (await fetchRolesMod({ chainId, address })),
-    next: apply,
+    next,
   })
 
   const calls = [...minus, ...plus]
@@ -44,12 +44,12 @@ export async function planApply(
 }
 
 export async function planApplyRole(
-  role: Role,
+  next: Role,
   { chainId, address, current, log }: { current?: Role } & Options
 ) {
   const { minus, plus } = await diffRole({
-    prev: current || (await fetchRole({ chainId, address, roleKey: role.key })),
-    next: role,
+    prev: current || (await fetchRole({ chainId, address, roleKey: next.key })),
+    next,
   })
 
   const calls = [...minus, ...plus]
@@ -66,12 +66,13 @@ type RoleFragment = {
 }
 
 export async function planExtendRole(
-  role: RoleFragment,
+  fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ) {
   const { plus } = await diffRole({
-    prev: current || (await fetchRole({ chainId, address, roleKey: role.key })),
-    next: role,
+    prev:
+      current || (await fetchRole({ chainId, address, roleKey: fragment.key })),
+    next: fragment,
   })
 
   // extend -> just the plus
