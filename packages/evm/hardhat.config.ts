@@ -124,6 +124,12 @@ const config: HardhatUserConfig = {
       chainId: 84532,
       url: `https://sepolia.base.org`,
     },
+    "lisk-sepolia": {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
+      gasPrice: 1000000000,
+    },
   },
   etherscan: {
     apiKey: {
@@ -138,6 +144,8 @@ const config: HardhatUserConfig = {
       base: BASESCAN_API_KEY,
       baseSepolia: BASESCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
+      // Use "ETHERSCAN_API_KEY" as a placeholder, because Blockscout doesn't need a real API key, and Hardhat will complain if this property isn't set.
+      "lisk-sepolia": ETHERSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
       {
@@ -196,7 +204,18 @@ const config: HardhatUserConfig = {
           browserURL: "https://bscscan.com",
         },
       },
+      {
+        network: "lisk-sepolia",
+        chainId: 4202,
+        urls: {
+          apiURL: "https://sepolia-blockscout.lisk.com/api",
+          browserURL: "https://sepolia-blockscout.lisk.com",
+        },
+      },
     ],
+  },
+  sourcify: {
+    enabled: false,
   },
   gasReporter: {
     enabled: true,
