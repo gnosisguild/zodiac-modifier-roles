@@ -52,7 +52,7 @@ suite("processPermissions()", () => {
       })
     })
 
-    it("filters out duplicate entry", () => {
+    it("filters out duplicate entry ✅", () => {
       expect(
         processPermissions([
           { targetAddress: AddressOne },
@@ -69,6 +69,15 @@ suite("processPermissions()", () => {
         ],
         annotations: [],
       })
+    })
+
+    it("throws on out duplicate entry with incompatible execution options ❌", () => {
+      expect(() =>
+        processPermissions([
+          { targetAddress: AddressOne, send: true },
+          { targetAddress: AddressOne, delegatecall: true },
+        ])
+      ).toThrowError()
     })
   })
 
@@ -196,6 +205,14 @@ suite("processPermissions()", () => {
         ],
         annotations: [],
       })
+    })
+    it("throws on duplicate with incompatible execution options ❌", () => {
+      expect(() =>
+        processPermissions([
+          { targetAddress: AddressOne, selector: "0x1", send: true },
+          { targetAddress: AddressOne, selector: "0x1", delegatecall: true },
+        ])
+      ).toThrowError()
     })
   })
 
