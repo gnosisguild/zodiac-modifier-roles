@@ -20,10 +20,8 @@ import { execOptions, targetId, isFunctionScoped } from "./utils"
 export const processPermissions = (
   permissions: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
-  const flatPermissions = permissions.flat()
-
   // first we merge permissions addressing the same target functions so every entry will be unique
-  const mergedPermissions = mergeFunctionPermissions(flatPermissions)
+  const mergedPermissions = mergeFunctionPermissions(permissions.flat())
   sanityCheck(mergedPermissions)
 
   const permissionsAllowed = mergedPermissions.filter(
@@ -33,10 +31,8 @@ export const processPermissions = (
     (entry) => "selector" in entry
   )
 
-  const targetsAllowed = Object.entries(
-    groupBy(permissionsAllowed, (entry) => entry.targetAddress)
-  ).map(([targetAddress, [permission]]) => ({
-    address: targetAddress.toLowerCase() as `0x${string}`,
+  const targetsAllowed = permissionsAllowed.map((permission) => ({
+    address: permission.targetAddress.toLowerCase() as `0x${string}`,
     clearance: Clearance.Target,
     executionOptions: execOptions(permission),
     functions: [],
