@@ -15,14 +15,10 @@ import { coercePermission, targetId, isFunctionScoped } from "./utils"
  */
 export const mergeFunctionPermissions = (permissions: Permission[]) =>
   permissions.reduce((result, entry) => {
-    if (!isFunctionScoped(entry)) {
-      result.push({
-        ...entry,
-        targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
-      })
-      return result
+    entry = {
+      ...entry,
+      targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
     }
-
     const coercedEntry = coercePermission(entry)
 
     const matchingEntry = result.find(
@@ -43,8 +39,11 @@ export const mergeFunctionPermissions = (permissions: Permission[]) =>
       return result
     }
 
-    // merge conditions into the entry we already have
-    matchingEntry.condition = mergeConditions(matchingEntry, coercedEntry)
+    if ("selector" in coercedEntry) {
+      // merge conditions into the entry we already have
+      matchingEntry.condition = mergeConditions(matchingEntry, coercedEntry)
+    }
+
     return result
   }, [] as PermissionCoerced[])
 
