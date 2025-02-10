@@ -7,13 +7,7 @@ import Layout from "@/components/Layout"
 import PageBreadcrumbs from "./breadcrumbs"
 import classes from "./page.module.css"
 import Flex from "@/ui/Flex"
-import Box from "@/ui/Box"
-import { RelativeTime } from "@/components/RelativeTime"
 import TargetCalls from "./TargetCalls"
-
-const shortDateFormat = new Intl.RelativeTimeFormat(undefined, {
-  style: "short",
-})
 
 export default async function RecordPage({
   params,

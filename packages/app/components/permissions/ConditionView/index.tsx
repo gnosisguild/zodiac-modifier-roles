@@ -10,7 +10,8 @@ import BitmaskConditionView from "./BitmaskConditionView"
 import LabeledData from "@/ui/LabeledData"
 import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
-import { isLogicalOperator, isArrayOperator, arrayElementType } from "./utils"
+import { isLogicalOperator, isArrayOperator } from "./utils"
+import { arrayElementType } from "@/utils/abi"
 export { matchesAbi } from "./utils"
 
 export interface Props {
