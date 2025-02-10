@@ -21,11 +21,12 @@ export const POST = withErrorHandling(
     // Check authorization
     authorizeRequest(req, record.authToken)
 
+    // Append new calls to record, filtering out duplicate calls
     const newCalls = z.array(zCall).parse(await req.json())
-
-    // Append new calls to record
-    // TODO: skip duplicates
-    record.calls = [...record.calls, ...newCalls]
+    const filteredCalls = newCalls.filter(
+      (call) => !record.calls.some((existing) => callsEqual(call, existing))
+    )
+    record.calls = [...record.calls, ...filteredCalls]
 
     // Update in KV store
     record.lastUpdatedAt = new Date()
@@ -34,7 +35,13 @@ export const POST = withErrorHandling(
     return NextResponse.json({
       success: true,
       lastUpdatedAt: record.lastUpdatedAt,
-      callCount: record.calls.length,
     })
   }
 )
+
+type Call = z.infer<typeof zCall>
+const callsEqual = (a: Call, b: Call) =>
+  a.to === b.to &&
+  a.data === b.data &&
+  a.value === b.value &&
+  a.operation === b.operation
