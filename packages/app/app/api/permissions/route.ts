@@ -2,22 +2,13 @@ import { NextResponse } from "next/server"
 import { checkIntegrity } from "zodiac-roles-sdk"
 import { kv } from "@vercel/kv"
 import { createHash } from "crypto"
-import { PermissionsPost, zPermissionsPost } from "./types"
+import { zPermissionsPost } from "./types"
+import { withErrorHandling } from "../utils/withErrorHandling"
 
-export async function POST(req: Request) {
+export const POST = withErrorHandling(async (req: Request) => {
   const json = await req.json()
 
-  let validated: PermissionsPost
-  try {
-    validated = zPermissionsPost.parse(json)
-  } catch (e) {
-    return NextResponse.json(
-      {
-        error: "Json is invalid",
-      },
-      { status: 400 }
-    )
-  }
+  const validated = zPermissionsPost.parse(json)
 
   if (validated.targets) {
     try {
@@ -34,7 +25,7 @@ export async function POST(req: Request) {
   await kv.set(key, stringValue)
 
   return NextResponse.json({ hash: key })
-}
+})
 
 /** URL-safe hash function */
 function hash(value: string) {

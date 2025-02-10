@@ -2,41 +2,31 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { nanoid } from "nanoid"
 import crypto from "crypto"
-import { Call, zCall } from "./types"
+import { Record, zCall } from "./types"
 import { kv } from "@vercel/kv"
+import { withErrorHandling } from "../utils/withErrorHandling"
 
-export async function POST(req: Request) {
-  const json = await req.json()
-
-  let validated: Call[]
-  try {
-    // Validate array of zCall objects
-    validated = z.array(zCall).parse(json)
-  } catch (e) {
-    return NextResponse.json(
-      {
-        error: "Invalid call array format",
-      },
-      { status: 400 }
-    )
-  }
+export const POST = withErrorHandling(async (req: Request) => {
+  const validated = z.array(zCall).parse(await req.json())
 
   // Generate URL-safe ID and auth token
   const id = nanoid()
   const authToken = crypto.randomBytes(32).toString("base64url")
 
+  const now = new Date()
+
   // Create storage object
-  const storageObject = {
-    calls: validated,
+  const storageObject: Record = {
     authToken,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    lastUpdatedAt: now,
+    calls: validated,
+    wildcards: {},
+    alternatives: {},
   }
 
   // Store in KV
-  await kv.set(id, JSON.stringify(storageObject))
+  await kv.set(id, storageObject)
 
-  return NextResponse.json({
-    id,
-    authToken,
-  })
-}
+  return NextResponse.json(storageObject)
+})
