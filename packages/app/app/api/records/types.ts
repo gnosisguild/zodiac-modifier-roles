@@ -1,7 +1,7 @@
 import { zAddress, zHex } from "@/components/permissions/schema"
 import { z } from "zod"
 
-enum Operation {
+export enum Operation {
   Call = 0,
   DelegateCall = 1,
 }
@@ -19,6 +19,7 @@ export const zCall = z.object({
     })
     .optional(),
 })
+export type Call = z.infer<typeof zCall>
 
 export const zWildcards = z.record(z.string(), z.boolean())
 
