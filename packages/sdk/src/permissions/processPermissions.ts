@@ -9,12 +9,7 @@ import { normalizeCondition } from "../conditions"
 import { groupBy } from "../utils/groupBy"
 
 import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
-import {
-  FunctionPermissionCoerced,
-  Permission,
-  PermissionCoerced,
-  PermissionSet,
-} from "./types"
+import { Permission, PermissionCoerced, PermissionSet } from "./types"
 import { execOptions, targetId, isFunctionScoped } from "./utils"
 
 /**
@@ -25,41 +20,36 @@ import { execOptions, targetId, isFunctionScoped } from "./utils"
 export const processPermissions = (
   permissions: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
-  const flatPermissions = permissions.flat()
-
   // first we merge permissions addressing the same target functions so every entry will be unique
-  const uniquePermissions = mergeFunctionPermissions(flatPermissions)
-  sanityCheck(uniquePermissions)
+  const mergedPermissions = mergeFunctionPermissions(permissions.flat())
+  sanityCheck(mergedPermissions)
 
-  // collect all fully cleared targets
-  const fullyClearedTargets = uniquePermissions
-    .filter((entry) => !isFunctionScoped(entry))
-    .map((entry) => ({
-      address: entry.targetAddress.toLowerCase() as `0x${string}`,
-      clearance: Clearance.Target,
-      executionOptions: execOptions(entry),
-      functions: [],
-    }))
-
-  // collect all function scoped targets and bring conditions into the normal form
-  const functionPermissions = uniquePermissions.filter(
+  const permissionsAllowed = mergedPermissions.filter(
+    (entry) => !("selector" in entry)
+  )
+  const permissionsScoped = mergedPermissions.filter(
     (entry) => "selector" in entry
-  ) as FunctionPermissionCoerced[]
-  const functionScopedTargets = Object.entries(
-    groupBy(functionPermissions, (entry) => entry.targetAddress)
-  ).map(([targetAddress, allowFunctions]) => ({
+  )
+
+  const targetsAllowed = permissionsAllowed.map((permission) => ({
+    address: permission.targetAddress.toLowerCase() as `0x${string}`,
+    clearance: Clearance.Target,
+    executionOptions: execOptions(permission),
+    functions: [],
+  }))
+
+  const targetsScoped = Object.entries(
+    groupBy(permissionsScoped, (entry) => entry.targetAddress)
+  ).map(([targetAddress, permissions]) => ({
     address: targetAddress.toLowerCase() as `0x${string}`,
     clearance: Clearance.Function,
     executionOptions: ExecutionOptions.None,
-    functions: allowFunctions.map((allowFunction) => {
-      const { condition } = allowFunction
-      return {
-        selector: allowFunction.selector,
-        executionOptions: execOptions(allowFunction),
-        wildcarded: !condition,
-        condition: condition && normalizeCondition(condition),
-      }
-    }),
+    functions: permissions.map(({ selector, condition, ...rest }) => ({
+      selector,
+      executionOptions: execOptions(rest),
+      wildcarded: !condition,
+      condition: condition && normalizeCondition(condition),
+    })),
   }))
 
   // collect all annotations
@@ -69,7 +59,7 @@ export const processPermissions = (
     .filter((annotation): annotation is Annotation => !!annotation)
 
   return {
-    targets: [...fullyClearedTargets, ...functionScopedTargets],
+    targets: [...targetsAllowed, ...targetsScoped],
 
     // make annotations unique
     annotations: annotations.filter(
@@ -82,6 +72,7 @@ export const processPermissions = (
 const sanityCheck = (permissions: PermissionCoerced[]) => {
   assertNoWildcardScopedIntersection(permissions)
   assertNoDuplicateAllowFunction(permissions)
+  assertNoDuplicateAllowTarget(permissions)
 }
 
 const assertNoWildcardScopedIntersection = (
@@ -121,6 +112,28 @@ const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
   if (duplicates.length > 0) {
     throw new Error(
       `The following functions appear multiple times and cannot be merged: ${duplicates.join(
+        ", "
+      )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
+    )
+  }
+}
+
+const assertNoDuplicateAllowTarget = (permissions: PermissionCoerced[]) => {
+  const allowTarget = permissions
+    .filter((p) => !isFunctionScoped(p))
+    .map(targetId)
+
+  const counts = allowTarget.reduce(
+    (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
+    {} as Record<string, number>
+  )
+  const duplicates = [
+    ...new Set(allowTarget.filter((item) => counts[item] > 1)),
+  ]
+
+  if (duplicates.length > 0) {
+    throw new Error(
+      `The following targets appear multiple times and cannot be merged: ${duplicates.join(
         ", "
       )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
     )
