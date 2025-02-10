@@ -4,13 +4,16 @@ import Flex from "@/ui/Flex"
 import { Mod, parseRoleParam } from "@/app/params"
 import BreadcrumbDivider from "@/ui/BreadcrumbDivider"
 import classes from "./page.module.css"
+import LabeledData from "@/ui/LabeledData"
 
 export default function PageBreadcrumbs({
   mod,
   role,
+  record,
 }: {
   mod: Mod
   role: string
+  record: string
 }) {
   const roleKey = parseRoleParam(role)
   if (!roleKey) {
@@ -19,19 +22,16 @@ export default function PageBreadcrumbs({
 
   return (
     <>
-      <ParentPageBreadcrumbs mod={mod} />
+      <ParentPageBreadcrumbs mod={mod} role={role} />
       <BreadcrumbDivider />
       <Breadcrumb
-        href={`/${mod.chainPrefix}:${mod.address}/roles/${role}`}
+        href={`/${mod.chainPrefix}:${mod.address}/roles/${role}/record/${record}`}
         className={classes.breadcrumb}
       >
-        <label>Role</label>
-        <Flex direction="column" gap={0}>
-          {role && role !== roleKey ? (
-            <div className={classes.roleName}>{role}</div>
-          ) : (
-            <small>{roleKey}</small>
-          )}
+        <Flex gap={2} alignItems="center">
+          <LabeledData label="Recorded calls">
+            <div className={classes.hash}>{record}</div>
+          </LabeledData>
         </Flex>
       </Breadcrumb>
     </>

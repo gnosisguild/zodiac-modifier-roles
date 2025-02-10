@@ -1,9 +1,0 @@
-.hash {
-  width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-  font-family: var(--font-mono);
-  line-height: 18.5px;
-}
