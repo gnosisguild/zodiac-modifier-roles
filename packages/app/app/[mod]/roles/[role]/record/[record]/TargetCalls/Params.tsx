@@ -1,18 +1,21 @@
+import Flex from "@/ui/Flex"
 import { arrayElementType } from "@/utils/abi"
 import { AbiParameter } from "viem"
+import classes from "./style.module.css"
 
 export const TupleParams: React.FC<{
   value: readonly unknown[]
   type: readonly AbiParameter[]
 }> = ({ value, type }) => {
   return (
-    <div>
+    <Flex direction="column" gap={1}>
       {type.map((field, i) => (
-        <div key={i}>
-          {field.name || `[${i}]`} ({field.type})
-        </div>
+        <Flex direction="row" gap={3} key={i}>
+          <label className={classes.paramLabel}>{field.name || `[${i}]`}</label>
+          <Param type={field} value={value[i]} />
+        </Flex>
       ))}
-    </div>
+    </Flex>
   )
 }
 
@@ -51,7 +54,7 @@ const PrimitiveParam: React.FC<{
   return (
     <div>
       <input type="text" value={value.toString()} readOnly />
-      <div>{type.type}</div>
+      <code>{type.type}</code>
     </div>
   )
 }

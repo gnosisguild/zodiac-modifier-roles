@@ -61,9 +61,6 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
   const selector = data.slice(0, 10)
   const chain = CHAINS[chainId]
 
-  const params =
-    abi?.inputs?.map((input) => input.type + " " + input.name) || []
-
   return (
     <Flex direction="row" gap={0} justifyContent="space-between">
       {abi ? (
@@ -71,15 +68,6 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
           <Flex gap={2} alignItems="center" className={classes.signature}>
             <Anchor name={`${to}-${selector}`} className={classes.anchor} />
             <div className={classes.selector}>{abi.name}</div>
-
-            <Flex gap={1} alignItems="start" wrap className={classes.params}>
-              {params.map((param, i) => (
-                <code className={classes.param} key={i}>
-                  {param}
-                </code>
-              ))}
-            </Flex>
-
             <div className={classes.selectorSmall}>{selector}</div>
           </Flex>
         </LabeledData>
