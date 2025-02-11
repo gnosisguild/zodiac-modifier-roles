@@ -260,21 +260,6 @@ export const ChildConditions: React.FC<
   )
 }
 
-const calcMaxLogicalDepth = (condition: Condition): number => {
-  const { children, operator } = condition
-  if (!children) return 0
-  return isLogicalOperator(operator)
-    ? 1
-    : 0 +
-        Math.max(
-          ...children.map((child) => {
-            return isLogicalOperator(child.operator)
-              ? 1 + calcMaxLogicalDepth(child)
-              : 0
-          })
-        )
-}
-
 const ComparisonConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
