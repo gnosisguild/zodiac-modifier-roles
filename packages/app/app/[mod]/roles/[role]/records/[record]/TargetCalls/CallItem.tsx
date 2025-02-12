@@ -61,6 +61,8 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
   const selector = data.slice(0, 10)
   const chain = CHAINS[chainId]
 
+  const valueBigInt = BigInt(value)
+
   return (
     <Flex direction="row" gap={0} justifyContent="space-between">
       {abi ? (
@@ -81,9 +83,9 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
       )}
       <Flex gap={3} alignItems="start">
         <LabeledData label="Send value">
-          {value === 0n
+          {valueBigInt === 0n
             ? "-"
-            : formatEther(value) + " " + chain.nativeCurrency.symbol}
+            : formatEther(valueBigInt) + " " + chain.nativeCurrency.symbol}
         </LabeledData>
 
         <LabeledData label="Delegate call">

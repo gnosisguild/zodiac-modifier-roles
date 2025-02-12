@@ -29,7 +29,7 @@ export const POST = withErrorHandling(
     record.calls = [...record.calls, ...filteredCalls]
 
     // Update in KV store
-    record.lastUpdatedAt = new Date()
+    record.lastUpdatedAt = new Date().toISOString()
     await kv.set(params.record, record)
 
     return NextResponse.json({

@@ -19,8 +19,8 @@ export const POST = withErrorHandling(async (req: Request) => {
   const storageObject: Record = {
     id,
     authToken,
-    createdAt: now,
-    lastUpdatedAt: now,
+    createdAt: now.toISOString(),
+    lastUpdatedAt: now.toISOString(),
     calls: validated,
     wildcards: {},
     alternatives: {},

@@ -8,13 +8,13 @@ export enum Operation {
 
 export const zCall = z.object({
   to: zAddress,
-  value: z.bigint(),
+  value: z.string(),
   data: zHex,
   operation: z.nativeEnum(Operation),
   metadata: z
     .object({
       label: z.string().optional(),
-      recordedAt: z.date().optional(),
+      recordedAt: z.string().datetime().optional(),
       recordedWith: z.string().optional(),
     })
     .optional(),
@@ -31,8 +31,8 @@ export const zRecord = z.object({
   calls: z.array(zCall),
   wildcards: zWildcards, // allows wildcarding fields in the calls
   alternatives: zAlternatives, // allows alternative values for fields in the calls
-  createdAt: z.date(), // timestamp of the initial creation
-  lastUpdatedAt: z.date(), // timestamp of the last update
+  createdAt: z.string().datetime(),
+  lastUpdatedAt: z.string().datetime(),
 })
 
 export type Record = z.infer<typeof zRecord>

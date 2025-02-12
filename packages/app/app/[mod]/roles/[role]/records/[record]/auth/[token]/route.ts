@@ -30,7 +30,7 @@ export const GET = withErrorHandling(
         <body>
           <script>
             localStorage.setItem('authToken:${params.record}', '${record.authToken}');
-            window.location.href = '../records'; // Redirect to the desired page
+            window.location.href = '../'; // Redirect to the record page
           </script>
         </body>
       </html>
