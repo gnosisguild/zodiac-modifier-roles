@@ -17,6 +17,7 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   // Create storage object
   const storageObject: Record = {
+    id,
     authToken,
     createdAt: now,
     lastUpdatedAt: now,

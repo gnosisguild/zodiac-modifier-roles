@@ -26,6 +26,7 @@ export const zWildcards = z.record(z.string(), z.boolean())
 export const zAlternatives = z.record(z.string(), z.string())
 
 export const zRecord = z.object({
+  id: z.string(),
   authToken: z.string(), // providing this token will allow the user to edit the record
   calls: z.array(zCall),
   wildcards: zWildcards, // allows wildcarding fields in the calls
