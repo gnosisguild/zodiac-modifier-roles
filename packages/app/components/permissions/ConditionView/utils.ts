@@ -1,4 +1,4 @@
-import { arrayElementType } from "@/utils/abi"
+import { arrayElementType, isStaticType } from "@/utils/abi"
 import { AbiFunction, AbiParameter } from "viem"
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 
@@ -67,6 +67,3 @@ export const isLogicalOperator = (operator: Operator) =>
 
 export const isArrayOperator = (operator: Operator) =>
   operator >= Operator.ArrayEvery && operator <= Operator.ArraySubset
-function isStaticType(abi: AbiFunction | AbiParameter): boolean {
-  throw new Error("Function not implemented.")
-}

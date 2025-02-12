@@ -1,6 +1,6 @@
 import { AbiParameter } from "viem"
 
-const isStaticType = (abi: AbiParameter): boolean => {
+export const isStaticType = (abi: AbiParameter): boolean => {
   if (
     abi.type === "bool" ||
     abi.type === "address" ||
