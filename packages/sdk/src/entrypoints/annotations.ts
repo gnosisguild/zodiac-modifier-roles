@@ -4,7 +4,6 @@ import { Annotation, Target } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 import {
   Permission,
-  PermissionCoerced,
   processPermissions,
   reconstructPermissions,
   diffTargets,
@@ -12,13 +11,14 @@ import {
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
+import { StatedPermission } from "../permissions/types"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
 }
 
 export interface Preset {
-  permissions: PermissionCoerced[]
+  permissions: Permission[]
   uri: string
   serverUrl: string
   apiInfo: OpenAPIV3.InfoObject
@@ -35,8 +35,8 @@ export interface Preset {
 
 /** Process annotations and return all presets and remaining unannotated permissions */
 export const processAnnotations = async (
-  permissions: readonly Permission[],
-  annotations: readonly Annotation[],
+  permissions: StatedPermission[],
+  annotations: Annotation[],
   options: {
     fetchPermissions?: (url: string) => Promise<Permission[]>
     fetchSchema?: (url: string) => Promise<OpenAPIV3.Document>

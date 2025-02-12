@@ -21,13 +21,17 @@ import {
   etherWithinAllowance,
 } from "../permissions/authoring/conditions/allowances"
 import { TupleScopings } from "../permissions/authoring/conditions/types"
-import {
-  ExecutionFlags,
-  TargetPermission,
-  FunctionPermission,
-  FunctionPermissionCoerced,
-} from "../permissions/types"
-import { coercePermission } from "../permissions/utils"
+import { ExecutionFlags } from "../permissions/types"
+
+type TargetPermission = {
+  targetAddress: `0x${string}`
+} & ExecutionFlags
+
+type FunctionPermission = {
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
+  condition?: Condition
+} & ExecutionFlags
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
@@ -120,12 +124,12 @@ const makeAllowFunction = <
     const options = (args[functionInputs.length] || {}) as Options
     const presetFunction: FunctionPermission = {
       targetAddress: contract.target as `0x${string}`,
-      signature: functionFragment.format("sighash"),
+      selector: functionFragment.selector.toLowerCase() as `0x${string}`,
       condition: hasScopings
         ? c.calldataMatches(scopings, functionInputs)()
         : undefined,
     }
-    return applyOptions(coercePermission(presetFunction), options)
+    return applyOptions(presetFunction, options)
   }
 }
 
@@ -159,9 +163,9 @@ const applyGlobalAllowance = (
 }
 
 const applyOptions = (
-  entry: FunctionPermissionCoerced,
+  entry: FunctionPermission,
   options: Options
-): FunctionPermissionCoerced => {
+): FunctionPermission => {
   let condition = entry.condition
 
   if (options.etherWithinAllowance) {

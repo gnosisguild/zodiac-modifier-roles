@@ -2,8 +2,8 @@ import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
-import { AbiType, FunctionPermission } from "../../types"
-import { coercePermission } from "../../utils"
+import { AbiType, StatedPermission } from "../../types"
+import { coercePermission, isPermissionScoped } from "../../utils"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
@@ -144,7 +144,7 @@ const calldataMatchesScopings =
   }
 
 const calldataMatchesFunctionPermission =
-  (functionPermission: FunctionPermission) => (abiType?: ParamType) => {
+  (functionPermission: StatedPermission) => (abiType?: ParamType) => {
     // only supported at the top level or for bytes type params
     if (abiType && abiType.type !== "bytes") {
       throw new Error(
@@ -152,7 +152,15 @@ const calldataMatchesFunctionPermission =
       )
     }
 
-    const { selector, condition } = coercePermission(functionPermission)
+    const permission = coercePermission(functionPermission)
+
+    if (!isPermissionScoped(permission)) {
+      throw new Error(
+        `Can only use \`calldataMatches\` on for function permission`
+      )
+    }
+
+    const { selector, condition } = permission
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
@@ -168,7 +176,7 @@ const calldataMatchesFunctionPermission =
 
     const selectorCondition = bitmask({
       mask: "0xffffffff0000000000000000000000",
-      value: selector,
+      value: selector!,
     })
 
     return (
@@ -201,11 +209,11 @@ type CalldataMatches = {
    *
    * @param functionPermission The reference function permission
    **/
-  (functionPermission: FunctionPermission): (abiType?: ParamType) => Condition
+  (functionPermission: StatedPermission): (abiType?: ParamType) => Condition
 }
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
-  scopingsOrFunctionPermission: S | FunctionPermission,
+  scopingsOrFunctionPermission: S | StatedPermission,
   abiTypes?: readonly AbiType[],
   selector?: `0x${string}`
 ): ((abiType?: ParamType) => Condition) => {
@@ -216,7 +224,7 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
         selector
       )
     : calldataMatchesFunctionPermission(
-        scopingsOrFunctionPermission as unknown as FunctionPermission
+        scopingsOrFunctionPermission as unknown as StatedPermission
       )
 }
 

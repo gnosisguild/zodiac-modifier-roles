@@ -5,11 +5,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import {
-  FunctionPermissionCoerced,
-  PermissionCoerced,
-  TargetPermission,
-} from "./types"
+import { Permission } from "./types"
 
 /**
  * The inverse of `processPermissions`: Given a list of allowed targets, reconstruct the list of permissions that would produce it.
@@ -18,7 +14,7 @@ import {
  */
 export const reconstructPermissions = (
   targets: readonly Target[]
-): PermissionCoerced[] => {
+): Permission[] => {
   return targets.flatMap((target) => {
     if (target.clearance === Clearance.None) {
       return []
@@ -29,7 +25,7 @@ export const reconstructPermissions = (
         targetAddress: target.address,
         send: allowsSend(target.executionOptions),
         delegatecall: allowsDelegateCall(target.executionOptions),
-      } as TargetPermission
+      }
     }
 
     if (target.clearance === Clearance.Function) {
@@ -49,7 +45,7 @@ export const reconstructPermissions = (
 }
 
 /** The inverse of mergeFunctionPermissions */
-const splitFunctionPermission = (permission: FunctionPermissionCoerced) => {
+const splitFunctionPermission = (permission: Permission) => {
   // only split permissions with top-level OR conditions
   if (
     permission.condition &&

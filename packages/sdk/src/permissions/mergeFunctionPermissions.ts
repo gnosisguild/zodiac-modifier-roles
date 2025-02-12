@@ -1,11 +1,7 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import {
-  PermissionCoerced,
-  FunctionPermissionCoerced,
-  Permission,
-} from "./types"
-import { coercePermission, targetId, isFunctionScoped } from "./utils"
+import { Permission } from "./types"
+import { targetId } from "./utils"
 
 /**
  * Processes the permissions and merges entries addressing the same target (targetAddress+selector) into a single entry.
@@ -13,20 +9,21 @@ import { coercePermission, targetId, isFunctionScoped } from "./utils"
  * @param permissions The permissions to process
  * @returns The updated permissions
  */
-export const mergeFunctionPermissions = (permissions: Permission[]) =>
+export const mergeFunctionPermissions = (
+  permissions: Permission[]
+): Permission[] =>
   permissions.reduce((result, entry) => {
     entry = {
       ...entry,
       targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
     }
-    const coercedEntry = coercePermission(entry)
 
     const matchingEntry = result.find(
-      (existingEntry) => targetId(existingEntry) === targetId(coercedEntry)
-    ) as FunctionPermissionCoerced | undefined
+      (existingEntry) => targetId(existingEntry) === targetId(entry)
+    )
 
     if (!matchingEntry) {
-      result.push(coercedEntry)
+      result.push(entry)
       return result
     }
 
@@ -35,25 +32,25 @@ export const mergeFunctionPermissions = (permissions: Permission[]) =>
       !!matchingEntry.delegatecall !== !!entry.delegatecall
     ) {
       // we don't merge if execution options are different
-      result.push(coercedEntry)
+      result.push(entry)
       return result
     }
 
-    if ("selector" in coercedEntry) {
+    if ("selector" in entry) {
       // merge conditions into the entry we already have
-      matchingEntry.condition = mergeConditions(matchingEntry, coercedEntry)
+      matchingEntry.condition = mergeConditions(matchingEntry, entry)
     }
 
     return result
-  }, [] as PermissionCoerced[])
+  }, [] as Permission[])
 
 /**
  * @dev Merges two conditions using a logical OR, flattening nested OR conditions. If the conditions are equal, it will still create separate OR branches.
  * These will be pruned later in sanitizeCondition().
  */
 const mergeConditions = (
-  a: FunctionPermissionCoerced,
-  b: FunctionPermissionCoerced
+  a: Permission,
+  b: Permission
 ): Condition | undefined => {
   if (!!a.condition !== !!b.condition) {
     const id = targetId(a)

@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 
 import { processAnnotations } from "./annotations"
-import { PermissionCoerced } from "../permissions"
+import { Permission } from "../permissions"
 
 suite("processAnnotations()", () => {
   it("returns the original set of permissions if no annotations are given", async () => {
@@ -77,7 +77,7 @@ const annotation1 = {
   schema: "https://kit.karpatkey.com/api/v1/openapi.json",
 }
 
-const permissionsForPreset1: PermissionCoerced[] = [
+const permissionsForPreset1: Permission[] = [
   {
     targetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
     selector: "0x095ea7b3",

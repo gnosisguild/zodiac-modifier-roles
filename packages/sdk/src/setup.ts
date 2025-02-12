@@ -13,7 +13,11 @@ import {
 import { extendAnnotations } from "./annotations"
 import { POSTER_ADDRESS, encodeAnnotationsPost } from "./annotations/poster"
 import { encodeCalls, grant } from "./calls"
-import { Permission, PermissionSet, processPermissions } from "./permissions"
+import {
+  PermissionSet,
+  processPermissions,
+  StatedPermission,
+} from "./permissions"
 import { encodeKey } from "./keys"
 
 const ROLES_MASTERCOPY_ADDRESS = "0x9646fDAD06d3e24444381f44362a3B0eB343D337"
@@ -28,7 +32,7 @@ const RolesInterface = Roles__factory.createInterface()
 interface RoleConfig {
   key: string
   members: `0x${string}`[]
-  permissions: readonly (Permission | PermissionSet)[]
+  permissions: (StatedPermission | PermissionSet)[]
 }
 
 /**

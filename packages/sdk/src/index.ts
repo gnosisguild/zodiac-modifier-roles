@@ -9,14 +9,7 @@ export {
   targetId,
   permissionId,
 } from "./permissions"
-export type {
-  Permission,
-  PermissionCoerced,
-  TargetPermission,
-  FunctionPermission,
-  FunctionPermissionCoerced,
-  PermissionSet,
-} from "./permissions"
+export type { Permission, StatedPermission, PermissionSet } from "./permissions"
 
 export {
   applyTargets,

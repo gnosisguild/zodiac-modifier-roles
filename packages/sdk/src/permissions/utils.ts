@@ -3,14 +3,7 @@ import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deploymen
 
 import { conditionAddress, normalizeCondition } from "../conditions"
 
-import {
-  Permission,
-  PermissionCoerced,
-  FunctionPermission,
-  FunctionPermissionCoerced,
-  ExecutionFlags,
-  TargetPermission,
-} from "./types"
+import { StatedPermission, Permission, ExecutionFlags } from "./types"
 
 export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
   if (options.send && options.delegatecall) return ExecutionOptionsEnum.Both
@@ -22,42 +15,53 @@ export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
 const sighash = (signature: string): string =>
   keccak256(toUtf8Bytes(signature)).substring(0, 10)
 
-export const coercePermission = <P extends Permission>(
-  permission: P
-): P extends FunctionPermission
-  ? FunctionPermissionCoerced
-  : TargetPermission => {
-  if (isFunctionScoped(permission)) {
+export const coercePermission = (permission: StatedPermission): Permission => {
+  if ("selector" in permission || "signature" in permission) {
     return {
-      targetAddress: permission.targetAddress.toLowerCase(),
+      targetAddress: permission.targetAddress.toLowerCase() as `0x${string}`,
       selector:
         "selector" in permission
-          ? permission.selector.toLowerCase()
-          : sighash(permission.signature),
+          ? (permission.selector.toLowerCase() as `0x${string}`)
+          : (sighash(permission.signature) as `0x${string}`),
       condition:
         typeof permission.condition === "function"
           ? permission.condition(ParamType.from("bytes"))
           : permission.condition,
       send: permission.send,
       delegatecall: permission.delegatecall,
-    } as FunctionPermissionCoerced
+    }
+  } else {
+    return {
+      ...permission,
+      targetAddress: permission.targetAddress.toLowerCase() as `0x${string}`,
+    } as Permission
   }
-
-  return permission as any
 }
 
-export const isFunctionScoped = (
-  permission: Permission
-): permission is FunctionPermission => {
-  return "selector" in permission || "signature" in permission
+export const isPermissionAllowed = (permission: Permission): boolean => {
+  return !("selector" in permission)
 }
 
-export const targetId = (permission: PermissionCoerced) =>
+export const isPermissionWildcarded = (permission: Permission): boolean => {
+  return "selector" in permission && !permission.condition
+}
+
+export const isPermissionConditional = (permission: Permission): boolean => {
+  return "selector" in permission && !!permission.condition
+}
+
+export const isPermissionScoped = (permission: Permission): boolean => {
+  return (
+    isPermissionWildcarded(permission) || isPermissionConditional(permission)
+  )
+}
+
+export const targetId = (permission: Permission) =>
   "selector" in permission
     ? `${permission.targetAddress.toLowerCase()}.${permission.selector}`
     : `${permission.targetAddress.toLowerCase()}.*` // * will be always be sorted before any selector 0x...
 
-export const permissionId = (permission: PermissionCoerced) => {
+export const permissionId = (permission: Permission) => {
   const cid =
     "condition" in permission && permission.condition
       ? conditionAddress(normalizeCondition(permission.condition))
