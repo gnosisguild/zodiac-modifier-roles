@@ -23,7 +23,12 @@ const ContractName: React.FC<{
   chainId: ChainId
   contractInfo: ContractInfo
 }> = ({ chainId, contractInfo }) => {
-  const defaultLabel = contractInfo.proxyTo ? (
+  const hardcodedLabel =
+    ADDRESS_LABELS[chainId.toString()]?.[contractInfo.address.toLowerCase()]
+  const label =
+    hardcodedLabel || (contractInfo.proxyTo ? undefined : contractInfo.name)
+
+  const proxyLabel = !hardcodedLabel && contractInfo.proxyTo && (
     <>
       <span className={classes.proxy}>proxy to</span>{" "}
       {contractInfo.name || (
@@ -32,34 +37,31 @@ const ContractName: React.FC<{
         </span>
       )}
     </>
-  ) : (
-    contractInfo.name
   )
-  const label =
-    (ADDRESS_LABELS as any)[chainId.toString()]?.[
-      contractInfo.address.toLowerCase()
-    ] || defaultLabel
 
   const address = (
     <Address
       address={contractInfo.address}
       chainId={chainId}
-      displayFull
       copyToClipboard
       explorerLink
-      blockieClassName={classes.targetBlockie}
-      className={classes.targetAddress}
+      className={classes.address}
+      noBlockie
+      displayFull
+      small
     />
   )
 
+  console.log({ contractInfo, label, address, proxyLabel })
   return (
-    <div>
+    <Flex gap={3} alignItems="center">
       <Flex gap={2} alignItems="center">
         <Anchor name={contractInfo.address} className={classes.anchor} />
         {label || address}
+        {proxyLabel}
       </Flex>
       {label && address}
-    </div>
+    </Flex>
   )
 }
 

@@ -9,6 +9,7 @@ import classes from "./style.module.css"
 import ContractName from "@/components/ContractName"
 import { Call } from "@/app/api/records/types"
 import CallItem from "./CallItem"
+import Box from "@/ui/Box"
 
 interface Props {
   // Define your component props here if needed.
@@ -21,37 +22,40 @@ export const TargetCalls = async ({ targetAddress, chainId, calls }: Props) => {
   const contractInfo = await fetchContractInfo(targetAddress, chainId)
 
   return (
-    <Disclosure
-      button={
-        <Flex
-          gap={4}
-          justifyContent="space-between"
-          alignItems="start"
-          className={classes.targetHeader}
-        >
-          <LabeledData label="Target Contract">
-            {/* Prevent clicks on the anchor or address icons from toggling the panel */}
-            <StopPropagation>
-              <ContractName chainId={chainId} contractInfo={contractInfo} />
-            </StopPropagation>
-          </LabeledData>
-          <LabeledData label="Recorded Calls">
-            <div className={classes.callsCount}>{calls.length}</div>
-          </LabeledData>
+    <Box borderless bg p={0}>
+      <Disclosure
+        defaultOpen
+        button={
+          <Flex
+            gap={4}
+            justifyContent="space-between"
+            alignItems="start"
+            className={classes.targetHeader}
+          >
+            <LabeledData label="Target Contract">
+              {/* Prevent clicks on the anchor or address icons from toggling the panel */}
+              <StopPropagation>
+                <ContractName chainId={chainId} contractInfo={contractInfo} />
+              </StopPropagation>
+            </LabeledData>
+            <LabeledData label="Recorded Calls">
+              <div className={classes.callsCount}>{calls.length}</div>
+            </LabeledData>
+          </Flex>
+        }
+      >
+        <Flex direction="column" gap={3} className={classes.targetContent}>
+          {calls.map((call, index) => (
+            <CallItem
+              key={index}
+              {...call}
+              abi={contractInfo.abi}
+              chainId={chainId}
+            />
+          ))}
         </Flex>
-      }
-    >
-      <Flex direction="column" gap={3} className={classes.targetContent}>
-        {calls.map((call, index) => (
-          <CallItem
-            key={index}
-            {...call}
-            abi={contractInfo.abi}
-            chainId={chainId}
-          />
-        ))}
-      </Flex>
-    </Disclosure>
+      </Disclosure>
+    </Box>
   )
 }
 

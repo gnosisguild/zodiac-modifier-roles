@@ -46,7 +46,8 @@ const PrimitiveParam: React.FC<{
   if (
     typeof value !== "bigint" &&
     typeof value !== "string" &&
-    typeof value !== "boolean"
+    typeof value !== "boolean" &&
+    typeof value !== "number"
   ) {
     throw new Error("Unexpected non-primitive value")
   }
@@ -64,13 +65,18 @@ const Param: React.FC<{ value: unknown; type: AbiParameter }> = ({
   type,
 }) => {
   const isArray = type.type.endsWith("]")
-  const isTuple = !isArray && "components" in type
+  const isTuple = !isArray && type.type === "tuple" && "components" in type
 
   if (isTuple) {
-    if (!Array.isArray(value)) {
-      throw new Error("Tuple value must be an array")
+    if (typeof value !== "object" || value == null) {
+      throw new Error("Tuple value must be an array or object")
     }
-    return <TupleParams value={value} type={type.components} />
+    return (
+      <TupleParams
+        value={Array.isArray(value) ? value : Object.values(value)}
+        type={type.components}
+      />
+    )
   }
 
   if (isArray) {

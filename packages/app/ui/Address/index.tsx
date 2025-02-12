@@ -22,6 +22,8 @@ interface Props {
   className?: string
   blockieClassName?: string
   addressClassName?: string
+  noBlockie?: boolean
+  small?: boolean
 }
 
 const VISIBLE_START = 5
@@ -43,6 +45,8 @@ const Address: React.FC<Props> = ({
   className,
   blockieClassName,
   addressClassName,
+  noBlockie,
+  small,
 }) => {
   const explorer =
     explorerLink && chainId && CHAINS[chainId]?.blockExplorers.default
@@ -54,13 +58,17 @@ const Address: React.FC<Props> = ({
 
   return (
     <Flex
-      className={cn(className, classes.container)}
+      className={cn(className, classes.container, small && classes.small)}
       gap={2}
       alignItems="center"
     >
-      <Box rounded className={cn(classes.blockieContainer, blockieClassName)}>
-        {address && <Blockie address={address} className={classes.blockies} />}
-      </Box>
+      {!noBlockie && (
+        <Box rounded className={cn(classes.blockieContainer, blockieClassName)}>
+          {address && (
+            <Blockie address={address} className={classes.blockies} />
+          )}
+        </Box>
+      )}
       <div
         className={cn(classes.address, addressClassName)}
         title={checksumAddress}
@@ -71,6 +79,7 @@ const Address: React.FC<Props> = ({
         <Flex gap={0} alignItems="center">
           {copyToClipboard && (
             <IconButton
+              small
               title="Copy to clipboard"
               onClick={() => {
                 copy(checksumAddress)
@@ -81,6 +90,7 @@ const Address: React.FC<Props> = ({
           )}
           {explorer && (
             <IconLinkButton
+              small
               href={`${explorer.url}/search?q=${address}`}
               target="_blank"
               className={classes.link}

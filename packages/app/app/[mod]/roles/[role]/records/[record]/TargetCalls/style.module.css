@@ -16,21 +16,11 @@
   margin-right: var(--spacing-3);
 }
 
-.targetHeader .targetBlockie {
-  height: 18px;
-  border: 0;
-  padding: 0;
-}
-
 .callsCount {
   height: 30px;
   font-family: var(--font-mono), monospace;
   display: flex;
   align-items: center;
-}
-
-.targetAddress {
-  height: 30px;
 }
 
 .targetContent {

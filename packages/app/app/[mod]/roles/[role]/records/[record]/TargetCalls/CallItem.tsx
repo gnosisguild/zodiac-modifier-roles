@@ -65,22 +65,14 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
 
   return (
     <Flex direction="row" gap={0} justifyContent="space-between">
-      {abi ? (
-        <LabeledData label="Function Signature">
-          <Flex gap={2} alignItems="center" className={classes.signature}>
-            <Anchor name={`${to}-${selector}`} className={classes.anchor} />
-            <div className={classes.selector}>{abi.name}</div>
-            <div className={classes.selectorSmall}>{selector}</div>
-          </Flex>
-        </LabeledData>
-      ) : (
-        <LabeledData label="Function Selector">
-          <Flex gap={2} alignItems="center">
-            <Anchor name={`${to}-${selector}`} className={classes.anchor} />
-            <div className={classes.selector}>{selector}</div>
-          </Flex>
-        </LabeledData>
-      )}
+      <LabeledData label="Function">
+        <Flex gap={2} alignItems="center">
+          <Anchor name={`${to}-${selector}`} className={classes.anchor} />
+          <div className={classes.selector}>{abi ? abi.name : selector}</div>
+          {abi && <div className={classes.selectorSmall}>{selector}</div>}
+        </Flex>
+      </LabeledData>
+
       <Flex gap={3} alignItems="start">
         <LabeledData label="Send value">
           {valueBigInt === 0n
@@ -92,12 +84,9 @@ const CallHeader: React.FC<Call & { chainId: ChainId; abi?: AbiFunction }> = ({
           <Switch checked={operation === Operation.DelegateCall} disabled />
         </LabeledData>
 
-        {metadata && (
+        {metadata?.recordedAt && (
           <LabeledData label="Recorded">
-            {metadata.recordedAt && (
-              <RelativeTime value={metadata.recordedAt} />
-            )}
-            {metadata.recordedWith && <span>with {metadata.recordedWith}</span>}
+            <RelativeTime value={metadata.recordedAt} />
           </LabeledData>
         )}
       </Flex>
