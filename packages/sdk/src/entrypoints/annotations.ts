@@ -1,18 +1,15 @@
 import OpenAPIBackend from "openapi-backend"
 import { OpenAPIV3 } from "openapi-types"
-import { Annotation, Target } from "zodiac-roles-deployments"
+import { Annotation } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 import {
   Permission,
   PermissionCoerced,
-  processPermissions,
-  reconstructPermissions,
-  splitTargets,
+  coercePermission,
+  filterPresets,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
-
-import { compareTargets } from "../diff"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
@@ -34,7 +31,26 @@ export interface Preset {
   }
 }
 
-/** Process annotations and return all presets and remaining unannotated permissions */
+/**
+ * Processes annotations by resolving and validating them against a given list of permissions.
+ * The idea is that we only show annotations that correspond to what's currently on chain
+ *
+ * The following sequence of actions is performed
+ * 1- Resolves annotations to build permission presets based on the associated URIs and schemas.
+ * 2- Confirms presets by ensuring they are valid subsets of the provided permissions.
+ * 3- Returns remaining unannotated permissions (those not included in any preset).
+ *
+ * @param {readonly Permission[]} permissions - A list of all available permissions.
+ * @param {readonly Annotation[]} annotations - A list of annotations to resolve and validate.
+ * @param {Object} [options] - Optional functions for fetching resources.
+ * @param {Function} [options.fetchPermissions] - A function to fetch permissions from a URL. Defaults to `defaultJsonFetch`.
+ * @param {Function} [options.fetchSchema] - A function to fetch a schema from a URL. Defaults to `defaultJsonFetch`.
+ *
+ * @returns {Promise<{ presets: Preset[], permissions: Permission[] }>}
+ *   A promise that resolves to an object containing:
+ *   - `presets`: An array of confirmed presets (corresponding to confirmed annotations).
+ *   - `permissions`: The remaining unannotated permissions.
+ */
 export const processAnnotations = async (
   permissions: readonly Permission[],
   annotations: readonly Annotation[],
@@ -71,7 +87,6 @@ export const processAnnotations = async (
     return cache.get(url)!
   }
 
-  const { targets } = processPermissions(permissions)
   const presets = await Promise.all(
     annotations.map(async (annotation) => {
       try {
@@ -86,50 +101,10 @@ export const processAnnotations = async (
     })
   )
 
-  // Only consider those presets whose full set of permissions are actually enabled on the role. Determine this by:
-  //  - combining current permissions with preset permissions,
-  //  - deriving the targets,
-  //  - and checking if these are equal to the current targets.
-  const confirmedPresets = presets.filter((preset) => {
-    if (!preset) return false
-
-    let targetsWithPresetApplied: Target[] = []
-    try {
-      const { targets } = processPermissions([
-        ...permissions,
-        ...preset.permissions,
-      ])
-      targetsWithPresetApplied = targets
-    } catch (e) {
-      // processPermissions throws if permissions and preset.permissions have entries addressing the same target function with different send/delegatecall options
-      return false
-    }
-
-    // If targetsWithPresetApplied is a subset of targets, it means they are equal sets.
-    return compareTargets(targetsWithPresetApplied, targets)
-  }) as Preset[]
-
-  // Calculate remaining permissions that are not part of any preset
-  const { targets: targetsViaPresets } = processPermissions(
-    confirmedPresets.flatMap((preset) => preset.permissions)
-  )
-
-  const remainingTargets = splitTargets(targets, targetsViaPresets)
-  const remainingPermissions = reconstructPermissions(remainingTargets)
-
-  // Extra safety check: assert that the final set of targets remains unchanged
-  const { targets: finalTargets } = processPermissions([
-    ...confirmedPresets.flatMap((preset) => preset.permissions),
-    ...remainingPermissions,
-  ])
-
-  if (!compareTargets(targets, finalTargets)) {
-    throw new Error(
-      "The processed results leads to a different set of targets."
-    )
-  }
-
-  return { presets: confirmedPresets, permissions: remainingPermissions }
+  return filterPresets({
+    presets,
+    permissions: permissions.map(coercePermission),
+  })
 }
 
 export const resolveAnnotation = async (
