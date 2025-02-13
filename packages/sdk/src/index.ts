@@ -6,6 +6,7 @@ export {
   processPermissions,
   reconstructPermissions,
   coercePermission,
+  filterPresets,
   targetId,
   permissionId,
 } from "./permissions"
@@ -18,7 +19,7 @@ export type {
   PermissionSet,
 } from "./permissions"
 
-export { checkIntegrity, splitTargets } from "./targets"
+export { checkIntegrity } from "./targets"
 
 export { encodeKey, decodeKey } from "./keys"
 

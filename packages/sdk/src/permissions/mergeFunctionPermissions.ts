@@ -5,7 +5,7 @@ import {
   FunctionPermissionCoerced,
   Permission,
 } from "./types"
-import { coercePermission, targetId, isFunctionScoped } from "./utils"
+import { coercePermission, targetId } from "./utils"
 
 /**
  * Processes the permissions and merges entries addressing the same target (targetAddress+selector) into a single entry.
