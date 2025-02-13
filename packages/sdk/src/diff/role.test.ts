@@ -68,17 +68,18 @@ suite("diffRoles", () => {
     const { minus, plus } = diffRoles({ prev, next })
 
     expect(minus).toHaveLength(2)
+
     expect(plus).toHaveLength(3)
 
     expect(minus.map(({ call }) => call)).toEqual([
-      "revokeTarget",
       "assignRoles",
+      "revokeTarget",
     ])
 
     expect(plus.map(({ call }) => call)).toEqual([
       "assignRoles",
-      "allowTarget",
       "assignRoles",
+      "allowTarget",
     ])
   })
 })
