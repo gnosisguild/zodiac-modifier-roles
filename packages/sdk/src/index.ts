@@ -6,7 +6,7 @@ export {
   processPermissions,
   reconstructPermissions,
   coercePermission,
-  filterPresets,
+  validatePresets,
   targetId,
   permissionId,
 } from "./permissions"

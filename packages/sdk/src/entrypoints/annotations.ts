@@ -6,7 +6,7 @@ import {
   Permission,
   PermissionCoerced,
   coercePermission,
-  filterPresets,
+  validatePresets,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
@@ -37,7 +37,7 @@ export interface Preset {
  *
  * The following sequence of actions is performed
  * 1- Resolves annotations to build permission presets based on the associated URIs and schemas.
- * 2- Confirms presets by ensuring they are valid subsets of the provided permissions.
+ * 2- Validates presets by ensuring they are strict subsets of the provided permissions.
  * 3- Returns remaining unannotated permissions (those not included in any preset).
  *
  * @param {readonly Permission[]} permissions - A list of all available permissions.
@@ -101,7 +101,7 @@ export const processAnnotations = async (
     })
   )
 
-  return filterPresets({
+  return validatePresets({
     presets,
     permissions: permissions.map(coercePermission),
   })

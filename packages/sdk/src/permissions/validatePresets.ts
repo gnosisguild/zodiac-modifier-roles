@@ -8,7 +8,9 @@ import { PermissionCoerced } from "./types"
  * 1. Confirmed presets that are subsets of the provided permissions.
  * 2. Remaining permissions that are not referenced by any confirmed preset.
  */
-export function filterPresets<T extends { permissions: PermissionCoerced[] }>({
+export function validatePresets<
+  T extends { permissions: PermissionCoerced[] },
+>({
   presets,
   permissions,
 }: {
