@@ -1,7 +1,7 @@
 export * from "./authoring"
 export { processPermissions } from "./processPermissions"
 export { reconstructPermissions } from "./reconstructPermissions"
-export { filterPresets } from "./filterPresets"
+export { validatePresets } from "./validatePresets"
 export { coercePermission, targetId, permissionId } from "./utils"
 
 export type {
