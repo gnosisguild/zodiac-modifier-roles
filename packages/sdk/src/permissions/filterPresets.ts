@@ -19,7 +19,7 @@ export function filterPresets<T extends { permissions: PermissionCoerced[] }>({
   permissions: PermissionCoerced[]
 } {
   /*
-   * sanity check permissions and presets, will throw on unmerged permissions
+   * sanity check permissions and presets, will throw on unmergeable permissions
    */
   processPermissions(permissions)
   for (const preset of presets) {
