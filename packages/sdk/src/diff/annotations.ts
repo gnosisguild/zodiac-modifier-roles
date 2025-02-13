@@ -39,15 +39,16 @@ export function diffAnnotations({
             },
           ]
         : [],
-    plus: addAnnotations
-      ? [
-          {
-            call: "postAnnotations",
-            roleKey,
-            body: { addAnnotations },
-          },
-        ]
-      : [],
+    plus:
+      addAnnotations.length > 0
+        ? [
+            {
+              call: "postAnnotations",
+              roleKey,
+              body: { addAnnotations },
+            },
+          ]
+        : [],
   }
 }
 
