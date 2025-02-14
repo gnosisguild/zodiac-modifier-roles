@@ -4,7 +4,7 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 import { normalizeCondition, stripIds } from "./normalizeCondition"
 import { allow } from "../entrypoints/kit"
 import { FunctionPermissionCoerced, c } from "../permissions"
-import { mergeFunctionPermissions } from "../permissions/mergePermissions"
+import { mergePermissions } from "../permissions/mergePermissions"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number) => ({
@@ -341,7 +341,7 @@ suite("normalizeCondition()", () => {
   })
 
   it("pushes down ORs in function variants differing only in a single param scoping", () => {
-    const [functionVariants] = mergeFunctionPermissions([
+    const [functionVariants] = mergePermissions([
       allow.mainnet.lido.stETH.transfer(
         "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
       ),
@@ -378,7 +378,7 @@ suite("normalizeCondition()", () => {
   })
 
   it("does not change logical operator semantics when pushing down ORs", () => {
-    const [functionVariants] = mergeFunctionPermissions([
+    const [functionVariants] = mergePermissions([
       allow.mainnet.lido.stETH.transfer(
         "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
         c.lt(1000)
@@ -435,7 +435,7 @@ suite("normalizeCondition()", () => {
   })
 
   it("keeps all other normalizations when pushing down ORs (idempotency is preserved)", () => {
-    const [functionVariants] = mergeFunctionPermissions([
+    const [functionVariants] = mergePermissions([
       // by using a greater number of branches we increase likelihood of differences in the normalized branch orders
       allow.mainnet.lido.stETH.transfer(
         "0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"

@@ -48,7 +48,7 @@ export const reconstructPermissions = (
   })
 }
 
-/** The inverse of mergeFunctionPermissions */
+/** The inverse of mergePermissions */
 const splitFunctionPermission = (permission: FunctionPermissionCoerced) => {
   // only split permissions with top-level OR conditions
   if (
