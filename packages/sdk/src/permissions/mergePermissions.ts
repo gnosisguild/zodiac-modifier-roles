@@ -11,11 +11,6 @@ import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
  */
 export function mergePermissions(permissions: readonly PermissionCoerced[]) {
   const mergedPermissions = permissions.reduce((result, entry) => {
-    entry = {
-      ...entry,
-      targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
-    }
-
     const matchingEntry = result.find(
       (existingEntry) => targetId(existingEntry) === targetId(entry)
     ) as FunctionPermissionCoerced | undefined
