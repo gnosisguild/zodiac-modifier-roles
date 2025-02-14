@@ -13,7 +13,7 @@ import {
  * @param permissions The permissions to process
  * @returns The updated permissions
  */
-export const mergeFunctionPermissions = (permissions: Permission[]) =>
+export const mergePermissions = (permissions: Permission[]) =>
   permissions.reduce((result, entry) => {
     entry = {
       ...entry,

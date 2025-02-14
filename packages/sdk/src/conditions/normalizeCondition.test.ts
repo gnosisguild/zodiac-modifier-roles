@@ -4,7 +4,7 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 import { normalizeCondition, stripIds } from "./normalizeCondition"
 import { allow } from "../entrypoints/kit"
 import { FunctionPermissionCoerced, c } from "../permissions"
-import { mergeFunctionPermissions } from "../permissions/mergeFunctionPermissions"
+import { mergeFunctionPermissions } from "../permissions/mergePermissions"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const DUMMY_COMP = (id: number) => ({
