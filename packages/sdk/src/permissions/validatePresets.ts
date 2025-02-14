@@ -1,5 +1,5 @@
+import { comparePermission } from "./comparePermission"
 import { processPermissions } from "./processPermissions"
-import { comparePermission } from "./utils"
 
 import { PermissionCoerced } from "./types"
 
