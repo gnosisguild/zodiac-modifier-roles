@@ -8,7 +8,7 @@ import {
 import { normalizeCondition } from "../conditions"
 import { groupBy } from "../utils/groupBy"
 
-import { mergeFunctionPermissions } from "./mergeFunctionPermissions"
+import { mergePermissions } from "./mergePermissions"
 import { Permission, PermissionCoerced, PermissionSet } from "./types"
 import { execOptions, targetId, isFunctionScoped } from "./utils"
 
@@ -21,7 +21,7 @@ export const processPermissions = (
   permissions: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
   // first we merge permissions addressing the same target functions so every entry will be unique
-  const mergedPermissions = mergeFunctionPermissions(permissions.flat())
+  const mergedPermissions = mergePermissions(permissions.flat())
   sanityCheck(mergedPermissions)
 
   const permissionsAllowed = mergedPermissions.filter(
