@@ -19,7 +19,7 @@ export type {
   PermissionSet,
 } from "./permissions"
 
-export { checkIntegrity } from "./targets"
+export { checkIntegrity } from "./utils/targetIntegrity"
 
 export { encodeKey, decodeKey } from "./keys"
 
