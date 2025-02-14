@@ -1,5 +1,10 @@
 import { mergeConditions } from "./mergeConditions"
-import { coercePermission, isPermissionScoped, targetId } from "./utils"
+import {
+  coercePermission,
+  isPermissionAllowed,
+  isPermissionScoped,
+  targetId,
+} from "./utils"
 
 import {
   PermissionCoerced,
@@ -47,27 +52,32 @@ export function mergePermissions(permissions: Permission[]) {
     return result
   }, [] as PermissionCoerced[])
 
-  assertNoWildcardScopedIntersection(mergedPermissions)
-  assertNoDuplicateAllowFunction(mergedPermissions)
-  assertNoDuplicateAllowTarget(mergedPermissions)
+  /*
+   * allowed     -> Clearance.Target
+   * wildcarded  -> Clearance.Function AND wildcarded == true AND condition == undefined
+   * conditional -> Clearance.Function AND wildcarded == false AND condition == defined
+   * scoped      -> wilcarded or conditional
+   */
+  assertNoAllowedScopedIntersection(mergedPermissions)
+  assertNoDuplicateAllowedTarget(mergedPermissions)
+  assertNoDuplicateScopedFunction(mergedPermissions)
 
   return mergedPermissions
 }
 
-const assertNoWildcardScopedIntersection = (
+const assertNoAllowedScopedIntersection = (
   permissions: PermissionCoerced[]
 ) => {
-  const wildcardTargets = permissions
-    .filter((entry) => !isPermissionScoped(entry))
+  const allowedTargets = permissions
+    .filter(isPermissionAllowed)
     .map((entry) => entry.targetAddress)
 
-  const scopedTargets = new Set(
-    permissions.filter(isPermissionScoped).map((entry) => entry.targetAddress)
-  )
+  const scopedTargets = permissions
+    .filter(isPermissionScoped)
+    .map((entry) => entry.targetAddress)
 
-  const intersection = [
-    ...new Set(wildcardTargets.filter((x) => scopedTargets.has(x))),
-  ]
+  const intersection = allowedTargets.filter((x) => scopedTargets.includes(x))
+
   if (intersection.length > 0) {
     throw new Error(
       `An address can either be fully allowed or scoped to selected functions. The following addresses are both: ${intersection.join(
@@ -77,42 +87,44 @@ const assertNoWildcardScopedIntersection = (
   }
 }
 
-const assertNoDuplicateAllowFunction = (permissions: PermissionCoerced[]) => {
-  const allowFunctions = permissions.filter(isPermissionScoped).map(targetId)
+const assertNoDuplicateAllowedTarget = (permissions: PermissionCoerced[]) => {
+  const targetIds = permissions
+    .filter((p) => !isPermissionScoped(p))
+    .map(targetId)
 
-  const counts = allowFunctions.reduce(
-    (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
+  const counts = targetIds.reduce(
+    (result, targetId) => ({
+      ...result,
+      [targetId]: (result[targetId] || 0) + 1,
+    }),
     {} as Record<string, number>
   )
-  const duplicates = [
-    ...new Set(allowFunctions.filter((item) => counts[item] > 1)),
-  ]
+  const duplicates = targetIds.filter((targetId) => counts[targetId] > 1)
 
   if (duplicates.length > 0) {
     throw new Error(
-      `The following functions appear multiple times and cannot be merged: ${duplicates.join(
+      `The following targets appear multiple times and cannot be merged: ${duplicates.join(
         ", "
       )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
     )
   }
 }
 
-const assertNoDuplicateAllowTarget = (permissions: PermissionCoerced[]) => {
-  const allowTarget = permissions
-    .filter((p) => !isPermissionScoped(p))
-    .map(targetId)
+const assertNoDuplicateScopedFunction = (permissions: PermissionCoerced[]) => {
+  const functionIds = permissions.filter(isPermissionScoped).map(targetId)
 
-  const counts = allowTarget.reduce(
-    (result, item) => ({ ...result, [item]: (result[item] || 0) + 1 }),
+  const counts = functionIds.reduce(
+    (result, functionId) => ({
+      ...result,
+      [functionId]: (result[functionId] || 0) + 1,
+    }),
     {} as Record<string, number>
   )
-  const duplicates = [
-    ...new Set(allowTarget.filter((item) => counts[item] > 1)),
-  ]
+  const duplicates = functionIds.filter((functionId) => counts[functionId] > 1)
 
   if (duplicates.length > 0) {
     throw new Error(
-      `The following targets appear multiple times and cannot be merged: ${duplicates.join(
+      `The following functions appear multiple times and cannot be merged: ${duplicates.join(
         ", "
       )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
     )
