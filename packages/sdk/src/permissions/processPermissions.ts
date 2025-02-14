@@ -9,7 +9,7 @@ import { normalizeCondition } from "../conditions"
 import { mergePermissions } from "./mergePermissions"
 
 import { groupBy } from "../utils/groupBy"
-import { execOptions } from "./utils"
+import { coercePermission, execOptions } from "./utils"
 
 import { Permission, PermissionSet } from "./types"
 
@@ -22,7 +22,9 @@ export const processPermissions = (
   permissions: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
   // first we merge permissions addressing the same target functions so every entry will be unique
-  const mergedPermissions = mergePermissions(permissions.flat())
+  const mergedPermissions = mergePermissions(
+    permissions.flat().map(coercePermission)
+  )
 
   const permissionsAllowed = mergedPermissions.filter(
     (entry) => !("selector" in entry)

@@ -1,16 +1,7 @@
 import { mergeConditions } from "./mergeConditions"
-import {
-  coercePermission,
-  isPermissionAllowed,
-  isPermissionScoped,
-  targetId,
-} from "./utils"
+import { isPermissionAllowed, isPermissionScoped, targetId } from "./utils"
 
-import {
-  PermissionCoerced,
-  FunctionPermissionCoerced,
-  Permission,
-} from "./types"
+import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
 /**
  * Processes the permissions and merges entries addressing the same target (targetAddress+selector) into a single entry.
@@ -18,20 +9,19 @@ import {
  * @param permissions The permissions to process
  * @returns The updated permissions
  */
-export function mergePermissions(permissions: Permission[]) {
+export function mergePermissions(permissions: readonly PermissionCoerced[]) {
   const mergedPermissions = permissions.reduce((result, entry) => {
     entry = {
       ...entry,
       targetAddress: entry.targetAddress.toLowerCase() as `0x${string}`,
     }
-    const coercedEntry = coercePermission(entry)
 
     const matchingEntry = result.find(
-      (existingEntry) => targetId(existingEntry) === targetId(coercedEntry)
+      (existingEntry) => targetId(existingEntry) === targetId(entry)
     ) as FunctionPermissionCoerced | undefined
 
     if (!matchingEntry) {
-      result.push(coercedEntry)
+      result.push(entry)
       return result
     }
 
@@ -40,13 +30,13 @@ export function mergePermissions(permissions: Permission[]) {
       !!matchingEntry.delegatecall !== !!entry.delegatecall
     ) {
       // we don't merge if execution options are different
-      result.push(coercedEntry)
+      result.push(entry)
       return result
     }
 
-    if ("selector" in coercedEntry) {
+    if ("selector" in entry) {
       // merge conditions into the entry we already have
-      matchingEntry.condition = mergeConditions(matchingEntry, coercedEntry)
+      matchingEntry.condition = mergeConditions(matchingEntry, entry)
     }
 
     return result

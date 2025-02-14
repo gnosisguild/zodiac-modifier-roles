@@ -1,5 +1,5 @@
 import { comparePermission } from "./comparePermission"
-import { processPermissions } from "./processPermissions"
+import { mergePermissions } from "./mergePermissions"
 
 import { PermissionCoerced } from "./types"
 
@@ -23,9 +23,9 @@ export function validatePresets<
   /*
    * sanity check permissions and presets, will throw on unmergeable permissions
    */
-  processPermissions(permissions)
+  mergePermissions(permissions)
   for (const preset of presets) {
-    preset && processPermissions(preset.permissions)
+    preset && mergePermissions(preset.permissions)
   }
 
   const confirmedPresets = presets
