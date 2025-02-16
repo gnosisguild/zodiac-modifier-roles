@@ -24,7 +24,7 @@ export function permissionEquals(
     return false
   }
 
-  if (!p1HasSelector || !p2HasSelector) {
+  if (!p1HasSelector) {
     return true
   }
 
@@ -35,7 +35,7 @@ export function permissionEquals(
     return false
   }
 
-  if (!fp1.condition && !fp2.condition) {
+  if (!fp1.condition) {
     return true
   }
 
