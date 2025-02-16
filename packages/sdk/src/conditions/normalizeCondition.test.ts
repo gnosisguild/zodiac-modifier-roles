@@ -341,7 +341,9 @@ suite("normalizeCondition()", () => {
   })
 
   it("pushes down ORs in function variants differing only in a single param scoping", () => {
-    const [functionVariants] = mergePermissions([
+    const {
+      permissions: [functionVariants],
+    } = mergePermissions([
       allow.mainnet.lido.stETH.transfer(
         "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
       ),
@@ -378,7 +380,9 @@ suite("normalizeCondition()", () => {
   })
 
   it("does not change logical operator semantics when pushing down ORs", () => {
-    const [functionVariants] = mergePermissions([
+    const {
+      permissions: [functionVariants],
+    } = mergePermissions([
       allow.mainnet.lido.stETH.transfer(
         "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
         c.lt(1000)
@@ -435,7 +439,9 @@ suite("normalizeCondition()", () => {
   })
 
   it("keeps all other normalizations when pushing down ORs (idempotency is preserved)", () => {
-    const [functionVariants] = mergePermissions([
+    const {
+      permissions: [functionVariants],
+    } = mergePermissions([
       // by using a greater number of branches we increase likelihood of differences in the normalized branch orders
       allow.mainnet.lido.stETH.transfer(
         "0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"
