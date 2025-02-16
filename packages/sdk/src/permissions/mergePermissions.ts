@@ -1,117 +1,177 @@
 import { mergeConditions } from "./mergeConditions"
-import { isPermissionAllowed, isPermissionScoped, targetId } from "./utils"
+import {
+  isPermissionAllowed,
+  isPermissionConditional,
+  isPermissionScoped,
+  isPermissionWildcarded,
+  targetId,
+} from "./utils"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
 /**
- * Processes the permissions and merges entries addressing the same target (targetAddress+selector) into a single entry.
- * This is done by merging the conditions using a logical OR.
- * @param permissions The permissions to process
- * @returns The updated permissions
+ * Merges permission entries that target the same destination (targetAddress + selector)
+ *
+ * Merging Rules (when ExecutionOptions match):
+ * ┌──────────────┬──────────────┬─────────────────────────────────────┐
+ * │ Permission A │ Permission B │               Result                │
+ * ├──────────────┼──────────────┼─────────────────────────────────────┤
+ * │ Allowed      │ Allowed      │ Merged as duplicate                 │
+ * │ Allowed      │ Scoped       │ Merged as Allowed (with warning)    │
+ * │ Wildcarded   │ Wildcarded   │ Merged as duplicate                 │
+ * │ Wildcarded   │ Conditional  │ Merged as Wildcarded (with warning) │
+ * │ Conditional  │ Conditional  │ Merged as Conditional (children OR) │
+ * └──────────────┴──────────────┴─────────────────────────────────────┘
+ *
+ * Note: Matching Permissions with different ExecutionOptions always throw an error
+ *
+ * Permission Types:
+ * Allowed     -> Clearance.Target
+ * Wildcarded  -> Clearance.Function AND wildcarded == true AND condition == undefined
+ * Conditional -> Clearance.Function AND wildcarded == false AND condition == defined
+ * Scoped      -> wilcarded or conditional
+ *
  */
-export function mergePermissions(permissions: readonly PermissionCoerced[]) {
-  const mergedPermissions = permissions.reduce((result, entry) => {
-    const matchingEntry = result.find(
-      (existingEntry) => targetId(existingEntry) === targetId(entry)
-    ) as FunctionPermissionCoerced | undefined
 
-    if (!matchingEntry) {
-      result.push(entry)
-      return result
-    }
-
-    if (
-      !!matchingEntry.send !== !!entry.send ||
-      !!matchingEntry.delegatecall !== !!entry.delegatecall
-    ) {
-      // we don't merge if execution options are different
-      result.push(entry)
-      return result
-    }
-
-    if ("selector" in entry) {
-      // merge conditions into the entry we already have
-      matchingEntry.condition = mergeConditions(matchingEntry, entry)
-    }
-
-    return result
-  }, [] as PermissionCoerced[])
-
-  /*
-   * allowed     -> Clearance.Target
-   * wildcarded  -> Clearance.Function AND wildcarded == true AND condition == undefined
-   * conditional -> Clearance.Function AND wildcarded == false AND condition == defined
-   * scoped      -> wilcarded or conditional
-   */
-  assertNoAllowedScopedIntersection(mergedPermissions)
-  assertNoDuplicateAllowedTarget(mergedPermissions)
-  assertNoDuplicateScopedFunction(mergedPermissions)
-
-  return mergedPermissions
-}
-
-const assertNoAllowedScopedIntersection = (
+type Result = {
   permissions: PermissionCoerced[]
-) => {
-  const allowedTargets = permissions
-    .filter(isPermissionAllowed)
-    .map((entry) => entry.targetAddress)
+  violations: string[]
+  warnings: string[]
+}
 
-  const scopedTargets = permissions
-    .filter(isPermissionScoped)
-    .map((entry) => entry.targetAddress)
+export function mergePermissions(
+  permissions: readonly PermissionCoerced[]
+): Result {
+  const result = [...permissions].sort(sort).reduce(reduce, {
+    permissions: [],
+    warnings: [],
+    violations: [],
+  } as Result)
 
-  const intersection = allowedTargets.filter((x) => scopedTargets.includes(x))
+  // if there are violations, don't output permissions or warnings
+  return result.violations.length > 0
+    ? { ...result, permissions: [], warnings: [] }
+    : result
+}
 
-  if (intersection.length > 0) {
-    throw new Error(
-      `An address can either be fully allowed or scoped to selected functions. The following addresses are both: ${intersection.join(
-        ", "
-      )}`
+const reduce = (result: Result, next: PermissionCoerced): Result => {
+  const violations: (string | null)[] = [...result.violations]
+  const warnings: (string | null)[] = [...result.warnings]
+  const permissions: PermissionCoerced[] = [...result.permissions]
+
+  {
+    const prev = permissions.find(
+      (prev) =>
+        isPermissionAllowed(prev) &&
+        prev.targetAddress.toLowerCase() === next.targetAddress.toLowerCase()
     )
+
+    if (prev) {
+      //get error, get warning
+      violations.push(getMergeViolation(prev, next))
+      warnings.push(getMergeWarning(prev, next))
+      return {
+        violations: violations.filter(Boolean) as string[],
+        warnings: warnings.filter(Boolean) as string[],
+        permissions,
+      }
+    }
+  }
+
+  if (isPermissionScoped(next)) {
+    const prev = permissions.find(
+      (prev) =>
+        isPermissionWildcarded(prev) && targetId(prev) === targetId(next)
+    )
+    if (prev) {
+      violations.push(getMergeViolation(prev, next))
+      warnings.push(getMergeWarning(prev, next))
+      return {
+        violations: violations.filter(Boolean) as string[],
+        warnings: warnings.filter(Boolean) as string[],
+        permissions,
+      }
+    }
+  }
+
+  if (isPermissionConditional(next)) {
+    const prev = permissions.find(
+      (prev) =>
+        (isPermissionConditional(prev) && targetId(prev)) === targetId(next)
+    )
+    if (prev) {
+      //get error, get warning
+
+      violations.push(getMergeViolation(prev, next))
+      warnings.push(getMergeWarning(prev, next))
+      ;(prev as FunctionPermissionCoerced).condition = mergeConditions(
+        prev as FunctionPermissionCoerced,
+        next as FunctionPermissionCoerced
+      )
+      return {
+        violations: violations.filter(Boolean) as string[],
+        warnings: warnings.filter(Boolean) as string[],
+        permissions,
+      }
+    }
+  }
+
+  return {
+    permissions: [...permissions, next],
+    violations: violations.filter(Boolean) as string[],
+    warnings: warnings.filter(Boolean) as string[],
   }
 }
 
-const assertNoDuplicateAllowedTarget = (permissions: PermissionCoerced[]) => {
-  const targetIds = permissions
-    .filter((p) => !isPermissionScoped(p))
-    .map(targetId)
+const sort = (p1: PermissionCoerced, p2: PermissionCoerced) => {
+  if (isPermissionAllowed(p1) && isPermissionScoped(p2)) return -1
 
-  const counts = targetIds.reduce(
-    (result, targetId) => ({
-      ...result,
-      [targetId]: (result[targetId] || 0) + 1,
-    }),
-    {} as Record<string, number>
-  )
-  const duplicates = targetIds.filter((targetId) => counts[targetId] > 1)
+  if (isPermissionWildcarded(p1) && isPermissionConditional(p2)) return -1
 
-  if (duplicates.length > 0) {
-    throw new Error(
-      `The following targets appear multiple times and cannot be merged: ${duplicates.join(
-        ", "
-      )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
-    )
-  }
+  return 0
 }
 
-const assertNoDuplicateScopedFunction = (permissions: PermissionCoerced[]) => {
-  const functionIds = permissions.filter(isPermissionScoped).map(targetId)
-
-  const counts = functionIds.reduce(
-    (result, functionId) => ({
-      ...result,
-      [functionId]: (result[functionId] || 0) + 1,
-    }),
-    {} as Record<string, number>
+const matchesExecutionOptions = (
+  p1: PermissionCoerced,
+  p2: PermissionCoerced
+): boolean => {
+  return (
+    Boolean(p1.send) === Boolean(p2.send) &&
+    Boolean(p1.delegatecall) === Boolean(p2.delegatecall)
   )
-  const duplicates = functionIds.filter((functionId) => counts[functionId] > 1)
+}
 
-  if (duplicates.length > 0) {
-    throw new Error(
-      `The following functions appear multiple times and cannot be merged: ${duplicates.join(
-        ", "
-      )}.\nThis might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
-    )
+const getMergeViolation = (
+  prev: PermissionCoerced,
+  next: PermissionCoerced
+): string | null => {
+  if (!matchesExecutionOptions(prev, next)) {
+    return "TODO"
   }
+
+  return null
+}
+
+const getMergeWarning = (
+  p1: PermissionCoerced,
+  p2: PermissionCoerced
+): string | null => {
+  const hasAllowed = isPermissionAllowed(p1) || isPermissionAllowed(p2)
+  const hasWildcarded = isPermissionWildcarded(p1) || isPermissionWildcarded(p2)
+  const hasConditional =
+    isPermissionConditional(p1) || isPermissionConditional(p2)
+
+  if (hasAllowed && hasWildcarded) {
+    return "TODO"
+  }
+
+  if (hasAllowed && hasConditional) {
+    return "TODO"
+  }
+
+  if (hasWildcarded && hasConditional) {
+    return "TODO"
+  }
+
+  return null
 }
