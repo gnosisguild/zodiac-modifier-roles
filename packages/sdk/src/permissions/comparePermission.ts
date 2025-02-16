@@ -2,7 +2,7 @@ import { normalizeCondition } from "../conditions"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
-export function comparePermission(
+export function permissionEquals(
   p1: PermissionCoerced,
   p2: PermissionCoerced
 ): boolean {

@@ -19,12 +19,18 @@ import { Permission, PermissionSet } from "./types"
  * @returns The resulting list of allowed targets
  */
 export const processPermissions = (
-  permissions: readonly (Permission | PermissionSet)[]
+  input: readonly (Permission | PermissionSet)[]
 ): { targets: Target[]; annotations: Annotation[] } => {
-  // first we merge permissions addressing the same target functions so every entry will be unique
-  const mergedPermissions = mergePermissions(
-    permissions.flat().map(coercePermission)
-  )
+  const permissions = input.flat().map(coercePermission)
+
+  const {
+    permissions: mergedPermissions,
+    warnings,
+    violations,
+  } = mergePermissions(permissions)
+
+  throwViolations(violations)
+  showWarnings(warnings)
 
   const permissionsAllowed = mergedPermissions.filter(
     (entry) => !("selector" in entry)
@@ -55,7 +61,7 @@ export const processPermissions = (
   }))
 
   // collect all annotations
-  const annotations = permissions
+  const annotations = input
     .filter((p) => Array.isArray(p))
     .map((permissionSet) => permissionSet.annotation)
     .filter((annotation): annotation is Annotation => !!annotation)
@@ -68,5 +74,17 @@ export const processPermissions = (
       (annotation, i) =>
         annotations.findIndex((a) => a.uri === annotation.uri) === i
     ),
+  }
+}
+
+function throwViolations(violations: string[]) {
+  if (violations.length) {
+    throw new Error(`Invalid Permissions:\n` + violations.join("\n\t"))
+  }
+}
+
+function showWarnings(warnings: string[]) {
+  if (warnings.length) {
+    console.warn(`Warning:\n` + warnings.join("\n\t"))
   }
 }
