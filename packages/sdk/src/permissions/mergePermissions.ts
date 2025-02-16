@@ -42,7 +42,7 @@ type Result = {
 export function mergePermissions(
   permissions: readonly PermissionCoerced[]
 ): Result {
-  const result = [...permissions].sort(sort).reduce(reduce, {
+  const result = [...permissions].sort(comparePermission).reduce(reduce, {
     permissions: [],
     warnings: [],
     violations: [],
@@ -123,7 +123,7 @@ const reduce = (result: Result, next: PermissionCoerced): Result => {
   }
 }
 
-const sort = (p1: PermissionCoerced, p2: PermissionCoerced) => {
+const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
   if (isPermissionAllowed(p1) && isPermissionScoped(p2)) return -1
 
   if (isPermissionWildcarded(p1) && isPermissionConditional(p2)) return -1
