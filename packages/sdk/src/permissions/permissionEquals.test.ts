@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { permissionEquals } from "./comparePermission"
+import { permissionEquals } from "./permissionEquals"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
