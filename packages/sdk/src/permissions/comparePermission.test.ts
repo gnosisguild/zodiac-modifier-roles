@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { comparePermission } from "./comparePermission"
+import { permissionEquals } from "./comparePermission"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
@@ -13,17 +13,17 @@ const DUMMY_COMP = (id: number) => ({
   compValue: encodeAbiParameters(["uint256"], [id]),
 })
 
-suite("comparePermission()", () => {
+suite("permissionEquals()", () => {
   it("compares by targetAddress", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressOne }
       )
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressTwo }
       )
@@ -32,14 +32,14 @@ suite("comparePermission()", () => {
 
   it("send: false or undefined are equivalent", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressOne, send: false }
       )
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressOne, send: true }
       )
@@ -48,14 +48,14 @@ suite("comparePermission()", () => {
 
   it("delegatecall: false or undefined are equivalent", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressOne, delegatecall: false }
       )
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne },
         { targetAddress: AddressOne, delegatecall: true }
       )
@@ -64,14 +64,14 @@ suite("comparePermission()", () => {
 
   it("compares by selector", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne, selector: "0x01" },
         { targetAddress: AddressOne, selector: "0x01" }
       )
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne, selector: "0x01" },
         { targetAddress: AddressOne, selector: "0x02" }
       )
@@ -80,7 +80,7 @@ suite("comparePermission()", () => {
 
   it("condition: missing or undefined are equivalent", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         { targetAddress: AddressOne, selector: "0x01", condition: undefined },
         { targetAddress: AddressOne, selector: "0x01" }
       )
@@ -89,7 +89,7 @@ suite("comparePermission()", () => {
 
   it("condition: matches when stricly equal", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         {
           targetAddress: AddressOne,
           selector: "0x01",
@@ -104,7 +104,7 @@ suite("comparePermission()", () => {
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         {
           targetAddress: AddressOne,
           selector: "0x01",
@@ -121,7 +121,7 @@ suite("comparePermission()", () => {
 
   it("condition: matches when normalized equal", () => {
     expect(
-      comparePermission(
+      permissionEquals(
         {
           targetAddress: AddressOne,
           selector: "0x01",
@@ -144,7 +144,7 @@ suite("comparePermission()", () => {
     ).to.equal(true)
 
     expect(
-      comparePermission(
+      permissionEquals(
         {
           targetAddress: AddressOne,
           selector: "0x01",

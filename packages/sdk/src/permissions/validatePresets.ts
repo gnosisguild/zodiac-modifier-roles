@@ -1,4 +1,4 @@
-import { comparePermission } from "./comparePermission"
+import { permissionEquals } from "./comparePermission"
 import { mergePermissions } from "./mergePermissions"
 
 import { PermissionCoerced } from "./types"
@@ -23,16 +23,16 @@ export function validatePresets<
   /*
    * sanity check permissions and presets, will throw on unmergeable permissions
    */
-  mergePermissions(permissions)
+  sanityCheck(permissions)
   for (const preset of presets) {
-    preset && mergePermissions(preset.permissions)
+    preset && sanityCheck(preset.permissions)
   }
 
   const confirmedPresets = presets
     .filter((p) => !!p)
     .filter((preset) =>
       preset.permissions.every((p1) =>
-        permissions.some((p2) => comparePermission(p1, p2))
+        permissions.some((p2) => permissionEquals(p1, p2))
       )
     )
 
@@ -41,8 +41,15 @@ export function validatePresets<
     .flat()
 
   const remainingPermissions = permissions.filter((p1) =>
-    confirmedPermissions.every((p2) => !comparePermission(p1, p2))
+    confirmedPermissions.every((p2) => !permissionEquals(p1, p2))
   )
 
   return { presets: confirmedPresets, permissions: remainingPermissions }
+}
+
+function sanityCheck(permissions: readonly PermissionCoerced[]) {
+  const { violations } = mergePermissions(permissions)
+  if (violations.length) {
+    throw new Error(`Invalid Permissions:\n` + violations.join("\n\t"))
+  }
 }

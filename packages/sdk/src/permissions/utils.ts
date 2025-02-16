@@ -34,7 +34,7 @@ export const coercePermission = <P extends Permission>(
     delegatecall: Boolean(permission.delegatecall),
   }
 
-  if (isPermissionScoped(permission)) {
+  if ("selector" in permission || "signature" in permission) {
     return {
       targetAddress: permission.targetAddress,
       selector:
@@ -53,15 +53,27 @@ export const coercePermission = <P extends Permission>(
 }
 
 export const isPermissionAllowed = (
-  permission: Permission
+  permission: PermissionCoerced
 ): permission is TargetPermission => {
   return !("selector" in permission) && !("signature" in permission)
 }
 
 export const isPermissionScoped = (
-  permission: Permission
-): permission is FunctionPermission => {
+  permission: PermissionCoerced
+): permission is FunctionPermissionCoerced => {
   return "selector" in permission || "signature" in permission
+}
+
+export const isPermissionWildcarded = (
+  permission: PermissionCoerced
+): permission is FunctionPermissionCoerced => {
+  return isPermissionScoped(permission) && !permission.condition
+}
+
+export const isPermissionConditional = (
+  permission: PermissionCoerced
+): permission is FunctionPermissionCoerced => {
+  return isPermissionScoped(permission) && !!permission.condition
 }
 
 export const targetId = (permission: PermissionCoerced) =>
