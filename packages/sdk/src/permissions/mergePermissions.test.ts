@@ -2,6 +2,12 @@ import { describe, expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 import { encodeAbiParameters } from "../utils/encodeAbiParameters"
 import { mergePermissions } from "./mergePermissions"
+import {
+  isPermissionAllowed,
+  isPermissionConditional,
+  isPermissionWildcarded,
+} from "./utils"
+import { Permission } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
@@ -20,123 +26,185 @@ suite("mergePermissions()", () => {
   const AddressOne = "0x0000000000000000000000000000000000000001"
   const AddressTwo = "0x0000000000000000000000000000000000000002"
 
-  describe("allowed + allowed", () => {
-    it("two distinct targets don't get merged", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne },
-          { targetAddress: AddressTwo },
-        ])
-      ).to.deep.equal([
+  describe("Allowed + Allowed", () => {
+    it("does not merge distinct entries", () => {
+      const { permissions, violations, warnings } = mergePermissions([
         { targetAddress: AddressOne },
         { targetAddress: AddressTwo },
       ])
-    })
-
-    it("filters out duplicate entry ✅", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne },
-        ])
-      ).to.deep.equal([{ targetAddress: AddressOne }])
-    })
-
-    it("throws on out duplicate entry with incompatible execution options", () => {
-      expect(() =>
-        mergePermissions([
-          { targetAddress: AddressOne, send: true },
-          { targetAddress: AddressOne, delegatecall: true },
-        ])
-      ).toThrowError()
-    })
-  })
-
-  describe("allowed + wildcarded", () => {
-    it("distinct targetAddresses don't get merged", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne },
-          { targetAddress: AddressTwo, selector: "0x1" },
-        ])
-      ).to.deep.equal([
+      expect(permissions).to.deep.equal([
         { targetAddress: AddressOne },
-        { targetAddress: AddressTwo, selector: "0x1" },
+        { targetAddress: AddressTwo },
       ])
+      expect(violations).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
     })
-    it("throws for same targetAddress", () => {
-      expect(() => {
-        mergePermissions([
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne, selector: "0x1" },
-        ])
-      }).toThrowError(
-        "An address can either be fully allowed or scoped to selected functions. The following addresses are both: 0x0000000000000000000000000000000000000001"
-      )
+    it("filters out duplicate", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne },
+        { targetAddress: AddressOne },
+      ])
+
+      expect(permissions).to.deep.equal([{ targetAddress: AddressOne }])
+      expect(violations).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+    })
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne, send: true },
+        { targetAddress: AddressOne, delegatecall: true },
+      ])
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
     })
   })
 
-  describe("allowed + conditional", () => {
-    it("throws for same targetAddress", () => {
-      expect(() => {
-        mergePermissions([
-          { targetAddress: AddressOne },
-          {
-            targetAddress: AddressOne,
-            selector: "0x1",
-            condition: DUMMY_COMP(1),
-          },
-        ])
-      }).toThrowError(
-        "An address can either be fully allowed or scoped to selected functions. The following addresses are both: 0x0000000000000000000000000000000000000001"
-      )
+  describe("Allowed + Wildcarded", () => {
+    it("does not merge distinct entries", () => {
+      const allowed: Permission = { targetAddress: AddressOne }
+      const wildcarded: Permission = {
+        targetAddress: AddressTwo,
+        selector: "0x1",
+      }
+
+      expect(isPermissionAllowed(allowed)).to.be.true
+      expect(isPermissionWildcarded(wildcarded)).to.be.true
+
+      const { permissions, violations, warnings } = mergePermissions([
+        allowed,
+        wildcarded,
+      ])
+
+      expect(permissions).to.deep.equal([allowed, wildcarded])
+
+      expect(permissions).toHaveLength(2)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
+    })
+    it("merges as Allowed with warning", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne },
+        { targetAddress: AddressOne, selector: "0x1" },
+      ])
+
+      expect(permissions).to.deep.equal([{ targetAddress: AddressOne }])
+
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(1)
+      expect(violations).toHaveLength(0)
+    })
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne },
+        { targetAddress: AddressOne, selector: "0x1", send: true },
+      ])
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
     })
   })
 
-  describe("wilcarded + wildcarded", () => {
-    it("distinct targetAddresses don't get merged", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1" },
-          { targetAddress: AddressTwo, selector: "0x1" },
-        ])
-      ).to.deep.equal([
+  describe("Allowed + Conditional", () => {
+    it("does not merge distinct entries", () => {
+      const allowed: Permission = { targetAddress: AddressOne }
+      const conditional: Permission = {
+        targetAddress: AddressTwo,
+        selector: "0x1",
+        condition: DUMMY_COMP(1),
+      }
+
+      expect(isPermissionAllowed(allowed)).to.be.true
+      expect(isPermissionConditional(conditional)).to.be.true
+
+      const { permissions, violations, warnings } = mergePermissions([
+        allowed,
+        conditional,
+      ])
+
+      expect(permissions).to.deep.equal([allowed, conditional])
+
+      expect(permissions).toHaveLength(2)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
+    })
+    it("merges as Allowed with warning", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+        { targetAddress: AddressOne },
+      ])
+      expect(permissions).to.deep.equal([{ targetAddress: AddressOne }])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(1)
+      expect(violations).toHaveLength(0)
+    })
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          send: true,
+          condition: DUMMY_COMP(1),
+        },
+        { targetAddress: AddressOne },
+      ])
+
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
+    })
+  })
+
+  describe("Wilcarded + Wildcarded", () => {
+    it("does not merge distinct entries", () => {
+      const { permissions, violations, warnings } = mergePermissions([
         { targetAddress: AddressOne, selector: "0x1" },
         { targetAddress: AddressTwo, selector: "0x1" },
       ])
-    })
-    it("filters out duplicate for same targetAddress", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1" },
-          { targetAddress: AddressOne, selector: "0x1" },
-        ])
-      ).to.deep.equal([
-        { targetAddress: AddressOne, selector: "0x1", condition: undefined },
+      expect(permissions).to.deep.equal([
+        { targetAddress: AddressOne, selector: "0x1" },
+        { targetAddress: AddressTwo, selector: "0x1" },
       ])
+      expect(permissions).toHaveLength(2)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
     })
-    it("throws on duplicate with incompatible execution options", () => {
-      expect(() =>
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1", send: true },
-          { targetAddress: AddressOne, selector: "0x1", delegatecall: true },
-        ])
-      ).toThrowError()
+    it("filters out duplicate", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne, selector: "0x1" },
+        { targetAddress: AddressOne, selector: "0x1" },
+      ])
+      expect(permissions).to.deep.equal([
+        { targetAddress: AddressOne, selector: "0x1" },
+      ])
+
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
+    })
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne, selector: "0x1", send: true },
+        { targetAddress: AddressOne, selector: "0x1", delegatecall: true },
+      ])
+
+      console.log(permissions)
+      console.log(violations)
+      console.log(warnings)
+
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
     })
   })
 
-  describe("wilcarded + conditional", () => {
-    it("distinct targetAddresses don't get merged", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1" },
-          {
-            targetAddress: AddressTwo,
-            selector: "0x2",
-            condition: DUMMY_COMP(1),
-          },
-        ])
-      ).to.deep.equal([
+  describe("Wilcarded + Conditional", () => {
+    it("does not merge distinct entries", () => {
+      const { permissions, violations, warnings } = mergePermissions([
         { targetAddress: AddressOne, selector: "0x1" },
         {
           targetAddress: AddressTwo,
@@ -144,52 +212,129 @@ suite("mergePermissions()", () => {
           condition: DUMMY_COMP(1),
         },
       ])
-    })
-    it("ignores conditional, merges as wildcarded, for same targetAddress", () => {
-      expect(
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1" },
-          {
-            targetAddress: AddressOne,
-            selector: "0x1",
-            condition: DUMMY_COMP(1),
-          },
-        ])
-      ).to.deep.equal([
-        { targetAddress: AddressOne, selector: "0x1", condition: undefined },
+      expect(permissions).to.deep.equal([
+        { targetAddress: AddressOne, selector: "0x1" },
+        {
+          targetAddress: AddressTwo,
+          selector: "0x2",
+          condition: DUMMY_COMP(1),
+        },
       ])
+      expect(permissions).toHaveLength(2)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
     })
-    it("throws on incompatible execution options", () => {
-      expect(() =>
-        mergePermissions([
-          { targetAddress: AddressOne, selector: "0x1", send: true },
-          {
-            targetAddress: AddressOne,
-            selector: "0x1",
-            condition: DUMMY_COMP(1),
-            send: false,
-          },
-        ])
-      ).toThrowError()
+    it("merges as Wildcarded with warning", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne, selector: "0x1" },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+      ])
+      expect(permissions).to.deep.equal([
+        { targetAddress: AddressOne, selector: "0x1" },
+      ])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(1)
+      expect(violations).toHaveLength(0)
+    })
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        { targetAddress: AddressOne, selector: "0x1", send: true },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+          send: true,
+          delegatecall: true,
+        },
+      ])
+
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
     })
   })
 
-  describe("condtional + conditional", () => {
-    it("merges compatible conditional permissions for same targetAddress and selector, via OR", () => {
-      expect(
-        mergePermissions([
+  describe("Conditional + Conditional", () => {
+    it("does not merge distinct entries", () => {
+      {
+        const { permissions, violations, warnings } = mergePermissions([
           {
             targetAddress: AddressOne,
-            selector: "0x1",
+            selector: "0x2",
+            condition: DUMMY_COMP(1),
+          },
+          {
+            targetAddress: AddressTwo,
+            selector: "0x2",
+            condition: DUMMY_COMP(2),
+          },
+        ])
+        expect(permissions).to.deep.equal([
+          {
+            targetAddress: AddressOne,
+            selector: "0x2",
+            condition: DUMMY_COMP(1),
+          },
+          {
+            targetAddress: AddressTwo,
+            selector: "0x2",
+            condition: DUMMY_COMP(2),
+          },
+        ])
+        expect(permissions).toHaveLength(2)
+        expect(warnings).toHaveLength(0)
+        expect(violations).toHaveLength(0)
+      }
+
+      {
+        const { permissions, violations, warnings } = mergePermissions([
+          {
+            targetAddress: AddressOne,
+            selector: "0x2",
             condition: DUMMY_COMP(1),
           },
           {
             targetAddress: AddressOne,
-            selector: "0x1",
+            selector: "0x3",
             condition: DUMMY_COMP(2),
           },
         ])
-      ).to.deep.equal([
+        expect(permissions).to.deep.equal([
+          {
+            targetAddress: AddressOne,
+            selector: "0x2",
+            condition: DUMMY_COMP(1),
+          },
+          {
+            targetAddress: AddressOne,
+            selector: "0x3",
+            condition: DUMMY_COMP(2),
+          },
+        ])
+        expect(permissions).toHaveLength(2)
+        expect(warnings).toHaveLength(0)
+        expect(violations).toHaveLength(0)
+      }
+    })
+    it("merges as Conditional with children OR", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(2),
+        },
+      ])
+
+      expect(permissions).to.deep.equal([
         {
           targetAddress: AddressOne,
           selector: "0x1",
@@ -200,24 +345,110 @@ suite("mergePermissions()", () => {
           },
         },
       ])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(0)
     })
-    it("throws on incompatible execution options, for same targetAddress and selector", () => {
-      expect(() =>
-        mergePermissions([
-          {
-            targetAddress: AddressOne,
-            selector: "0x1",
-            condition: DUMMY_COMP(1),
-            send: false,
-          },
-          {
-            targetAddress: AddressOne,
-            selector: "0x1",
-            condition: DUMMY_COMP(2),
-            send: true,
-          },
-        ])
-      ).toThrowError()
+    it("flags violation when matching with different ExecutionOptions", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(2),
+          send: true,
+        },
+      ])
+
+      expect(permissions).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(violations).toHaveLength(1)
+    })
+  })
+
+  describe("multiple merge into one", () => {
+    it("Conditional + Wildcarded + Allowed -> yields Allowed with warning", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(2),
+        },
+        {
+          targetAddress: AddressOne,
+        },
+      ])
+
+      expect(permissions).to.deep.equal([
+        {
+          targetAddress: AddressOne,
+        },
+      ])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(2)
+      expect(violations).toHaveLength(0)
+    })
+    it("Conditional + Conditional + Wildcarded -> yields Wildcarded", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(2),
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+        },
+      ])
+
+      expect(permissions).to.deep.equal([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+        },
+      ])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(2)
+      expect(violations).toHaveLength(0)
+    })
+    it("Conditional + Conditional + Allowed -> yields Allowed", () => {
+      const { permissions, violations, warnings } = mergePermissions([
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(1),
+        },
+        {
+          targetAddress: AddressOne,
+        },
+        {
+          targetAddress: AddressOne,
+          selector: "0x1",
+          condition: DUMMY_COMP(2),
+        },
+      ])
+
+      expect(permissions).to.deep.equal([
+        {
+          targetAddress: AddressOne,
+        },
+      ])
+      expect(permissions).toHaveLength(1)
+      expect(warnings).toHaveLength(2)
+      expect(violations).toHaveLength(0)
     })
   })
 })
