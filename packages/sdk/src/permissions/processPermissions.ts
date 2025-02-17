@@ -84,7 +84,7 @@ function throwViolations(violations: string[]) {
 }
 
 function showWarnings(warnings: string[]) {
-  if (warnings.length) {
-    console.warn(`Warning:\n` + warnings.join("\n\t"))
+  for (const warning of warnings) {
+    console.warn(warning)
   }
 }
