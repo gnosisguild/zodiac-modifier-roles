@@ -421,7 +421,7 @@ suite("mergePermissions()", () => {
         },
       ])
       expect(permissions).toHaveLength(1)
-      expect(warnings).toHaveLength(2)
+      expect(warnings).toHaveLength(1)
       expect(violations).toHaveLength(0)
     })
     it("Conditional + Conditional + Allowed -> yields Allowed", () => {

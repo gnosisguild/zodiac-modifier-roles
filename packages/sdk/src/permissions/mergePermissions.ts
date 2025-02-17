@@ -1,14 +1,12 @@
-import { invariant } from "@epic-web/invariant"
 import { mergeConditions } from "./mergeConditions"
 import {
   isPermissionAllowed,
   isPermissionConditional,
-  isPermissionScoped,
   isPermissionWildcarded,
   targetId,
 } from "./utils"
 
-import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
+import { PermissionCoerced } from "./types"
 
 /**
  * Merges permission entries that target the same destination (targetAddress + selector)
@@ -43,7 +41,7 @@ type Result = {
 export function mergePermissions(
   permissions: readonly PermissionCoerced[]
 ): Result {
-  const result = [...permissions].sort(comparePermission).reduce(reduce, {
+  const result = permissions.reduce(reduce, {
     permissions: [],
     warnings: [],
     violations: [],
@@ -56,70 +54,57 @@ export function mergePermissions(
 }
 
 const reduce = (result: Result, permission: PermissionCoerced): Result => {
-  const violations: (string | null)[] = [...result.violations]
-  const warnings: (string | null)[] = [...result.warnings]
-  const permissions: PermissionCoerced[] = [...result.permissions]
-
-  const mergeEntries = (
-    prev: PermissionCoerced,
-    next: PermissionCoerced
-  ): Result => {
+  const match = result.permissions.find((match) =>
+    isPermissionAllowed(match) || isPermissionAllowed(permission)
+      ? match.targetAddress === permission.targetAddress
+      : targetId(match) === targetId(permission)
+  )
+  if (match) {
     return {
-      ...result,
-      warnings: [...result.warnings, maybeMergeWarning(prev, next)].filter(
-        Boolean
-      ) as string[],
+      permissions: result.permissions.map((entry) =>
+        entry == match ? mergeEntry(entry, permission) : entry
+      ),
+      warnings: [
+        ...result.warnings,
+        maybeMergeWarning(match, permission),
+      ].filter(Boolean) as string[],
       violations: [
         ...result.violations,
-        maybeMergeViolation(prev, next),
+        maybeMergeViolation(match, permission),
       ].filter(Boolean) as string[],
     }
   }
 
-  {
-    const match = permissions.find(
-      (m) =>
-        isPermissionAllowed(m) &&
-        m.targetAddress.toLowerCase() === permission.targetAddress.toLowerCase()
-    )
-
-    if (match) {
-      return mergeEntries(match, permission)
-    }
-  }
-
-  if (isPermissionScoped(permission)) {
-    const match = permissions.find(
-      (m) => isPermissionWildcarded(m) && targetId(m) === targetId(permission)
-    )
-    if (match) {
-      return mergeEntries(match, permission)
-    }
-  }
-
-  if (isPermissionConditional(permission)) {
-    const match = permissions.find(
-      (m) =>
-        (isPermissionConditional(m) && targetId(m)) === targetId(permission)
-    ) as FunctionPermissionCoerced | undefined
-    if (match) {
-      match.condition = mergeConditions(match, permission)
-      return mergeEntries(match, permission)
-    }
-  }
-
   return {
-    permissions: [...permissions, permission],
-    violations: violations.filter(Boolean) as string[],
-    warnings: warnings.filter(Boolean) as string[],
+    ...result,
+    permissions: [...result.permissions, permission],
   }
 }
 
-const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
-  if (isPermissionAllowed(p1) && isPermissionScoped(p2)) return -1
+const mergeEntry = (curr: PermissionCoerced, next: PermissionCoerced) => {
+  if ("condition" in curr && "condition" in next) {
+    return {
+      ...curr,
+      condition: mergeConditions(curr, next)!,
+    }
+  }
 
+  return comparePermission(curr, next) <= 0 ? curr : next
+}
+
+const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
+  if (isPermissionAllowed(p1) && isPermissionAllowed(p2)) return 0
+  if (isPermissionAllowed(p1) && isPermissionWildcarded(p2)) return -1
+  if (isPermissionAllowed(p1) && isPermissionConditional(p2)) return -1
+
+  if (isPermissionWildcarded(p1) && isPermissionAllowed(p2)) return 1
+  if (isPermissionWildcarded(p1) && isPermissionWildcarded(p2)) return 0
   if (isPermissionWildcarded(p1) && isPermissionConditional(p2)) return -1
 
+  if (isPermissionConditional(p1) && isPermissionAllowed(p2)) return 1
+  if (isPermissionConditional(p1) && isPermissionWildcarded(p2)) return 1
+
+  // if (isPermissionConditional(p1) && isPermissionConditional(p2)) return 0
   return 0
 }
 
@@ -137,7 +122,7 @@ const maybeMergeWarning = (
   p1: PermissionCoerced,
   p2: PermissionCoerced
 ): string | null => {
-  invariant(comparePermission(p1, p2) <= 0, "Never happens")
+  ;[p1, p2] = comparePermission(p1, p2) <= 0 ? [p1, p2] : [p2, p1]
 
   if (isPermissionAllowed(p1) && isPermissionWildcarded(p2)) {
     return `Target ${targetId(p1)} is fully allowed, and then wildcarded at function level ${targetId(p2)}. It will be fully allowed.`
@@ -155,12 +140,11 @@ const maybeMergeWarning = (
 }
 
 const maybeMergeViolation = (
-  prev: PermissionCoerced,
-  next: PermissionCoerced
+  p1: PermissionCoerced,
+  p2: PermissionCoerced
 ): string | null => {
-  // invariant(comparePermission(p1, p2) <= 0, "Never happens")
-  if (!matchesExecutionOptions(prev, next)) {
-    return "TODO"
+  if (!matchesExecutionOptions(p1, p2)) {
+    return `The following functions appear multiple times and cannot be merged: ${targetId(p1)}, ${targetId(p2)}. This might be be due to different \`send\` and \`delegatecall\` flags in entries with the same target.`
   }
 
   return null
