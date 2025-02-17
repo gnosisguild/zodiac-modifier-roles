@@ -6,9 +6,11 @@ import {
   ColDef,
   ColGroupDef,
 } from "ag-grid-community"
+import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
 import { Call } from "@/app/api/records/types"
 import classes from "./style.module.css"
+import { arrayElementType } from "@/utils/abi"
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -18,36 +20,41 @@ interface Props {
 }
 
 const HEADER_HEIGHT = 48
-const ROW_HEIGHT = 44
+const LINE_HEIGHT = 44
 
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
-  const colDefs = columnDefs(abi.inputs, "inputs.")
+  const cols = columnDefs(abi.inputs, "inputs.")
+  const rows = rowData(calls, abi)
+  const totalLines = rows.reduce((sum, row) => sum + row.lines, 0)
   console.log({
-    colDefs,
-    rowData: rowData(calls, abi),
-    maxNesting: maxNesting(colDefs),
+    cols,
+    rows,
+    totalLines,
+    maxNesting: maxNesting(cols),
   })
+
   return (
     <div
       className={classes.table}
       style={{
-        height: calls.length * ROW_HEIGHT + maxNesting(colDefs) * HEADER_HEIGHT,
+        height: totalLines * LINE_HEIGHT + maxNesting(cols) * HEADER_HEIGHT,
       }}
     >
-      <AgGridReact columnDefs={colDefs} rowData={rowData(calls, abi)} />
+      <AgGridReact
+        columnDefs={cols}
+        rowData={rows}
+        enableCellSpan
+        getRowHeight={({ data }) => data.lines * LINE_HEIGHT}
+      />
     </div>
   )
 }
 
 export default CallTable
 
-const columnDefs = (
-  inputs: readonly AbiParameter[],
-  prefix: string = ""
-): (ColDef<any, any> | ColGroupDef<any>)[] => {
-  return inputs.map((input, index) => {
-    const isArray = input.type.endsWith("]")
-    const isTuple = !isArray && input.type === "tuple" && "components" in input
+const columnDefs = (inputs: readonly AbiParameter[], prefix: string = "") => {
+  return inputs.map((input, index): ColDef<any, any> | ColGroupDef<any> => {
+    const isTuple = "components" in input
     const name = input.name ?? `[${index}]`
 
     if (isTuple) {
@@ -59,7 +66,14 @@ const columnDefs = (
         children: columnDefs(input.components, prefix + name + "."),
       }
     } else {
-      return { headerName: name, field: prefix + name, spanRows: true }
+      const stringify = input.type === "bool"
+
+      return {
+        headerName: name,
+        field: prefix + name,
+        spanRows: true,
+        cellDataType: stringify ? "string" : undefined,
+      }
     }
   })
 }
@@ -72,6 +86,8 @@ const rowData = (calls: Call[], abi: AbiFunction) => {
       inputs: Object.fromEntries(
         abi.inputs.map((input, index) => [input.name, args[index]])
       ),
+      /** We're rendering array elements as sub rows (=lines) inside the row. This property indicates the number of such sub rows. */
+      lines: maxArrayLength(Object.values(args), abi.inputs),
       value: call.value,
       operation: call.operation,
       metadata: call.metadata,
@@ -90,4 +106,36 @@ const maxNesting = (
     }
     return max
   }, 1)
+}
+
+/** Returns the maximum _nested_ array length for the given inputs.  */
+export const maxArrayLength = (
+  values: any[],
+  inputs: readonly AbiParameter[]
+): number => {
+  const maxLengths = inputs.map((input, index) => {
+    const value = values[index]
+    const elementType = arrayElementType(input)
+    const isTuple = input.type === "tuple" && "components" in input
+
+    if (isTuple) {
+      invariant(
+        typeof value === "object" && !Array.isArray(value) && value !== null,
+        "Expected object for tuple"
+      )
+      return maxArrayLength(Object.values(value), input.components)
+    }
+
+    if (elementType) {
+      invariant(Array.isArray(value), "Expected array for array")
+      const itemLengths = value.map((itemValue) =>
+        maxArrayLength([itemValue], [elementType])
+      )
+      return itemLengths.reduce((sum, length) => sum + length, 0)
+    }
+
+    return 1
+  })
+
+  return Math.max(...maxLengths)
 }

@@ -25,5 +25,8 @@
   },
   "author": "",
   "license": "LGPL-3.0+",
-  "packageManager": "yarn@3.7.0"
+  "packageManager": "yarn@3.7.0",
+  "dependencies": {
+    "@epic-web/invariant": "^1.0.0"
+  }
 }
