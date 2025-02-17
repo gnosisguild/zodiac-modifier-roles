@@ -1,71 +1,65 @@
-import { ChainId } from "zodiac-roles-sdk"
-
-import { AbiFunction, decodeFunctionData, toFunctionSelector } from "viem"
-import Flex from "@/ui/Flex"
-import classes from "./style.module.css"
-import LabeledData from "@/ui/LabeledData"
-import Anchor from "@/ui/Anchor"
+"use client"
+import { AgGridReact } from "ag-grid-react"
+import {
+  ModuleRegistry,
+  AllCommunityModule,
+  ColDef,
+  ColGroupDef,
+} from "ag-grid-community"
+import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
 import { Call } from "@/app/api/records/types"
-import CallRow from "./Row"
+import { c } from "zodiac-roles-sdk"
 
-const CallTable: React.FC<{
-  to: `0x${string}`
-  selector: `0x${string}`
+ModuleRegistry.registerModules([AllCommunityModule])
+
+interface Props {
+  abi: AbiFunction
   calls: Call[]
-  chainId: ChainId
-  abi?: AbiFunction[]
-}> = ({ to, selector, calls, chainId, abi }) => {
-  const functionAbi = abi?.find(
-    (fragment: any) =>
-      fragment.type === "function" && toFunctionSelector(fragment) === selector
-  ) as AbiFunction | undefined
+}
 
-  const decodedCalls =
-    abi &&
-    functionAbi &&
-    calls.map((call) => {
-      const { args } = decodeFunctionData({ abi, data: call.data })
-      return {
-        value: call.value,
-        operation: call.operation,
-        args,
-        metadata: call.metadata,
-      }
-    })
-
+const CallTable: React.FC<Props> = ({ calls, abi }) => {
   return (
-    <div className={classes.functionContainer}>
-      <LabeledData label="Function">
-        <Flex gap={2} alignItems="center">
-          <Anchor name={`${to}-${selector}`} className={classes.anchor} />
-          <div className={classes.selector}>
-            {functionAbi ? functionAbi.name : selector}
-          </div>
-          {functionAbi && (
-            <div className={classes.selectorSmall}>{selector}</div>
-          )}
-        </Flex>
-      </LabeledData>
-
-      {functionAbi && decodedCalls ? (
-        <table>
-          <tbody>
-            {decodedCalls.map((call, index) => (
-              <CallRow
-                key={index}
-                {...call}
-                chainId={chainId}
-                abi={functionAbi}
-              />
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <div>ABI not found</div>
-      )}
-      <div className={classes.verticalGuide} />
-    </div>
+    <AgGridReact
+      columnDefs={columnDefs(abi.inputs, "args.")}
+      rowData={rowData(calls, abi)}
+    />
   )
 }
 
 export default CallTable
+
+const columnDefs = (
+  inputs: readonly AbiParameter[],
+  prefix: string = ""
+): (ColDef<any, any> | ColGroupDef<any>)[] => {
+  return inputs.map((input, index) => {
+    const isArray = input.type.endsWith("]")
+    const isTuple = !isArray && input.type === "tuple" && "components" in input
+    const name = input.name ?? `[${index}]`
+
+    if (isTuple) {
+      // represent as column group
+      return {
+        headerName: name,
+        field: prefix + name,
+        children: columnDefs(input.components, prefix + name + "."),
+      }
+    } else {
+      return { headerName: name, field: prefix + name }
+    }
+  })
+}
+
+const rowData = (calls: Call[], abi: AbiFunction) => {
+  const decodedCalls = calls.map((call) => {
+    const { args } = decodeFunctionData({ abi: [abi], data: call.data })
+    return {
+      args,
+      value: call.value,
+      operation: call.operation,
+      metadata: call.metadata,
+    }
+  })
+
+  return decodedCalls
+}

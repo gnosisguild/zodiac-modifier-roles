@@ -28,39 +28,6 @@
 }
 
 .functionContainer {
-  padding: var(--spacing-2) var(--spacing-2) var(--spacing-2)
-    calc(var(--spacing-3) + var(--spacing-2));
-  position: relative;
-}
-
-.verticalGuide {
-  position: absolute;
-  top: var(--spacing-3);
-  bottom: var(--spacing-2);
-  left: var(--spacing-2);
-  margin-left: -3px;
-  width: 1px;
-  background-color: var(--border-color);
-  z-index: 10;
-}
-
-.verticalGuide::before,
-.verticalGuide::after {
-  content: "";
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 10px;
-  height: 1px;
-  background-color: var(--border-color);
-}
-
-.verticalGuide::after {
-  top: auto;
-  bottom: 0px;
-}
-
-.wildcardContainer {
   padding: var(--spacing-2);
 }
 

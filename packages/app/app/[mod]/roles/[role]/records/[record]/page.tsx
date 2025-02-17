@@ -8,6 +8,7 @@ import PageBreadcrumbs from "./breadcrumbs"
 import classes from "./page.module.css"
 import Flex from "@/ui/Flex"
 import TargetCalls from "./TargetCalls"
+import { groupBy } from "@/utils/groupBy"
 
 export default async function RecordPage({
   params,
@@ -23,40 +24,22 @@ export default async function RecordPage({
   // Fetch the record
   const record = await getRecordById(params.record)
 
-  const callsByTarget = groupBy(record.calls, (call) => call.to)
+  const callsByTo = groupBy(record.calls, (call) => call.to)
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main className={classes.main}>
-        <div className={classes.header}>
-          <LabeledData label="Recorded calls">
-            <div className={classes.headerHash}>
-              {params.record}
-              <CopyButton value={params.record} />
-            </div>
-          </LabeledData>
-
-          <Flex direction="column" gap={3}>
-            {Object.entries(callsByTarget).map(([target, calls], index) => (
-              <TargetCalls
-                key={index}
-                targetAddress={target as `0x${string}`}
-                calls={calls}
-                chainId={mod.chainId}
-              />
-            ))}
-          </Flex>
-        </div>
+        <Flex direction="column" gap={3}>
+          {Object.entries(callsByTo).map(([to, calls], index) => (
+            <TargetCalls
+              key={index}
+              to={to as `0x${string}`}
+              calls={calls}
+              chainId={mod.chainId}
+            />
+          ))}
+        </Flex>
       </main>
     </Layout>
   )
 }
-
-export const groupBy = <T, K extends keyof any>(
-  arr: readonly T[],
-  key: (i: T) => K
-) =>
-  arr.reduce((groups, item) => {
-    ;(groups[key(item)] ||= []).push(item)
-    return groups
-  }, {} as Record<K, T[]>)

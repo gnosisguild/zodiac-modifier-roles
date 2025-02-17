@@ -10,16 +10,21 @@ import ContractName from "@/components/ContractName"
 import { Call } from "@/app/api/records/types"
 import CallItem from "./CallItem"
 import Box from "@/ui/Box"
+import { groupBy } from "@/utils/groupBy"
+import CallTable from "./FunctionCalls"
 
 interface Props {
-  // Define your component props here if needed.
-  targetAddress: `0x${string}`
+  to: `0x${string}`
   chainId: ChainId
   calls: Call[]
 }
 
-export const TargetCalls = async ({ targetAddress, chainId, calls }: Props) => {
-  const contractInfo = await fetchContractInfo(targetAddress, chainId)
+const TargetCalls = async ({ to, chainId, calls }: Props) => {
+  const contractInfo = await fetchContractInfo(to, chainId)
+
+  const callsBySelector = Object.entries(
+    groupBy(calls, (entry) => entry.data.slice(0, 10))
+  )
 
   return (
     <Box borderless bg p={0}>
@@ -45,10 +50,12 @@ export const TargetCalls = async ({ targetAddress, chainId, calls }: Props) => {
         }
       >
         <Flex direction="column" gap={3} className={classes.targetContent}>
-          {calls.map((call, index) => (
-            <CallItem
-              key={index}
-              {...call}
+          {callsBySelector.map(([selector, calls]) => (
+            <CallTable
+              key={selector}
+              to={to}
+              selector={selector as `0x${string}`}
+              calls={calls}
               abi={contractInfo.abi}
               chainId={chainId}
             />
