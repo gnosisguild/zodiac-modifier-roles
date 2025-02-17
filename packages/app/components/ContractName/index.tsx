@@ -52,7 +52,6 @@ const ContractName: React.FC<{
     />
   )
 
-  console.log({ contractInfo, label, address, proxyLabel })
   return (
     <Flex gap={3} alignItems="center">
       <Flex gap={2} alignItems="center">
