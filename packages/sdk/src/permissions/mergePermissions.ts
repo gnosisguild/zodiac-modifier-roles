@@ -82,10 +82,15 @@ const reduce = (result: Result, permission: PermissionCoerced): Result => {
 }
 
 const mergeEntry = (curr: PermissionCoerced, next: PermissionCoerced) => {
-  if ("condition" in curr && "condition" in next) {
+  if (
+    "condition" in curr &&
+    !!curr.condition &&
+    "condition" in next &&
+    !!next.condition
+  ) {
     return {
       ...curr,
-      condition: mergeConditions(curr, next)!,
+      condition: mergeConditions(curr.condition, next.condition),
     }
   }
 
