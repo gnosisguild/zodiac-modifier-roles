@@ -81,20 +81,20 @@ const reduce = (result: Result, permission: PermissionCoerced): Result => {
   }
 }
 
-const mergeEntry = (curr: PermissionCoerced, next: PermissionCoerced) => {
+const mergeEntry = (p1: PermissionCoerced, p2: PermissionCoerced) => {
   if (
-    "condition" in curr &&
-    !!curr.condition &&
-    "condition" in next &&
-    !!next.condition
+    "condition" in p1 &&
+    !!p1.condition &&
+    "condition" in p2 &&
+    !!p2.condition
   ) {
     return {
-      ...curr,
-      condition: mergeConditions(curr.condition, next.condition),
+      ...p1,
+      condition: mergeConditions(p1.condition, p2.condition),
     }
   }
 
-  return comparePermission(curr, next) <= 0 ? curr : next
+  return comparePermission(p1, p2) <= 0 ? p1 : p2
 }
 
 const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
