@@ -112,16 +112,6 @@ const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
   return 1
 }
 
-const matchesExecutionOptions = (
-  p1: PermissionCoerced,
-  p2: PermissionCoerced
-): boolean => {
-  return (
-    Boolean(p1.send) === Boolean(p2.send) &&
-    Boolean(p1.delegatecall) === Boolean(p2.delegatecall)
-  )
-}
-
 const maybeMergeWarning = (
   p1: PermissionCoerced,
   p2: PermissionCoerced
@@ -152,4 +142,14 @@ const maybeMergeViolation = (
   }
 
   return null
+}
+
+const matchesExecutionOptions = (
+  p1: PermissionCoerced,
+  p2: PermissionCoerced
+): boolean => {
+  return (
+    Boolean(p1.send) === Boolean(p2.send) &&
+    Boolean(p1.delegatecall) === Boolean(p2.delegatecall)
+  )
 }
