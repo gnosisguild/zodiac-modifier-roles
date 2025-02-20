@@ -49,7 +49,6 @@ suite("processAnnotations()", () => {
       {
         targetAddress: "0xc0ffee254729296a45a3885639ac7e10f9d54979",
         selector: "0x1234abcd",
-        condition: undefined,
         send: false,
         delegatecall: false,
       },
