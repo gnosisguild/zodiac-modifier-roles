@@ -1,16 +1,15 @@
-import { Interface } from "ethers"
-import { Roles__factory } from "../../../evm/typechain-types"
 import { flattenCondition } from "../conditions"
+import { encodeAnnotationsPost, POSTER_ADDRESS } from "./encodePoster"
 
 import { Call } from "./types"
-import { encodeAnnotationsPost, POSTER_ADDRESS } from "./encodePoster"
+import { Roles__factory } from "../../../evm/typechain-types"
 
 const rolesInterface = Roles__factory.createInterface()
 
 export const encodeCalls = (
   calls: Call[],
-  rolesMod: string
-): { to: string; data: string }[] => {
+  rolesMod: `0x${string}`
+): { to: `0x${string}`; data: `0x${string}` }[] => {
   return calls.map((call) => {
     switch (call.call) {
       case "allowTarget": {
@@ -20,7 +19,7 @@ export const encodeCalls = (
             call.roleKey,
             call.targetAddress,
             call.executionOptions,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 
@@ -30,7 +29,7 @@ export const encodeCalls = (
           data: rolesInterface.encodeFunctionData("scopeTarget", [
             call.roleKey,
             call.targetAddress,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 
@@ -40,7 +39,7 @@ export const encodeCalls = (
           data: rolesInterface.encodeFunctionData("revokeTarget", [
             call.roleKey,
             call.targetAddress,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 
@@ -52,7 +51,7 @@ export const encodeCalls = (
             call.targetAddress,
             call.selector,
             call.executionOptions,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 
@@ -68,7 +67,7 @@ export const encodeCalls = (
               compValue: c.compValue || "0x",
             })),
             call.executionOptions,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 
@@ -79,7 +78,7 @@ export const encodeCalls = (
             call.roleKey,
             call.targetAddress,
             call.selector,
-          ]),
+          ]) as `0x${string}`,
         }
       }
       case "assignRoles": {
@@ -89,7 +88,7 @@ export const encodeCalls = (
             call.member,
             [call.roleKey],
             [call.join],
-          ]),
+          ]) as `0x${string}`,
         }
       }
       case "setAllowance": {
@@ -102,7 +101,7 @@ export const encodeCalls = (
             call.refill,
             call.period,
             call.timestamp,
-          ]),
+          ]) as `0x${string}`,
         }
       }
 

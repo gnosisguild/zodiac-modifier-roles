@@ -25,6 +25,11 @@ type RoleFragment = {
   annotations?: Annotation[]
 }
 
+type Result = {
+  to: `0x${string}`
+  data: `0x${string}`
+}[]
+
 /**
  * Plans and encodes transactions to update a rolesMod to a desired state.
  *
@@ -62,7 +67,7 @@ export async function planApply(
       allowances: Allowance[]
     }
   } & Options
-) {
+): Promise<Result> {
   const { minus, plus } = diff({
     prev: current || (await fetchRolesMod({ chainId, address })),
     next,
@@ -101,7 +106,7 @@ export async function planApply(
 export async function planApplyRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
-) {
+): Promise<Result> {
   const prev: Role =
     current ||
     (await fetchRole({ chainId, address, roleKey: fragment.key })) ||
@@ -156,7 +161,7 @@ export async function planApplyRole(
 export async function planExtendRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
-) {
+): Promise<Result> {
   const { plus } = await diffRole({
     prev:
       current || (await fetchRole({ chainId, address, roleKey: fragment.key })),
