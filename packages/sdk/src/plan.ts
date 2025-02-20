@@ -31,13 +31,13 @@ type Result = {
 }[]
 
 /**
- * Plans and encodes transactions to update a rolesMod to a desired state.
+ * Plans and encodes transactions to update a `rolesMod` to a desired state.
  *
- * Compares the current state (either provided or fetched from subgraph) with the
- * desired state, calculates necessary operations (additions and removals), and
- * encodes them into transaction calls that can be executed on-chain.
+ * Compares the current state (either provided or fetched from the subgraph)
+ * with the desired state, calculates the necessary operations (additions and
+ * removals), and encodes them as transaction calls for on-chain execution.
  *
- * Note: contrarily to plan*Role functions, this function does not support partial
+ * Note: Unlike `plan*Role` functions, this function does not support partial
  * state input. The full intended state must be provided.
  *
  * @param next - The complete desired state to apply
