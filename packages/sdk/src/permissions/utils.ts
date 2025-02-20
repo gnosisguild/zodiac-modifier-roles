@@ -1,4 +1,4 @@
-import { keccak256, ParamType, toUtf8Bytes } from "ethers"
+import { ethers, ParamType } from "ethers"
 import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deployments"
 
 import { conditionAddress, normalizeCondition } from "../conditions"
@@ -19,37 +19,52 @@ export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
   return ExecutionOptionsEnum.None
 }
 
-const sighash = (signature: string): string =>
-  keccak256(toUtf8Bytes(signature)).substring(0, 10)
+const sighash = (signature: string) => {
+  const fragment = ethers.FunctionFragment.from(signature)
+  const selector = ethers.id(fragment.format()).slice(0, 10)
+  return selector
+}
 
 export const coercePermission = <P extends Permission>(
   permission: P
 ): P extends FunctionPermission
   ? FunctionPermissionCoerced
   : TargetPermission => {
-  permission = {
-    ...permission,
+  const selector = () => {
+    if ("selector" in permission) {
+      return { selector: permission.selector.toLowerCase() as `0x${string}` }
+    }
+
+    if ("signature" in permission) {
+      return { selector: sighash(permission.signature) as `0x${string}` }
+    }
+
+    return {}
+  }
+
+  const condition = () => {
+    if (
+      "condition" in permission &&
+      typeof permission.condition === "function"
+    ) {
+      return { condition: permission.condition(ParamType.from("bytes")) }
+    }
+
+    if ("condition" in permission) {
+      return { condition: permission.condition }
+    }
+
+    return {}
+  }
+
+  const coerced: PermissionCoerced = {
     targetAddress: permission.targetAddress.toLowerCase() as `0x${string}`,
+    ...selector(),
+    ...condition(),
     send: Boolean(permission.send),
     delegatecall: Boolean(permission.delegatecall),
   }
-
-  if ("selector" in permission || "signature" in permission) {
-    return {
-      targetAddress: permission.targetAddress,
-      selector:
-        "selector" in permission
-          ? permission.selector.toLowerCase()
-          : sighash(permission.signature),
-      condition:
-        typeof permission.condition === "function"
-          ? permission.condition(ParamType.from("bytes"))
-          : permission.condition,
-      send: permission.send,
-      delegatecall: permission.delegatecall,
-    } as FunctionPermissionCoerced
-  }
-  return permission as any
+  return coerced as any
 }
 
 export const isPermissionAllowed = (
