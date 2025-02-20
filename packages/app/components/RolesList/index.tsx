@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { RiArrowRightSLine } from "react-icons/ri"
-import { RoleSummary } from "zodiac-roles-sdk"
+import { Role } from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
 import classes from "./style.module.css"
 import Link from "next/link"
@@ -18,7 +18,7 @@ const tryDecodeBytes32String = (str: string) => {
   }
 }
 
-const RolesList: React.FC<{ roles: readonly RoleSummary[]; mod: Mod }> = ({
+const RolesList: React.FC<{ roles: readonly Role[]; mod: Mod }> = ({
   roles,
   mod,
 }) => {
