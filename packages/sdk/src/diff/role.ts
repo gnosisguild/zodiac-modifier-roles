@@ -1,4 +1,3 @@
-import { invariant } from "@epic-web/invariant"
 import { ZeroHash } from "ethers"
 import { Annotation, Target } from "zodiac-roles-deployments"
 
@@ -73,7 +72,9 @@ function ensureRoleKey(
 ) {
   const set = new Set([prev?.key, next?.key].filter(Boolean))
 
-  invariant(set.size <= 1, "Invalid Role Comparison")
+  if (set.size >= 2) {
+    throw new Error(`Not the same Role: ${prev?.key} and ${next?.key}`)
+  }
 
   return prev?.key || next?.key || ZeroHash
 }

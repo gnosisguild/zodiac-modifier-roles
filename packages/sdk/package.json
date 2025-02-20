@@ -60,7 +60,6 @@
     "prepare": "yarn eth-sdk"
   },
   "dependencies": {
-    "@epic-web/invariant": "^1.0.0",
     "ethers": "^6.13.5",
     "zodiac-roles-deployments": "workspace:^"
   },
