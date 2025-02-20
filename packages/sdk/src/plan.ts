@@ -18,12 +18,22 @@ type Options = {
   log?: boolean | ((message: string) => void)
 }
 
+type RoleFragment = {
+  key: `0x${string}`
+  members?: `0x${string}`[]
+  targets?: Target[]
+  annotations?: Annotation[]
+}
+
 /**
  * Plans and encodes transactions to update a rolesMod to a desired state.
  *
  * Compares the current state (either provided or fetched from subgraph) with the
  * desired state, calculates necessary operations (additions and removals), and
  * encodes them into transaction calls that can be executed on-chain.
+ *
+ * Note: contrarily to plan*Role functions, this function does not support partial
+ * state input. The full intended state must be provided.
  *
  * @param next - The complete desired state to apply
  * @param next.roles - Array of roles to be set
@@ -67,14 +77,15 @@ export async function planApply(
 /**
  * Plans and encodes transactions to update a single role to a desired state.
  *
- * Compares the current role state (either provided or fetched from subgraph)
- * with the desired state, calculates necessary operations (additions and removals),
- * and encodes them into transaction calls that can be executed on-chain.
+ * Compares the current state of the role (either provided or fetched from the
+ * subgraph) with the desired state, calculates the necessary operations
+ * (additions and removals), and encodes them into transaction calls for
+ * on-chain execution.
  *
- * Note:
- * - This function is useful when you want to update a single role in the rolesMod.
- * - The role will end up looking exactly the role described in the `next` parameter.
- *
+ * The desired state may be a partial fragment of the role, containing only the
+ * fields that require updating. This function merges the fragment with the
+ * current state to produce a complete role configuration. Thus, fields not
+ * present in the fragment will remain unchanged.
  *
  * @param next - The complete desired role configuration to apply
  * @param options - Configuration options for the operation
@@ -86,14 +97,22 @@ export async function planApply(
  *
  * @returns Promise resolving to encoded transaction calls ready to be executed
  */
+
 export async function planApplyRole(
-  next: Role,
+  fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ) {
-  const { minus, plus } = await diffRole({
-    prev: current || (await fetchRole({ chainId, address, roleKey: next.key })),
-    next,
-  })
+  const prev: Role =
+    current ||
+    (await fetchRole({ chainId, address, roleKey: fragment.key })) ||
+    emptyRole(fragment.key)
+
+  const next: Role = {
+    ...prev,
+    ...fragment,
+  }
+
+  const { minus, plus } = await diffRole({ prev, next })
 
   const calls = [...minus, ...plus]
   logCalls(calls, log)
@@ -101,19 +120,12 @@ export async function planApplyRole(
   return encodeCalls(calls, address)
 }
 
-type RoleFragment = {
-  key: `0x${string}`
-  members?: `0x${string}`[]
-  targets?: Target[]
-  annotations?: Annotation[]
-}
-
 /**
  * Plans and encodes transactions to extend/augment an existing Role.
  *
  * Unlike planApplyRole which synchronizes to an exact intended state, this
  * function only adds new capabilities.
- * 
+ *
  * In other words, this function only plans for additive/expanding changes. It
  * never restricts or removes previously allowed capabilities from a Role. If
  * something was previously allowed, applying the output of this function will
@@ -165,5 +177,15 @@ function logCalls(calls: Call[], log?: boolean | ((message: string) => void)) {
 
   for (const call of calls) {
     logCall(call, log === true ? console.log : log || undefined)
+  }
+}
+
+function emptyRole(key: `0x${string}`): Role {
+  return {
+    key: key,
+    members: [],
+    targets: [],
+    annotations: [],
+    lastUpdate: 0,
   }
 }
