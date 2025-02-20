@@ -106,11 +106,10 @@ const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
   if (isPermissionWildcarded(p1) && isPermissionWildcarded(p2)) return 0
   if (isPermissionWildcarded(p1) && isPermissionConditional(p2)) return -1
 
-  if (isPermissionConditional(p1) && isPermissionAllowed(p2)) return 1
-  if (isPermissionConditional(p1) && isPermissionWildcarded(p2)) return 1
-
-  // if (isPermissionConditional(p1) && isPermissionConditional(p2)) return 0
-  return 0
+  // if (isPermissionConditional(p1) && isPermissionAllowed(p2)) return 1
+  // if (isPermissionConditional(p1) && isPermissionWildcarded(p2)) return 1
+  if (isPermissionConditional(p1) && isPermissionConditional(p2)) return 0
+  return 1
 }
 
 const matchesExecutionOptions = (
