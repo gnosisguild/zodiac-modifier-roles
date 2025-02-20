@@ -1,9 +1,52 @@
-import { it, suite } from "vitest"
+import { expect, it, suite } from "vitest"
+import { mergeConditions } from "./mergeConditions"
+import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+
+const DUMMY_COMP = (id: number) => ({
+  paramType: ParameterType.Static,
+  operator: Operator.Custom,
+  compValue: encodeAbiParameters(["uint256"], [id]),
+})
 
 suite("mergeConditions()", () => {
-  it.todo("both with condition - joined via OR")
+  it("both with condition - joined via OR", () => {
+    expect(mergeConditions(DUMMY_COMP(1), DUMMY_COMP(2))).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2)],
+    })
+  })
 
-  it.todo("both with condition - joined via OR, left gets hoisted")
+  it("both with condition - joined via OR, left gets hoisted", () => {
+    const left = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2)],
+    }
 
-  it.todo("both with condition - joined via OR, right gets hoisted")
+    const right = DUMMY_COMP(3)
+
+    expect(mergeConditions(left, right)).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
+    })
+  })
+
+  it("both with condition - joined via OR, right gets hoisted", () => {
+    const left = DUMMY_COMP(1)
+
+    const right = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(2), DUMMY_COMP(3)],
+    }
+
+    expect(mergeConditions(left, right)).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
+    })
+  })
 })
