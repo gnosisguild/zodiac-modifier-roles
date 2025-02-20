@@ -128,20 +128,19 @@ export async function planApplyRole(
 /**
  * Plans and encodes transactions to extend/augment an existing Role.
  *
- * Unlike planApplyRole which synchronizes to an exact intended state, this
- * function only adds new capabilities.
+ * Unlike `planApplyRole`, which updates to an exact intended state, this
+ * function only adds new capabilities without limiting/removing existing ones.
  *
- * In other words, this function only plans for additive/expanding changes. It
- * never restricts or removes previously allowed capabilities from a Role. If
- * something was previously allowed, applying the output of this function will
- * never make it disallowed.
+ * In other words, this function is strictly additive. It never restricts or
+ * removes previously granted capabilities. If a capability was allowed
+ * before, applying the output of this function will not disallow it.
  *
  * Examples:
- * - If a target is fully `allowed`, passing in a fragment that scopes or wildcards
- *   a function in that target will result in a NOOP (empty output)
- * - If a function was previously scoped with ExecutionOptions.send, scoping that
- *   function with ExecutionOptions.none will result in a NOOP (empty output)
- * - etc
+ * - If a target is fully `allowed`, passing a fragment that scopes or wildcards
+ *   a function in that target will result in a NOOP (empty output).
+ * - If a function was previously scoped with `ExecutionOptions.send`, scoping
+ *   it with `ExecutionOptions.none` will result in a NOOP (empty output).
+ * - Etc.
  *
  * @param fragment - The partial role configuration to add to the existing role
  * @param fragment.key - The unique role identifier (hex string)
