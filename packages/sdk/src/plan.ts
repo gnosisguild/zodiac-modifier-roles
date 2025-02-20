@@ -82,15 +82,15 @@ export async function planApply(
 /**
  * Plans and encodes transactions to update a single role to a desired state.
  *
- * Compares the current state of the role (either provided or fetched from the
+ * Compares the current role state (either provided or fetched from the
  * subgraph) with the desired state, calculates the necessary operations
- * (additions and removals), and encodes them into transaction calls for
+ * (additions and removals), and encodes them as transaction calls for
  * on-chain execution.
  *
- * The desired state may be a partial fragment of the role, containing only the
- * fields that require updating. This function merges the fragment with the
- * current state to produce a complete role configuration. Thus, fields not
- * present in the fragment will remain unchanged.
+ * The desired state may be a partial fragment of the role, containing only
+ * the fields that need updates. This function merges the fragment with the
+ * current state to create a complete role configuration. Fields not included
+ * in the fragment remain unchanged.
  *
  * @param next - The complete desired role configuration to apply
  * @param options - Configuration options for the operation
