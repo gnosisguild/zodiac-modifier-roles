@@ -1,8 +1,20 @@
 import { defineConfig } from "@gnosis-guild/eth-sdk"
-import { ethSdkConfig } from "../../sdk/src/ethSdk"
 
 export default defineConfig({
-  ...ethSdkConfig,
+  etherscanURLs: {
+    gnosis: "https://api.gnosisscan.io/api",
+  },
+  etherscanKeys: {
+    gnosis: "8ENCUFT4D3XVJS7N9ZFS5Z9XQPNUGRKSN5",
+  },
+  rpc: {
+    gnosis: "https://rpc.gnosischain.com",
+  },
+  networkIds: {
+    gnosis: 100,
+    base: 8453,
+    zkevm: 1101,
+  },
   contracts: {
     mainnet: {
       lido: {
