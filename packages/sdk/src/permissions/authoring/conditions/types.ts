@@ -24,13 +24,14 @@ type RequireAtLeastOne<T> = {
 // Exclude alternative union members that ethers supports for specifying parameters:
 // Typed, Promise<any>, Addressable
 export type PrimitiveOnly<T> = Exclude<T, Typed | Promise<any> | Addressable>
-type MapToScoping<T> = PrimitiveOnly<T> extends PrimitiveValue
-  ? PrimitiveScoping<PrimitiveOnly<T>>
-  : PrimitiveOnly<T> extends unknown[]
-  ? ArrayScoping<PrimitiveOnly<T>>
-  : PrimitiveOnly<T> extends { [key: string]: any }
-  ? StructScoping<PrimitiveOnly<T>>
-  : never
+type MapToScoping<T> =
+  PrimitiveOnly<T> extends PrimitiveValue
+    ? PrimitiveScoping<PrimitiveOnly<T>>
+    : PrimitiveOnly<T> extends unknown[]
+      ? ArrayScoping<PrimitiveOnly<T>>
+      : PrimitiveOnly<T> extends { [key: string]: any }
+        ? StructScoping<PrimitiveOnly<T>>
+        : never
 
 export type StructScoping<Struct extends { [key: string]: any }> =
   | RequireAtLeastOne<{
@@ -47,10 +48,10 @@ export type StructScoping<Struct extends { [key: string]: any }> =
 export type Scoping<T> = T extends PrimitiveValue
   ? PrimitiveScoping<T>
   : T extends any[]
-  ? ArrayScoping<T>
-  : T extends { [key: string]: any }
-  ? StructScoping<T>
-  : unknown // it resolves to this if T is any (for example when using scoping functions outside of the typed context)
+    ? ArrayScoping<T>
+    : T extends { [key: string]: any }
+      ? StructScoping<T>
+      : unknown // it resolves to this if T is any (for example when using scoping functions outside of the typed context)
 
 export type TupleScopings<Params extends [...any[]]> = {
   [Index in keyof Params]?: MapToScoping<Params[Index]>
