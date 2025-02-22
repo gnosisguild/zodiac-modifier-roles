@@ -1,4 +1,4 @@
-import { Roles__factory } from "../../evm/typechain-types"
+import { Roles__factory } from "../typechain"
 
 export const rolesAbi = Roles__factory.abi
 

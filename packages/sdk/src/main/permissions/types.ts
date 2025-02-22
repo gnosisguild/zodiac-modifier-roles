@@ -1,7 +1,7 @@
 import { BytesLike, ParamType } from "ethers"
 import { Annotation, Condition } from "zodiac-roles-deployments"
 
-import { ConditionFunction } from "./authoring/conditions/types"
+import { ConditionFunction } from "../authoring/conditions/types"
 
 export type AbiType = string | ParamType
 
