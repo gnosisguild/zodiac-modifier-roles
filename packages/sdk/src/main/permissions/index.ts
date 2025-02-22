@@ -1,4 +1,3 @@
-export * from "./authoring"
 export { processPermissions } from "./processPermissions"
 export { reconstructPermissions } from "./reconstructPermissions"
 export { validatePresets } from "./validatePresets"
@@ -11,6 +10,5 @@ export type {
   TargetPermission,
   FunctionPermission,
   FunctionPermissionCoerced,
+  ExecutionFlags,
 } from "./types"
-
-export type { Scoping } from "./authoring/conditions/types"

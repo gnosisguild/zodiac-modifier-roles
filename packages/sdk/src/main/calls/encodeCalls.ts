@@ -2,7 +2,8 @@ import { flattenCondition } from "../conditions"
 import { encodeAnnotationsPost, POSTER_ADDRESS } from "./encodePoster"
 
 import { Call } from "./types"
-import { Roles__factory } from "../../../evm/typechain-types"
+
+import { Roles__factory } from "../../typechain"
 
 const rolesInterface = Roles__factory.createInterface()
 

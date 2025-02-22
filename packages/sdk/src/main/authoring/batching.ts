@@ -1,7 +1,7 @@
 import { BytesLike } from "ethers"
 import { Condition } from "zodiac-roles-deployments"
 
-import { ExecutionFlags, Permission } from "../types"
+import { ExecutionFlags, Permission } from ".."
 
 import { ConditionFunction } from "./conditions/types"
 

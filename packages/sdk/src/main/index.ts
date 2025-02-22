@@ -1,15 +1,5 @@
 export * from "zodiac-roles-deployments"
 
-export {
-  c,
-  forAll,
-  processPermissions,
-  reconstructPermissions,
-  coercePermission,
-  validatePresets,
-  targetId,
-  permissionId,
-} from "./permissions"
 export type {
   Permission,
   PermissionCoerced,
@@ -17,15 +7,23 @@ export type {
   FunctionPermission,
   FunctionPermissionCoerced,
   PermissionSet,
+  ExecutionFlags,
 } from "./permissions"
 
-export { checkIntegrity } from "./utils/targetIntegrity"
+export {
+  processPermissions,
+  reconstructPermissions,
+  coercePermission,
+  validatePresets,
+  targetId,
+  permissionId,
+} from "./permissions"
 
-export { encodeKey, decodeKey } from "./keys"
+export { c, forAll } from "./authoring"
 
 export { planApply, planApplyRole, planExtendRole } from "./plan"
 
+export { encodeKey, decodeKey } from "./keys"
+
 export { postRole } from "./api"
 export { posterAbi, rolesAbi } from "./abi"
-
-export { ethSdkConfig } from "./ethSdk"

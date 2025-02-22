@@ -1,19 +1,23 @@
 import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
-import { AbiType, FunctionPermission } from "../../types"
-import { coercePermission } from "../../utils"
+import { checkParameterTypeCompatibility } from "../../conditions/checkConditionIntegrity"
+
+import { FunctionPermission } from "../../permissions"
+import { coercePermission } from "../../permissions/utils"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
+import { describeStructure, parameterType } from "./utils"
+
 import {
   ConditionFunction,
   Scoping,
   StructScoping,
   TupleScopings,
 } from "./types"
-import { describeStructure, parameterType } from "./utils"
+
+type AbiType = string | ParamType
 
 /**
  * Matches a tuple or array against a structure of conditions.

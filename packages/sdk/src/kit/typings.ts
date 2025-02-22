@@ -12,22 +12,18 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 // eslint does not know about our Typescript path alias
 // eslint-disable-next-line import/no-unresolved
-import { c } from "zodiac-roles-sdk"
-
-// For things that are not publicly exported we still use relative paths.
-// Since these are mainly types, this won't blow up bundles.
 import {
-  callWithinAllowance,
-  etherWithinAllowance,
-} from "../permissions/authoring/conditions/allowances"
-import { TupleScopings } from "../permissions/authoring/conditions/types"
-import {
+  c,
   ExecutionFlags,
   TargetPermission,
   FunctionPermission,
   FunctionPermissionCoerced,
-} from "../permissions/types"
-import { coercePermission } from "../permissions/utils"
+} from "zodiac-roles-sdk"
+
+// For things that are not publicly exported we still use relative paths.
+// Since these are mainly types, this won't blow up bundles.
+import { TupleScopings } from "../main/authoring/conditions/types"
+import { coercePermission } from "../main/permissions/utils"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 
@@ -173,14 +169,14 @@ const applyOptions = (
 
     condition = applyGlobalAllowance(
       condition,
-      etherWithinAllowance(options.etherWithinAllowance)()
+      c.etherWithinAllowance(options.etherWithinAllowance)()
     )
   }
 
   if (options.callWithinAllowance) {
     condition = applyGlobalAllowance(
       condition,
-      callWithinAllowance(options.callWithinAllowance)()
+      c.callWithinAllowance(options.callWithinAllowance)()
     )
   }
 
