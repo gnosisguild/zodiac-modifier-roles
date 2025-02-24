@@ -11,8 +11,8 @@
       "import": "./build/esm/sdk/src/main/index.js"
     },
     "./kit": {
-      "require": "./build/cjs/sdk/src/index/kit.js",
-      "import": "./build/esm/sdk/src/index/kit.js"
+      "require": "./build/cjs/sdk/src/kit/index.js",
+      "import": "./build/esm/sdk/src/kit/index.js"
     },
     "./annotations": {
       "require": "./build/cjs/sdk/src/annotations/index.js",
