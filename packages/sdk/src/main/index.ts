@@ -19,10 +19,18 @@ export {
   permissionId,
 } from "./permissions"
 
-export { c, forAll } from "./authoring"
+/*
+ *
+ * Layer 1 - Target
+ *
+ */
+export { c, forAll } from "./target/authoring"
+export { planApply, planApplyRole, planExtendRole } from "./target/plan"
 
-export { planApply, planApplyRole, planExtendRole } from "./plan"
-
+/*
+ *
+ * Misc
+ *
+ */
 export { encodeKey, decodeKey } from "./keys"
-
-export { postRole } from "./api"
+export { postRole } from "./postRole"

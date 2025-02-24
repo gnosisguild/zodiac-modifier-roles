@@ -8,9 +8,8 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { diff, diffRole } from "./target/diff"
-
-import { Call, encodeCalls, logCall } from "./calls"
+import { type Call, encodeCalls, logCall } from "./calls"
+import { diff, diffRole } from "./diff"
 
 type Options = {
   chainId: ChainId

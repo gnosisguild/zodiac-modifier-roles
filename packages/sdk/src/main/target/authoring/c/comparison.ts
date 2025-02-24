@@ -9,9 +9,11 @@ import {
 } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { ConditionFunction } from "./types"
-import { describeStructure, parameterType } from "./utils"
-import { abiEncode } from "../../utils/abiEncode"
+import { describeStructure } from "../helpers/describeStructure"
+import { parameterType } from "../helpers/parameterType"
+import { abiEncode } from "../../../utils/abiEncode"
+
+import { ConditionFunction } from "../types"
 
 /**
  * Asserts that the value from calldata is equal to the given value

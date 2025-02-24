@@ -2,7 +2,8 @@ import { ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
-import { ConditionFunction, Scoping } from "./types"
+
+import { ConditionFunction, Scoping } from "../types"
 
 type ScopingBranches<T> = [Scoping<T>, Scoping<T>, ...Scoping<T>[]]
 

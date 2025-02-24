@@ -1,7 +1,8 @@
 import { ParamType } from "ethers"
 import { Operator } from "zodiac-roles-deployments"
 
-import { describeStructure, parameterType } from "./utils"
+import { describeStructure } from "../helpers/describeStructure"
+import { parameterType } from "../helpers/parameterType"
 
 /**
  * Allows any value to pass

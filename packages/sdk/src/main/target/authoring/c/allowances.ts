@@ -1,9 +1,9 @@
 import { BigNumberish, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../../utils/abiEncode"
+import { abiEncode } from "../../../utils/abiEncode"
 
-import { ConditionFunction } from "./types"
+import { ConditionFunction } from "../types"
 
 export const withinAllowance =
   (allowanceKey: string): ConditionFunction<BigNumberish> =>

@@ -1,8 +1,8 @@
 import { ExecutionOptions } from "zodiac-roles-deployments"
 
-import { conditionAddress } from "../conditions"
+import { conditionAddress } from "../../conditions"
 
-import { Call } from "./types"
+import { Call } from "./Call"
 
 export const logCall = (
   call: Call,

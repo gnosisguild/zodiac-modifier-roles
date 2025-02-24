@@ -1,9 +1,8 @@
-import { flattenCondition } from "../conditions"
-import { encodeAnnotationsPost, POSTER_ADDRESS } from "./encodePoster"
+import { flattenCondition } from "../../conditions"
+import { encodePostAnnotations, POSTER_ADDRESS } from "./encodePostAnnotations"
 
-import { Call } from "./types"
-
-import { Roles__factory } from "../../typechain"
+import { Call } from "./Call"
+import { Roles__factory } from "../../../typechain"
 
 const rolesInterface = Roles__factory.createInterface()
 
@@ -110,7 +109,7 @@ export const encodeCalls = (
         const { roleKey, body } = call
         return {
           to: POSTER_ADDRESS,
-          data: encodeAnnotationsPost(rolesMod, roleKey, body),
+          data: encodePostAnnotations(rolesMod, roleKey, body),
         }
       }
     }
