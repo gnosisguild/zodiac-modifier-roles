@@ -1,25 +1,25 @@
 import { permissionEquals } from "./permissionEquals"
 import { mergePermissions } from "./mergePermissions"
+import { coercePermission } from "./utils"
 
-import { PermissionCoerced } from "./types"
+import { Permission, PermissionCoerced } from "./types"
 
 /**
  * Filters and validates permission presets, returning two sets:
  * 1. Confirmed presets that are subsets of the provided permissions.
  * 2. Remaining permissions that are not referenced by any confirmed preset.
  */
-export function validatePresets<
-  T extends { permissions: PermissionCoerced[] },
->({
+export function validatePresets<T extends { permissions: Permission[] }>({
   presets,
-  permissions,
+  permissions: input,
 }: {
   presets: readonly (T | null)[]
-  permissions: readonly PermissionCoerced[]
+  permissions: readonly Permission[]
 }): {
   presets: T[]
   permissions: PermissionCoerced[]
 } {
+  const permissions: PermissionCoerced[] = input.map(coercePermission)
   /*
    * sanity check permissions and presets, will throw on unmergeable permissions
    */
