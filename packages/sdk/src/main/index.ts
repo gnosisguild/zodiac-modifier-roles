@@ -7,6 +7,7 @@ export * from "zodiac-roles-deployments"
  */
 export { c, forAll } from "./target/authoring"
 export { planApply, planApplyRole, planExtendRole } from "./target/plan"
+export { default as targetIntegrity } from "./target/integrity"
 
 /*
  *
