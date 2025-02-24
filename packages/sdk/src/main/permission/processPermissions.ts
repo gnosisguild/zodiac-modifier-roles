@@ -5,11 +5,12 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../conditions"
+import { coercePermission } from "./coercePermission"
 import { mergePermissions } from "./mergePermissions"
+import { normalizeCondition } from "../conditions"
 
 import { groupBy } from "../utils/groupBy"
-import { coercePermission, execOptions } from "./utils"
+import { execOptions } from "./utils"
 
 import { Permission, PermissionSet } from "./types"
 
