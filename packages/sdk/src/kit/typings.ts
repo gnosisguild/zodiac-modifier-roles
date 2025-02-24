@@ -23,7 +23,7 @@ import {
 // For things that are not publicly exported we still use relative paths.
 // Since these are mainly types, this won't blow up bundles.
 import { TupleScopings } from "../main/target/authoring/types"
-import { coercePermission } from "../main/permissions/utils"
+import { coercePermission } from "../main/permission/utils"
 
 // In this file, we derive the typed allow kit from the eth-sdk-client that has been generated based on the user-provided config json.
 

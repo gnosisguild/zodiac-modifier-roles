@@ -3,8 +3,8 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
 
-import { FunctionPermission } from "../../../permissions"
-import { coercePermission } from "../../../permissions/utils"
+import { FunctionPermission } from "../../../permission"
+import { coercePermission } from "../../../permission/utils"
 import { describeStructure } from "../helpers/describeStructure"
 import { parameterType } from "../helpers/parameterType"
 

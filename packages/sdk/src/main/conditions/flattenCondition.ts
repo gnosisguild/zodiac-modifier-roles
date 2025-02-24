@@ -1,6 +1,11 @@
-import { Condition } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { ConditionFlat } from "./types"
+export interface ConditionFlat {
+  parent: number
+  paramType: ParameterType
+  operator: Operator
+  compValue?: string
+}
 
 /**
  * Flattens a condition with nested children conditions into a breadth-first, flat array of conditions with parent index references.
