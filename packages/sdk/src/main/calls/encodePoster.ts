@@ -1,6 +1,17 @@
 import { Interface } from "ethers"
 
-import { posterAbi } from "../abi"
+const posterAbi = [
+  {
+    inputs: [
+      { internalType: "string", name: "content", type: "string" },
+      { internalType: "string", name: "tag", type: "string" },
+    ],
+    name: "post",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as const
 
 interface AnnotationsPost {
   addAnnotations?: {
