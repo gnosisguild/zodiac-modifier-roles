@@ -8,8 +8,8 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
+import { normalizeCondition } from "../../permission/normalizeCondition"
 import { diffTarget, diffTargets } from "./target"
-import { normalizeCondition } from "../../conditions"
 
 const roleKey = ZeroHash
 const address = ZeroAddress as `0x${string}`

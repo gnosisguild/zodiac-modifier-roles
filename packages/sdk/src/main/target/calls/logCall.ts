@@ -1,6 +1,6 @@
 import { ExecutionOptions } from "zodiac-roles-deployments"
 
-import { conditionAddress } from "../../conditions"
+import { conditionAddress } from "../../permission/conditionId"
 
 import { Call } from "./Call"
 

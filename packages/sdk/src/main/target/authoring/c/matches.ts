@@ -2,7 +2,7 @@ import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { coercePermission } from "../../../permission/coercePermission"
-import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
+import { checkParameterTypeCompatibility } from "../../../permission/checkConditionIntegrity"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"

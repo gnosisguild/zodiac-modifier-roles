@@ -1,4 +1,4 @@
-import { normalizeCondition } from "../conditions"
+import { normalizeCondition } from "./normalizeCondition"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
