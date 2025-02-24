@@ -1,4 +1,5 @@
 import { expect, it, suite } from "vitest"
+import { ZeroAddress, ZeroHash } from "ethers"
 import {
   Clearance,
   ExecutionOptions,
@@ -7,10 +8,8 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { ZeroAddress, ZeroHash } from "ethers"
-
 import { diffTarget, diffTargets } from "./target"
-import { normalizeCondition } from "../conditions"
+import { normalizeCondition } from "../../conditions"
 
 const roleKey = ZeroHash
 const address = ZeroAddress as `0x${string}`

@@ -1,6 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { hexlify, zeroPadValue } from "ethers"
 import { Allowance } from "zodiac-roles-deployments"
+
 import { diffAllowances } from "./allowances"
 
 const key1 = hexlify(zeroPadValue("0x01", 32)) as `0x${string}`

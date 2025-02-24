@@ -6,10 +6,10 @@ import {
   Operator,
   ParameterType,
 } from "zodiac-roles-deployments"
-import { abiEncode } from "../utils/abiEncode"
-import { normalizeCondition } from "../conditions"
 
 import { diffFunction, diffFunctions } from "./function"
+import { abiEncode } from "../../utils/abiEncode"
+import { normalizeCondition } from "../../conditions"
 
 const roleKey = ZeroHash
 const targetAddress = ZeroAddress

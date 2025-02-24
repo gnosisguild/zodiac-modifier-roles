@@ -8,7 +8,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import diff, { diffRole } from "./diff"
+import { diff, diffRole } from "./target/diff"
 
 import { Call, encodeCalls, logCall } from "./calls"
 
