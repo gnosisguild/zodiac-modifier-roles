@@ -1,8 +1,7 @@
-import { ZeroHash } from "ethers"
 import { Clearance, Target } from "zodiac-roles-deployments"
 
 import { diffFunctions } from "./function"
-import { Call } from "../calls"
+import { Call } from "../../calls"
 
 import {
   Diff,
@@ -71,11 +70,6 @@ export function diffTarget({
       next: next?.functions,
     })
   )
-}
-
-export function compareTargets(prev: Target[], next: Target[]): boolean {
-  const { minus, plus } = diffTargets({ prev, next, roleKey: ZeroHash })
-  return minus.length === 0 && plus.length === 0
 }
 
 function draftCall({
