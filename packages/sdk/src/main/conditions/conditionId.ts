@@ -8,7 +8,7 @@ import {
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 
 import { flattenCondition } from "./flattenCondition"
 import { ConditionFlat } from "./types"
@@ -74,7 +74,7 @@ const packCompValue = (condition: ConditionFlat) => {
 
   return condition.operator === Operator.EqualTo
     ? keccak256(condition.compValue)
-    : encodeAbiParameters(["bytes32"], [condition.compValue])
+    : abiEncode(["bytes32"], [condition.compValue])
 }
 
 const removeExtraneousOffsets = (conditions: ConditionFlat[]) => {

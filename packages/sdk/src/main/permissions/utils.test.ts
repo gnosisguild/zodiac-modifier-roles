@@ -1,12 +1,12 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 import { coercePermission } from "./utils"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: encodeAbiParameters(["uint256"], [id]),
+  compValue: abiEncode(["uint256"], [id]),
 })
 
 suite("coercePermission()", () => {

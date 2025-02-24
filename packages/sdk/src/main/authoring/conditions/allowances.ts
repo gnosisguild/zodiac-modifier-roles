@@ -1,7 +1,7 @@
 import { BigNumberish, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { encodeAbiParameters } from "../../utils/encodeAbiParameters"
+import { abiEncode } from "../../utils/abiEncode"
 
 import { ConditionFunction } from "./types"
 
@@ -15,10 +15,7 @@ export const withinAllowance =
     return {
       paramType: ParameterType.Static,
       operator: Operator.WithinAllowance,
-      compValue: encodeAbiParameters(
-        ["bytes32"],
-        [allowanceKey]
-      ) as `0x${string}`,
+      compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
     }
   }
 
@@ -26,10 +23,7 @@ export const callWithinAllowance = (allowanceKey: `0x${string}`) => () => {
   return {
     paramType: ParameterType.None,
     operator: Operator.CallWithinAllowance,
-    compValue: encodeAbiParameters(
-      ["bytes32"],
-      [allowanceKey]
-    ) as `0x${string}`,
+    compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
   }
 }
 
@@ -37,9 +31,6 @@ export const etherWithinAllowance = (allowanceKey: `0x${string}`) => () => {
   return {
     paramType: ParameterType.None,
     operator: Operator.EtherWithinAllowance,
-    compValue: encodeAbiParameters(
-      ["bytes32"],
-      [allowanceKey]
-    ) as `0x${string}`,
+    compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
   }
 }

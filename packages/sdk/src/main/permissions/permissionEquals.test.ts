@@ -2,7 +2,7 @@ import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { permissionEquals } from "./permissionEquals"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
 const AddressTwo = "0x0000000000000000000000000000000000000002"
@@ -10,7 +10,7 @@ const AddressTwo = "0x0000000000000000000000000000000000000002"
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: encodeAbiParameters(["uint256"], [id]),
+  compValue: abiEncode(["uint256"], [id]),
 })
 
 suite("permissionEquals()", () => {

@@ -6,14 +6,14 @@ import {
   Operator,
   ParameterType,
 } from "zodiac-roles-deployments"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 import { normalizeCondition } from "../conditions"
 import { PermissionSet } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: encodeAbiParameters(["uint256"], [id]),
+  compValue: abiEncode(["uint256"], [id]),
 })
 
 suite("processPermissions()", () => {

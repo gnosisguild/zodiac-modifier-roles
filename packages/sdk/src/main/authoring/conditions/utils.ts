@@ -1,10 +1,10 @@
-import { ParamType } from "ethers"
+ import { ParamType } from "ethers"
 import { ParameterType, Condition, Operator } from "zodiac-roles-deployments"
 
-import { encodeAbiParameters } from "../../utils/encodeAbiParameters"
+import { abiEncode } from "../../utils/abiEncode"
 
-export const encodeValue = (value: any, type: ParamType) => {
-  return encodeAbiParameters([type], [value]) as `0x${string}`
+ export const encodeValue = (value: any, type: ParamType): `0x${string}` => {
+   return abiEncode([type], [value]) 
 }
 
 export const parameterType = (type: ParamType): ParameterType => {
