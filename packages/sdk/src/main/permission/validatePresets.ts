@@ -1,6 +1,6 @@
-import { permissionEquals } from "./permissionEquals"
+import { coercePermission } from "./coercePermission"
 import { mergePermissions } from "./mergePermissions"
-import { coercePermission } from "./utils"
+import { permissionEquals } from "./permissionEquals"
 
 import { Permission, PermissionCoerced } from "./types"
 
