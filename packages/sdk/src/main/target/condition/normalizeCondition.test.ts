@@ -494,3 +494,58 @@ suite("normalizeCondition()", () => {
     expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
   })
 })
+
+suite("normalizeCondition() - MISC transfered from other tests", () => {
+  it("both with condition - joined via OR", () => {
+    const condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2)],
+    }
+    expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
+  })
+
+  it("both with condition - joined via OR, left gets hoisted", () => {
+    const left = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2)],
+    }
+
+    const right = DUMMY_COMP(3)
+
+    const condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [left, right],
+    }
+
+    expect(stripIds(normalizeCondition(condition))).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
+    })
+  })
+
+  it("both with condition - joined via OR, right gets hoisted", () => {
+    const left = DUMMY_COMP(1)
+
+    const right = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(2), DUMMY_COMP(3)],
+    }
+
+    const condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [left, right],
+    }
+
+    expect(stripIds(normalizeCondition(condition))).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
+    })
+  })
+})
