@@ -1,5 +1,5 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
-import { normalizeCondition } from "../conditions"
+import { normalizeCondition } from "./normalizeCondition"
 
 /**
  * @dev Merges two conditions using a logical OR, flattening nested OR conditions. If the conditions are equal, it will still create separate OR branches.

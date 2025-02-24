@@ -1,4 +1,4 @@
-import { flattenCondition } from "../../conditions"
+import { flattenCondition } from "../../permission/flattenCondition"
 import { encodePostAnnotations, POSTER_ADDRESS } from "./encodePostAnnotations"
 
 import { Call } from "./Call"

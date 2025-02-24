@@ -6,8 +6,10 @@ import {
   Operator,
   ParameterType,
 } from "zodiac-roles-deployments"
+
+import { normalizeCondition } from "./normalizeCondition"
+
 import { abiEncode } from "../utils/abiEncode"
-import { normalizeCondition } from "../conditions"
 import { PermissionSet } from "./types"
 
 const DUMMY_COMP = (id: number) => ({

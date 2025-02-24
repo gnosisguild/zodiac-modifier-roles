@@ -7,7 +7,7 @@ import {
 
 import { coercePermission } from "./coercePermission"
 import { mergePermissions } from "./mergePermissions"
-import { normalizeCondition } from "../conditions"
+import { normalizeCondition } from "./normalizeCondition"
 
 import { groupBy } from "../utils/groupBy"
 import { execOptions } from "./utils"
