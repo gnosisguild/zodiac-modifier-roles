@@ -26,4 +26,3 @@ export { planApply, planApplyRole, planExtendRole } from "./plan"
 export { encodeKey, decodeKey } from "./keys"
 
 export { postRole } from "./api"
-export { posterAbi, rolesAbi } from "./abi"
