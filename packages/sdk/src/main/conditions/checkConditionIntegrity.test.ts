@@ -5,7 +5,7 @@ import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
 } from "./checkConditionIntegrity"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 
 suite("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {
@@ -32,7 +32,7 @@ suite("checkConditionIntegrity()", () => {
       checkConditionIntegrity({
         paramType: ParameterType.None,
         operator: Operator.And,
-        compValue: encodeAbiParameters(["uint256"], [0]),
+        compValue: abiEncode(["uint256"], [0]),
         children: [
           { paramType: ParameterType.Static, operator: Operator.Pass },
         ],

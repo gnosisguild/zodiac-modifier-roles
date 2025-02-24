@@ -5,7 +5,7 @@ import { normalizeCondition, stripIds } from "./normalizeCondition"
 
 import { FunctionPermissionCoerced } from "../permissions"
 import { mergePermissions } from "../permissions/mergePermissions"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 
 import { c } from "../index"
 import { allow } from "../../kit"
@@ -13,7 +13,7 @@ import { allow } from "../../kit"
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: encodeAbiParameters(["uint256"], [id]),
+  compValue: abiEncode(["uint256"], [id]),
 })
 
 suite("normalizeCondition()", () => {

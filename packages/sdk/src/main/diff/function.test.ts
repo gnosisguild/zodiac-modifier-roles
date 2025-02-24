@@ -6,7 +6,7 @@ import {
   Operator,
   ParameterType,
 } from "zodiac-roles-deployments"
-import { encodeAbiParameters } from "../utils/encodeAbiParameters"
+import { abiEncode } from "../utils/abiEncode"
 import { normalizeCondition } from "../conditions"
 
 import { diffFunction, diffFunctions } from "./function"
@@ -18,7 +18,7 @@ const selector: `0x${string}` = "0xaabbccdd"
 const staticComp = (id: number) => ({
   paramType: ParameterType.Static,
   operator: Operator.Custom,
-  compValue: encodeAbiParameters(["uint256"], [id]),
+  compValue: abiEncode(["uint256"], [id]),
 })
 
 suite("diffFunction", () => {
