@@ -1,5 +1,4 @@
-import { normalizeCondition } from "./normalizeCondition"
-
+import { normalizeCondition } from "../target/condition/normalizeCondition"
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
 export function permissionEquals(

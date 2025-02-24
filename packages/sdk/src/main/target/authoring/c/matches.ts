@@ -2,13 +2,12 @@ import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { coercePermission } from "../../../permission/coercePermission"
-import { checkParameterTypeCompatibility } from "../../../permission/checkConditionIntegrity"
+import { checkParameterTypeCompatibility } from "../../condition/checkConditionIntegrity"
+import { describeStructure } from "../helpers/describeStructure"
+import { parameterType } from "../helpers/parameterType"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
-
-import { describeStructure } from "../helpers/describeStructure"
-import { parameterType } from "../helpers/parameterType"
 
 import {
   ConditionFunction,

@@ -3,11 +3,11 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition, stripIds } from "./normalizeCondition"
 
-import { FunctionPermissionCoerced, mergePermissions } from "../permission"
-import { abiEncode } from "../utils/abiEncode"
+import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
+import { abiEncode } from "../../utils/abiEncode"
 
-import { c } from "../target/authoring"
-import { allow } from "../../kit"
+import { c } from "../../target/authoring"
+import { allow } from "../../../kit"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,

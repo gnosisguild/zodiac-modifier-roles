@@ -1,7 +1,9 @@
-import { flattenCondition } from "../../permission/flattenCondition"
 import { encodePostAnnotations, POSTER_ADDRESS } from "./encodePostAnnotations"
 
+import { flattenCondition } from "../condition/flattenCondition"
+
 import { Call } from "./Call"
+
 import { Roles__factory } from "../../../typechain"
 
 const rolesInterface = Roles__factory.createInterface()

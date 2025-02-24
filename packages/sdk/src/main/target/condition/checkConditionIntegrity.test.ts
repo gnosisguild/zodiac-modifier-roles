@@ -5,7 +5,7 @@ import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
 } from "./checkConditionIntegrity"
-import { abiEncode } from "../utils/abiEncode"
+import { abiEncode } from "../../utils/abiEncode"
 
 suite("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {

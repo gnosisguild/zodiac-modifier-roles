@@ -1,13 +1,14 @@
 import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deployments"
 
+import { normalizeCondition } from "../target/condition/normalizeCondition"
+import { conditionAddress } from "../target/condition/conditionId"
+
 import {
   PermissionCoerced,
   FunctionPermissionCoerced,
   ExecutionFlags,
   TargetPermission,
 } from "./types"
-import { normalizeCondition } from "./normalizeCondition"
-import { conditionAddress } from "./conditionId"
 
 export const execOptions = (options: ExecutionFlags): ExecutionOptionsEnum => {
   if (options.send && options.delegatecall) return ExecutionOptionsEnum.Both

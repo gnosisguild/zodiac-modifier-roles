@@ -1,4 +1,4 @@
-import { mergeConditions } from "./mergeConditions"
+import { mergeConditions } from "../target/condition/mergeConditions"
 import {
   isPermissionAllowed,
   isPermissionConditional,

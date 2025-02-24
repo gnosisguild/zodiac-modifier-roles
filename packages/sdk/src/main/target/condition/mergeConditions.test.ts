@@ -1,7 +1,8 @@
 import { expect, it, suite } from "vitest"
-import { mergeConditions } from "./mergeConditions"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
-import { abiEncode } from "../utils/abiEncode"
+
+import { abiEncode } from "../../utils/abiEncode"
+import { mergeConditions } from "./mergeConditions"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
