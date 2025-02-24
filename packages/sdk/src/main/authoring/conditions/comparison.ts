@@ -10,7 +10,8 @@ import {
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "./types"
-import { describeStructure, parameterType, encodeValue } from "./utils"
+import { describeStructure, parameterType } from "./utils"
+import { abiEncode } from "../../utils/abiEncode"
 
 /**
  * Asserts that the value from calldata is equal to the given value
@@ -24,7 +25,7 @@ export const eq =
     return {
       paramType: parameterType(type),
       operator: Operator.EqualTo,
-      compValue: encodeValue(value, type),
+      compValue: abiEncode([type], [value]),
       children: structure.children,
     }
   }
@@ -58,7 +59,7 @@ export const gt =
       operator: type.type.startsWith("uint")
         ? Operator.GreaterThan
         : Operator.SignedIntGreaterThan,
-      compValue: encodeValue(value, abiType),
+      compValue: abiEncode([type], [value]),
     }
   }
 
@@ -84,7 +85,7 @@ export const lt =
       operator: type.type.startsWith("uint")
         ? Operator.LessThan
         : Operator.SignedIntLessThan,
-      compValue: encodeValue(value, abiType),
+      compValue: abiEncode([type], [value]),
     }
   }
 
