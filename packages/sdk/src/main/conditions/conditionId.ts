@@ -10,8 +10,7 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../utils/abiEncode"
 
-import { flattenCondition } from "./flattenCondition"
-import { ConditionFlat } from "./types"
+import { flattenCondition, ConditionFlat } from "./flattenCondition"
 
 const ERC2470_SINGLETON_FACTORY_ADDRESS =
   "0xce0042b868300000d44a59004da54a005ffdcf9f"

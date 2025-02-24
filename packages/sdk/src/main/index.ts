@@ -1,5 +1,18 @@
 export * from "zodiac-roles-deployments"
 
+/*
+ *
+ * Layer 1 - Target
+ *
+ */
+export { c, forAll } from "./target/authoring"
+export { planApply, planApplyRole, planExtendRole } from "./target/plan"
+
+/*
+ *
+ * Layer 2 - Permission
+ *
+ */
 export type {
   Permission,
   PermissionCoerced,
@@ -8,24 +21,13 @@ export type {
   FunctionPermissionCoerced,
   PermissionSet,
   ExecutionFlags,
-} from "./permissions"
+} from "./permission"
 
 export {
   processPermissions,
   reconstructPermissions,
-  coercePermission,
   validatePresets,
-  targetId,
-  permissionId,
-} from "./permissions"
-
-/*
- *
- * Layer 1 - Target
- *
- */
-export { c, forAll } from "./target/authoring"
-export { planApply, planApplyRole, planExtendRole } from "./target/plan"
+} from "./permission"
 
 /*
  *
