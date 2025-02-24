@@ -8,7 +8,7 @@ import {
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../utils/abiEncode"
+import { abiEncode } from "../../utils/abiEncode"
 
 import { flattenCondition, ConditionFlat } from "./flattenCondition"
 
