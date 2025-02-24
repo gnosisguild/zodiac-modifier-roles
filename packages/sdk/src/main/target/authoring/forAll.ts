@@ -1,9 +1,9 @@
 import { BytesLike } from "ethers"
 import { Condition } from "zodiac-roles-deployments"
 
-import { ExecutionFlags, Permission } from ".."
+import { ExecutionFlags, Permission } from "../../permissions"
 
-import { ConditionFunction } from "./conditions/types"
+import { ConditionFunction } from "./types"
 
 type UntargetedFunctionPermission = (
   | { selector: `0x${string}` }

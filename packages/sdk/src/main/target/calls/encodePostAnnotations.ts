@@ -29,7 +29,7 @@ const ROLES_ANNOTATION_POSTER_TAG = "ROLES_PERMISSION_ANNOTATION"
 
 const posterInterface = new Interface(posterAbi)
 
-export const encodeAnnotationsPost = (
+export const encodePostAnnotations = (
   rolesMod: string,
   roleKey: string,
   payload: AnnotationsPost

@@ -2,7 +2,8 @@ import { ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
-import { ArrayElement, ConditionFunction, Scoping } from "./types"
+
+import { ArrayElement, ConditionFunction, Scoping } from "../types"
 
 /**
  * Passes if every element of the array matches the given condition.

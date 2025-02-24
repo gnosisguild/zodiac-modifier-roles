@@ -1,7 +1,6 @@
 import { Clearance, Target } from "zodiac-roles-deployments"
 
 import { diffFunctions } from "./function"
-import { Call } from "../../calls"
 
 import {
   Diff,
@@ -11,6 +10,7 @@ import {
   isExecutionOptionsPlus,
   merge,
 } from "./helpers"
+import { Call } from "../calls"
 
 export function diffTargets({
   roleKey,

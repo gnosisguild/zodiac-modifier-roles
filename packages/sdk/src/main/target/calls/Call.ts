@@ -1,5 +1,16 @@
 import { Condition, ExecutionOptions } from "zodiac-roles-deployments"
 
+export type Call =
+  | AllowTargetCall
+  | ScopeTargetCall
+  | RevokeTargetCall
+  | AllowFunctionCall
+  | ScopeFunctionCall
+  | RevokeFunctionCall
+  | AssignRolesCall
+  | SetAllowanceCall
+  | PostAnnotationsCall
+
 interface AllowTargetCall {
   call: "allowTarget"
   roleKey: string
@@ -70,14 +81,3 @@ interface PostAnnotationsCall {
     removeAnnotations?: string[]
   }
 }
-
-export type Call =
-  | AllowTargetCall
-  | ScopeTargetCall
-  | RevokeTargetCall
-  | AllowFunctionCall
-  | ScopeFunctionCall
-  | RevokeFunctionCall
-  | AssignRolesCall
-  | SetAllowanceCall
-  | PostAnnotationsCall

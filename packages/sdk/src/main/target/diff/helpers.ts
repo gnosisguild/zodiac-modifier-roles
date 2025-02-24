@@ -1,5 +1,5 @@
 import { Clearance, ExecutionOptions } from "zodiac-roles-deployments"
-import { Call } from "../../calls"
+import { Call } from "../calls"
 
 export type Diff = {
   minus: Call[]

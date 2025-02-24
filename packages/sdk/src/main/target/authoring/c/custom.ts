@@ -1,7 +1,7 @@
 import { BigNumberish, BytesLike, getAddress, hexlify, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { ConditionFunction } from "./types"
+import { ConditionFunction } from "../types"
 
 const AVATAR_IS_OWNER_OF_ERC_721_ADDRESS =
   "0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1"

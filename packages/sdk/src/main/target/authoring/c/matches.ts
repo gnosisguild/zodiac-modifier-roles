@@ -1,21 +1,22 @@
 import { BigNumberish, isHexString, ParamType } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { checkParameterTypeCompatibility } from "../../conditions/checkConditionIntegrity"
+import { checkParameterTypeCompatibility } from "../../../conditions/checkConditionIntegrity"
 
-import { FunctionPermission } from "../../permissions"
-import { coercePermission } from "../../permissions/utils"
+import { FunctionPermission } from "../../../permissions"
+import { coercePermission } from "../../../permissions/utils"
+import { describeStructure } from "../helpers/describeStructure"
+import { parameterType } from "../helpers/parameterType"
 
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
-import { describeStructure, parameterType } from "./utils"
 
 import {
   ConditionFunction,
   Scoping,
   StructScoping,
   TupleScopings,
-} from "./types"
+} from "../types"
 
 type AbiType = string | ParamType
 
