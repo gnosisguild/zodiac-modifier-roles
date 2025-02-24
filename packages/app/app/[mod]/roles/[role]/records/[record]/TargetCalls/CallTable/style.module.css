@@ -2,3 +2,13 @@
   width: 100%;
   max-height: calc(100vh - 100px);
 }
+
+.table ol {
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+}
+.table ol li::marker {
+  color: silver;
+  font-size: 0.8em;
+}

@@ -1,4 +1,4 @@
-import { maxArrayLength } from "."
+import { maxArrayLength } from "./maxArrayLength"
 
 describe("maxArrayLength", () => {
   it("returns the maximum array length if there are nested arrays", () => {
