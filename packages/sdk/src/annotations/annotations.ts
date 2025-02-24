@@ -5,11 +5,13 @@ import { Annotation } from "zodiac-roles-deployments"
 import {
   Permission,
   PermissionCoerced,
-  coercePermission,
   validatePresets,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
+
+// TODO will remove
+import { coercePermission } from "../main/permission/coercePermission"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {
   schema: OpenAPIV3.SchemaObject
