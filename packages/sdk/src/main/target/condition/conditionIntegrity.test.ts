@@ -4,7 +4,7 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
-} from "./checkConditionIntegrity"
+} from "./conditionIntegrity"
 import { abiEncode } from "../../utils/abiEncode"
 
 suite("checkConditionIntegrity()", () => {

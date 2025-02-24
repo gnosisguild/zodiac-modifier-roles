@@ -1,8 +1,8 @@
 import { Clearance, Function, Target } from "zodiac-roles-deployments"
 
-import { checkRootConditionIntegrity } from "../target/condition/checkConditionIntegrity"
+import { checkRootConditionIntegrity } from "./condition/conditionIntegrity"
 
-export const checkIntegrity = (targets: Target[]): void => {
+export default (targets: Target[]): void => {
   const uniqueAddresses = new Set(
     targets.map((target) => target.address.toLowerCase())
   )
@@ -10,10 +10,10 @@ export const checkIntegrity = (targets: Target[]): void => {
     throw new Error("Duplicate target addresses")
   }
 
-  targets.forEach(checkTargetIntegrity)
+  targets.forEach(targetIntegrity)
 }
 
-const checkTargetIntegrity = (target: Target): void => {
+const targetIntegrity = (target: Target): void => {
   if (
     target.clearance === Clearance.Function &&
     target.functions.length === 0
@@ -36,10 +36,10 @@ const checkTargetIntegrity = (target: Target): void => {
     throw new Error(`Duplicate functions in target ${target.address}`)
   }
 
-  target.functions.forEach(checkFunctionIntegrity)
+  target.functions.forEach(functionIntegrity)
 }
 
-const checkFunctionIntegrity = (func: Function): void => {
+const functionIntegrity = (func: Function): void => {
   if (func.wildcarded && func.condition) {
     throw new Error(
       `Wildcarded functions cannot have conditions (function in violation: ${func.selector})`

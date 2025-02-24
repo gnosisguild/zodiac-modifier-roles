@@ -1,10 +1,5 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-export const checkConditionIntegrity = (condition: Condition): void => {
-  checkConsistentChildrenTypes(condition)
-  checkConditionIntegrityRecursive(condition)
-}
-
 export const checkRootConditionIntegrity = (condition: Condition): void => {
   const rootType = checkConsistentChildrenTypes(condition)
   if (rootType !== ParameterType.Calldata) {
@@ -12,6 +7,11 @@ export const checkRootConditionIntegrity = (condition: Condition): void => {
       `Root param type must be \`Calldata\`, got \`${ParameterType[rootType]}\``
     )
   }
+  checkConditionIntegrityRecursive(condition)
+}
+
+export const checkConditionIntegrity = (condition: Condition): void => {
+  checkConsistentChildrenTypes(condition)
   checkConditionIntegrityRecursive(condition)
 }
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import {
   Annotation,
   Target,
-  checkIntegrity,
+  targetIntegrity,
   processPermissions,
 } from "zodiac-roles-sdk"
 import styles from "./page.module.css"
@@ -76,7 +76,7 @@ export default function PermissionsPage() {
 
   if (targets) {
     try {
-      checkIntegrity(targets)
+      targetIntegrity(targets)
     } catch (e) {
       errorMessage =
         e instanceof Error
