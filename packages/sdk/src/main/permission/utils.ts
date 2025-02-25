@@ -1,7 +1,6 @@
 import { ExecutionOptions as ExecutionOptionsEnum } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../target/condition/normalizeCondition"
-import { conditionAddress } from "../target/condition/conditionId"
+import { conditionAddress, normalizeCondition } from "../target/condition/"
 
 import {
   PermissionCoerced,

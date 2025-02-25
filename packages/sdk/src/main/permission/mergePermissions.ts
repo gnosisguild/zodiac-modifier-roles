@@ -1,8 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
-import {
-  normalizeCondition,
-  stripIds,
-} from "../target/condition/normalizeCondition"
+
+import { normalizeCondition, stripIds } from "../target/condition"
 import {
   isPermissionAllowed,
   isPermissionConditional,

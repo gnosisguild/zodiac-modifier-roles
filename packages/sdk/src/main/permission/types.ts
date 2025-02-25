@@ -1,4 +1,4 @@
-import { BytesLike, ParamType } from "ethers"
+import { BytesLike } from "ethers"
 import { Annotation, Condition } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "../target/authoring/types"

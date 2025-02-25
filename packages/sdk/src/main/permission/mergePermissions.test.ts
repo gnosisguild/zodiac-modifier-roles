@@ -1,5 +1,6 @@
 import { describe, expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
+
 import { abiEncode } from "../abiEncode"
 import { mergePermissions } from "./mergePermissions"
 import {
@@ -7,6 +8,7 @@ import {
   isPermissionConditional,
   isPermissionWildcarded,
 } from "./utils"
+
 import { Permission } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
