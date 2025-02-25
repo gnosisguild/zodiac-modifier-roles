@@ -3,8 +3,6 @@ import { Annotation, Condition } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "../target/authoring/types"
 
-export type AbiType = string | ParamType
-
 export interface ExecutionFlags {
   send?: boolean
   delegatecall?: boolean
