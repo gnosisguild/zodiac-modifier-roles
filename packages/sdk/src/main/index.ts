@@ -25,8 +25,10 @@ export type {
 } from "./permission"
 
 export {
+  permissionId,
   processPermissions,
   reconstructPermissions,
+  targetId,
   validatePresets,
 } from "./permission"
 
@@ -35,5 +37,6 @@ export {
  * Misc
  *
  */
+export { default as abi } from "../abi.json"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
