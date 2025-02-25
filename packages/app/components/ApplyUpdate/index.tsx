@@ -1,13 +1,12 @@
 import { MdOutlineFileDownload } from "react-icons/md"
 import {
+  abi as rolesAbi,
   Annotation,
   ChainId,
   Role,
   Target,
   planApplyRole,
   decodeKey,
-  posterAbi,
-  rolesAbi,
 } from "zodiac-roles-sdk"
 
 import Box from "@/ui/Box"
@@ -122,6 +121,9 @@ const exportToSafeTransactionBuilder = (
 
 // EIP-3722 Poster contract
 const POSTER_ADDRESS = "0x000000000000cd17345801aa8147b8D3950260FF" as const
+const posterAbi = JSON.parse(
+  Interface.from(["function post(string content,string tag)"]).formatJson()
+)
 
 const decode = (transaction: { to: `0x${string}`; data: `0x${string}` }) => {
   const abi: readonly JsonFragment[] =
