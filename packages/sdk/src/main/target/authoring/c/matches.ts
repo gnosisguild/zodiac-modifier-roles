@@ -9,14 +9,13 @@ import { parameterType } from "../helpers/parameterType"
 import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
 
+import { FunctionPermission } from "../../../permission"
 import {
   ConditionFunction,
   Scoping,
   StructScoping,
   TupleScopings,
 } from "../types"
-
-import { FunctionPermission } from "../../../permission"
 
 type AbiType = string | ParamType
 
