@@ -1,12 +1,13 @@
-import { encodePostAnnotations, POSTER_ADDRESS } from "./encodePostAnnotations"
-
+import { Interface } from "ethers"
 import { flattenCondition } from "../condition/flattenCondition"
 
 import { Call } from "./Call"
-
 import { Roles__factory } from "../../../typechain"
 
 const rolesInterface = Roles__factory.createInterface()
+const posterInterface = Interface.from([
+  "function post(string content,string tag)",
+])
 
 export const encodeCalls = (
   calls: Call[],
@@ -108,12 +109,26 @@ export const encodeCalls = (
       }
 
       case "postAnnotations": {
-        const { roleKey, body } = call
+        const content = JSON.stringify({
+          rolesMod,
+          roleKey: call.roleKey,
+          ...call.body,
+        })
+        const tag = POSTER_TAG_ROLES_ANNOTATION
+
         return {
           to: POSTER_ADDRESS,
-          data: encodePostAnnotations(rolesMod, roleKey, body),
+          data: posterInterface.encodeFunctionData("post", [
+            content,
+            tag,
+          ]) as `0x${string}`,
         }
       }
     }
   })
 }
+
+// EIP-3722 Poster contract
+const POSTER_ADDRESS =
+  "0x000000000000cd17345801aa8147b8D3950260FF" as `0x${string}`
+const POSTER_TAG_ROLES_ANNOTATION = "ROLES_PERMISSION_ANNOTATION"
