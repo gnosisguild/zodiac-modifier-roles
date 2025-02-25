@@ -10,8 +10,8 @@ import {
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../../../abiEncode"
-import { describeStructure } from "../helpers/describeStructure"
-import { parameterType } from "../helpers/parameterType"
+import { describeStructure } from "./helpers/describeStructure"
+import { parameterType } from "./helpers/parameterType"
 
 import { ConditionFunction } from "../types"
 
