@@ -6,7 +6,7 @@ import {
   isPermissionConditional,
   isPermissionWildcarded,
   targetId,
-} from "./utils"
+} from "./id"
 
 import { PermissionCoerced } from "./types"
 

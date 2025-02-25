@@ -7,7 +7,7 @@ import {
   isPermissionAllowed,
   isPermissionConditional,
   isPermissionWildcarded,
-} from "./utils"
+} from "./id"
 
 import { Permission } from "./types"
 
