@@ -8,8 +8,8 @@ import {
 import { groupBy } from "../groupBy"
 import { normalizeCondition } from "../target/condition"
 import { coercePermission } from "./coercePermission"
+import { executionFlagsToOptions } from "./executionFlagsToOptions"
 import { mergePermissions } from "./mergePermissions"
-import { execOptions } from "./utils"
 
 import { Permission, PermissionSet } from "./types"
 
@@ -42,7 +42,7 @@ export const processPermissions = (
   const targetsAllowed = permissionsAllowed.map((permission) => ({
     address: permission.targetAddress.toLowerCase() as `0x${string}`,
     clearance: Clearance.Target,
-    executionOptions: execOptions(permission),
+    executionOptions: executionFlagsToOptions(permission),
     functions: [],
   }))
 
@@ -54,7 +54,7 @@ export const processPermissions = (
     executionOptions: ExecutionOptions.None,
     functions: permissions.map(({ selector, condition, ...rest }) => ({
       selector,
-      executionOptions: execOptions(rest),
+      executionOptions: executionFlagsToOptions(rest),
       wildcarded: !condition,
       condition: condition && normalizeCondition(condition),
     })),
