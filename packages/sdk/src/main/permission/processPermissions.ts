@@ -5,7 +5,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { groupBy } from "../utils/groupBy"
+import { groupBy } from "../groupBy"
 import { normalizeCondition } from "../target/condition/normalizeCondition"
 import { coercePermission } from "./coercePermission"
 import { mergePermissions } from "./mergePermissions"

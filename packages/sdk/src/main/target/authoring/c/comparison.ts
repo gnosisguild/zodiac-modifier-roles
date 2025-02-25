@@ -11,7 +11,7 @@ import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { describeStructure } from "../helpers/describeStructure"
 import { parameterType } from "../helpers/parameterType"
-import { abiEncode } from "../../../utils/abiEncode"
+import { abiEncode } from "../../../abiEncode"
 
 import { ConditionFunction } from "../types"
 

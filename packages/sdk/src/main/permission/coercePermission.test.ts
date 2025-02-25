@@ -2,7 +2,7 @@ import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { coercePermission } from "./coercePermission"
-import { abiEncode } from "../utils/abiEncode"
+import { abiEncode } from "../abiEncode"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
