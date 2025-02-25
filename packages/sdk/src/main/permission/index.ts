@@ -1,8 +1,9 @@
-export { processPermissions } from "./processPermissions"
+export { coercePermission } from "./coercePermission"
 export { mergePermissions } from "./mergePermissions"
+export { processPermissions } from "./processPermissions"
 export { reconstructPermissions } from "./reconstructPermissions"
-export { validatePresets } from "./validatePresets"
 export { targetId, permissionId } from "./utils"
+export { validatePresets } from "./validatePresets"
 
 export type {
   Permission,
