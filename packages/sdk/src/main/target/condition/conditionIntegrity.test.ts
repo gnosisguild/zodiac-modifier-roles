@@ -1,11 +1,11 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
+import { abiEncode } from "../../abiEncode"
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,
 } from "./conditionIntegrity"
-import { abiEncode } from "../../utils/abiEncode"
 
 suite("checkConditionIntegrity()", () => {
   it("should throw for And without children", () => {

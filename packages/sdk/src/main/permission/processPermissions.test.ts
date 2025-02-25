@@ -7,7 +7,7 @@ import {
   ParameterType,
 } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../utils/abiEncode"
+import { abiEncode } from "../abiEncode"
 import { normalizeCondition } from "../target/condition/normalizeCondition"
 import { PermissionSet } from "./types"
 

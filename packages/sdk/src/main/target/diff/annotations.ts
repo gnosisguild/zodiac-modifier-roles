@@ -1,6 +1,6 @@
 import { Annotation } from "zodiac-roles-deployments"
 
-import { groupBy } from "../../utils/groupBy"
+import { groupBy } from "../../groupBy"
 
 import { Diff } from "./helpers"
 

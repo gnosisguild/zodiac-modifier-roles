@@ -2,7 +2,7 @@ import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { permissionEquals } from "./permissionEquals"
-import { abiEncode } from "../utils/abiEncode"
+import { abiEncode } from "../abiEncode"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
 const AddressTwo = "0x0000000000000000000000000000000000000002"

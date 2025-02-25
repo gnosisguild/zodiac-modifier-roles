@@ -1,7 +1,7 @@
 import { BigNumberish, ParamType } from "ethers"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../../../utils/abiEncode"
+import { abiEncode } from "../../../abiEncode"
 
 import { ConditionFunction } from "../types"
 
