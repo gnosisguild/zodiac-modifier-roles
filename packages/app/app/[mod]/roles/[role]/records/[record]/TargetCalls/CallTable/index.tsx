@@ -97,7 +97,7 @@ const columnDefs = (
        */
 
       const indexColumnDef: ColDef<Row, any> = {
-        field,
+        field: (field + ".indices") as NestedFieldPaths<Row>,
         headerName: "#",
         spanRows: true,
         suppressMovable: true,
