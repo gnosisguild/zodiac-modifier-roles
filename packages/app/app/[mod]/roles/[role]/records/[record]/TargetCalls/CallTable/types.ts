@@ -34,7 +34,7 @@ export type RowValue =
   | NestedArrayValues
 
 export interface Row {
-  inputs: StructAbiInput
+  inputs: StructRowValue
   value: string
   operation: Operation
   metadata: Call["metadata"]

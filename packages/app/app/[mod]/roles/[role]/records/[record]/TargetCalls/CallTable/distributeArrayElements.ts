@@ -257,7 +257,7 @@ export function distributeArrayToLeaves(
   } as NestedArrayValues
 }
 
-const totalSpan = (value: RowValue): number => {
+export const totalSpan = (value: RowValue): number => {
   if (isNestedArrayValues(value)) {
     return value.span
   }

@@ -5,6 +5,7 @@ import {
   AllCommunityModule,
   ColDef,
   ColGroupDef,
+  NestedFieldPaths,
 } from "ag-grid-community"
 import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
@@ -14,9 +15,8 @@ import { NestedCellRenderer, NestedCellValue } from "./cellRenderers"
 import classes from "./style.module.css"
 import { theme } from "./theme"
 // import { distributeArrayElements } from "./distributeArrayElements"
-import { Row } from "./types"
-import { makeFieldPathGetter } from "./fieldPathGetter"
-import { totalNestedLength } from "./utils"
+import { Row, StructRowValue } from "./types"
+import { distributeArrayElements, totalSpan } from "./distributeArrayElements"
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -30,29 +30,21 @@ const LINE_HEIGHT = 44
 
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
   const rows = rowData(calls, abi)
-
-  const topLevelValueGetter = (row: Row | null | undefined) => {
-    if (row == null) {
-      throw new Error("do we have to implement this?")
-    }
-
-    return [{ value: row.inputs, span: row.span }]
-  }
-  const cols = columnDefs(abi.inputs, topLevelValueGetter)
+  const cols = columnDefs(abi.inputs)
 
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
   console.log({
     cols,
     rows,
     totalSpan,
-    maxNesting: maxNesting(cols),
+    maxNesting: maxColNesting(cols),
   })
 
   return (
     <div
       className={classes.table}
       style={{
-        height: totalSpan * LINE_HEIGHT + maxNesting(cols) * HEADER_HEIGHT,
+        height: totalSpan * LINE_HEIGHT + maxColNesting(cols) * HEADER_HEIGHT,
       }}
     >
       <AgGridReact
@@ -71,13 +63,10 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
 
 export default CallTable
 
-type ValuesGetter = (
-  row: Row | null | undefined
-) => { value: any; span: number }[]
-
 const columnDefs = (
   inputs: readonly AbiParameter[],
-  parentValuesGetter: ValuesGetter
+  prefix = "",
+  inArray = false
 ) => {
   return inputs.map((input, index): ColDef<Row, any> | ColGroupDef<Row> => {
     const elementType = arrayElementType(input)
@@ -86,16 +75,12 @@ const columnDefs = (
 
     const baseDefs: ColDef<Row, any> = {
       headerName: input.name ?? "",
-      spanRows: true, // TODO most probably this won't work with array values -> https://www.ag-grid.com/javascript-data-grid/row-spanning/#custom-row-spanning
+      spanRows: true,
       suppressMovable: true,
     }
 
-    // derive nested values getters from the parent values getter
-    const valuesGetter = (row: any) =>
-      parentValuesGetter(row).map(({ value, span }) => ({
-        value: value[input.name ?? index],
-        span: totalNestedLength(value[input.name ?? index]),
-      }))
+    const field = (prefix +
+      (input.name ?? `[${index}]`)) as NestedFieldPaths<Row>
 
     if (!isArray && isTuple) {
       /**
@@ -103,77 +88,41 @@ const columnDefs = (
        */
       return {
         ...baseDefs,
-        children: columnDefs(input.components, valuesGetter),
+        field,
+        children: columnDefs(input.components, field + ".", inArray),
       }
     } else if (isArray) {
       /**
        * array type: represent as column group with index column
        */
 
-      const indicesGetter = (row: any): NestedCellValue =>
-        valuesGetter(row).map(({ value, span }) => {
-          invariant(Array.isArray(value), "array expected")
-          return {
-            value: value.map((_, index) => index),
-            span: value.map(totalNestedLength),
-            totalSpan: span,
-          }
-        })
-
       const indexColumnDef: ColDef<Row, any> = {
+        field,
         headerName: "#",
-        spanRows: true, // TODO most probably this won't work with array values -> https://www.ag-grid.com/javascript-data-grid/row-spanning/#custom-row-spanning
+        spanRows: true,
         suppressMovable: true,
-        cellRenderer: NestedCellRenderer,
-        valueGetter: (params) => indicesGetter(params.data),
+        cellRenderer: NestedIndicesRenderer,
       }
 
-      const elementsGetter = (row: any): NestedCellValue =>
-        valuesGetter(row).map(({ value, span }) => {
-          invariant(Array.isArray(value), "array expected")
-          return value.map((element) => ({
-            value: element,
-            span: totalNestedLength(element),
-          }))
-        })
-
       const valueColumnDefs = isTuple
-        ? columnDefs(input.components, elementsGetter)
-        : columnDefs([elementType], elementsGetter)
+        ? columnDefs(input.components, field + ".values", true)
+        : columnDefs([elementType], field + ".values", true)
 
       return {
         ...baseDefs,
         children: [indexColumnDef, ...valueColumnDefs],
       }
     } else {
-      // const isBool = input.type === "bool"
-
-      const valueGetter = (row: any): NestedCellValue =>
-        valuesGetter(row).map(({ value, span }) => {
-          invariant(
-            typeof value === "string" ||
-              typeof value === "number" ||
-              typeof value === "boolean" ||
-              typeof value === "bigint",
-            "primitive value expected"
-          )
-
-          return {
-            value: value,
-            span: 1,
-            totalSpan: span,
-          }
-        })
-
+      const isBool = input.type === "bool"
       const isNumeric =
         input.type.startsWith("uint") || input.type.startsWith("int")
 
       return {
         ...baseDefs,
-        // cellDataType: isBool ? "string" : undefined,
-        cellRenderer: NestedCellRenderer,
-        valueGetter: (params) => valuesGetter(params.data),
+        field,
+        cellDataType: isBool ? "string" : undefined,
         type: isNumeric ? "numericColumn" : undefined,
+        cellRenderer: inArray ? NestedValuesRenderer : undefined,
       }
     }
   })
@@ -182,35 +131,30 @@ const columnDefs = (
 const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
   const decodedCalls = calls.map((call) => {
     const { args } = decodeFunctionData({ abi: [abi], data: call.data })
-    const inputs = Object.fromEntries(
-      abi.inputs.map((input, index) => [input.name, args[index]])
-    )
+    const inputs = distributeArrayElements(
+      Object.fromEntries(
+        abi.inputs.map((input, index) => [input.name, args[index]])
+      )
+    ) as StructRowValue
+
     return {
       inputs,
-      // inputs: distributeArrayElements(
-      //   Object.fromEntries(
-      //     abi.inputs.map((input, index) => [input.name, args[index]])
-      //   )
-      //   // abi.inputs
-      // ),
-      /** We're rendering array elements as sub rows inside the row. The `span` property indicates the total number of such sub rows. */
-      // span: maxArrayLength(Object.values(args), abi.inputs),
       value: call.value,
       operation: call.operation,
       metadata: call.metadata,
-      span: totalNestedLength(inputs),
+      span: totalSpan(inputs),
     }
   })
 
   return decodedCalls
 }
 
-const maxNesting = (
+const maxColNesting = (
   colDefs: (ColDef<any, any> | ColGroupDef<any>)[]
 ): number => {
   return colDefs.reduce((max, colDef) => {
     if ("children" in colDef) {
-      return Math.max(max, maxNesting(colDef.children) + 1)
+      return Math.max(max, maxColNesting(colDef.children) + 1)
     }
     return max
   }, 1)
