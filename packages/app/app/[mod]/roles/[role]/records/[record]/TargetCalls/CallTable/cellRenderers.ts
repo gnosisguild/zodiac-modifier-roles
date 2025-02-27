@@ -9,11 +9,14 @@ import { NestedArrayValues, Row } from "./types"
 export class NestedValuesRenderer implements ICellRendererComp<Row> {
   eGui!: HTMLDivElement
 
+  className = "nested-values"
+
   init(params: ICellRendererParams<Row, NestedArrayValues>) {
     invariant(params.value != null, "unexpected empty cell value")
 
     this.eGui = document.createElement("div")
     this.eGui.dataset.span = params.value.span.toString()
+    this.eGui.classList.add(this.className)
 
     const valueFormatter =
       params.formatValue ??
@@ -60,4 +63,8 @@ export class NestedValuesRenderer implements ICellRendererComp<Row> {
   refresh(params: ICellRendererParams): boolean {
     return false
   }
+}
+
+export class NestedIndicesRenderer extends NestedValuesRenderer {
+  override className = "nested-indices"
 }
