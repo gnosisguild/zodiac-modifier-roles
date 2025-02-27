@@ -12,24 +12,33 @@ export type StructRowValue = {
   [key: string]: RowValue
 }
 
-type ArrayLeave = { elements: PrimitiveValue[]; span: number[] }
+export type NestedArrayValues =
+  | {
+      span: number
+      children: NestedArrayValues[]
+    }
+  | {
+      span: number
+      value: PrimitiveValue
+    }
 
 export type ArrayRowValue = {
-  indices: ArrayLeave
-  values: StructRowValue | ArrayRowValue | ArrayLeave
+  indices: NestedArrayValues
+  values: StructRowValue | ArrayRowValue | NestedArrayValues
 }
 
 export type RowValue =
   | PrimitiveValue
   | StructRowValue
   | ArrayRowValue
-  | ArrayLeave
+  | NestedArrayValues
 
 export interface Row {
-  inputs: StructRowValue
-  /** We're rendering array elements as sub rows inside the row. The `span` property indicates the total number of such sub rows. */
-  span: number
+  inputs: StructAbiInput
   value: string
   operation: Operation
   metadata: Call["metadata"]
+
+  /** We're rendering array elements as sub rows inside the row. The `span` property indicates the total number of such sub rows. */
+  span: number
 }

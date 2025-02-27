@@ -1,26 +1,50 @@
 import {
   distributeArrayElements,
-  distributeArrayToProperties,
-  flattenNestedArray,
-  totalNestedLength,
+  distributeArrayToLeaves,
 } from "./distributeArrayElements"
+import { RowValue } from "./types"
 
 describe("distributeArrayElements", () => {
   it("turns a primitive array into 2 columns, one for the index and one for the value", () => {
     const values = { limits: ["1000000000000000000", "-2577523341", "0"] }
-    const params = [
-      {
-        internalType: "int256[]",
-        name: "limits",
-        type: "int256[]",
-      },
-    ]
-    expect(distributeArrayElements(values, params)).toEqual({
+
+    const current = {
       limits: {
-        indices: { elements: [0, 1, 2], span: [1, 1, 1] },
+        children: [
+          {
+            span: 1,
+            value: "1000000000000000000",
+          },
+          {
+            span: 1,
+            value: "-2577523341",
+          },
+          {
+            span: 1,
+            value: "0",
+          },
+        ],
+        span: 3,
+      },
+    }
+
+    expect(distributeArrayElements(values)).toEqual({
+      limits: {
+        indices: {
+          children: [
+            { value: 0, span: 1 },
+            { value: 1, span: 1 },
+            { value: 2, span: 1 },
+          ],
+          span: 3,
+        },
         values: {
-          elements: ["1000000000000000000", "-2577523341", "0"],
-          span: [1, 1, 1],
+          children: [
+            { value: "1000000000000000000", span: 1 },
+            { value: "-2577523341", span: 1 },
+            { value: "0", span: 1 },
+          ],
+          span: 3,
         },
       },
     })
@@ -55,67 +79,69 @@ describe("distributeArrayElements", () => {
         },
       ],
     }
-    const params = [
-      {
-        components: [
-          {
-            internalType: "bytes32",
-            name: "poolId",
-            type: "bytes32",
-          },
-          {
-            internalType: "uint256",
-            name: "assetInIndex",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "assetOutIndex",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "amount",
-            type: "uint256",
-          },
-          {
-            internalType: "bytes",
-            name: "userData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IVault.BatchSwapStep[]",
-        name: "swaps",
-        type: "tuple[]",
-      },
-    ]
-    expect(distributeArrayElements(values, params)).toEqual({
+
+    expect(distributeArrayElements(values)).toEqual({
       swaps: {
-        indices: { elements: [0, 1, 2], span: [1, 1, 1] },
+        indices: {
+          children: [
+            { value: 0, span: 1 },
+            { value: 1, span: 1 },
+            { value: 2, span: 1 },
+          ],
+          span: 3,
+        },
         values: {
           poolId: {
-            elements: [
-              "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
-              "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
-              "0x79c58f70905f734641735bc61e45c19dd9ad60bc0000000000000000000004e7",
+            children: [
+              {
+                value:
+                  "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
+                span: 1,
+              },
+              {
+                value:
+                  "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
+                span: 1,
+              },
+              {
+                value:
+                  "0x79c58f70905f734641735bc61e45c19dd9ad60bc0000000000000000000004e7",
+                span: 1,
+              },
             ],
-            span: [1, 1, 1],
+            span: 3,
           },
           assetInIndex: {
-            elements: ["0", "0", "2"],
-            span: [1, 1, 1],
+            children: [
+              { value: "0", span: 1 },
+              { value: "0", span: 1 },
+              { value: "2", span: 1 },
+            ],
+            span: 3,
           },
           assetOutIndex: {
-            elements: ["1", "2", "1"],
-            span: [1, 1, 1],
+            children: [
+              { value: "1", span: 1 },
+              { value: "2", span: 1 },
+              { value: "1", span: 1 },
+            ],
+            span: 3,
           },
           amount: {
-            elements: ["500000000000000000", "500000000000000000", "0"],
-            span: [1, 1, 1],
+            children: [
+              { value: "500000000000000000", span: 1 },
+              { value: "500000000000000000", span: 1 },
+              { value: "0", span: 1 },
+            ],
+            span: 3,
           },
           userData: {
-            elements: ["0x", "0x", "0x"],
-            span: [1, 1, 1],
+            children: [
+              { value: "0x", span: 1 },
+              { value: "0x", span: 1 },
+              { value: "0x", span: 1 },
+            ],
+            span: 3,
           },
         },
       },
@@ -126,27 +152,44 @@ describe("distributeArrayElements", () => {
     const values = {
       a: [[{ x: 0 }, { x: 1 }], [{ x: 3 }]],
     }
-    const params = [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "x",
-            type: "uint256",
-          },
-        ],
-        internalType: "tuple[][]",
-        name: "a",
-        type: "tuple[][]",
-      },
-    ]
-    expect(distributeArrayElements(values, params)).toEqual({
+
+    expect(distributeArrayElements(values)).toEqual({
       a: {
-        indices: { elements: [0, 1], span: [2, 1] },
+        indices: {
+          children: [
+            { value: 0, span: 2 },
+            { value: 1, span: 1 },
+          ],
+          span: 3,
+        },
         values: {
-          indices: { elements: [0, 1, 0], span: [1, 1, 1] },
+          indices: {
+            children: [
+              {
+                children: [
+                  { value: 0, span: 1 },
+                  { value: 1, span: 1 },
+                ],
+                span: 2,
+              },
+              { children: [{ value: 0, span: 1 }], span: 1 },
+            ],
+            span: 3,
+          },
           values: {
-            x: { elements: [0, 1, 3], span: [1, 1, 1] },
+            x: {
+              children: [
+                {
+                  children: [
+                    { value: 0, span: 1 },
+                    { value: 1, span: 1 },
+                  ],
+                  span: 2,
+                },
+                { children: [{ value: 3, span: 1 }], span: 1 },
+              ],
+              span: 3,
+            },
           },
         },
       },
@@ -154,74 +197,272 @@ describe("distributeArrayElements", () => {
   })
 })
 
-describe("distributeArrayToProperties", () => {
+describe("distributeArrayToLeaves", () => {
   it("transforms an array of objects into an object of arrays", () => {
-    const inputArray = [
+    const input = [
       { id: 1, name: "Alice", age: 30 },
       { id: 2, name: "Bob", age: 25 },
       { id: 3, name: "Charlie", age: 35 },
     ]
 
     const expectedOutput = {
-      id: [1, 2, 3],
-      name: ["Alice", "Bob", "Charlie"],
-      age: [30, 25, 35],
+      age: {
+        children: [
+          {
+            span: 1,
+            value: 30,
+          },
+          {
+            span: 1,
+            value: 25,
+          },
+          {
+            span: 1,
+            value: 35,
+          },
+        ],
+        span: 3,
+      },
+      id: {
+        children: [
+          {
+            span: 1,
+            value: 1,
+          },
+          {
+            span: 1,
+            value: 2,
+          },
+          {
+            span: 1,
+            value: 3,
+          },
+        ],
+        span: 3,
+      },
+      name: {
+        children: [
+          {
+            span: 1,
+            value: "Alice",
+          },
+          {
+            span: 1,
+            value: "Bob",
+          },
+          {
+            span: 1,
+            value: "Charlie",
+          },
+        ],
+        span: 3,
+      },
     }
 
-    const result = distributeArrayToProperties(inputArray)
-    expect(result).toEqual(expectedOutput)
+    expect(distributeArrayToLeaves(input)).toEqual(expectedOutput)
   })
-})
 
-describe("flattenNestedArray", () => {
-  it("flattens a nested array into elements, indices, and span", () => {
-    const nestedArray = [[1, 2, 3], [4, 5], [6]]
+  it("handles nested arrays", () => {
+    // Example usage:
+    const input: RowValue[] = [
+      {
+        name: "Alice",
+        tags: {
+          indices: {
+            children: [
+              { value: 0, span: 1 },
+              { value: 1, span: 1 },
+            ],
+            span: 2,
+          },
+          values: {
+            children: [
+              { value: "student", span: 1 },
+              { value: "senior", span: 1 },
+            ],
+            span: 2,
+          },
+        },
+      },
+      {
+        name: "Bob",
+        tags: {
+          indices: { children: [{ value: 0, span: 1 }], span: 1 },
+          values: { children: [{ value: "student", span: 1 }], span: 1 },
+        },
+      },
+    ]
 
     const expectedOutput = {
-      elements: [1, 2, 3, 4, 5, 6],
-      indices: [0, 1, 2],
-      span: [3, 2, 1],
+      name: {
+        children: [
+          {
+            span: 1,
+            value: "Alice",
+          },
+          {
+            span: 1,
+            value: "Bob",
+          },
+        ],
+        span: 2,
+      },
+      tags: {
+        indices: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 0,
+                },
+                {
+                  span: 1,
+                  value: 1,
+                },
+              ],
+              span: 2,
+            },
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 0,
+                },
+              ],
+              span: 1,
+            },
+          ],
+          span: 3,
+        },
+        values: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: "student",
+                },
+                {
+                  span: 1,
+                  value: "senior",
+                },
+              ],
+              span: 2,
+            },
+            {
+              children: [
+                {
+                  span: 1,
+                  value: "student",
+                },
+              ],
+              span: 1,
+            },
+          ],
+          span: 3,
+        },
+      },
     }
 
-    const result = flattenNestedArray(nestedArray)
-    expect(result).toEqual(expectedOutput)
-  })
-})
-
-describe("totalNestedLength", () => {
-  it("returns the total length for a flat array", () => {
-    const values = [1, 2, 3]
-    expect(totalNestedLength(values)).toBe(3)
+    expect(distributeArrayToLeaves(input)).toEqual(expectedOutput)
   })
 
-  it("returns the max arraylength for an object with arrays", () => {
-    const values = {
-      a: [1, 2],
-      b: [1, 2, 3],
-    }
-    expect(totalNestedLength(values)).toBe(3) // 1, 2, 3
-  })
-
-  it("returns the total length for a nested array", () => {
-    const values = [[1, 2], [3, 4, 5], [6]]
-    expect(totalNestedLength(values)).toBe(6)
-  })
-
-  it("returns the max total length for an array with nested objects", () => {
-    const values = [
-      { a: [1, 2], b: [1] },
-      { a: [3], b: [2] },
+  it("uses the max span for structs with nested arrays", () => {
+    const input = [
+      {
+        x: {
+          indices: { children: [{ value: 0, span: 1 }], span: 1 },
+          values: { children: [{ value: 1, span: 1 }], span: 1 },
+        },
+        y: {
+          indices: {
+            children: [
+              { value: 0, span: 1 },
+              { value: 1, span: 1 },
+            ],
+            span: 2,
+          },
+          values: {
+            children: [
+              { value: 1, span: 1 },
+              { value: 2, span: 1 },
+            ],
+            span: 2,
+          },
+        },
+      },
     ]
-    expect(totalNestedLength(values)).toBe(3) // 1, 2, 3
-  })
-
-  it("returns the max total length for a deeply nested structure", () => {
-    const values = [{ a: [{ b: [1, 2] }, { b: [3, 4] }] }]
-    expect(totalNestedLength(values)).toBe(4) // 1, 2, 3, 4
-  })
-
-  it("returns the total length for an empty array", () => {
-    const values: any[] = []
-    expect(totalNestedLength(values)).toBe(0)
+    const expectedValue = {
+      x: {
+        indices: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 0,
+                },
+              ],
+              span: 1,
+            },
+          ],
+          span: 2,
+        },
+        values: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 1,
+                },
+              ],
+              span: 1,
+            },
+          ],
+          span: 2,
+        },
+      },
+      y: {
+        indices: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 0,
+                },
+                {
+                  span: 1,
+                  value: 1,
+                },
+              ],
+              span: 2,
+            },
+          ],
+          span: 2,
+        },
+        values: {
+          children: [
+            {
+              children: [
+                {
+                  span: 1,
+                  value: 1,
+                },
+                {
+                  span: 1,
+                  value: 2,
+                },
+              ],
+              span: 2,
+            },
+          ],
+          span: 2,
+        },
+      },
+    }
+    expect(distributeArrayToLeaves(input)).toEqual(expectedValue)
   })
 })

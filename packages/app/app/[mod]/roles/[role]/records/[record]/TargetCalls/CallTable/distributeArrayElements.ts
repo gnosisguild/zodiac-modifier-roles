@@ -1,17 +1,22 @@
 import { AbiParameter } from "viem"
-import { AbiInput, ArrayRowValue, RowValue, StructValue } from "./types"
-import { arrayElementType } from "@/utils/abi"
+import {
+  AbiInput,
+  ArrayRowValue,
+  NestedArrayValues,
+  RowValue,
+  StructRowValue,
+} from "./types"
 import { invariant } from "@epic-web/invariant"
 
 /**
  * Spread array elements into separate columns for `indices` and `values`.
- * Each column has an `elements` field that contains the values to be displayed
- * and a `span` field that indicates the row span of the elements at the corresponding position.
  *
  * For arrays of objects, the arrays are pushed down to the object's leaf properties.
  *
- * Nested arrays are flattened into the `indices` and `values` columns. The `span` field is used to visualize the nesting structure:
- * Parent arrays have a `span` matching the sum of the lengths of their child arrays.
+ * For nested arrays the original nesting structure is preserved in the `indices` and `values` column leaves.
+ *
+ * In order to keep all column leaf values aligned when rendering sub rows, they carry a `span` field
+ * that indicates the total number of rows spanned.
  *
  * @example
  * Primitive array:
@@ -21,23 +26,23 @@ import { invariant } from "@epic-web/invariant"
  * Result:
  * ```
  * {
- *   indices: { elements: [0, 1], span: [1, 1] },
- *   values: { elements: [ 'foo', 'bar' ], span: [1, 1] }
+ *   indices: { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
+ *   values: { children: [ { value: 'foo', span: 1 }, { value: 'bar', span: 1 } ], span: 2 },
  * }
  * ```
  *
  * @example
  * Array of objects:
  * ```
- * [ { a: 0, b: 0 }, { a: 1, b: 1 } ]
+ * [ { a: 0, b: 10 }, { a: 1, b: 11 } ]
  * ```
  * Result:
  * ```
  * {
- *   indices: { elements: [0, 1], span: [2, 2] },
+ *   indices: { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
  *   values: {
- *     a: { elements: [0, 1], span: [1, 1] },
- *     b: { elements: [0, 1], span: [1, 1] }
+ *     a: { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
+ *     b: { children: [ { value: 10, span: 1 }, { value: 11, span: 1 } ], span: 2 }
  *   }
  * }
  * ```
@@ -53,12 +58,30 @@ import { invariant } from "@epic-web/invariant"
  * Result:
  * ```
  * {
- *   indices: { elements: [0, 1], span: [2, 1] },
+ *   indices: { children: [ { value: 0, span: 2 }, { value: 1, span: 1 } ], span: 3 }
  *   values: {
  *     a: {
- *       indices: { elements: [0, 1, 0], span: [1, 1, 1] },
+ *       indices: {
+ *         children: [
+ *           {
+ *             children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ],
+ *             span: 2
+ *           },
+ *           {
+ *             children: [ { value: 2, span: 1 } ],
+ *             span: 1
+ *           }
+ *         ],
+ *         span: 3
+ *       },
  *       values: {
- *         x: { elements: [0, 1, 2], span: [1, 1, 1] }
+ *         x: {
+ *           children: [
+ *             { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
+ *             { children: [ { value: 2, span: 1 } ], span: 1 }
+ *           ],
+ *           span: 3
+ *         }
  *       }
  *     }
  *   }
@@ -76,11 +99,27 @@ import { invariant } from "@epic-web/invariant"
  * Result:
  * ```
  * {
- *   indices: { elements: [0, 1], span: [2, 1] },
+ *   indices: {
+ *     children: [ { value: 0, span: 2 }, { value: 1, span: 1 } ],
+ *     span: 3
+ *   },
  *   values: {
  *     indices: { elements: [0, 1, 0], span: [1, 1, 1] },
+ *     indices: {
+ *       children: [
+ *         { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
+ *         { children: [ { value: 3, span: 1 } ], span: 1 }
+ *       ],
+ *       span: 3
+ *     },
  *     values: {
- *       x: { elements: [0, 1, 3], span: [1, 1, 1] }
+ *       x: {
+ *         children: [
+ *           { children: [ { value: 0, span: 1 }, { value: 1, span: 1 } ], span: 2 },
+ *           { children: [ { value: 3, span: 1 } ], span: 1 }
+ *         ],
+ *         span: 3
+ *       }
  *     }
  *   }
  * }
@@ -90,10 +129,7 @@ import { invariant } from "@epic-web/invariant"
  * @param params - The parameters of the ABI.
  * @returns The distributed values.
  */
-export const distributeArrayElements = (
-  value: AbiInput
-  //   params: readonly AbiParameter[]
-): RowValue => {
+export const distributeArrayElements = (value: AbiInput): RowValue => {
   if (Array.isArray(value)) {
     /**
      * Array: push down elements to the leaf values
@@ -103,57 +139,44 @@ export const distributeArrayElements = (
       // Empty arrays are treated as primitive values rather than being pushed down to leaf values.
       // While this creates a slight inconsistency with non-empty arrays, it simplifies the implementation
       // by removing the need for type information (AbiParameter[]) to be passed in.
-      return {
-        indices: { elements: [], span: [] },
-        values: { elements: [], span: [] },
+      const emptyArray: ArrayRowValue = {
+        indices: { span: 0, children: [] },
+        values: { span: 0, children: [] },
       }
+      return emptyArray
     }
 
-    const elementSpans = value.map((v) => totalNestedLength(v))
+    // Recurse into each element
+    const rowValues = value.map((v) => distributeArrayElements(v))
 
-    const firstElement = value[0]
-    if (Array.isArray(firstElement)) {
-      // Array of arrays: recurse into each element and flatten the results
-      const rowValues = value.map(
-        (v) => distributeArrayElements(v) as ArrayRowValue
-      )
-      return {
-        indices: { elements: [...value.keys()], span: elementSpans },
-        values: {
-          indices: { elements: [], span: [] },
-          values: rowValues.flatMap((v) => v.values),
-          // elements: rowValues.flatMap((v) => v.),
-          // span: rowValues.flatMap((v) => v.values.span),
-        },
-      }
-    } else if (typeof firstElement === "object" && firstElement !== null) {
-      // Array of objects: push array down to leaves or until hitting other array properties.
-      // Then recurse into the resulting object.
-      const spans = Object.values(value).map((v) => totalNestedLength(v))
-      const distributed = distributeArrayToProperties(
-        value as Record<string, any>[]
-      )
+    // Now we have an array of row values, which may or may now contain array structures at the leaf level.
+    // We need to distribute the array elements to the leaf values and then wrap the whole thing in an array row value.
+    const values = distributeArrayToLeaves(rowValues)
 
-      return {
-        indices: { elements: [], span: [] },
-        values: distributeArrayElements(distributed),
-      }
-    } else {
-      // Array of primitive values:
-      return // TODO
-    }
+    // Calculate the span of the row values and create the indices column
+    const rowSpans = rowValues.map(totalSpan)
+    const span = rowSpans.reduce((total, span) => total + span, 0)
+
+    return {
+      indices: {
+        children: rowSpans.map((span, index) => ({ value: index, span })),
+        span,
+      },
+      values,
+    } as ArrayRowValue
   }
 
   if (typeof value === "object" && value !== null) {
     /**
      * Object: recurse into each property
      */
-    return Object.fromEntries(
+    const result: StructRowValue = Object.fromEntries(
       Object.entries(value).map(([key, val]) => [
         key,
         distributeArrayElements(val),
       ])
     )
+    return result
   }
 
   /**
@@ -161,217 +184,85 @@ export const distributeArrayElements = (
    */
   return value
 }
-// export const distributeArrayElements = (
-//   value: AbiInput
-//   //   params: readonly AbiParameter[]
-// ): RowValue => {
-//   if (Array.isArray(value)) {
-//     if (value.length === 0)
-//       return {
-//         indices: { elements: [], span: [] },
-//         values: { elements: [], span: [] },
-//       }
 
-//     const firstElement = value[0]
-//     if (Array.isArray(firstElement)) {
-//       // nested array: flatten it
-//       const {
-//         elements,
-//         indices,
-//         span: indexSpans,
-//       } = flattenNestedArray(value as AbiInput[][])
-//       const elementSpans = elements.map((element) => totalNestedLength(element))
-
-//       // indexSpan describe how many elements are spanned by each index
-//       // To derive the total span of each index, we need to sum up the spans of all elements that fall under it.
-//       let spanned = 0
-//       const totalIndexSpans = indexSpans.map((span) => {
-//         let total = 0
-//         for (let j = 0; j < span; j++) {
-//           total += elementSpans[spanned + j]
-//         }
-//         spanned += span
-//         return total
-//       })
-
-//       return {
-//         indices: { elements: indices, span: totalIndexSpans },
-//         values: {
-//           // recurse into each element
-//           elements: elements.map((element) => distributeArrayElements(element)),
-//           span: elementSpans,
-//         },
-//       }
-//     } else {
-//       // primitive array: distribute the elements
-//       return distributeArrayElements(firstElement)
-//     }
-//   } else if (typeof value === "object" && value !== null) {
-//   } else {
-//     return value
-//   }
-// }
-
-/**
- * Distributes an array of objects into an object of arrays.
- * Each property of the resulting object corresponds to an array of values
- * from the original objects.
- *
- * @param arr - The array of objects to transform.
- * @returns An object where each property is an array of values.
- */
-export function distributeArrayToPropertiesV1<T extends Record<string, any>>(
-  arr: T[]
-): Record<keyof T, any[]> {
-  const result: Partial<Record<keyof T, any[]>> = {}
-
-  for (const obj of arr) {
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        if (!result[key]) {
-          result[key] = [] // Initialize the array if it doesn't exist
-        }
-        result[key].push(obj[key]) // Push the value into the corresponding array
-      }
-    }
-  }
-
-  return result as Record<keyof T, any[]> // Cast to the expected return type
+const isNestedArrayValues = (value: RowValue): value is NestedArrayValues => {
+  return (
+    typeof value === "object" &&
+    "span" in value &&
+    "children" in value &&
+    Array.isArray(value.children)
+  )
 }
 
-/**
- * Distributes an array of objects into an object of arrays.
- * Each property of the resulting object corresponds to an array of values
- * from the original objects.
- *
- * For nested objects, arrays are pushed down to the leaf values.
- * When encountering another array, it creates a nested array structure.
- *
- * @example
- * Input: [{ a: { b: 1 } }, { a: { b: 2 } }]
- * Output: { a: { b: [1, 2] } }
- *
- * @example
- * Input: [{ a: [1, 2] }, { a: [3] }]
- * Output: { a: [[1, 2], [3]] }
- *
- * @param arr - The array of objects to transform.
- * @returns An object where each property contains either an array of values
- *          or a nested object with arrays at the leaf nodes.
- */
-export function distributeArrayToProperties<T extends Record<string, any>>(
-  arr: T[]
-): Record<string, any> {
-  const result: Record<string, any> = {}
-
-  // If array is empty, return empty result
-  if (arr.length === 0) return result
-
-  // Get the first object to check property types
-  const firstObj = arr[0]
-
-  for (const key in firstObj) {
-    if (!firstObj.hasOwnProperty(key)) continue
-
-    const firstValue = firstObj[key]
-    const allValues = arr.map((obj) => obj[key])
-
-    if (Array.isArray(firstValue)) {
-      // If the value is an array, collect all arrays at this level
-      result[key] = allValues
-    } else if (typeof firstValue === "object" && firstValue !== null) {
-      // If the value is an object, recursively distribute its properties
-      result[key] = distributeArrayToProperties(allValues)
-    } else {
-      // For primitive values, create a flat array
-      result[key] = allValues
-    }
-  }
-
-  return result
+const isStructRowValue = (value: RowValue): value is StructRowValue => {
+  return !Array.isArray(value) && typeof value === "object" && value !== null
 }
 
-// Example usage:
-const input = [
-  {
-    name: "Alice",
-    scores: { math: 90, science: [95, 92] },
-    tags: ["student", "senior"],
-  },
-  {
-    name: "Bob",
-    scores: { math: 85, science: [88] },
-    tags: ["student", "junior"],
-  },
-]
+export function distributeArrayToLeaves(
+  array: RowValue[],
+  siblingSpan = 1 // The maximum span of sibling elements
+): RowValue {
+  if (array.length === 0) throw new Error("array is empty")
 
-/* Output:
-{
-  name: ["Alice", "Bob"],
-  scores: {
-    math: [90, 85],
-    science: [[95, 92], [88]]
-  },
-  tags: [["student", "senior"], ["student", "junior"]]
-}
-*/
+  // Since all elements have the same type we use first object to determine the structure
+  const firstValue = array[0]
 
-/**
- * Flattens a nested array (with one level of nesting) into a flat `elements` array,
- * an `indices` array tracking the indices of the top-level array, and a `span` array
- * indicating how many of the nested array elements fall under the corresponding index.
- *
- * @param nestedArray - The nested array to flatten.
- * @returns An object containing the `elements`, `indices`, and `span` arrays.
- */
-export function flattenNestedArrayV1<T>(nestedArray: T[][]): {
-  elements: T[]
-  indices: number[]
-  span: number[]
-} {
-  const elements: T[] = []
-  const indices: number[] = []
-  const span: number[] = []
+  if (isNestedArrayValues(firstValue)) {
+    // Once we hit a nested array, we can wrap ours around it and stop recursing
 
-  for (let i = 0; i < nestedArray.length; i++) {
-    const subArray = nestedArray[i]
-    indices.push(i)
-    span.push(subArray.length)
+    const nestedArrayValues = array as NestedArrayValues[]
+    const span = nestedArrayValues.reduce((total, { span }) => total + span, 0)
 
-    // Flatten the nested array elements into the elements array
-    elements.push(...subArray)
+    return {
+      children: nestedArrayValues,
+      span: Math.max(span, siblingSpan),
+    } as NestedArrayValues
   }
 
-  return { elements, indices, span }
+  if (isStructRowValue(firstValue)) {
+    // If the element type is an object, recursively distribute to its properties
+
+    const nestedArrayValues = array as StructRowValue[]
+    const maxSiblingSpan = Math.max(
+      siblingSpan,
+      ...nestedArrayValues.map(totalSpan)
+    )
+
+    return Object.fromEntries(
+      Object.keys(firstValue).map((key) => [
+        key,
+        distributeArrayToLeaves(
+          nestedArrayValues.map((v) => v[key]),
+          maxSiblingSpan
+        ),
+      ])
+    ) as StructRowValue
+  }
+
+  const isPrimitiveValue =
+    typeof firstValue === "string" ||
+    typeof firstValue === "number" ||
+    typeof firstValue === "boolean" ||
+    typeof firstValue === "bigint"
+  if (!isPrimitiveValue) throw new Error("unexpected non-primitive row value")
+
+  const primitiveValues = array as (typeof firstValue)[]
+
+  return {
+    children: primitiveValues.map((v) => ({
+      value: v,
+      span: 1,
+    })),
+    span: Math.max(primitiveValues.length, siblingSpan),
+  } as NestedArrayValues
 }
 
-/**
- * Calculates the total number of elements in a nested array or
- * the max total length of any arrays nested within an object.
- *
- * @param nested - The nested array or object to calculate the total length for.
- * @returns The total number of elements in the nested structure.
- */
-export function totalNestedLength(nested: any): number {
-  if (Array.isArray(nested)) {
-    // Array: calculate the total length recursively
-    let totalLength = 0
-    for (const item of nested) {
-      totalLength += totalNestedLength(item)
-    }
-    return totalLength
-  } else if (typeof nested === "object" && nested !== null) {
-    // Object (struct): return the max length of any array nested within the struct
-    let maxLength = 0
-    for (const key in nested) {
-      if (nested.hasOwnProperty(key)) {
-        const length = totalNestedLength(nested[key])
-        maxLength = Math.max(maxLength, length)
-      }
-    }
-    return maxLength
-  } else {
-    // Primitive value: count as one element
-    return 1
+const totalSpan = (value: RowValue): number => {
+  if (isNestedArrayValues(value)) {
+    return value.span
   }
+  if (isStructRowValue(value)) {
+    return Math.max(...Object.values(value).map((v) => totalSpan(v)))
+  }
+  return 1
 }
