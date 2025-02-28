@@ -67,93 +67,111 @@ const columnDefs = (
   inputs: readonly AbiParameter[],
   {
     prefix,
-    isArrayValues,
     arrayDescendant,
-  }: { prefix: string; isArrayValues?: boolean; arrayDescendant?: boolean }
+    carryComponentNameToValuesColumn,
+  }: {
+    prefix: string
+    arrayDescendant?: boolean
+    carryComponentNameToValuesColumn?: string
+  }
 ) => {
-  return inputs.map((input, index): ColDef<Row, any> | ColGroupDef<Row> => {
-    const elementType = arrayElementType(input)
-    const isArray = elementType !== undefined
-    const isTuple = "components" in input && Array.isArray(input.components)
-    const isLastChild = index === inputs.length - 1
+  return inputs.flatMap(
+    (
+      input,
+      index
+    ):
+      | ColDef<Row, any>
+      | ColGroupDef<Row>
+      | (ColDef<Row, any> | ColDef<Row, any>)[] => {
+      const elementType = arrayElementType(input)
+      const isArray = elementType !== undefined
+      const isTuple = "components" in input && Array.isArray(input.components)
+      const isLastChild = index === inputs.length - 1
 
-    const baseDefs: ColDef<Row, any> = {
-      headerName: isArrayValues ? "" : input.name ?? "",
-      // spanRows: true,
-      suppressMovable: true,
-      headerClass: cn(
-        isArrayValues && classes.headerArrayValues,
-        isLastChild && "agx-header-cell-last-child"
-      ),
-    }
-
-    const componentName = input.name ?? `[${index}]`
-    const field = (prefix +
-      (isArrayValues ? "values" : componentName)) as NestedFieldPaths<Row>
-
-    if (!isArray && isTuple) {
-      /**
-       * struct type: represent as column group
-       */
-      return {
-        ...baseDefs,
-        field,
-        children: columnDefs(input.components, {
-          prefix: field + ".",
-          arrayDescendant,
-        }),
-      }
-    } else if (isArray) {
-      /**
-       * array type: represent as column group with index column
-       */
-
-      const indexColumnDef: ColDef<Row, any> = {
-        field: (field + ".indices") as NestedFieldPaths<Row>,
-        headerName: "#",
-        headerClass: cn(classes.headerArrayIndices, "ag-right-aligned-header"),
-        width: 30,
-        type: "numericColumn",
+      const baseDefs: ColDef<Row, any> = {
+        headerName: carryComponentNameToValuesColumn ?? input.name ?? "",
         // spanRows: true,
         suppressMovable: true,
-        cellRenderer: NestedIndicesRenderer,
-      }
-
-      // For arrays of tuples we skip one level of nesting and render the unfolded tuple properties directly next to the index column.
-      // For arrays of non-tuples we create a value column artificial column group with the element type.
-      const valueColumnDefs = isTuple
-        ? columnDefs(input.components, {
-            prefix: field + ".values.",
-            arrayDescendant: true,
-          })
-        : columnDefs([elementType], {
-            prefix: field + ".",
-            isArrayValues: true,
-            arrayDescendant: true,
-          })
-
-      return {
-        ...baseDefs,
-        children: [indexColumnDef, ...valueColumnDefs],
-      }
-    } else {
-      const isBool = input.type === "bool"
-      const isNumeric =
-        input.type.startsWith("uint") || input.type.startsWith("int")
-
-      return {
-        ...baseDefs,
-        field,
-        cellDataType: isBool ? "string" : undefined,
-        type: isNumeric ? "numericColumn" : undefined,
         headerClass: cn(
-          baseDefs.headerClass,
-          isNumeric && "ag-right-aligned-header"
+          !!carryComponentNameToValuesColumn && "agx-header-array-values",
+          isLastChild && "agx-header-cell-last-child"
         ),
-        cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
+      }
+
+      const componentName = input.name ?? `[${index}]`
+      const field = (prefix +
+        (carryComponentNameToValuesColumn
+          ? "values"
+          : componentName)) as NestedFieldPaths<Row>
+
+      if (!isArray && isTuple) {
+        /**
+         * struct type: represent as column group
+         */
+        return {
+          ...baseDefs,
+          field,
+          children: columnDefs(input.components, {
+            prefix: field + ".",
+            arrayDescendant,
+          }),
+        } as ColGroupDef<Row>
+      } else if (isArray) {
+        /**
+         * array type: represent as two columns (indices and values) without group nesting
+         */
+
+        const indexColumnDef: ColDef<Row, any> = {
+          field: (field + ".indices") as NestedFieldPaths<Row>,
+          headerName: "#",
+          headerClass: cn(
+            "agx-header-array-indices",
+            "ag-right-aligned-header"
+          ),
+          width: 30,
+          resizable: false,
+          sortable: false,
+          type: "numericColumn",
+          // spanRows: true,
+          suppressMovable: true,
+          cellRenderer: NestedIndicesRenderer,
+        }
+
+        const elementColumnDefs = columnDefs([elementType], {
+          prefix: field + ".",
+          carryComponentNameToValuesColumn: componentName,
+          arrayDescendant: true,
+        })
+
+        // For arrays of non-tuples we also skip nesting and name the values column after the current field
+        return [
+          indexColumnDef,
+
+          // Usually the elementColumnDefs will be a single column, but for multi-dimensional arrays elementColumnDefs.length will be greater than 1.
+          // Thus, we flatten multi-dimensional arrays by prepending an indices column for each level.
+          // TODO multi-dimensional arrays have not been tested yet and might not be handled correctly
+          ...elementColumnDefs,
+        ]
+      } else {
+        const isBool = input.type === "bool"
+        const isNumeric =
+          input.type.startsWith("uint") || input.type.startsWith("int")
+
+        return {
+          ...baseDefs,
+          field,
+          cellDataType: isBool ? "string" : undefined,
+          type: isNumeric ? "numericColumn" : undefined,
+          headerClass: cn(
+            baseDefs.headerClass,
+            isNumeric && "ag-right-aligned-header"
+          ),
+          sortable: !arrayDescendant,
+          cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
+        }
       }
     }
-  })
+  )
 }
 
 const rowData = (calls: Call[], abi: AbiFunction): Row[] => {

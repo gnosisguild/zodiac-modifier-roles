@@ -42,15 +42,16 @@
     ) {
     border-top: none;
   }
+}
 
-  /* :where(
-      .ag-header-cell:not(
-          .ag-header-span-height.ag-header-span-total,
-          .ag-header-parent-hidden
-        ),
-      .ag-header-group-cell.ag-header-group-cell-with-group
-    )
-    .ag-header-cell-comp-wrapper {
-    border-top: var(--ag-header-row-border);
-  } */
+.agx-header-array-indices {
+  color: silver;
+  font-size: 0.8em;
+}
+
+.agx-header-nested-array-values {
+}
+
+:where(.ag-ltr) .ag-header-cell.agx-header-array-indices:after {
+  border-right: none;
 }
