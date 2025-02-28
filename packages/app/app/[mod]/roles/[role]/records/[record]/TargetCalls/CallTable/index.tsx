@@ -25,8 +25,8 @@ interface Props {
   calls: Call[]
 }
 
-const HEADER_HEIGHT = 48
-const LINE_HEIGHT = 44
+const HEADER_HEIGHT = 32
+const LINE_HEIGHT = 25
 
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
   const rows = rowData(calls, abi)
@@ -44,7 +44,8 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
     <div
       className={classes.table}
       style={{
-        height: totalSpan * LINE_HEIGHT + maxColNesting(cols) * HEADER_HEIGHT,
+        height:
+          totalSpan * LINE_HEIGHT + maxColNesting(cols) * HEADER_HEIGHT + 3,
       }}
     >
       <AgGridReact
