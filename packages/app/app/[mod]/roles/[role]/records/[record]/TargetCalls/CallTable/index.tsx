@@ -11,10 +11,9 @@ import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
 import { Call } from "@/app/api/records/types"
 import { arrayElementType } from "@/utils/abi"
-import { NestedCellRenderer, NestedCellValue } from "./cellRenderers"
+import { NestedIndicesRenderer, NestedValuesRenderer } from "./cellRenderers"
 import classes from "./style.module.css"
 import { theme } from "./theme"
-// import { distributeArrayElements } from "./distributeArrayElements"
 import { Row, StructRowValue } from "./types"
 import { distributeArrayElements, totalSpan } from "./distributeArrayElements"
 
@@ -30,7 +29,7 @@ const LINE_HEIGHT = 44
 
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
   const rows = rowData(calls, abi)
-  const cols = columnDefs(abi.inputs)
+  const cols = columnDefs(abi.inputs, { prefix: "inputs." })
 
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
   console.log({
@@ -63,24 +62,31 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
 
 export default CallTable
 
+const ARRAY_ELEMENT_COMPONENT_NAME = "[]"
+
 const columnDefs = (
   inputs: readonly AbiParameter[],
-  prefix = "",
-  inArray = false
+  {
+    prefix,
+    isArrayValues,
+    arrayDescendant,
+  }: { prefix: string; isArrayValues?: boolean; arrayDescendant?: boolean }
 ) => {
   return inputs.map((input, index): ColDef<Row, any> | ColGroupDef<Row> => {
     const elementType = arrayElementType(input)
     const isArray = elementType !== undefined
-    const isTuple = "components" in input
+    const isTuple = "components" in input && Array.isArray(input.components)
 
     const baseDefs: ColDef<Row, any> = {
-      headerName: input.name ?? "",
+      headerName: isArrayValues ? "elements" : input.name ?? "",
       spanRows: true,
       suppressMovable: true,
+      headerClass: isArrayValues ? classes.headerArrayValues : undefined,
     }
 
+    const componentName = input.name ?? `[${index}]`
     const field = (prefix +
-      (input.name ?? `[${index}]`)) as NestedFieldPaths<Row>
+      (isArrayValues ? "values" : componentName)) as NestedFieldPaths<Row>
 
     if (!isArray && isTuple) {
       /**
@@ -89,7 +95,10 @@ const columnDefs = (
       return {
         ...baseDefs,
         field,
-        children: columnDefs(input.components, field + ".", inArray),
+        children: columnDefs(input.components, {
+          prefix: field + ".",
+          arrayDescendant,
+        }),
       }
     } else if (isArray) {
       /**
@@ -99,14 +108,24 @@ const columnDefs = (
       const indexColumnDef: ColDef<Row, any> = {
         field: (field + ".indices") as NestedFieldPaths<Row>,
         headerName: "#",
+        headerClass: classes.headerArrayIndices,
         spanRows: true,
         suppressMovable: true,
         cellRenderer: NestedIndicesRenderer,
       }
 
+      // For arrays of tuples we skip one level of nesting and render the unfolded tuple properties directly next to the index column.
+      // For arrays of non-tuples we create a value column artificial column group with the element type.
       const valueColumnDefs = isTuple
-        ? columnDefs(input.components, field + ".values", true)
-        : columnDefs([elementType], field + ".values", true)
+        ? columnDefs(input.components, {
+            prefix: field + ".values.",
+            arrayDescendant: true,
+          })
+        : columnDefs([elementType], {
+            prefix: field + ".",
+            isArrayValues: true,
+            arrayDescendant: true,
+          })
 
       return {
         ...baseDefs,
@@ -122,7 +141,7 @@ const columnDefs = (
         field,
         cellDataType: isBool ? "string" : undefined,
         type: isNumeric ? "numericColumn" : undefined,
-        cellRenderer: inArray ? NestedValuesRenderer : undefined,
+        cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
       }
     }
   })
@@ -131,6 +150,7 @@ const columnDefs = (
 const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
   const decodedCalls = calls.map((call) => {
     const { args } = decodeFunctionData({ abi: [abi], data: call.data })
+
     const inputs = distributeArrayElements(
       Object.fromEntries(
         abi.inputs.map((input, index) => [input.name, args[index]])
