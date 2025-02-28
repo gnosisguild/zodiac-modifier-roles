@@ -3,17 +3,27 @@
   max-height: calc(100vh - 100px);
 }
 
-.table ol {
-  padding: 0;
-  margin: 0;
-  list-style-position: inside;
-}
-.table ol li::marker {
+.headerArrayIndices,
+.headerArrayValues {
   color: silver;
   font-size: 0.8em;
 }
 
-.headerArrayIndices {
+.nestedIndices {
+  color: silver;
+  font-size: 0.8em;
 }
-.headerArrayValues {
+.nestedValues {
+}
+
+.nestedIndices ol,
+.nestedValues ol {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+.nestedIndices li,
+.nestedValues li {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

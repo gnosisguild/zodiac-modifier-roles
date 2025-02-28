@@ -5,11 +5,12 @@ import {
   type ICellRendererParams,
 } from "ag-grid-community"
 import { NestedArrayValues, Row } from "./types"
+import classes from "./style.module.css"
 
 export class NestedValuesRenderer implements ICellRendererComp<Row> {
   eGui!: HTMLDivElement
 
-  className = "nested-values"
+  className = classes.nestedValues
 
   init(params: ICellRendererParams<Row, NestedArrayValues>) {
     invariant(params.value != null, "unexpected empty cell value")
@@ -66,5 +67,5 @@ export class NestedValuesRenderer implements ICellRendererComp<Row> {
 }
 
 export class NestedIndicesRenderer extends NestedValuesRenderer {
-  override className = "nested-indices"
+  override className = classes.nestedIndices
 }

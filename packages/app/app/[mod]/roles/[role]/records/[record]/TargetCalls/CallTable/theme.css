@@ -1,0 +1,25 @@
+/** override ag-grid header border so that the nesting hierarchy is more visible */
+
+/** group header */
+.ag-header-group-cell:where(
+    :not(.ag-header-span-height.ag-header-group-cell-no-group)
+  ):after {
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+/** columns before a group column*/
+.ag-header-cell.ag-header-span-total:after {
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+/** last child column header in group */
+/** agx- is our prefix for custom ag-grid classes */
+.ag-header-cell.agx-header-cell-last-child:after {
+  height: 100%;
+  position: absolute;
+  top: 0;
+}

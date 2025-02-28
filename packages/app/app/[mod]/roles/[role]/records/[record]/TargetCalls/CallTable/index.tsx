@@ -7,6 +7,7 @@ import {
   ColGroupDef,
   NestedFieldPaths,
 } from "ag-grid-community"
+import cn from "classnames"
 import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
 import { Call } from "@/app/api/records/types"
@@ -62,8 +63,6 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
 
 export default CallTable
 
-const ARRAY_ELEMENT_COMPONENT_NAME = "[]"
-
 const columnDefs = (
   inputs: readonly AbiParameter[],
   {
@@ -76,12 +75,16 @@ const columnDefs = (
     const elementType = arrayElementType(input)
     const isArray = elementType !== undefined
     const isTuple = "components" in input && Array.isArray(input.components)
+    const isLastChild = index === inputs.length - 1
 
     const baseDefs: ColDef<Row, any> = {
       headerName: isArrayValues ? "elements" : input.name ?? "",
-      spanRows: true,
+      // spanRows: true,
       suppressMovable: true,
-      headerClass: isArrayValues ? classes.headerArrayValues : undefined,
+      headerClass: cn(
+        isArrayValues && classes.headerArrayValues,
+        isLastChild && "agx-header-cell-last-child"
+      ),
     }
 
     const componentName = input.name ?? `[${index}]`
@@ -108,8 +111,10 @@ const columnDefs = (
       const indexColumnDef: ColDef<Row, any> = {
         field: (field + ".indices") as NestedFieldPaths<Row>,
         headerName: "#",
-        headerClass: classes.headerArrayIndices,
-        spanRows: true,
+        headerClass: cn(classes.headerArrayIndices, "ag-right-aligned-header"),
+        width: 30,
+        type: "numericColumn",
+        // spanRows: true,
         suppressMovable: true,
         cellRenderer: NestedIndicesRenderer,
       }
@@ -141,6 +146,10 @@ const columnDefs = (
         field,
         cellDataType: isBool ? "string" : undefined,
         type: isNumeric ? "numericColumn" : undefined,
+        headerClass: cn(
+          baseDefs.headerClass,
+          isNumeric && "ag-right-aligned-header"
+        ),
         cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
       }
     }
