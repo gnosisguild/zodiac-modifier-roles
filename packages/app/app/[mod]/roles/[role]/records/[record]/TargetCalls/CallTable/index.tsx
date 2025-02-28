@@ -31,14 +31,7 @@ const LINE_HEIGHT = 25
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
   const rows = rowData(calls, abi)
   const cols = columnDefs(abi.inputs, { prefix: "inputs." })
-
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
-  console.log({
-    cols,
-    rows,
-    totalSpan,
-    maxNesting: maxColNesting(cols),
-  })
 
   return (
     <div
