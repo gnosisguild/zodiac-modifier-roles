@@ -78,7 +78,7 @@ const columnDefs = (
     const isLastChild = index === inputs.length - 1
 
     const baseDefs: ColDef<Row, any> = {
-      headerName: isArrayValues ? "elements" : input.name ?? "",
+      headerName: isArrayValues ? "" : input.name ?? "",
       // spanRows: true,
       suppressMovable: true,
       headerClass: cn(

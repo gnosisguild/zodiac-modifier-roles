@@ -1,6 +1,6 @@
 /** override ag-grid header border so that the nesting hierarchy is more visible */
 
-/** group header */
+/** group header: make right border cover entire row height */
 .ag-header-group-cell:where(
     :not(.ag-header-span-height.ag-header-group-cell-no-group)
   ):after {
@@ -9,17 +9,48 @@
   top: 0;
 }
 
-/** columns before a group column*/
+.ag-header-group-cell:where(
+    :not(.ag-header-span-height.ag-header-group-cell-no-group)
+  )
+  .ag-header-cell-comp-wrapper {
+  border-bottom: 1px solid color(srgb 1 1 1 / 0.15);
+}
+
+/** columns before a group column: make right border cover entire row height */
 .ag-header-cell.ag-header-span-total:after {
   height: 100%;
   position: absolute;
   top: 0;
 }
 
-/** last child column header in group */
+/** last child column header in group: make right border cover entire row height */
 /** agx- is our prefix for custom ag-grid classes */
 .ag-header-cell.agx-header-cell-last-child:after {
   height: 100%;
   position: absolute;
   top: 0;
+}
+
+/** group column headers: move the top border into the content wrapper so that the border is open to the parent in the padding area */
+.ag-header-row:where(:not(:first-child)) {
+  :where(
+      .ag-header-cell:not(
+          .ag-header-span-height.ag-header-span-total,
+          .ag-header-parent-hidden
+        ),
+      .ag-header-group-cell.ag-header-group-cell-with-group
+    ) {
+    border-top: none;
+  }
+
+  /* :where(
+      .ag-header-cell:not(
+          .ag-header-span-height.ag-header-span-total,
+          .ag-header-parent-hidden
+        ),
+      .ag-header-group-cell.ag-header-group-cell-with-group
+    )
+    .ag-header-cell-comp-wrapper {
+    border-top: var(--ag-header-row-border);
+  } */
 }
