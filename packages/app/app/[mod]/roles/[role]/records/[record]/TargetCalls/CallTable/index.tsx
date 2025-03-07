@@ -10,9 +10,13 @@ import {
 import cn from "classnames"
 import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
-import { Call } from "@/app/api/records/types"
+import { Call, Operation } from "@/app/api/records/types"
 import { arrayElementType } from "@/utils/abi"
-import { NestedIndicesRenderer, NestedValuesRenderer } from "./cellRenderers"
+import {
+  NestedIndicesRenderer,
+  NestedValuesRenderer,
+  RecordedCellRenderer,
+} from "./cellRenderers"
 import classes from "./style.module.css"
 import { theme } from "./theme"
 import { Row, StructRowValue } from "./types"
@@ -30,7 +34,12 @@ const LINE_HEIGHT = 25
 
 const CallTable: React.FC<Props> = ({ calls, abi }) => {
   const rows = rowData(calls, abi)
-  const cols = columnDefs(abi.inputs, { prefix: "inputs." })
+
+  const cols = [
+    ...defaultColumnDefs(calls),
+    ...inputColumnDefs(abi.inputs, { prefix: "inputs.", isLastGroup: true }),
+    ...metadataColumns,
+  ]
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
 
   return (
@@ -57,16 +66,18 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
 
 export default CallTable
 
-const columnDefs = (
+const inputColumnDefs = (
   inputs: readonly AbiParameter[],
   {
     prefix,
     arrayDescendant,
     carryComponentNameToValuesColumn,
+    isLastGroup,
   }: {
     prefix: string
     arrayDescendant?: boolean
     carryComponentNameToValuesColumn?: string
+    isLastGroup?: boolean
   }
 ) => {
   return inputs.flatMap(
@@ -105,9 +116,10 @@ const columnDefs = (
         return {
           ...baseDefs,
           field,
-          children: columnDefs(input.components, {
+          children: inputColumnDefs(input.components, {
             prefix: field + ".",
             arrayDescendant,
+            isLastGroup: isLastGroup && isLastChild,
           }),
         } as ColGroupDef<Row>
       } else if (isArray) {
@@ -131,10 +143,11 @@ const columnDefs = (
           cellRenderer: NestedIndicesRenderer,
         }
 
-        const elementColumnDefs = columnDefs([elementType], {
+        const elementColumnDefs = inputColumnDefs([elementType], {
           prefix: field + ".",
           carryComponentNameToValuesColumn: componentName,
           arrayDescendant: true,
+          isLastGroup: isLastGroup && isLastChild,
         })
 
         // For arrays of non-tuples we also skip nesting and name the values column after the current field
@@ -160,6 +173,7 @@ const columnDefs = (
             baseDefs.headerClass,
             isNumeric && "ag-right-aligned-header"
           ),
+          cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
           sortable: !arrayDescendant,
           cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
         }
@@ -167,6 +181,54 @@ const columnDefs = (
     }
   )
 }
+
+const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
+  const includesDelegateCalls = calls.some(
+    (call) => call.operation === Operation.DelegateCall
+  )
+  const includesValue = calls.some((call) => BigInt(call.value || 0) > 0n)
+
+  const delegateCallColumn: ColDef<Row> = {
+    headerName: "operation",
+    field: "operation",
+    width: 110,
+    resizable: false,
+    suppressMovable: true,
+    cellClass: cn(
+      "agx-default-column",
+      !includesValue && "agx-default-column-last"
+    ),
+  }
+
+  const valueColumn: ColDef<Row> = {
+    headerName: "value",
+    field: "value",
+    type: "numericColumn",
+    suppressMovable: true,
+    cellClass: "agx-default-column agx-default-column-last",
+  }
+
+  const result = []
+  if (includesDelegateCalls) result.push(delegateCallColumn)
+  if (includesValue) result.push(valueColumn)
+
+  return result
+}
+
+const metadataColumns: ColDef<Row>[] = [
+  {
+    headerName: "recorded",
+    field: "metadata",
+    cellClass: "agx-recorded-column",
+    cellRenderer: RecordedCellRenderer,
+  },
+  {
+    headerName: "label",
+    field: "metadata.label",
+    cellClass: "agx-label-column",
+    editable: true,
+  },
+]
 
 const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
   const decodedCalls = calls.map((call) => {
@@ -179,9 +241,12 @@ const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
     ) as StructRowValue
 
     return {
-      inputs,
       value: call.value,
-      operation: call.operation,
+      operation:
+        call.operation === Operation.DelegateCall
+          ? ("delegatecall" as const)
+          : ("call" as const),
+      inputs,
       metadata: call.metadata,
       span: totalSpan(inputs),
     }

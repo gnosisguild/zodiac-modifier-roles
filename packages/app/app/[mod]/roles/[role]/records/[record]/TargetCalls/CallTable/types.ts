@@ -36,7 +36,7 @@ export type RowValue =
 export interface Row {
   inputs: StructRowValue
   value: string
-  operation: Operation
+  operation: "call" | "delegatecall"
   metadata: Call["metadata"]
 
   /** We're rendering array elements as sub rows inside the row. The `span` property indicates the total number of such sub rows. */

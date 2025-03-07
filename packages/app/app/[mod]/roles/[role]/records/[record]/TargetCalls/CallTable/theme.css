@@ -55,3 +55,8 @@
 :where(.ag-ltr) .ag-header-cell.agx-header-array-indices:after {
   border-right: none;
 }
+
+.agx-default-column-last,
+.agx-inputs-column-last {
+  border-right: 1px solid color(srgb 1 1 1 / 0.15) !important;
+}
