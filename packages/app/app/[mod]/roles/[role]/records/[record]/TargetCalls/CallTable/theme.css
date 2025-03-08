@@ -1,3 +1,8 @@
+.ag-root {
+  --ag-range-selection-border-color: transparent;
+  --ag-cell-editing-border: 1px solid white;
+}
+
 /** override ag-grid header border so that the nesting hierarchy is more visible */
 
 /** group header: make right border cover entire row height */
@@ -59,4 +64,24 @@
 .agx-default-column-last,
 .agx-inputs-column-last {
   border-right: 1px solid color(srgb 1 1 1 / 0.15) !important;
+}
+
+.agx-recorded-column,
+.agx-label-column {
+  font-family: var(--ag-header-font-family);
+}
+input.ag-input-field-input {
+  font-family: var(--ag-header-font-family);
+  font-size: var(--ag-data-font-size);
+  padding: 0 6px;
+  border: none;
+  transition: none;
+}
+
+.ag-cell {
+  line-height: 24px;
+}
+.ag-text-field-input-wrapper,
+.ag-cell-edit-wrapper {
+  min-height: 24px;
 }

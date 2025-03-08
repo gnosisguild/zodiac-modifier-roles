@@ -110,7 +110,6 @@ export class RecordedCellRenderer implements ICellRendererComp<Row> {
 
     // Use the browser's locale to display the absolute date and time.
     const absoluteTime = date.toLocaleString()
-    console.log({ absoluteTime, relativeTime })
     return `<time dateTime="${date.toISOString()}" title="${absoluteTime}">${relativeTime}</time>`
   }
 
@@ -122,3 +121,39 @@ export class RecordedCellRenderer implements ICellRendererComp<Row> {
     return false
   }
 }
+
+export class EditableCellRenderer implements ICellRendererComp<Row> {
+  eGui!: HTMLDivElement
+  span!: HTMLSpanElement
+
+  className = classes.editable
+
+  init(params: ICellRendererParams<Row, any>) {
+    this.eGui = document.createElement("div")
+    this.eGui.classList.add(this.className)
+    this.span = document.createElement("span")
+    this.span.innerText = params.value ?? ""
+    this.eGui.appendChild(this.span)
+
+    const editButton = document.createElement("button")
+    editButton.innerHTML = editIconSvg
+    editButton.onclick = (ev) => {
+      params.api.startEditingCell({
+        rowIndex: params.node.rowIndex!,
+        colKey: params.colDef!.field!,
+      })
+    }
+    this.eGui.appendChild(editButton)
+  }
+
+  getGui() {
+    return this.eGui
+  }
+
+  refresh(params: ICellRendererParams): boolean {
+    this.span.innerText = params.valueFormatted ?? ""
+    return true
+  }
+}
+
+const editIconSvg = `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="16px" width="16px" xmlns="http://www.w3.org/2000/svg"><path d="M5 18.89H6.41421L15.7279 9.57627L14.3137 8.16206L5 17.4758V18.89ZM21 20.89H3V16.6473L16.435 3.21231C16.8256 2.82179 17.4587 2.82179 17.8492 3.21231L20.6777 6.04074C21.0682 6.43126 21.0682 7.06443 20.6777 7.45495L9.24264 18.89H21V20.89ZM15.7279 6.74785L17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785Z"></path></svg>`

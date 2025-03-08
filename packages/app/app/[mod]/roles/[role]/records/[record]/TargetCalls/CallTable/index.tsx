@@ -13,6 +13,7 @@ import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
 import { Call, Operation } from "@/app/api/records/types"
 import { arrayElementType } from "@/utils/abi"
 import {
+  EditableCellRenderer,
   NestedIndicesRenderer,
   NestedValuesRenderer,
   RecordedCellRenderer,
@@ -173,7 +174,10 @@ const inputColumnDefs = (
             baseDefs.headerClass,
             isNumeric && "ag-right-aligned-header"
           ),
-          cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
+          cellClass: cn(
+            isLastGroup && isLastChild && "agx-inputs-column-last",
+            isNumeric && "ag-right-aligned-cell"
+          ),
           sortable: !arrayDescendant,
           cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
         }
@@ -205,7 +209,8 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
     field: "value",
     type: "numericColumn",
     suppressMovable: true,
-    cellClass: "agx-default-column agx-default-column-last",
+    cellClass:
+      "agx-default-column agx-default-column-last ag-right-aligned-cell",
   }
 
   const result = []
@@ -217,16 +222,18 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
 
 const metadataColumns: ColDef<Row>[] = [
   {
+    headerName: "label",
+    field: "metadata.label",
+    cellClass: "agx-label-column",
+    cellRenderer: EditableCellRenderer,
+    editable: true,
+  },
+  {
     headerName: "recorded",
     field: "metadata",
     cellClass: "agx-recorded-column",
     cellRenderer: RecordedCellRenderer,
-  },
-  {
-    headerName: "label",
-    field: "metadata.label",
-    cellClass: "agx-label-column",
-    editable: true,
+    width: 120,
   },
 ]
 
