@@ -19,6 +19,8 @@
   )
   .ag-header-cell-comp-wrapper {
   border-bottom: 1px solid color(srgb 1 1 1 / 0.15);
+  padding-bottom: 3px;
+  margin-bottom: -3px;
 }
 
 /** columns before a group column: make right border cover entire row height */

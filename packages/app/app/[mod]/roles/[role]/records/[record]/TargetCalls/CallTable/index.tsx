@@ -131,14 +131,11 @@ const inputColumnDefs = (
         const indexColumnDef: ColDef<Row, any> = {
           field: (field + ".indices") as NestedFieldPaths<Row>,
           headerName: "#",
-          headerClass: cn(
-            "agx-header-array-indices",
-            "ag-right-aligned-header"
-          ),
+          headerClass: "agx-header-array-indices",
           width: 30,
           resizable: false,
           sortable: false,
-          type: "numericColumn",
+          // type: "numericColumn",
           // spanRows: true,
           suppressMovable: true,
           cellRenderer: NestedIndicesRenderer,
@@ -162,22 +159,16 @@ const inputColumnDefs = (
         ]
       } else {
         const isBool = input.type === "bool"
-        const isNumeric =
-          input.type.startsWith("uint") || input.type.startsWith("int")
+        // const isNumeric =
+        //   input.type.startsWith("uint") || input.type.startsWith("int")
 
         return {
           ...baseDefs,
           field,
           cellDataType: isBool ? "string" : undefined,
-          type: isNumeric ? "numericColumn" : undefined,
-          headerClass: cn(
-            baseDefs.headerClass,
-            isNumeric && "ag-right-aligned-header"
-          ),
-          cellClass: cn(
-            isLastGroup && isLastChild && "agx-inputs-column-last",
-            isNumeric && "ag-right-aligned-cell"
-          ),
+          // type: isNumeric ? "numericColumn" : undefined,
+          headerClass: baseDefs.headerClass,
+          cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
           sortable: !arrayDescendant,
           cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
         }
@@ -207,10 +198,9 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
   const valueColumn: ColDef<Row> = {
     headerName: "value",
     field: "value",
-    type: "numericColumn",
+    // type: "numericColumn",
     suppressMovable: true,
-    cellClass:
-      "agx-default-column agx-default-column-last ag-right-aligned-cell",
+    cellClass: "agx-default-column agx-default-column-last",
   }
 
   const result = []
