@@ -22,6 +22,7 @@ import classes from "./style.module.css"
 import { theme } from "./theme"
 import { Row, StructRowValue } from "./types"
 import { distributeArrayElements, totalSpan } from "./distributeArrayElements"
+import { CustomInnerHeader } from "./customInnerHeader"
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -102,6 +103,10 @@ const inputColumnDefs = (
           !!carryComponentNameToValuesColumn && "agx-header-array-values",
           isLastChild && "agx-header-cell-last-child"
         ),
+
+        headerComponentParams: {
+          innerHeaderComponent: CustomInnerHeader,
+        },
       }
 
       const componentName = input.name ?? `[${index}]`
