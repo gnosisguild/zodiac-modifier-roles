@@ -53,6 +53,8 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
       }}
     >
       <AgGridReact
+        headerHeight={HEADER_HEIGHT * 2}
+        groupHeaderHeight={HEADER_HEIGHT}
         columnDefs={cols}
         rowData={rows}
         enableCellSpan
@@ -105,23 +107,8 @@ const inputColumnDefs = (
         ),
 
         headerComponent: CustomHeader,
-        headerComponentParams: {
-          // template: `<div class="ag-cell-label-container" role="presentation">
-          //   <span data-ref="eMenu" class="ag-header-icon ag-header-cell-menu-button" aria-hidden="true"></span>
-          //   <span data-ref="eFilterButton" class="ag-header-icon ag-header-cell-filter-button" aria-hidden="true"></span>
-          //   <div data-ref="eLabel" class="ag-header-cell-label" role="presentation">
-          //     <span data-ref="eText" class="ag-header-cell-text"></span>
-          //     <span data-ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon" aria-hidden="true"></span>
-          //     <span data-ref="eSortOrder" class="ag-header-icon ag-header-label-icon ag-sort-order" aria-hidden="true"></span>
-          //     <span data-ref="eSortAsc" class="ag-header-icon ag-header-label-icon ag-sort-ascending-icon" aria-hidden="true"></span>
-          //     <span data-ref="eSortDesc" class="ag-header-icon ag-header-label-icon ag-sort-descending-icon" aria-hidden="true"></span>
-          //     <span data-ref="eSortNone" class="ag-header-icon ag-header-label-icon ag-sort-none-icon" aria-hidden="true"></span>
-          //   </div>
-          // </div>`,
-        },
-        // headerComponentParams: {
-        //   innerHeaderComponent: CustomInnerHeader,
-        // },
+        // autoHeaderHeight: true,
+        headerComponentParams: {},
       }
 
       const componentName = input.name ?? `[${index}]`
@@ -159,6 +146,9 @@ const inputColumnDefs = (
           // spanRows: true,
           suppressMovable: true,
           cellRenderer: NestedIndicesRenderer,
+
+          headerComponent: CustomHeader,
+          // autoHeaderHeight: true,
         }
 
         const elementColumnDefs = inputColumnDefs([elementType], {
@@ -221,6 +211,8 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
     // type: "numericColumn",
     suppressMovable: true,
     cellClass: "agx-default-column agx-default-column-last",
+    headerComponent: CustomHeader,
+    // autoHeaderHeight: true,
   }
 
   const result = []
@@ -238,6 +230,7 @@ const metadataColumns: ColDef<Row>[] = [
     cellRenderer: EditableCellRenderer,
     editable: true,
     headerComponent: CustomHeader,
+    // autoHeaderHeight: true,
   },
   {
     headerName: "recorded",
@@ -246,6 +239,7 @@ const metadataColumns: ColDef<Row>[] = [
     cellRenderer: RecordedCellRenderer,
     width: 120,
     headerComponent: CustomHeader,
+    // autoHeaderHeight: true,
   },
 ]
 

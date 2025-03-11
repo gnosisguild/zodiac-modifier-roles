@@ -24,5 +24,5 @@ const template = `<div class="agx-header-cell-wrapper">
         <ag-sort-indicator data-ref="eSortIndicator"></ag-sort-indicator>
       </div>
     </div>
-    <div class="agx-header-cell-scoping"></div>
+    <div class="agx-header-cell-scoping"><button>ok</button></div>
   </div>`
