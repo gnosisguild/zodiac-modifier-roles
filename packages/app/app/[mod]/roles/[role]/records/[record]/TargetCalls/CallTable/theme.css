@@ -1,6 +1,15 @@
 .ag-root {
   --ag-range-selection-border-color: transparent;
   --ag-cell-editing-border: 1px solid white;
+
+  background-color: transparent;
+  --ag-background-color: transparent;
+  --ag-odd-row-background-color: transparent;
+  --ag-header-background-color: rgb(36 38 31);
+  --ag-row-hover-color: rgb(217 212 173 / 10%);
+}
+.ag-root-wrapper {
+  background-color: #3b3a32;
 }
 
 /** override ag-grid header border so that the nesting hierarchy is more visible */
