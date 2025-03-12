@@ -2,15 +2,19 @@ import Switch from "@/ui/Switch"
 import classes from "./style.module.css"
 
 interface Props {
-  isWildcarded: boolean
+  isWildcarded?: boolean
   hide?: boolean
+  disabled?: boolean
 }
-const ColumnScoping: React.FC<Props> = ({ isWildcarded, hide }) => {
+const ColumnScoping: React.FC<Props> = ({ isWildcarded, hide, disabled }) => {
+  if (hide) return null
+
   return (
     <div>
       <Switch
         label={<span className={classes.columnScopingLabel}>allow any</span>}
-        checked={isWildcarded}
+        disabled={disabled}
+        checked={!!isWildcarded}
       />
     </div>
   )

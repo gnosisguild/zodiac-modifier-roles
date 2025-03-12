@@ -49,7 +49,7 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
       className={classes.table}
       style={{
         height:
-          totalSpan * LINE_HEIGHT + // amount of data rows
+          totalSpan * LINE_HEIGHT + // amount of data
           (maxColNesting(cols) + 1) * HEADER_HEIGHT + // amount of stacked header rows + 1 for the scoping row
           3, // account for borders
       }}
@@ -101,6 +101,7 @@ const inputColumnDefs = (
 
       const baseDefs: ColDef<Row, any> = {
         headerName: carryComponentNameToValuesColumn ?? input.name ?? "",
+        minWidth: 110,
         // spanRows: true,
         suppressMovable: true,
         headerClass: cn(
@@ -109,8 +110,10 @@ const inputColumnDefs = (
         ),
 
         headerComponent: CustomHeader,
-        // autoHeaderHeight: true,
-        headerComponentParams: {},
+        headerComponentParams: {
+          isWildcarded: false, // TODO
+          noScoping: arrayDescendant,
+        },
       }
 
       const componentName = input.name ?? `[${index}]`
@@ -144,13 +147,10 @@ const inputColumnDefs = (
           width: 30,
           resizable: false,
           sortable: false,
-          // type: "numericColumn",
-          // spanRows: true,
           suppressMovable: true,
           cellRenderer: NestedIndicesRenderer,
 
           headerComponent: CustomHeader,
-          // autoHeaderHeight: true,
         }
 
         const elementColumnDefs = inputColumnDefs([elementType], {
@@ -178,7 +178,6 @@ const inputColumnDefs = (
           ...baseDefs,
           field,
           cellDataType: isBool ? "string" : undefined,
-          // type: isNumeric ? "numericColumn" : undefined,
           headerClass: baseDefs.headerClass,
           cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
           sortable: !arrayDescendant,
@@ -209,12 +208,16 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
 
   const valueColumn: ColDef<Row> = {
     headerName: "value",
+    minWidth: 110,
     field: "value",
     // type: "numericColumn",
     suppressMovable: true,
     cellClass: "agx-default-column agx-default-column-last",
     headerComponent: CustomHeader,
-    // autoHeaderHeight: true,
+    headerComponentParams: {
+      isWildcarded: true,
+      disableScoping: true,
+    },
   }
 
   const result = []
@@ -232,7 +235,9 @@ const metadataColumns: ColDef<Row>[] = [
     cellRenderer: EditableCellRenderer,
     editable: true,
     headerComponent: CustomHeader,
-    // autoHeaderHeight: true,
+    headerComponentParams: {
+      noScoping: true,
+    },
   },
   {
     headerName: "recorded",
@@ -241,7 +246,9 @@ const metadataColumns: ColDef<Row>[] = [
     cellRenderer: RecordedCellRenderer,
     width: 120,
     headerComponent: CustomHeader,
-    // autoHeaderHeight: true,
+    headerComponentParams: {
+      noScoping: true,
+    },
   },
 ]
 

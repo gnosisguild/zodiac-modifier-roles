@@ -102,3 +102,10 @@ input.ag-input-field-input {
   bottom: 0;
   height: 32px;
 }
+
+.ag-header-cell {
+  overflow: visible; /** allow the scoping toggle in narrow indices columns to overflow into the next column */
+}
+.agx-header-array-indices {
+  z-index: 2; /* ensure that the indices column is above the following columns so that its scoping toggle is clickable */
+}

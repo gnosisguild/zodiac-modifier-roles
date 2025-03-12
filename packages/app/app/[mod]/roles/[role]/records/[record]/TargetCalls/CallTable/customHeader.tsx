@@ -5,6 +5,7 @@ import ColumnScoping from "./ColumnScoping"
 export type CustomHeaderParams = IHeaderParams & {
   isWildcarded: boolean
   noScoping?: boolean
+  disableScoping?: boolean
 }
 
 export class CustomHeader extends _HeaderComp {
@@ -17,6 +18,7 @@ export class CustomHeader extends _HeaderComp {
       <ColumnScoping
         isWildcarded={params.isWildcarded}
         hide={params.noScoping}
+        disabled={params.disableScoping}
       />
     )
   }
