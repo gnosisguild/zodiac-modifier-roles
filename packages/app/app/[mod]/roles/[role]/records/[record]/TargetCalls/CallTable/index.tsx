@@ -102,6 +102,7 @@ const inputColumnDefs = (
       const baseDefs: ColDef<Row, any> = {
         headerName: carryComponentNameToValuesColumn ?? input.name ?? "",
         minWidth: 110,
+        cellDataType: "text",
         // spanRows: true,
         suppressMovable: true,
         headerClass: cn(
@@ -142,6 +143,7 @@ const inputColumnDefs = (
 
         const indexColumnDef: ColDef<Row, any> = {
           field: (field + ".indices") as NestedFieldPaths<Row>,
+          cellDataType: "text",
           headerName: "#",
           headerClass: "agx-header-array-indices",
           width: 30,
@@ -177,7 +179,6 @@ const inputColumnDefs = (
         return {
           ...baseDefs,
           field,
-          cellDataType: isBool ? "string" : undefined,
           headerClass: baseDefs.headerClass,
           cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
           sortable: !arrayDescendant,
@@ -230,6 +231,7 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
 const metadataColumns: ColDef<Row>[] = [
   {
     headerName: "label",
+    cellDataType: "text",
     field: "metadata.label",
     cellClass: "agx-label-column",
     cellRenderer: EditableCellRenderer,
@@ -241,6 +243,7 @@ const metadataColumns: ColDef<Row>[] = [
   },
   {
     headerName: "recorded",
+    cellDataType: "text",
     field: "metadata",
     cellClass: "agx-recorded-column",
     cellRenderer: RecordedCellRenderer,
