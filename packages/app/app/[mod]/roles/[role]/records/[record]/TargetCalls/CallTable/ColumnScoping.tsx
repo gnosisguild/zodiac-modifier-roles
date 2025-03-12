@@ -3,18 +3,21 @@ import classes from "./style.module.css"
 
 interface Props {
   isWildcarded?: boolean
-  hide?: boolean
   disabled?: boolean
+  onChange?: (isWildcarded: boolean) => void
 }
-const ColumnScoping: React.FC<Props> = ({ isWildcarded, hide, disabled }) => {
-  if (hide) return null
-
+const ColumnScoping: React.FC<Props> = ({
+  isWildcarded,
+  disabled,
+  onChange,
+}) => {
   return (
     <div>
       <Switch
         label={<span className={classes.columnScopingLabel}>allow any</span>}
         disabled={disabled}
         checked={!!isWildcarded}
+        onChange={onChange}
       />
     </div>
   )

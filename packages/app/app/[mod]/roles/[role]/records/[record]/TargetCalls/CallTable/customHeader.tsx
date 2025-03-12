@@ -14,11 +14,18 @@ export class CustomHeader extends _HeaderComp {
     const el = this.getGui().querySelector(".agx-header-cell-scoping")
     if (!el) throw new Error("agx-header-cell-scoping not found")
     const root = createRoot(el)
+
+    if (params.noScoping) return
+
+    const { field } = params.column.getColDef()
+    if (!field) throw new Error("field required to render scoping")
     root.render(
       <ColumnScoping
         isWildcarded={params.isWildcarded}
-        hide={params.noScoping}
         disabled={params.disableScoping}
+        onChange={(isWildcarded) =>
+          params.context.onScopeToggle(field, isWildcarded)
+        }
       />
     )
   }
@@ -38,5 +45,5 @@ const template = `<div class="agx-header-cell-wrapper">
         <ag-sort-indicator data-ref="eSortIndicator"></ag-sort-indicator>
       </div>
     </div>
-    <div class="agx-header-cell-scoping"><button>ok</button></div>
+    <div class="agx-header-cell-scoping"></div>
   </div>`
