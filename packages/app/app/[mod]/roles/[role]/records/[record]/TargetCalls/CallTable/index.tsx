@@ -49,7 +49,9 @@ const CallTable: React.FC<Props> = ({ calls, abi }) => {
       className={classes.table}
       style={{
         height:
-          totalSpan * LINE_HEIGHT + maxColNesting(cols) * HEADER_HEIGHT + 3,
+          totalSpan * LINE_HEIGHT + // amount of data rows
+          (maxColNesting(cols) + 1) * HEADER_HEIGHT + // amount of stacked header rows + 1 for the scoping row
+          3, // account for borders
       }}
     >
       <AgGridReact

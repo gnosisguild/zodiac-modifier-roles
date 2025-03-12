@@ -1,15 +1,27 @@
 import { _HeaderComp, type IHeaderParams } from "ag-grid-community"
+import { createRoot } from "react-dom/client"
+import ColumnScoping from "./ColumnScoping"
 
-export interface ICustomHeaderParams {
-  menuIcon: string
+export type CustomHeaderParams = IHeaderParams & {
+  isWildcarded: boolean
+  noScoping?: boolean
 }
 
 export class CustomHeader extends _HeaderComp {
-  init(params: IHeaderParams) {
+  init(params: CustomHeaderParams) {
     super.init({ ...params, template })
+    const el = this.getGui().querySelector(".agx-header-cell-scoping")
+    if (!el) throw new Error("agx-header-cell-scoping not found")
+    const root = createRoot(el)
+    root.render(
+      <ColumnScoping
+        isWildcarded={params.isWildcarded}
+        hide={params.noScoping}
+      />
+    )
   }
 
-  refresh(params: IHeaderParams) {
+  refresh(params: CustomHeaderParams) {
     return super.refresh({ ...params, template })
   }
 }

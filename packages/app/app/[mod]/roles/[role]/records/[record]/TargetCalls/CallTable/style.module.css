@@ -41,3 +41,10 @@
 .editable button:hover {
   opacity: 1;
 }
+
+.columnScopingLabel {
+  color: var(--ag-header-text-color);
+  font-family: var(--ag-header-font-family);
+  font-size: var(--ag-header-font-size);
+  font-weight: normal;
+}

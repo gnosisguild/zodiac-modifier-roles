@@ -87,3 +87,18 @@ input.ag-input-field-input {
 .ag-cell-edit-wrapper {
   min-height: 24px;
 }
+
+/** adjust header cell rendering for adding the scoping toggle at the bottom */
+:where(.ag-header-cell:not(.ag-header-cell-auto-height))
+  .ag-header-cell-comp-wrapper {
+  padding-bottom: 32px; /** height of the scoping row **/
+}
+
+.ag-header-cell .agx-header-cell-wrapper {
+  position: static;
+}
+.agx-header-cell-scoping {
+  position: absolute;
+  bottom: 0;
+  height: 32px;
+}
