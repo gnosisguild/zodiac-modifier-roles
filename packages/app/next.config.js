@@ -6,6 +6,9 @@ const nextConfig = {
       fullUrl: true,
     },
   },
+  experimental: {
+    taint: true,
+  },
   async headers() {
     return [
       {
