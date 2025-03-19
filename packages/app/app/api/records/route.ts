@@ -16,7 +16,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   const now = new Date()
 
   // Create storage object
-  const storageObject: Record = {
+  const record: Record = {
     id,
     authToken,
     createdAt: now.toISOString(),
@@ -26,7 +26,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   }
 
   // Store in KV
-  await kv.set(id, storageObject)
+  await kv.set(id, record)
 
-  return NextResponse.json(storageObject)
+  return NextResponse.json(record)
 })

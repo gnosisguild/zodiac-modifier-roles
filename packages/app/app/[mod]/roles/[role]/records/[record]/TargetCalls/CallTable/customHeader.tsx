@@ -24,7 +24,7 @@ export class CustomHeader extends _HeaderComp {
       <ColumnScoping
         label={params.scopingLabel ?? "allow any"}
         isWildcarded={params.isWildcarded}
-        disabled={params.disableScoping}
+        disabled={params.disableScoping || params.context.readOnly}
         onChange={(isWildcarded) =>
           params.context.onScopeToggle(field, isWildcarded)
         }

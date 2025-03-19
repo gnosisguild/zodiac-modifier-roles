@@ -40,6 +40,7 @@ interface Props {
   onScopeToggle: ScopeToggleHandler
   onLabelEdit: (callIndex: number, newLabel: string) => void
   onDelete: (callIndex: number) => void
+  readOnly?: boolean
 }
 
 const HEADER_HEIGHT = 32
@@ -47,16 +48,21 @@ const LINE_HEIGHT = 25
 
 const CallTable: React.FC<Props> = ({
   calls,
+  wildcards,
   abi,
   onLabelEdit,
   onScopeToggle,
   onDelete,
+  readOnly = false,
 }) => {
   const rows = rowData(calls, abi)
 
   const cols = [
     ...defaultColumnDefs(calls),
-    ...inputColumnDefs(abi.inputs, { prefix: "inputs.", isLastGroup: true }),
+    ...inputColumnDefs(abi.inputs, wildcards, {
+      prefix: "inputs.",
+      isLastGroup: true,
+    }),
     ...metadataColumns,
   ]
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
@@ -94,6 +100,7 @@ const CallTable: React.FC<Props> = ({
           onLabelEdit(event.rowIndex, event.newValue)
         }}
         context={{
+          readOnly,
           onDelete,
           onScopeToggle: handleScopeToggle,
         }}
@@ -106,6 +113,7 @@ export default CallTable
 
 const inputColumnDefs = (
   inputs: readonly AbiParameter[],
+  wildcards: string[],
   {
     prefix,
     arrayDescendant,
@@ -131,7 +139,14 @@ const inputColumnDefs = (
       const isTuple = "components" in input && Array.isArray(input.components)
       const isLastChild = index === inputs.length - 1
 
+      const componentName = input.name ?? `[${index}]`
+      const field = (prefix +
+        (carryComponentNameToValuesColumn
+          ? "values"
+          : componentName)) as NestedFieldPaths<Row>
+
       const baseDefs: ColDef<Row, any> = {
+        field,
         headerName: carryComponentNameToValuesColumn ?? input.name ?? "",
         minWidth: 110,
         cellDataType: "text",
@@ -141,19 +156,7 @@ const inputColumnDefs = (
           // !!carryComponentNameToValuesColumn && "agx-header-array-values",
           isLastChild && "agx-header-cell-last-child"
         ),
-
-        headerComponent: CustomHeader,
-        headerComponentParams: {
-          isWildcarded: false, // TODO
-          noScoping: arrayDescendant,
-        },
       }
-
-      const componentName = input.name ?? `[${index}]`
-      const field = (prefix +
-        (carryComponentNameToValuesColumn
-          ? "values"
-          : componentName)) as NestedFieldPaths<Row>
 
       if (!isArray && isTuple) {
         /**
@@ -161,8 +164,7 @@ const inputColumnDefs = (
          */
         return {
           ...baseDefs,
-          field,
-          children: inputColumnDefs(input.components, {
+          children: inputColumnDefs(input.components, wildcards, {
             prefix: field + ".",
             arrayDescendant,
             isLastGroup: isLastGroup && isLastChild,
@@ -187,7 +189,7 @@ const inputColumnDefs = (
           headerComponent: CustomHeader,
         }
 
-        const elementColumnDefs = inputColumnDefs([elementType], {
+        const elementColumnDefs = inputColumnDefs([elementType], wildcards, {
           prefix: field + ".",
           carryComponentNameToValuesColumn: componentName,
           arrayDescendant: true,
@@ -204,14 +206,13 @@ const inputColumnDefs = (
           ...elementColumnDefs,
         ]
       } else {
-        const isBool = input.type === "bool"
-        // const isNumeric =
-        //   input.type.startsWith("uint") || input.type.startsWith("int")
-
         return {
           ...baseDefs,
-          field,
-          headerClass: baseDefs.headerClass,
+          headerComponent: CustomHeader,
+          headerComponentParams: {
+            isWildcarded: wildcards.includes(cleanPath(inputs, field)), // TODO
+            noScoping: arrayDescendant,
+          },
           cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
           sortable: !arrayDescendant,
           cellRenderer: arrayDescendant ? NestedValuesRenderer : undefined,
