@@ -136,6 +136,7 @@ export class EditableCellRenderer implements ICellRendererComp<Row> {
     this.eGui.appendChild(this.span)
 
     const editButton = document.createElement("button")
+    editButton.classList.add(classes.iconButton)
     editButton.innerHTML = editIconSvg
     editButton.onclick = (ev) => {
       params.api.startEditingCell({
