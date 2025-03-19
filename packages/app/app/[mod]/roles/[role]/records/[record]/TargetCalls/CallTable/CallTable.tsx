@@ -1,3 +1,4 @@
+"use client"
 import { AgGridReact } from "ag-grid-react"
 import {
   ModuleRegistry,
@@ -35,6 +36,7 @@ type ScopeToggleHandler = (paramPath: string, isScoped: boolean) => void
 interface Props {
   abi: AbiFunction
   calls: Call[]
+  wildcards: string[]
   onScopeToggle: ScopeToggleHandler
   onLabelEdit: (callIndex: number, newLabel: string) => void
   onDelete: (callIndex: number) => void
@@ -60,8 +62,7 @@ const CallTable: React.FC<Props> = ({
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
 
   const handleScopeToggle: ScopeToggleHandler = (paramPath, isScoped) => {
-    // map paramPath to the index of the input column
-    onScopeToggle(paramPath, isScoped)
+    onScopeToggle(cleanPath(abi.inputs, paramPath), isScoped)
   }
 
   return (
@@ -334,4 +335,38 @@ const maxColNesting = (
     }
     return max
   }, 1)
+}
+
+/** turns the column path into a ABI parameter path, ironing out some small discrepancies that stem from array handling */
+function cleanPath(params: readonly AbiParameter[], path: string): string {
+  invariant(path.startsWith("inputs."), "unexpected path")
+  const parts = path.split(".")
+
+  // skip over the first part (inputs.)
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i]
+
+    const current = params.find((p) => p.name === part)
+    if (!current) {
+      throw new Error(`Invalid path: ${path}. Parameter ${part} not found`)
+    }
+    // If we hit an array, validate remaining path is ".indices"
+    if (arrayElementType(current) !== undefined) {
+      const remainingPath = parts.slice(i).join(".")
+      if (remainingPath !== "indices") {
+        throw new Error(
+          `Invalid path: ${path}. Array can only be followed by ".indices"`
+        )
+      }
+      return parts.slice(1, i).join(".")
+    }
+
+    if ("components" in current && Array.isArray(current.components)) {
+      params = current.components
+    } else {
+      invariant(i === parts.length - 1, "unexpected path")
+    }
+  }
+
+  return parts.slice(1).join(".")
 }

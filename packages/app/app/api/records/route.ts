@@ -22,8 +22,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     createdAt: now.toISOString(),
     lastUpdatedAt: now.toISOString(),
     calls: validated,
-    wildcards: {},
-    alternatives: {},
+    wildcards: [],
   }
 
   // Store in KV
