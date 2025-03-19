@@ -6,6 +6,7 @@ export type CustomHeaderParams = IHeaderParams & {
   isWildcarded: boolean
   noScoping?: boolean
   disableScoping?: boolean
+  scopingLabel?: string
 }
 
 export class CustomHeader extends _HeaderComp {
@@ -21,6 +22,7 @@ export class CustomHeader extends _HeaderComp {
     if (!field) throw new Error("field required to render scoping")
     root.render(
       <ColumnScoping
+        label={params.scopingLabel ?? "allow any"}
         isWildcarded={params.isWildcarded}
         disabled={params.disableScoping}
         onChange={(isWildcarded) =>

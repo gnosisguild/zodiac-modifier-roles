@@ -59,6 +59,11 @@ const CallTable: React.FC<Props> = ({
   ]
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
 
+  const handleScopeToggle: ScopeToggleHandler = (paramPath, isScoped) => {
+    // map paramPath to the index of the input column
+    onScopeToggle(paramPath, isScoped)
+  }
+
   return (
     <div
       className={classes.table}
@@ -89,7 +94,7 @@ const CallTable: React.FC<Props> = ({
         }}
         context={{
           onDelete,
-          onScopeToggle,
+          onScopeToggle: handleScopeToggle,
         }}
       />
     </div>
@@ -140,7 +145,6 @@ const inputColumnDefs = (
         headerComponentParams: {
           isWildcarded: false, // TODO
           noScoping: arrayDescendant,
-          onScopeToggle: () => {},
         },
       }
 
@@ -245,6 +249,7 @@ const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
     headerComponentParams: {
       isWildcarded: true,
       disableScoping: true,
+      scopingLabel: "allow send",
     },
   }
 
