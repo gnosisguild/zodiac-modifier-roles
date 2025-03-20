@@ -1,7 +1,8 @@
 import { kv } from "@vercel/kv"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { zCall, zRecord } from "../../types"
+import crypto from "crypto"
+import { zCallInput, zRecord } from "../../types"
 import { authorizeRequest } from "../../auth"
 import { withErrorHandling } from "../../../utils/withErrorHandling"
 
@@ -22,9 +23,13 @@ export const POST = withErrorHandling(
     authorizeRequest(req, record.authToken)
 
     // Append new calls to record, filtering out duplicate calls
-    const newCalls = z.array(zCall).parse(await req.json())
-    const filteredCalls = newCalls.filter(
-      (call) => !record.calls.some((existing) => callsEqual(call, existing))
+    const newCalls = z.array(zCallInput).parse(await req.json())
+    const callsWithIds = newCalls.map((call) => ({
+      ...call,
+      id: callId(call),
+    }))
+    const filteredCalls = callsWithIds.filter(
+      (call) => !record.calls.some((existing) => existing.id === call.id)
     )
     record.calls = [...record.calls, ...filteredCalls]
 
@@ -39,9 +44,9 @@ export const POST = withErrorHandling(
   }
 )
 
-type Call = z.infer<typeof zCall>
-const callsEqual = (a: Call, b: Call) =>
-  a.to === b.to &&
-  a.data === b.data &&
-  a.value === b.value &&
-  a.operation === b.operation
+type CallInput = z.infer<typeof zCallInput>
+const callId = (call: CallInput) => {
+  const str =
+    call.operation + BigInt(call.value).toString() + call.to + call.data
+  return crypto.createHash("md5").update(str).digest("base64url")
+}

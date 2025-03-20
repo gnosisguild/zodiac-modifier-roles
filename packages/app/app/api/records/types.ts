@@ -6,7 +6,7 @@ export enum Operation {
   DelegateCall = 1,
 }
 
-export const zCall = z.object({
+export const zCallInput = z.object({
   to: zAddress,
   value: z.string(),
   data: zHex,
@@ -18,6 +18,10 @@ export const zCall = z.object({
       recordedWith: z.string().optional(),
     })
     .optional(),
+})
+
+export const zCall = zCallInput.extend({
+  id: z.string(),
 })
 export type Call = z.infer<typeof zCall>
 
