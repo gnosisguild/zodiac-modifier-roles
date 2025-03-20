@@ -29,19 +29,21 @@ ModuleRegistry.registerModules([AllCommunityModule])
 
 /**
  * @param columnPath - A dot-separated path to the ABI parameter that was toggled.
- * @param isScoped - Whether the parameter is now scoped to the recorded values (`false` means that any parameter value is allowed)
+ * @param isWildcarded - Whether the parameter is wildcarded or scoped to the recorded values (`true` means that any parameter value is allowed)
  */
-type ScopeToggleHandler = (paramPath: string, isScoped: boolean) => void
+type WildcardToggleHandler = (paramPath: string, isWildcarded: boolean) => void
 
-interface Props {
+export interface CallActionHandlers {
+  onWildcardToggle: WildcardToggleHandler
+  onLabelEdit: (callId: string, newLabel: string) => void
+  onDelete: (callId: string) => void
+}
+
+type Props = {
   abi: AbiFunction
   calls: Call[]
-  wildcards: string[]
-  onScopeToggle: ScopeToggleHandler
-  onLabelEdit: (callIndex: number, newLabel: string) => void
-  onDelete: (callIndex: number) => void
-  readOnly?: boolean
-}
+  wildcards: { [paramPath: string]: boolean }
+} & CallActionHandlers
 
 const HEADER_HEIGHT = 32
 const LINE_HEIGHT = 25
@@ -51,9 +53,8 @@ const CallTable: React.FC<Props> = ({
   wildcards,
   abi,
   onLabelEdit,
-  onScopeToggle,
+  onWildcardToggle,
   onDelete,
-  readOnly = false,
 }) => {
   const rows = rowData(calls, abi)
 
@@ -67,8 +68,15 @@ const CallTable: React.FC<Props> = ({
   ]
   const totalSpan = rows.reduce((sum, row) => sum + row.span, 0)
 
-  const handleScopeToggle: ScopeToggleHandler = (paramPath, isScoped) => {
-    onScopeToggle(cleanPath(abi.inputs, paramPath), isScoped)
+  const handleWildcardToggle: WildcardToggleHandler = (
+    paramPath,
+    isWildcarded
+  ) => {
+    onWildcardToggle(cleanPath(abi.inputs, paramPath), isWildcarded)
+  }
+
+  const handleDelete = (callIndex: number) => {
+    onDelete(calls[callIndex].id)
   }
 
   return (
@@ -97,12 +105,11 @@ const CallTable: React.FC<Props> = ({
           if (event.rowIndex === null) {
             throw new Error("Expected to receive row index")
           }
-          onLabelEdit(event.rowIndex, event.newValue)
+          onLabelEdit(calls[event.rowIndex].id, event.newValue)
         }}
         context={{
-          readOnly,
-          onDelete,
-          onScopeToggle: handleScopeToggle,
+          onDelete: handleDelete,
+          onWildcardToggle: handleWildcardToggle,
         }}
       />
     </div>
@@ -113,7 +120,7 @@ export default CallTable
 
 const inputColumnDefs = (
   inputs: readonly AbiParameter[],
-  wildcards: string[],
+  wildcards: { [paramPath: string]: boolean },
   {
     prefix,
     arrayDescendant,
@@ -210,7 +217,7 @@ const inputColumnDefs = (
           ...baseDefs,
           headerComponent: CustomHeader,
           headerComponentParams: {
-            isWildcarded: wildcards.includes(cleanPath(inputs, field)), // TODO
+            isWildcarded: wildcards[cleanPath(inputs, field)] === true,
             noScoping: arrayDescendant,
           },
           cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),

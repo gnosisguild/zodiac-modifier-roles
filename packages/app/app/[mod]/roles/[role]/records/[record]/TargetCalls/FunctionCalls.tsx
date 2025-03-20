@@ -1,5 +1,3 @@
-import { ChainId } from "zodiac-roles-sdk"
-
 import { AbiFunction, toFunctionSelector } from "viem"
 import Flex from "@/ui/Flex"
 import classes from "./style.module.css"
@@ -8,13 +6,23 @@ import Anchor from "@/ui/Anchor"
 import { Call } from "@/app/api/records/types"
 import CallTable from "./CallTable"
 
-const FunctionCalls: React.FC<{
+type Props = {
   to: `0x${string}`
   selector: `0x${string}`
   calls: Call[]
-  chainId: ChainId
+  wildcards: { [paramPath: string]: boolean }
   abi?: AbiFunction[]
-}> = ({ to, selector, calls, chainId, abi }) => {
+  recordId: string
+}
+
+const FunctionCalls: React.FC<Props> = ({
+  to,
+  selector,
+  calls,
+  wildcards,
+  abi,
+  recordId,
+}) => {
   const functionAbi = abi?.find(
     (fragment: any) =>
       fragment.type === "function" && toFunctionSelector(fragment) === selector
@@ -35,7 +43,13 @@ const FunctionCalls: React.FC<{
       </LabeledData>
 
       {functionAbi ? (
-        <CallTable calls={calls} abi={functionAbi} />
+        <CallTable
+          recordId={recordId}
+          targetSelector={`${to}:${selector}`}
+          calls={calls}
+          abi={functionAbi}
+          wildcards={wildcards}
+        />
       ) : (
         <div>ABI not found</div>
       )}

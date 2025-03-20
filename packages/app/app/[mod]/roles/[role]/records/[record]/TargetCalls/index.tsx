@@ -8,23 +8,28 @@ import StopPropagation from "@/ui/StopPropagation"
 import classes from "./style.module.css"
 import ContractName from "@/components/ContractName"
 import { Call } from "@/app/api/records/types"
-import CallItem from "./CallItem"
 import Box from "@/ui/Box"
 import { groupBy } from "@/utils/groupBy"
-import CallTable from "./FunctionCalls"
+import FunctionCalls from "./FunctionCalls"
 
-interface Props {
+type Props = {
   to: `0x${string}`
   chainId: ChainId
   calls: Call[]
+  wildcards: { [targetSelector: string]: { [paramPath: string]: boolean } }
+  recordId: string
 }
 
-const TargetCalls = async ({ to, chainId, calls }: Props) => {
+const TargetCalls = async ({
+  to,
+  chainId,
+  calls,
+  wildcards,
+  recordId,
+}: Props) => {
   const contractInfo = await fetchContractInfo(to, chainId)
 
-  const callsBySelector = Object.entries(
-    groupBy(calls, (entry) => entry.data.slice(0, 10))
-  )
+  const callsBySelector = groupBy(calls, (call) => call.data.slice(0, 10))
 
   return (
     <Box borderless bg p={0}>
@@ -50,14 +55,15 @@ const TargetCalls = async ({ to, chainId, calls }: Props) => {
         }
       >
         <Flex direction="column" gap={3} className={classes.targetContent}>
-          {callsBySelector.map(([selector, calls]) => (
-            <CallTable
+          {Object.entries(callsBySelector).map(([selector, calls]) => (
+            <FunctionCalls
               key={selector}
               to={to}
               selector={selector as `0x${string}`}
               calls={calls}
+              wildcards={wildcards[to + ":" + selector]}
               abi={contractInfo.abi}
-              chainId={chainId}
+              recordId={recordId}
             />
           ))}
         </Flex>

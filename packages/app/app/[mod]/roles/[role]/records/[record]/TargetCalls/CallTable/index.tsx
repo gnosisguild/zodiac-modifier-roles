@@ -1,57 +1,104 @@
+"use client"
 import { AbiFunction } from "viem"
 
 import { Call, Record } from "@/app/api/records/types"
 import CallTable from "./CallTable"
-import { useEffect, useRef, useState } from "react"
 import { kv } from "@vercel/kv"
+import { useOptimistic } from "react"
+import { getRecordById } from "@/app/api/records/query"
 
-async function updateRecord(record: Record) {
+async function serverToggleWildcard({
+  recordId,
+  targetSelector,
+  paramPath,
+  isWildcarded,
+}: {
+  recordId: string
+  targetSelector: string
+  paramPath: string
+  isWildcarded: boolean
+}) {
   "use server"
-  // TODO authentication!?!?!?
-  await kv.set(record.id, {
-    ...record,
-    lastUpdatedAt: new Date().toISOString(),
-  })
+  console.log(
+    "wildcard toggle server",
+    recordId,
+    targetSelector,
+    paramPath,
+    isWildcarded
+  )
+  const record = await getRecordById(recordId)
+
+  // TODO authentication!!!!
+
+  const multi = kv.multi()
+  if (!isWildcarded) {
+    multi.json.del(recordId, `.wildcards.${targetSelector}.${paramPath}`)
+  } else {
+    if (!record.wildcards[targetSelector]) {
+      multi.json.set(recordId, `.wildcards.${targetSelector}`, {})
+    }
+    multi.json.set(recordId, `.wildcards.${targetSelector}.${paramPath}`, true)
+  }
+  multi.json.set(recordId, `.lastUpdatedAt`, new Date().toISOString())
+
+  await multi.exec()
 }
 
 interface Props {
-  record: Record
+  recordId: string
+  targetSelector: string // <to>:<selector>
   abi: AbiFunction
+  calls: Call[]
+  wildcards: { [paramPath: string]: boolean }
 }
 
-const InteractiveCallTable: React.FC<Props> = ({ record, abi }) => {
-  const [recordState, setRecordState] = useState(record)
+const InteractiveCallTable: React.FC<Props> = ({
+  recordId,
+  targetSelector,
+  calls,
+  wildcards,
+  abi,
+}) => {
+  const [optimisticCalls, updateCall] = useOptimistic(
+    calls,
+    handleUpdateCallAction
+  )
+  const [optimisticWildcards, updateWildcard] = useOptimistic(
+    wildcards,
+    handleUpdateWildcardAction
+  )
 
-  // automatically save the record when it changes
-  const mounted = useRef(false)
-  useEffect(() => {
-    if (mounted.current) {
-      updateRecord(recordState)
-    }
-    mounted.current = true
-  }, [recordState])
-
-  const handleScopeToggle = async (paramPath: string, isScoped: boolean) => {
-    setRecordState((state) => updateWildcard(state, paramPath, isScoped))
-    console.log("scope toggle", paramPath, isScoped)
+  const handleWildcardToggle = async (
+    paramPath: string,
+    isWildcarded: boolean
+  ) => {
+    updateWildcard({ paramPath, isWildcarded })
+    console.log("wildcard toggle", paramPath, isWildcarded)
+    await serverToggleWildcard({
+      recordId,
+      targetSelector,
+      paramPath,
+      isWildcarded,
+    })
+    console.log("wildcard toggle done", paramPath, isWildcarded)
   }
 
-  const handleLabelEdit = async (callIndex: number, newLabel: string) => {
-    setRecordState((state) => labelCall(state, callIndex, newLabel))
-    console.log("label edit", callIndex, newLabel)
+  const handleLabelEdit = (callId: string, label: string) => {
+    updateCall({ action: "label", callId, label })
+    console.log("label edit", callId, label)
   }
 
-  const handleDelete = async (callIndex: number) => {
-    setRecordState((state) => deleteCall(state, callIndex))
-    console.log("delete", callIndex)
+  const handleDelete = (callId: string) => {
+    updateCall({ action: "delete", callId })
+    console.log("delete", callId)
   }
 
   return (
     <CallTable
-      calls={recordState.calls}
-      wildcards={recordState.wildcards}
+      calls={optimisticCalls}
+      wildcards={optimisticWildcards}
       abi={abi}
-      onScopeToggle={handleScopeToggle}
+      onWildcardToggle={handleWildcardToggle}
       onLabelEdit={handleLabelEdit}
       onDelete={handleDelete}
     />
@@ -60,43 +107,36 @@ const InteractiveCallTable: React.FC<Props> = ({ record, abi }) => {
 
 export default InteractiveCallTable
 
-function deleteCall(record: Record, callIndex: number) {
-  return {
-    ...record,
-    calls: record.calls.filter((_, index) => index !== callIndex),
-    lastUpdatedAt: new Date().toISOString(),
+type UpdateCallAction =
+  | {
+      action: "delete"
+      callId: string
+    }
+  | {
+      action: "label"
+      callId: string
+      label: string
+    }
+
+function handleUpdateCallAction(calls: Call[], action: UpdateCallAction) {
+  switch (action.action) {
+    case "delete":
+      return calls.filter((call) => call.id !== action.callId)
+    case "label":
+      return calls.map((call) =>
+        call.id === action.callId
+          ? { ...call, metadata: { ...call.metadata, label: action.label } }
+          : call
+      )
   }
 }
 
-function labelCall(record: Record, callIndex: number, label: string) {
-  return {
-    ...record,
-    calls: record.calls.map((call, index) =>
-      index === callIndex
-        ? { ...call, metadata: { ...call.metadata, label } }
-        : call
-    ),
-  }
-}
-
-function updateWildcard(
-  record: Record,
-  paramPath: string,
-  isWildcard: boolean
+function handleUpdateWildcardAction(
+  wildcards: { [paramPath: string]: boolean },
+  action: { paramPath: string; isWildcarded: boolean }
 ) {
-  if (isWildcard && !record.wildcards.includes(paramPath)) {
-    return {
-      ...record,
-      wildcards: [...record.wildcards, paramPath],
-    }
+  return {
+    ...wildcards,
+    [action.paramPath]: action.isWildcarded,
   }
-
-  if (!isWildcard && record.wildcards.includes(paramPath)) {
-    return {
-      ...record,
-      wildcards: record.wildcards.filter((path) => path !== paramPath),
-    }
-  }
-
-  return record
 }

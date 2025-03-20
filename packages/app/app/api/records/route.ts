@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { nanoid } from "nanoid"
 import crypto from "crypto"
-import { Record, zCall } from "./types"
+import { Record, zCallInput } from "./types"
 import { kv } from "@vercel/kv"
 import { withErrorHandling } from "../utils/withErrorHandling"
+import { indexCallInputs } from "./utils"
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const validated = z.array(zCall).parse(await req.json())
+  const validated = z.array(zCallInput).parse(await req.json())
+  const calls = indexCallInputs(validated)
 
   // Generate URL-safe ID and auth token
   const id = nanoid()
@@ -21,8 +23,8 @@ export const POST = withErrorHandling(async (req: Request) => {
     authToken,
     createdAt: now.toISOString(),
     lastUpdatedAt: now.toISOString(),
-    calls: validated,
-    wildcards: [],
+    calls,
+    wildcards: {},
   }
 
   // Store in KV

@@ -25,13 +25,19 @@ export const zCall = zCallInput.extend({
 })
 export type Call = z.infer<typeof zCall>
 
-export const zWildcards = z.record(z.string(), z.boolean())
+export const zWildcards = z.record(
+  z.string(), // <target>:<selector>
+  z.record(
+    z.string(), // param path
+    z.boolean() // true if wildcarded
+  )
+)
 
 export const zRecord = z.object({
   id: z.string(),
   authToken: z.string(), // providing this token will allow the user to edit the record
-  calls: z.array(zCall),
-  wildcards: z.string().array(), // allows wildcarding fields in the calls
+  calls: z.record(z.string(), zCall), // store calls under their IDs
+  wildcards: zWildcards, // allows wildcarding fields in the calls
   createdAt: z.string().datetime(),
   lastUpdatedAt: z.string().datetime(),
 })
