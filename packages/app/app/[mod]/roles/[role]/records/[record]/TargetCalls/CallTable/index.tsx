@@ -1,11 +1,17 @@
 "use client"
 import { AbiFunction } from "viem"
-import { useOptimistic, useReducer, useState, useTransition } from "react"
+import { useReducer } from "react"
 
 import { Call } from "@/app/api/records/types"
 import CallTable from "./CallTable"
-import { serverToggleWildcard } from "./serverActions"
-
+import {
+  serverLabelCall,
+  serverDeleteCall,
+  serverToggleWildcard,
+  serverAddCall,
+} from "./serverActions"
+import { CallState } from "./types"
+import { invariant } from "@epic-web/invariant"
 interface Props {
   recordId: string
   targetSelector: string // <to>:<selector>
@@ -32,25 +38,43 @@ const InteractiveCallTable: React.FC<Props> = ({
     isWildcarded: boolean
   ) => {
     updateWildcard({ paramPath, isWildcarded })
-    console.log("wildcard toggle", paramPath, isWildcarded)
     await serverToggleWildcard({
       recordId,
       targetSelector,
       paramPath,
       isWildcarded,
     })
-
-    console.log("wildcard toggle done", paramPath, isWildcarded)
   }
 
-  const handleLabelEdit = (callId: string, label: string) => {
+  const handleLabelEdit = async (callId: string, label: string) => {
     updateCall({ action: "label", callId, label })
+    await serverLabelCall({
+      recordId,
+      callId,
+      label,
+    })
     console.log("label edit", callId, label)
   }
 
-  const handleDelete = (callId: string) => {
+  const handleDelete = async (callId: string) => {
     updateCall({ action: "delete", callId })
+    await serverDeleteCall({
+      recordId,
+      callId,
+    })
     console.log("delete", callId)
+  }
+
+  const handleRestore = async (callId: string) => {
+    updateCall({ action: "restore", callId })
+    const callState = calls.find((call) => call.id === callId)
+    invariant(callState != null, "call not found")
+    const { deleted, ...call } = callState
+    await serverAddCall({
+      recordId,
+      call,
+    })
+    console.log("restore", callId)
   }
 
   console.log("wildcards", wildcards, { initialWildcards })
@@ -63,6 +87,7 @@ const InteractiveCallTable: React.FC<Props> = ({
       onWildcardToggle={handleWildcardToggle}
       onLabelEdit={handleLabelEdit}
       onDelete={handleDelete}
+      onRestore={handleRestore}
     />
   )
 }
@@ -75,15 +100,25 @@ type UpdateCallAction =
       callId: string
     }
   | {
+      action: "restore"
+      callId: string
+    }
+  | {
       action: "label"
       callId: string
       label: string
     }
 
-function handleUpdateCallAction(calls: Call[], action: UpdateCallAction) {
+function handleUpdateCallAction(calls: CallState[], action: UpdateCallAction) {
   switch (action.action) {
     case "delete":
-      return calls.filter((call) => call.id !== action.callId)
+      return calls.map((call) =>
+        call.id === action.callId ? { ...call, deleted: true } : call
+      )
+    case "restore":
+      return calls.map((call) =>
+        call.id === action.callId ? { ...call, deleted: false } : call
+      )
     case "label":
       return calls.map((call) =>
         call.id === action.callId

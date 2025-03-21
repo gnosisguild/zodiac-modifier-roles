@@ -1,6 +1,7 @@
 "use server"
 
 import { getRecordById } from "@/app/api/records/query"
+import { Call } from "@/app/api/records/types"
 import { kv } from "@vercel/kv"
 
 export async function serverToggleWildcard({
@@ -14,7 +15,6 @@ export async function serverToggleWildcard({
   paramPath: string
   isWildcarded: boolean
 }) {
-  "use server"
   console.log(
     "wildcard toggle server",
     recordId,
@@ -42,4 +42,45 @@ export async function serverToggleWildcard({
   )
 
   await multi.exec()
+}
+
+export async function serverLabelCall({
+  recordId,
+  callId,
+  label,
+}: {
+  recordId: string
+  callId: string
+  label: string
+}) {
+  console.log("label call server", recordId, callId, label)
+  const record = await getRecordById(recordId)
+
+  // TODO authentication!!!!
+}
+
+export async function serverDeleteCall({
+  recordId,
+  callId,
+}: {
+  recordId: string
+  callId: string
+}) {
+  console.log("delete call server", recordId, callId)
+  const record = await getRecordById(recordId)
+
+  // TODO authentication!!!!
+}
+
+export async function serverAddCall({
+  recordId,
+  call,
+}: {
+  recordId: string
+  call: Call
+}) {
+  console.log("add call server", recordId, call)
+  const record = await getRecordById(recordId)
+
+  // TODO authentication!!!!
 }

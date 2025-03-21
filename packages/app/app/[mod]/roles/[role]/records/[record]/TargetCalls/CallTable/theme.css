@@ -118,3 +118,11 @@ input.ag-input-field-input {
 .agx-header-array-indices {
   z-index: 2; /* ensure that the indices column is above the following columns so that its scoping toggle is clickable */
 }
+
+.agx-deleted-row .ag-cell {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.agx-deleted-row .ag-cell.agx-actions-column {
+  opacity: 1;
+}

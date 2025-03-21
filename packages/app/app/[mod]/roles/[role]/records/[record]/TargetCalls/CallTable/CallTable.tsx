@@ -10,7 +10,7 @@ import {
 import cn from "classnames"
 import { invariant } from "@epic-web/invariant"
 import { AbiFunction, AbiParameter, decodeFunctionData } from "viem"
-import { Call, Operation } from "@/app/api/records/types"
+import { Operation } from "@/app/api/records/types"
 import { arrayElementType } from "@/utils/abi"
 import {
   ActionsCellRenderer,
@@ -21,7 +21,7 @@ import {
 } from "./cellRenderers"
 import classes from "./style.module.css"
 import { theme } from "./theme"
-import { Row, StructRowValue } from "./types"
+import { Row, StructRowValue, CallState } from "./types"
 import { distributeArrayElements, totalSpan } from "./distributeArrayElements"
 import { CustomHeader } from "./customHeader"
 
@@ -37,11 +37,12 @@ export interface CallActionHandlers {
   onWildcardToggle: WildcardToggleHandler
   onLabelEdit: (callId: string, newLabel: string) => void
   onDelete: (callId: string) => void
+  onRestore: (callId: string) => void
 }
 
 type Props = {
   abi: AbiFunction
-  calls: Call[]
+  calls: CallState[]
   wildcards: { [paramPath: string]: boolean | undefined }
 } & CallActionHandlers
 
@@ -55,6 +56,7 @@ const CallTable: React.FC<Props> = ({
   onLabelEdit,
   onWildcardToggle,
   onDelete,
+  onRestore,
 }) => {
   const rows = rowData(calls, abi)
 
@@ -79,6 +81,10 @@ const CallTable: React.FC<Props> = ({
     onDelete(calls[callIndex].id)
   }
 
+  const handleRestore = (callIndex: number) => {
+    onRestore(calls[callIndex].id)
+  }
+
   return (
     <div
       className={classes.table}
@@ -99,6 +105,9 @@ const CallTable: React.FC<Props> = ({
           invariant(data, "row groups not supported")
           return data.span * LINE_HEIGHT
         }}
+        getRowClass={(params) =>
+          params.data?.deleted ? "agx-deleted-row" : ""
+        }
         theme={theme}
         readOnlyEdit // don't let ag-grid handle cell edits in its own internal state
         onCellEditRequest={(event) => {
@@ -109,6 +118,7 @@ const CallTable: React.FC<Props> = ({
         }}
         context={{
           onDelete: handleDelete,
+          onRestore: handleRestore,
           onWildcardToggle: handleWildcardToggle,
         }}
       />
@@ -213,10 +223,6 @@ const inputColumnDefs = (
           ...elementColumnDefs,
         ]
       } else {
-        console.log({
-          isWildcarded: wildcards[cleanPath(inputs, field)] === true,
-          field,
-        })
         return {
           ...baseDefs,
           headerComponent: CustomHeader,
@@ -233,7 +239,7 @@ const inputColumnDefs = (
   )
 }
 
-const defaultColumnDefs = (calls: Call[]): ColDef<Row>[] => {
+const defaultColumnDefs = (calls: CallState[]): ColDef<Row>[] => {
   const includesDelegateCalls = calls.some(
     (call) => call.operation === Operation.DelegateCall
   )
@@ -280,7 +286,7 @@ const metadataColumns: ColDef<Row>[] = [
     field: "metadata.label",
     cellClass: "agx-label-column",
     cellRenderer: EditableCellRenderer,
-    editable: true,
+    editable: ({ data }) => !data?.deleted,
     suppressMovable: true,
     headerComponent: CustomHeader,
     headerComponentParams: {
@@ -314,7 +320,7 @@ const metadataColumns: ColDef<Row>[] = [
   },
 ]
 
-const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
+const rowData = (calls: CallState[], abi: AbiFunction): Row[] => {
   const decodedCalls = calls.map((call) => {
     const { args } = decodeFunctionData({ abi: [abi], data: call.data })
 
@@ -333,6 +339,7 @@ const rowData = (calls: Call[], abi: AbiFunction): Row[] => {
       inputs,
       metadata: call.metadata,
       span: totalSpan(inputs),
+      deleted: call.deleted,
     }
   })
 

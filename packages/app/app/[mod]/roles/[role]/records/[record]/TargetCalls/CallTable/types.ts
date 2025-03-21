@@ -41,4 +41,10 @@ export interface Row {
 
   /** We're rendering array elements as sub rows inside the row. The `span` property indicates the total number of such sub rows. */
   span: number
+
+  deleted?: boolean
+}
+
+export type CallState = Call & {
+  deleted?: boolean
 }
