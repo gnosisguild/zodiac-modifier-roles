@@ -1,5 +1,5 @@
 import { _HeaderComp, type IHeaderParams } from "ag-grid-community"
-import { createRoot } from "react-dom/client"
+import { createRoot, Root } from "react-dom/client"
 import ColumnScoping from "./ColumnScoping"
 
 export type CustomHeaderParams = IHeaderParams & {
@@ -10,17 +10,25 @@ export type CustomHeaderParams = IHeaderParams & {
 }
 
 export class CustomHeader extends _HeaderComp {
+  private root: Root | null = null
+
   init(params: CustomHeaderParams) {
     super.init({ ...params, template })
     const el = this.getGui().querySelector(".agx-header-cell-scoping")
     if (!el) throw new Error("agx-header-cell-scoping not found")
-    const root = createRoot(el)
+    this.root = createRoot(el)
 
+    this.render(params)
+  }
+
+  render(params: CustomHeaderParams) {
     if (params.noScoping) return
 
+    if (!this.root) throw new Error("root not found")
     const { field } = params.column.getColDef()
     if (!field) throw new Error("field required to render scoping")
-    root.render(
+
+    this.root.render(
       <ColumnScoping
         label={params.scopingLabel ?? "allow any"}
         isWildcarded={params.isWildcarded}
@@ -33,6 +41,7 @@ export class CustomHeader extends _HeaderComp {
   }
 
   refresh(params: CustomHeaderParams) {
+    this.render(params)
     return super.refresh({ ...params, template })
   }
 }
