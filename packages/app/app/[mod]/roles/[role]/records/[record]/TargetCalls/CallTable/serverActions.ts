@@ -57,6 +57,20 @@ export async function serverLabelCall({
   const record = await getRecordById(recordId)
 
   // TODO authentication!!!!
+
+  const multi = kv.multi()
+  multi.json.set(
+    recordId,
+    `$.calls.${callId}.metadata.label`,
+    JSON.stringify(label)
+  )
+  multi.json.set(
+    recordId,
+    `$.lastUpdatedAt`,
+    JSON.stringify(new Date().toISOString())
+  )
+
+  await multi.exec()
 }
 
 export async function serverDeleteCall({
@@ -70,6 +84,16 @@ export async function serverDeleteCall({
   const record = await getRecordById(recordId)
 
   // TODO authentication!!!!
+
+  const multi = kv.multi()
+  multi.json.del(recordId, `$.calls.${callId}`)
+  multi.json.set(
+    recordId,
+    `$.lastUpdatedAt`,
+    JSON.stringify(new Date().toISOString())
+  )
+
+  await multi.exec()
 }
 
 export async function serverAddCall({
@@ -83,4 +107,14 @@ export async function serverAddCall({
   const record = await getRecordById(recordId)
 
   // TODO authentication!!!!
+
+  const multi = kv.multi()
+  multi.json.set(recordId, `$.calls.${call.id}`, call)
+  multi.json.set(
+    recordId,
+    `$.lastUpdatedAt`,
+    JSON.stringify(new Date().toISOString())
+  )
+
+  await multi.exec()
 }

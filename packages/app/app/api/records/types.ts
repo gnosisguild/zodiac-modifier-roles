@@ -17,7 +17,7 @@ export const zCallInput = z.object({
       recordedAt: z.string().datetime().optional(),
       recordedWith: z.string().optional(),
     })
-    .optional(),
+    .default({}),
 })
 
 export const zCall = zCallInput.extend({

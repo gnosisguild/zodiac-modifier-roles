@@ -10,8 +10,6 @@ export async function getRecordById(recordId: string) {
     notFound()
   }
 
-  console.log({ storedRecord })
-
   // Validate the fetched record.
   const record = zRecord.parse(storedRecord)
 
