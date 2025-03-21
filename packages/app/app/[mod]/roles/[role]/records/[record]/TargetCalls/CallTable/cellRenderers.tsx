@@ -86,7 +86,7 @@ export class RecordedCellRenderer implements ICellRendererComp<Row> {
     this.eGui.innerHTML = this.render(params.value)
   }
 
-  render(metadata: Row["metadata"] | null) {
+  render(metadata: Row["metadata"] | undefined | null) {
     const recordedAt = metadata?.recordedAt
     if (!recordedAt) return ""
 
