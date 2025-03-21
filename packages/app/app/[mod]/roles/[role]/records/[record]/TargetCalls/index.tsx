@@ -29,6 +29,9 @@ const TargetCalls = async ({
 }: Props) => {
   const contractInfo = await fetchContractInfo(to, chainId)
   const callsBySelector = groupBy(calls, (call) => call.data.slice(0, 10))
+  const sortedEntries = Object.entries(callsBySelector).sort((a, b) =>
+    a[0] < b[0] ? -1 : 1
+  )
 
   return (
     <Box borderless bg p={0}>
@@ -54,7 +57,7 @@ const TargetCalls = async ({
         }
       >
         <Flex direction="column" gap={3} className={classes.targetContent}>
-          {Object.entries(callsBySelector).map(([selector, calls]) => (
+          {sortedEntries.map(([selector, calls]) => (
             <FunctionCalls
               key={selector}
               to={to}

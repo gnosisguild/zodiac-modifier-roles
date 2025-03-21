@@ -1,6 +1,6 @@
 "use client"
 import { AbiFunction } from "viem"
-import { useOptimistic } from "react"
+import { useOptimistic, useReducer, useState, useTransition } from "react"
 
 import { Call } from "@/app/api/records/types"
 import CallTable from "./CallTable"
@@ -17,17 +17,14 @@ interface Props {
 const InteractiveCallTable: React.FC<Props> = ({
   recordId,
   targetSelector,
-  calls,
-  wildcards,
+  calls: initialCalls,
+  wildcards: initialWildcards,
   abi,
 }) => {
-  const [optimisticCalls, updateCall] = useOptimistic(
-    calls,
-    handleUpdateCallAction
-  )
-  const [optimisticWildcards, updateWildcard] = useOptimistic(
-    wildcards,
-    handleUpdateWildcardAction
+  const [calls, updateCall] = useReducer(handleUpdateCallAction, initialCalls)
+  const [wildcards, updateWildcard] = useReducer(
+    handleUpdateWildcardAction,
+    initialWildcards
   )
 
   const handleWildcardToggle = async (
@@ -42,6 +39,7 @@ const InteractiveCallTable: React.FC<Props> = ({
       paramPath,
       isWildcarded,
     })
+
     console.log("wildcard toggle done", paramPath, isWildcarded)
   }
 
@@ -55,12 +53,12 @@ const InteractiveCallTable: React.FC<Props> = ({
     console.log("delete", callId)
   }
 
-  console.log("optimisticWildcards", optimisticWildcards, { wildcards })
+  console.log("wildcards", wildcards, { initialWildcards })
 
   return (
     <CallTable
-      calls={optimisticCalls}
-      wildcards={optimisticWildcards}
+      calls={calls}
+      wildcards={wildcards}
       abi={abi}
       onWildcardToggle={handleWildcardToggle}
       onLabelEdit={handleLabelEdit}

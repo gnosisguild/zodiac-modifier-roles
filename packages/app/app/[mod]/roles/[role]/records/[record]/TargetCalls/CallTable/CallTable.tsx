@@ -213,7 +213,10 @@ const inputColumnDefs = (
           ...elementColumnDefs,
         ]
       } else {
-        console.log("wildcards", wildcards, cleanPath(inputs, field))
+        console.log({
+          isWildcarded: wildcards[cleanPath(inputs, field)] === true,
+          field,
+        })
         return {
           ...baseDefs,
           headerComponent: CustomHeader,
@@ -294,6 +297,7 @@ const metadataColumns: ColDef<Row>[] = [
     resizable: false,
     suppressMovable: true,
     headerComponent: CustomHeader,
+    sort: "asc",
     headerComponentParams: {
       noScoping: true,
     },

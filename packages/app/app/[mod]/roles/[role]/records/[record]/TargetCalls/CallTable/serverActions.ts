@@ -35,7 +35,11 @@ export async function serverToggleWildcard({
     }
     multi.json.set(recordId, `$.wildcards.${targetSelector}.${paramPath}`, true)
   }
-  multi.json.set(recordId, `$.lastUpdatedAt`, new Date().toISOString())
+  multi.json.set(
+    recordId,
+    `$.lastUpdatedAt`,
+    JSON.stringify(new Date().toISOString())
+  )
 
   await multi.exec()
 }
