@@ -10,7 +10,7 @@ type Props = {
   to: `0x${string}`
   selector: `0x${string}`
   calls: Call[]
-  wildcards: { [paramPath: string]: boolean }
+  wildcards: { [paramPath: string]: boolean | undefined }
   abi?: AbiFunction[]
   recordId: string
 }

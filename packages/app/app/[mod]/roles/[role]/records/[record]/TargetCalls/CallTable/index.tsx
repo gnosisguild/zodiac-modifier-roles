@@ -1,55 +1,17 @@
 "use client"
 import { AbiFunction } from "viem"
-
-import { Call, Record } from "@/app/api/records/types"
-import CallTable from "./CallTable"
-import { kv } from "@vercel/kv"
 import { useOptimistic } from "react"
-import { getRecordById } from "@/app/api/records/query"
 
-async function serverToggleWildcard({
-  recordId,
-  targetSelector,
-  paramPath,
-  isWildcarded,
-}: {
-  recordId: string
-  targetSelector: string
-  paramPath: string
-  isWildcarded: boolean
-}) {
-  "use server"
-  console.log(
-    "wildcard toggle server",
-    recordId,
-    targetSelector,
-    paramPath,
-    isWildcarded
-  )
-  const record = await getRecordById(recordId)
-
-  // TODO authentication!!!!
-
-  const multi = kv.multi()
-  if (!isWildcarded) {
-    multi.json.del(recordId, `.wildcards.${targetSelector}.${paramPath}`)
-  } else {
-    if (!record.wildcards[targetSelector]) {
-      multi.json.set(recordId, `.wildcards.${targetSelector}`, {})
-    }
-    multi.json.set(recordId, `.wildcards.${targetSelector}.${paramPath}`, true)
-  }
-  multi.json.set(recordId, `.lastUpdatedAt`, new Date().toISOString())
-
-  await multi.exec()
-}
+import { Call } from "@/app/api/records/types"
+import CallTable from "./CallTable"
+import { serverToggleWildcard } from "./serverActions"
 
 interface Props {
   recordId: string
   targetSelector: string // <to>:<selector>
   abi: AbiFunction
   calls: Call[]
-  wildcards: { [paramPath: string]: boolean }
+  wildcards: { [paramPath: string]: boolean | undefined }
 }
 
 const InteractiveCallTable: React.FC<Props> = ({
@@ -93,6 +55,8 @@ const InteractiveCallTable: React.FC<Props> = ({
     console.log("delete", callId)
   }
 
+  console.log("optimisticWildcards", optimisticWildcards, { wildcards })
+
   return (
     <CallTable
       calls={optimisticCalls}
@@ -132,7 +96,7 @@ function handleUpdateCallAction(calls: Call[], action: UpdateCallAction) {
 }
 
 function handleUpdateWildcardAction(
-  wildcards: { [paramPath: string]: boolean },
+  wildcards: { [paramPath: string]: boolean | undefined },
   action: { paramPath: string; isWildcarded: boolean }
 ) {
   return {

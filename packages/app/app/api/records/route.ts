@@ -15,20 +15,20 @@ export const POST = withErrorHandling(async (req: Request) => {
   const id = nanoid()
   const authToken = crypto.randomBytes(32).toString("base64url")
 
-  const now = new Date()
+  const now = new Date().toISOString()
 
   // Create storage object
   const record: Record = {
     id,
     authToken,
-    createdAt: now.toISOString(),
-    lastUpdatedAt: now.toISOString(),
+    createdAt: now,
+    lastUpdatedAt: now,
     calls,
     wildcards: {},
   }
 
   // Store in KV
-  await kv.set(id, record)
+  await kv.json.set(id, "$", record)
 
   return NextResponse.json(record)
 })

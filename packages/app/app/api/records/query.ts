@@ -4,14 +4,15 @@ import { zRecord } from "./types"
 import { experimental_taintUniqueValue } from "react"
 
 export async function getRecordById(recordId: string) {
-  const storedRecord = await kv.get(recordId)
+  const storedRecord = await kv.json.get(recordId)
 
   if (!storedRecord) {
     notFound()
   }
 
+  console.log({ storedRecord })
+
   // Validate the fetched record.
-  // TODO: Shall we skip this?
   const record = zRecord.parse(storedRecord)
 
   // Prevent the authToken from ever being passed to the client

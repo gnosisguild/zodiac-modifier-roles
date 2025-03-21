@@ -42,7 +42,7 @@ export interface CallActionHandlers {
 type Props = {
   abi: AbiFunction
   calls: Call[]
-  wildcards: { [paramPath: string]: boolean }
+  wildcards: { [paramPath: string]: boolean | undefined }
 } & CallActionHandlers
 
 const HEADER_HEIGHT = 32
@@ -120,7 +120,7 @@ export default CallTable
 
 const inputColumnDefs = (
   inputs: readonly AbiParameter[],
-  wildcards: { [paramPath: string]: boolean },
+  wildcards: { [paramPath: string]: boolean | undefined },
   {
     prefix,
     arrayDescendant,
@@ -213,6 +213,7 @@ const inputColumnDefs = (
           ...elementColumnDefs,
         ]
       } else {
+        console.log("wildcards", wildcards, cleanPath(inputs, field))
         return {
           ...baseDefs,
           headerComponent: CustomHeader,

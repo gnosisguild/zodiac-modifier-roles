@@ -7,7 +7,7 @@ import StopPropagation from "@/ui/StopPropagation"
 
 import classes from "./style.module.css"
 import ContractName from "@/components/ContractName"
-import { Call } from "@/app/api/records/types"
+import { Call, Wildcards } from "@/app/api/records/types"
 import Box from "@/ui/Box"
 import { groupBy } from "@/utils/groupBy"
 import FunctionCalls from "./FunctionCalls"
@@ -16,7 +16,7 @@ type Props = {
   to: `0x${string}`
   chainId: ChainId
   calls: Call[]
-  wildcards: { [targetSelector: string]: { [paramPath: string]: boolean } }
+  wildcards: Wildcards
   recordId: string
 }
 
@@ -28,7 +28,6 @@ const TargetCalls = async ({
   recordId,
 }: Props) => {
   const contractInfo = await fetchContractInfo(to, chainId)
-
   const callsBySelector = groupBy(calls, (call) => call.data.slice(0, 10))
 
   return (
@@ -61,7 +60,7 @@ const TargetCalls = async ({
               to={to}
               selector={selector as `0x${string}`}
               calls={calls}
-              wildcards={wildcards[to + ":" + selector]}
+              wildcards={wildcards[to + ":" + selector] ?? {}}
               abi={contractInfo.abi}
               recordId={recordId}
             />

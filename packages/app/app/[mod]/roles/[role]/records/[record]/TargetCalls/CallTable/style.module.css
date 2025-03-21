@@ -49,3 +49,6 @@ button.iconButton:hover {
   font-size: var(--ag-header-font-size);
   font-weight: normal;
 }
+
+.actions {
+}

@@ -27,11 +27,15 @@ export type Call = z.infer<typeof zCall>
 
 export const zWildcards = z.record(
   z.string(), // <target>:<selector>
-  z.record(
-    z.string(), // param path
-    z.boolean() // true if wildcarded
-  )
+  z
+    .record(
+      z.string(), // param path
+      z.boolean().optional() // true if wildcarded
+    )
+    .optional()
 )
+
+export type Wildcards = z.infer<typeof zWildcards>
 
 export const zRecord = z.object({
   id: z.string(),
