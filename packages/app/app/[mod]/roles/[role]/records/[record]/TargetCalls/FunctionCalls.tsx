@@ -13,6 +13,7 @@ type Props = {
   wildcards: { [paramPath: string]: boolean | undefined }
   abi?: AbiFunction[]
   recordId: string
+  isAuthorized: boolean
 }
 
 const FunctionCalls: React.FC<Props> = ({
@@ -22,6 +23,7 @@ const FunctionCalls: React.FC<Props> = ({
   wildcards,
   abi,
   recordId,
+  isAuthorized,
 }) => {
   const functionAbi = abi?.find(
     (fragment: any) =>
@@ -49,6 +51,7 @@ const FunctionCalls: React.FC<Props> = ({
           calls={calls}
           abi={functionAbi}
           wildcards={wildcards}
+          isAuthorized={isAuthorized}
         />
       ) : (
         <div>ABI not found</div>

@@ -7,6 +7,7 @@ import classes from "./page.module.css"
 import Flex from "@/ui/Flex"
 import TargetCalls from "./TargetCalls"
 import { groupBy } from "@/utils/groupBy"
+import { isAuthorized } from "./auth"
 
 export default async function RecordPage({
   params,
@@ -21,6 +22,7 @@ export default async function RecordPage({
 
   // Fetch the record
   const record = await getRecordById(params.record)
+
   const callsByTo = groupBy(Object.values(record.calls), (call) => call.to)
 
   return (
@@ -35,6 +37,7 @@ export default async function RecordPage({
               wildcards={record.wildcards}
               chainId={mod.chainId}
               recordId={record.id}
+              isAuthorized={isAuthorized(record.authToken)}
             />
           ))}
         </Flex>

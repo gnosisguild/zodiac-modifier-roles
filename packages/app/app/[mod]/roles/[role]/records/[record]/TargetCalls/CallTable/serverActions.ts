@@ -3,6 +3,15 @@
 import { getRecordById } from "@/app/api/records/query"
 import { Call } from "@/app/api/records/types"
 import { kv } from "@vercel/kv"
+import { isAuthorized } from "../../auth"
+
+async function getAuthorizedRecord(recordId: string) {
+  const record = await getRecordById(recordId)
+  if (!isAuthorized(record.authToken)) {
+    throw new Error("Unauthorized")
+  }
+  return record
+}
 
 export async function serverToggleWildcard({
   recordId,
@@ -15,16 +24,7 @@ export async function serverToggleWildcard({
   paramPath: string
   isWildcarded: boolean
 }) {
-  console.log(
-    "wildcard toggle server",
-    recordId,
-    targetSelector,
-    paramPath,
-    isWildcarded
-  )
-  const record = await getRecordById(recordId)
-
-  // TODO authentication!!!!
+  const record = await getAuthorizedRecord(recordId)
 
   const multi = kv.multi()
   if (!isWildcarded) {
@@ -53,10 +53,7 @@ export async function serverLabelCall({
   callId: string
   label: string
 }) {
-  console.log("label call server", recordId, callId, label)
-  const record = await getRecordById(recordId)
-
-  // TODO authentication!!!!
+  await getAuthorizedRecord(recordId)
 
   const multi = kv.multi()
   multi.json.set(
@@ -80,10 +77,7 @@ export async function serverDeleteCall({
   recordId: string
   callId: string
 }) {
-  console.log("delete call server", recordId, callId)
-  const record = await getRecordById(recordId)
-
-  // TODO authentication!!!!
+  await getAuthorizedRecord(recordId)
 
   const multi = kv.multi()
   multi.json.del(recordId, `$.calls.${callId}`)
@@ -103,10 +97,7 @@ export async function serverAddCall({
   recordId: string
   call: Call
 }) {
-  console.log("add call server", recordId, call)
-  const record = await getRecordById(recordId)
-
-  // TODO authentication!!!!
+  await getAuthorizedRecord(recordId)
 
   const multi = kv.multi()
   multi.json.set(recordId, `$.calls.${call.id}`, call)

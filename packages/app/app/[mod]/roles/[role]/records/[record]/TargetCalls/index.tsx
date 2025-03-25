@@ -18,6 +18,7 @@ type Props = {
   calls: Call[]
   wildcards: Wildcards
   recordId: string
+  isAuthorized: boolean
 }
 
 const TargetCalls = async ({
@@ -26,6 +27,7 @@ const TargetCalls = async ({
   calls,
   wildcards,
   recordId,
+  isAuthorized,
 }: Props) => {
   const contractInfo = await fetchContractInfo(to, chainId)
   const callsBySelector = groupBy(calls, (call) => call.data.slice(0, 10))
@@ -66,6 +68,7 @@ const TargetCalls = async ({
               wildcards={wildcards[to + ":" + selector] ?? {}}
               abi={contractInfo.abi}
               recordId={recordId}
+              isAuthorized={isAuthorized}
             />
           ))}
         </Flex>

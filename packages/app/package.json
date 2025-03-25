@@ -12,7 +12,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@headlessui/react": "^1.7.18",
+    "@headlessui/react": "^2.2.0",
     "@safe-global/safe-apps-react-sdk": "^4.7.1",
     "@types/jest": "^29.5.5",
     "@types/node": "^20.9.0",

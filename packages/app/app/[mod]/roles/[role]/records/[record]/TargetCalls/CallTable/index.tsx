@@ -12,12 +12,15 @@ import {
 } from "./serverActions"
 import { CallState } from "./types"
 import { invariant } from "@epic-web/invariant"
+import { useCopyModal } from "../CopyModal"
+
 interface Props {
   recordId: string
   targetSelector: string // <to>:<selector>
   abi: AbiFunction
   calls: Call[]
   wildcards: { [paramPath: string]: boolean | undefined }
+  isAuthorized: boolean
 }
 
 const InteractiveCallTable: React.FC<Props> = ({
@@ -26,6 +29,7 @@ const InteractiveCallTable: React.FC<Props> = ({
   calls: initialCalls,
   wildcards: initialWildcards,
   abi,
+  isAuthorized,
 }) => {
   const [calls, updateCall] = useReducer(handleUpdateCallAction, initialCalls)
   const [wildcards, updateWildcard] = useReducer(
@@ -33,10 +37,16 @@ const InteractiveCallTable: React.FC<Props> = ({
     initialWildcards
   )
 
+  const { modal: copyModal, open: openCopyModal } = useCopyModal()
+
   const handleWildcardToggle = async (
     paramPath: string,
     isWildcarded: boolean
   ) => {
+    if (!isAuthorized) {
+      openCopyModal()
+      return
+    }
     updateWildcard({ paramPath, isWildcarded })
     await serverToggleWildcard({
       recordId,
@@ -47,25 +57,35 @@ const InteractiveCallTable: React.FC<Props> = ({
   }
 
   const handleLabelEdit = async (callId: string, label: string) => {
+    if (!isAuthorized) {
+      openCopyModal()
+      return
+    }
     updateCall({ action: "label", callId, label })
     await serverLabelCall({
       recordId,
       callId,
       label,
     })
-    console.log("label edit", callId, label)
   }
 
   const handleDelete = async (callId: string) => {
+    if (!isAuthorized) {
+      openCopyModal()
+      return
+    }
     updateCall({ action: "delete", callId })
     await serverDeleteCall({
       recordId,
       callId,
     })
-    console.log("delete", callId)
   }
 
   const handleRestore = async (callId: string) => {
+    if (!isAuthorized) {
+      openCopyModal()
+      return
+    }
     updateCall({ action: "restore", callId })
     const callState = calls.find((call) => call.id === callId)
     invariant(callState != null, "call not found")
@@ -74,21 +94,21 @@ const InteractiveCallTable: React.FC<Props> = ({
       recordId,
       call,
     })
-    console.log("restore", callId)
   }
 
-  console.log("wildcards", wildcards, { initialWildcards })
-
   return (
-    <CallTable
-      calls={calls}
-      wildcards={wildcards}
-      abi={abi}
-      onWildcardToggle={handleWildcardToggle}
-      onLabelEdit={handleLabelEdit}
-      onDelete={handleDelete}
-      onRestore={handleRestore}
-    />
+    <>
+      {copyModal}
+      <CallTable
+        calls={calls}
+        wildcards={wildcards}
+        abi={abi}
+        onWildcardToggle={handleWildcardToggle}
+        onLabelEdit={handleLabelEdit}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+      />
+    </>
   )
 }
 
