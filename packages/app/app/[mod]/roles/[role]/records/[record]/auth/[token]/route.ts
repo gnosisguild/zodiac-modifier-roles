@@ -1,22 +1,19 @@
+import { NextResponse } from "next/server"
+
 export const GET = async (
   req: Request,
-  { params }: { params: { record: string; token: string } }
+  {
+    params: { mod, role, record, token },
+  }: { params: { mod: string; role: string; record: string; token: string } }
 ) => {
-  const html = `
-      <html>
-        <body>
-          <script>
-            localStorage.setItem('authToken:${params.record}', '${params.token}');
-            window.location.href = '../'; // Redirect to the record page
-          </script>
-        </body>
-      </html>
-    `
-
-  return new Response(html, {
-    headers: {
-      "Content-Type": "text/html",
-    },
-    status: 200,
+  const path = `/${mod}/roles/${role}/records/${record}`
+  const res = NextResponse.redirect(new URL(path, req.url))
+  res.cookies.set("authToken", token, {
+    path,
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 2147483647,
   })
+  return res
 }
