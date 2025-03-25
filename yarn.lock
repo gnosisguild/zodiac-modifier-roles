@@ -4941,6 +4941,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vercel/analytics@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@vercel/analytics@npm:1.5.0"
+  peerDependencies:
+    "@remix-run/react": ^2
+    "@sveltejs/kit": ^1 || ^2
+    next: ">= 13"
+    react: ^18 || ^19 || ^19.0.0-rc
+    svelte: ">= 4"
+    vue: ^3
+    vue-router: ^4
+  peerDependenciesMeta:
+    "@remix-run/react":
+      optional: true
+    "@sveltejs/kit":
+      optional: true
+    next:
+      optional: true
+    react:
+      optional: true
+    svelte:
+      optional: true
+    vue:
+      optional: true
+    vue-router:
+      optional: true
+  checksum: 60991e558ce459ef0fdd3f3b4ccb657453507083ff879570c43cfe613e5a37f6fdae5146926f3cdeba48db9943a4cfd203be6c5d55de44294cf892526b603877
+  languageName: node
+  linkType: hard
+
 "@vercel/kv@npm:^0.2.3":
   version: 0.2.4
   resolution: "@vercel/kv@npm:0.2.4"
@@ -20574,6 +20604,7 @@ __metadata:
     "@types/node": ^20.9.0
     "@types/react": ^18.2.8
     "@types/react-dom": ^18.2.4
+    "@vercel/analytics": ^1.5.0
     "@vercel/kv": ^0.2.3
     ag-grid-community: ^33.1.0
     ag-grid-react: ^33.1.0
