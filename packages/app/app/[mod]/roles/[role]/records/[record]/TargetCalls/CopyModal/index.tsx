@@ -29,15 +29,15 @@ const CopyModal: React.FC<{ open: boolean; onClose: () => void }> = ({
           <Headless.DialogPanel transition className={classes.panel}>
             <Flex direction="column" gap={4}>
               <p>
-                You don't have write access. Ask the author to invite you as
-                collaborator or create a copy of this page to edit it for your
-                own purposes.
+                You don't have permission to edit this page. To make changes,
+                ask the author to invite you as a collaborator, or create a copy
+                to edit it separately.
               </p>
 
               <Flex gap={2}>
                 <Button onClick={() => onClose()}>Cancel</Button>
                 <Button primary onClick={copy}>
-                  Copy
+                  Create Copy
                 </Button>
               </Flex>
             </Flex>
