@@ -4,10 +4,17 @@ import { Call, zCallInput } from "./types"
 
 type CallInput = z.infer<typeof zCallInput>
 
+/** Derives an id for a call from the call input, only using characters and numerals */
 export const callId = (call: CallInput) => {
   const str =
     call.operation + BigInt(call.value).toString() + call.to + call.data
-  return crypto.createHash("md5").update(str).digest("base64url")
+
+  // we must avoid +, /, and = as this might break redis ID references
+  return crypto
+    .createHash("md5")
+    .update(str)
+    .digest("base64")
+    .replace(/[+/=]/g, "")
 }
 
 export const targetSelector = (call: CallInput) => {

@@ -26,19 +26,21 @@ export const POST = withErrorHandling(
     const callInputs = z.array(zCallInput).parse(await req.json())
     const callsToAdd = indexCallInputs(callInputs, Object.keys(record.calls))
 
+    console.log(JSON.stringify(callsToAdd["Wfu7adO-tVfZsDLUO9eSng"]))
+
     const promises = Object.entries(callsToAdd).map(([id, call]) =>
-      kv.json.set(params.record, `$.calls.${id}`, call)
+      kv.json.set(params.record, `$.calls.${id}`, JSON.stringify(call))
     )
 
     // Update last updated date
     const lastUpdatedAt = new Date().toISOString()
-    promises.push(
-      kv.json.set(
-        params.record,
-        "$.lastUpdatedAt",
-        JSON.stringify(lastUpdatedAt)
-      )
-    )
+    // promises.push(
+    //   kv.json.set(
+    //     params.record,
+    //     "$.lastUpdatedAt",
+    //     JSON.stringify(lastUpdatedAt)
+    //   )
+    // )
 
     await Promise.all(promises)
 
