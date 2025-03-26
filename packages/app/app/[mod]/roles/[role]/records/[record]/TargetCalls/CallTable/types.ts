@@ -4,7 +4,7 @@ type PrimitiveValue = string | boolean | number | bigint
 
 export type AbiInput = StructAbiInput | AbiInput[] | PrimitiveValue
 
-type StructAbiInput = {
+export type StructAbiInput = {
   [key: string]: AbiInput
 }
 

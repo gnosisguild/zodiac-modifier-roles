@@ -9,10 +9,10 @@ import {
   serverDeleteCall,
   serverToggleWildcard,
   serverAddCall,
-} from "../serverActions"
+} from "../../serverActions"
 import { CallState } from "./types"
 import { invariant } from "@epic-web/invariant"
-import { useCopyModal } from "../CopyModal"
+import { useCopyModal } from "../../CopyModal"
 
 interface Props {
   recordId: string

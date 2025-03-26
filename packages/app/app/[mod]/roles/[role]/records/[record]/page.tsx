@@ -8,6 +8,7 @@ import Flex from "@/ui/Flex"
 import TargetCalls from "./TargetCalls"
 import { groupBy } from "@/utils/groupBy"
 import { isAuthorized } from "./auth"
+import Apply from "./Apply"
 
 export default async function RecordPage({
   params,
@@ -40,6 +41,8 @@ export default async function RecordPage({
               isAuthorized={isAuthorized(record.authToken)}
             />
           ))}
+
+          <Apply />
         </Flex>
       </main>
     </Layout>
