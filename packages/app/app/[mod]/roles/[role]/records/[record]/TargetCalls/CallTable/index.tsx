@@ -9,7 +9,7 @@ import {
   serverDeleteCall,
   serverToggleWildcard,
   serverAddCall,
-} from "./serverActions"
+} from "../serverActions"
 import { CallState } from "./types"
 import { invariant } from "@epic-web/invariant"
 import { useCopyModal } from "../CopyModal"
@@ -37,7 +37,7 @@ const InteractiveCallTable: React.FC<Props> = ({
     initialWildcards
   )
 
-  const { modal: copyModal, open: openCopyModal } = useCopyModal()
+  const { modal: copyModal, open: openCopyModal } = useCopyModal(recordId)
 
   const handleWildcardToggle = async (
     paramPath: string,

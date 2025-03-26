@@ -3,26 +3,47 @@ import * as Headless from "@headlessui/react"
 import Flex from "@/ui/Flex"
 import Button from "@/ui/Button"
 import classes from "./style.module.css"
+import { serverCreateCopy } from "../serverActions"
+import { useParams, useRouter } from "next/navigation"
 
-export const useCopyModal = () => {
+export const useCopyModal = (recordId: string) => {
   const [isOpen, setIsOpen] = useState(false)
 
   return {
-    modal: <CopyModal open={isOpen} onClose={() => setIsOpen(false)} />,
+    modal: (
+      <CopyModal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        recordId={recordId}
+      />
+    ),
     open: () => setIsOpen(true),
   }
 }
 
-const CopyModal: React.FC<{ open: boolean; onClose: () => void }> = ({
-  open,
-  onClose,
-}) => {
-  const copy = () => {
-    throw new Error("Not implemented")
+const CopyModal: React.FC<{
+  recordId: string
+  open: boolean
+  onClose: () => void
+}> = ({ recordId, open, onClose }) => {
+  const [isLoading, setIsLoading] = useState(false)
+  const { mod, role, record } = useParams<{
+    mod: string
+    role: string
+    record: string
+  }>()
+  const router = useRouter()
+
+  const copy = async () => {
+    setIsLoading(true)
+    const copy = await serverCreateCopy({ recordId: record })
+    router.push(
+      `/${mod}/roles/${role}/records/${copy.id}/auth/${copy.authToken}`
+    )
   }
 
   return (
-    <Headless.Dialog open={open} onClose={onClose}>
+    <Headless.Dialog open={open} onClose={isLoading ? () => {} : onClose}>
       <Headless.DialogBackdrop transition className={classes.backdrop} />
       <div className={classes.wrapper}>
         <div className={classes.container}>
@@ -35,9 +56,11 @@ const CopyModal: React.FC<{ open: boolean; onClose: () => void }> = ({
               </p>
 
               <Flex gap={2}>
-                <Button onClick={() => onClose()}>Cancel</Button>
-                <Button primary onClick={copy}>
-                  Create Copy
+                <Button disabled={isLoading} onClick={() => onClose()}>
+                  Cancel
+                </Button>
+                <Button disabled={isLoading} primary onClick={copy}>
+                  {isLoading ? "Creating copy..." : "Create Copy"}
                 </Button>
               </Flex>
             </Flex>

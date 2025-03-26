@@ -1,9 +1,11 @@
 "use server"
 
+import { redirect } from "next/navigation"
 import { getRecordById } from "@/app/api/records/query"
 import { Call } from "@/app/api/records/types"
 import { kv } from "@vercel/kv"
-import { isAuthorized } from "../../auth"
+import { isAuthorized } from "../auth"
+import { createRecord } from "@/app/api/records/route"
 
 async function getAuthorizedRecord(recordId: string) {
   const record = await getRecordById(recordId)
@@ -108,4 +110,10 @@ export async function serverAddCall({
   )
 
   await multi.exec()
+}
+
+export async function serverCreateCopy({ recordId }: { recordId: string }) {
+  const record = await getRecordById(recordId)
+  const copy = await createRecord(record.calls, record.wildcards)
+  return copy
 }
