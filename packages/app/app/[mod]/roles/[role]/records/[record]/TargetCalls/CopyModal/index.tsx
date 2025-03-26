@@ -6,26 +6,19 @@ import classes from "./style.module.css"
 import { serverCreateCopy } from "../serverActions"
 import { useParams, useRouter } from "next/navigation"
 
-export const useCopyModal = (recordId: string) => {
+export const useCopyModal = () => {
   const [isOpen, setIsOpen] = useState(false)
 
   return {
-    modal: (
-      <CopyModal
-        open={isOpen}
-        onClose={() => setIsOpen(false)}
-        recordId={recordId}
-      />
-    ),
+    modal: <CopyModal open={isOpen} onClose={() => setIsOpen(false)} />,
     open: () => setIsOpen(true),
   }
 }
 
 const CopyModal: React.FC<{
-  recordId: string
   open: boolean
   onClose: () => void
-}> = ({ recordId, open, onClose }) => {
+}> = ({ open, onClose }) => {
   const [isLoading, setIsLoading] = useState(false)
   const { mod, role, record } = useParams<{
     mod: string

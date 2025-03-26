@@ -37,7 +37,7 @@ const InteractiveCallTable: React.FC<Props> = ({
     initialWildcards
   )
 
-  const { modal: copyModal, open: openCopyModal } = useCopyModal(recordId)
+  const { modal: copyModal, open: openCopyModal } = useCopyModal()
 
   const handleWildcardToggle = async (
     paramPath: string,
