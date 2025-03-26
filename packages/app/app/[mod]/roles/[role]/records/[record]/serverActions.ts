@@ -1,22 +1,14 @@
 "use server"
 
 import { getRecordById } from "@/app/api/records/query"
-import { Call, Operation } from "@/app/api/records/types"
+import { Call } from "@/app/api/records/types"
 import { kv } from "@vercel/kv"
-import {
-  checkIntegrity,
-  FunctionPermission,
-  Permission,
-  processPermissions,
-  Target,
-} from "zodiac-roles-sdk"
+import { checkIntegrity, processPermissions } from "zodiac-roles-sdk"
 import { isAuthorized } from "./auth"
 import { createRecord } from "@/app/api/records/route"
 import { createPermissionsPost } from "@/app/api/permissions/route"
-import { Record } from "@/app/api/records/types"
-import { fetchContractInfo } from "@/app/abi"
 import { ChainId } from "@/app/chains"
-import { AbiFunction, decodeFunctionData, toFunctionSelector } from "viem"
+import { derivePermissionsFromRecord } from "./derivePermissions"
 
 async function getAuthorizedRecord(recordId: string) {
   const record = await getRecordById(recordId)
@@ -142,64 +134,4 @@ export async function serverApplyPermissions({
   checkIntegrity(targets)
   const hash = await createPermissionsPost({ targets })
   return hash
-}
-
-async function derivePermissionsFromRecord(
-  record: Record,
-  chainId: ChainId
-): Promise<FunctionPermission[]> {
-  const calls = Object.values(record.calls)
-
-  // fetch all ABIs (they should already be in cache at this point)
-  const targets = new Set(calls.map((call) => call.to))
-  const abiEntries = Object.fromEntries(
-    await Promise.all(
-      [...targets].map(
-        async (target) =>
-          [target, await fetchContractInfo(target, chainId)] as const
-      )
-    )
-  )
-
-  return calls.map((call) => {
-    const selector = call.data.slice(0, 10) as `0x${string}`
-    const functionAbi = abiEntries[call.to]?.abi?.find(
-      (fragment: any) =>
-        fragment.type === "function" &&
-        toFunctionSelector(fragment) === selector
-    ) as AbiFunction | undefined
-
-    if (!functionAbi) {
-      throw new Error(`Unable to decode function data for call ${call.id}`)
-    }
-
-    const wildcards = record.wildcards[call.to + ":" + selector] || {}
-    return derivePermissionFromCall({ call, abi: functionAbi, wildcards })
-  })
-
-  return []
-}
-
-const derivePermissionFromCall = ({
-  call,
-  abi,
-  wildcards,
-}: {
-  call: Call
-  abi: AbiFunction
-  wildcards: { [paramPath: string]: boolean | undefined }
-}): FunctionPermission => {
-  const selector = call.data.slice(0, 10) as `0x${string}`
-  const { args } = decodeFunctionData({ abi: [abi], data: call.data })
-
-  const noWildcards = Object.values(wildcards).every((v) => !v)
-  const allWildcarded = abi.inputs
-
-  return {
-    targetAddress: call.to,
-    selector,
-    delegatecall: call.operation === Operation.DelegateCall,
-    send: BigInt(call.value || "0") > 0,
-    condition: null,
-  }
 }

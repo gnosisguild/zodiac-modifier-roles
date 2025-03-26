@@ -1,12 +1,20 @@
 import { AbiParameter } from "viem"
 import { invariant } from "@epic-web/invariant"
 import { arrayElementType } from "@/utils/abi"
-import { AbiInput, StructAbiInput } from "./types"
+
+export type PrimitiveValue = string | boolean | number | bigint
+
+export type AbiInput = StructAbiInput | AbiInput[] | PrimitiveValue
+
+export type StructAbiInput = {
+  [key: string]: AbiInput
+}
 
 /**
- * Deeply map the decoded ABI params making sure that any unnamed tuple fields will be named as `[${index}]`
+ * Deeply map the decoded ABI params so that structs values are represented as objects.
+ * Values of unnamed struct components will be stored as `[${index}]` properties.
  **/
-export const ensureFieldNames = (
+export const mapAbiInputs = (
   inputs: readonly AbiParameter[],
   values: readonly unknown[]
 ): StructAbiInput => {
@@ -19,13 +27,13 @@ export const ensureFieldNames = (
       if ("components" in input) {
         const isArrayParam = arrayElementType(input) != null
         if (isArrayParam) {
-          value = ensureFieldNamesInArray(input, value)
+          value = mapAbiInputsInArray(input, value)
         } else {
           invariant(
             Array.isArray(value),
             "expected array value for tuple param"
           )
-          value = ensureFieldNames(input.components, value)
+          value = mapAbiInputs(input.components, value)
         }
       }
       return [input.name ?? `[${index}]`, value]
@@ -33,7 +41,7 @@ export const ensureFieldNames = (
   )
 }
 
-const ensureFieldNamesInArray = (
+const mapAbiInputsInArray = (
   input: AbiParameter,
   values: unknown
 ): AbiInput => {
@@ -46,7 +54,7 @@ const ensureFieldNamesInArray = (
 
   return values.map((value) =>
     isNestedArray
-      ? ensureFieldNamesInArray(elementType, value)
-      : ensureFieldNames(elementType.components, value)
+      ? mapAbiInputsInArray(elementType, value)
+      : mapAbiInputs(elementType.components, value)
   )
 }

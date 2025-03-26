@@ -21,10 +21,10 @@ import {
 } from "./cellRenderers"
 import classes from "./style.module.css"
 import { theme } from "./theme"
-import { Row, StructRowValue, CallState, AbiInput } from "./types"
+import { Row, StructRowValue, CallState } from "./types"
 import { distributeArrayElements, totalSpan } from "./distributeArrayElements"
 import { CustomHeader } from "./customHeader"
-import { ensureFieldNames } from "./ensureFieldNames"
+import { mapAbiInputs } from "../../abi"
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -326,7 +326,7 @@ const rowData = (calls: CallState[], abi: AbiFunction): Row[] => {
     const { args } = decodeFunctionData({ abi: [abi], data: call.data })
 
     const inputs = distributeArrayElements(
-      ensureFieldNames(abi.inputs, args)
+      mapAbiInputs(abi.inputs, args)
     ) as StructRowValue
 
     return {

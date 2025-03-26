@@ -1,12 +1,5 @@
-import { Call, Operation } from "@/app/api/records/types"
-
-type PrimitiveValue = string | boolean | number | bigint
-
-export type AbiInput = StructAbiInput | AbiInput[] | PrimitiveValue
-
-export type StructAbiInput = {
-  [key: string]: AbiInput
-}
+import { Call } from "@/app/api/records/types"
+import { PrimitiveValue } from "../../abi"
 
 export type StructRowValue = {
   [key: string]: RowValue

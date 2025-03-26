@@ -1,5 +1,5 @@
+import { AbiInput } from "../../abi"
 import {
-  AbiInput,
   ArrayRowValue,
   NestedArrayValues,
   RowValue,

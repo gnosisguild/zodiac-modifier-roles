@@ -5,6 +5,7 @@ import { useState } from "react"
 import { serverApplyPermissions } from "./serverActions"
 import { useRouter } from "next/navigation"
 import { useParams } from "next/navigation"
+import { parseModParam } from "@/app/params"
 
 const Apply: React.FC<{}> = ({}) => {
   const [isLoading, setIsLoading] = useState(false)
@@ -13,8 +14,12 @@ const Apply: React.FC<{}> = ({}) => {
     role: string
     record: string
   }>()
-  const
+  const chainId = parseModParam(mod)?.chainId
   const router = useRouter()
+
+  if (!chainId) {
+    return null
+  }
 
   const apply = async () => {
     setIsLoading(true)
