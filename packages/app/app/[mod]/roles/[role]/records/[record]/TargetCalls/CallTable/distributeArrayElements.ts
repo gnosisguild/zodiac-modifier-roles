@@ -1,4 +1,3 @@
-import { AbiParameter } from "viem"
 import {
   AbiInput,
   ArrayRowValue,
@@ -6,7 +5,6 @@ import {
   RowValue,
   StructRowValue,
 } from "./types"
-import { invariant } from "@epic-web/invariant"
 
 /**
  * Spread array elements into separate columns for `indices` and `values`.
