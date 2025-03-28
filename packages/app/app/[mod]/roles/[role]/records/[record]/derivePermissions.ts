@@ -5,7 +5,12 @@ import {
   AbiParameter,
   encodeAbiParameters,
 } from "viem"
-import { c, Condition, FunctionPermission } from "zodiac-roles-sdk"
+import {
+  c,
+  Condition,
+  FunctionPermission,
+  FunctionPermissionCoerced,
+} from "zodiac-roles-sdk"
 import { ParamType } from "ethers"
 import { invariant } from "@epic-web/invariant"
 import { fetchContractInfo } from "@/app/abi"
@@ -47,11 +52,9 @@ export async function derivePermissionsFromRecord(
       .map(([paramPath]) => paramPath)
     return derivePermissionFromCall({ call, abi: functionAbi, wildcards })
   })
-
-  return []
 }
 
-const derivePermissionFromCall = ({
+export const derivePermissionFromCall = ({
   call,
   abi,
   wildcards,
@@ -59,7 +62,7 @@ const derivePermissionFromCall = ({
   call: Call
   abi: AbiFunction
   wildcards: string[]
-}): FunctionPermission => {
+}): FunctionPermissionCoerced => {
   const selector = call.data.slice(0, 10) as `0x${string}`
   const { args } = decodeFunctionData({ abi: [abi], data: call.data })
 
