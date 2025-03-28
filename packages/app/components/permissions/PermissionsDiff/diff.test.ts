@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest"
 import { Preset } from "zodiac-roles-sdk/annotations"
 import { DiffFlag } from "../types"
 import { diffPermissions, diffPresets } from "./diff"

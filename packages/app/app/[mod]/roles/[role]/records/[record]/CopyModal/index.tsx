@@ -43,9 +43,9 @@ const CopyModal: React.FC<{
           <Headless.DialogPanel transition className={classes.panel}>
             <Flex direction="column" gap={4}>
               <p>
-                You don't have permission to edit this page. To make changes,
-                ask the author to invite you as a collaborator, or create a copy
-                to edit it separately.
+                You don&apos;t have permission to edit this page. To make
+                changes, ask the author to invite you as a collaborator, or
+                create a copy to edit it separately.
               </p>
 
               <Flex gap={2}>

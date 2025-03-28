@@ -31,7 +31,10 @@ const InteractiveCallTable: React.FC<Props> = ({
   abi,
   isAuthorized,
 }) => {
-  const [calls, updateCall] = useReducer(handleUpdateCallAction, initialCalls)
+  const [calls, updateCall] = useReducer(
+    handleUpdateCallAction,
+    initialCalls as CallState[]
+  )
   const [wildcards, updateWildcard] = useReducer(
     handleUpdateWildcardAction,
     initialWildcards

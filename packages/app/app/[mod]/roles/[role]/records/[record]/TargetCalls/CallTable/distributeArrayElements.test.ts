@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest"
 import {
   distributeArrayElements,
   distributeArrayToLeaves,
@@ -264,7 +265,7 @@ describe("distributeArrayToLeaves", () => {
 
   it("handles nested arrays", () => {
     // Example usage:
-    const input: RowValue[] = [
+    const input = [
       {
         name: "Alice",
         tags: {
@@ -291,7 +292,7 @@ describe("distributeArrayToLeaves", () => {
           values: { children: [{ value: "student", span: 1 }], span: 1 },
         },
       },
-    ]
+    ] as RowValue[]
 
     const expectedOutput = {
       name: {

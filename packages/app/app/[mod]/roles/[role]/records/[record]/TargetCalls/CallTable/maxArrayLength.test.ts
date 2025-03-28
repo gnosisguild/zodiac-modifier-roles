@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest"
 import { maxArrayLength } from "./maxArrayLength"
 
 describe("maxArrayLength", () => {
