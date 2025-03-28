@@ -51,6 +51,7 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Avalanche C-Chain](https://snowtrace.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337/contract/43114/code)
 - [BSC](https://bscscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
@@ -67,6 +68,7 @@ Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
 - [Avalanche C-Chain](https://snowtrace.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0/contract/43114/code)
 - [BSC](https://bscscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Base](https://basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
+- [Celo](https://celoscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
 
@@ -83,6 +85,7 @@ Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
 - [Avalanche C-Chain](https://snowtrace.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1/contract/43114/code)
 - [BSC](https://bscscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Base](https://basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+- [Celo](https://celoscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
 

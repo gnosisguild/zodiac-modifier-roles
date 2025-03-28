@@ -23,12 +23,10 @@ task(
       );
     }
 
-    const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
-
     for (const artifact of readMastercopies({ contractVersion })) {
       const { noop } = await verifyMastercopy({
         artifact,
-        apiUrlOrChainId: chainId,
+        apiUrlOrChainId: (hre.config.networks[hre.network.name] as any).url,
         apiKey: apiKey,
       });
 

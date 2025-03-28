@@ -118,7 +118,7 @@ const config: HardhatUserConfig = {
     celo: {
       ...sharedNetworkConfig,
       chainId: 42220,
-      url: "https://forno.celo.org",
+      url: "https://celo.drpc.org",
     },
     lisk: {
       ...sharedNetworkConfig,
