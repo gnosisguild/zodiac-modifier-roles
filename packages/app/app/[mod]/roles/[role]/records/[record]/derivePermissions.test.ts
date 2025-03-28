@@ -1,18 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { Record } from "@/app/api/records/types"
 import { derivePermissionFromCall } from "./derivePermissions"
+import { c, Operator } from "zodiac-roles-sdk"
+import { encodeFunctionData, parseAbiItem } from "viem"
+import { normalizeCondition } from "zodiac-roles-sdk"
+import { ParamType } from "ethers"
 
 describe("derivePermissionFromCall", () => {
-  it("scopes the entire calldata with equals if no wildcards are set", async () => {
-    // const record: Record = {
-    //   id: "record1",
-    //   calls: { [swap1EthForUsdc.id]: swap1EthForUsdc },
-    //   authToken: "testAuthToken",
-    //   createdAt: new Date(1234567890).toString(),
-    //   lastUpdatedAt: new Date(1234567890).toString(),
-    //   wildcards: {},
-    // }
-
+  it("scopes each calldata parameter with equals if no wildcards are set", async () => {
     const permission = await derivePermissionFromCall({
       call: swap1EthForUsdc,
       abi: batchSwapAbi,
@@ -22,130 +16,170 @@ describe("derivePermissionFromCall", () => {
     expect(permission.targetAddress).toEqual(swap1EthForUsdc.to)
     expect(permission.selector).toEqual(swap1EthForUsdc.data.slice(0, 10))
     expect(permission.delegatecall).toBeFalsy()
+    expect(normalizeCondition(permission.condition!)).toEqual(
+      normalizeCondition(
+        c.calldataMatches(
+          swap1EthForUsdcArgs.map((value) => c.eq(value)),
+          batchSwapAbiInputs
+        )()
+      )
+    )
+  })
+
+  it("allows wildcarding top-level param", async () => {
+    const permission = await derivePermissionFromCall({
+      call: swap1EthForUsdc,
+      abi: batchSwapAbi,
+      wildcards: ["swaps"],
+    })
+
+    expect(normalizeCondition(permission.condition!)).toEqual(
+      normalizeCondition(
+        c.calldataMatches(
+          swap1EthForUsdcArgs.map((value, index) =>
+            index === 1 ? undefined : c.eq(value)
+          ),
+          batchSwapAbiInputs
+        )()
+      )
+    )
+  })
+
+  it("handles nested wildcards to unnamed fields", async () => {
+    const permission = await derivePermissionFromCall({
+      call: swap1EthForUsdc,
+      abi: batchSwapAbi,
+      wildcards: ["funds.[1]"],
+    })
+
+    expect(normalizeCondition(permission.condition!)).toEqual(
+      normalizeCondition(
+        c.calldataMatches(
+          swap1EthForUsdcArgs.map((value, index) =>
+            index === 3
+              ? c.matches([
+                  "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+                  undefined,
+                  "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+                  false,
+                ])
+              : c.eq(value)
+          ),
+          batchSwapAbiInputs
+        )()
+      )
+    )
+  })
+
+  it("does not set a condition if all parameters are wildcarded", async () => {
+    const permission = await derivePermissionFromCall({
+      call: swap1EthForUsdc,
+      abi: batchSwapAbi,
+      wildcards: [
+        "kind",
+        "swaps",
+        "assets",
+        "funds.[0]",
+        "funds.[1]",
+        "funds.[2]",
+        "funds.[3]",
+        "limits",
+        "deadline",
+      ],
+    })
+    expect(permission.condition).toBeUndefined()
+  })
+
+  it("ignores wildcards in array elements", async () => {
+    const permission = await derivePermissionFromCall({
+      call: swap1EthForUsdc,
+      abi: batchSwapAbi,
+      wildcards: ["swaps.[1]"],
+    })
+    const swapsCondition = permission.condition!.children![1]
+    expect(swapsCondition.operator).toBe(Operator.EqualTo)
   })
 })
+
+const batchSwapAbi = parseAbiItem(
+  "function batchSwap(uint8 kind, (bytes32,uint256,uint256,uint256,bytes)[] swaps, address[] assets, (address,bool,address,bool) funds, int256[] limits, uint256 deadline) payable"
+)
+
+const batchSwapAbiInputs = batchSwapAbi.inputs.map((input) =>
+  ParamType.from(input)
+)
+
+const swap1EthForUsdcArgs = [
+  0,
+  [
+    [
+      "0x93d199263632a4ef4bb438f1feb99e57b4b5f0bd0000000000000000000005c2",
+      0n,
+      1n,
+      500000000000000000n,
+      "0x",
+    ],
+    [
+      "0xc8cf54b0b70899ea846b70361e62f3f5b22b1f4b0002000000000000000006c7",
+      1n,
+      2n,
+      0n,
+      "0x",
+    ],
+    [
+      "0xc2aa60465bffa1a88f5ba471a59ca0435c3ec5c100020000000000000000062c",
+      2n,
+      3n,
+      0n,
+      "0x",
+    ],
+    [
+      "0xf01b0684c98cd7ada480bfdf6e43876422fa1fc10002000000000000000005de",
+      0n,
+      1n,
+      500000000000000000n,
+      "0x",
+    ],
+    [
+      "0xc8cf54b0b70899ea846b70361e62f3f5b22b1f4b0002000000000000000006c7",
+      1n,
+      2n,
+      0n,
+      "0x",
+    ],
+    [
+      "0x2875f3effe9ec897d7e4c32680d77ca3e628f33a0002000000000000000006d1",
+      2n,
+      3n,
+      0n,
+      "0x",
+    ],
+  ],
+  [
+    "0x0000000000000000000000000000000000000000",
+    "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    "0xe07F9D810a48ab5c3c914BA3cA53AF14E4491e8A",
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  ],
+  [
+    "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+    false,
+    "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+    false,
+  ],
+  [BigInt(1000000000000000000), BigInt(0), BigInt(0), BigInt(-1860401715)],
+  BigInt(9007199254740991),
+] as const
 
 const swap1EthForUsdc = {
   id: "swap1EthForUsdc",
   to: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
   value: "1000000000000000000",
-  data: "0x945bcec9000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000680000000000000000000000000849d52316331967b6ff1198e5e32a0eb168d039d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000849d52316331967b6ff1198e5e32a0eb168d039d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000720000000000000000000000000000000000000000000000000001fffffffffffff000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000240000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000048093d199263632a4ef4bb438f1feb99e57b4b5f0bd0000000000000000000005c20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000006f05b59d3b2000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000c8cf54b0b70899ea846b70361e62f3f5b22b1f4b0002000000000000000006c700000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000c2aa60465bffa1a88f5ba471a59ca0435c3ec5c100020000000000000000062c00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000f01b0684c98cd7ada480bfdf6e43876422fa1fc10002000000000000000005de0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000006f05b59d3b2000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000c8cf54b0b70899ea846b70361e62f3f5b22b1f4b0002000000000000000006c700000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000002875f3effe9ec897d7e4c32680d77ca3e628f33a0002000000000000000006d100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f39c581f595b53c5cb19bd0b3f8da6c935e2ca0000000000000000000000000e07f9d810a48ab5c3c914ba3ca53af14e4491e8a000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff911c85cd",
   operation: 0,
   metadata: {},
-} as const
-
-const batchSwapAbi = {
-  inputs: [
-    {
-      internalType: "enum IVault.SwapKind",
-      name: "kind",
-      type: "uint8",
-    },
-    {
-      components: [
-        {
-          internalType: "bytes32",
-          name: "poolId",
-          type: "bytes32",
-        },
-        {
-          internalType: "uint256",
-          name: "assetInIndex",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "assetOutIndex",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256",
-        },
-        {
-          internalType: "bytes",
-          name: "userData",
-          type: "bytes",
-        },
-      ],
-      internalType: "struct IVault.BatchSwapStep[]",
-      name: "swaps",
-      type: "tuple[]",
-    },
-    {
-      internalType: "contract IAsset[]",
-      name: "assets",
-      type: "address[]",
-    },
-    {
-      components: [
-        {
-          internalType: "address",
-          name: "sender",
-          type: "address",
-        },
-        {
-          internalType: "bool",
-          name: "fromInternalBalance",
-          type: "bool",
-        },
-        {
-          internalType: "address payable",
-          name: "recipient",
-          type: "address",
-        },
-        {
-          internalType: "bool",
-          name: "toInternalBalance",
-          type: "bool",
-        },
-      ],
-      internalType: "struct IVault.FundManagement",
-      name: "funds",
-      type: "tuple",
-    },
-    {
-      internalType: "int256[]",
-      name: "limits",
-      type: "int256[]",
-    },
-    {
-      internalType: "uint256",
-      name: "deadline",
-      type: "uint256",
-    },
-    {
-      internalType: "uint256",
-      name: "value",
-      type: "uint256",
-    },
-    {
-      components: [
-        {
-          internalType: "uint256",
-          name: "index",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "key",
-          type: "uint256",
-        },
-      ],
-      internalType: "struct VaultActions.OutputReference[]",
-      name: "outputReferences",
-      type: "tuple[]",
-    },
-  ],
-  name: "batchSwap",
-  outputs: [
-    {
-      internalType: "int256[]",
-      name: "results",
-      type: "int256[]",
-    },
-  ],
-  stateMutability: "payable",
-  type: "function",
+  data: encodeFunctionData({
+    abi: [batchSwapAbi],
+    functionName: "batchSwap",
+    args: swap1EthForUsdcArgs,
+  }),
 } as const

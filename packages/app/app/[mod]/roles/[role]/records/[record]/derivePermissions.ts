@@ -8,6 +8,7 @@ import {
 import {
   c,
   Condition,
+  ConditionFunction,
   FunctionPermission,
   FunctionPermissionCoerced,
 } from "zodiac-roles-sdk"
@@ -66,12 +67,15 @@ export const derivePermissionFromCall = ({
   const selector = call.data.slice(0, 10) as `0x${string}`
   const { args } = decodeFunctionData({ abi: [abi], data: call.data })
 
+  // This will generally be a calldataMatches condition (the type only doesn't say so because the recursive calls will yield other conditions)
+  const condition = deriveConditionFromWildcards(args, abi.inputs, wildcards)
+
   return {
     targetAddress: call.to,
     selector,
     delegatecall: call.operation === Operation.DelegateCall,
     send: BigInt(call.value || "0") > 0,
-    condition: deriveConditionFromWildcards(args, abi.inputs, wildcards),
+    condition: condition && condition(ParamType.from("bytes")),
   }
 }
 
@@ -85,7 +89,7 @@ const deriveConditionFromWildcards = (
   abi: readonly AbiParameter[],
   wildcards: string[],
   pathPrefix = ""
-): Condition | undefined => {
+): ConditionFunction<any> | undefined => {
   const isTopLevelCalldata = pathPrefix === ""
 
   const filteredWildcards = wildcards.filter((wildcard) =>
@@ -94,37 +98,24 @@ const deriveConditionFromWildcards = (
     )
   )
 
-  const noWildcards = filteredWildcards.length === 0
-
-  const allWildcarded = abi.every((component, index) =>
-    filteredWildcards.includes(pathPrefix + (component.name ?? `[${index}]`))
-  )
-
-  if (allWildcarded) {
-    // no condition needed
-    return undefined
-  }
-
   // some weird incompatibility between ParamType from different ethers instances forces use of any :/
   const paramTypes = abi.map((abiParam) => ParamType.from(abiParam)) as any[]
 
+  const noWildcards = filteredWildcards.length === 0
+
   if (noWildcards && isTopLevelCalldata) {
     // use calldata matches on top-level
-    return c.calldataMatches(
-      values.map((value, index) => c.eq(value)(paramTypes[index])),
-      paramTypes
-    )()
-  }
 
-  const tupleType = ParamType.from({
-    type: "tuple",
-    components: abi,
-  })
+    return c.calldataMatches(
+      values.map((value) => c.eq(value)),
+      paramTypes
+    )
+  }
 
   if (noWildcards && !isTopLevelCalldata) {
     // full equals match on tuple
 
-    return c.eq(encodeAbiParameters(abi, values))(tupleType as any)
+    return c.eq(values)
   }
 
   // use matches structure on the tuple and recurse into tuple components
@@ -148,8 +139,16 @@ const deriveConditionFromWildcards = (
     }
 
     // some weird incompatibility between ParamType from different ethers instances :/
-    return c.eq(values[index])(ParamType.from(component) as any)
+    return c.eq(values[index])
   })
 
-  return c.matches(components)(tupleType as any)
+  const allWildcarded = components.every((component) => component === undefined)
+
+  if (allWildcarded) {
+    return undefined
+  }
+
+  return isTopLevelCalldata
+    ? c.calldataMatches(components, paramTypes)
+    : c.matches(components)
 }
