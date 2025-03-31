@@ -23,9 +23,7 @@
   cursor: default;
 }
 .head[aria-checked="true"] {
-  background-color: hsl(
-    var(--nextra-primary-hue) 100% 94% / var(--tw-bg-opacity)
-  );
+  background-color: var(--x-color-primary-100);
 }
 
 .children {

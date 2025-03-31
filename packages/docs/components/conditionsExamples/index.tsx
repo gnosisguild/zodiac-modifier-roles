@@ -1,3 +1,4 @@
+"use client";
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk";
 import AbiTree from "@/components/tree/AbiTree";
 import ConditionTree, { gatherNodeIds } from "@/components/tree/ConditionTree";

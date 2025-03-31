@@ -13,13 +13,20 @@ import AnnotationsToggle from "@/components/AnnotationsToggle"
 
 const chains = Object.values(CHAINS)
 
-export default async function PermissionPage({
-  params: { hash, chain },
-  searchParams,
-}: {
-  params: { hash: string; chain: string }
-  searchParams: { annotations?: string }
-}) {
+export default async function PermissionPage(
+  props: {
+    params: Promise<{ hash: string; chain: string }>
+    searchParams: Promise<{ annotations?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
+
+  const {
+    hash,
+    chain
+  } = params;
+
   const chainId = chains.find((c) => c.prefix === chain.toLowerCase())?.id
   if (!chainId) {
     notFound()

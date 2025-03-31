@@ -76,7 +76,7 @@ type NodeChildren =
 const deepMapChildrenProps = (
   children: NodeChildren,
   mapProps: (props: NodeProps) => NodeProps
-): React.ReactElement[] | undefined =>
+): React.ReactElement<any>[] | undefined =>
   React.Children.map(
     children,
     (child) =>

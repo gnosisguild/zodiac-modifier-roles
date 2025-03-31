@@ -9,13 +9,14 @@ import DiffView from "@/components/DiffView"
 
 const chains = Object.values(CHAINS)
 
-export default async function DiffPage({
-  params,
-  searchParams,
-}: {
-  params: { chain: string; hash: string; hashRight: string }
-  searchParams: { annotations?: string }
-}) {
+export default async function DiffPage(
+  props: {
+    params: Promise<{ chain: string; hash: string; hashRight: string }>
+    searchParams: Promise<{ annotations?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const chainId = chains.find(
     (c) => c.prefix === params.chain.toLowerCase()
   )?.id
