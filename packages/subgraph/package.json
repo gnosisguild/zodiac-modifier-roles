@@ -38,8 +38,8 @@
     "prettier": "^3.4.2"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.94.0",
-    "@graphprotocol/graph-ts": "^0.37.0",
+    "@graphprotocol/graph-cli": "^0.96.0",
+    "@graphprotocol/graph-ts": "^0.38.0",
     "assemblyscript-json": "^1.1.0"
   },
   "installConfig": {
