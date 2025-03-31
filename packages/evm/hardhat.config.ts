@@ -75,6 +75,11 @@ const config: HardhatUserConfig = {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
+    sepolia: {
+      ...sharedNetworkConfig,
+      chainId: 11155111,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+    },
     optimism: {
       ...sharedNetworkConfig,
       chainId: 10,
@@ -89,6 +94,11 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       chainId: 8453,
       url: "https://mainnet.base.org",
+    },
+    baseSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 84532,
+      url: "https://sepolia.base.org",
     },
     matic: {
       ...sharedNetworkConfig,
@@ -125,32 +135,37 @@ const config: HardhatUserConfig = {
       chainId: 1135,
       url: "https://rpc.api.lisk.com",
     },
-    sepolia: {
-      ...sharedNetworkConfig,
-      chainId: 11155111,
-      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
-    },
-    baseSepolia: {
-      ...sharedNetworkConfig,
-      chainId: 84532,
-      url: "https://sepolia.base.org",
-    },
-    liskSepolia: {
-      ...sharedNetworkConfig,
-      chainId: 4202,
-      url: "https://rpc.sepolia-api.lisk.com",
-    },
     "lisk-sepolia": {
       ...sharedNetworkConfig,
       chainId: 4202,
       url: "https://rpc.sepolia-api.lisk.com",
       gasPrice: 1000000000,
     },
+    liskSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
+    },
     "bob-sepolia": {
       ...sharedNetworkConfig,
       chainId: 808813,
       url: "https://bob-sepolia.rpc.gobob.xyz/",
       gasPrice: 1000000000,
+    },
+    mantle: {
+      ...sharedNetworkConfig,
+      chainId: 5000,
+      url: "https://rpc.mantle.xyz",
+    },
+    sonic: {
+      ...sharedNetworkConfig,
+      chainId: 146,
+      url: "https://rpc.soniclabs.com",
+    },
+    berachain: {
+      ...sharedNetworkConfig,
+      chainId: 80094,
+      url: "https://rpc.berachain.com",
     },
   },
   etherscan: {
