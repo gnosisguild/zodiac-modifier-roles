@@ -35,6 +35,16 @@ export function validatePresets<T extends { permissions: Permission[] }>({
         permissions.some((p2) => permissionEquals(p1, p2))
       )
     )
+  const unconfirmedPresets = presets
+    .filter((p) => !!p)
+    .filter((preset) =>
+      preset.permissions.every((p1) => {
+        const res = permissions.some((p2) => permissionEquals(p1, p2))
+        if (!res) console.log({ p1 })
+        return res
+      })
+    )
+  console.log({ confirmedPresets })
 
   const confirmedPermissions = confirmedPresets
     .map((preset) => preset.permissions)

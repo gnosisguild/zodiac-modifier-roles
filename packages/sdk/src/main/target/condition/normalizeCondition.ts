@@ -31,6 +31,7 @@ export const normalizeCondition = (
 
   // At this point result is already a deep clone of the input condition, so the individual normalization functions can safely mutate it in place.
   result = pruneTrailingPass(result)
+  result = ensureBranchTypeTreeCompatibility(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
@@ -99,6 +100,67 @@ const pruneTrailingPass = (
 
   condition.children = prunedChildren
   return condition
+}
+
+const ensureBranchTypeTreeCompatibility = (
+  condition: NormalizedCondition
+): NormalizedCondition => {
+  const complexBranches = collectComplexBranches(condition)
+
+  // find the longest branch
+  let maxLength = 0
+  let longestBranch: NormalizedCondition | null = null
+  for (const branch of complexBranches) {
+    if (branch.children?.length && branch.children.length > maxLength) {
+      maxLength = branch.children.length
+      longestBranch = branch
+    }
+  }
+  if (!longestBranch) return condition
+
+  // fill up shorter branches with Pass nodes
+  for (const branch of complexBranches) {
+    if (!branch.children) continue
+    for (let i = branch.children?.length; i < maxLength; i++) {
+      branch.children.push(
+        normalizeCondition({
+          operator: Operator.Pass,
+          paramType: longestBranch.children![i].paramType,
+          children: [],
+        })
+      )
+    }
+  }
+  return condition
+}
+
+/**
+ * Traverses through logical and array nodes the condition tree and collects all complex branches: tuple, abiEncoded, calldata nodes
+ */
+const collectComplexBranches = (
+  condition: NormalizedCondition
+): NormalizedCondition[] => {
+  if (
+    condition.operator === Operator.And ||
+    condition.operator === Operator.Or ||
+    condition.operator === Operator.Nor
+  ) {
+    return condition.children?.flatMap(collectComplexBranches) ?? []
+  }
+
+  if (condition.paramType === ParameterType.Array) {
+    return condition.children?.flatMap(collectComplexBranches) ?? []
+  }
+
+  if (
+    condition.paramType === ParameterType.AbiEncoded ||
+    condition.paramType === ParameterType.Calldata ||
+    condition.paramType === ParameterType.Tuple
+  ) {
+    return [condition]
+  }
+
+  return []
 }
 
 /** flatten nested AND/OR conditions */
