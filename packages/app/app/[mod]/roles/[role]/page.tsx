@@ -7,13 +7,14 @@ import RoleView from "@/components/RoleView"
 import classes from "./page.module.css"
 import { fetchOrInitRole } from "./fetching"
 
-export default async function RolePage({
-  params,
-  searchParams,
-}: {
-  params: { mod: string; role: string; hash?: string }
-  searchParams: { annotations?: string }
-}) {
+export default async function RolePage(
+  props: {
+    params: Promise<{ mod: string; role: string; hash?: string }>
+    searchParams: Promise<{ annotations?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
   if (!mod || !roleKey) {

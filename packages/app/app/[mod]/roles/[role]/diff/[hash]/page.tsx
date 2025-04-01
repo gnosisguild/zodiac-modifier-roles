@@ -13,13 +13,14 @@ import { fetchOrInitRole } from "../../fetching"
 import { PermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
 
-export default async function DiffPage({
-  params,
-  searchParams,
-}: {
-  params: { mod: string; role: string; hash: string }
-  searchParams: { annotations?: string }
-}) {
+export default async function DiffPage(
+  props: {
+    params: Promise<{ mod: string; role: string; hash: string }>
+    searchParams: Promise<{ annotations?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
   if (!mod || !roleKey) {

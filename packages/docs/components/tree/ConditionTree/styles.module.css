@@ -6,7 +6,7 @@
 
 .compValue {
   white-space: nowrap;
-  color: hsl(var(--nextra-primary-hue) 100% 32% / var(--tw-text-opacity));
+  color: var(--x-color-primary-800);
   font-size: 0.875rem;
 }
 
