@@ -33,6 +33,8 @@ const {
   BASESCAN_API_KEY,
   BSCSCAN_API_KEY,
   CELOSCAN_API_KEY,
+  SONICSCAN_API_KEY,
+  BERASCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -182,6 +184,8 @@ const config: HardhatUserConfig = {
       baseSepolia: BASESCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
       celo: CELOSCAN_API_KEY,
+      sonic: SONICSCAN_API_KEY,
+      berachain: BERASCAN_API_KEY,
       "lisk-sepolia": "not-required",
       "bob-sepolia": ETHERSCAN_API_KEY,
     } as Record<string, string>,
@@ -248,6 +252,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.celoscan.io/api",
           browserURL: "https://celoscan.io",
+        },
+      },
+      {
+        network: "sonic",
+        chainId: 146,
+        urls: {
+          apiURL: "https://api.sonicscan.org/api",
+          browserURL: "https://sonicscan.org",
+        },
+      },
+      {
+        network: "berachain",
+        chainId: 80094,
+        urls: {
+          apiURL: "https://api.berascan.com/api",
+          browserURL: "https://berascan.com",
         },
       },
       {
