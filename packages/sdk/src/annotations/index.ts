@@ -1,1 +1,1 @@
-export { applyAnnotations, extendAnnotations } from "./applyAnnotations"
+export { type Preset, processAnnotations } from "./annotations"
