@@ -6,6 +6,16 @@
   padding: 0;
 }
 
+.wrapper code {
+  color: currentColor;
+  border-style: none;
+  border-radius: 0;
+  min-width: 100%;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  display: grid;
+}
+
 .comments {
   flex-grow: 1;
 }
@@ -24,7 +34,5 @@
 }
 
 .highlight {
-  background-color: hsl(
-    var(--nextra-primary-hue) 100% 94% / var(--tw-bg-opacity)
-  );
+  background-color: var(--x-color-primary-100);
 }
