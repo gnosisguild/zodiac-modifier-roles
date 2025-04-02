@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.21.2",
+  "version": "2.22.0",
   "license": "LGPL-3.0+",
   "main": "build/cjs/sdk/src/index.js",
   "module": "build/esm/sdk/src/index.js",
@@ -82,7 +82,7 @@
   "devDependencies": {
     "@gnosis-guild/eth-sdk": "^0.3.7",
     "@gnosis-guild/eth-sdk-client": "^0.1.6",
-    "@gnosis-guild/typechain-ethers-v6": "^0.5.4",
+    "@gnosis-guild/typechain-ethers-v6": "^0.5.5",
     "@types/node": "^20.9.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",

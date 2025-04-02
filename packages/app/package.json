@@ -33,8 +33,8 @@
     "react-dom": "19.1.0",
     "react-icons": "^4.10.1",
     "typescript": "^5.6.2",
-    "viem": "^2.7.1",
-    "wagmi": "^2.5.5",
+    "viem": "^2.24.3",
+    "wagmi": "^2.14.16",
     "zod": "^3.23.8",
     "zodiac-roles-sdk": "workspace:*"
   },

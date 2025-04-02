@@ -32,6 +32,9 @@ const {
   ZKEVM_POLYGONSCAN_API_KEY,
   BASESCAN_API_KEY,
   BSCSCAN_API_KEY,
+  CELOSCAN_API_KEY,
+  SONICSCAN_API_KEY,
+  BERASCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -74,6 +77,11 @@ const config: HardhatUserConfig = {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
+    sepolia: {
+      ...sharedNetworkConfig,
+      chainId: 11155111,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+    },
     optimism: {
       ...sharedNetworkConfig,
       chainId: 10,
@@ -88,6 +96,11 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       chainId: 8453,
       url: "https://mainnet.base.org",
+    },
+    baseSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 84532,
+      url: "https://sepolia.base.org",
     },
     matic: {
       ...sharedNetworkConfig,
@@ -114,15 +127,15 @@ const config: HardhatUserConfig = {
       chainId: 56,
       url: "https://bscrpc.com",
     },
-    sepolia: {
+    celo: {
       ...sharedNetworkConfig,
-      chainId: 11155111,
-      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+      chainId: 42220,
+      url: "https://celo.drpc.org",
     },
-    baseSepolia: {
+    lisk: {
       ...sharedNetworkConfig,
-      chainId: 84532,
-      url: `https://sepolia.base.org`,
+      chainId: 1135,
+      url: "https://rpc.api.lisk.com",
     },
     "lisk-sepolia": {
       ...sharedNetworkConfig,
@@ -130,11 +143,31 @@ const config: HardhatUserConfig = {
       url: "https://rpc.sepolia-api.lisk.com",
       gasPrice: 1000000000,
     },
+    liskSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
+    },
     "bob-sepolia": {
       ...sharedNetworkConfig,
       chainId: 808813,
       url: "https://bob-sepolia.rpc.gobob.xyz/",
       gasPrice: 1000000000,
+    },
+    mantle: {
+      ...sharedNetworkConfig,
+      chainId: 5000,
+      url: "https://rpc.mantle.xyz",
+    },
+    sonic: {
+      ...sharedNetworkConfig,
+      chainId: 146,
+      url: "https://rpc.soniclabs.com",
+    },
+    berachain: {
+      ...sharedNetworkConfig,
+      chainId: 80094,
+      url: "https://rpc.berachain.com",
     },
   },
   etherscan: {
@@ -150,8 +183,10 @@ const config: HardhatUserConfig = {
       base: BASESCAN_API_KEY,
       baseSepolia: BASESCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
-      // Use "ETHERSCAN_API_KEY" as a placeholder, because Blockscout doesn't need a real API key, and Hardhat will complain if this property isn't set.
-      "lisk-sepolia": ETHERSCAN_API_KEY,
+      celo: CELOSCAN_API_KEY,
+      sonic: SONICSCAN_API_KEY,
+      berachain: BERASCAN_API_KEY,
+      "lisk-sepolia": "not-required",
       "bob-sepolia": ETHERSCAN_API_KEY,
     } as Record<string, string>,
     customChains: [
@@ -209,6 +244,30 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.bscscan.com/api",
           browserURL: "https://bscscan.com",
+        },
+      },
+      {
+        network: "celo",
+        chainId: 42220,
+        urls: {
+          apiURL: "https://api.celoscan.io/api",
+          browserURL: "https://celoscan.io",
+        },
+      },
+      {
+        network: "sonic",
+        chainId: 146,
+        urls: {
+          apiURL: "https://api.sonicscan.org/api",
+          browserURL: "https://sonicscan.org",
+        },
+      },
+      {
+        network: "berachain",
+        chainId: 80094,
+        urls: {
+          apiURL: "https://api.berascan.com/api",
+          browserURL: "https://berascan.com",
         },
       },
       {

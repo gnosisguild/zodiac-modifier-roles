@@ -1,8 +1,6 @@
 import { task, types } from "hardhat/config";
 import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
 
-const { ETHERSCAN_API_KEY } = process.env;
-
 task(
   "verify:mastercopy",
   "Verifies all mastercopies from the artifacts file in the block explorer corresponding to the current network"
@@ -23,12 +21,10 @@ task(
       );
     }
 
-    const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
-
     for (const artifact of readMastercopies({ contractVersion })) {
       const { noop } = await verifyMastercopy({
         artifact,
-        apiUrlOrChainId: chainId,
+        apiUrlOrChainId: (hre.config.networks[hre.network.name] as any).url,
         apiKey: apiKey,
       });
 
