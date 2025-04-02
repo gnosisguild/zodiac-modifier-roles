@@ -342,6 +342,47 @@ suite("normalizeCondition()", () => {
     })
   })
 
+  it("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
+    expect(
+      stripIds(
+        normalizeCondition({
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: ParameterType.Calldata,
+              operator: Operator.Matches,
+              children: [DUMMY_COMP(3)],
+            },
+            {
+              paramType: ParameterType.Calldata,
+              operator: Operator.Matches,
+              children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+            },
+          ],
+        })
+      )
+    ).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            DUMMY_COMP(3),
+            { paramType: ParameterType.Static, operator: Operator.Pass },
+          ],
+        },
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+        },
+      ],
+    })
+  })
+
   it("pushes down ORs in function variants differing only in a single param scoping", () => {
     const {
       permissions: [functionVariants],

@@ -123,11 +123,7 @@ const ensureBranchTypeTreeCompatibility = (
     if (!branch.children) continue
     for (let i = branch.children?.length; i < maxLength; i++) {
       branch.children.push(
-        normalizeCondition({
-          operator: Operator.Pass,
-          paramType: longestBranch.children![i].paramType,
-          children: [],
-        })
+        normalizeCondition(copyStructure(longestBranch.children![i]))
       )
     }
   }
@@ -180,6 +176,37 @@ const flattenNestedLogicalConditions = (
   }
 
   return condition
+}
+
+/**
+ * Given a condition, returns a tree of Pass nodes that matches the structure of the type
+ */
+export const copyStructure = (condition: Condition): Condition => {
+  // skip over logical conditions
+  if (condition.paramType === ParameterType.None) {
+    if (!condition.children || condition.children.length === 0) {
+      throw new Error("Logical condition must have at least one child")
+    }
+    return copyStructure(condition.children[0])
+  }
+
+  // handle array conditions
+  if (condition.paramType === ParameterType.Array) {
+    if (!condition.children || condition.children.length === 0) {
+      throw new Error("Array condition must have at least one child")
+    }
+    return {
+      paramType: ParameterType.Array,
+      operator: Operator.Pass,
+      children: [copyStructure(condition.children[0])],
+    }
+  }
+
+  return {
+    paramType: condition.paramType,
+    operator: Operator.Pass,
+    children: condition.children?.map(copyStructure),
+  }
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
