@@ -81,7 +81,7 @@ suite("checkConditionIntegrity()", () => {
 })
 
 suite("checkRootConditionIntegrity()", () => {
-  it("should throw if the root param type is not Calldata", () => {
+  it("should throw if the root param type is not Calldata or None", () => {
     expect(() =>
       checkRootConditionIntegrity({
         paramType: ParameterType.None,
@@ -90,6 +90,6 @@ suite("checkRootConditionIntegrity()", () => {
           { paramType: ParameterType.Static, operator: Operator.Pass },
         ],
       })
-    ).to.throw("Root param type must be `Calldata`, got `Static`")
+    ).to.throw("Root param type must be `Calldata` or `None`, got `Static`")
   })
 })
