@@ -7,9 +7,9 @@ export const checkConditionIntegrity = (condition: Condition): void => {
 
 export const checkRootConditionIntegrity = (condition: Condition): void => {
   const rootType = checkConsistentChildrenTypes(condition)
-  if (rootType !== ParameterType.Calldata) {
+  if (rootType !== ParameterType.Calldata && rootType !== ParameterType.None) {
     throw new Error(
-      `Root param type must be \`Calldata\`, got \`${ParameterType[rootType]}\``
+      `Root param type must be \`Calldata\` or \`None\`, got \`${ParameterType[rootType]}\``
     )
   }
   checkConditionIntegrityRecursive(condition)
