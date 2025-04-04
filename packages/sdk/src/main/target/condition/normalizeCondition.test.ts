@@ -8,6 +8,7 @@ import { abiEncode } from "../../abiEncode"
 
 import { c } from "../../target/authoring"
 import { allow } from "../../../kit"
+import { encodeKey } from "../../keys"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
@@ -337,6 +338,34 @@ suite("normalizeCondition()", () => {
         {
           paramType: ParameterType.Static,
           operator: Operator.EqualToAvatar,
+        },
+      ],
+    })
+  })
+
+  it("keeps the EtherWithinAllowance as the only child of Calldata.Matches", () => {
+    expect(
+      stripIds(
+        normalizeCondition({
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: ParameterType.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: encodeKey("test-allowance"),
+            },
+          ],
+        })
+      )
+    ).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.EtherWithinAllowance,
+          compValue: encodeKey("test-allowance"),
         },
       ],
     })
