@@ -1,5 +1,4 @@
 import hre from "hardhat";
-import assert from "assert";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -8,6 +7,7 @@ import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { AbiCoder } from "ethers";
 
 import { Operator, ParameterType } from "../utils";
+import { flattenCondition } from "./flattenConditions";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 const YesRemoveOffset = true;
@@ -32,9 +32,8 @@ describe("Decoder library", async () => {
       const { testEncoder, decoder } = await loadFixture(setup);
 
       const { data } = await testEncoder.dynamic.populateTransaction("0x");
-      assert(data);
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -44,9 +43,9 @@ describe("Decoder library", async () => {
             children: [],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data, layout);
+      const result = await decoder.inspect(data, conditions);
       expect(result.location).to.equal(BigInt(0));
       expect(result.size).to.equal(BigInt((data.length - 2) / 2));
 
@@ -68,9 +67,8 @@ describe("Decoder library", async () => {
           "0xabcd",
           [10, 32, 55]
         );
-      assert(data);
 
-      const layout = {
+      const condition = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -96,8 +94,8 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
-      const result = await decoder.inspect(data, layout);
+      });
+      const result = await decoder.inspect(data, condition);
 
       expect(
         await decoder.pluck(
@@ -135,9 +133,7 @@ describe("Decoder library", async () => {
           ["0x1122", "0x3344", "0x5566"]
         );
 
-      assert(data);
-
-      const layout = {
+      const condition = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -163,9 +159,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data, layout);
+      const result = await decoder.inspect(data, condition);
       expect(
         await decoder.pluck(
           data,
@@ -204,9 +200,7 @@ describe("Decoder library", async () => {
           123456789
         );
 
-      assert(data);
-
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -232,9 +226,9 @@ describe("Decoder library", async () => {
             children: [],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data, layout);
+      const result = await decoder.inspect(data, conditions);
       expect(
         await decoder.pluck(
           data,
@@ -268,8 +262,7 @@ describe("Decoder library", async () => {
         dynamic: "0xabcd",
       });
 
-      assert(data);
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -285,9 +278,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data, layout);
+      const result = await decoder.inspect(data, conditions);
 
       expect(
         await decoder.pluck(
@@ -316,9 +309,7 @@ describe("Decoder library", async () => {
         2000
       );
 
-      assert(data);
-
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -344,9 +335,9 @@ describe("Decoder library", async () => {
             children: [],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       expect(
         await decoder.pluck(
@@ -381,9 +372,7 @@ describe("Decoder library", async () => {
         2000
       );
 
-      assert(data);
-
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -403,9 +392,9 @@ describe("Decoder library", async () => {
             children: [],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       expect(
         await decoder.pluck(
@@ -451,7 +440,7 @@ describe("Decoder library", async () => {
         false
       );
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -488,11 +477,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      assert(data);
-
-      const result = await decoder.inspect(data, layout);
+      const result = await decoder.inspect(data, conditions);
       expect(
         await decoder.pluck(
           data,
@@ -530,9 +517,7 @@ describe("Decoder library", async () => {
           }
         );
 
-      assert(data);
-
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -596,9 +581,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       const expected = encode(
         [
@@ -670,9 +655,7 @@ describe("Decoder library", async () => {
           c: [{ a: 10, b: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" }],
         });
 
-      assert(data);
-
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -715,8 +698,8 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
-      const result = await decoder.inspect(data, layout);
+      });
+      const result = await decoder.inspect(data, conditions);
 
       // check root
       expect(await decoder.pluck(data, result.location, result.size)).to.equal(
@@ -757,7 +740,7 @@ describe("Decoder library", async () => {
           },
         ]);
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -784,8 +767,8 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
-      const result = await decoder.inspect(data as string, layout);
+      });
+      const result = await decoder.inspect(data as string, conditions);
 
       // check root
       expect(
@@ -860,7 +843,7 @@ describe("Decoder library", async () => {
           },
         ]);
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -898,9 +881,8 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
-      assert(data);
-      const result = await decoder.inspect(data, layout);
+      });
+      const result = await decoder.inspect(data, conditions);
 
       // check root
       expect(await decoder.pluck(data, result.location, result.size)).to.equal(
@@ -979,7 +961,7 @@ describe("Decoder library", async () => {
           []
         );
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -1011,9 +993,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       // check the nested uint
       const nestedUintField = result.children[1].children[0];
@@ -1075,7 +1057,7 @@ describe("Decoder library", async () => {
         ],
       };
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -1103,9 +1085,9 @@ describe("Decoder library", async () => {
             ],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       const nestedDynamicField =
         result.children[0].children[0].children[0].children[0];
@@ -1154,9 +1136,6 @@ describe("Decoder library", async () => {
           []
         );
 
-      assert(nestedData1);
-      assert(nestedData2);
-
       const { data } = await testEncoder.dynamicArray.populateTransaction([
         nestedData1,
         nestedData2,
@@ -1190,7 +1169,7 @@ describe("Decoder library", async () => {
         ],
       };
 
-      const layout = {
+      const conditions = flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [
@@ -1200,9 +1179,9 @@ describe("Decoder library", async () => {
             children: [nestedLayout],
           },
         ],
-      };
+      });
 
-      const result = await decoder.inspect(data as string, layout);
+      const result = await decoder.inspect(data as string, conditions);
 
       const arrayField1 = result.children[0].children[0].children[2];
       expect(

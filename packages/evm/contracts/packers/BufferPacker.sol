@@ -133,7 +133,7 @@ library BufferPacker {
             uint16 bits = uint16(bytes2(word));
             ConditionFlat memory condition = result[i];
             condition.parent = uint8((bits & MASK_PARENT) >> OFFSET_PARENT);
-            condition.paramType = ParameterType(
+            condition.paramType = AbiType(
                 (bits & MASK_PARAM_TYPE) >> OFFSET_PARAM_TYPE
             );
             condition.operator = Operator(bits & MASK_OPERATOR);
