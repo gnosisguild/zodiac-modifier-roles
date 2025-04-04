@@ -8,15 +8,24 @@ import {
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
+<<<<<<< HEAD
 import { setupOneParamStatic } from "../setup";
+=======
+import { setupAvatarAndRoles } from "./setup";
+>>>>>>> 6bfb5d0c (Initial port of the new AbiDecoder with flat TypeTree)
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - And", async () => {
   it("evaluates operator And with a single child", async () => {
+<<<<<<< HEAD
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamStatic
     );
+=======
+    const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      await await loadFixture(setupAvatarAndRoles);
+>>>>>>> 6bfb5d0c (Initial port of the new AbiDecoder with flat TypeTree)
 
     const conditions = [
       {
@@ -38,18 +47,32 @@ describe("Operator - And", async () => {
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
     ];
+<<<<<<< HEAD
 
     await scopeFunction(conditions);
+=======
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+
+    await scopeFunction(selector, conditions);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(2);
+      return execTransactionFromModule(data);
+    };
+>>>>>>> 6bfb5d0c (Initial port of the new AbiDecoder with flat TypeTree)
 
     await expect(invoke(2))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator And with multiple children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      await loadFixture(setupAvatarAndRoles);
 
+<<<<<<< HEAD
+=======
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+>>>>>>> 6bfb5d0c (Initial port of the new AbiDecoder with flat TypeTree)
     const conditions = [
       {
         parent: 0,
@@ -76,7 +99,16 @@ describe("Operator - And", async () => {
         compValue: defaultAbiCoder.encode(["uint256"], [30]),
       },
     ];
+<<<<<<< HEAD
     await scopeFunction(conditions);
+=======
+    await scopeFunction(selector, conditions);
+
+    const invoke = async (value: number) =>
+      execTransactionFromModule(
+        (await testContract.oneParamStatic.populateTransaction(value)).data
+      );
+>>>>>>> 6bfb5d0c (Initial port of the new AbiDecoder with flat TypeTree)
 
     await expect(invoke(1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
