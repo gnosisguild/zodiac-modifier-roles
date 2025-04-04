@@ -1,11 +1,11 @@
 import hre from "hardhat";
-import assert from "assert";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Operator, ParameterType } from "../utils";
 
 import { AbiCoder, Interface } from "ethers";
+import { flattenCondition } from "./flattenConditions";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 const YesRemoveOffset = true;
@@ -34,9 +34,7 @@ describe("Decoder library", async () => {
         123456789
       );
 
-    assert(data);
-
-    const layout = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -62,9 +60,9 @@ describe("Decoder library", async () => {
           children: [],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data, layout);
+    const result = await decoder.inspect(data, conditions);
 
     expect(
       await decoder.pluck(
@@ -81,8 +79,7 @@ describe("Decoder library", async () => {
       dynamic: "0xabcd0011",
     });
 
-    assert(data);
-    const layout = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -98,9 +95,9 @@ describe("Decoder library", async () => {
           ],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data, layout);
+    const result = await decoder.inspect(data, conditions);
 
     expect(
       await decoder.pluck(
@@ -118,7 +115,7 @@ describe("Decoder library", async () => {
       "0x004466ff",
     ]);
 
-    const layout = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -134,9 +131,9 @@ describe("Decoder library", async () => {
           ],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data as string, layout);
+    const result = await decoder.inspect(data as string, conditions);
 
     const arrayElement0 = result.children[0].children[0];
     const arrayElement1 = result.children[0].children[1];
@@ -172,7 +169,7 @@ describe("Decoder library", async () => {
     const dynamicTupleValue = [embedded];
     const data = iface.encodeFunctionData("fnOut", [dynamicTupleValue]);
 
-    const condition = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -210,9 +207,9 @@ describe("Decoder library", async () => {
           ],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data as string, condition);
+    const result = await decoder.inspect(data as string, conditions);
 
     const tupleField = result.children[0].children[0].children[0];
     expect(
@@ -230,7 +227,7 @@ describe("Decoder library", async () => {
 
     const data = iface.encodeFunctionData("fn", [embedded]);
 
-    const condition = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -262,9 +259,9 @@ describe("Decoder library", async () => {
           ],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data as string, condition);
+    const result = await decoder.inspect(data as string, conditions);
 
     const field1 = result.children[0].children[0];
     expect(
@@ -294,7 +291,7 @@ describe("Decoder library", async () => {
       iface.encodeFunctionData("fnIn", [1234, 9876]),
     ]);
 
-    const condition = {
+    const conditions = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -326,9 +323,9 @@ describe("Decoder library", async () => {
           ],
         },
       ],
-    };
+    });
 
-    const result = await decoder.inspect(data as string, condition);
+    const result = await decoder.inspect(data as string, conditions);
 
     const all = result;
     const embedded = result.children[0];

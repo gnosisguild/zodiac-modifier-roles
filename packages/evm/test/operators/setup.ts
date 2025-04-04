@@ -6,6 +6,63 @@ import { deployRolesMod, ExecutionOptions } from "../utils";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
 import { TestContract } from "../../typechain-types/contracts/test/";
 
+const DEFAULT_ROLE_KEY =
+  "0x000000000000000000000000000000000000000000000000000000000aabbcc1";
+
+export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
+  const [owner, member, relayer] = await hre.ethers.getSigners();
+
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const testContract = await TestContract.deploy();
+  const avatarAddress = await avatar.getAddress();
+  const roles = await deployRolesMod(
+    hre,
+    owner.address,
+    avatarAddress,
+    avatarAddress
+  );
+  await roles.connect(owner).enableModule(member.address);
+  await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+
+  await roles
+    .connect(owner)
+    .scopeTarget(roleKey, await testContract.getAddress());
+
+  const testContractAddress = await testContract.getAddress();
+
+  const scopeFunction = (selector: string, conditions: ConditionFlatStruct[]) =>
+    roles
+      .connect(owner)
+      .scopeFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        conditions,
+        ExecutionOptions.Both
+      );
+
+  const execTransactionFromModule = async (data: string) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(await testContract.getAddress(), 0, data, 0);
+
+  return {
+    owner,
+    member,
+    relayer,
+    avatar,
+    roles,
+    roleKey,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  };
+}
+
 export async function baseSetup(
   functioName:
     | "fnThatMaybeReverts"
