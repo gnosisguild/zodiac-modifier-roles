@@ -18,19 +18,3 @@ export const withinAllowance =
       compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
     }
   }
-
-export const callWithinAllowance = (allowanceKey: `0x${string}`) => () => {
-  return {
-    paramType: ParameterType.None,
-    operator: Operator.CallWithinAllowance,
-    compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
-  }
-}
-
-export const etherWithinAllowance = (allowanceKey: `0x${string}`) => () => {
-  return {
-    paramType: ParameterType.None,
-    operator: Operator.EtherWithinAllowance,
-    compValue: abiEncode(["bytes32"], [allowanceKey]) as `0x${string}`,
-  }
-}

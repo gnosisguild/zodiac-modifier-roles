@@ -102,7 +102,11 @@ const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
     abiTypes: readonly AbiType[],
-    selector?: `0x${string}`
+    options: {
+      selector?: `0x${string}`
+      etherWithinAllowance?: `0x${string}`
+      callWithinAllowance?: `0x${string}`
+    } = {}
   ) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
@@ -113,6 +117,8 @@ const calldataMatchesScopings =
         `Can only use \`calldataMatches\` on bytes type params, got: ${abiType.type}`
       )
     }
+
+    const { selector, etherWithinAllowance, callWithinAllowance } = options
 
     // map scoping items to conditions
     const conditions: (Condition | undefined)[] = paramTypes.map(
@@ -194,7 +200,11 @@ type CalldataMatches = {
   <S extends TupleScopings<any>>(
     scopings: S,
     abiTypes: readonly AbiType[],
-    selector?: `0x${string}`
+    options?: {
+      selector?: `0x${string}`
+      etherWithinAllowance?: `0x${string}`
+      callWithinAllowance?: `0x${string}`
+    }
   ): (abiType?: ParamType) => Condition
 
   /**
@@ -211,13 +221,17 @@ type CalldataMatches = {
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
   abiTypes?: readonly AbiType[],
-  selector?: `0x${string}`
+  options?: {
+    selector?: `0x${string}`
+    etherWithinAllowance?: `0x${string}`
+    callWithinAllowance?: `0x${string}`
+  }
 ): ((abiType?: ParamType) => Condition) => {
   return abiTypes
     ? calldataMatchesScopings(
         scopingsOrFunctionPermission as S,
         abiTypes,
-        selector
+        options
       )
     : calldataMatchesFunctionPermission(
         scopingsOrFunctionPermission as unknown as FunctionPermission
