@@ -62,7 +62,6 @@ describe("Operator - Matches", async () => {
   });
 
   it("evaluates operator Matches for Tuple", async () => {
-    // ..
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamStaticTuple
     );

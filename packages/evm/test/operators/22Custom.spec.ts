@@ -2,7 +2,6 @@ import hre from "hardhat";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { setupOneParamStatic } from "./setup";
 import {
   BYTES32_ZERO,
   ExecutionOptions,
@@ -11,6 +10,7 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
+import { setupOneParamStatic } from "./setup";
 
 describe("Operator - Custom", async () => {
   async function setup() {

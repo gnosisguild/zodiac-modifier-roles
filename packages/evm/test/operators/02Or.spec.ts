@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder } from "ethers";
 
 import {
   BYTES32_ZERO,
@@ -8,7 +9,6 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { setupOneParamStatic } from "./setup";
-import { AbiCoder } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
