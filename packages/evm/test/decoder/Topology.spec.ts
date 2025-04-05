@@ -2,8 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { flattenCondition, Operator } from "../utils";
-import { AbiType } from "./types";
+import { AbiType, flattenCondition, Operator } from "../utils";
 
 describe("Topology library", async () => {
   async function setup() {
@@ -19,7 +18,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -54,7 +53,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n],
       },
       {
@@ -89,7 +88,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -113,7 +112,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n],
       },
       {
@@ -136,7 +135,7 @@ describe("Topology library", async () => {
       operator: Operator.Or,
       children: [
         {
-          paramType: AbiType.AbiEncodedWithSelector,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           children: [
             {
@@ -152,7 +151,7 @@ describe("Topology library", async () => {
           ],
         },
         {
-          paramType: AbiType.AbiEncodedWithSelector,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           children: [
             {
@@ -168,7 +167,7 @@ describe("Topology library", async () => {
           ],
         },
         {
-          paramType: AbiType.AbiEncodedWithSelector,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           children: [
             {
@@ -192,7 +191,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n, 2n],
       },
       {
@@ -211,7 +210,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -235,7 +234,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n],
       },
       {
@@ -254,7 +253,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -306,7 +305,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n],
       },
       {
@@ -344,7 +343,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -390,7 +389,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n],
       },
       {
@@ -425,7 +424,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -443,7 +442,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n, 2n],
       },
       {
@@ -466,7 +465,7 @@ describe("Topology library", async () => {
     const { topology } = await loadFixture(setup);
 
     const input = flattenCondition({
-      paramType: AbiType.AbiEncodedWithSelector,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
@@ -484,7 +483,7 @@ describe("Topology library", async () => {
 
     const expected = [
       {
-        _type: BigInt(AbiType.AbiEncodedWithSelector),
+        _type: BigInt(AbiType.Calldata),
         fields: [1n, 2n],
       },
       {

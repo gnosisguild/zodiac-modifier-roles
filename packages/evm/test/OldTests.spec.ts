@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder } from "ethers";
 
 import {
-  ParameterType,
+  AbiType,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
@@ -133,49 +133,49 @@ describe("OldTests", async () => {
     const conditionTree = [
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_3,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_4,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_5,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_6,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_7,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_8,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_9,
       },
@@ -389,19 +389,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -473,19 +473,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -703,19 +703,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -815,19 +815,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -912,19 +912,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -1316,19 +1316,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },

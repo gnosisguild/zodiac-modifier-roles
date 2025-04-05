@@ -4,10 +4,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, BytesLike } from "ethers";
 
 import {
+  AbiType,
   BYTES32_ZERO,
   ExecutionOptions,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
   flattenCondition,
 } from "./utils";
@@ -71,19 +71,19 @@ describe("Roles", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
           parent: 0,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -656,13 +656,13 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [11]),
           },
@@ -677,13 +677,13 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [11]),
           },
@@ -726,27 +726,27 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Calldata,
+              paramType: AbiType.Calldata,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Tuple,
+                  paramType: AbiType.Tuple,
                   operator: Operator.Matches,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.EqualTo,
                       compValue: defaultAbiCoder.encode(["uint256"], [123456]),
                     },
                     {
-                      paramType: ParameterType.Dynamic,
+                      paramType: AbiType.Dynamic,
                       operator: Operator.EqualTo,
                       compValue: defaultAbiCoder.encode(
                         ["bytes"],
@@ -795,23 +795,23 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.EqualTo,
               compValue:
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.Calldata,
+                  paramType: AbiType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.Pass,
                       compValue: "0x",
                       children: [],
@@ -834,23 +834,23 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.EqualTo,
               compValue:
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: ParameterType.Calldata,
+                  paramType: AbiType.Calldata,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.Pass,
                       compValue: "0x",
                       children: [],

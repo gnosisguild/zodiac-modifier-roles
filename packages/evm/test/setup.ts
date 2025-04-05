@@ -186,7 +186,7 @@ export async function setupOneParamStatic() {
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions
     ) => scopeFunction(selector, conditions, options),
-    invoke: async (a: number, operation: 0 | 1 = 0) =>
+    invoke: async (a: BigNumberish, operation: 0 | 1 = 0) =>
       execTransactionFromModule({
         data: (await testContract.oneParamStatic.populateTransaction(a)).data,
         operation,

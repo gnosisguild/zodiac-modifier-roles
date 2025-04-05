@@ -7,9 +7,9 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import { setupOneParamArrayOfStatic } from "../setup";
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 
@@ -21,37 +21,37 @@ describe("Operator - ArraySubset", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySubset,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["bool"], [true]),
         },
@@ -67,31 +67,31 @@ describe("Operator - ArraySubset", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [123]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [4567]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [999999]),
       },
@@ -115,31 +115,31 @@ describe("Operator - ArraySubset", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [3]),
       },
@@ -167,25 +167,25 @@ describe("Operator - ArraySubset", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
@@ -207,31 +207,31 @@ describe("Operator - ArraySubset", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [3]),
       },

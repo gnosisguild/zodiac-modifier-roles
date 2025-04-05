@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { AbiCoder, Interface } from "ethers";
 import hre from "hardhat";
 
-import { AbiType } from "./types";
+import { AbiType } from "../utils";
 
 const YesRemoveOffset = true;
 
@@ -30,7 +30,7 @@ describe("Decoder library", async () => {
 
     const typeTree = [
       {
-        _type: AbiType.AbiEncodedWithSelector,
+        _type: AbiType.Calldata,
         fields: [1],
       },
       {
@@ -206,7 +206,7 @@ describe("Decoder library", async () => {
 
       const typeTree = [
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [1],
         },
         {
@@ -423,11 +423,11 @@ describe("Decoder library", async () => {
 
       const typeTree = [
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [1],
         },
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [2],
         },
         {
@@ -473,11 +473,11 @@ describe("Decoder library", async () => {
 
       const typeTree = [
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [1],
         },
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [2],
         },
         {
@@ -527,7 +527,7 @@ describe("Decoder library", async () => {
 
       const typeTree = [
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [1],
         },
         {
@@ -582,7 +582,7 @@ describe("Decoder library", async () => {
 
       const typeTree = [
         {
-          _type: AbiType.AbiEncodedWithSelector,
+          _type: AbiType.Calldata,
           fields: [1],
         },
         {

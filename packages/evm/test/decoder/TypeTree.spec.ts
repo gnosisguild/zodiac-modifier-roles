@@ -3,8 +3,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface } from "ethers";
 
-import { flattenCondition, Operator, ParameterType } from "../utils";
-import { AbiType } from "./types";
+import { AbiType, flattenCondition, Operator } from "../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const YesRemoveOffset = true;
@@ -35,52 +34,52 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Or,
         children: [
           {
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             children: [
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: ParameterType.Dynamic,
+                paramType: AbiType.Dynamic,
                 operator: Operator.EqualTo,
                 children: [],
               },
             ],
           },
           {
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             children: [
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.EqualTo,
                 children: [],
               },
               {
-                paramType: ParameterType.Dynamic,
+                paramType: AbiType.Dynamic,
                 operator: Operator.EqualTo,
                 children: [],
               },
             ],
           },
           {
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             children: [
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.EqualTo,
                 children: [],
               },
               {
-                paramType: ParameterType.Dynamic,
+                paramType: AbiType.Dynamic,
                 operator: Operator.EqualTo,
                 children: [],
               },
@@ -112,20 +111,20 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.And,
             children: [
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.EqualTo,
                 children: [],
               },
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.EqualTo,
                 children: [],
               },
@@ -150,44 +149,44 @@ describe("AbiDecoder library", async () => {
       });
 
       const conditions = flattenCondition({
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.Tuple,
+            paramType: AbiType.Tuple,
             operator: Operator.Matches,
             children: [
               {
-                paramType: ParameterType.Dynamic,
+                paramType: AbiType.Dynamic,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: ParameterType.None,
+                paramType: AbiType.None,
                 operator: Operator.Or,
                 children: [
                   {
-                    paramType: ParameterType.Array,
+                    paramType: AbiType.Array,
                     operator: Operator.EqualTo,
                     children: [
                       {
-                        paramType: ParameterType.Static,
+                        paramType: AbiType.Static,
                         operator: Operator.EqualTo,
                         children: [],
                       },
                     ],
                   },
                   {
-                    paramType: ParameterType.Array,
+                    paramType: AbiType.Array,
                     operator: Operator.EqualTo,
                     children: [
                       {
-                        paramType: ParameterType.Static,
+                        paramType: AbiType.Static,
                         operator: Operator.EqualTo,
                         children: [],
                       },
@@ -228,38 +227,38 @@ describe("AbiDecoder library", async () => {
       });
 
       const conditions = flattenCondition({
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.Tuple,
+            paramType: AbiType.Tuple,
             operator: Operator.Matches,
             children: [
               {
-                paramType: ParameterType.Dynamic,
+                paramType: AbiType.Dynamic,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: ParameterType.Static,
+                paramType: AbiType.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: ParameterType.Array,
+                paramType: AbiType.Array,
                 operator: Operator.EqualTo,
                 children: [
                   {
-                    paramType: ParameterType.None,
+                    paramType: AbiType.None,
                     operator: Operator.Or,
                     children: [
                       {
-                        paramType: ParameterType.Static,
+                        paramType: AbiType.Static,
                         operator: Operator.EqualTo,
                         children: [],
                       },
                       {
-                        paramType: ParameterType.Static,
+                        paramType: AbiType.Static,
                         operator: Operator.EqualTo,
                         children: [],
                       },
@@ -297,16 +296,16 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.EtherWithinAllowance,
             children: [],
           },
           {
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             children: [],
           },
@@ -328,16 +327,16 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.CallWithinAllowance,
             children: [],
           },
           {
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             children: [],
           },
@@ -367,7 +366,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -412,7 +411,7 @@ describe("AbiDecoder library", async () => {
       });
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -448,7 +447,7 @@ describe("AbiDecoder library", async () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -502,7 +501,7 @@ describe("AbiDecoder library", async () => {
       const data = iface.encodeFunctionData("fnOut", [dynamicTupleValue]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -510,7 +509,7 @@ describe("AbiDecoder library", async () => {
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.AbiEncodedWithSelector,
+                paramType: AbiType.Calldata,
                 operator: Operator.Matches,
                 children: [
                   {
@@ -564,7 +563,7 @@ describe("AbiDecoder library", async () => {
       const data = iface.encodeFunctionData("fn", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -627,7 +626,7 @@ describe("AbiDecoder library", async () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -635,7 +634,7 @@ describe("AbiDecoder library", async () => {
             operator: Operator.And,
             children: [
               {
-                paramType: AbiType.AbiEncodedWithSelector,
+                paramType: AbiType.Calldata,
                 operator: Operator.Matches,
                 children: [
                   {
@@ -695,7 +694,7 @@ describe("AbiDecoder library", async () => {
       const { data } = await testEncoder.dynamic.populateTransaction("0x");
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -730,7 +729,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const condition = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -795,7 +794,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const condition = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -862,7 +861,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -924,7 +923,7 @@ describe("AbiDecoder library", async () => {
       });
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -971,7 +970,7 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1034,7 +1033,7 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1102,7 +1101,7 @@ describe("AbiDecoder library", async () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1179,7 +1178,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1317,7 +1316,7 @@ describe("AbiDecoder library", async () => {
         });
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1402,7 +1401,7 @@ describe("AbiDecoder library", async () => {
         ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1505,7 +1504,7 @@ describe("AbiDecoder library", async () => {
         ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1623,7 +1622,7 @@ describe("AbiDecoder library", async () => {
         );
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1632,7 +1631,7 @@ describe("AbiDecoder library", async () => {
             children: [],
           },
           {
-            paramType: AbiType.AbiEncodedWithSelector,
+            paramType: AbiType.Calldata,
             operator: Operator.Pass,
             children: [
               {
@@ -1685,7 +1684,7 @@ describe("AbiDecoder library", async () => {
       });
 
       const nestedLayout = {
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1719,7 +1718,7 @@ describe("AbiDecoder library", async () => {
       };
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1803,7 +1802,7 @@ describe("AbiDecoder library", async () => {
       ]);
 
       const nestedLayout = {
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
@@ -1831,7 +1830,7 @@ describe("AbiDecoder library", async () => {
       };
 
       const conditions = flattenCondition({
-        paramType: AbiType.AbiEncodedWithSelector,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {

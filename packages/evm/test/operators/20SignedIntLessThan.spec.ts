@@ -6,9 +6,9 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 import { setupOneParamIntSmall, setupOneParamIntWord } from "../setup";
@@ -22,13 +22,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int256"], [1000]),
       },
@@ -63,13 +63,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int256"], [-1000]),
       },
@@ -107,13 +107,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int8"], [50]),
       },
@@ -148,13 +148,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int8"], [-99]),
       },

@@ -3,7 +3,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ExecutionOptions, Operator, ParameterType } from "./utils";
+import { AbiType, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const ROLE_KEY =
@@ -81,13 +81,13 @@ describe("EmitsEvent", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
