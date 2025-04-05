@@ -10,7 +10,7 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamStatic } from "./setup";
+import { setupOneParamStatic } from "../setup";
 
 describe("Operator - Nor", async () => {
   it("evaluates operator Nor with single child", async () => {

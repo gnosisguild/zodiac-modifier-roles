@@ -23,6 +23,13 @@ contract MockDecoder {
             );
     }
 
+    function inspectRaw(
+        bytes calldata data,
+        AbiTypeTree[] memory typeTree
+    ) public pure returns (PP1 memory r) {
+        return copyOut(AbiDecoder.inspect(data, typeTree, 0));
+    }
+
     function pluck(
         bytes calldata data,
         uint256 offset,

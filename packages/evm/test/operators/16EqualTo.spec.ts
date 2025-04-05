@@ -25,7 +25,7 @@ import {
   setupOneParamUintSmall,
   setupOneParamUintWord,
   setupTwoParamsStaticTupleStatic,
-} from "./setup";
+} from "../setup";
 
 describe("Operator - EqualTo", async () => {
   it("evaluates operator EqualTo for Static - uint full word", async () => {

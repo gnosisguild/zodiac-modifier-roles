@@ -3,12 +3,8 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import {
-  deployRolesMod,
-  ExecutionOptions,
-  Operator,
-  ParameterType,
-} from "./utils";
+import { ExecutionOptions, Operator, ParameterType } from "./utils";
+import { deployRolesMod } from "./setup";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";

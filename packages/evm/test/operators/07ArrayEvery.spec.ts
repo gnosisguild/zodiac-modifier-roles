@@ -8,7 +8,7 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 import {
   setupOneParamArrayOfStatic,
   setupOneParamArrayOfStaticTuple,
-} from "./setup";
+} from "../setup";
 import {
   BYTES32_ZERO,
   Operator,

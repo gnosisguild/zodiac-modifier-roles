@@ -15,7 +15,7 @@ import {
   setupOneParamAddress,
   setupOneParamUintSmall,
   setupOneParamUintWord,
-} from "./setup";
+} from "../setup";
 
 describe("Operator - LessThan", async () => {
   it("evaluates operator LessThan - uint full word", async () => {

@@ -9,7 +9,7 @@ import {
   setupOneParamArrayOfStatic,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./setup";
+} from "../setup";
 import {
   BYTES32_ZERO,
   Operator,

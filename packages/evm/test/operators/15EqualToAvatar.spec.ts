@@ -2,7 +2,7 @@ import hre from "hardhat";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { setupOneParamAddress } from "./setup";
+import { setupOneParamAddress } from "../setup";
 import {
   BYTES32_ZERO,
   Operator,

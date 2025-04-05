@@ -9,10 +9,12 @@ import {
   Operator,
   ParameterType,
   PermissionCheckerStatus,
-  deployRolesMod,
 } from "../utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
+import { deployRolesMod } from "../setup";
+
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
+
+const AddressOne = "0x0000000000000000000000000000000000000001";
 
 describe("AvatarIsOwnerOfERC721", async () => {
   async function setup() {

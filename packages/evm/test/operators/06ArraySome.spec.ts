@@ -5,7 +5,7 @@ import { AbiCoder } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { setupOneParamArrayOfStaticTuple } from "./setup";
+import { setupOneParamArrayOfStaticTuple } from "../setup";
 import {
   BYTES32_ZERO,
   Operator,

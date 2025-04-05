@@ -11,7 +11,7 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamIntSmall, setupOneParamIntWord } from "./setup";
+import { setupOneParamIntSmall, setupOneParamIntWord } from "../setup";
 
 describe("Operator - SignedIntLessThan", async () => {
   it("evaluates operator SignedIntLessThan - positive full word", async () => {

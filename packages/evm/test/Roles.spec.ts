@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder, BytesLike } from "ethers";
 
 import {
   BYTES32_ZERO,
@@ -8,12 +9,11 @@ import {
   Operator,
   ParameterType,
   PermissionCheckerStatus,
-  deployRolesMod,
-  toConditionsFlat,
+  flattenCondition,
 } from "./utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { AbiCoder, BytesLike } from "ethers";
+import { deployRolesMod } from "./setup";
 
+const AddressOne = "0x0000000000000000000000000000000000000001";
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
 const ROLE_KEY1 =
@@ -725,7 +725,7 @@ describe("Roles", async () => {
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
-        toConditionsFlat({
+        flattenCondition({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
@@ -794,7 +794,7 @@ describe("Roles", async () => {
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
-        toConditionsFlat({
+        flattenCondition({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
@@ -833,7 +833,7 @@ describe("Roles", async () => {
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
-        toConditionsFlat({
+        flattenCondition({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
