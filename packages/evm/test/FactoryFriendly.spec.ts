@@ -4,8 +4,8 @@ import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder } from "ethers";
-import createAdapter from "./createEIP1193";
 import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
+import { createEip1193 } from "./utils";
 
 const FirstAddress = "0x0000000000000000000000000000000000000001";
 const saltNonce = "0xfa";
@@ -34,10 +34,7 @@ describe("Module works with factory", () => {
       FirstAddress,
       FirstAddress
     );
-    const eip1193Provider = createAdapter({
-      provider: hre.network.provider,
-      signer: deployer,
-    });
+    const eip1193Provider = createEip1193(hre.network.provider, deployer);
     return { factory, masterCopy, Modifier, eip1193Provider };
   }
 

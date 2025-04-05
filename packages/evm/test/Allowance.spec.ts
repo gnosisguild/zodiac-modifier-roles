@@ -13,9 +13,9 @@ import {
 import { AbiCoder, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
+  setupAvatarAndRoles,
   setupFnThatMaybeReturns,
   setupOneParamArrayOfDynamicTuple,
-  setupOneParamStatic,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
 } from "./operators/setup";
@@ -118,7 +118,6 @@ describe("Allowance", async () => {
       ],
     });
     await scopeFunction(conditionsFlat);
-    const maybe = true;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -466,9 +465,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
   });
   it("failing And returns unchanged in memory consumptions", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -515,7 +518,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -526,9 +535,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
   });
   it("failing OR returns unchanged in memory consumptions", async () => {
-    const { roles, invoke, scopeFunction, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -582,7 +595,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);

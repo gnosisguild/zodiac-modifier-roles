@@ -7,8 +7,9 @@ import { ExecutionOptions, Operator, ParameterType } from "../utils";
 
 describe("Operator - Pass", async () => {
   it("evaluates a Pass", async () => {
-    const { owner, member, roles, roleKey, testContract } =
-      await await loadFixture(setupAvatarAndRoles);
+    const { owner, member, roles, roleKey, testContract } = await loadFixture(
+      setupAvatarAndRoles
+    );
 
     const conditions = [
       {

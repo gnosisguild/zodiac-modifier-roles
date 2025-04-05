@@ -8,14 +8,15 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupAvatarAndRoles } from "./setup";
+import { setupOneParamStatic } from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - And", async () => {
   it("evaluates operator And with a single child", async () => {
-    const { roles, testContract, scopeFunction, execTransactionFromModule } =
-      await await loadFixture(setupAvatarAndRoles);
+    const { roles, invoke, scopeFunction } = await loadFixture(
+      setupOneParamStatic
+    );
 
     const conditions = [
       {
@@ -37,24 +38,18 @@ describe("Operator - And", async () => {
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
     ];
-    const { selector } = testContract.interface.getFunction("oneParamStatic");
 
-    await scopeFunction(selector, conditions);
-
-    const invoke = async (a: number) => {
-      const { data } = await testContract.oneParamStatic.populateTransaction(2);
-      return execTransactionFromModule(data);
-    };
+    await scopeFunction(conditions);
 
     await expect(invoke(2))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator And with multiple children", async () => {
-    const { roles, testContract, scopeFunction, execTransactionFromModule } =
-      await loadFixture(setupAvatarAndRoles);
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamStatic
+    );
 
-    const { selector } = testContract.interface.getFunction("oneParamStatic");
     const conditions = [
       {
         parent: 0,
@@ -81,12 +76,7 @@ describe("Operator - And", async () => {
         compValue: defaultAbiCoder.encode(["uint256"], [30]),
       },
     ];
-    await scopeFunction(selector, conditions);
-
-    const invoke = async (value: number) =>
-      execTransactionFromModule(
-        (await testContract.oneParamStatic.populateTransaction(value)).data
-      );
+    await scopeFunction(conditions);
 
     await expect(invoke(1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
