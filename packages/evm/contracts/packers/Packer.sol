@@ -67,14 +67,14 @@ library Packer {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        ParameterType paramType = conditions[index].paramType;
-        if (paramType == ParameterType.Static) {
+        AbiType paramType = conditions[index].paramType;
+        if (paramType == AbiType.Static) {
             return true;
         } else if (
-            paramType == ParameterType.Dynamic ||
-            paramType == ParameterType.Array ||
-            paramType == ParameterType.Calldata ||
-            paramType == ParameterType.AbiEncoded
+            paramType == AbiType.Dynamic ||
+            paramType == AbiType.Array ||
+            paramType == AbiType.Calldata ||
+            paramType == AbiType.AbiEncoded
         ) {
             return false;
         } else {

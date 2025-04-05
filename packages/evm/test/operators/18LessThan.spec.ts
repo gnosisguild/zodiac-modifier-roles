@@ -6,16 +6,16 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 import {
   setupOneParamAddress,
   setupOneParamUintSmall,
   setupOneParamUintWord,
-} from "./setup";
+} from "../setup";
 
 describe("Operator - LessThan", async () => {
   it("evaluates operator LessThan - uint full word", async () => {
@@ -26,13 +26,13 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.LessThan,
         compValue: defaultAbiCoder.encode(["uint256"], [1000]),
       },
@@ -60,13 +60,13 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.LessThan,
         compValue: defaultAbiCoder.encode(["uint8"], [50]),
       },
@@ -104,13 +104,13 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.LessThan,
         compValue: defaultAbiCoder.encode(["address"], [address]),
       },

@@ -4,15 +4,17 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 import {
+  AbiType,
   BYTES32_ZERO,
   ExecutionOptions,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
-  deployRolesMod,
 } from "../utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
+import { deployRolesMod } from "../setup";
+
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
+
+const AddressOne = "0x0000000000000000000000000000000000000001";
 
 describe("AvatarIsOwnerOfERC721", async () => {
   async function setup() {
@@ -96,19 +98,19 @@ describe("AvatarIsOwnerOfERC721", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Custom,
         compValue: `${customCheckerAddress}${extra}`,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: `0x`,
       },
