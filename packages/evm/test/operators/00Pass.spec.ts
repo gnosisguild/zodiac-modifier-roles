@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupAvatarAndRoles } from "./setup";
+import { setupAvatarAndRoles } from "../setup";
 
 import { ExecutionOptions, Operator, ParameterType } from "../utils";
 

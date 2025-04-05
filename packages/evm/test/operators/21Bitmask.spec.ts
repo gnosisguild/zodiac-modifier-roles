@@ -7,7 +7,7 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamBytes, setupOneParamStatic } from "./setup";
+import { setupOneParamBytes, setupOneParamStatic } from "../setup";
 
 describe("Operator - Bitmask", async () => {
   it("evaluates operator Bitmask - Static, left aligned", async () => {

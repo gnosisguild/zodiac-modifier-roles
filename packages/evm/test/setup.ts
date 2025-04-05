@@ -1,13 +1,72 @@
+import { BigNumberish, ZeroHash } from "ethers";
 import hre from "hardhat";
-import { BigNumberish } from "ethers";
+import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import {
+  deployFactories,
+  deployMastercopy,
+  EIP1193Provider,
+} from "@gnosis-guild/zodiac-core";
 
-import { deployRolesMod, ExecutionOptions } from "../utils";
+import { ExecutionOptions } from "./utils";
 
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
-import { TestContract } from "../../typechain-types/contracts/test/";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { TestContract } from "../typechain-types/contracts/test";
 
 const DEFAULT_ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000aabbcc1";
+
+export function createEip1193(
+  provider: EthereumProvider,
+  signer: HardhatEthersSigner
+): EIP1193Provider {
+  return {
+    request: async ({ method, params }) => {
+      if (method == "eth_sendTransaction") {
+        const { hash } = await signer.sendTransaction((params as any[])[0]);
+        return hash;
+      }
+
+      return provider.request({ method, params });
+    },
+  };
+}
+
+export async function deployRolesMod(
+  hre: HardhatRuntimeEnvironment,
+  owner: string,
+  avatar: string,
+  target: string
+) {
+  const [signer] = await hre.ethers.getSigners();
+  const provider = createEip1193(hre.network.provider, signer);
+
+  await deployFactories({ provider });
+  const integrity = await hre.artifacts.readArtifact("Integrity");
+  const { address: integrityAddress } = await deployMastercopy({
+    bytecode: integrity.bytecode,
+    constructorArgs: { types: [], values: [] },
+    salt: ZeroHash,
+    provider,
+  });
+  const packer = await hre.artifacts.readArtifact("Packer");
+  const { address: packerAddress } = await deployMastercopy({
+    bytecode: packer.bytecode,
+    constructorArgs: { types: [], values: [] },
+    salt: ZeroHash,
+    provider,
+  });
+
+  const Modifier = await hre.ethers.getContractFactory("Roles", {
+    libraries: {
+      Integrity: integrityAddress,
+      Packer: packerAddress,
+    },
+  });
+  const modifier = await Modifier.deploy(owner, avatar, target);
+  await modifier.waitForDeployment();
+  return modifier;
+}
 
 export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
   const [owner, member, relayer] = await hre.ethers.getSigners();

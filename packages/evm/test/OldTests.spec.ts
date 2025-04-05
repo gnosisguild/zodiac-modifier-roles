@@ -1,17 +1,18 @@
 import { expect } from "chai";
-import hre, { ethers } from "hardhat";
+import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder } from "ethers";
 
 import {
   ParameterType,
   ExecutionOptions,
   Operator,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
   encodeMultisendPayload,
 } from "./utils";
-import { AbiCoder } from "ethers";
+
+import { deployRolesMod } from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 

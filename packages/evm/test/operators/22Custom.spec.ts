@@ -10,7 +10,7 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { setupOneParamStatic } from "./setup";
+import { setupOneParamStatic } from "../setup";
 
 describe("Operator - Custom", async () => {
   async function setup() {

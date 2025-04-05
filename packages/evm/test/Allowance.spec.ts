@@ -2,23 +2,23 @@ import { expect } from "chai";
 import hre from "hardhat";
 import {
   BYTES32_ZERO,
-  deployRolesMod,
   ExecutionOptions,
   Operator,
   ParameterType,
   PermissionCheckerStatus,
-  toConditionsFlat,
   encodeMultisendPayload,
+  flattenCondition,
 } from "./utils";
 import { AbiCoder, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
+  deployRolesMod,
   setupAvatarAndRoles,
   setupFnThatMaybeReturns,
   setupOneParamArrayOfDynamicTuple,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./operators/setup";
+} from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -65,7 +65,7 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -100,7 +100,7 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -182,7 +182,7 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
     await scopeFunction(
-      toConditionsFlat({
+      flattenCondition({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
@@ -247,7 +247,7 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -310,7 +310,7 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -382,7 +382,7 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f3";
     await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -481,7 +481,7 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -551,7 +551,7 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -624,7 +624,7 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
@@ -694,7 +694,7 @@ describe("Allowance", async () => {
       .connect(owner)
       .setAllowance(allowanceKey, 1300, 1000, 100, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
+    const conditionsFlat = flattenCondition({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",

@@ -7,7 +7,7 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamBytes } from "./setup";
+import { setupOneParamBytes } from "../setup";
 import { Interface, AbiCoder } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();

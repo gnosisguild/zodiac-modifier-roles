@@ -10,10 +10,10 @@ import {
   Operator,
   ExecutionOptions,
   ParameterType,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
 } from "../utils";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000001";

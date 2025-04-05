@@ -6,7 +6,7 @@ import { AbiCoder, BigNumberish } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import { Operator, ParameterType, PermissionCheckerStatus } from "../utils";
-import { setupOneParamStatic, setupTwoParamsStatic } from "./setup";
+import { setupOneParamStatic, setupTwoParamsStatic } from "../setup";
 import { Roles } from "../../typechain-types";
 
 describe("Operator - WithinAllowance", async () => {

@@ -8,7 +8,7 @@ import {
   ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamStatic } from "./setup";
+import { setupOneParamStatic } from "../setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
