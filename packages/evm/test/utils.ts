@@ -1,5 +1,5 @@
 import assert from "assert";
-import { BigNumberish, BytesLike, ethers, solidityPacked } from "ethers";
+import { BigNumberish, solidityPacked } from "ethers";
 
 export const logGas = async (
   message: string,
@@ -32,7 +32,7 @@ export interface SafeTransaction extends MetaTransaction {
   nonce: string | number;
 }
 
-export enum ParameterType {
+export enum AbiType {
   None = 0,
   Static,
   Dynamic,
@@ -170,18 +170,23 @@ export const encodeMultisendPayload = (txs: MetaTransaction[]): string => {
 export const BYTES32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-type ConditionStruct = {
-  paramType: ParameterType;
+interface Condition {
+  paramType: AbiType;
   operator: Operator;
-  compValue: BytesLike;
-  children?: ConditionStruct[];
-};
+  compValue?: `0x${string}`;
+  children?: readonly Condition[];
+}
 
-export function flattenCondition<T extends { children: T[] }>(
-  root: T
-): (T & { parent: number; compValue: string })[] {
+interface ConditionFlat {
+  parent: number;
+  paramType: AbiType;
+  operator: Operator;
+  compValue: string;
+}
+
+export function flattenCondition(root: Condition): ConditionFlat[] {
   let queue = [{ node: root, parent: 0 }];
-  let result: (T & { parent: number; compValue: string })[] = [];
+  let result: ConditionFlat[] = [];
 
   for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
     const entry = queue.shift();

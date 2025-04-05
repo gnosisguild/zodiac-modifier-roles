@@ -3,10 +3,10 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import {
+  AbiType,
   BYTES32_ZERO,
   ExecutionOptions,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
@@ -32,13 +32,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Custom,
         compValue: `${customerCheckerAddress}${extra}`,
       },
@@ -56,13 +56,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Custom,
         compValue: `${customerCheckerAddress}${extra}`,
       },
@@ -86,13 +86,13 @@ describe("Operator - Custom", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Custom,
           compValue: `${customerCheckerAddress}${extra}`,
         },
@@ -114,13 +114,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Custom,
         compValue: AddressOne.padEnd(66, "0"),
       },

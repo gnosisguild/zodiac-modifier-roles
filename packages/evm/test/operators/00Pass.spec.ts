@@ -3,7 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { setupAvatarAndRoles } from "../setup";
 
-import { ExecutionOptions, Operator, ParameterType } from "../utils";
+import { ExecutionOptions, Operator, AbiType } from "../utils";
 
 describe("Operator - Pass", async () => {
   it("evaluates a Pass", async () => {
@@ -14,13 +14,13 @@ describe("Operator - Pass", async () => {
     const conditions = [
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
