@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
 
 import { normalizeCondition, stripIds } from "../target/condition"
 import {
@@ -102,7 +102,7 @@ const mergeEntry = (p1: PermissionCoerced, p2: PermissionCoerced) => {
 const mergeConditions = (a: Condition, b: Condition): Condition => {
   return stripIds(
     normalizeCondition({
-      paramType: ParameterType.None,
+      paramType: AbiType.None,
       operator: Operator.Or,
       children: [a, b],
     })
