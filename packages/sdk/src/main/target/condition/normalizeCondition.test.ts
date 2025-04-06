@@ -343,7 +343,7 @@ suite("normalizeCondition()", () => {
     })
   })
 
-  it("keeps EtherWithinAllowance while pruning trailing Pass nodes on Calldata.Matches", () => {
+  it("keeps EtherWithinAllowance (moving it to the end) while pruning trailing Pass nodes on Calldata.Matches", () => {
     expect(
       stripIds(
         normalizeCondition({
@@ -351,13 +351,17 @@ suite("normalizeCondition()", () => {
           operator: Operator.Matches,
           children: [
             {
+              paramType: ParameterType.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: encodeKey("test-allowance"),
+            },
+            {
               paramType: ParameterType.Static,
               operator: Operator.Pass,
             },
             {
-              paramType: ParameterType.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: encodeKey("test-allowance"),
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
             },
           ],
         })
@@ -366,6 +370,11 @@ suite("normalizeCondition()", () => {
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
+        {
+          // first child is always kept
+          paramType: ParameterType.Static,
+          operator: Operator.Pass,
+        },
         {
           paramType: ParameterType.None,
           operator: Operator.EtherWithinAllowance,

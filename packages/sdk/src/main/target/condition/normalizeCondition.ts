@@ -79,26 +79,35 @@ const pruneTrailingPass = (
 
   if (!canPrune) return condition
 
+  // keep all children nodes with ParameterType.None
+  // (EtherWithinAllowance, CallWithinAllowance conditions appear as children of Calldata.Matches)
+  const preservedChildren = condition.children.filter(
+    (child) => child.paramType === ParameterType.None
+  )
+  const prunableChildren = condition.children.filter(
+    (child) => child.paramType !== ParameterType.None
+  )
+
   // Start from the end and prune all trailing Pass nodes.
   // Always keep the first child, even if it is a Pass, because children must not be empty.
   // For tuples keep all children up to the first dynamic child.
   let keepChildrenUntil = 0
   if (isDynamicTuple) {
-    keepChildrenUntil = condition.children.findIndex(isDynamicParamType)
+    keepChildrenUntil = prunableChildren.findIndex(isDynamicParamType)
   }
-  let prunedChildren: NormalizedCondition[] = condition.children.slice(
+  let prunedChildren: NormalizedCondition[] = prunableChildren.slice(
     0,
     keepChildrenUntil + 1
   )
-  for (let i = condition.children.length - 1; i > keepChildrenUntil; i--) {
-    const child = condition.children[i]
+  for (let i = prunableChildren.length - 1; i > keepChildrenUntil; i--) {
+    const child = prunableChildren[i]
     if (child.operator !== Operator.Pass) {
-      prunedChildren = condition.children.slice(0, i + 1)
+      prunedChildren = prunableChildren.slice(0, i + 1)
       break
     }
   }
 
-  condition.children = prunedChildren
+  condition.children = [...prunedChildren, ...preservedChildren]
   return condition
 }
 
