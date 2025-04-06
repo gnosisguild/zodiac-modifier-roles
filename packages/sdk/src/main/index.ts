@@ -46,3 +46,20 @@ export { rolesAbi, posterAbi } from "./abi"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
 export { fetchLicense, License, LicenseError } from "./licensing"
+
+/*
+ *
+ * Integration? TODO fix
+ *
+ */
+import {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+} from "./eip712-signer/encode"
+
+export const __integration = {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+}

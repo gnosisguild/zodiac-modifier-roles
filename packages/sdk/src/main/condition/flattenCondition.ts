@@ -1,8 +1,8 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
 
 export interface ConditionFlat {
   parent: number
-  paramType: ParameterType
+  paramType: AbiType
   operator: Operator
   compValue?: string
 }
