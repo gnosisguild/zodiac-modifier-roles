@@ -6029,7 +6029,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"abitype@npm:1.0.8, abitype@npm:^1.0.6":
+"abitype@npm:1.0.8, abitype@npm:^1.0.6, abitype@npm:^1.0.8":
   version: 1.0.8
   resolution: "abitype@npm:1.0.8"
   peerDependencies:
@@ -6041,21 +6041,6 @@ __metadata:
     zod:
       optional: true
   checksum: 104bc2f6820ced8d2cb61521916f7f22c0981a846216f5b6144f69461265f7da137a4ae108bf4b84cd8743f2dd1e9fdadffc0f95371528e15a59e0a369e08438
-  languageName: node
-  linkType: hard
-
-"abitype@npm:^1.0.8":
-  version: 1.1.1
-  resolution: "abitype@npm:1.1.1"
-  peerDependencies:
-    typescript: ">=5.0.4"
-    zod: ^3.22.0 || ^4.0.0
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-    zod:
-      optional: true
-  checksum: 8df4754f73e0552c5aad228e2ae62368ab858855ffc99ff27698696c27d60883c9655b8d0615448474b8cdecf1733dc188318e4bbd7b18d5f87eaf895fcb5ceb
   languageName: node
   linkType: hard
 
