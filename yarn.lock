@@ -5658,6 +5658,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"abitype@npm:^1.0.8":
+  version: 1.0.8
+  resolution: "abitype@npm:1.0.8"
+  peerDependencies:
+    typescript: ">=5.0.4"
+    zod: ^3 >=3.22.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+    zod:
+      optional: true
+  checksum: 104bc2f6820ced8d2cb61521916f7f22c0981a846216f5b6144f69461265f7da137a4ae108bf4b84cd8743f2dd1e9fdadffc0f95371528e15a59e0a369e08438
+  languageName: node
+  linkType: hard
+
 "abort-controller@npm:^3.0.0":
   version: 3.0.0
   resolution: "abort-controller@npm:3.0.0"
@@ -20225,6 +20240,7 @@ __metadata:
     "@types/node": ^20.9.0
     "@typescript-eslint/eslint-plugin": ^5.62.0
     "@typescript-eslint/parser": ^5.62.0
+    abitype: ^1.0.8
     dotenv: ^16.3.1
     eslint: ^8.53.0
     eslint-config-prettier: ^8.10.0
