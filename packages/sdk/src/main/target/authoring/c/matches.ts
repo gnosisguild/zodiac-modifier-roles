@@ -137,6 +137,22 @@ const calldataMatchesScopings =
       ),
     }
 
+    if (etherWithinAllowance) {
+      matchesCondition.children.push({
+        paramType: ParameterType.None,
+        operator: Operator.EtherWithinAllowance,
+        compValue: etherWithinAllowance,
+      })
+    }
+
+    if (callWithinAllowance) {
+      matchesCondition.children.push({
+        paramType: ParameterType.None,
+        operator: Operator.CallWithinAllowance,
+        compValue: callWithinAllowance,
+      })
+    }
+
     if (selector) {
       if (selector.length !== 10) {
         throw new Error(
