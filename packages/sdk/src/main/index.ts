@@ -40,3 +40,20 @@ export {
 export { default as abi } from "../abi.json"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
+
+/*
+ *
+ * Integration? TODO fix
+ *
+ */
+import {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+} from "./eip712-signer/encode"
+
+export const __integration = {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+}
