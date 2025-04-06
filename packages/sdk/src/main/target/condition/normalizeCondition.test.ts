@@ -343,13 +343,17 @@ suite("normalizeCondition()", () => {
     })
   })
 
-  it("keeps the EtherWithinAllowance as the only child of Calldata.Matches", () => {
+  it("keeps EtherWithinAllowance while pruning trailing Pass nodes on Calldata.Matches", () => {
     expect(
       stripIds(
         normalizeCondition({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.Pass,
+            },
             {
               paramType: ParameterType.None,
               operator: Operator.EtherWithinAllowance,

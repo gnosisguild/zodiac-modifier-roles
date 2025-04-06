@@ -5,7 +5,7 @@ import { calldataMatches } from "./matches"
 import { encodeKey } from "../../../keys"
 
 describe("calldataMatches", () => {
-  it("correctly encodes etherWithinAllowance conditions", () => {
+  it("correctly encodes EtherWithinAllowance conditions", () => {
     const result = calldataMatches([], [], {
       etherWithinAllowance: encodeKey("test-allowance"),
     })()
