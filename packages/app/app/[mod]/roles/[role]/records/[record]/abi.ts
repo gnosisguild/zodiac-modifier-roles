@@ -27,13 +27,13 @@ export const mapAbiInputs = (
       if ("components" in input) {
         const isArrayParam = arrayElementType(input) != null
         if (isArrayParam) {
-          value = mapAbiInputsInArray(input, value)
-        } else {
           invariant(
             Array.isArray(value),
-            "expected array value for tuple param"
+            "expected array value for array param"
           )
-          value = mapAbiInputs(input.components, value)
+          value = mapAbiInputsInArray(input, value)
+        } else {
+          value = mapAbiInputs(input.components, Object.values(value))
         }
       }
       return [input.name ?? `[${index}]`, value]
