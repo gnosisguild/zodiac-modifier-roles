@@ -10,7 +10,7 @@
     "pre-commit": "yarn fix"
   },
   "devDependencies": {
-    "@gnosis-guild/zodiac-core": "^2.0.4",
+    "@gnosis-guild/zodiac-core": "^2.0.5",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
@@ -26,7 +26,7 @@
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-prettier": "^4.2.1",
     "ethers": "^6.13.5",
-    "hardhat": "^2.22.18",
+    "hardhat": "^2.22.19",
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",

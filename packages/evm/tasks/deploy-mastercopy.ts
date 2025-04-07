@@ -1,6 +1,10 @@
 import { task, types } from "hardhat/config";
 
-import { deployMastercopy, readMastercopies } from "@gnosis-guild/zodiac-core";
+import {
+  deployFactories,
+  deployMastercopy,
+  readMastercopies,
+} from "@gnosis-guild/zodiac-core";
 import { createEIP1193 } from "./createEIP1193";
 
 task(
@@ -20,6 +24,8 @@ task(
       hre.network.provider,
       signer
     );
+
+    await deployFactories({ provider });
 
     for (const mastercopy of readMastercopies({ contractVersion })) {
       const {

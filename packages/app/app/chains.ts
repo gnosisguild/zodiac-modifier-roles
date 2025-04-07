@@ -10,6 +10,9 @@ import {
   polygonZkEvm,
   gnosis,
   bsc,
+  celo,
+  sonic,
+  berachain,
 } from "wagmi/chains"
 
 export const CHAINS = {
@@ -66,6 +69,24 @@ export const CHAINS = {
     prefix: "base",
     blockExplorerAbiUrl: "https://api.basescan.org/api",
     blockExplorerApiKey: "KCC7EQHE17IAQZA9TICUS6BQTJGZUDRNIY",
+  },
+  [celo.id]: {
+    ...celo,
+    prefix: "celo",
+    blockExplorerAbiUrl: "https://api.celoscan.io/api",
+    blockExplorerApiKey: "2PFFN9NR94F9XQBFMCI6VXHVXRGNXNP2E2",
+  },
+  [sonic.id]: {
+    ...sonic,
+    prefix: "sonic",
+    blockExplorerAbiUrl: "https://api.sonicscan.org/api",
+    blockExplorerApiKey: "4PKXQYT2DGQXHSINRFY4UM8RUFJHR9V1TX",
+  },
+  [berachain.id]: {
+    ...berachain,
+    prefix: "berachain",
+    blockExplorerAbiUrl: "https://api.berascan.com/api",
+    blockExplorerApiKey: "X39RQV6MWGUB3W4NC4VI6YM4MTYMCFN8Y9",
   },
   [baseSepolia.id]: {
     ...baseSepolia,
