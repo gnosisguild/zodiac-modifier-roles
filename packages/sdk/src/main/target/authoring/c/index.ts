@@ -1,8 +1,4 @@
-export {
-  callWithinAllowance,
-  etherWithinAllowance,
-  withinAllowance,
-} from "./allowances"
+export { withinAllowance } from "./allowance"
 export { every, some, subset } from "./array"
 export { and, or, nor } from "./branching"
 export { avatar, bitmask, eq, gt, gte, lt, lte } from "./comparison"

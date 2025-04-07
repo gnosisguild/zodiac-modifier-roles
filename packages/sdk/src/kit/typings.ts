@@ -167,17 +167,19 @@ const applyOptions = (
       )
     }
 
-    condition = applyGlobalAllowance(
-      condition,
-      c.etherWithinAllowance(options.etherWithinAllowance)()
-    )
+    condition = applyGlobalAllowance(condition, {
+      paramType: ParameterType.None,
+      operator: Operator.EtherWithinAllowance,
+      compValue: options.etherWithinAllowance,
+    })
   }
 
   if (options.callWithinAllowance) {
-    condition = applyGlobalAllowance(
-      condition,
-      c.callWithinAllowance(options.callWithinAllowance)()
-    )
+    condition = applyGlobalAllowance(condition, {
+      paramType: ParameterType.None,
+      operator: Operator.CallWithinAllowance,
+      compValue: options.etherWithinAllowance,
+    })
   }
 
   return {
