@@ -10,7 +10,7 @@ export const zCallInput = z.object({
   to: zAddress,
   value: z.string(),
   data: zHex,
-  operation: z.nativeEnum(Operation),
+  operation: z.nativeEnum(Operation).default(Operation.Call),
   metadata: z
     .object({
       label: z.string().optional(),
