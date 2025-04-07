@@ -33,12 +33,16 @@ export async function serverToggleWildcard({
 
   const multi = kv.multi()
   if (!isWildcarded) {
-    multi.json.del(recordId, `$.wildcards.${targetSelector}.${paramPath}`)
+    multi.json.del(recordId, `$.wildcards.${targetSelector}["${paramPath}"]`)
   } else {
     if (!record.wildcards[targetSelector]) {
       multi.json.set(recordId, `$.wildcards.${targetSelector}`, {})
     }
-    multi.json.set(recordId, `$.wildcards.${targetSelector}.${paramPath}`, true)
+    multi.json.set(
+      recordId,
+      `$.wildcards.${targetSelector}["${paramPath}"]`,
+      true
+    )
   }
   multi.json.set(
     recordId,

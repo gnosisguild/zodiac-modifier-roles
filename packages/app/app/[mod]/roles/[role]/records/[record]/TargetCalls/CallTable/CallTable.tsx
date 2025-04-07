@@ -203,8 +203,11 @@ const inputColumnDefs = (
           sortable: false,
           suppressMovable: true,
           cellRenderer: NestedIndicesRenderer,
-
           headerComponent: CustomHeader,
+          headerComponentParams: {
+            // field paths start with "inputs.", not present in wildcard paths
+            isWildcarded: wildcards[field.slice("inputs.".length)] === true,
+          },
         }
 
         const elementColumnDefs = inputColumnDefs([elementType], wildcards, {
@@ -228,7 +231,8 @@ const inputColumnDefs = (
           ...baseDefs,
           headerComponent: CustomHeader,
           headerComponentParams: {
-            isWildcarded: wildcards[cleanPath(inputs, field)] === true,
+            // field paths start with "inputs.", not present in wildcard paths
+            isWildcarded: wildcards[field.slice("inputs.".length)] === true,
             noScoping: arrayDescendant,
           },
           cellClass: cn(isLastGroup && isLastChild && "agx-inputs-column-last"),
@@ -371,13 +375,13 @@ function cleanPath(params: readonly AbiParameter[], path: string): string {
     }
     // If we hit an array, validate remaining path is ".indices"
     if (arrayElementType(current) !== undefined) {
-      const remainingPath = parts.slice(i).join(".")
+      const remainingPath = parts.slice(i + 1).join(".")
       if (remainingPath !== "indices") {
         throw new Error(
           `Invalid path: ${path}. Array can only be followed by ".indices"`
         )
       }
-      return parts.slice(1, i).join(".")
+      return parts.slice(1, i + 1).join(".")
     }
 
     if ("components" in current && Array.isArray(current.components)) {
