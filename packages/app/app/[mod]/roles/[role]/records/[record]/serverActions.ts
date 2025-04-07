@@ -12,7 +12,7 @@ import { derivePermissionsFromRecord } from "./derivePermissions"
 
 async function getAuthorizedRecord(recordId: string) {
   const record = await getRecordById(recordId)
-  if (!isAuthorized(record.authToken)) {
+  if (!(await isAuthorized(record.authToken))) {
     throw new Error("Unauthorized")
   }
   return record

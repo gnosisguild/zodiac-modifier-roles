@@ -10,12 +10,10 @@ import { groupBy } from "@/utils/groupBy"
 import { isAuthorized } from "./auth"
 import Apply from "./Apply"
 
-export default async function RecordPage(
-  props: {
-    params: Promise<{ mod: string; role: string; record: string }>
-  }
-) {
-  const params = await props.params;
+export default async function RecordPage(props: {
+  params: Promise<{ mod: string; role: string; record: string }>
+}) {
+  const params = await props.params
   const mod = parseModParam(params.mod)
   const roleKey = parseRoleParam(params.role)
   if (!mod || !roleKey) {
@@ -26,6 +24,8 @@ export default async function RecordPage(
   const record = await getRecordById(params.record)
 
   const callsByTo = groupBy(Object.values(record.calls), (call) => call.to)
+
+  const authorized = await isAuthorized(record.authToken)
 
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
@@ -39,7 +39,7 @@ export default async function RecordPage(
               wildcards={record.wildcards}
               chainId={mod.chainId}
               recordId={record.id}
-              isAuthorized={isAuthorized(record.authToken)}
+              isAuthorized={authorized}
             />
           ))}
 

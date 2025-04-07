@@ -1,13 +1,13 @@
 import { timingSafeEqual } from "crypto"
-import { cookies, type UnsafeUnwrappedCookies } from "next/headers";
+import { cookies } from "next/headers"
 
-export function isAuthorized(expectedToken: string) {
-  const authToken = (cookies() as unknown as UnsafeUnwrappedCookies).get("authToken")?.value
+export async function isAuthorized(expectedToken: string) {
+  const authToken = (await cookies()).get("authToken")?.value
+  const buffer = new Uint8Array(Buffer.from(authToken || ""))
+  const expectedBuffer = new Uint8Array(Buffer.from(expectedToken))
+  console.log({ authToken, expectedToken })
   return (
-    !!authToken &&
-    timingSafeEqual(
-      new Uint8Array(Buffer.from(authToken)),
-      new Uint8Array(Buffer.from(expectedToken))
-    )
+    buffer.length === expectedBuffer.length &&
+    timingSafeEqual(buffer, expectedBuffer)
   )
 }
