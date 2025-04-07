@@ -5,7 +5,6 @@ export async function isAuthorized(expectedToken: string) {
   const authToken = (await cookies()).get("authToken")?.value
   const buffer = new Uint8Array(Buffer.from(authToken || ""))
   const expectedBuffer = new Uint8Array(Buffer.from(expectedToken))
-  console.log({ authToken, expectedToken })
   return (
     buffer.length === expectedBuffer.length &&
     timingSafeEqual(buffer, expectedBuffer)
