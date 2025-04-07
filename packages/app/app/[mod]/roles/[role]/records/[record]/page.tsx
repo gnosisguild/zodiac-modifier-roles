@@ -24,6 +24,9 @@ export default async function RecordPage(props: {
   const record = await getRecordById(params.record)
 
   const callsByTo = groupBy(Object.values(record.calls), (call) => call.to)
+  const sortedEntries = Object.entries(callsByTo).sort((a, b) =>
+    a[0] < b[0] ? -1 : 1
+  )
 
   const authorized = await isAuthorized(record.authToken)
 
@@ -31,7 +34,7 @@ export default async function RecordPage(props: {
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main className={classes.main}>
         <Flex direction="column" gap={3}>
-          {Object.entries(callsByTo).map(([to, calls], index) => (
+          {sortedEntries.map(([to, calls], index) => (
             <TargetCalls
               key={index}
               to={to as `0x${string}`}
