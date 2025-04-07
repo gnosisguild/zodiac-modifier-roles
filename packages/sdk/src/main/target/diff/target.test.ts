@@ -4,7 +4,7 @@ import {
   Clearance,
   ExecutionOptions,
   Operator,
-  ParameterType,
+  AbiType,
   Target,
 } from "zodiac-roles-deployments"
 
@@ -522,7 +522,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -562,7 +562,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -581,7 +581,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Or,
               children: [],
             },
@@ -602,7 +602,7 @@ suite("diffTarget - Misc", () => {
         selector: "0x095ea7b3",
         executionOptions: 0,
         condition: normalizeCondition({
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           children: [],
         }),
@@ -678,7 +678,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -697,7 +697,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.Dynamic,
+              paramType: AbiType.Dynamic,
               operator: Operator.EqualTo,
               compValue: "0x00",
             },
@@ -723,7 +723,7 @@ suite("diffTarget - Misc", () => {
           selector: "0x095ea7b3",
           executionOptions: 0,
           condition: normalizeCondition({
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Pass,
           }),
         },

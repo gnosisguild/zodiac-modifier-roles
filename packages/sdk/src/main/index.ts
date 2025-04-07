@@ -38,6 +38,7 @@ export {
  *
  */
 export { default as abi } from "../abi.json"
+export { encodeSignTypedMessage, scopeSignTypedMessage } from "./eip712-signer"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
 
