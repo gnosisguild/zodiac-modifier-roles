@@ -102,10 +102,6 @@ contract SignTypedMessageLib is SafeStorage, EIP712Encoder {
             );
     }
 
-    function justReverts() public {
-        revert("I'm just reverting");
-    }
-
     /**
      * We make the signTypedMessage function available under any selector. This
      * allows scoping different type trees under different signTypedMessage
