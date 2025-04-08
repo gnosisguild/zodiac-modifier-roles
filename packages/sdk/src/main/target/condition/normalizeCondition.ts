@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, AbiType } from "zodiac-roles-deployments"
 
 import { conditionId as calculateConditionId } from "./conditionId"
 
@@ -69,12 +69,12 @@ const pruneTrailingPass = (
   if (condition.operator !== Operator.Matches) return condition
 
   const isDynamicTuple =
-    condition.paramType === ParameterType.Tuple && isDynamicParamType(condition)
+    condition.paramType === AbiType.Tuple && isDynamicParamType(condition)
 
   // We must not apply this to static tuples since removing Static Pass nodes would cause word shifts in the encoding.
   const canPrune =
-    condition.paramType === ParameterType.Calldata ||
-    condition.paramType === ParameterType.AbiEncoded ||
+    condition.paramType === AbiType.Calldata ||
+    condition.paramType === AbiType.AbiEncoded ||
     isDynamicTuple
 
   if (!canPrune) return condition
@@ -155,14 +155,14 @@ const collectComplexBranches = (
     return condition.children?.flatMap(collectComplexBranches) ?? []
   }
 
-  if (condition.paramType === ParameterType.Array) {
+  if (condition.paramType === AbiType.Array) {
     return condition.children?.flatMap(collectComplexBranches) ?? []
   }
 
   if (
-    condition.paramType === ParameterType.AbiEncoded ||
-    condition.paramType === ParameterType.Calldata ||
-    condition.paramType === ParameterType.Tuple
+    condition.paramType === AbiType.AbiEncoded ||
+    condition.paramType === AbiType.Calldata ||
+    condition.paramType === AbiType.Tuple
   ) {
     return [condition]
   }
@@ -194,7 +194,7 @@ const flattenNestedLogicalConditions = (
  */
 export const copyStructure = (condition: Condition): Condition => {
   // skip over logical conditions
-  if (condition.paramType === ParameterType.None) {
+  if (condition.paramType === AbiType.None) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error("Logical condition must have at least one child")
     }
@@ -202,12 +202,12 @@ export const copyStructure = (condition: Condition): Condition => {
   }
 
   // handle array conditions
-  if (condition.paramType === ParameterType.Array) {
+  if (condition.paramType === AbiType.Array) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error("Array condition must have at least one child")
     }
     return {
-      paramType: ParameterType.Array,
+      paramType: AbiType.Array,
       operator: Operator.Pass,
       children: [copyStructure(condition.children[0])],
     }
@@ -273,8 +273,8 @@ const normalizeChildrenOrder = (
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
     const moveToFront = condition.children.filter(
       (child) =>
-        child.paramType === ParameterType.Calldata ||
-        child.paramType === ParameterType.AbiEncoded
+        child.paramType === AbiType.Calldata ||
+        child.paramType === AbiType.AbiEncoded
     )
     condition.children = [
       ...moveToFront,
@@ -318,7 +318,7 @@ const pushDownLogicalConditions = (
         i !== hingeIndex
           ? child
           : {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Or,
               children: condition.children?.map((c) => c.children?.[i]),
             }
@@ -363,7 +363,7 @@ const pushDownLogicalConditions = (
             : [
                 {
                   $$id: "",
-                  paramType: ParameterType.None,
+                  paramType: AbiType.None,
                   operator: Operator.Or,
                   children: orBranches,
                 },
@@ -473,15 +473,15 @@ const deleteUndefinedFields = (
 
 const isDynamicParamType = (condition: Condition): boolean => {
   switch (condition.paramType) {
-    case ParameterType.Static:
+    case AbiType.Static:
       return false
-    case ParameterType.Dynamic:
-    case ParameterType.Array:
+    case AbiType.Dynamic:
+    case AbiType.Array:
       return true
-    case ParameterType.Tuple:
-    case ParameterType.Calldata:
-    case ParameterType.AbiEncoded:
-    case ParameterType.None:
+    case AbiType.Tuple:
+    case AbiType.Calldata:
+    case AbiType.AbiEncoded:
+    case AbiType.None:
       return condition.children?.some(isDynamicParamType) ?? false
     default:
       throw new Error(`Unknown paramType: ${condition.paramType}`)

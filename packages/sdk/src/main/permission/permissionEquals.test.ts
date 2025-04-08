@@ -1,5 +1,5 @@
 import { expect, it, suite } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Operator } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
 import { permissionEquals } from "./permissionEquals"
@@ -8,7 +8,7 @@ const AddressOne = "0x0000000000000000000000000000000000000001"
 const AddressTwo = "0x0000000000000000000000000000000000000002"
 
 const DUMMY_COMP = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: AbiType.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })
@@ -126,7 +126,7 @@ suite("permissionEquals()", () => {
           targetAddress: AddressOne,
           selector: "0x01",
           condition: {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             children: [DUMMY_COMP(1), DUMMY_COMP(2)],
           },
@@ -135,7 +135,7 @@ suite("permissionEquals()", () => {
           targetAddress: AddressOne,
           selector: "0x01",
           condition: {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(1)],
           },
@@ -149,7 +149,7 @@ suite("permissionEquals()", () => {
           targetAddress: AddressOne,
           selector: "0x01",
           condition: {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             children: [DUMMY_COMP(1), DUMMY_COMP(2)],
           },
@@ -158,7 +158,7 @@ suite("permissionEquals()", () => {
           targetAddress: AddressOne,
           selector: "0x01",
           condition: {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
           },
