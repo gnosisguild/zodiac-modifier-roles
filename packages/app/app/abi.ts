@@ -15,7 +15,7 @@ export const fetchContractInfo = async (
   chainId: ChainId
 ): Promise<ContractInfo> => {
   const url = `https://api.abi.pub/v1/chains/${chainId}/accounts/${address}`
-  const res = await fetch(url)
+  const res = await fetch(url, { next: { revalidate: false } })
   if (!res.ok) {
     console.error("Failed to fetch contract info", url, res.status)
     return { address, verified: false }
