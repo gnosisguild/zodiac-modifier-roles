@@ -386,11 +386,11 @@ suite("normalizeCondition()", () => {
 
   it("does not change the position of children other than EtherWithinAllowance and CallWithinAllowance", async () => {
     const condition = {
-      paramType: ParameterType.Calldata,
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           children: [DUMMY_COMP(0), DUMMY_COMP(1)],
         },
