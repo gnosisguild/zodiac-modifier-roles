@@ -79,13 +79,15 @@ const pruneTrailingPass = (
 
   if (!canPrune) return condition
 
+  const isGlobalAllowance = (child: NormalizedCondition) =>
+    child.operator === Operator.EtherWithinAllowance ||
+    child.operator === Operator.CallWithinAllowance
+
   // keep all children nodes with ParameterType.None
   // (EtherWithinAllowance, CallWithinAllowance conditions appear as children of Calldata.Matches)
-  const preservedChildren = condition.children.filter(
-    (child) => child.paramType === ParameterType.None
-  )
+  const tailChildren = condition.children.filter(isGlobalAllowance)
   const prunableChildren = condition.children.filter(
-    (child) => child.paramType !== ParameterType.None
+    (child) => !isGlobalAllowance(child)
   )
 
   // Start from the end and prune all trailing Pass nodes.
@@ -107,7 +109,7 @@ const pruneTrailingPass = (
     }
   }
 
-  condition.children = [...prunedChildren, ...preservedChildren]
+  condition.children = [...prunedChildren, ...tailChildren]
   return condition
 }
 
