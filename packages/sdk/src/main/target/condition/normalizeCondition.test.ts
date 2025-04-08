@@ -384,6 +384,25 @@ suite("normalizeCondition()", () => {
     })
   })
 
+  it("does not change the position of children other than EtherWithinAllowance and CallWithinAllowance", async () => {
+    const condition = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+        },
+        {
+          paramType: ParameterType.Dynamic,
+          operator: Operator.Pass,
+        },
+      ],
+    }
+    expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
+  })
+
   it("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
     expect(
       stripIds(
