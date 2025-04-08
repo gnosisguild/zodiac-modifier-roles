@@ -53,8 +53,11 @@ import {
   toAbiTypes,
 } from "./eip712-signer/encode"
 
+import { typesForDomain } from "./eip712-signer/types"
+
 export const __integration = {
   encodeTypedDomain,
   encodeTypedMessage,
   toAbiTypes,
+  typesForDomain,
 }
