@@ -1,11 +1,15 @@
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { AbiCoder, Signer, ZeroAddress, ZeroHash, concat } from "ethers";
+import {
+  HardhatEthersSigner,
+  SignerWithAddress,
+} from "@nomicfoundation/hardhat-ethers/signers"
 
-import { iface } from "./deploy-mastercopies/safeMastercopy";
+import { AbiCoder, ZeroAddress, ZeroHash, concat } from "ethers"
+
+import { iface } from "./deploy-mastercopies/safeMastercopy"
 import {
   calculateSafeAddress,
   populateSafeCreation,
-} from "./encodeSafeCreation";
+} from "./encodeSafeCreation"
 
 export async function deploySafe(
   {
@@ -13,25 +17,25 @@ export async function deploySafe(
     threshold,
     creationNonce,
   }: {
-    owners: string[];
-    threshold: number;
-    creationNonce: bigint | number;
+    owners: string[]
+    threshold: number
+    creationNonce: bigint | number
   },
-  relayer: Signer,
+  relayer: HardhatEthersSigner
 ) {
   await relayer.sendTransaction(
     populateSafeCreation({
       owners,
       threshold,
       creationNonce: BigInt(creationNonce),
-    }),
-  );
+    })
+  )
 
   return calculateSafeAddress({
     owners,
     threshold,
     creationNonce: BigInt(creationNonce),
-  });
+  })
 }
 
 export async function enableModuleInSafe(
@@ -39,10 +43,10 @@ export async function enableModuleInSafe(
     safe,
     module,
   }: {
-    safe: string;
-    module: string;
+    safe: string
+    module: string
   },
-  signer: SignerWithAddress,
+  signer: SignerWithAddress
 ) {
   return signer.sendTransaction({
     to: safe,
@@ -58,7 +62,7 @@ export async function enableModuleInSafe(
       ZeroAddress,
       createPreApprovedSignature(await signer.getAddress()),
     ]),
-  });
+  })
 }
 
 const createPreApprovedSignature = (approver: string) => {
@@ -66,5 +70,5 @@ const createPreApprovedSignature = (approver: string) => {
     AbiCoder.defaultAbiCoder().encode(["address"], [approver]),
     ZeroHash,
     "0x01",
-  ]);
-};
+  ])
+}

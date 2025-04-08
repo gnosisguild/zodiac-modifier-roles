@@ -1,14 +1,11 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { AbiCoder, randomBytes } from "ethers";
-import {
-  Condition,
-  ExecutionOptions,
-  flattenCondition,
-} from "zodiac-roles-sdk";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers"
+import { AbiCoder, randomBytes } from "ethers"
+import { Condition, ExecutionOptions } from "zodiac-roles-sdk"
 
-import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory";
-import { rolesModMastercopy } from "./deploy-mastercopies/rolesMastercopy";
-import { enableModuleInSafe } from "./safe";
+import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory"
+import { rolesModMastercopy } from "./deploy-mastercopies/rolesMastercopy"
+import { enableModuleInSafe } from "./safe"
+import { ConditionFlatStruct } from "../../../../evm/typechain-types/contracts/test/MockTopology"
 
 export async function deployRoles(
   {
@@ -16,19 +13,19 @@ export async function deployRoles(
     target,
     owner,
   }: {
-    avatar: string;
-    target: string;
-    owner: string;
+    avatar: string
+    target: string
+    owner: string
   },
-  relayer: HardhatEthersSigner,
+  relayer: HardhatEthersSigner
 ) {
   function encodeSetUp() {
     const initializer = AbiCoder.defaultAbiCoder().encode(
       ["address", "address", "address"],
-      [owner, avatar, target],
-    );
+      [owner, avatar, target]
+    )
 
-    return rolesModMastercopy.iface.encodeFunctionData("setUp", [initializer]);
+    return rolesModMastercopy.iface.encodeFunctionData("setUp", [initializer])
   }
 
   const tx = {
@@ -39,17 +36,17 @@ export async function deployRoles(
       encodeSetUp(),
       randomHash(),
     ]),
-  };
+  }
 
-  const result = await relayer.call(tx);
+  const result = await relayer.call(tx)
   const [address] = moduleProxyFactory.iface.decodeFunctionResult(
     "deployModule",
-    result,
-  );
+    result
+  )
 
-  await relayer.sendTransaction(tx);
+  await relayer.sendTransaction(tx)
 
-  return address;
+  return address
 }
 
 export async function connectRolesSafeAndMember({
@@ -58,18 +55,18 @@ export async function connectRolesSafeAndMember({
   roles,
   member,
 }: {
-  owner: HardhatEthersSigner;
-  safe: string;
-  roles: string;
-  member: string;
+  owner: HardhatEthersSigner
+  safe: string
+  roles: string
+  member: string
 }) {
-  const roleKey = randomHash();
-  await enableModuleInSafe({ safe, module: roles }, owner);
+  const roleKey = randomHash()
+  await enableModuleInSafe({ safe, module: roles }, owner)
 
   await owner.sendTransaction({
     to: roles,
     data: rolesModMastercopy.iface.encodeFunctionData("enableModule", [member]),
-  });
+  })
 
   await owner.sendTransaction({
     to: roles,
@@ -78,9 +75,9 @@ export async function connectRolesSafeAndMember({
       [roleKey],
       [true],
     ]),
-  });
+  })
 
-  return { roleKey };
+  return { roleKey }
 }
 
 export async function scopeTarget({
@@ -89,10 +86,10 @@ export async function scopeTarget({
   roleKey,
   target,
 }: {
-  owner: HardhatEthersSigner;
-  roles: string;
-  roleKey: string;
-  target: string;
+  owner: HardhatEthersSigner
+  roles: string
+  roleKey: string
+  target: string
 }) {
   await owner.sendTransaction({
     to: roles,
@@ -100,7 +97,7 @@ export async function scopeTarget({
       roleKey,
       target,
     ]),
-  });
+  })
 }
 
 export async function scopeFunction({
@@ -112,13 +109,13 @@ export async function scopeFunction({
   condition,
   executionOptions,
 }: {
-  owner: HardhatEthersSigner;
-  roles: string;
-  roleKey: string;
-  target: string;
-  selector: string;
-  condition: Condition;
-  executionOptions: ExecutionOptions;
+  owner: HardhatEthersSigner
+  roles: string
+  roleKey: string
+  target: string
+  selector: string
+  condition: Condition
+  executionOptions: ExecutionOptions
 }) {
   await owner.sendTransaction({
     to: roles,
@@ -134,7 +131,7 @@ export async function scopeFunction({
       ]),
       executionOptions,
     ]),
-  });
+  })
 }
 
 export async function execTransactionWithRole({
@@ -145,20 +142,20 @@ export async function execTransactionWithRole({
   data,
   operation,
 }: {
-  signer: HardhatEthersSigner;
-  roles: string;
-  roleKey: string;
-  to: string;
-  data: string;
-  operation: number;
+  signer: HardhatEthersSigner
+  roles: string
+  roleKey: string
+  to: string
+  data: string
+  operation: number
 }) {
   return await signer.sendTransaction({
     to: roles,
     data: rolesModMastercopy.iface.encodeFunctionData(
       "execTransactionWithRole",
-      [to, 0, data, operation, roleKey, true],
+      [to, 0, data, operation, roleKey, true]
     ),
-  });
+  })
 }
 
 function randomHash(): string {
@@ -167,5 +164,34 @@ function randomHash(): string {
     Array.from(randomBytes(32))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("")
-  );
+  )
+}
+
+const flattenCondition = (root: any): ConditionFlatStruct[] => {
+  const result: ConditionFlatStruct[] = []
+  const queue = [{ condition: root, parent: 0 }]
+
+  while (queue.length > 0) {
+    const {
+      condition: { children, ...conditionFlat },
+      parent,
+    } = queue.shift()!
+
+    result.push({ compValue: "0x", ...conditionFlat, parent })
+    const index = result.length - 1
+
+    if (children) {
+      for (const child of children) {
+        queue.push({ condition: child, parent: index })
+      }
+    }
+  }
+
+  if (result.length > 256) {
+    console.warn(
+      "Condition tree has more than 256 nodes. It will not be possible to apply this permission to the Roles mod."
+    )
+  }
+
+  return result
 }
