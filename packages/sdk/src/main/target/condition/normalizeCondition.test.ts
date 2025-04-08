@@ -394,10 +394,7 @@ suite("normalizeCondition()", () => {
           operator: Operator.Or,
           children: [DUMMY_COMP(0), DUMMY_COMP(1)],
         },
-        {
-          paramType: ParameterType.Dynamic,
-          operator: Operator.Pass,
-        },
+        DUMMY_COMP(2),
       ],
     }
     expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
