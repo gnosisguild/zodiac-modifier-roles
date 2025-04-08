@@ -6,11 +6,11 @@ import { BigNumberish } from "ethers";
 
 import {
   BYTES32_ZERO,
-  deployRolesMod,
   encodeMultisendPayload,
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
+import { deployRolesMod } from "./setup";
 
 enum Operation {
   Call = 0,

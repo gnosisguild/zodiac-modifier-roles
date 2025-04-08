@@ -9,11 +9,11 @@ import {
   setupOneParamArrayOfStatic,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./setup";
+} from "../setup";
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 
@@ -26,25 +26,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -62,7 +62,6 @@ describe("Operator - Matches", async () => {
   });
 
   it("evaluates operator Matches for Tuple", async () => {
-    // ..
     const { roles, invoke, scopeFunction } = await loadFixture(
       setupOneParamStaticTuple
     );
@@ -70,25 +69,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Tuple,
+        paramType: AbiType.Tuple,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -109,25 +108,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.LessThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
@@ -153,13 +152,13 @@ describe("Operator - Matches", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -175,19 +174,19 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },

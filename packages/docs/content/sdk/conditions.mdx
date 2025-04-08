@@ -140,13 +140,21 @@ c.calldataMatches(
 
 See [`WithinAllowance`](/general/conditions#withinallowance) operator
 
-#### `c.etherWithinAllowance`
+#### Allowance on Ether value via `c.calldataMatches`
 
-See [`EtherWithinAllowance`](/general/conditions#etherwithinallowance) operator
+```typescript
+c.calldataMatches([], [], {
+  etherWithinAllowance: encodeKey("mt-eth-allowance"),
+});
+```
 
-#### `c.callWithinAllowance`
+#### Allowance on call rate via `c.calldataMatches`
 
-See [`CallWithinAllowance`](/general/conditions#callwithinallowance) operator
+```typescript
+c.calldataMatches([], [], {
+  callWithinAllowance: encodeKey("my-call-allowance"),
+});
+```
 
 ### Custom conditions
 

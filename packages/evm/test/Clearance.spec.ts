@@ -4,10 +4,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
   BYTES32_ZERO,
-  deployRolesMod,
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
+import { deployRolesMod } from "./setup";
 
 describe("Clearance", async () => {
   const ROLE_KEY =

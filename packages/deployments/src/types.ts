@@ -121,7 +121,7 @@ export interface Target {
   address: `0x${string}`
   clearance: Clearance
   executionOptions: ExecutionOptions
-  functions: readonly Function[]
+  functions: Function[]
 }
 
 export interface Function {

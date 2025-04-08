@@ -1,27 +1,51 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Operator, ParameterType } from "../utils";
-import { setupOneParamStatic } from "./setup";
+
+import { setupAvatarAndRoles } from "../setup";
+
+import { ExecutionOptions, Operator, AbiType } from "../utils";
 
 describe("Operator - Pass", async () => {
   it("evaluates a Pass", async () => {
-    const { scopeFunction, invoke } = await loadFixture(setupOneParamStatic);
+    const { owner, member, roles, roleKey, testContract } = await loadFixture(
+      setupAvatarAndRoles
+    );
 
-    await scopeFunction([
+    const conditions = [
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
-    ]);
+    ];
 
-    await expect(invoke(1)).to.not.be.reverted;
+    await roles
+      .connect(owner)
+      .scopeFunction(
+        roleKey,
+        await testContract.getAddress(),
+        testContract.interface.getFunction("oneParamStatic").selector,
+        conditions,
+        ExecutionOptions.Both
+      );
+
+    const invoke = async () =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          await testContract.getAddress(),
+          0,
+          (await testContract.oneParamStatic.populateTransaction(0)).data,
+          0
+        );
+
+    await expect(invoke()).to.not.be.reverted;
   });
 });

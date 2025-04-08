@@ -5,8 +5,5 @@
     "target": "esnext",
     "outDir": "build/esm",
     "module": "esnext"
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts"],
-  "files": []
+  }
 }
