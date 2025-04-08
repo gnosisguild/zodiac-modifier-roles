@@ -1,24 +1,24 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import {
+  AbiType,
   BYTES32_ZERO,
-  deployRolesMod,
   ExecutionOptions,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
-  toConditionsFlat,
   encodeMultisendPayload,
+  flattenCondition,
 } from "./utils";
 import { AbiCoder, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
+  deployRolesMod,
+  setupAvatarAndRoles,
   setupFnThatMaybeReturns,
   setupOneParamArrayOfDynamicTuple,
-  setupOneParamStatic,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./operators/setup";
+} from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -34,19 +34,19 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -65,18 +65,18 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -100,25 +100,24 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
       ],
     });
     await scopeFunction(conditionsFlat);
-    const maybe = true;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -138,25 +137,25 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.And,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
@@ -183,45 +182,45 @@ describe("Allowance", async () => {
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
     await scopeFunction(
-      toConditionsFlat({
-        paramType: ParameterType.Calldata,
+      flattenCondition({
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
           {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             compValue: "0x",
             children: [
               {
-                paramType: ParameterType.None,
+                paramType: AbiType.None,
                 operator: Operator.And,
                 compValue: "0x",
                 children: [
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.WithinAllowance,
                     compValue: allowanceKey,
                   },
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.LessThan,
                     compValue: defaultAbiCoder.encode(["uint256"], [1]),
                   },
                 ],
               },
               {
-                paramType: ParameterType.None,
+                paramType: AbiType.None,
                 operator: Operator.And,
                 compValue: "0x",
                 children: [
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.WithinAllowance,
                     compValue: allowanceKey,
                   },
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.GreaterThan,
                     compValue: defaultAbiCoder.encode(["uint256"], [1]),
                   },
@@ -248,28 +247,28 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySome,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
@@ -311,28 +310,28 @@ describe("Allowance", async () => {
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArrayEvery,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
@@ -383,62 +382,62 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f3";
     await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySubset,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey2,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xdeadbeef"]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey3,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbad0beef"]),
                 },
@@ -466,9 +465,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
   });
   it("failing And returns unchanged in memory consumptions", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -478,35 +481,35 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.And,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.LessThan,
                   compValue: defaultAbiCoder.encode(["uint256"], [50]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.WithinAllowance,
               compValue: allowanceKey2,
             },
@@ -515,7 +518,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -526,9 +535,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
   });
   it("failing OR returns unchanged in memory consumptions", async () => {
-    const { roles, invoke, scopeFunction, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -538,33 +551,33 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Or,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.None,
+                  paramType: AbiType.None,
                   operator: Operator.And,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.WithinAllowance,
                       compValue: allowanceKey1,
                     },
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.LessThan,
                       compValue: defaultAbiCoder.encode(["uint256"], [50]),
                     },
@@ -573,7 +586,7 @@ describe("Allowance", async () => {
               ],
             },
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.WithinAllowance,
               compValue: allowanceKey2,
             },
@@ -582,7 +595,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -605,45 +624,45 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bool"], [true]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey2,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.Pass,
                   compValue: "0x",
                 },
@@ -675,18 +694,18 @@ describe("Allowance", async () => {
       .connect(owner)
       .setAllowance(allowanceKey, 1300, 1000, 100, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -803,13 +822,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
@@ -824,19 +843,19 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
@@ -929,13 +948,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
@@ -950,19 +969,19 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
@@ -1042,13 +1061,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
@@ -1063,19 +1082,19 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1159,13 +1178,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
@@ -1189,19 +1208,19 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
@@ -1302,13 +1321,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
@@ -1323,13 +1342,13 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [1]),
           },
@@ -1346,19 +1365,19 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },

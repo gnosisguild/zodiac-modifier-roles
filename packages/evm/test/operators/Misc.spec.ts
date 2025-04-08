@@ -2,12 +2,12 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamBytes } from "./setup";
+import { setupOneParamBytes } from "../setup";
 import { Interface, AbiCoder } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
@@ -38,44 +38,44 @@ describe("Operator - Misc", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.And,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 2,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [123456]),
       },
 
       {
         parent: 3,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(fnAllowed1.selector),
       },
       {
         parent: 3,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(fnAllowed2.selector),
       },
@@ -119,43 +119,43 @@ describe("Operator - Misc", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.Bitmask,
           compValue: maskCompValue(fnAllowed1.selector),
         },
         {
           parent: 2,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.Bitmask,
           compValue: maskCompValue(fnAllowed2.selector),
         },
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [123456]),
         },

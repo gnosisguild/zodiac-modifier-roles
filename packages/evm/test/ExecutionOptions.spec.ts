@@ -2,13 +2,15 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
+import { parseEther } from "ethers";
+
 import {
   BYTES32_ZERO,
-  deployRolesMod,
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
-import { parseEther } from "ethers";
+
+import { deployRolesMod } from "./setup";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";

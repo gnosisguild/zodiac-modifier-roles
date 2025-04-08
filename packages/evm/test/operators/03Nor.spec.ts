@@ -5,12 +5,12 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamStatic } from "./setup";
+import { setupOneParamStatic } from "../setup";
 
 describe("Operator - Nor", async () => {
   it("evaluates operator Nor with single child", async () => {
@@ -21,19 +21,19 @@ describe("Operator - Nor", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Nor,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
@@ -54,31 +54,31 @@ describe("Operator - Nor", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Nor,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [6]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [77]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [888]),
       },

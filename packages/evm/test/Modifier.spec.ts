@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { deployRolesMod } from "./utils";
+import { deployRolesMod } from "./setup";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
 const AddressOne = "0x0000000000000000000000000000000000000001";
