@@ -11,13 +11,13 @@ import {
   concat,
   randomBytes,
 } from "ethers"
-import hre from "hardhat"
+import hre, { ethers } from "hardhat"
 import { encodeSignTypedMessage, __integration } from "zodiac-roles-sdk"
 
 import deployMastercopies from "./setup/deploy-mastercopies"
 import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
 import { iface as ifaceSafe } from "./setup/deploy-mastercopies/safeMastercopy"
-import { deploySignTypedMessageLib } from "./setup/deploySignTypedMessageLib"
+
 import { deploySafe } from "./setup/safe"
 
 const EIP712_MAGIC_VALUE = "0x1626ba7e"
@@ -26,7 +26,10 @@ const EIP712_MAGIC_VALUE_OLD = "0x20c13b0b"
 describe("SignTypedMessageLib", () => {
   async function setup() {
     await deployMastercopies()
-    const lib = await deploySignTypedMessageLib()
+    const lib = await (
+      await ethers.getContractFactory("SignTypedMessageLib")
+    ).deploy()
+
     const [owner, relayer] = await hre.ethers.getSigners()
 
     const safe = await deploySafe(

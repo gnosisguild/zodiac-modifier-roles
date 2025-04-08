@@ -8,7 +8,7 @@ import {
   keccak256,
   randomBytes,
 } from "ethers"
-import hre from "hardhat"
+import hre, { ethers } from "hardhat"
 import {
   Condition,
   ExecutionOptions,
@@ -20,7 +20,6 @@ import {
 } from "zodiac-roles-sdk"
 
 import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
-import { deploySignTypedMessageLib } from "./setup/deploySignTypedMessageLib"
 import {
   connectRolesSafeAndMember,
   deployRoles,
@@ -38,12 +37,13 @@ const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
-describe("scopeTypedData()", () => {
+describe("scopeSignTypedMessage()", () => {
   async function setup() {
     await deployMastercopies()
 
-    const lib = await deploySignTypedMessageLib()
-    const ifaceLib = lib.interface
+    const lib = await (
+      await ethers.getContractFactory("SignTypedMessageLib")
+    ).deploy()
 
     const [owner, member, relayer] = await hre.ethers.getSigners()
 
@@ -216,7 +216,6 @@ describe("scopeTypedData()", () => {
       safe,
       roles,
       lib: await lib.getAddress(),
-      ifaceLib,
 
       execTransactionFromRoles: ({
         to,
@@ -239,13 +238,6 @@ describe("scopeTypedData()", () => {
       message,
       types,
     }
-  }
-
-  async function setup2() {
-    //await deployMastercopies()
-
-    const lib = await deploySignTypedMessageLib()
-    return { lib }
   }
 
   it("correctly restricts some elements in domain", async () => {
