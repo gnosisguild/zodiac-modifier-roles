@@ -8,19 +8,13 @@ interface Props {
 }
 
 export const fetchOrInitRole = async ({ address, chainId, roleKey }: Props) => {
-  let data = await fetchRole(
-    { address, chainId, roleKey },
-    { next: { revalidate: 1 } }
-  )
+  let data = await fetchRole({ address, chainId, roleKey })
 
   if (!data) {
     // If the role doesn't exist, we check if the mod exists.
     // In that case we show an empty role page so the user can start populating it.
     // Otherwise we show a 404.
-    const modExists = await fetchRolesMod(
-      { address, chainId },
-      { next: { revalidate: 1 } }
-    )
+    const modExists = await fetchRolesMod({ address, chainId })
     if (!modExists) {
       notFound()
     }
