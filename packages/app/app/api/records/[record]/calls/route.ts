@@ -9,10 +9,12 @@ import { indexCallInputs } from "../../utils"
 export const POST = withErrorHandling(
   async (
     req: Request,
-    { params }: { params: { record: string } }
+    { params }: { params: Promise<{ record: string }> }
   ): Promise<Response> => {
+    const { record: recordId } = await params
+
     // Get record from KV store
-    const value = await kv.json.get(params.record)
+    const value = await kv.json.get(recordId)
     if (!value) {
       return NextResponse.json({ error: "Record not found" }, { status: 404 })
     }
@@ -26,17 +28,13 @@ export const POST = withErrorHandling(
     const callsToAdd = indexCallInputs(callInputs, Object.keys(record.calls))
 
     const promises = Object.entries(callsToAdd).map(([id, call]) =>
-      kv.json.set(params.record, `$.calls.${id}`, call)
+      kv.json.set(recordId, `$.calls.${id}`, call)
     )
 
     // Update last updated date
     const lastUpdatedAt = new Date().toISOString()
     promises.push(
-      kv.json.set(
-        params.record,
-        "$.lastUpdatedAt",
-        JSON.stringify(lastUpdatedAt)
-      )
+      kv.json.set(recordId, "$.lastUpdatedAt", JSON.stringify(lastUpdatedAt))
     )
 
     await Promise.all(promises)
