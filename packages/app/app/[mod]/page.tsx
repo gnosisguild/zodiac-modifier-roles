@@ -12,14 +12,16 @@ import Flex from "@/ui/Flex"
 import { CHAINS } from "../chains"
 import LabeledData from "@/ui/LabeledData"
 
-export default async function ModPage(props: { params: Promise<{ mod: string }> }) {
-  const params = await props.params;
+export default async function ModPage(props: {
+  params: Promise<{ mod: string }>
+}) {
+  const params = await props.params
   const mod = parseModParam(params.mod)
   if (!mod) {
     notFound()
   }
 
-  const data = await fetchRolesMod(mod, { next: { revalidate: 1 } })
+  const data = await fetchRolesMod(mod)
   if (!data) {
     notFound()
   }
