@@ -1,7 +1,6 @@
 import { CHAINS } from "@/app/chains"
-import { encodeBytes32String } from "ethers"
 import { isAddress } from "viem"
-import { ChainId } from "zodiac-roles-sdk"
+import { ChainId, encodeRoleKey } from "zodiac-roles-sdk"
 
 const chains = Object.values(CHAINS)
 
@@ -30,12 +29,5 @@ export function parseModParam(mod: string | string[] | undefined) {
 
 export function parseRoleParam(role: string | string[] | undefined) {
   if (!role || typeof role !== "string") return null
-
-  try {
-    return encodeBytes32String(role) as `0x${string}`
-  } catch (e) {
-    return role.startsWith("0x") && role.length === 66
-      ? (role as `0x${string}`)
-      : null
-  }
+  return encodeRoleKey(role) as `0x${string}`
 }

@@ -1,6 +1,9 @@
 .container {
   height: 40px;
 }
+.container.small {
+  height: 30px;
+}
 
 .blockies {
   height: 100%;
@@ -12,6 +15,9 @@
   flex-shrink: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.small .address {
+  font-size: 12px;
 }
 
 .link {

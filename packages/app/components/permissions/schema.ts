@@ -20,7 +20,7 @@ export const zAddress = z.string().transform((val, ctx) => {
   }
 })
 
-const zHex = z
+export const zHex = z
   .string()
   .regex(/^0x[0-9a-fA-F]*$/)
   .transform((value) => value.toLowerCase() as `0x${string}`)

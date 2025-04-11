@@ -13,19 +13,14 @@ import AnnotationsToggle from "@/components/AnnotationsToggle"
 
 const chains = Object.values(CHAINS)
 
-export default async function PermissionPage(
-  props: {
-    params: Promise<{ hash: string; chain: string }>
-    searchParams: Promise<{ annotations?: string }>
-  }
-) {
-  const searchParams = await props.searchParams;
-  const params = await props.params;
+export default async function PermissionPage(props: {
+  params: Promise<{ hash: string; chain: string }>
+  searchParams: Promise<{ annotations?: string }>
+}) {
+  const searchParams = await props.searchParams
+  const params = await props.params
 
-  const {
-    hash,
-    chain
-  } = params;
+  const { hash, chain } = params
 
   const chainId = chains.find((c) => c.prefix === chain.toLowerCase())?.id
   if (!chainId) {
@@ -34,13 +29,13 @@ export default async function PermissionPage(
 
   const entry = await kv.get<{
     targets: Target[]
-    annotations: Annotation[]
+    annotations?: Annotation[]
   }>(hash)
   if (!entry) {
     notFound()
   }
 
-  const { targets, annotations } = entry
+  const { targets, annotations = [] } = entry
 
   const hasAnnotations = annotations.length > 0
   const showAnnotations = searchParams.annotations !== "false"

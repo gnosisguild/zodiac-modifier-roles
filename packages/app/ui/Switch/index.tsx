@@ -19,7 +19,12 @@ const Switch: React.FC<Props> = ({ label, checked, onChange, disabled }) => {
   // re-enable when we want to add editing
   // const [, setChecked] = useState(false)
   return (
-    <HeadlessSwitch checked={checked} onChange={() => {}} as={Fragment}>
+    <HeadlessSwitch
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      as={Fragment}
+    >
       {({ checked }) => (
         <button
           className={classNames(classes.switch, disabled && classes.disabled)}

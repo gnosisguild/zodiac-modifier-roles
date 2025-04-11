@@ -6,6 +6,9 @@ const nextConfig = {
       fullUrl: true,
     },
   },
+  experimental: {
+    taint: true,
+  },
   async headers() {
     return [
       {
@@ -20,8 +23,20 @@ const nextConfig = {
           },
         ],
       },
+
+      // Posting permissions shall be possible from third party apps
       {
         source: "/api/permissions",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+
+      // Recording calls shall be possible from third party apps
+      {
+        source: "/api/records",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+      {
+        source: "/api/records/:record/calls",
         headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
       },
     ]
