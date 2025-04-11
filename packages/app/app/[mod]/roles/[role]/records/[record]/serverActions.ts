@@ -6,7 +6,7 @@ import { kv } from "@vercel/kv"
 import { checkIntegrity, processPermissions } from "zodiac-roles-sdk"
 import { isAuthorized } from "./auth"
 import { createRecord } from "@/app/api/records/route"
-import { createPermissionsPost } from "@/app/api/permissions/route"
+import { createPermissionsPost } from "@/app/api/permissions/createPermissionsPost"
 import { ChainId } from "@/app/chains"
 import { derivePermissionsFromRecord } from "./derivePermissions"
 

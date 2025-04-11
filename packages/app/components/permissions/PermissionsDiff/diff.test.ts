@@ -88,7 +88,7 @@ describe("diff", () => {
       expect(right.get(edited)).toHaveProperty("modified", PRESET)
     })
 
-    it.only("marks presets with same uri but updated permissions as Modified / Modified", () => {
+    it("marks presets with same uri but updated permissions as Modified / Modified", () => {
       const edited = copy(PRESET)
       delete edited.permissions[0].condition
       const [left, right] = diffPresets([PRESET], [edited])
