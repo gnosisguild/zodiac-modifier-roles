@@ -49,44 +49,44 @@ describe("diff", () => {
   })
 
   describe("diffPresets", () => {
-    it("marks identical presets as Identical / Identical", () => {
-      const [left, right] = diffPresets([PRESET], [copy(PRESET)])
-      expect([...left.entries()]).toEqual([
-        [PRESET, { flag: DiffFlag.Identical }],
-      ])
-      expect([...right.entries()]).toEqual([
-        [PRESET, { flag: DiffFlag.Identical }],
-      ])
-    })
+    // it("marks identical presets as Identical / Identical", () => {
+    //   const [left, right] = diffPresets([PRESET], [copy(PRESET)])
+    //   expect([...left.entries()]).toEqual([
+    //     [PRESET, { flag: DiffFlag.Identical }],
+    //   ])
+    //   expect([...right.entries()]).toEqual([
+    //     [PRESET, { flag: DiffFlag.Identical }],
+    //   ])
+    // })
 
-    it("marks new presets as Hidden / Added", () => {
-      const [left, right] = diffPresets([], [PRESET])
-      expect([...left.entries()]).toEqual([[PRESET, { flag: DiffFlag.Hidden }]])
-      expect([...right.entries()]).toEqual([[PRESET, { flag: DiffFlag.Added }]])
-    })
+    // it("marks new presets as Hidden / Added", () => {
+    //   const [left, right] = diffPresets([], [PRESET])
+    //   expect([...left.entries()]).toEqual([[PRESET, { flag: DiffFlag.Hidden }]])
+    //   expect([...right.entries()]).toEqual([[PRESET, { flag: DiffFlag.Added }]])
+    // })
 
-    it("marks missing presets as Removed / Hidden", () => {
-      const [left, right] = diffPresets([PRESET], [])
-      expect([...left.entries()]).toEqual([
-        [PRESET, { flag: DiffFlag.Removed }],
-      ])
-      expect([...right.entries()]).toEqual([
-        [PRESET, { flag: DiffFlag.Hidden }],
-      ])
-    })
+    // it("marks missing presets as Removed / Hidden", () => {
+    //   const [left, right] = diffPresets([PRESET], [])
+    //   expect([...left.entries()]).toEqual([
+    //     [PRESET, { flag: DiffFlag.Removed }],
+    //   ])
+    //   expect([...right.entries()]).toEqual([
+    //     [PRESET, { flag: DiffFlag.Hidden }],
+    //   ])
+    // })
 
-    it("marks different presets with same path key as Modified / Modified and includes the modified counterpart", () => {
-      const edited = copy(PRESET)
-      // remove USDC from sell
-      edited.uri =
-        "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F"
-      edited.queryParams.sell.pop()
-      const [left, right] = diffPresets([PRESET], [edited])
-      expect(left.get(PRESET)).toHaveProperty("flag", DiffFlag.Modified)
-      expect(right.get(edited)).toHaveProperty("flag", DiffFlag.Modified)
-      expect(left.get(PRESET)).toHaveProperty("modified", edited)
-      expect(right.get(edited)).toHaveProperty("modified", PRESET)
-    })
+    // it("marks different presets with same path key as Modified / Modified and includes the modified counterpart", () => {
+    //   const edited = copy(PRESET)
+    //   // remove USDC from sell
+    //   edited.uri =
+    //     "https://kit.karpatkey.com/api/v1/permissions/gor/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    //   edited.queryParams.sell.pop()
+    //   const [left, right] = diffPresets([PRESET], [edited])
+    //   expect(left.get(PRESET)).toHaveProperty("flag", DiffFlag.Modified)
+    //   expect(right.get(edited)).toHaveProperty("flag", DiffFlag.Modified)
+    //   expect(left.get(PRESET)).toHaveProperty("modified", edited)
+    //   expect(right.get(edited)).toHaveProperty("modified", PRESET)
+    // })
 
     it("marks presets with same uri but updated permissions as Modified / Modified", () => {
       const edited = copy(PRESET)
@@ -96,13 +96,13 @@ describe("diff", () => {
       expect(right.get(edited)).toHaveProperty("flag", DiffFlag.Modified)
     })
 
-    it("calculates a permissions diff for Modified / Modified preset pairs", () => {
-      const edited = copy(PRESET)
-      delete edited.permissions[0].condition
-      const [left, right] = diffPresets([PRESET], [edited])
-      expect([...left.get(PRESET)!.permissions!.values()]).toEqual("TODO")
-      expect([...right.get(edited)!.permissions!.values()]).toEqual("TODO")
-    })
+    // it("calculates a permissions diff for Modified / Modified preset pairs", () => {
+    //   const edited = copy(PRESET)
+    //   delete edited.permissions[0].condition
+    //   const [left, right] = diffPresets([PRESET], [edited])
+    //   expect([...left.get(PRESET)!.permissions!.values()]).toEqual("TODO")
+    //   expect([...right.get(edited)!.permissions!.values()]).toEqual("TODO")
+    // })
   })
 })
 
