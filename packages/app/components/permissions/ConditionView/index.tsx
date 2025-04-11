@@ -12,6 +12,7 @@ import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
 import { isLogicalOperator, isArrayOperator } from "./utils"
 import { arrayElementType } from "@/utils/abi"
+import { NormalizedCondition } from "../../../../sdk/build/esm/sdk/src/conditions/normalizeCondition"
 export { matchesAbi } from "./utils"
 
 export interface Props {
@@ -309,8 +310,17 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
           Cannot parse this condition (it most likely came from a different
           interface)
         </p>
-        <pre>{JSON.stringify(condition, undefined, 2)}</pre>
+        <pre>{JSON.stringify(stripIds(condition), undefined, 2)}</pre>
       </LabeledData>
     </Flex>
   )
+}
+
+const stripIds = (condition: Condition & { $$id?: string }): Condition => {
+  const { $$id, children, ...rest } = condition
+  if (!children) return rest
+  return {
+    ...rest,
+    children: children.map(stripIds),
+  }
 }
