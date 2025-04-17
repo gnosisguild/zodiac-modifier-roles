@@ -35,6 +35,8 @@ const {
   CELOSCAN_API_KEY,
   SONICSCAN_API_KEY,
   BERASCAN_API_KEY,
+  MANTLESCAN_API_KEY,
+  UNISCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -154,6 +156,11 @@ const config: HardhatUserConfig = {
       url: "https://bob-sepolia.rpc.gobob.xyz/",
       gasPrice: 1000000000,
     },
+    unichain: {
+      ...sharedNetworkConfig,
+      chainId: 130,
+      url: "https://mainnet.unichain.org",
+    },
     mantle: {
       ...sharedNetworkConfig,
       chainId: 5000,
@@ -184,6 +191,8 @@ const config: HardhatUserConfig = {
       baseSepolia: BASESCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
       celo: CELOSCAN_API_KEY,
+      mantle: MANTLESCAN_API_KEY,
+      unichain: UNISCAN_API_KEY,
       sonic: SONICSCAN_API_KEY,
       berachain: BERASCAN_API_KEY,
       "lisk-sepolia": "not-required",
@@ -252,6 +261,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.celoscan.io/api",
           browserURL: "https://celoscan.io",
+        },
+      },
+      {
+        network: "mantle",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://api.mantlescan.xyz/api",
+          browserURL: "https://mantlescan.xyz",
+        },
+      },
+      {
+        network: "unichain",
+        chainId: 130,
+        urls: {
+          apiURL: "https://api.uniscan.xyz/api",
+          browserURL: "https://uniscan.xyz",
         },
       },
       {
