@@ -3,10 +3,11 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+import "./AbiDecoder.sol";
 import "./Consumptions.sol";
 import "./Core.sol";
-import "./Decoder.sol";
 import "./Periphery.sol";
+import "./Topology.sol";
 
 import "./packers/BufferPacker.sol";
 
@@ -217,11 +218,13 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
-        (Condition memory condition, Consumption[] memory consumptions) = _load(
-            role,
-            key
-        );
-        ParameterPayload memory payload = Decoder.inspect(data, condition);
+        (
+            Condition memory condition,
+            AbiTypeTree[] memory typeTree,
+            Consumption[] memory consumptions
+        ) = _load(role, key);
+
+        Payload memory payload = AbiDecoder.inspect(data, typeTree, 0);
 
         context.consumptions = context.consumptions.length > 0
             ? Consumptions.merge(context.consumptions, consumptions)
@@ -233,7 +236,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _walk(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status, Result memory) {
         Operator operator = condition.operator;
@@ -292,7 +295,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _matches(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -333,7 +336,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _and(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -369,7 +372,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _or(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -403,7 +406,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _nor(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory) {
         for (uint256 i; i < condition.children.length; ) {
@@ -427,7 +430,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -461,7 +464,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _arrayEvery(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -494,7 +497,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _arraySubset(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status, Result memory result) {
         result.consumptions = context.consumptions;
@@ -544,13 +547,13 @@ abstract contract PermissionChecker is Core, Periphery {
     function _compare(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload
+        Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         bytes32 compValue = condition.compValue;
         bytes32 value = operator == Operator.EqualTo
-            ? keccak256(Decoder.pluck(data, payload.location, payload.size))
-            : Decoder.word(data, payload.location);
+            ? keccak256(AbiDecoder.pluck(data, payload.location, payload.size))
+            : AbiDecoder.word(data, payload.location);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -566,11 +569,11 @@ abstract contract PermissionChecker is Core, Periphery {
     function _compareSignedInt(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload
+        Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(condition.compValue));
-        int256 value = int256(uint256(Decoder.word(data, payload.location)));
+        int256 value = int256(uint256(AbiDecoder.word(data, payload.location)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -593,11 +596,11 @@ abstract contract PermissionChecker is Core, Periphery {
     function _bitmask(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload
+        Payload memory payload
     ) private pure returns (Status) {
         bytes32 compValue = condition.compValue;
-        bool isInline = condition.paramType == ParameterType.Static;
-        bytes calldata value = Decoder.pluck(
+        bool isInline = condition.paramType == AbiType.Static;
+        bytes calldata value = AbiDecoder.pluck(
             data,
             payload.location + (isInline ? 0 : 32),
             payload.size - (isInline ? 0 : 32)
@@ -623,7 +626,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _custom(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status, Result memory) {
         // 20 bytes on the left
@@ -651,10 +654,10 @@ abstract contract PermissionChecker is Core, Periphery {
     function _withinAllowance(
         bytes calldata data,
         Condition memory condition,
-        ParameterPayload memory payload,
+        Payload memory payload,
         Context memory context
     ) private pure returns (Status, Result memory) {
-        uint256 value = uint256(Decoder.word(data, payload.location));
+        uint256 value = uint256(AbiDecoder.word(data, payload.location));
         return __consume(value, condition, context.consumptions);
     }
 

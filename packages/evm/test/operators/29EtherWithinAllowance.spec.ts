@@ -7,13 +7,13 @@ import { AbiCoder, BigNumberish, parseEther } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   Operator,
   ExecutionOptions,
-  ParameterType,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
 } from "../utils";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -80,13 +80,13 @@ describe("Operator - EtherWithinAllowance", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.EtherWithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -234,43 +234,43 @@ describe("Operator - EtherWithinAllowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 1,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value1]),
           },
           {
             parent: 1,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.EtherWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value2]),
           },
           {
             parent: 2,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.EtherWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
