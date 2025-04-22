@@ -10,7 +10,9 @@ import BitmaskConditionView from "./BitmaskConditionView"
 import LabeledData from "@/ui/LabeledData"
 import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
-import { isLogicalOperator, isArrayOperator, arrayElementType } from "./utils"
+import { isLogicalOperator, isArrayOperator } from "./utils"
+import { arrayElementType } from "@/utils/abi"
+import { NormalizedCondition } from "../../../../sdk/build/esm/sdk/src/conditions/normalizeCondition"
 export { matchesAbi } from "./utils"
 
 export interface Props {
@@ -259,21 +261,6 @@ export const ChildConditions: React.FC<
   )
 }
 
-const calcMaxLogicalDepth = (condition: Condition): number => {
-  const { children, operator } = condition
-  if (!children) return 0
-  return isLogicalOperator(operator)
-    ? 1
-    : 0 +
-        Math.max(
-          ...children.map((child) => {
-            return isLogicalOperator(child.operator)
-              ? 1 + calcMaxLogicalDepth(child)
-              : 0
-          })
-        )
-}
-
 const ComparisonConditionView: React.FC<Props> = ({
   condition,
   paramIndex,
@@ -323,8 +310,17 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
           Cannot parse this condition (it most likely came from a different
           interface)
         </p>
-        <pre>{JSON.stringify(condition, undefined, 2)}</pre>
+        <pre>{JSON.stringify(stripIds(condition), undefined, 2)}</pre>
       </LabeledData>
     </Flex>
   )
+}
+
+const stripIds = (condition: Condition & { $$id?: string }): Condition => {
+  const { $$id, children, ...rest } = condition
+  if (!children) return rest
+  return {
+    ...rest,
+    children: children.map(stripIds),
+  }
 }

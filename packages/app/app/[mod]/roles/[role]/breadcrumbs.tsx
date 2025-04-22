@@ -19,7 +19,7 @@ export default function PageBreadcrumbs({
 
   return (
     <>
-      <ParentPageBreadcrumbs mod={mod} isLink={true} />
+      <ParentPageBreadcrumbs mod={mod} />
       <BreadcrumbDivider />
       <Breadcrumb
         href={`/${mod.chainPrefix}:${mod.address}/roles/${role}`}

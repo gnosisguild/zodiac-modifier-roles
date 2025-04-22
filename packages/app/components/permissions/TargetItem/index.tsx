@@ -14,23 +14,11 @@ import Switch from "@/ui/Switch"
 import StopPropagation from "@/ui/StopPropagation"
 import Anchor from "@/ui/Anchor"
 import { fetchContractInfo } from "@/app/abi"
-import addressLabels from "./addressLabels.json"
 import { DiffFlag, PermissionsDiff } from "../types"
 import { groupDiff } from "../PermissionsDiff/diff"
 import DiffBox from "../DiffBox"
 import classes from "./style.module.css"
-
-const ADDRESS_LABELS = Object.fromEntries(
-  Object.entries(addressLabels).map(([chain, labels]) => [
-    chain,
-    Object.fromEntries(
-      Object.entries(labels).map(([address, label]) => [
-        address.toLowerCase(),
-        label,
-      ])
-    ),
-  ])
-)
+import ContractName from "@/components/ContractName"
 
 const TargetItem: React.FC<{
   targetAddress: `0x${string}`
@@ -40,19 +28,6 @@ const TargetItem: React.FC<{
 }> = async ({ targetAddress, chainId, permissions, diff }) => {
   const contractInfo = await fetchContractInfo(targetAddress, chainId)
 
-  const defaultLabel = contractInfo.proxyTo ? (
-    <>
-      <span className={classes.proxy}>proxy to</span>{" "}
-      {contractInfo.name || (
-        <span className={classes.proxyTo}>
-          {getAddress(contractInfo.proxyTo)}
-        </span>
-      )}
-    </>
-  ) : (
-    contractInfo.name
-  )
-
   // don't take into account "shadow permissions" added in the diff view for the purpose of aligning items in the two columns
   const ownPermissions = diff
     ? permissions.filter((p) => diff.get(p)?.flag !== DiffFlag.Hidden)
@@ -61,11 +36,6 @@ const TargetItem: React.FC<{
   const isWildcarded = ownPermissions.some(
     (permission) => !("selector" in permission)
   )
-
-  const label =
-    (ADDRESS_LABELS as any)[chainId.toString()]?.[
-      targetAddress.toLowerCase()
-    ] || defaultLabel
 
   const targetDiff =
     diff &&
@@ -77,18 +47,6 @@ const TargetItem: React.FC<{
         return diff.get(p)!.flag
       })
     )
-
-  const address = (
-    <Address
-      address={targetAddress}
-      chainId={chainId}
-      displayFull
-      copyToClipboard
-      explorerLink
-      blockieClassName={classes.targetBlockie}
-      className={classes.targetAddress}
-    />
-  )
 
   return (
     <DiffBox
@@ -107,11 +65,7 @@ const TargetItem: React.FC<{
             <LabeledData label="Target Contract">
               {/* Prevent clicks on the anchor or address icons from toggling the panel */}
               <StopPropagation>
-                <Flex gap={2} alignItems="center">
-                  <Anchor name={targetAddress} className={classes.anchor} />
-                  {label || address}
-                </Flex>
-                {label && address}
+                <ContractName chainId={chainId} contractInfo={contractInfo} />
               </StopPropagation>
             </LabeledData>
             <LabeledData label="Permissions">

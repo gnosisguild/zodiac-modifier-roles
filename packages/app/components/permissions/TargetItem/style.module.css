@@ -52,21 +52,11 @@
   margin-left: calc(var(--open-parantheses-width) * -1);
 }
 
-.targetHeader .targetBlockie {
-  height: 18px;
-  border: 0;
-  padding: 0;
-}
-
 .functionCount {
   height: 30px;
   font-family: var(--font-mono), monospace;
   display: flex;
   align-items: center;
-}
-
-.targetAddress {
-  height: 30px;
 }
 
 .targetContent {
@@ -117,21 +107,5 @@
 }
 
 .anchor {
-  /* We want to align it with the address blockie, which is 18x18 px */
   margin: -10px;
-}
-
-.proxy {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: var(--bg-color);
-  width: fit-content;
-  padding: 2px 5px;
-  font-family: var(--font-mono), monospace;
-  text-transform: uppercase;
-}
-
-.proxyTo {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
 }

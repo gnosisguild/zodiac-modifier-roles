@@ -15,9 +15,6 @@
 .disabled {
   cursor: initial;
   pointer-events: none;
-}
-
-.disabled .knobCase {
   opacity: 0.7;
 }
 

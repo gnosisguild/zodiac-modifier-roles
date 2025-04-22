@@ -22,7 +22,11 @@
   },
   "devDependencies": {
     "@gnosis-guild/typechain-ethers-v6": "^0.5.5",
+<<<<<<< HEAD
     "@gnosis-guild/zodiac-core": "^2.1.1",
+=======
+    "@gnosis-guild/zodiac-core": "^2.1.3",
+>>>>>>> feat/mantle-unichain
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-ignition": "^0.15.10",

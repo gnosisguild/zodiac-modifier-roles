@@ -8,7 +8,6 @@ import LabeledData from "@/ui/LabeledData"
 import { SlArrowDown } from "react-icons/sl"
 import classNames from "classnames"
 import { matchesAbi } from "./utils"
-import { MdErrorOutline } from "react-icons/md"
 
 interface Props {
   condition: Condition
