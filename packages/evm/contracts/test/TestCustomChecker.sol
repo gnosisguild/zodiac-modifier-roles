@@ -8,14 +8,14 @@ contract TestCustomChecker is ICustomCondition {
         address,
         uint256,
         bytes calldata data,
-        Enum.Operation operation,
+        Operation operation,
         uint256 location,
         uint256 size,
         bytes12 extra
     ) public pure returns (bool success, bytes32 reason) {
         uint256 param = uint256(bytes32(data[location:location + size]));
 
-        if (operation != Enum.Operation.Call) {
+        if (operation != Operation.Call) {
             return (false, bytes32(0));
         }
 

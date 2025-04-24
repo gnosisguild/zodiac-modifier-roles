@@ -5,9 +5,8 @@ import { ConsumptionStructOutput } from "../typechain-types/contracts/test/MockC
 
 describe("Consumptions library", async () => {
   async function setup() {
-    const MockConsumptions = await hre.ethers.getContractFactory(
-      "MockConsumptions"
-    );
+    const MockConsumptions =
+      await hre.ethers.getContractFactory("MockConsumptions");
     const consumptions = await MockConsumptions.deploy();
 
     return {

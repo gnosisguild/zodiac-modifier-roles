@@ -23,7 +23,11 @@ abstract contract Core is Modifier {
     function _load(
         Role storage role,
         bytes32 key
-    ) internal view virtual returns (Condition memory, Consumption[] memory);
+    )
+        internal
+        view
+        virtual
+        returns (Condition memory, AbiTypeTree[] memory, Consumption[] memory);
 
     function _accruedAllowance(
         Allowance memory allowance,

@@ -1,39 +1,38 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder } from "ethers";
 
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamStatic } from "./setup";
-import { AbiCoder } from "ethers";
+import { setupOneParamStatic } from "../setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Or", async () => {
   it("evaluates operator Or with a single child", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
@@ -47,32 +46,31 @@ describe("Operator - Or", async () => {
   });
 
   it("evaluates operator Or with multiple children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [15]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [30]),
       },
