@@ -8,7 +8,7 @@ import "./EIP712Encoder.sol";
  * @title SignTypedMessageLib - Marks (typed) messages as signed in SafeStorage
  * @author gnosisguild
  */
-contract SignTypedMessageLib is SafeStorage, EIP712Encoder {
+contract SignTypedMessageLib is SafeStorage {
     /// @dev Deployment address of the contract.
     address public immutable deployedAt;
 
@@ -51,7 +51,7 @@ contract SignTypedMessageLib is SafeStorage, EIP712Encoder {
     function signTypedMessage(
         bytes calldata domain,
         bytes calldata message,
-        TypedData calldata types
+        EIP712Encoder.TypedData calldata types
     ) public {
         require(address(this) != deployedAt);
         bytes32 safeMessageHash = hashTypedSafeMessage(domain, message, types);
@@ -94,11 +94,13 @@ contract SignTypedMessageLib is SafeStorage, EIP712Encoder {
     function hashTypedSafeMessage(
         bytes calldata domain,
         bytes calldata message,
-        TypedData calldata types
+        EIP712Encoder.TypedData calldata types
     ) public view returns (bytes32) {
         return
             hashSafeMessage(
-                abi.encode(hashTypedMessage(domain, message, types))
+                abi.encode(
+                    EIP712Encoder.hashTypedMessage(domain, message, types)
+                )
             );
     }
 
@@ -110,7 +112,7 @@ contract SignTypedMessageLib is SafeStorage, EIP712Encoder {
     fallback() external {
         bytes calldata domain;
         bytes calldata message;
-        TypedData calldata types;
+        EIP712Encoder.TypedData calldata types;
         assembly {
             // offset to domain block
             domain.offset := add(calldataload(0x04), 0x24)

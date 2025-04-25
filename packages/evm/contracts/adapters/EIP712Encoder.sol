@@ -7,7 +7,7 @@ import "../AbiDecoder.sol";
  * @title EIP712Encoder - Encodes and hashes EIP-712 typed structured data
  * @author gnosisguild
  */
-contract EIP712Encoder {
+library EIP712Encoder {
     struct TypedData {
         AbiTypeTree[] typeTree;
         bytes32[] typeHashes;
@@ -24,7 +24,7 @@ contract EIP712Encoder {
         bytes calldata domain,
         bytes calldata message,
         TypedData calldata types
-    ) public pure returns (bytes32 result) {
+    ) internal pure returns (bytes32 result) {
         (bytes32 domainSeparator, bytes32 messageHash) = (
             _inpectAndHashStruct(domain, types, 0),
             _inpectAndHashStruct(message, types, 1)
@@ -47,7 +47,7 @@ contract EIP712Encoder {
     function hashTypedDomain(
         bytes calldata data,
         TypedData calldata types
-    ) public pure returns (bytes32) {
+    ) internal pure returns (bytes32) {
         return _inpectAndHashStruct(data, types, 0);
     }
 
