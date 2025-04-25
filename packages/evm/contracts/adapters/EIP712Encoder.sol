@@ -8,7 +8,7 @@ import "../AbiDecoder.sol";
  * @author gnosisguild
  */
 library EIP712Encoder {
-    struct TypedData {
+    struct Types {
         AbiTypeTree[] typeTree;
         bytes32[] typeHashes;
     }
@@ -23,7 +23,7 @@ library EIP712Encoder {
     function hashTypedMessage(
         bytes calldata domain,
         bytes calldata message,
-        TypedData calldata types
+        Types calldata types
     ) internal pure returns (bytes32 result) {
         (bytes32 domainSeparator, bytes32 messageHash) = (
             _inpectAndHashStruct(domain, types, 0),
@@ -46,7 +46,7 @@ library EIP712Encoder {
      */
     function hashTypedDomain(
         bytes calldata data,
-        TypedData calldata types
+        Types calldata types
     ) internal pure returns (bytes32) {
         return _inpectAndHashStruct(data, types, 0);
     }
@@ -60,7 +60,7 @@ library EIP712Encoder {
      */
     function _inpectAndHashStruct(
         bytes calldata data,
-        TypedData calldata types,
+        Types calldata types,
         uint256 index
     ) private pure returns (bytes32) {
         Payload memory payload = AbiDecoder
@@ -79,7 +79,7 @@ library EIP712Encoder {
      */
     function _hashBlock(
         bytes calldata data,
-        TypedData calldata types,
+        Types calldata types,
         Payload memory _block
     ) private pure returns (bytes32) {
         bytes32[] memory result = new bytes32[](_block.children.length);
@@ -117,7 +117,7 @@ library EIP712Encoder {
      */
     function _encodeField(
         bytes calldata data,
-        TypedData calldata types,
+        Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
         AbiType _type = types.typeTree[field.index]._type;
