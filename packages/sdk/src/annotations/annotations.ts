@@ -31,24 +31,24 @@ export interface Preset {
 }
 
 /**
- * Processes annotations by resolving and validating them against a given list of permissions.
- * The idea is that we only show annotations that correspond to what's currently on chain
+ * Processes annotations and validates against a list of permissions (intended
+ * to be the on-chain permissions).
  *
- * The following sequence of actions is performed
- * 1- Resolves annotations to build permission presets based on the associated URIs and schemas.
- * 2- Validates presets by ensuring they are strict subsets of the provided permissions.
- * 3- Returns remaining unannotated permissions (those not included in any preset).
+ * This function:
+ * 1. Resolves each annotation (uri and schema) into a permission preset
+ * 2. Validates each preset against the input list (must be strict subset)
+ * 3. Discards invalid presets
+ * 4. Returns validated presets plus remaining permissions not covered by presets
  *
- * @param {readonly Permission[]} permissions - A list of all available permissions.
- * @param {readonly Annotation[]} annotations - A list of annotations to resolve and validate.
- * @param {Object} [options] - Optional functions for fetching resources.
- * @param {Function} [options.fetchPermissions] - A function to fetch permissions from a URL. Defaults to `defaultJsonFetch`.
- * @param {Function} [options.fetchSchema] - A function to fetch a schema from a URL. Defaults to `defaultJsonFetch`.
+ * @param {readonly Permission[]} permissions - List of permissions to validate against
+ * @param {readonly Annotation[]} annotations - Annotations to resolve and validate
+ * @param {Object} [options] - Optional functions for fetching resources
+ * @param {Function} [options.fetchPermissions] - Fetch permissions from URL
+ * @param {Function} [options.fetchSchema] - Fetch schema from URL
  *
  * @returns {Promise<{ presets: Preset[], permissions: Permission[] }>}
- *   A promise that resolves to an object containing:
- *   - `presets`: An array of confirmed presets (corresponding to confirmed annotations).
- *   - `permissions`: The remaining unannotated permissions.
+ *   - `presets`: Valid presets (strict subsets of input permissions)
+ *   - `permissions`: Input permissions not covered by any preset
  */
 export const processAnnotations = async (
   permissions: readonly Permission[],
