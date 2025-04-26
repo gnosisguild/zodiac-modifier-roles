@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./_Core.sol";
+import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
-import "./Core.sol";
-import "./Periphery.sol";
 import "./Topology.sol";
 
 import "./packers/BufferPacker.sol";
