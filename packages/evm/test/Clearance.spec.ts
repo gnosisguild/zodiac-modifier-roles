@@ -26,7 +26,7 @@ describe("Clearance", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
 
     await modifier.enableModule(invoker.address);
@@ -53,7 +53,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
@@ -65,7 +65,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     ).to.not.be.reverted;
 
     await modifier.connect(owner).revokeTarget(ROLE_KEY, testContractAddress);
@@ -73,7 +73,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
@@ -96,7 +96,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     ).to.not.be.reverted;
 
     await expect(
@@ -106,8 +106,8 @@ describe("Clearance", async () => {
           await testContractClone.getAddress(),
           0,
           data as string,
-          0
-        )
+          0,
+        ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
@@ -126,7 +126,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     const { data } = await testContract.doNothing.populateTransaction();
@@ -134,7 +134,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     ).to.not.be.reverted;
 
     await modifier
@@ -144,12 +144,12 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR.padEnd(66, "0")
+        SELECTOR.padEnd(66, "0"),
       );
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
@@ -166,7 +166,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     const { data } = await testContract.doNothing.populateTransaction();
@@ -175,7 +175,7 @@ describe("Clearance", async () => {
     await expect(
       modifier
         .connect(invoker)
-        .execTransactionFromModule(testContractAddress, 0, data as string, 0)
+        .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     ).to.not.be.reverted;
 
     // but fail on the clone
@@ -186,8 +186,8 @@ describe("Clearance", async () => {
           await testContractClone.getAddress(),
           0,
           data as string,
-          0
-        )
+          0,
+        ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
@@ -216,8 +216,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await modifier.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
@@ -228,7 +228,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selectorDoNothing,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await expect(
@@ -238,8 +238,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoNothing as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await expect(
@@ -249,13 +249,13 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        selectorDoEvenLess.padEnd(66, "0")
+        selectorDoEvenLess.padEnd(66, "0"),
       );
   });
 
@@ -279,7 +279,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR1,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await expect(
@@ -289,8 +289,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoNothing as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await expect(
@@ -300,13 +300,13 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR2.padEnd(66, "0")
+        SELECTOR2.padEnd(66, "0"),
       );
 
     await modifier
@@ -320,8 +320,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     ).to.emit(testContract, "DoEvenLess");
   });
 
@@ -343,7 +343,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selector1,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await modifier
@@ -352,7 +352,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selector2,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await expect(
@@ -362,8 +362,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoNothing as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await expect(
@@ -373,8 +373,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await modifier
@@ -388,8 +388,8 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoNothing as string,
-          0
-        )
+          0,
+        ),
     ).to.not.be.reverted;
 
     await expect(
@@ -399,13 +399,13 @@ describe("Clearance", async () => {
           testContractAddress,
           0,
           dataDoEvenLess as string,
-          0
-        )
+          0,
+        ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        selector2.padEnd(66, "0")
+        selector2.padEnd(66, "0"),
       );
   });
 });

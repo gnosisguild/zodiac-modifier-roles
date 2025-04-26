@@ -19,7 +19,7 @@ import {
 describe("Operator - ArrayEvery", async () => {
   it("evaluates Operator ArrayEvery", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStaticTuple
+      setupOneParamArrayOfStaticTuple,
     );
 
     await scopeFunction([
@@ -61,36 +61,36 @@ describe("Operator - ArrayEvery", async () => {
       invoke([
         { a: 999, b: true },
         { a: 100, b: true },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(
       invoke([
         { a: 999, b: false },
         { a: 100, b: true },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(
       invoke([
         { a: 999, b: true },
         { a: 1000, b: true },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
   it("evaluates Operator ArrayEvery - empty input", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -122,7 +122,7 @@ describe("Operator - ArrayEvery", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 });

@@ -24,9 +24,8 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Allowance", async () => {
   it("unexistent allowance produces error", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x123000000000000000000000000000000000000000000000000000000000000f";
@@ -58,7 +57,7 @@ describe("Allowance", async () => {
   });
   it("raises ConsumeAllowance event", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
@@ -93,7 +92,7 @@ describe("Allowance", async () => {
   });
   it("does not raise ConsumeAllowance, when inner transaction reverts, shouldRevert=false", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
@@ -126,9 +125,8 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
   });
   it("consumption in truthy And branch bleeds to other branches", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke, owner } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -173,9 +171,8 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
   });
   it("consumption in falsy Or branch gets discarded", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke, owner } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -229,7 +226,7 @@ describe("Allowance", async () => {
             ],
           },
         ],
-      })
+      }),
     );
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
@@ -240,7 +237,7 @@ describe("Allowance", async () => {
   });
   it("consumption in ArraySome gets counted once", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey =
@@ -296,14 +293,14 @@ describe("Allowance", async () => {
         { a: 100, b: "0xbadfed" },
         { a: 900, b: "0xbadfed" },
         { a: 1234, b: "0xbadfed" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(800);
   });
   it("consumption in ArrayEvery gets counted for all elements", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey =
@@ -349,7 +346,7 @@ describe("Allowance", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
@@ -358,16 +355,16 @@ describe("Allowance", async () => {
       invoke([
         { a: 123, b: "0xbadfed" },
         { a: 200, b: "0xbadfed" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(
-      1000 - (123 + 200)
+      1000 - (123 + 200),
     );
   });
   it("consumption in ArraySubset gets counted in hits", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey1 =
@@ -457,7 +454,7 @@ describe("Allowance", async () => {
       invoke([
         { a: 20, b: "0xdeadbeef" },
         { a: 30, b: "0xbad0beef" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
@@ -613,7 +610,7 @@ describe("Allowance", async () => {
   });
   it("failing Matches returns unchanged in memory consumptions", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamStaticTuple
+      setupOneParamStaticTuple,
     );
 
     const allowanceKey1 =
@@ -685,7 +682,7 @@ describe("Allowance", async () => {
   });
   it("balance above maxRefill gets consumed", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
@@ -743,7 +740,7 @@ describe("Allowance", async () => {
         hre,
         owner.address,
         avatarAddress,
-        avatarAddress
+        avatarAddress,
       );
       await roles.enableModule(invoker.address);
 
@@ -758,9 +755,8 @@ describe("Allowance", async () => {
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
-      const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-        "MultiSendUnwrapper"
-      );
+      const MultiSendUnwrapper =
+        await hre.ethers.getContractFactory("MultiSendUnwrapper");
       const adapter = await MultiSendUnwrapper.deploy();
       const adapterAddress = await adapter.getAddress();
 
@@ -769,7 +765,7 @@ describe("Allowance", async () => {
         .setTransactionUnwrapper(
           multisendAddress,
           multisend.interface.getFunction("multiSend").selector,
-          adapterAddress
+          adapterAddress,
         );
 
       async function setAllowance(allowanceKey: string, balance: BigNumberish) {
@@ -833,7 +829,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -860,7 +856,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const testContractAddress = await testContract.getAddress();
@@ -881,20 +877,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   0,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -904,15 +900,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - value1
+        balance1 - value1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("consumptions with overlap get flushed", async () => {
@@ -959,7 +955,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -986,7 +982,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1006,20 +1002,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1029,15 +1025,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("consumptions with overlap overspend", async () => {
@@ -1072,7 +1068,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -1099,7 +1095,7 @@ describe("Allowance", async () => {
             compValue: "0x",
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1119,12 +1115,12 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value2,
-                  999999
+                  999999,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
@@ -1137,8 +1133,8 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       )
         .to.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
@@ -1189,7 +1185,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles
@@ -1198,7 +1194,7 @@ describe("Allowance", async () => {
           roleKey,
           testContractAddress,
           testContract.interface.getFunction("doNothing").selector,
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await roles.connect(owner).scopeFunction(
@@ -1225,7 +1221,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1242,9 +1238,8 @@ describe("Allowance", async () => {
             {
               to: testContractAddress,
               value: 0,
-              data: (
-                await testContract.doNothing.populateTransaction()
-              ).data as string,
+              data: (await testContract.doNothing.populateTransaction())
+                .data as string,
               operation: 0,
             },
             {
@@ -1253,20 +1248,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1276,15 +1271,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("middle entrypoint scoped with no consumptions carries and flushes", async () => {
@@ -1332,7 +1327,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       const testEncoderAddress = await testEncoder.getAddress();
       await roles.connect(owner).scopeFunction(
@@ -1353,7 +1348,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["uint256"], [1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -1382,7 +1377,7 @@ describe("Allowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1399,9 +1394,8 @@ describe("Allowance", async () => {
             {
               to: testEncoderAddress,
               value: 0,
-              data: (
-                await testEncoder.simple.populateTransaction(1)
-              ).data as string,
+              data: (await testEncoder.simple.populateTransaction(1))
+                .data as string,
               operation: 0,
             },
             {
@@ -1410,20 +1404,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1433,15 +1427,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
   });

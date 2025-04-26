@@ -20,7 +20,7 @@ import {
 describe("Operator - LessThan", async () => {
   it("evaluates operator LessThan - uint full word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamUintWord
+      setupOneParamUintWord,
     );
 
     await scopeFunction([
@@ -42,19 +42,19 @@ describe("Operator - LessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke(1001))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke(999)).to.not.be.reverted;
   });
   it("evaluates operator LessThan - uint smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamUintSmall
+      setupOneParamUintSmall,
     );
 
     await scopeFunction([
@@ -76,28 +76,27 @@ describe("Operator - LessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke(51))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke(49)).to.not.be.reverted;
     await expect(invoke(0)).to.not.be.reverted;
   });
   it("evaluates operator LessThan - address", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamAddress
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamAddress);
 
     const address = "0x000000000000000000000000000000000000000f";
 
@@ -120,19 +119,19 @@ describe("Operator - LessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke("0x000000000000000000000000000000000000001f"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
     await expect(invoke("0x800000000000000000000000000000000000000e"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke("0x000000000000000000000000000000000000000e")).to.not.be

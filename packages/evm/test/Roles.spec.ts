@@ -35,7 +35,7 @@ describe("Roles", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await roles.enableModule(invoker.address);
 
@@ -88,7 +88,7 @@ describe("Roles", async () => {
           compValue: "0x",
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     return {
@@ -111,7 +111,7 @@ describe("Roles", async () => {
         hre,
         user1.address,
         user1.address,
-        user1.address
+        user1.address,
       );
       await roles.waitForDeployment();
       await expect(roles.deploymentTransaction())
@@ -126,13 +126,13 @@ describe("Roles", async () => {
       await expect(
         roles
           .connect(owner)
-          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true])
+          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true]),
       ).to.be.revertedWithCustomError(roles, "ArraysDifferentLength");
     });
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
-        roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true])
+        roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true]),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("assigns roles to a module", async () => {
@@ -143,7 +143,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await expect(
@@ -153,8 +153,8 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.be.revertedWithCustomError(roles, "NoMembership");
 
       await roles
@@ -170,8 +170,8 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.emit(testContract, "DoNothing");
     });
     it("revokes roles to a module", async () => {
@@ -182,7 +182,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       //authorize
@@ -199,8 +199,8 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.emit(testContract, "DoNothing");
 
       //revoke
@@ -216,8 +216,8 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.be.revertedWithCustomError(roles, "NoMembership");
     });
     it("it enables the module if necessary", async () => {
@@ -232,14 +232,14 @@ describe("Roles", async () => {
       await expect(
         roles
           .connect(owner)
-          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true])
+          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true]),
       ).to.not.be.reverted;
     });
     it("emits the AssignRoles event", async () => {
       const { owner, alice, roles } = await loadFixture(setup);
 
       await expect(
-        roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true])
+        roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true]),
       )
         .to.emit(roles, "AssignRoles")
         .withArgs(alice.address, [ROLE_KEY1], [true]);
@@ -250,7 +250,7 @@ describe("Roles", async () => {
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
-        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1)
+        roles.connect(alice).setDefaultRole(bob.address, ROLE_KEY1),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("sets default role", async () => {
@@ -270,7 +270,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY1,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       // expect it to fail
@@ -281,8 +281,8 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.be.reverted;
 
       // make ROLE1 the default to invoker
@@ -294,15 +294,15 @@ describe("Roles", async () => {
             await testContract.getAddress(),
             0,
             testContract.interface.encodeFunctionData("doNothing"),
-            0
-          )
+            0,
+          ),
       ).to.emit(testContract, "DoNothing");
     });
     it("emits event with correct params", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 
       await expect(
-        roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2)
+        roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2),
       )
         .to.emit(roles, "SetDefaultRole")
         .withArgs(invoker.address, ROLE_KEY2);
@@ -324,10 +324,10 @@ describe("Roles", async () => {
             (
               await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
-                executionRevert
+                executionRevert,
               )
             ).data as string,
-            0
+            0,
           );
       }
 
@@ -340,7 +340,7 @@ describe("Roles", async () => {
 
       await expect(invoke(0, true)).to.revertedWithCustomError(
         roles,
-        "NotAuthorized"
+        "NotAuthorized",
       );
     });
     it("success=true, flushes consumptions to storage", async () => {
@@ -385,10 +385,10 @@ describe("Roles", async () => {
             (
               await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
-                executionRevert
+                executionRevert,
               )
             ).data as string,
-            0
+            0,
           );
       }
 
@@ -401,7 +401,7 @@ describe("Roles", async () => {
 
       await expect(invoke(0, true)).to.revertedWithCustomError(
         roles,
-        "NotAuthorized"
+        "NotAuthorized",
       );
     });
     it("success=true, flushes consumptions to storage", async () => {
@@ -440,7 +440,7 @@ describe("Roles", async () => {
       async function invoke(
         toSpend: number,
         success: boolean,
-        shouldModifierRevert: boolean
+        shouldModifierRevert: boolean,
       ) {
         const executionRevert = !success;
         return roles
@@ -451,12 +451,12 @@ describe("Roles", async () => {
             (
               await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
-                executionRevert
+                executionRevert,
               )
             ).data as string,
             0,
             roleKey,
-            shouldModifierRevert
+            shouldModifierRevert,
           );
       }
 
@@ -469,7 +469,7 @@ describe("Roles", async () => {
 
       await expect(invoke(0, true, true)).to.revertedWithCustomError(
         roles,
-        "NotAuthorized"
+        "NotAuthorized",
       );
     });
     it("success=true shouldRevert=true, flush YES revert NO", async () => {
@@ -538,7 +538,7 @@ describe("Roles", async () => {
       async function invoke(
         toSpend: number,
         success: boolean,
-        shouldModifierRevert: boolean
+        shouldModifierRevert: boolean,
       ) {
         const executionRevert = !success;
         return roles
@@ -549,12 +549,12 @@ describe("Roles", async () => {
             (
               await testContract.spendAndMaybeRevert.populateTransaction(
                 toSpend,
-                executionRevert
+                executionRevert,
               )
             ).data as string,
             0,
             roleKey,
-            shouldModifierRevert
+            shouldModifierRevert,
           );
       }
 
@@ -567,7 +567,7 @@ describe("Roles", async () => {
 
       await expect(invoke(0, true, true)).to.revertedWithCustomError(
         roles,
-        "NotAuthorized"
+        "NotAuthorized",
       );
     });
     it("success=true shouldRevert=true, flush YES revert NO", async () => {
@@ -667,7 +667,7 @@ describe("Roles", async () => {
             compValue: defaultAbiCoder.encode(["uint256"], [11]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -688,7 +688,7 @@ describe("Roles", async () => {
             compValue: defaultAbiCoder.encode(["uint256"], [11]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const invoke = async (targetAddress: string, a: number) =>
@@ -699,7 +699,7 @@ describe("Roles", async () => {
             0,
             (await testContract.fnWithSingleParam.populateTransaction(a))
               .data as string,
-            0
+            0,
           );
 
       await expect(invoke(await testContract.getAddress(), 11)).to.not.be
@@ -750,7 +750,7 @@ describe("Roles", async () => {
                       operator: Operator.EqualTo,
                       compValue: defaultAbiCoder.encode(
                         ["bytes"],
-                        ["0xaabbccdd4500d1"]
+                        ["0xaabbccdd4500d1"],
                       ),
                     },
                   ],
@@ -759,7 +759,7 @@ describe("Roles", async () => {
             },
           ],
         }),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const invoke = async (a: number, b: BytesLike) => {
@@ -776,7 +776,7 @@ describe("Roles", async () => {
             0,
             (await testContract.dynamic.populateTransaction(inner))
               .data as string,
-            0
+            0,
           );
       };
 
@@ -822,7 +822,7 @@ describe("Roles", async () => {
             },
           ],
         }),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
     });
 
@@ -861,7 +861,7 @@ describe("Roles", async () => {
             },
           ],
         }),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
     });
   });

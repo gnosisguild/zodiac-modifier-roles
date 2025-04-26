@@ -15,9 +15,8 @@ import { setupOneParamIntSmall, setupOneParamIntWord } from "../setup";
 
 describe("Operator - SignedIntLessThan", async () => {
   it("evaluates operator SignedIntLessThan - positive full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntWord
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamIntWord);
 
     await scopeFunction([
       {
@@ -38,14 +37,14 @@ describe("Operator - SignedIntLessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(999)).to.not.be.reverted;
@@ -56,9 +55,8 @@ describe("Operator - SignedIntLessThan", async () => {
   });
 
   it("evaluates operator SignedIntLessThan - negative full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntWord
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamIntWord);
 
     await scopeFunction([
       {
@@ -79,21 +77,21 @@ describe("Operator - SignedIntLessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(0))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(-1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(-1001)).to.not.be.reverted;
@@ -101,7 +99,7 @@ describe("Operator - SignedIntLessThan", async () => {
 
   it("evaluates operator SignedIntLessThan - positive smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntSmall
+      setupOneParamIntSmall,
     );
 
     await scopeFunction([
@@ -123,14 +121,14 @@ describe("Operator - SignedIntLessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(49)).to.not.be.reverted;
@@ -142,7 +140,7 @@ describe("Operator - SignedIntLessThan", async () => {
 
   it("evaluates operator SignedIntLessThan - negative smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntSmall
+      setupOneParamIntSmall,
     );
 
     await scopeFunction([
@@ -164,21 +162,21 @@ describe("Operator - SignedIntLessThan", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(0))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(-99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(-100)).to.not.be.reverted;

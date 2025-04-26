@@ -15,9 +15,8 @@ import { setupOneParamIntSmall, setupOneParamIntWord } from "../setup";
 
 describe("Operator - SignedIntGreaterThan", async () => {
   it("evaluates operator SignedIntGreaterThan - positive full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntWord
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamIntWord);
 
     await scopeFunction([
       {
@@ -44,9 +43,8 @@ describe("Operator - SignedIntGreaterThan", async () => {
   });
 
   it("evaluates operator SignedIntGreaterThan - negative full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntWord
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamIntWord);
 
     await scopeFunction([
       {
@@ -76,7 +74,7 @@ describe("Operator - SignedIntGreaterThan", async () => {
 
   it("evaluates operator SignedIntGreaterThan - positive smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntSmall
+      setupOneParamIntSmall,
     );
 
     await scopeFunction([
@@ -106,7 +104,7 @@ describe("Operator - SignedIntGreaterThan", async () => {
 
   it("evaluates operator SignedIntGreaterThan - negative smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamIntSmall
+      setupOneParamIntSmall,
     );
 
     await scopeFunction([

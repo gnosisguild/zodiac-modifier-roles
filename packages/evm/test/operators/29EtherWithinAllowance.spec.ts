@@ -38,7 +38,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await roles.enableModule(invoker.address);
 
@@ -70,7 +70,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
     const SELECTOR = testContract.interface.getFunction(
-      "receiveEthAndDoNothing"
+      "receiveEthAndDoNothing",
     ).selector;
 
     await roles.connect(owner).scopeFunction(
@@ -91,7 +91,7 @@ describe("Operator - EtherWithinAllowance", async () => {
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
       ],
-      ExecutionOptions.Send
+      ExecutionOptions.Send,
     );
 
     async function sendEthAndDoNothing(value: BigNumberish) {
@@ -102,7 +102,7 @@ describe("Operator - EtherWithinAllowance", async () => {
           value,
           (await testContract.receiveEthAndDoNothing.populateTransaction())
             .data as string,
-          0
+          0,
         );
     }
 
@@ -133,7 +133,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       });
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(
-        initialBalance
+        initialBalance,
       );
 
       await expect(sendEthAndDoNothing(initialBalance + 1))
@@ -275,7 +275,7 @@ describe("Operator - EtherWithinAllowance", async () => {
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.Send
+        ExecutionOptions.Send,
       );
 
       async function invoke(value: BigNumberish, p: BigNumberish) {
@@ -286,7 +286,7 @@ describe("Operator - EtherWithinAllowance", async () => {
             value,
             (await testContract.oneParamStatic.populateTransaction(p))
               .data as string,
-            0
+            0,
           );
       }
 
@@ -309,10 +309,10 @@ describe("Operator - EtherWithinAllowance", async () => {
 
       // Checks that both allowance balances still remain unchanged
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        allowanceAmount1
+        allowanceAmount1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        allowanceAmount2
+        allowanceAmount2,
       );
 
       /*
@@ -323,7 +323,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(0);
       // check that allowance 2 remains unchanged
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        allowanceAmount2
+        allowanceAmount2,
       );
 
       /*

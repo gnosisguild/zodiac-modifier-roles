@@ -7,9 +7,8 @@ import { ExecutionOptions, Operator, AbiType } from "../utils";
 
 describe("Operator - Pass", async () => {
   it("evaluates a Pass", async () => {
-    const { owner, member, roles, roleKey, testContract } = await loadFixture(
-      setupAvatarAndRoles
-    );
+    const { owner, member, roles, roleKey, testContract } =
+      await loadFixture(setupAvatarAndRoles);
 
     const conditions = [
       {
@@ -33,7 +32,7 @@ describe("Operator - Pass", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("oneParamStatic").selector,
         conditions,
-        ExecutionOptions.Both
+        ExecutionOptions.Both,
       );
 
     const invoke = async () =>
@@ -43,7 +42,7 @@ describe("Operator - Pass", async () => {
           await testContract.getAddress(),
           0,
           (await testContract.oneParamStatic.populateTransaction(0)).data,
-          0
+          0,
         );
 
     await expect(invoke()).to.not.be.reverted;

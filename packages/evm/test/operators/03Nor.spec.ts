@@ -14,9 +14,8 @@ import { setupOneParamStatic } from "../setup";
 
 describe("Operator - Nor", async () => {
   it("evaluates operator Nor with single child", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {
@@ -47,9 +46,8 @@ describe("Operator - Nor", async () => {
   });
 
   it("evaluates operator Nor with multiple children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {

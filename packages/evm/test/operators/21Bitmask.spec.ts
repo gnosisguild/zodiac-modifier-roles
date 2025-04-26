@@ -11,9 +11,8 @@ import { setupOneParamBytes, setupOneParamStatic } from "../setup";
 
 describe("Operator - Bitmask", async () => {
   it("evaluates operator Bitmask - Static, left aligned", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     const shift = "0000";
     const mask = "ff".padEnd(30, "0");
@@ -38,33 +37,32 @@ describe("Operator - Bitmask", async () => {
     await expect(
       invoke(
         BigInt(
-          "0x4600000000000000000000000000000000000000000000000000000000000000"
-        )
-      )
+          "0x4600000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
     ).to.not.be.reverted;
 
     await expect(
       invoke(
         BigInt(
-          "0x4600ff0000000000000000000000000000000110000000000000000334400000"
-        )
-      )
+          "0x4600ff0000000000000000000000000000000110000000000000000334400000",
+        ),
+      ),
     ).to.not.be.reverted;
 
     await expect(
       invoke(
         BigInt(
-          "0x4500000000000000000000000000000000000000000000000000000000000000"
-        )
-      )
+          "0x4500000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator Bitmask - Static, middle aligned", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     const shift = "000a";
     const mask = "f0f0f0".padEnd(30, "0");
@@ -89,32 +87,31 @@ describe("Operator - Bitmask", async () => {
     await expect(
       invoke(
         BigInt(
-          "0x0000000000000000000010302000000000000000000000000000000000000000"
-        )
-      )
+          "0x0000000000000000000010302000000000000000000000000000000000000000",
+        ),
+      ),
     ).to.not.be.reverted;
     await expect(
       invoke(
         BigInt(
-          "0x000000000000000000001030200000000000000000000000000000ffffffffff"
-        )
-      )
+          "0x000000000000000000001030200000000000000000000000000000ffffffffff",
+        ),
+      ),
     ).to.not.be.reverted;
 
     await expect(
       invoke(
         BigInt(
-          "0x000000000000000000001030400000000000000000000000000000ffffffffff"
-        )
-      )
+          "0x000000000000000000001030400000000000000000000000000000ffffffffff",
+        ),
+      ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator Bitmask - Static, right aligned", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     const shift = "001e";
     const mask = "ffff".padEnd(30, "0");
@@ -138,32 +135,31 @@ describe("Operator - Bitmask", async () => {
     await expect(
       invoke(
         BigInt(
-          "0x00000000000000000000000000000000000000000000000000000000000abcd"
-        )
-      )
+          "0x00000000000000000000000000000000000000000000000000000000000abcd",
+        ),
+      ),
     ).to.not.be.reverted;
     await expect(
       invoke(
         BigInt(
-          "0x00000000ffffffff000000000000000000000000000000000000000000fabcd"
-        )
-      )
+          "0x00000000ffffffff000000000000000000000000000000000000000000fabcd",
+        ),
+      ),
     ).to.not.be.reverted;
 
     await expect(
       invoke(
         BigInt(
-          "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd"
-        )
-      )
+          "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd",
+        ),
+      ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator Bitmask - Static, overflow", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     // 30
     const shift = "0020";
@@ -188,17 +184,16 @@ describe("Operator - Bitmask", async () => {
     await expect(
       invoke(
         BigInt(
-          "0x000000000000000000000000000000000000000000000000000000000000000"
-        )
-      )
+          "0x000000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
   });
   it("evaluates operator Bitmask - Dynamic, left aligned", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamBytes
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
 
     const shift = "0000";
     const mask = "ff".padEnd(30, "0");
@@ -259,9 +254,8 @@ describe("Operator - Bitmask", async () => {
       .reverted;
   });
   it("evaluates operator Bitmask - Dynamic, overflow", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamBytes
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
 
     // 30
     const shift = "0050";
@@ -316,7 +310,7 @@ describe("Operator - Bitmask", async () => {
           operator: Operator.Pass,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.reverted;
 
     await expect(
@@ -339,7 +333,7 @@ describe("Operator - Bitmask", async () => {
           operator: Operator.Pass,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.reverted;
   });
 });

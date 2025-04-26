@@ -25,7 +25,7 @@ describe("Operator - WithinAllowance", async () => {
       refill: BigNumberish;
       period: BigNumberish;
       timestamp: BigNumberish;
-    }
+    },
   ) {
     return roles.setAllowance(
       allowanceKey,
@@ -33,15 +33,14 @@ describe("Operator - WithinAllowance", async () => {
       maxRefill || 0,
       refill,
       period,
-      timestamp
+      timestamp,
     );
   }
 
   describe("WithinAllowance - Check", () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
-      const { owner, roles, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -78,9 +77,8 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with only from balance and refill configured", async () => {
-      const { roles, owner, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { roles, owner, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -117,9 +115,8 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check balance from available+refill", async () => {
-      const { roles, owner, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { roles, owner, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -157,9 +154,8 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
-      const { owner, roles, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
@@ -196,9 +192,8 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with balance from refill and bellow maxRefill", async () => {
-      const { owner, roles, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
 
       const interval = 10000;
       const allowanceKey =
@@ -235,9 +230,8 @@ describe("Operator - WithinAllowance", async () => {
       await expect(invoke(1000)).to.not.be.reverted;
     });
     it("fails a check with balance from refill but capped by maxRefill", async () => {
-      const { owner, roles, scopeFunction, invoke } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
@@ -275,9 +269,8 @@ describe("Operator - WithinAllowance", async () => {
 
   describe("WithinAllowance - Consumption", async () => {
     it("Consumes balance, even with multiple references to same allowance", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupTwoParamsStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupTwoParamsStatic);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -324,9 +317,8 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.balance).to.equal(0);
     });
     it("Fails, when multiple parameters referencing the same limit overspend", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupTwoParamsStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupTwoParamsStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
@@ -368,9 +360,8 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.balance).to.equal(3000);
     });
     it("Updates timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupOneParamStatic);
 
       const interval = 600;
       const allowanceKey =
@@ -411,9 +402,8 @@ describe("Operator - WithinAllowance", async () => {
       expect(timeDifference).to.be.lte(interval * 2);
     });
     it("Does not updates timestamp if interval is zero", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupOneParamStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
       await scopeFunction([
@@ -443,9 +433,8 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.timestamp).to.equal(123);
     });
     it("Updates timestamp from past timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupOneParamStatic);
 
       const interval = 600;
 
@@ -484,9 +473,8 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.timestamp).to.be.greaterThan(timestamp);
     });
     it("Does not update timestamp from future timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } = await loadFixture(
-        setupOneParamStatic
-      );
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupOneParamStatic);
 
       const interval = 600;
       const allowanceKey =

@@ -55,13 +55,13 @@ describe("Operator - ArraySubset", async () => {
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["bool"], [true]),
         },
-      ])
+      ]),
     ).to.be.reverted;
   });
 
   it("evaluates operator ArraySubset", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -101,7 +101,7 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke([123, 4567])).to.not.be.reverted;
@@ -109,7 +109,7 @@ describe("Operator - ArraySubset", async () => {
 
   it("evaluates operator ArraySubset - order does not matter", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -155,13 +155,13 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 
   it("evaluates operator ArraySubset - empty array is not subset", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -195,13 +195,13 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 
   it("evaluates operator ArraySubset - does not allow repetition", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -247,14 +247,14 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke([3, 2, 1, 3]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 });

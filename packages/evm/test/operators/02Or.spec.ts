@@ -14,9 +14,8 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Or", async () => {
   it("evaluates operator Or with a single child", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {
@@ -47,9 +46,8 @@ describe("Operator - Or", async () => {
   });
 
   it("evaluates operator Or with multiple children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     await scopeFunction([
       {

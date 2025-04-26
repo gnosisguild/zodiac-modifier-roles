@@ -20,7 +20,7 @@ import {
 describe("Operator - GreaterThan", async () => {
   it("evaluates operator GreaterThan - uint full word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamUintWord
+      setupOneParamUintWord,
     );
 
     await scopeFunction([
@@ -48,7 +48,7 @@ describe("Operator - GreaterThan", async () => {
   });
   it("evaluates operator GreaterThan - uint smaller than word", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamUintSmall
+      setupOneParamUintSmall,
     );
 
     await scopeFunction([
@@ -75,9 +75,8 @@ describe("Operator - GreaterThan", async () => {
     await expect(invoke(51)).to.not.be.reverted;
   });
   it("evaluates operator GreaterThan - address", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamAddress
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamAddress);
 
     const address = "0x000000000000000000000000000000000000000f";
 

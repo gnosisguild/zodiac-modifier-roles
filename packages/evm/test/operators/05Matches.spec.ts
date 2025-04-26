@@ -20,7 +20,7 @@ import {
 describe("Operator - Matches", async () => {
   it("throws on children length mismatch", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -63,7 +63,7 @@ describe("Operator - Matches", async () => {
 
   it("evaluates operator Matches for Tuple", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamStaticTuple
+      setupOneParamStaticTuple,
     );
 
     await scopeFunction([
@@ -102,7 +102,7 @@ describe("Operator - Matches", async () => {
 
   it("evaluates operator Matches for Array", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
@@ -141,7 +141,7 @@ describe("Operator - Matches", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 
@@ -162,14 +162,13 @@ describe("Operator - Matches", async () => {
           operator: Operator.Matches,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
   it("evaluates operator Matches for Calldata", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, invoke, scopeFunction } =
+      await loadFixture(setupTwoParamsStatic);
 
     await scopeFunction([
       {

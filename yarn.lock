@@ -1116,6 +1116,7 @@ __metadata:
     hardhat: ^2.22.19
     hardhat-contract-sizer: 2.10.0
     hardhat-gas-reporter: ^2.2.2
+    prettier: ^3.5.3
     prettier-plugin-solidity: ^1.4.2
     solidity-coverage: 0.8.4
     ts-node: 10.9.1
@@ -15639,7 +15640,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.4.2":
+"prettier@npm:^3.4.2, prettier@npm:^3.5.3":
   version: 3.5.3
   resolution: "prettier@npm:3.5.3"
   bin:

@@ -16,7 +16,7 @@ import {
 describe("Operator - ArraySome", async () => {
   it("evaluates operator ArraySome", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStaticTuple
+      setupOneParamArrayOfStaticTuple,
     );
 
     scopeFunction([
@@ -58,7 +58,7 @@ describe("Operator - ArraySome", async () => {
       invoke([
         { a: 1234, b: true },
         { a: 1234, b: false },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(invoke([{ a: 1234, b: false }]))

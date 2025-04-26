@@ -16,7 +16,7 @@ describe("EmitsEvent", async () => {
       hre,
       owner.address,
       owner.address,
-      owner.address
+      owner.address,
     );
 
     return {
@@ -31,7 +31,7 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, AddressOne, ExecutionOptions.Send)
+        .allowTarget(ROLE_KEY, AddressOne, ExecutionOptions.Send),
     )
       .to.emit(modifier, "AllowTarget")
       .withArgs(ROLE_KEY, AddressOne, ExecutionOptions.Send);
@@ -59,14 +59,16 @@ describe("EmitsEvent", async () => {
           ROLE_KEY,
           AddressOne,
           "0x12345678",
-          ExecutionOptions.Both
-        )
+          ExecutionOptions.Both,
+        ),
     ).to.emit(modifier, "AllowFunction");
   });
   it("RevokeFunction", async () => {
     const { modifier, owner } = await loadFixture(setup);
     await expect(
-      modifier.connect(owner).revokeFunction(ROLE_KEY, AddressOne, "0x12345678")
+      modifier
+        .connect(owner)
+        .revokeFunction(ROLE_KEY, AddressOne, "0x12345678"),
     )
       .to.emit(modifier, "RevokeFunction")
       .withArgs(ROLE_KEY, AddressOne, "0x12345678");
@@ -92,8 +94,8 @@ describe("EmitsEvent", async () => {
             compValue: "0x",
           },
         ],
-        ExecutionOptions.None
-      )
+        ExecutionOptions.None,
+      ),
     ).to.emit(modifier, "ScopeFunction");
   });
   it("SetAllowance", async () => {
@@ -101,7 +103,7 @@ describe("EmitsEvent", async () => {
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000000";
     await expect(
-      modifier.connect(owner).setAllowance(allowanceKey, 2, 3, 4, 5, 6)
+      modifier.connect(owner).setAllowance(allowanceKey, 2, 3, 4, 5, 6),
     )
       .to.emit(modifier, "SetAllowance")
       .withArgs(allowanceKey, 2, 3, 4, 5, 6);

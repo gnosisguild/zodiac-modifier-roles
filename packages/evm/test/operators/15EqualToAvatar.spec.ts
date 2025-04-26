@@ -12,9 +12,8 @@ import {
 
 describe("Operator - EqualToAvatar", async () => {
   it("evaluates operator EqualToAvatar", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamAddress
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamAddress);
 
     const [, , alice, bob, charlie] = await hre.ethers.getSigners();
 

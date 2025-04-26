@@ -3,14 +3,14 @@ import { BigNumberish, solidityPacked } from "ethers";
 
 export const logGas = async (
   message: string,
-  tx: Promise<any>
+  tx: Promise<any>,
 ): Promise<any> => {
   return tx.then(async (result) => {
     const receipt = await result.wait();
     console.log(
       "           Used",
       receipt.gasUsed.toNumber(),
-      `gas for >${message}<`
+      `gas for >${message}<`,
     );
     return result;
   });
@@ -160,8 +160,8 @@ export const encodeMultisendPayload = (txs: MetaTransaction[]): string => {
       .map((tx) =>
         solidityPacked(
           ["uint8", "address", "uint256", "uint256", "bytes"],
-          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data]
-        ).slice(2)
+          [tx.operation, tx.to, tx.value, (tx.data.length - 2) / 2, tx.data],
+        ).slice(2),
       )
       .join("")
   );

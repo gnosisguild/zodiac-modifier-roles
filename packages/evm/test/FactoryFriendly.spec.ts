@@ -31,7 +31,7 @@ describe("Module works with factory", () => {
     const masterCopy = await Modifier.deploy(
       AddressOne,
       AddressOne,
-      AddressOne
+      AddressOne,
     );
     const eip1193Provider = createEip1193(hre.network.provider, deployer);
     return { factory, masterCopy, Modifier, eip1193Provider };
@@ -46,7 +46,7 @@ describe("Module works with factory", () => {
     ]);
 
     await expect(masterCopy.setUp(encodedParams)).to.be.revertedWith(
-      "Initializable: contract is already initialized"
+      "Initializable: contract is already initialized",
     );
   });
 

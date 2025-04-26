@@ -25,7 +25,7 @@ describe("Decoder library", async () => {
 
     const data = Interface.from(["function a(uint256)"]).encodeFunctionData(
       "a",
-      [987]
+      [987],
     );
 
     const typeTree = [
@@ -42,7 +42,7 @@ describe("Decoder library", async () => {
     const payload = await decoder.inspectRaw(data, typeTree);
     const [_static] = payload.children;
     expect(await decoder.pluck(data, _static.location, _static.size)).to.equal(
-      encode("uint256", 987)
+      encode("uint256", 987),
     );
   });
 
@@ -51,7 +51,7 @@ describe("Decoder library", async () => {
 
     const data = AbiCoder.defaultAbiCoder().encode(
       ["string"],
-      ["Hello World!"]
+      ["Hello World!"],
     );
 
     const typeTree = [
@@ -69,7 +69,7 @@ describe("Decoder library", async () => {
     const [dynamic] = payload.children;
 
     expect(
-      await decoder.pluck(data as string, dynamic.location, dynamic.size)
+      await decoder.pluck(data as string, dynamic.location, dynamic.size),
     ).to.equal(encode("string", "Hello World!", true));
   });
 
@@ -78,7 +78,7 @@ describe("Decoder library", async () => {
 
     const data = AbiCoder.defaultAbiCoder().encode(
       ["uint256", "string", "bytes1", "bytes", "address"],
-      [123, "John Doe", "0xbf", "0xbadbadbeef", AddressA]
+      [123, "John Doe", "0xbf", "0xbadbadbeef", AddressA],
     );
 
     const typeTree = [
@@ -100,19 +100,19 @@ describe("Decoder library", async () => {
     const [a, b, c, d, e] = payload.children;
 
     expect(await decoder.pluck(data as string, a.location, a.size)).to.equal(
-      encode("uint256", 123)
+      encode("uint256", 123),
     );
     expect(await decoder.pluck(data as string, b.location, b.size)).to.equal(
-      encode("string", "John Doe", YesRemoveOffset)
+      encode("string", "John Doe", YesRemoveOffset),
     );
     expect(await decoder.pluck(data as string, c.location, c.size)).to.equal(
-      encode("bytes1", "0xbf")
+      encode("bytes1", "0xbf"),
     );
     expect(await decoder.pluck(data as string, d.location, d.size)).to.equal(
-      encode("bytes", "0xbadbadbeef", YesRemoveOffset)
+      encode("bytes", "0xbadbadbeef", YesRemoveOffset),
     );
     expect(await decoder.pluck(data as string, e.location, e.size)).to.equal(
-      encode("address", AddressA)
+      encode("address", AddressA),
     );
   });
 
@@ -122,7 +122,7 @@ describe("Decoder library", async () => {
 
       const data = AbiCoder.defaultAbiCoder().encode(
         ["tuple(uint256)"],
-        [[123456789]]
+        [[123456789]],
       );
 
       // it's the same plus +4 bytes
@@ -150,7 +150,7 @@ describe("Decoder library", async () => {
       const [tuple] = payload.children;
       const [_static] = tuple.children;
       expect(
-        await decoder.pluck(data as string, _static.location, _static.size)
+        await decoder.pluck(data as string, _static.location, _static.size),
       ).to.equal(encode("uint256", 123456789));
     });
 
@@ -162,7 +162,7 @@ describe("Decoder library", async () => {
 
       const data = AbiCoder.defaultAbiCoder().encode(
         ["tuple(bytes)"],
-        [[value]]
+        [[value]],
       );
 
       // it's the same plus +4 bytes
@@ -191,7 +191,7 @@ describe("Decoder library", async () => {
       const [tuple] = payload.children;
       const [dynamic] = tuple.children;
       expect(
-        await decoder.pluck(data as string, dynamic.location, dynamic.size)
+        await decoder.pluck(data as string, dynamic.location, dynamic.size),
       ).to.equal(encode("bytes", value, YesRemoveOffset));
     });
 
@@ -229,19 +229,19 @@ describe("Decoder library", async () => {
       const [a, b, c, d, e] = tuple.children;
 
       expect(await decoder.pluck(data as string, a.location, a.size)).to.equal(
-        encode("uint256", 123)
+        encode("uint256", 123),
       );
       expect(await decoder.pluck(data as string, b.location, b.size)).to.equal(
-        encode("string", "John Doe", YesRemoveOffset)
+        encode("string", "John Doe", YesRemoveOffset),
       );
       expect(await decoder.pluck(data as string, c.location, c.size)).to.equal(
-        encode("bytes1", "0xbf")
+        encode("bytes1", "0xbf"),
       );
       expect(await decoder.pluck(data as string, d.location, d.size)).to.equal(
-        encode("bytes", "0xbadbadbeef", YesRemoveOffset)
+        encode("bytes", "0xbadbadbeef", YesRemoveOffset),
       );
       expect(await decoder.pluck(data as string, e.location, e.size)).to.equal(
-        encode("address", AddressA)
+        encode("address", AddressA),
       );
     });
 
@@ -250,7 +250,7 @@ describe("Decoder library", async () => {
 
       const data = AbiCoder.defaultAbiCoder().encode(
         ["tuple(uint256)"],
-        [[123456789]]
+        [[123456789]],
       );
 
       const typeTree = [
@@ -272,7 +272,7 @@ describe("Decoder library", async () => {
       const [tuple] = payload.children;
       const [_static] = tuple.children;
       expect(
-        await decoder.pluck(data as string, _static.location, _static.size)
+        await decoder.pluck(data as string, _static.location, _static.size),
       ).to.equal(encode("uint256", 123456789));
     });
 
@@ -281,7 +281,7 @@ describe("Decoder library", async () => {
 
       const data = AbiCoder.defaultAbiCoder().encode(
         ["tuple(uint256,tuple(uint256,bytes))"],
-        [[123, [456, "0xaabbcc"]]]
+        [[123, [456, "0xaabbcc"]]],
       );
 
       const typeTree = [
@@ -315,13 +315,13 @@ describe("Decoder library", async () => {
       const [_static, _tuple] = tuple.children;
       const [__static, __dynamic] = _tuple.children;
       expect(
-        await decoder.pluck(data as string, _static.location, _static.size)
+        await decoder.pluck(data as string, _static.location, _static.size),
       ).to.equal(encode("uint256", 123));
       expect(
-        await decoder.pluck(data as string, __static.location, __static.size)
+        await decoder.pluck(data as string, __static.location, __static.size),
       ).to.equal(encode("uint256", 456));
       expect(
-        await decoder.pluck(data as string, __dynamic.location, __dynamic.size)
+        await decoder.pluck(data as string, __dynamic.location, __dynamic.size),
       ).to.equal(encode("bytes", "0xaabbcc", YesRemoveOffset));
     });
 
@@ -344,7 +344,7 @@ describe("Decoder library", async () => {
 
       const data = AbiCoder.defaultAbiCoder().encode(
         ["tuple(tuple(uint256,bytes)[])"],
-        [[value]]
+        [[value]],
       );
 
       const typeTree = [
@@ -384,7 +384,7 @@ describe("Decoder library", async () => {
       const [_tuple] = array.children;
       const [__static, __dynamic] = _tuple.children;
       expect(
-        await decoder.pluck(data as string, array.location, array.size)
+        await decoder.pluck(data as string, array.location, array.size),
       ).to.equal(
         encode(
           "tuple(uint256,bytes)[]",
@@ -394,14 +394,14 @@ describe("Decoder library", async () => {
               [6768, longBytesValue],
             ],
           ],
-          YesRemoveOffset
-        )
+          YesRemoveOffset,
+        ),
       );
       expect(
-        await decoder.pluck(data as string, __static.location, __static.size)
+        await decoder.pluck(data as string, __static.location, __static.size),
       ).to.equal(encode("uint256", 123));
       expect(
-        await decoder.pluck(data as string, __dynamic.location, __dynamic.size)
+        await decoder.pluck(data as string, __dynamic.location, __dynamic.size),
       ).to.equal(encode("bytes", "0xaabb00cc", YesRemoveOffset));
     });
   });
@@ -446,7 +446,7 @@ describe("Decoder library", async () => {
 
       const data = Interface.from(["function entry(bytes)"]).encodeFunctionData(
         "entry",
-        [embedded]
+        [embedded],
       );
 
       const payload = await decoder.inspectRaw(data, typeTree);
@@ -457,15 +457,15 @@ describe("Decoder library", async () => {
       const [s1, s2] = tuple.children;
 
       expect(
-        await decoder.pluck(data as string, tuple.location, tuple.size)
+        await decoder.pluck(data as string, tuple.location, tuple.size),
       ).to.equal(`0x${embedded.slice(10)}`);
 
       expect(
-        await decoder.pluck(data as string, s1.location, s1.size)
+        await decoder.pluck(data as string, s1.location, s1.size),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [12345]));
 
       expect(
-        await decoder.pluck(data as string, s2.location, s2.size)
+        await decoder.pluck(data as string, s2.location, s2.size),
       ).to.equal(defaultAbiCoder.encode(["address"], [AddressA]));
     });
     it("plucks DynamicTuple from embedded AbiEncodedWithSelector", async () => {
@@ -500,7 +500,7 @@ describe("Decoder library", async () => {
 
       const data = Interface.from(["function entry(bytes)"]).encodeFunctionData(
         "entry",
-        [embedded]
+        [embedded],
       );
 
       const payload = await decoder.inspectRaw(data, typeTree);
@@ -515,11 +515,11 @@ describe("Decoder library", async () => {
       // ).to.equal(`0x${embedded.slice(10)}`);
 
       expect(
-        await decoder.pluck(data as string, _static.location, _static.size)
+        await decoder.pluck(data as string, _static.location, _static.size),
       ).to.equal(encode(["uint256"], [12345]));
 
       expect(
-        await decoder.pluck(data as string, dynamic.location, dynamic.size)
+        await decoder.pluck(data as string, dynamic.location, dynamic.size),
       ).to.equal(encode(["string"], ["Johnny Doe"], YesRemoveOffset));
     });
     it("plucks StaticTuple from embedded AbiEncoded", async () => {
@@ -550,7 +550,7 @@ describe("Decoder library", async () => {
 
       const embedded = AbiCoder.defaultAbiCoder().encode(
         ["tuple(uint256, address)"],
-        [[12345, AddressA]]
+        [[12345, AddressA]],
       );
 
       const data = Interface.from([
@@ -566,15 +566,15 @@ describe("Decoder library", async () => {
       const [s1, s2] = _tuple.children;
 
       expect(
-        await decoder.pluck(data as string, _tuple.location, _tuple.size)
+        await decoder.pluck(data as string, _tuple.location, _tuple.size),
       ).to.equal(embedded);
 
       expect(
-        await decoder.pluck(data as string, s1.location, s1.size)
+        await decoder.pluck(data as string, s1.location, s1.size),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [12345]));
 
       expect(
-        await decoder.pluck(data as string, s2.location, s2.size)
+        await decoder.pluck(data as string, s2.location, s2.size),
       ).to.equal(defaultAbiCoder.encode(["address"], [AddressA]));
     });
     it("plucks DynamicTuple from embedded AbiEncoded", async () => {
@@ -609,7 +609,7 @@ describe("Decoder library", async () => {
 
       const embedded = AbiCoder.defaultAbiCoder().encode(
         ["tuple(uint256, string)"],
-        [[12345, "Johnny Doe"]]
+        [[12345, "Johnny Doe"]],
       );
 
       const data = Interface.from([
@@ -627,11 +627,11 @@ describe("Decoder library", async () => {
       // ).to.equal(embedded);
 
       expect(
-        await decoder.pluck(data as string, _static.location, _static.size)
+        await decoder.pluck(data as string, _static.location, _static.size),
       ).to.equal(encode(["uint256"], [12345]));
 
       expect(
-        await decoder.pluck(data as string, dynamic.location, dynamic.size)
+        await decoder.pluck(data as string, dynamic.location, dynamic.size),
       ).to.equal(encode(["string"], ["Johnny Doe"], YesRemoveOffset));
     });
   });

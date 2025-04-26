@@ -34,7 +34,7 @@ describe("Operator", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await modifier.enableModule(invoker.address);
 
@@ -68,7 +68,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -106,7 +106,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["uint256"], [22]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(11)).to.not.be.reverted;
@@ -130,7 +130,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -173,14 +173,14 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(60000))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(30000))
@@ -204,7 +204,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -241,14 +241,14 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(60000))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(30000))
@@ -262,7 +262,7 @@ describe("Operator", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getFunction(
-      "fnWithTwoMixedParams"
+      "fnWithTwoMixedParams",
     ).selector;
 
     const invoke = async (a: boolean, b: string) =>
@@ -273,7 +273,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -322,7 +322,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(true, "First String")).to.not.be.reverted;
@@ -353,7 +353,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -416,7 +416,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 1111, b: addressOne })).to.not.be.reverted;
@@ -428,7 +428,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
     await expect(
-      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
+      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" }),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -441,7 +441,7 @@ describe("Operator", async () => {
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
     const SELECTOR = testEncoder.interface.getFunction(
-      "arrayStaticTupleItems"
+      "arrayStaticTupleItems",
     ).selector;
     const invoke = async (a: any[]) =>
       modifier
@@ -451,7 +451,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -550,28 +550,28 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(
       invoke([
         { a: 123, b: address1 },
         { a: 334455, b: address2 },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(
       invoke([
         { a: 123456, b: address1 },
         { a: 334455, b: address2 },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(
       invoke([
         { a: 123456, b: address1 },
         { a: 111111, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -599,7 +599,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -662,7 +662,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 1111, b: addressOne })).to.not.be.reverted;
@@ -674,7 +674,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
     await expect(
-      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
+      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" }),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -696,7 +696,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -733,7 +733,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["address"], [addressOk]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 345, b: addressNok }))
@@ -756,7 +756,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.dynamicTuple.populateTransaction(s))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -817,7 +817,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["uint256"], [99]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7] }))
@@ -825,7 +825,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
 
     await expect(
-      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] })
+      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] }),
     ).to.not.be.reverted;
   });
 
@@ -836,7 +836,7 @@ describe("Operator", async () => {
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
     const SELECTOR = testEncoder.interface.getFunction(
-      "arrayStaticTupleItems"
+      "arrayStaticTupleItems",
     ).selector;
     const invoke = async (a: any[]) =>
       modifier
@@ -846,7 +846,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -928,7 +928,7 @@ describe("Operator", async () => {
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(
@@ -936,7 +936,7 @@ describe("Operator", async () => {
         { a: 123, b: address1 },
         { a: 333, b: address2 },
         { a: 233, b: address3 },
-      ])
+      ]),
     ).to.not.be.reverted;
     await expect(invoke([]))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
@@ -945,7 +945,7 @@ describe("Operator", async () => {
       invoke([
         { a: 123, b: address1 },
         { a: 333, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
@@ -955,7 +955,7 @@ describe("Operator", async () => {
         { a: 123, b: address1 },
         { a: 333, b: address2 },
         { a: 233, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
@@ -963,12 +963,11 @@ describe("Operator", async () => {
 
   describe("Variants", async () => {
     it("checks a simple 3 way variant", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
+      const { modifier, testContract, owner, invoker } =
+        await loadFixture(setup);
 
       const SELECTOR = testContract.interface.getFunction(
-        "fnWithTwoMixedParams"
+        "fnWithTwoMixedParams",
       ).selector;
 
       const invoke = async (a: boolean, b: string) =>
@@ -979,7 +978,7 @@ describe("Operator", async () => {
             0,
             (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
               .data as string,
-            0
+            0,
           );
 
       await modifier
@@ -1063,7 +1062,7 @@ describe("Operator", async () => {
             compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await expect(invoke(true, "First String")).to.not.be.reverted;

@@ -14,9 +14,8 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - And", async () => {
   it("evaluates operator And with a single child", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, invoke, scopeFunction } =
+      await loadFixture(setupOneParamStatic);
 
     const conditions = [
       {
@@ -46,9 +45,8 @@ describe("Operator - And", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator And with multiple children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
     const conditions = [
       {
@@ -89,14 +87,14 @@ describe("Operator - And", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(20)).to.not.be.reverted;

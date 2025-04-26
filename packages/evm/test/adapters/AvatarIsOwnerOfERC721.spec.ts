@@ -31,7 +31,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await roles.enableModule(invoker.address);
 
@@ -46,13 +46,13 @@ describe("AvatarIsOwnerOfERC721", async () => {
     await roles.connect(owner).scopeTarget(ROLE_KEY, mockERC721Address);
 
     const CustomChecker = await hre.ethers.getContractFactory(
-      "AvatarIsOwnerOfERC721"
+      "AvatarIsOwnerOfERC721",
     );
     const customChecker = await CustomChecker.deploy();
 
     async function scopeFunction(
       conditions: ConditionFlatStruct[],
-      options: ExecutionOptions = ExecutionOptions.None
+      options: ExecutionOptions = ExecutionOptions.None,
     ) {
       await roles
         .connect(owner)
@@ -61,7 +61,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
           mockERC721Address,
           SELECTOR,
           conditions,
-          options
+          options,
         );
     }
 
@@ -73,7 +73,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
           0,
           (await mockERC721.doSomething.populateTransaction(tokenId, someParam))
             .data as string,
-          0
+          0,
         );
     }
 

@@ -79,7 +79,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -122,7 +122,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -186,7 +186,7 @@ describe("Topology library", async () => {
     });
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     const expected = [
@@ -244,7 +244,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -334,7 +334,7 @@ describe("Topology library", async () => {
       ({ _type, fields }) => ({
         _type,
         fields,
-      })
+      }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -415,7 +415,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -456,7 +456,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);
@@ -497,7 +497,7 @@ describe("Topology library", async () => {
     ];
 
     const output = (await topology.typeTree(input)).map(
-      ({ _type, fields }) => ({ _type, fields })
+      ({ _type, fields }) => ({ _type, fields }),
     );
 
     expect(output).to.deep.equal(expected);

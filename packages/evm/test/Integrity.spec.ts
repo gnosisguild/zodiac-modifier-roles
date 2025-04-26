@@ -47,7 +47,7 @@ describe("Integrity", async () => {
           operator: Operator.Pass,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
 
     await expect(
@@ -64,7 +64,7 @@ describe("Integrity", async () => {
           operator: Operator.Pass,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
 
     await expect(
@@ -81,7 +81,7 @@ describe("Integrity", async () => {
           operator: Operator.Pass,
           compValue: "0x",
         },
-      ])
+      ]),
     ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
   });
 
@@ -97,7 +97,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
@@ -112,7 +112,7 @@ describe("Integrity", async () => {
             operator: Operator.And,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(0);
@@ -125,7 +125,7 @@ describe("Integrity", async () => {
             operator: Operator.And,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
@@ -140,7 +140,7 @@ describe("Integrity", async () => {
             operator: Operator.Matches,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(0);
@@ -153,7 +153,7 @@ describe("Integrity", async () => {
             operator: Operator.Matches,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
@@ -168,7 +168,7 @@ describe("Integrity", async () => {
             operator: Operator.ArraySome,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(0);
@@ -181,7 +181,7 @@ describe("Integrity", async () => {
             operator: Operator.ArrayEvery,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(0);
@@ -194,7 +194,7 @@ describe("Integrity", async () => {
             operator: Operator.ArraySubset,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(0);
@@ -207,7 +207,7 @@ describe("Integrity", async () => {
             operator: Operator.ArraySubset,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(0);
@@ -228,7 +228,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualToAvatar,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -247,7 +247,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualToAvatar,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -266,7 +266,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualToAvatar,
             compValue: "0x",
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node EqualTo well formed", async () => {
@@ -285,7 +285,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualTo,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -304,7 +304,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualTo,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -323,7 +323,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualTo,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -342,7 +342,7 @@ describe("Integrity", async () => {
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [100]),
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node GT/LT well formed", async () => {
@@ -361,7 +361,7 @@ describe("Integrity", async () => {
             operator: Operator.GreaterThan,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -380,7 +380,7 @@ describe("Integrity", async () => {
             operator: Operator.LessThan,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -399,7 +399,7 @@ describe("Integrity", async () => {
             operator: Operator.SignedIntGreaterThan,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -418,7 +418,7 @@ describe("Integrity", async () => {
             operator: Operator.SignedIntLessThan,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -437,7 +437,7 @@ describe("Integrity", async () => {
             operator: Operator.SignedIntLessThan,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -456,7 +456,7 @@ describe("Integrity", async () => {
             operator: Operator.SignedIntLessThan,
             compValue: defaultAbiCoder.encode(["int32"], [-100]),
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node Bitmask well formed", async () => {
@@ -475,7 +475,7 @@ describe("Integrity", async () => {
             operator: Operator.Bitmask,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -494,7 +494,7 @@ describe("Integrity", async () => {
             operator: Operator.Bitmask,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -514,7 +514,7 @@ describe("Integrity", async () => {
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000000",
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node Custom well formed", async () => {
@@ -534,7 +534,7 @@ describe("Integrity", async () => {
             operator: Operator.Custom,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -554,7 +554,7 @@ describe("Integrity", async () => {
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000000",
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node WithinAllowance formed", async () => {
@@ -573,7 +573,7 @@ describe("Integrity", async () => {
             operator: Operator.WithinAllowance,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -592,7 +592,7 @@ describe("Integrity", async () => {
             operator: Operator.WithinAllowance,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -612,7 +612,7 @@ describe("Integrity", async () => {
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000000",
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node (Ether|Call)WithinAllowance formed", async () => {
@@ -631,7 +631,7 @@ describe("Integrity", async () => {
             operator: Operator.EtherWithinAllowance,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -650,7 +650,7 @@ describe("Integrity", async () => {
             operator: Operator.CallWithinAllowance,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
         .withArgs(1);
@@ -669,7 +669,7 @@ describe("Integrity", async () => {
             operator: Operator.EtherWithinAllowance,
             compValue: "0x00",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
         .withArgs(1);
@@ -689,7 +689,7 @@ describe("Integrity", async () => {
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000000",
           },
-        ])
+        ]),
       ).to.not.be.reverted;
     });
     it("Node *Placeholder* triggers error", async () => {
@@ -708,7 +708,7 @@ describe("Integrity", async () => {
             operator: Operator._Placeholder09,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsupportedOperator")
         .withArgs(1);
@@ -745,7 +745,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           },
-        ])
+        ]),
       ).to.be.revertedWithCustomError(integrity, "NotBFS");
     });
     it("enforces (Ether/Call)WithinAllowance to be child of Calldata", async () => {
@@ -1011,7 +1011,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           })),
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
@@ -1039,7 +1039,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
@@ -1064,7 +1064,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           },
-        ])
+        ]),
       )
         .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
         .withArgs(1);
@@ -1080,7 +1080,7 @@ describe("Integrity", async () => {
             operator: Operator.Pass,
             compValue: "0x",
           },
-        ])
+        ]),
       ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
     });
 
@@ -1122,7 +1122,7 @@ describe("Integrity", async () => {
         ];
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         await expect(
@@ -1157,7 +1157,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         ).to.not.be.reverted;
       });
       it("and/or/nor mismatch - order counts", async () => {
@@ -1215,7 +1215,7 @@ describe("Integrity", async () => {
         ];
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         await expect(
@@ -1268,7 +1268,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         ).to.not.be.reverted;
       });
       it("and/or/nor mismatch - recursive", async () => {
@@ -1315,7 +1315,7 @@ describe("Integrity", async () => {
 
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         conditions[conditions.length - 1].paramType = AbiType.Static;
@@ -1381,7 +1381,7 @@ describe("Integrity", async () => {
         ];
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         conditions[4].paramType = AbiType.Static;
@@ -1446,7 +1446,7 @@ describe("Integrity", async () => {
 
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         // swap
@@ -1514,7 +1514,7 @@ describe("Integrity", async () => {
         await expect(enforce(conditions)).to.be.not.reverted;
 
         await expect(
-          enforce(conditions.slice(0, -1))
+          enforce(conditions.slice(0, -1)),
         ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
       });
       it("array mismatch - recursive", async () => {
@@ -1561,7 +1561,7 @@ describe("Integrity", async () => {
 
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
-          "UnsuitableChildTypeTree"
+          "UnsuitableChildTypeTree",
         );
 
         conditions[conditions.length - 1].paramType = AbiType.Static;
@@ -1603,7 +1603,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         ).to.not.be.reverted;
 
         // A function with a dynamic argument, which is also an embedded AbiEncoded encoded field
@@ -1639,7 +1639,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         ).to.not.be.reverted;
 
         // Dynamic can't come before the Calldata node that actually defines the type tree and should be the Anchor
@@ -1676,7 +1676,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         )
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
           .withArgs(1);
@@ -1715,7 +1715,7 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ])
+          ]),
         )
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
           .withArgs(1);

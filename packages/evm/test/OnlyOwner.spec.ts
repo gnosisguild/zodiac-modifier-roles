@@ -17,7 +17,7 @@ async function setup() {
     hre,
     owner.address,
     avatarAddress,
-    avatarAddress
+    avatarAddress,
   );
 
   return {
@@ -35,7 +35,7 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0)
+      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, 0))
@@ -45,7 +45,7 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).scopeTarget(ROLE_KEY, SomeAddress)
+      modifier.connect(johnDoe).scopeTarget(ROLE_KEY, SomeAddress),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).scopeTarget(ROLE_KEY, SomeAddress)).to
@@ -55,7 +55,7 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).revokeTarget(ROLE_KEY, SomeAddress)
+      modifier.connect(johnDoe).revokeTarget(ROLE_KEY, SomeAddress),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(modifier.connect(owner).revokeTarget(ROLE_KEY, SomeAddress)).to
@@ -67,12 +67,12 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(johnDoe)
-        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0)
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0)
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0),
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeFunction, simple invoker fails", async () => {
@@ -81,13 +81,13 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(johnDoe)
-        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000")
+        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000"),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
       modifier
         .connect(owner)
-        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000")
+        .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000"),
     ).to.not.be.reverted;
   });
   it("onlyOwner for scopeFunction, simple invoker fails", async () => {
@@ -112,8 +112,8 @@ describe("OnlyOwner", async () => {
             compValue: "0x",
           },
         ],
-        0
-      )
+        0,
+      ),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
@@ -135,8 +135,8 @@ describe("OnlyOwner", async () => {
             compValue: "0x",
           },
         ],
-        0
-      )
+        0,
+      ),
     ).to.not.be.reverted;
   });
   it("onlyOwner for setAllowance, simple invoker fails", async () => {
@@ -146,11 +146,11 @@ describe("OnlyOwner", async () => {
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
     await expect(
-      modifier.connect(johnDoe).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
+      modifier.connect(johnDoe).setAllowance(allowanceKey, 0, 0, 0, 0, 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier.connect(owner).setAllowance(allowanceKey, 0, 0, 0, 0, 0)
+      modifier.connect(owner).setAllowance(allowanceKey, 0, 0, 0, 0, 0),
     ).to.not.be.reverted;
   });
   it("onlyOwner for setTransactionUnwrapper, simple invoker fails", async () => {
@@ -162,8 +162,8 @@ describe("OnlyOwner", async () => {
         .setTransactionUnwrapper(
           "0x0000000000000000000000000000000000000003",
           "0xaabbccdd",
-          "0x0000000000000000000000000000000000000004"
-        )
+          "0x0000000000000000000000000000000000000004",
+        ),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
@@ -172,8 +172,8 @@ describe("OnlyOwner", async () => {
         .setTransactionUnwrapper(
           "0x0000000000000000000000000000000000000003",
           "0xaabbccdd",
-          "0x0000000000000000000000000000000000000004"
-        )
+          "0x0000000000000000000000000000000000000004",
+        ),
     ).to.not.be.reverted;
   });
 });

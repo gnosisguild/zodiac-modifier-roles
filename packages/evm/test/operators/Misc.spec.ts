@@ -14,9 +14,8 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Misc", async () => {
   it("evaluates operator Bitmask and EqualsTo with type equivalent tree", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamBytes
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
 
     const maskCompValue = (selector: string) => {
       const shift = "0000";
@@ -159,7 +158,7 @@ describe("Operator - Misc", async () => {
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [123456]),
         },
-      ])
+      ]),
     ).to.be.reverted;
   });
 });

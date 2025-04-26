@@ -18,7 +18,7 @@ const DEFAULT_ROLE_KEY =
 
 export function createEip1193(
   provider: EthereumProvider,
-  signer: HardhatEthersSigner
+  signer: HardhatEthersSigner,
 ): EIP1193Provider {
   return {
     request: async ({ method, params }) => {
@@ -36,7 +36,7 @@ export async function deployRolesMod(
   hre: HardhatRuntimeEnvironment,
   owner: string,
   avatar: string,
-  target: string
+  target: string,
 ) {
   const [signer] = await hre.ethers.getSigners();
   const provider = createEip1193(hre.network.provider, signer);
@@ -81,7 +81,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
     hre,
     owner.address,
     avatarAddress,
-    avatarAddress
+    avatarAddress,
   );
   await roles.connect(owner).enableModule(member.address);
   await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
@@ -96,7 +96,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
   const scopeFunction = (
     selector: string,
     conditions: ConditionFlatStruct[],
-    options?: ExecutionOptions
+    options?: ExecutionOptions,
   ) =>
     roles
       .connect(owner)
@@ -105,7 +105,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
         testContractAddress,
         selector,
         conditions,
-        options || ExecutionOptions.Both
+        options || ExecutionOptions.Both,
       );
 
   const execTransactionFromModule = async ({
@@ -121,7 +121,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
         await testContract.getAddress(),
         0,
         data,
-        operation || 0
+        operation || 0,
       );
 
   return {
@@ -161,7 +161,7 @@ export async function setupFnThatMaybeReturns() {
     roles,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -184,7 +184,7 @@ export async function setupOneParamStatic() {
     roles,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke: async (a: BigNumberish, operation: 0 | 1 = 0) =>
       execTransactionFromModule({
@@ -218,7 +218,7 @@ export async function setupTwoParamsStatic() {
     roles,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -241,7 +241,7 @@ export async function setupOneParamStaticTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamStaticTuple"
+    "oneParamStaticTuple",
   );
 
   return {
@@ -250,7 +250,7 @@ export async function setupOneParamStaticTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -274,7 +274,7 @@ export async function setupOneParamStaticNestedTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamStaticNestedTuple"
+    "oneParamStaticNestedTuple",
   );
 
   return {
@@ -283,7 +283,7 @@ export async function setupOneParamStaticNestedTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -307,7 +307,7 @@ export async function setupTwoParamsStaticTupleStatic() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "twoParamsStaticTupleStatic"
+    "twoParamsStaticTupleStatic",
   );
 
   return {
@@ -316,7 +316,7 @@ export async function setupTwoParamsStaticTupleStatic() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -339,7 +339,7 @@ export async function setupOneParamDynamicTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamDynamicTuple"
+    "oneParamDynamicTuple",
   );
 
   return {
@@ -348,7 +348,7 @@ export async function setupOneParamDynamicTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -372,7 +372,7 @@ export async function setupOneParamDynamicNestedTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamDynamicNestedTuple"
+    "oneParamDynamicNestedTuple",
   );
 
   return {
@@ -381,7 +381,7 @@ export async function setupOneParamDynamicNestedTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -404,7 +404,7 @@ export async function setupOneParamArrayOfStatic() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfStatic"
+    "oneParamArrayOfStatic",
   );
 
   return {
@@ -413,7 +413,7 @@ export async function setupOneParamArrayOfStatic() {
     roles,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -437,7 +437,7 @@ export async function setupOneParamArrayOfStaticTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfStaticTuple"
+    "oneParamArrayOfStaticTuple",
   );
 
   return {
@@ -446,7 +446,7 @@ export async function setupOneParamArrayOfStaticTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -470,7 +470,7 @@ export async function setupOneParamArrayOfDynamicTuple() {
   }
 
   const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfDynamicTuple"
+    "oneParamArrayOfDynamicTuple",
   );
 
   return {
@@ -479,7 +479,7 @@ export async function setupOneParamArrayOfDynamicTuple() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -508,7 +508,7 @@ export async function setupOneParamUintWord() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -537,7 +537,7 @@ export async function setupOneParamUintSmall() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -566,7 +566,7 @@ export async function setupOneParamIntWord() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -595,7 +595,7 @@ export async function setupOneParamIntSmall() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -624,7 +624,7 @@ export async function setupOneParamBytesWord() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -653,7 +653,7 @@ export async function setupOneParamBytesSmall() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -682,7 +682,7 @@ export async function setupOneParamBytes() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -711,7 +711,7 @@ export async function setupOneParamString() {
     member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
@@ -738,7 +738,7 @@ export async function setupOneParamAddress() {
     roles,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions
+      options?: ExecutionOptions,
     ) => scopeFunction(selector, conditions, options),
     invoke,
   };
