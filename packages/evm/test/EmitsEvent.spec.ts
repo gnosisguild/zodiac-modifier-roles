@@ -1,4 +1,3 @@
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -6,6 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiType, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
+const AddressOne = "0x0000000000000000000000000000000000000001";
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 

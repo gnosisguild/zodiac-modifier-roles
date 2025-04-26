@@ -3,10 +3,10 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { BigNumberish, getAddress, solidityPacked } from "ethers";
 import { encodeMultisendPayload } from "../utils";
 
+const AddressOne = "0x0000000000000000000000000000000000000001";
 enum Operation {
   Call = 0,
   DelegateCall,

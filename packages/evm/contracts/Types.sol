@@ -45,11 +45,6 @@ struct Payload {
     Payload[] children;
 }
 
-enum Operation {
-    Call,
-    DelegateCall
-}
-
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
     //          paramType: Static / Dynamic / Tuple / Array

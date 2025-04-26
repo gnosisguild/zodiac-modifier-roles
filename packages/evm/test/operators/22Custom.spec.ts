@@ -9,16 +9,19 @@ import {
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { setupOneParamStatic } from "../setup";
+
+const AddressOne = "0x0000000000000000000000000000000000000001";
 
 describe("Operator - Custom", async () => {
   async function setup() {
-    const { roles, scopeFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamStatic
+    );
 
-    const CustomChecker =
-      await hre.ethers.getContractFactory("TestCustomChecker");
+    const CustomChecker = await hre.ethers.getContractFactory(
+      "TestCustomChecker"
+    );
     const customChecker = await CustomChecker.deploy();
 
     return { roles, customChecker, scopeFunction, invoke };
@@ -46,8 +49,9 @@ describe("Operator - Custom", async () => {
     await expect(invoke(101)).to.not.be.reverted;
   });
   it("evaluates operator Custom - result is check fail", async () => {
-    const { roles, customChecker, scopeFunction, invoke } =
-      await loadFixture(setup);
+    const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
+      setup
+    );
     const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
     await scopeFunction([
@@ -70,12 +74,13 @@ describe("Operator - Custom", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.CustomConditionViolation,
-        `0xaabbccddeeff1122334455660000000000000000000000000000000000000000`,
+        `0xaabbccddeeff1122334455660000000000000000000000000000000000000000`
       );
   });
   it("evaluates operator Custom - result is check fail due to operation", async () => {
-    const { roles, customChecker, scopeFunction, invoke } =
-      await loadFixture(setup);
+    const { roles, customChecker, scopeFunction, invoke } = await loadFixture(
+      setup
+    );
     const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
     await scopeFunction(
@@ -93,14 +98,14 @@ describe("Operator - Custom", async () => {
           compValue: `${customerCheckerAddress}${extra}`,
         },
       ],
-      ExecutionOptions.Both,
+      ExecutionOptions.Both
     );
 
     await expect(invoke(101, 1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.CustomConditionViolation,
-        `0x0000000000000000000000000000000000000000000000000000000000000000`,
+        `0x0000000000000000000000000000000000000000000000000000000000000000`
       );
   });
 

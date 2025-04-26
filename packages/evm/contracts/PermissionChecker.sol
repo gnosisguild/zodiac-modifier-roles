@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-
+import "./_Core.sol";
+import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
-import "./Core.sol";
-import "./Periphery.sol";
 import "./Topology.sol";
 
 import "./packers/BufferPacker.sol";
@@ -24,7 +22,7 @@ abstract contract PermissionChecker is Core, Periphery {
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation
+        Operation operation
     ) internal moduleOnly returns (Consumption[] memory) {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
@@ -76,7 +74,7 @@ abstract contract PermissionChecker is Core, Periphery {
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation
+        Operation operation
     ) private view returns (Status status, Result memory result) {
         try adapter.unwrap(to, value, data, operation) returns (
             UnwrappedTransaction[] memory transactions
@@ -117,7 +115,7 @@ abstract contract PermissionChecker is Core, Periphery {
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation,
+        Operation operation,
         Consumption[] memory consumptions
     ) private view returns (Status, Result memory) {
         if (data.length != 0 && data.length < 4) {
@@ -188,7 +186,7 @@ abstract contract PermissionChecker is Core, Periphery {
     /// @param options Determines if a transaction can send ether and/or delegatecall to target.
     function _executionOptions(
         uint256 value,
-        Enum.Operation operation,
+        Operation operation,
         ExecutionOptions options
     ) private pure returns (Status) {
         // isSend && !canSend
@@ -202,7 +200,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
         // isDelegateCall && !canDelegateCall
         if (
-            operation == Enum.Operation.DelegateCall &&
+            operation == Operation.DelegateCall &&
             options != ExecutionOptions.DelegateCall &&
             options != ExecutionOptions.Both
         ) {
@@ -719,7 +717,7 @@ abstract contract PermissionChecker is Core, Periphery {
         address to;
         uint256 value;
         Consumption[] consumptions;
-        Enum.Operation operation;
+        Operation operation;
     }
 
     struct Result {

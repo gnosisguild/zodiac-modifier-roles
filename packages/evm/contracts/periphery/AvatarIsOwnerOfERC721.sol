@@ -15,7 +15,7 @@ contract AvatarIsOwnerOfERC721 is ICustomCondition {
         address to,
         uint256 /* value */,
         bytes calldata data,
-        Enum.Operation /* operation */,
+        Operation /* operation */,
         uint256 location,
         uint256 size,
         bytes12 /* extra */
