@@ -21,18 +21,18 @@ type Props = {
   blockNumber?: number
 }
 
-const ROLE_FIELDS = `
+export const ROLE_FIELDS = `
     key
-    members(first: 1000) {
+    members {
       member {
         address
       }
     }
-    targets(first: 1000) {
+    targets {
       address
       clearance
       executionOptions
-      functions(first: 1000) {
+      functions {
         selector
         executionOptions
         wildcarded
@@ -42,7 +42,7 @@ const ROLE_FIELDS = `
         }
       }
     }
-    annotations(first: 1000) {
+    annotations {
       uri
       schema
     }
@@ -88,7 +88,7 @@ export const fetchRole = async (
   return mapGraphQl(role)
 }
 
-const mapGraphQl = (role: any): Role => ({
+export const mapGraphQl = (role: any): Role => ({
   ...role,
   members: role.members.map((assignment: any) => assignment.member.address),
   targets: role.targets.map(

@@ -1,13 +1,6 @@
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
-import {
-  Allowance,
-  ChainId,
-  Clearance,
-  ExecutionOptions,
-  Function,
-  Role,
-  Target,
-} from "./types"
+import { ChainId, RolesModifier } from "./types"
+import { mapGraphQl as mapGraphQlRole, ROLE_FIELDS } from "./fetchRole"
 
 type Props = {
   address: `0x${string}`
@@ -26,31 +19,7 @@ const MOD_FIELDS = `
     avatar
     target 
     roles {
-      key
-      members {
-        member {
-          address
-        }
-      }
-      targets {
-        address
-        clearance
-        executionOptions
-        functions {
-          selector
-          executionOptions
-          wildcarded
-          condition {
-            id
-            json
-          }
-        }
-      }
-      annotations {
-        uri
-        schema
-      }
-      lastUpdate
+      ${ROLE_FIELDS}
     }
     allowances {
       key
@@ -106,16 +75,6 @@ export const fetchRolesMod = async (
   return mapGraphQl(rolesModifier)
 }
 
-export interface RolesModifier {
-  address: `0x${string}`
-  owner: `0x${string}`
-  avatar: `0x${string}`
-  target: `0x${string}`
-  roles: Role[]
-  allowances: Allowance[]
-  multiSendAddresses: `0x${string}`[]
-}
-
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   ...rolesModifier,
   roles: rolesModifier.roles.map(mapGraphQlRole),
@@ -129,31 +88,5 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
   })),
   multiSendAddresses: rolesModifier.unwrapAdapters.map(
     (adapter: any) => adapter.targetAddress
-  ),
-})
-
-const mapGraphQlRole = (role: any): Role => ({
-  ...role,
-  members: role.members.map((assignment: any) => assignment.member.address),
-  targets: role.targets.map(
-    (target: any): Target => ({
-      address: target.address,
-      clearance: Clearance[target.clearance as keyof typeof Clearance],
-      executionOptions:
-        ExecutionOptions[
-          target.executionOptions as keyof typeof ExecutionOptions
-        ],
-      functions: target.functions.map(
-        (func: any): Function => ({
-          selector: func.selector,
-          executionOptions:
-            ExecutionOptions[
-              func.executionOptions as keyof typeof ExecutionOptions
-            ],
-          wildcarded: func.wildcarded,
-          condition: func.condition && JSON.parse(func.condition.json),
-        })
-      ),
-    })
   ),
 })
