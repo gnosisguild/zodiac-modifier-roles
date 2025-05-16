@@ -1,3 +1,4 @@
+import { getRolesModId } from "./ids"
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   Allowance,
@@ -10,91 +11,27 @@ import {
 } from "./types"
 
 type Props = {
-  address: `0x${string}`
   chainId: ChainId
-
-  /**
-   * Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block.
-   * @requires A Zodiac OS Enterprise subscription
-   **/
-  blockNumber?: number
+  address: `0x${string}`
 }
 
-const MOD_FIELDS = `
-    address
-    owner
-    avatar
-    target 
-    roles {
-      key
-      members {
-        member {
-          address
-        }
-      }
-      targets {
-        address
-        clearance
-        executionOptions
-        functions {
-          selector
-          executionOptions
-          wildcarded
-          condition {
-            id
-            json
-          }
-        }
-      }
-      annotations {
-        uri
-        schema
-      }
-      lastUpdate
-    }
-    allowances {
-      key
-      refill
-      maxRefill
-      period
-      balance
-      timestamp
-    }
-    unwrapAdapters(
-      where: {
-        selector: "0x8d80ff0a", 
-        adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
-      }
-    ) {
-      targetAddress
-    }
-`.trim()
-
-const MOD_QUERY = `
-query RolesMod($id: String) {
+const MOD_OWNER_QUERY = `
+query RolesModOwner($id: String) {
   rolesModifier(id: $id) {
-    ${MOD_FIELDS}
-  }
-}
-`
-
-const MOD_AT_BLOCK_QUERY = `
-query RolesMod($id: String, $block: Int) {
-  rolesModifier(id: $id, block: { number: $block }) {
-    ${MOD_FIELDS}
+    owner
   }
 }
 `
 
 export const fetchRolesMod = async (
-  { address, blockNumber, ...subgraphProps }: Props,
+  { chainId, address }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
   const { rolesModifier } = await fetchFromSubgraph(
     {
-      query: blockNumber ? MOD_AT_BLOCK_QUERY : MOD_QUERY,
-      variables: { id: address.toLowerCase(), block: blockNumber },
-      operationName: "RolesMod",
+      query: MOD_OWNER_QUERY,
+      variables: { id: getRolesModId(chainId, address) },
+      operationName: "RolesModOwner",
     },
     options
   )
