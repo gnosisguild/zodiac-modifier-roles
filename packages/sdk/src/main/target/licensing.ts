@@ -3,10 +3,12 @@ import {
   chains,
   Condition,
   Operator,
+  ParameterType,
   Role,
   Target,
 } from "zodiac-roles-deployments"
 import { decodeKey } from "../keys"
+import { AbiCoder } from "ethers"
 
 type RoleFragment = {
   key: `0x${string}`
@@ -35,10 +37,17 @@ export const enforceLicenseTerms = (
   license: License,
   owner: PrefixedAddress
 ) => {
+  if (license === License.Free) {
+    assertFeeCollection(role)
+  }
+
   if (license === License.None) {
+    assertFeeCollection(role)
     assertPublicFeatureScope(role, owner)
   }
 }
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder()
 
 /**
  * Asserts that the role permissions correctly enforces fee collection as per the zodiac os fee structure.
@@ -57,8 +66,24 @@ const assertFeeCollection = (role: RoleFragment) => {
     const signOrder = cowOrderSigner.functions.find(
       (func) => func.selector === "0x569d3489"
     )
-    if (signOrder) {
-      // TODO: check that any condition node scoping feeAmountBP is set to 25
+    if (signOrder && signOrder.condition) {
+      // check that any condition node scoping feeAmountBP is set to 25
+      const feeAmountBPConditions = collectFeeAmountBPConditionNodes(
+        signOrder.condition
+      )
+      if (
+        feeAmountBPConditions.length === 0 ||
+        !feeAmountBPConditions.every(
+          (condition) =>
+            condition.operator !== Operator.EqualTo ||
+            condition.compValue !== defaultAbiCoder.encode(["uint256"], [25])
+        )
+      ) {
+        throw new Error(
+          `Role ${decodeKey(role.key)} is scoping Cow Swap orders in disregard of the 0.25% swap fee applying to users without a Zodiac OS Enterprise subscription.\n\n` +
+            "Learn more at TODO docs links."
+        )
+      }
     }
   }
 
@@ -99,4 +124,38 @@ const usesAllowances = (condition: Condition): boolean => {
     return true
   }
   return condition.children?.some((child) => usesAllowances(child)) ?? false
+}
+
+const collectFeeAmountBPConditionNodes = (
+  condition: Condition
+): Condition[] => {
+  const nodes = skipOverLogicalNodes(condition)
+  const result: Condition[] = []
+  for (const node of nodes) {
+    if (
+      node.paramType === ParameterType.Calldata &&
+      node.operator === Operator.Matches
+    ) {
+      // feeAmountBP is the 3rd parameter of the calldata
+      const feeAmountBPCondition = node.children?.[2]
+      if (feeAmountBPCondition) {
+        result.push(...skipOverLogicalNodes(feeAmountBPCondition))
+      }
+    }
+  }
+
+  return result
+}
+
+const skipOverLogicalNodes = (condition: Condition): Condition[] => {
+  if (
+    condition.operator === Operator.And ||
+    condition.operator === Operator.Or
+  ) {
+    return (
+      condition.children?.flatMap((child) => skipOverLogicalNodes(child)) ?? []
+    )
+  }
+
+  return [condition]
 }
