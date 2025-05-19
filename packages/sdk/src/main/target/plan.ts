@@ -4,12 +4,14 @@ import {
   ChainId,
   fetchRole,
   fetchRolesMod,
+  fetchRolesModOwner,
   Role,
   Target,
 } from "zodiac-roles-deployments"
 
 import { type Call, encodeCalls, logCall } from "./calls"
 import { diff, diffRole } from "./diff"
+import { enforceLicenseTerms, fetchLicense, prefixAddress } from "./licensing"
 
 type Options = {
   chainId: ChainId
@@ -67,6 +69,15 @@ export async function planApply(
     }
   } & Options
 ): Promise<Result> {
+  const ownerAddress = await fetchRolesModOwner({ chainId, address })
+  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
+  if (owner !== null) {
+    const license = await fetchLicense(owner)
+    for (const role of next.roles) {
+      enforceLicenseTerms(role, license, owner)
+    }
+  }
+
   const { minus, plus } = diff({
     prev: current || (await fetchRolesMod({ chainId, address })),
     next,
@@ -106,6 +117,13 @@ export async function planApplyRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  const ownerAddress = await fetchRolesModOwner({ chainId, address })
+  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
+  if (owner !== null) {
+    const license = await fetchLicense(owner)
+    enforceLicenseTerms(fragment, license, owner)
+  }
+
   const prev: Role =
     current ||
     (await fetchRole({ chainId, address, roleKey: fragment.key })) ||
@@ -160,6 +178,13 @@ export async function planExtendRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  const ownerAddress = await fetchRolesModOwner({ chainId, address })
+  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
+  if (owner !== null) {
+    const license = await fetchLicense(owner)
+    enforceLicenseTerms(fragment, license, owner)
+  }
+
   const { plus } = await diffRole({
     prev:
       current || (await fetchRole({ chainId, address, roleKey: fragment.key })),
