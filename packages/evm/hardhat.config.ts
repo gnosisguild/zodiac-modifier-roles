@@ -169,26 +169,14 @@ const config: HardhatUserConfig = {
       chainId: 80094,
       url: "https://rpc.berachain.com",
     },
+    worldchain: {
+      ...sharedNetworkConfig,
+      chainId: 480,
+      url: "https://worldchain-mainnet.g.alchemy.com/public",
+    },
   },
   etherscan: {
-    apiKey: {
-      mainnet: ETHERSCAN_API_KEY,
-      sepolia: ETHERSCAN_API_KEY,
-      optimism: OPTIMISTIC_ETHERSCAN_API_KEY,
-      gnosis: GNOSISSCAN_API_KEY,
-      matic: POLYGONSCAN_API_KEY,
-      arbitrum: ARBISCAN_API_KEY,
-      avalanche: SNOWTRACE_API_KEY,
-      zkevm: ZKEVM_POLYGONSCAN_API_KEY,
-      base: BASESCAN_API_KEY,
-      baseSepolia: BASESCAN_API_KEY,
-      bsc: BSCSCAN_API_KEY,
-      celo: CELOSCAN_API_KEY,
-      sonic: SONICSCAN_API_KEY,
-      berachain: BERASCAN_API_KEY,
-      "lisk-sepolia": "not-required",
-      "bob-sepolia": ETHERSCAN_API_KEY,
-    } as Record<string, string>,
+    apiKey: ETHERSCAN_API_KEY,
     customChains: [
       {
         network: "optimism",
@@ -284,6 +272,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
           browserURL: "https://bob-sepolia.explorer.gobob.xyz",
+        },
+      },
+      {
+        network: "worldchain",
+        chainId: 480,
+        urls: {
+          apiURL: "https://api.worldscan.org/api",
+          browserURL: "https://worldscan.org",
         },
       },
     ],
