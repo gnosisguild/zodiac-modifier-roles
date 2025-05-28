@@ -20,9 +20,9 @@ const prefixAddress = (chainId: ChainId, address: `0x${string}`) => {
 }
 
 export enum License {
-  None,
-  Free,
-  Enterprise,
+  None = "none",
+  Free = "free",
+  Enterprise = "enterprise",
 }
 
 export const fetchLicense = async ({
@@ -33,7 +33,16 @@ export const fetchLicense = async ({
   owner: `0x${string}`
 }) => {
   const prefixedAddress = prefixAddress(chainId, owner)
-  return License.None // TODO fetch from Zodiac OS endpoint
+  const response = await fetch(
+    `https://api.pilot.gnosisguild.org/system/get-plan/${prefixedAddress}`
+  )
+  const data = await response.json()
+
+  if (!Object.values(License).includes(data.currentPlan)) {
+    throw new Error(`Invalid license: ${data.currentPlan}`)
+  }
+
+  return data.currentPlan as License
 }
 
 export const enforceLicenseTerms = ({
