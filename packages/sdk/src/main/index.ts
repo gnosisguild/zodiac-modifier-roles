@@ -40,3 +40,4 @@ export {
 export { default as abi } from "../abi.json"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
+export { fetchLicense, License } from "./licensing"

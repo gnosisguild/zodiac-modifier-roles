@@ -2,28 +2,36 @@ import { getRolesModId } from "./ids"
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import { ChainId } from "./types"
 
-type Props = {
+interface Props {
   chainId: ChainId
   address: `0x${string}`
 }
 
-const MOD_OWNER_QUERY = `
-query RolesModOwner($id: String) {
+const MOD_CONFIG_QUERY = `
+query RolesModConfig($id: ID!) {
   rolesModifier(id: $id) {
+    avatar
     owner
+    target
   }
 }
 `
 
-export const fetchRolesModOwner = async (
+interface RoleModConfig {
+  avatar: `0x${string}`
+  owner: `0x${string}`
+  target: `0x${string}`
+}
+
+export const fetchRolesModConfig = async (
   { chainId, address }: Props,
   options?: FetchOptions
-): Promise<`0x${string}` | null> => {
+): Promise<RoleModConfig | null> => {
   const { rolesModifier } = await fetchFromSubgraph(
     {
-      query: MOD_OWNER_QUERY,
+      query: MOD_CONFIG_QUERY,
       variables: { id: getRolesModId(chainId, address) },
-      operationName: "RolesModOwner",
+      operationName: "RolesModConfig",
     },
     options
   )
@@ -32,5 +40,5 @@ export const fetchRolesModOwner = async (
     return null
   }
 
-  return rolesModifier.owner
+  return rolesModifier
 }

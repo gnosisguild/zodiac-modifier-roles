@@ -4,14 +4,14 @@ import {
   ChainId,
   fetchRole,
   fetchRolesMod,
-  fetchRolesModOwner,
+  fetchRolesModConfig,
   Role,
   Target,
 } from "zodiac-roles-deployments"
 
 import { type Call, encodeCalls, logCall } from "./calls"
 import { diff, diffRole } from "./diff"
-import { enforceLicenseTerms, fetchLicense, prefixAddress } from "./licensing"
+import { enforceLicenseTerms, fetchLicense } from "../licensing"
 
 type Options = {
   chainId: ChainId
@@ -69,12 +69,16 @@ export async function planApply(
     }
   } & Options
 ): Promise<Result> {
-  const ownerAddress = await fetchRolesModOwner({ chainId, address })
-  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
-  if (owner !== null) {
-    const license = await fetchLicense(owner)
+  const roleModConfig = await fetchRolesModConfig({ chainId, address })
+  if (roleModConfig) {
+    const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
     for (const role of next.roles) {
-      enforceLicenseTerms(role, license, owner)
+      enforceLicenseTerms({
+        role,
+        license,
+        chainId,
+        owner: roleModConfig.owner,
+      })
     }
   }
 
@@ -117,11 +121,18 @@ export async function planApplyRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
-  const ownerAddress = await fetchRolesModOwner({ chainId, address })
-  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
-  if (owner !== null) {
-    const license = await fetchLicense(owner)
-    enforceLicenseTerms(fragment, license, owner)
+  const rolesModConfig = await fetchRolesModConfig({ chainId, address })
+  if (rolesModConfig) {
+    const license = await fetchLicense({
+      chainId,
+      owner: rolesModConfig.owner,
+    })
+    enforceLicenseTerms({
+      role: fragment,
+      license,
+      chainId,
+      owner: rolesModConfig.owner,
+    })
   }
 
   const prev: Role =
@@ -178,11 +189,15 @@ export async function planExtendRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
-  const ownerAddress = await fetchRolesModOwner({ chainId, address })
-  const owner = ownerAddress && prefixAddress(chainId, ownerAddress)
-  if (owner !== null) {
-    const license = await fetchLicense(owner)
-    enforceLicenseTerms(fragment, license, owner)
+  const roleModConfig = await fetchRolesModConfig({ chainId, address })
+  if (roleModConfig) {
+    const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
+    enforceLicenseTerms({
+      role: fragment,
+      license,
+      chainId,
+      owner: roleModConfig.owner,
+    })
   }
 
   const { plus } = await diffRole({

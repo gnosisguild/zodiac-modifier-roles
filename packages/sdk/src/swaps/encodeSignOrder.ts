@@ -1,11 +1,9 @@
 import { id, Interface } from "ethers"
+import { BuyTokenBalance, OrderKind, SellTokenBalance } from "./types"
 
 const zodiacOsSafe = "0x3ec84da3A9bCed9767490c198E69Aa216A35Df12"
 
 export type Props = {
-  rolesModifier: `0x${string}`
-  roleKey: `0x${string}`
-
   /**
    * ERC-20 token to be sold.
    */
@@ -40,15 +38,12 @@ export type Props = {
    * Is the order fill-or-kill or partially fillable?
    */
   partiallyFillable: boolean
-  sellTokenBalance?: SellTokenSource
-  buyTokenBalance?: BuyTokenDestination
+  sellTokenBalance?: SellTokenBalance
+  buyTokenBalance?: BuyTokenBalance
 }
 
-/**
- * Encodes the call to the Roles Modifier to make the avatar sign the given CowSwap order.
- * Should be used in conjunction with `postCowOrder`.
- */
-export const signCowOrder = async ({
+/** Encodes a signOrder call to the CowswapOrderSigner contract */
+export const encodeSignOrder = async ({
   sellToken,
   buyToken,
   sellAmount,
@@ -56,8 +51,8 @@ export const signCowOrder = async ({
   validTo,
   kind,
   partiallyFillable,
-  sellTokenBalance = SellTokenSource.ERC20,
-  buyTokenBalance = BuyTokenDestination.ERC20,
+  sellTokenBalance = SellTokenBalance.ERC20,
+  buyTokenBalance = BuyTokenBalance.ERC20,
   receiver,
 }: Props) => {
   let feeAmount = 0n

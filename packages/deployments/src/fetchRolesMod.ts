@@ -40,7 +40,7 @@ const MOD_FIELDS = `
 `.trim()
 
 const MOD_QUERY = `
-query RolesMod($id: String) {
+query RolesMod($id: ID!) {
   rolesModifier(id: $id) {
     ${MOD_FIELDS}
   }
@@ -48,7 +48,7 @@ query RolesMod($id: String) {
 `
 
 const MOD_AT_BLOCK_QUERY = `
-query RolesMod($id: String, $block: Int) {
+query RolesMod($id: ID!, $block: Int) {
   rolesModifier(id: $id, block: { number: $block }) {
     ${MOD_FIELDS}
   }

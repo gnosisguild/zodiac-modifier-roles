@@ -1,23 +1,20 @@
-import { c, Condition, ExecutionOptions } from "zodiac-roles-sdk"
-
-import { forAll } from "zodiac-roles-sdk"
+import { c, Condition, ExecutionOptions, forAll } from "zodiac-roles-sdk"
 
 const gpV2VaultRelayer = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110"
 const cowOrderSigner = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB"
 
+/**
+ * Returns permissions allowing the avatar to sign the specified CowSwap orders.
+ */
 export const allowCowOrderSigning = ({
   sell,
   buy,
   receiver,
-  noFee = false,
 }: {
   sell: `0x${string}`[]
   buy: `0x${string}`[]
-
   /** Defaults to the avatar of the Roles Modifier. */
   receiver?: `0x${string}`
-  /** Set to true if you have a Zodiac OS Enterprise subscription. */
-  noFee?: boolean
 }) => {
   return [
     ...allowErc20Approve(sell, gpV2VaultRelayer),
@@ -32,8 +29,6 @@ export const allowCowOrderSigning = ({
             buy: buy,
             receiver: receiver ? receiver : c.avatar,
           }),
-          undefined,
-          noFee ? undefined : 25,
         ],
         [
           "(address sellToken, address buyToken, address receiver, uint256 sellAmount, uint256 buyAmount, uint32 validTo, bytes32 appData, uint256 feeAmount, bytes32 kind, bool partiallyFillable, bytes32 sellTokenBalance, bytes32 buyTokenBalance)",

@@ -8,6 +8,10 @@ const orderBookApi = new OrderBookApi({
   chainId: SupportedChainId.GNOSIS_CHAIN,
 })
 
+/**
+ * Posts a CowSwap order to the Cow order book API.
+ * Should be used in conjunction with `signCowOrder`.
+ */
 export const postCowOrder = async ({
   order,
   noFee = false,
@@ -15,6 +19,6 @@ export const postCowOrder = async ({
   order: Order
   noFee?: boolean
 }) => {
-  const { quote } = await orderBookApi.getQuote(quoteRequest)
+  const { quote } = await orderBookApi.getQuote({})
   quote
 }
