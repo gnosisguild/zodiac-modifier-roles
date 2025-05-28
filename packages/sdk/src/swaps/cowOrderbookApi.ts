@@ -1,5 +1,87 @@
 import { SupportedChainId } from "./types"
-import type { CowQuoteRequest, CowQuoteResponse, CowApiError } from "./types"
+import type { OrderKind, SellTokenBalance, BuyTokenBalance } from "./types"
+
+/**
+ * COW Protocol API quote request
+ */
+interface CowQuoteRequest {
+  sellToken: string
+  buyToken: string
+  kind: OrderKind
+  sellAmountBeforeFee?: string
+  sellAmountAfterFee?: string
+  buyAmountAfterFee?: string
+  from: string
+  receiver?: string
+  validTo?: number
+  appData?: string
+  partiallyFillable?: boolean
+  sellTokenBalance?: SellTokenBalance
+  buyTokenBalance?: BuyTokenBalance
+  priceQuality?: "fast" | "optimal"
+  signingScheme?: "eip712" | "ethsign" | "eip1271" | "presign"
+  onchainOrder?: boolean
+}
+
+/**
+ * COW Protocol API quote response
+ */
+interface CowQuoteResponse {
+  quote: {
+    sellToken: string
+    buyToken: string
+    receiver: string
+    sellAmount: string
+    buyAmount: string
+    validTo: number
+    appData: string
+    appDataHash: string
+    feeAmount: string
+    kind: OrderKind
+    partiallyFillable: boolean
+    sellTokenBalance: SellTokenBalance
+    buyTokenBalance: BuyTokenBalance
+  }
+  from: string
+  expiration: number
+  id?: number
+}
+
+/**
+ * COW Protocol API order request for posting signed orders
+ */
+interface CowOrderRequest {
+  sellToken: string
+  buyToken: string
+  sellAmount: string
+  buyAmount: string
+  validTo: number
+  appData: string
+  feeAmount: string
+  kind: OrderKind
+  partiallyFillable: boolean
+  sellTokenBalance?: SellTokenBalance
+  buyTokenBalance?: BuyTokenBalance
+  from: string
+  signature: string
+  signingScheme: "eip712" | "ethsign" | "eip1271" | "presign"
+  quoteId?: number
+}
+
+/**
+ * COW Protocol API order response after posting
+ */
+interface CowOrderResponse {
+  orderId: string
+}
+
+/**
+ * COW Protocol API error
+ */
+interface CowApiError {
+  errorType: string
+  description: string
+}
 
 /**
  * Supported COW Protocol networks and their corresponding API network identifiers
@@ -114,6 +196,33 @@ export async function getCowOrderbookQuote(
   }
 
   return await apiCall<CowQuoteResponse>(baseUrl, "quote", {
+    method: "POST",
+    body: JSON.stringify(request),
+  })
+}
+
+/**
+ * Post a signed order to the COW Protocol orderbook
+ *
+ * @param chainId - The chain ID to post the order to
+ * @param request - The signed order request parameters
+ * @returns A promise that resolves to the order response with orderId
+ */
+export async function postCowOrder(
+  chainId: SupportedChainId,
+  request: CowOrderRequest
+): Promise<CowOrderResponse> {
+  const baseUrl = getApiBaseUrl(chainId)
+
+  // Validate required fields for posting an order
+  if (!request.signature) {
+    throw new Error("Order signature is required")
+  }
+  if (!request.from) {
+    throw new Error("Order from address is required")
+  }
+
+  return await apiCall<CowOrderResponse>(baseUrl, "orders", {
     method: "POST",
     body: JSON.stringify(request),
   })

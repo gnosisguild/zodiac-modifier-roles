@@ -1,93 +1,16 @@
-import { id, Interface } from "ethers"
-
-const zodiacOsSafe = "0x3ec84da3A9bCed9767490c198E69Aa216A35Df12"
-
-export type Props = {
-  rolesModifier: `0x${string}`
-  roleKey: `0x${string}`
-
-  /**
-   * ERC-20 token to be sold.
-   */
-  sellToken: `0x${string}`
-  /**
-   * ERC-20 token to be bought.
-   */
-  buyToken: `0x${string}`
-  /**
-   * An optional Ethereum address to receive the proceeds of the trade instead of the owner (i.e. the order signer).
-   *
-   */
-  receiver?: `0x${string}` | null
-  /**
-   * Amount of `sellToken` to be sold in atoms.
-   */
-  sellAmount: bigint
-  /**
-   * Amount of `buyToken` to be bought in atoms.
-   */
-  buyAmount: bigint
-  /**
-   * Unix timestamp (`uint32`) until which the order is valid.
-   */
-  validTo: bigint
-
-  /**
-   * The kind is either a buy or sell order.
-   */
-  kind: OrderKind
-  /**
-   * Is the order fill-or-kill or partially fillable?
-   */
-  partiallyFillable: boolean
-  sellTokenBalance?: SellTokenSource
-  buyTokenBalance?: BuyTokenDestination
-}
+import { TransactionRequest } from "ethers"
+import { Quote } from "./types"
+import { encodeSignOrderWithRole } from "./encodeSignOrder"
 
 /**
  * Encodes the call to the Roles Modifier to make the avatar sign the given CowSwap order.
  * Should be used in conjunction with `postCowOrder`.
  */
-export const signCowOrder = async ({
-  sellToken,
-  buyToken,
-  sellAmount,
-  buyAmount,
-  validTo,
-  kind,
-  partiallyFillable,
-  sellTokenBalance = SellTokenSource.ERC20,
-  buyTokenBalance = BuyTokenDestination.ERC20,
-  receiver,
-}: Props) => {
-  let feeAmount = 0n
-  if (!noFee) {
-    feeAmount =
-      kind === OrderKind.BUY
-        ? (sellAmount * 25n) / 10000n
-        : (buyAmount * 25n) / 10000n
-  }
-
-  CowswapOrderSignerInterface.encodeFunctionData("signOrder", [
-    {
-      sellToken,
-      buyToken,
-      sellAmount,
-      buyAmount,
-      validTo,
-      partiallyFillable,
-      receiver,
-      kind: id(kind),
-      sellTokenBalance: id(sellTokenBalance),
-      buyTokenBalance: id(buyTokenBalance),
-      feeAmount: 0n,
-      appData: id(appData),
-    },
-    validTo - BigInt(Math.floor(Date.now() / 1000)),
-    0n,
-  ])
+export const signCowOrder = (quote: Quote) => {
+  return {
+    to: quote.rolesModifier,
+    data: encodeSignOrderWithRole(quote),
+    value: 0 as const,
+    chainId: quote.chainId,
+  } satisfies TransactionRequest
 }
-
-const CowswapOrderSignerInterface = new Interface([
-  "function signOrder(tuple(address sellToken, address buyToken, address receiver, uint256 sellAmount, uint256 buyAmount, uint32 validTo, bytes32 appData, uint256 feeAmount, bytes32 kind, bool partiallyFillable, bytes32 sellTokenBalance, bytes32 buyTokenBalance) order, uint32 validDuration, uint256 feeAmountBP)",
-])

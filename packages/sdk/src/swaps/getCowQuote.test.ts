@@ -47,7 +47,7 @@ describe("getCowQuote", () => {
       const validTo = Math.floor(Date.now() / 1000) + 30 * 60
 
       // Call getCowQuote
-      const { quote } = await getCowQuote({
+      const quote = await getCowQuote({
         kind: "sell",
         sellToken: WETH_ADDRESS,
         buyToken: COW_ADDRESS,
@@ -55,8 +55,9 @@ describe("getCowQuote", () => {
         validTo,
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
+        roleKey: "test-role",
       })
-
+      console.log(quote)
       // Verify the quote was successful
       expect(quote).toBeDefined()
       expect(quote.sellToken.toLowerCase()).toBe(WETH_ADDRESS.toLowerCase())
@@ -64,7 +65,7 @@ describe("getCowQuote", () => {
 
       // Parse appData to verify partner fee
       const appData = JSON.parse(quote.appData)
-      expect(appData.partnerFee).toBe(25)
+      expect(appData.metadata.partnerFee.bps).toBe(25)
     }
   )
 
@@ -79,7 +80,7 @@ describe("getCowQuote", () => {
       const validTo = Math.floor(Date.now() / 1000) + 30 * 60
 
       // Call getCowQuote
-      const { quote } = await getCowQuote({
+      const quote = await getCowQuote({
         kind: "sell",
         sellToken: WETH_ADDRESS,
         buyToken: COW_ADDRESS,
@@ -87,16 +88,17 @@ describe("getCowQuote", () => {
         validTo,
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
+        roleKey: "test-role",
       })
-
+      console.log(quote)
       // Verify the quote was successful
       expect(quote).toBeDefined()
       expect(quote.sellToken.toLowerCase()).toBe(WETH_ADDRESS.toLowerCase())
       expect(quote.buyToken.toLowerCase()).toBe(COW_ADDRESS.toLowerCase())
 
-      // Parse appData to verify partner fee
+      // Parse appData to verify no partner fee specified
       const appData = JSON.parse(quote.appData)
-      expect(appData.partnerFee).toBe(0)
+      expect(appData.metadata.partnerFee).toBe(undefined)
     }
   )
 })

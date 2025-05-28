@@ -9,9 +9,6 @@ export enum SupportedChainId {
   SEPOLIA = 11155111,
 }
 
-/**
- * Order kind - sell or buy
- */
 export type OrderKind = "sell" | "buy"
 
 /**
@@ -24,108 +21,68 @@ export type SellTokenBalance = "erc20" | "external" | "internal"
  */
 export type BuyTokenBalance = "erc20" | "internal"
 
-/**
- * Price quality for quotes
- */
-export type PriceQuality = "fast" | "optimal"
-
-/**
- * Signing scheme for orders
- */
-export type SigningScheme = "eip712" | "ethsign" | "eip1271" | "presign"
-
-/**
- * Quote request for sell orders with amount before fee
- */
-export interface SellOrderRequest {
+interface SellOrderRequest {
   kind: "sell"
   sellAmountBeforeFee: bigint
-  sellToken: `0x${string}`
-  buyToken: `0x${string}`
-  receiver?: `0x${string}` | null
-  validTo?: number
-  partiallyFillable?: boolean
-  sellTokenBalance?: SellTokenBalance
-  buyTokenBalance?: BuyTokenBalance
-  priceQuality?: PriceQuality
-  signingScheme?: SigningScheme
-  chainId: SupportedChainId
-  rolesModifier: `0x${string}`
 }
 
-/**
- * Quote request for buy orders
- */
-export interface BuyOrderRequest {
+interface BuyOrderRequest {
   kind: "buy"
   buyAmountAfterFee: bigint
-  sellToken: `0x${string}`
-  buyToken: `0x${string}`
-  receiver?: `0x${string}` | null
-  validTo?: number
-  partiallyFillable?: boolean
-  sellTokenBalance?: SellTokenBalance
-  buyTokenBalance?: BuyTokenBalance
-  priceQuality?: PriceQuality
-  signingScheme?: SigningScheme
-  chainId: SupportedChainId
-  rolesModifier: `0x${string}`
 }
+
+type PriceQuality = "fast" | "optimal"
 
 /**
  * Union type for quote requests
  */
-export type QuoteRequest = SellOrderRequest | BuyOrderRequest
-
-/**
- * COW Protocol API quote request
- */
-export interface CowQuoteRequest {
-  sellToken: string
-  buyToken: string
-  kind: OrderKind
-  sellAmountBeforeFee?: string
-  sellAmountAfterFee?: string
-  buyAmountAfterFee?: string
-  from: string
-  receiver?: string
+export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
+  sellToken: `0x${string}`
+  buyToken: `0x${string}`
+  receiver?: `0x${string}` | null
   validTo?: number
-  appData?: string
   partiallyFillable?: boolean
   sellTokenBalance?: SellTokenBalance
   buyTokenBalance?: BuyTokenBalance
   priceQuality?: PriceQuality
-  signingScheme?: SigningScheme
-  onchainOrder?: boolean
+
+  chainId: SupportedChainId
+  rolesModifier: `0x${string}`
+  roleKey: string
+}
+
+export type Quote = {
+  sellToken: string
+  buyToken: string
+  receiver: string
+  sellAmount: string
+  buyAmount: string
+  validTo: number
+  appData: string
+  appDataHash: string
+  networkCostsAmount: string
+  kind: OrderKind
+  partiallyFillable: boolean
+  sellTokenBalance: SellTokenBalance
+  buyTokenBalance: BuyTokenBalance
+
+  from: `0x${string}`
+  chainId: SupportedChainId
+  rolesModifier: `0x${string}`
+  roleKey: string
 }
 
 /**
- * COW Protocol API quote response
+ * AppData structure for COW Protocol orders
  */
-export interface CowQuoteResponse {
-  quote: {
-    sellToken: string
-    buyToken: string
-    receiver: string
-    sellAmount: string
-    buyAmount: string
-    validTo: number
-    appData: string
-    feeAmount: string
-    kind: string
-    partiallyFillable: boolean
-    sellTokenBalance: string
-    buyTokenBalance: string
+export interface AppData {
+  partnerFee: {
+    bps: number
+    recipient: string
   }
-  from: string
-  expiration: number
-  id?: number
 }
 
-/**
- * COW Protocol API error
- */
-export interface CowApiError {
-  errorType: string
-  description: string
+export interface AdvancedOptions {
+  appCode?: string
+  environment?: string
 }
