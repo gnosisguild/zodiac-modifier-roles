@@ -57,7 +57,7 @@ describe("getCowQuote", () => {
         rolesModifier: ROLES_MOD_ADDRESS,
         roleKey: "test-role",
       })
-      console.log(quote)
+
       // Verify the quote was successful
       expect(quote).toBeDefined()
       expect(quote.sellToken.toLowerCase()).toBe(WETH_ADDRESS.toLowerCase())
@@ -90,7 +90,7 @@ describe("getCowQuote", () => {
         rolesModifier: ROLES_MOD_ADDRESS,
         roleKey: "test-role",
       })
-      console.log(quote)
+
       // Verify the quote was successful
       expect(quote).toBeDefined()
       expect(quote.sellToken.toLowerCase()).toBe(WETH_ADDRESS.toLowerCase())

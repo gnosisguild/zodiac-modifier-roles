@@ -69,13 +69,6 @@ interface CowOrderRequest {
 }
 
 /**
- * COW Protocol API order response after posting
- */
-interface CowOrderResponse {
-  orderId: string
-}
-
-/**
  * COW Protocol API error
  */
 interface CowApiError {
@@ -206,12 +199,12 @@ export async function getCowOrderbookQuote(
  *
  * @param chainId - The chain ID to post the order to
  * @param request - The signed order request parameters
- * @returns A promise that resolves to the order response with orderId
+ * @returns A promise that resolves to the orderId
  */
 export async function postCowOrder(
   chainId: SupportedChainId,
   request: CowOrderRequest
-): Promise<CowOrderResponse> {
+): Promise<`0x${string}`> {
   const baseUrl = getApiBaseUrl(chainId)
 
   // Validate required fields for posting an order
@@ -222,7 +215,7 @@ export async function postCowOrder(
     throw new Error("Order from address is required")
   }
 
-  return await apiCall<CowOrderResponse>(baseUrl, "orders", {
+  return await apiCall<`0x${string}`>(baseUrl, "orders", {
     method: "POST",
     body: JSON.stringify(request),
   })
