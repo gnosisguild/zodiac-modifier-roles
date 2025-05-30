@@ -1,4 +1,5 @@
 export { allowCowOrderSigning } from "./allowCowOrderSigning"
+export { getCowQuote } from "./getCowQuote"
 export { encodeSignOrder } from "./encodeSignOrder"
 export { signCowOrder } from "./signCowOrder"
 export { postCowOrder } from "./postCowOrder"

@@ -13,6 +13,9 @@ const meta: MetaRecord = {
   swaps: {
     title: "Swaps",
   },
+  api: {
+    title: "API Reference",
+  },
 };
 
 export default meta;
