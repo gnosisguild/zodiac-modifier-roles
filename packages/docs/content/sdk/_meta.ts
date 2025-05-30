@@ -10,6 +10,9 @@ const meta: MetaRecord = {
   conditions: {
     title: "Conditions",
   },
+  swaps: {
+    title: "Swaps",
+  },
 };
 
 export default meta;
