@@ -16,6 +16,9 @@ const meta: MetaRecord = {
   api: {
     title: "API Reference",
   },
+  "v2-v3-migration": {
+    title: "v2 to v3 Migration",
+  },
 };
 
 export default meta;
