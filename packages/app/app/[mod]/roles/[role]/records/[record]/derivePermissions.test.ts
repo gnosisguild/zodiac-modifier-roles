@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { derivePermissionFromCall } from "./derivePermissions"
 import { c, Operator } from "zodiac-roles-sdk"
 import { encodeFunctionData, parseAbiItem } from "viem"
-import { normalizeCondition } from "zodiac-roles-sdk"
 import { ParamType } from "ethers"
 
 describe("derivePermissionFromCall", () => {
@@ -16,13 +15,11 @@ describe("derivePermissionFromCall", () => {
     expect(permission.targetAddress).toEqual(swap1EthForUsdc.to)
     expect(permission.selector).toEqual(swap1EthForUsdc.data.slice(0, 10))
     expect(permission.delegatecall).toBeFalsy()
-    expect(normalizeCondition(permission.condition!)).toEqual(
-      normalizeCondition(
-        c.calldataMatches(
-          swap1EthForUsdcArgs.map((value) => c.eq(value)),
-          batchSwapAbiInputs
-        )()
-      )
+    expect(permission.condition).toEqual(
+      c.calldataMatches(
+        swap1EthForUsdcArgs.map((value) => c.eq(value)),
+        batchSwapAbiInputs
+      )()
     )
   })
 
@@ -33,15 +30,13 @@ describe("derivePermissionFromCall", () => {
       wildcards: ["swaps"],
     })
 
-    expect(normalizeCondition(permission.condition!)).toEqual(
-      normalizeCondition(
-        c.calldataMatches(
-          swap1EthForUsdcArgs.map((value, index) =>
-            index === 1 ? undefined : c.eq(value)
-          ),
-          batchSwapAbiInputs
-        )()
-      )
+    expect(permission.condition).toEqual(
+      c.calldataMatches(
+        swap1EthForUsdcArgs.map((value, index) =>
+          index === 1 ? undefined : c.eq(value)
+        ),
+        batchSwapAbiInputs
+      )()
     )
   })
 
@@ -52,22 +47,20 @@ describe("derivePermissionFromCall", () => {
       wildcards: ["funds.[1]"],
     })
 
-    expect(normalizeCondition(permission.condition!)).toEqual(
-      normalizeCondition(
-        c.calldataMatches(
-          swap1EthForUsdcArgs.map((value, index) =>
-            index === 3
-              ? c.matches([
-                  "0x849D52316331967b6fF1198e5E32A0eB168D039d",
-                  undefined,
-                  "0x849D52316331967b6fF1198e5E32A0eB168D039d",
-                  false,
-                ])
-              : c.eq(value)
-          ),
-          batchSwapAbiInputs
-        )()
-      )
+    expect(permission.condition).toEqual(
+      c.calldataMatches(
+        swap1EthForUsdcArgs.map((value, index) =>
+          index === 3
+            ? c.matches([
+                "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+                undefined,
+                "0x849D52316331967b6fF1198e5E32A0eB168D039d",
+                false,
+              ])
+            : c.eq(value)
+        ),
+        batchSwapAbiInputs
+      )()
     )
   })
 
