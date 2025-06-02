@@ -35,6 +35,8 @@ export function validatePresets<T extends { permissions: Permission[] }>({
         permissions.some((p2) => permissionEquals(p1, p2))
       )
     )
+
+  // TODO
   const unconfirmedPresets = presets
     .filter((p) => !!p)
     .filter((preset) =>
