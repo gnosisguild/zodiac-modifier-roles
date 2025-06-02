@@ -34,7 +34,7 @@ export const fetchLicense = async ({
 }) => {
   const prefixedAddress = prefixAddress(chainId, owner)
   const response = await fetch(
-    `https://api.pilot.gnosisguild.org/system/get-plan/${prefixedAddress}`
+    `https://app.pilot.gnosisguild.org/system/get-plan/${prefixedAddress}`
   )
   const data = await response.json()
 
