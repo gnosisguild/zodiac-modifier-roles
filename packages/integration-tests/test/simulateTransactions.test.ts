@@ -114,7 +114,7 @@ describe("Simulate Transactions Test", async () => {
         targets: processPermissions(permissions).targets,
       },
       {
-        chainId: 31337 as any,
+        chainId: 1,
         address: (await modifier.getAddress()) as `0x${string}`,
         current: {
           key: ROLE_KEY,

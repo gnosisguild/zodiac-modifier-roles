@@ -4,12 +4,14 @@ import {
   ChainId,
   fetchRole,
   fetchRolesMod,
+  fetchRolesModConfig,
   Role,
   Target,
 } from "zodiac-roles-deployments"
 
 import { type Call, encodeCalls, logCall } from "./calls"
 import { diff, diffRole } from "./diff"
+import { enforceLicenseTerms, fetchLicense } from "../licensing"
 
 type Options = {
   chainId: ChainId
@@ -67,6 +69,19 @@ export async function planApply(
     }
   } & Options
 ): Promise<Result> {
+  const roleModConfig = await fetchRolesModConfig({ chainId, address })
+  if (roleModConfig) {
+    const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
+    for (const role of next.roles) {
+      enforceLicenseTerms({
+        role,
+        license,
+        chainId,
+        owner: roleModConfig.owner,
+      })
+    }
+  }
+
   const { minus, plus } = diff({
     prev: current || (await fetchRolesMod({ chainId, address })),
     next,
@@ -106,6 +121,20 @@ export async function planApplyRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  const rolesModConfig = await fetchRolesModConfig({ chainId, address })
+  if (rolesModConfig) {
+    const license = await fetchLicense({
+      chainId,
+      owner: rolesModConfig.owner,
+    })
+    enforceLicenseTerms({
+      role: fragment,
+      license,
+      chainId,
+      owner: rolesModConfig.owner,
+    })
+  }
+
   const prev: Role =
     current ||
     (await fetchRole({ chainId, address, roleKey: fragment.key })) ||
@@ -160,6 +189,17 @@ export async function planExtendRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  const roleModConfig = await fetchRolesModConfig({ chainId, address })
+  if (roleModConfig) {
+    const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
+    enforceLicenseTerms({
+      role: fragment,
+      license,
+      chainId,
+      owner: roleModConfig.owner,
+    })
+  }
+
   const { plus } = await diffRole({
     prev:
       current || (await fetchRole({ chainId, address, roleKey: fragment.key })),

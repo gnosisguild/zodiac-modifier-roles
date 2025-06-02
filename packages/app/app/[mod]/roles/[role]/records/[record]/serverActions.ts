@@ -3,7 +3,7 @@
 import { getRecordById } from "@/app/api/records/query"
 import { Call } from "@/app/api/records/types"
 import { kv } from "@vercel/kv"
-import { checkIntegrity, processPermissions } from "zodiac-roles-sdk"
+import { targetIntegrity, processPermissions } from "zodiac-roles-sdk"
 import { isAuthorized } from "./auth"
 import { createRecord } from "@/app/api/records/createRecord"
 import { createPermissionsPost } from "@/app/api/permissions/createPermissionsPost"
@@ -135,7 +135,7 @@ export async function serverApplyPermissions({
   const record = await getRecordById(recordId)
   const permissions = await derivePermissionsFromRecord(record, chainId)
   const { targets } = processPermissions(permissions)
-  checkIntegrity(targets)
+  targetIntegrity(targets)
   const hash = await createPermissionsPost({ targets })
   return hash
 }

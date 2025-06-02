@@ -1,4 +1,5 @@
-import { assertNoPagination, fetchFromSubgraph, FetchOptions } from "./subgraph"
+import { getRoleId } from "./ids"
+import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   ChainId,
   Role,
@@ -9,35 +10,29 @@ import {
 } from "./types"
 
 type Props = {
+  chainId: ChainId
   address: `0x${string}`
   roleKey: `0x${string}`
-  /** Specify a block height to fetch a historic role state. Defaults to latest block. */
-  blockNumber?: number
-} & (
-  | {
-      /** pass a chainId to use query against the official subgraph deployment */
-      chainId: ChainId
-      /** pass your own API key from The Graph for production use */
-      theGraphApiKey?: string
-    }
-  | {
-      /** pass your own subgraph endpoint */
-      subgraph: string
-    }
-)
 
-const ROLE_FIELDS = `
+  /**
+   * Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block.
+   * @requires A Zodiac OS Enterprise subscription
+   **/
+  blockNumber?: number
+}
+
+export const ROLE_FIELDS = `
     key
-    members(first: 1000) {
+    members {
       member {
         address
       }
     }
-    targets(first: 1000) {
+    targets {
       address
       clearance
       executionOptions
-      functions(first: 1000) {
+      functions {
         selector
         executionOptions
         wildcarded
@@ -47,7 +42,7 @@ const ROLE_FIELDS = `
         }
       }
     }
-    annotations(first: 1000) {
+    annotations {
       uri
       schema
     }
@@ -55,33 +50,24 @@ const ROLE_FIELDS = `
 `.trim()
 
 const ROLE_QUERY = `
-query Role($id: String) {
-  role(id: $id) {
+query Role($id: ID!, $blockNumber: Int) {
+  role(id: $id, blockNumber: $blockNumber) {
     ${ROLE_FIELDS}
   }
 }
 `.trim()
-
-const ROLE_AT_BLOCK_QUERY = `
-query Role($id: String, $block: Int) {
-  role(id: $id, block: { number: $block }) {
-    ${ROLE_FIELDS}
-  }
-}
-`.trim()
-
-const getRoleId = (address: `0x${string}`, roleKey: `0x${string}`) =>
-  `${address.toLowerCase()}-ROLE-${roleKey}`
 
 export const fetchRole = async (
-  { address, roleKey, blockNumber, ...subgraphProps }: Props,
+  { chainId, address, roleKey, blockNumber }: Props,
   options?: FetchOptions
 ): Promise<Role | null> => {
   const { role } = await fetchFromSubgraph(
-    subgraphProps,
     {
-      query: blockNumber ? ROLE_AT_BLOCK_QUERY : ROLE_QUERY,
-      variables: { id: getRoleId(address, roleKey), block: blockNumber },
+      query: ROLE_QUERY,
+      variables: {
+        id: getRoleId(chainId, address, roleKey),
+        blockNumber,
+      },
       operationName: "Role",
     },
     options
@@ -91,14 +77,10 @@ export const fetchRole = async (
     return null
   }
 
-  assertNoPagination(role.members)
-  assertNoPagination(role.targets)
-  assertNoPagination(role.annotations)
-
   return mapGraphQl(role)
 }
 
-const mapGraphQl = (role: any): Role => ({
+export const mapGraphQl = (role: any): Role => ({
   ...role,
   members: role.members.map((assignment: any) => assignment.member.address),
   targets: role.targets.map(

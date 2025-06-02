@@ -1,4 +1,5 @@
-export * from "./chains"
-export * from "./fetchRolesMod"
-export * from "./fetchRole"
+export { chains } from "./chains"
+export { fetchRolesMod } from "./fetchRolesMod"
+export { fetchRolesModConfig } from "./fetchRolesModConfig"
+export { fetchRole } from "./fetchRole"
 export * from "./types"

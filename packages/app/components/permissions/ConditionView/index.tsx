@@ -12,7 +12,6 @@ import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
 import { isLogicalOperator, isArrayOperator } from "./utils"
 import { arrayElementType } from "@/utils/abi"
-import { NormalizedCondition } from "../../../../sdk/build/esm/sdk/src/conditions/normalizeCondition"
 export { matchesAbi } from "./utils"
 
 export interface Props {
