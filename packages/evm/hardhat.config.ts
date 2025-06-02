@@ -181,6 +181,11 @@ const config: HardhatUserConfig = {
       chainId: 999,
       url: "https://rpc.hyperliquid.xyz/evm",
     },
+    worldchain: {
+      ...sharedNetworkConfig,
+      chainId: 480,
+      url: "https://worldchain-mainnet.g.alchemy.com/public",
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
@@ -303,6 +308,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
           browserURL: "https://bob-sepolia.explorer.gobob.xyz",
+        },
+      },
+      {
+        network: "worldchain",
+        chainId: 480,
+        urls: {
+          apiURL: "https://api.worldscan.org/api",
+          browserURL: "https://worldscan.org",
         },
       },
     ],
